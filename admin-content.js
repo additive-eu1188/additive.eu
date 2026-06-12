@@ -1,7 +1,8 @@
-// admin-content.js - 内容管理页面（包含活动和内容管理）
+// admin-content.js - 内容管理页面（包含活动和内容管理，支持图片上传）
 let systemContents = [];
 let eventsList = [];
 let currentContentTab = 'contents';
+let uploadingImage = false;
 
 async function loadContentPage() {
     const container = document.getElementById('page_content');
@@ -26,9 +27,16 @@ async function loadContentPage() {
         .tab-content-btn { background: rgba(74,124,255,0.1); border: 1px solid rgba(74,124,255,0.2); border-radius: 30px; padding: 6px 16px; color: #8a9abb; cursor: pointer; transition: all 0.2s; }
         .tab-content-btn.active { background: #4a7cff; color: #fff; border-color: #4a7cff; }
         .event-item { background: #0f172a; border-radius: 16px; padding: 15px; margin-bottom: 12px; display: flex; gap: 15px; flex-wrap: wrap; align-items: center; }
-        .event-image-preview { width: 80px; height: 60px; object-fit: cover; border-radius: 8px; }
+        .event-image-preview { width: 80px; height: 60px; object-fit: cover; border-radius: 8px; cursor: pointer; border: 1px solid rgba(74,124,255,0.3); }
+        .event-image-preview:hover { border-color: #4a7cff; }
         .event-status-active { color: #2ed15a; }
         .event-status-inactive { color: #ff5a5a; }
+        .upload-area { background: rgba(74,124,255,0.1); border: 2px dashed rgba(74,124,255,0.3); border-radius: 12px; padding: 20px; text-align: center; cursor: pointer; transition: 0.2s; margin: 10px 0; }
+        .upload-area:hover { background: rgba(74,124,255,0.15); border-color: #4a7cff; }
+        .upload-area i { font-size: 32px; color: #4a7cff; margin-bottom: 10px; display: block; }
+        .image-preview { max-width: 200px; max-height: 150px; border-radius: 8px; margin-top: 10px; }
+        .upload-progress { width: 100%; height: 4px; background: rgba(255,255,255,0.1); border-radius: 2px; margin-top: 10px; overflow: hidden; display: none; }
+        .upload-progress-bar { width: 0%; height: 100%; background: #4a7cff; transition: width 0.3s; }
     `;
     document.head.appendChild(style);
     
@@ -51,6 +59,149 @@ function switchContentTab(tab) {
         renderContentList();
     } else if (tab === 'events') {
         renderEventsList();
+    }
+}
+
+// ========== 图片上传函数 ==========
+async function uploadImage(file, type = 'event') {
+    return new Promise(async (resolve, reject) => {
+        if (!file) {
+            reject('No file selected');
+            return;
+        }
+        
+        // 检查文件类型
+        if (!file.type.startsWith('image/')) {
+            showToast('请选择图片文件', 'error');
+            reject('Invalid file type');
+            return;
+        }
+        
+        // 检查文件大小 (最大 5MB)
+        if (file.size > 5 * 1024 * 1024) {
+            showToast('图片大小不能超过 5MB', 'error');
+            reject('File too large');
+            return;
+        }
+        
+        const fileName = `${type}/${Date.now()}_${file.name.replace(/[^a-zA-Z0-9.]/g, '_')}`;
+        const storageBucket = 'event-images';
+        
+        try {
+            // 检查存储桶是否存在，如果不存在则创建
+            const { data: buckets } = await sb.storage.listBuckets();
+            const bucketExists = buckets?.some(b => b.name === storageBucket);
+            
+            if (!bucketExists) {
+                await sb.storage.createBucket(storageBucket, { public: true });
+            }
+            
+            const { error: uploadError } = await sb.storage
+                .from(storageBucket)
+                .upload(fileName, file);
+            
+            if (uploadError) throw uploadError;
+            
+            const { data: urlData } = sb.storage
+                .from(storageBucket)
+                .getPublicUrl(fileName);
+            
+            resolve(urlData.publicUrl);
+        } catch (error) {
+            console.error('上传失败:', error);
+            reject(error.message);
+        }
+    });
+}
+
+function createImageUploader(containerId, currentImageUrl, onUploadComplete) {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+    
+    container.innerHTML = `
+        <div class="upload-area" id="uploadArea_${containerId}">
+            <i class="fas fa-cloud-upload-alt"></i>
+            <div>点击或拖拽上传图片</div>
+            <small style="color: #8a9abb;">支持 JPG, PNG, GIF (最大 5MB)</small>
+            <div id="previewContainer_${containerId}" style="margin-top: 10px;">
+                ${currentImageUrl ? `<img src="${currentImageUrl}" class="image-preview" onclick="window.open('${currentImageUrl}','_blank')">` : ''}
+            </div>
+            <div id="uploadProgress_${containerId}" class="upload-progress">
+                <div id="uploadProgressBar_${containerId}" class="upload-progress-bar"></div>
+            </div>
+            <input type="file" id="fileInput_${containerId}" accept="image/*" style="display: none;">
+        </div>
+    `;
+    
+    const uploadArea = document.getElementById(`uploadArea_${containerId}`);
+    const fileInput = document.getElementById(`fileInput_${containerId}`);
+    
+    uploadArea.addEventListener('click', () => {
+        fileInput.click();
+    });
+    
+    // 拖拽上传
+    uploadArea.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        uploadArea.style.background = 'rgba(74,124,255,0.2)';
+        uploadArea.style.borderColor = '#4a7cff';
+    });
+    
+    uploadArea.addEventListener('dragleave', (e) => {
+        e.preventDefault();
+        uploadArea.style.background = 'rgba(74,124,255,0.1)';
+        uploadArea.style.borderColor = 'rgba(74,124,255,0.3)';
+    });
+    
+    uploadArea.addEventListener('drop', async (e) => {
+        e.preventDefault();
+        uploadArea.style.background = 'rgba(74,124,255,0.1)';
+        uploadArea.style.borderColor = 'rgba(74,124,255,0.3)';
+        
+        const file = e.dataTransfer.files[0];
+        if (file && file.type.startsWith('image/')) {
+            await handleImageUpload(file, containerId, onUploadComplete);
+        } else {
+            showToast('请拖拽图片文件', 'error');
+        }
+    });
+    
+    fileInput.addEventListener('change', async (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            await handleImageUpload(file, containerId, onUploadComplete);
+        }
+    });
+}
+
+async function handleImageUpload(file, containerId, onUploadComplete) {
+    const progressBar = document.getElementById(`uploadProgressBar_${containerId}`);
+    const progressContainer = document.getElementById(`uploadProgress_${containerId}`);
+    const previewContainer = document.getElementById(`previewContainer_${containerId}`);
+    
+    progressContainer.style.display = 'block';
+    progressBar.style.width = '30%';
+    
+    try {
+        const imageUrl = await uploadImage(file, 'events');
+        
+        progressBar.style.width = '100%';
+        
+        previewContainer.innerHTML = `<img src="${imageUrl}" class="image-preview" onclick="window.open('${imageUrl}','_blank')">`;
+        
+        setTimeout(() => {
+            progressContainer.style.display = 'none';
+            progressBar.style.width = '0%';
+        }, 500);
+        
+        showToast('图片上传成功！', 'success');
+        
+        if (onUploadComplete) {
+            onUploadComplete(imageUrl);
+        }
+    } catch (error) {
+        progressContainer.style.display = 'none';
+        showToast('上传失败: ' + error, 'error');
     }
 }
 
@@ -117,10 +268,10 @@ async function deleteContentItem(id) {
 function openAddContentModal() {
     const modalHtml = `
         <div id="addContentModal" class="modal-overlay" style="visibility: visible; opacity: 1;">
-            <div class="modal-card">
+            <div class="modal-card" style="width: 600px; max-width: 90%;">
                 <h3><i class="fas fa-plus"></i> 添加内容</h3>
-                <input type="text" id="contentTitle" placeholder="标题" style="width:100%; margin:10px 0; padding:12px; background:#0f172a; border:1px solid #1e2a3a; border-radius:8px; color:#fff;">
-                <textarea id="contentBody" rows="5" placeholder="内容" style="width:100%; margin:10px 0; padding:12px; background:#0f172a; border:1px solid #1e2a3a; border-radius:8px; color:#fff;"></textarea>
+                <div><label>标题</label><input type="text" id="contentTitle" placeholder="标题" style="width:100%; margin:10px 0; padding:12px; background:#0f172a; border:1px solid #1e2a3a; border-radius:8px; color:#fff;"></div>
+                <div><label>内容</label><textarea id="contentBody" rows="8" placeholder="内容" style="width:100%; margin:10px 0; padding:12px; background:#0f172a; border:1px solid #1e2a3a; border-radius:8px; color:#fff;"></textarea></div>
                 <div style="display: flex; gap: 12px; margin-top: 20px;">
                     <button id="saveContentItemBtn" class="success">保存</button>
                     <button id="closeContentModalBtn">取消</button>
@@ -178,14 +329,24 @@ function renderEventsList() {
             div.className = 'event-item';
             div.setAttribute('data-id', event.id);
             div.innerHTML = `
-                <div><img src="${event.image_url || 'https://placehold.co/80x60/0f172a/4a7cff?text=No+Img'}" class="event-image-preview" onerror="this.src='https://placehold.co/80x60/0f172a/4a7cff?text=No+Img'"></div>
-                <div style="flex:2;"><input type="text" class="event-title-edit" data-id="${event.id}" value="${escapeHtml(event.title || '')}" placeholder="标题" style="width:100%; background:#0f172a; border:1px solid #1e2a3a; border-radius:8px; padding:8px; color:#fff;"></div>
-                <div><input type="date" class="event-date-edit" data-id="${event.id}" value="${event.event_date || ''}" style="background:#0f172a; border:1px solid #1e2a3a; border-radius:8px; padding:8px; color:#fff;"></div>
-                <div><select class="event-status-edit" data-id="${event.id}" style="background:#0f172a; border:1px solid #1e2a3a; border-radius:8px; padding:8px; color:#fff;">
-                    <option value="active" ${event.status === 'active' ? 'selected' : ''}>显示</option>
-                    <option value="inactive" ${event.status === 'inactive' ? 'selected' : ''}>隐藏</option>
-                </select></div>
-                <div><input type="number" class="event-sort-edit" data-id="${event.id}" value="${event.sort_order || 0}" placeholder="排序" style="width:70px; background:#0f172a; border:1px solid #1e2a3a; border-radius:8px; padding:8px; color:#fff;"></div>
+                <div>
+                    <img src="${event.image_url || 'https://placehold.co/80x60/0f172a/4a7cff?text=No+Img'}" class="event-image-preview" onclick="window.open('${event.image_url || '#'}','_blank')" onerror="this.src='https://placehold.co/80x60/0f172a/4a7cff?text=No+Img'">
+                </div>
+                <div style="flex:2;">
+                    <input type="text" class="event-title-edit" data-id="${event.id}" value="${escapeHtml(event.title || '')}" placeholder="标题" style="width:100%; background:#0f172a; border:1px solid #1e2a3a; border-radius:8px; padding:8px; color:#fff;">
+                </div>
+                <div>
+                    <input type="date" class="event-date-edit" data-id="${event.id}" value="${event.event_date || ''}" style="background:#0f172a; border:1px solid #1e2a3a; border-radius:8px; padding:8px; color:#fff;">
+                </div>
+                <div>
+                    <select class="event-status-edit" data-id="${event.id}" style="background:#0f172a; border:1px solid #1e2a3a; border-radius:8px; padding:8px; color:#fff;">
+                        <option value="active" ${event.status === 'active' ? 'selected' : ''}>显示</option>
+                        <option value="inactive" ${event.status === 'inactive' ? 'selected' : ''}>隐藏</option>
+                    </select>
+                </div>
+                <div>
+                    <input type="number" class="event-sort-edit" data-id="${event.id}" value="${event.sort_order || 0}" placeholder="排序" style="width:70px; background:#0f172a; border:1px solid #1e2a3a; border-radius:8px; padding:8px; color:#fff;">
+                </div>
                 <div>
                     <button class="edit-event-detail" data-id="${event.id}" style="background:#2f6b3a; padding:6px 12px; border-radius:8px;"><i class="fas fa-edit"></i> 编辑</button>
                     <button class="delete-event-btn" data-id="${event.id}" style="background:#7a2f2f; padding:6px 12px; border-radius:8px;"><i class="fas fa-trash"></i> 删除</button>
@@ -221,16 +382,21 @@ async function deleteEvent(id) {
 }
 
 function openAddEventModal() {
+    let currentImageUrl = '';
+    
     const modalHtml = `
         <div id="addEventModal" class="modal-overlay" style="visibility: visible; opacity: 1;">
-            <div class="modal-card" style="width: 600px; max-width: 90%;">
+            <div class="modal-card" style="width: 650px; max-width: 90%; max-height: 85vh; overflow-y: auto;">
                 <h3><i class="fas fa-plus"></i> 添加活动</h3>
                 <div><label>标题 *</label><input type="text" id="eventTitle" placeholder="活动标题" style="width:100%; margin:10px 0; padding:12px; background:#0f172a; border:1px solid #1e2a3a; border-radius:8px; color:#fff;"></div>
+                <div><label>活动图片</label><div id="eventImageUploader"></div></div>
                 <div><label>简短描述</label><input type="text" id="eventShortDesc" placeholder="简短描述" style="width:100%; margin:10px 0; padding:12px; background:#0f172a; border:1px solid #1e2a3a; border-radius:8px; color:#fff;"></div>
                 <div><label>详细描述</label><textarea id="eventDesc" rows="3" placeholder="详细描述" style="width:100%; margin:10px 0; padding:12px; background:#0f172a; border:1px solid #1e2a3a; border-radius:8px; color:#fff;"></textarea></div>
                 <div><label>内容详情</label><textarea id="eventContent" rows="5" placeholder="完整内容" style="width:100%; margin:10px 0; padding:12px; background:#0f172a; border:1px solid #1e2a3a; border-radius:8px; color:#fff;"></textarea></div>
-                <div><label>图片 URL</label><input type="text" id="eventImageUrl" placeholder="图片URL" style="width:100%; margin:10px 0; padding:12px; background:#0f172a; border:1px solid #1e2a3a; border-radius:8px; color:#fff;"></div>
-                <div style="display: flex; gap: 12px;"><div style="flex:1"><label>开始日期</label><input type="date" id="eventDate" style="width:100%; margin:10px 0; padding:12px; background:#0f172a; border:1px solid #1e2a3a; border-radius:8px; color:#fff;"></div><div style="flex:1"><label>结束日期</label><input type="date" id="eventEndDate" style="width:100%; margin:10px 0; padding:12px; background:#0f172a; border:1px solid #1e2a3a; border-radius:8px; color:#fff;"></div></div>
+                <div style="display: flex; gap: 12px;">
+                    <div style="flex:1"><label>开始日期</label><input type="date" id="eventDate" style="width:100%; margin:10px 0; padding:12px; background:#0f172a; border:1px solid #1e2a3a; border-radius:8px; color:#fff;"></div>
+                    <div style="flex:1"><label>结束日期</label><input type="date" id="eventEndDate" style="width:100%; margin:10px 0; padding:12px; background:#0f172a; border:1px solid #1e2a3a; border-radius:8px; color:#fff;"></div>
+                </div>
                 <div><label>标签徽章</label><input type="text" id="eventBadge" placeholder="如: 🔥 Limited Time" value="Promotion" style="width:100%; margin:10px 0; padding:12px; background:#0f172a; border:1px solid #1e2a3a; border-radius:8px; color:#fff;"></div>
                 <div><label>状态</label><select id="eventStatus" style="width:100%; margin:10px 0; padding:12px; background:#0f172a; border:1px solid #1e2a3a; border-radius:8px; color:#fff;"><option value="active">显示</option><option value="inactive">隐藏</option></select></div>
                 <div><label>排序</label><input type="number" id="eventSortOrder" value="0" style="width:100%; margin:10px 0; padding:12px; background:#0f172a; border:1px solid #1e2a3a; border-radius:8px; color:#fff;"></div>
@@ -241,59 +407,70 @@ function openAddEventModal() {
             </div>
         </div>
     `;
+    
     const existing = document.getElementById('addEventModal');
     if (existing) existing.remove();
     document.body.insertAdjacentHTML('beforeend', modalHtml);
-    document.getElementById('saveEventBtn').onclick = saveNewEvent;
-    document.getElementById('closeEventModalBtn').onclick = () => document.getElementById('addEventModal').remove();
-}
-
-async function saveNewEvent() {
-    const title = document.getElementById('eventTitle').value.trim();
-    if (!title) {
-        showToast('请填写活动标题', 'error');
-        return;
-    }
     
-    const eventData = {
-        title: title,
-        short_description: document.getElementById('eventShortDesc').value.trim(),
-        description: document.getElementById('eventDesc').value.trim(),
-        content: document.getElementById('eventContent').value.trim(),
-        image_url: document.getElementById('eventImageUrl').value.trim(),
-        event_date: document.getElementById('eventDate').value || null,
-        end_date: document.getElementById('eventEndDate').value || null,
-        badge: document.getElementById('eventBadge').value.trim() || 'Promotion',
-        status: document.getElementById('eventStatus').value,
-        sort_order: parseInt(document.getElementById('eventSortOrder').value) || 0,
-        created_at: new Date().toISOString()
+    // 初始化图片上传器
+    createImageUploader('eventImageUploader', '', (imageUrl) => {
+        currentImageUrl = imageUrl;
+    });
+    
+    document.getElementById('saveEventBtn').onclick = async () => {
+        const title = document.getElementById('eventTitle').value.trim();
+        if (!title) {
+            showToast('请填写活动标题', 'error');
+            return;
+        }
+        
+        const eventData = {
+            title: title,
+            short_description: document.getElementById('eventShortDesc').value.trim(),
+            description: document.getElementById('eventDesc').value.trim(),
+            content: document.getElementById('eventContent').value.trim(),
+            image_url: currentImageUrl,
+            event_date: document.getElementById('eventDate').value || null,
+            end_date: document.getElementById('eventEndDate').value || null,
+            badge: document.getElementById('eventBadge').value.trim() || 'Promotion',
+            status: document.getElementById('eventStatus').value,
+            sort_order: parseInt(document.getElementById('eventSortOrder').value) || 0,
+            created_at: new Date().toISOString()
+        };
+        
+        const { error } = await sb.from('events').insert([eventData]);
+        if (error) {
+            showToast('添加失败: ' + error.message, 'error');
+            return;
+        }
+        
+        showToast('活动添加成功', 'success');
+        document.getElementById('addEventModal').remove();
+        loadEventsList();
     };
     
-    const { error } = await sb.from('events').insert([eventData]);
-    if (error) {
-        showToast('添加失败: ' + error.message, 'error');
-        return;
-    }
-    
-    showToast('活动添加成功', 'success');
-    document.getElementById('addEventModal').remove();
-    loadEventsList();
+    document.getElementById('closeEventModalBtn').onclick = () => document.getElementById('addEventModal').remove();
 }
 
 function openEditEventModal(id) {
     const event = eventsList.find(e => e.id == id);
     if (!event) return;
     
+    let currentImageUrl = event.image_url || '';
+    
     const modalHtml = `
         <div id="editEventModal" class="modal-overlay" style="visibility: visible; opacity: 1;">
-            <div class="modal-card" style="width: 600px; max-width: 90%;">
+            <div class="modal-card" style="width: 650px; max-width: 90%; max-height: 85vh; overflow-y: auto;">
                 <h3><i class="fas fa-edit"></i> 编辑活动</h3>
                 <div><label>标题 *</label><input type="text" id="editEventTitle" value="${escapeHtml(event.title)}" style="width:100%; margin:10px 0; padding:12px; background:#0f172a; border:1px solid #1e2a3a; border-radius:8px; color:#fff;"></div>
+                <div><label>活动图片</label><div id="editEventImageUploader"></div></div>
                 <div><label>简短描述</label><input type="text" id="editEventShortDesc" value="${escapeHtml(event.short_description || '')}" style="width:100%; margin:10px 0; padding:12px; background:#0f172a; border:1px solid #1e2a3a; border-radius:8px; color:#fff;"></div>
                 <div><label>详细描述</label><textarea id="editEventDesc" rows="3" style="width:100%; margin:10px 0; padding:12px; background:#0f172a; border:1px solid #1e2a3a; border-radius:8px; color:#fff;">${escapeHtml(event.description || '')}</textarea></div>
                 <div><label>内容详情</label><textarea id="editEventContent" rows="5" style="width:100%; margin:10px 0; padding:12px; background:#0f172a; border:1px solid #1e2a3a; border-radius:8px; color:#fff;">${escapeHtml(event.content || '')}</textarea></div>
-                <div><label>图片 URL</label><input type="text" id="editEventImageUrl" value="${escapeHtml(event.image_url || '')}" style="width:100%; margin:10px 0; padding:12px; background:#0f172a; border:1px solid #1e2a3a; border-radius:8px; color:#fff;"></div>
-                <div style="display: flex; gap: 12px;"><div style="flex:1"><label>开始日期</label><input type="date" id="editEventDate" value="${event.event_date || ''}" style="width:100%; margin:10px 0; padding:12px; background:#0f172a; border:1px solid #1e2a3a; border-radius:8px; color:#fff;"></div><div style="flex:1"><label>结束日期</label><input type="date" id="editEventEndDate" value="${event.end_date || ''}" style="width:100%; margin:10px 0; padding:12px; background:#0f172a; border:1px solid #1e2a3a; border-radius:8px; color:#fff;"></div></div>
+                <div style="display: flex; gap: 12px;">
+                    <div style="flex:1"><label>开始日期</label><input type="date" id="editEventDate" value="${event.event_date || ''}" style="width:100%; margin:10px 0; padding:12px; background:#0f172a; border:1px solid #1e2a3a; border-radius:8px; color:#fff;"></div>
+                    <div style="flex:1"><label>结束日期</label><input type="date" id="editEventEndDate" value="${event.end_date || ''}" style="width:100%; margin:10px 0; padding:12px; background:#0f172a; border:1px solid #1e2a3a; border-radius:8px; color:#fff;"></div>
+                </div>
                 <div><label>标签徽章</label><input type="text" id="editEventBadge" value="${escapeHtml(event.badge || 'Promotion')}" style="width:100%; margin:10px 0; padding:12px; background:#0f172a; border:1px solid #1e2a3a; border-radius:8px; color:#fff;"></div>
                 <div><label>状态</label><select id="editEventStatus" style="width:100%; margin:10px 0; padding:12px; background:#0f172a; border:1px solid #1e2a3a; border-radius:8px; color:#fff;"><option value="active" ${event.status === 'active' ? 'selected' : ''}>显示</option><option value="inactive" ${event.status === 'inactive' ? 'selected' : ''}>隐藏</option></select></div>
                 <div><label>排序</label><input type="number" id="editEventSortOrder" value="${event.sort_order || 0}" style="width:100%; margin:10px 0; padding:12px; background:#0f172a; border:1px solid #1e2a3a; border-radius:8px; color:#fff;"></div>
@@ -304,17 +481,29 @@ function openEditEventModal(id) {
             </div>
         </div>
     `;
+    
     const existing = document.getElementById('editEventModal');
     if (existing) existing.remove();
     document.body.insertAdjacentHTML('beforeend', modalHtml);
     
+    // 初始化图片上传器
+    createImageUploader('editEventImageUploader', currentImageUrl, (imageUrl) => {
+        currentImageUrl = imageUrl;
+    });
+    
     document.getElementById('updateEventBtn').onclick = async () => {
+        const title = document.getElementById('editEventTitle').value.trim();
+        if (!title) {
+            showToast('请填写活动标题', 'error');
+            return;
+        }
+        
         const updateData = {
-            title: document.getElementById('editEventTitle').value.trim(),
+            title: title,
             short_description: document.getElementById('editEventShortDesc').value.trim(),
             description: document.getElementById('editEventDesc').value.trim(),
             content: document.getElementById('editEventContent').value.trim(),
-            image_url: document.getElementById('editEventImageUrl').value.trim(),
+            image_url: currentImageUrl,
             event_date: document.getElementById('editEventDate').value || null,
             end_date: document.getElementById('editEventEndDate').value || null,
             badge: document.getElementById('editEventBadge').value.trim(),
@@ -322,11 +511,6 @@ function openEditEventModal(id) {
             sort_order: parseInt(document.getElementById('editEventSortOrder').value) || 0,
             updated_at: new Date().toISOString()
         };
-        
-        if (!updateData.title) {
-            showToast('请填写活动标题', 'error');
-            return;
-        }
         
         const { error } = await sb.from('events').update(updateData).eq('id', id);
         if (error) {
@@ -338,6 +522,7 @@ function openEditEventModal(id) {
         document.getElementById('editEventModal').remove();
         loadEventsList();
     };
+    
     document.getElementById('closeEditEventModalBtn').onclick = () => document.getElementById('editEventModal').remove();
 }
 
