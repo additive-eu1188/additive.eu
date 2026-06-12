@@ -36,11 +36,27 @@
             box-shadow: 0 12px 24px rgba(0,0,0,0.2);
         }
         
-        .event-image {
+        /* 图片容器 - 1080x1920 比例 (9:16) */
+        .event-image-wrapper {
+            position: relative;
             width: 100%;
-            height: 180px;
+            padding-bottom: 177.78%; /* 1920/1080 * 100% = 177.78% 竖屏比例 */
+            overflow: hidden;
+            background: linear-gradient(135deg, #1a1f3a, #0f1428);
+        }
+        
+        .event-image {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
             object-fit: cover;
-            background: linear-gradient(135deg, #2a2418, #4a3a28);
+            transition: transform 0.3s ease;
+        }
+        
+        .event-card:hover .event-image {
+            transform: scale(1.05);
         }
         
         .event-content {
@@ -52,6 +68,10 @@
             font-weight: 700;
             color: #ffffff;
             margin-bottom: 8px;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
         }
         
         .event-date {
@@ -68,6 +88,10 @@
             color: #a0a8c0;
             line-height: 1.5;
             margin-bottom: 16px;
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
         }
         
         .event-badge {
@@ -115,13 +139,14 @@
         .upgrade-desc { font-size: 13px; color: #7a85a5; line-height: 1.5; margin-bottom: 20px; }
         .btn-upgrade { background: rgba(201,176,149,0.15); padding: 10px 20px; border-radius: 40px; text-decoration: none; color: #C9B095; font-weight: 600; font-size: 14px; display: inline-flex; align-items: center; gap: 8px; border: 1px solid rgba(201,176,149,0.3); }
         
+        /* 弹窗 - 1080x1920 比例 */
         .event-modal {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0, 0, 0, 0.9);
+            background: rgba(0, 0, 0, 0.95);
             backdrop-filter: blur(12px);
             z-index: 10001;
             display: flex;
@@ -140,18 +165,27 @@
         .event-modal-content {
             background: linear-gradient(145deg, #1a1f3a, #0f1428);
             border-radius: 32px;
-            max-width: 600px;
-            width: 90%;
-            max-height: 85vh;
+            max-width: 90vw;
+            width: auto;
+            max-height: 90vh;
             overflow-y: auto;
             border: 1px solid rgba(201, 176, 149, 0.3);
             position: relative;
         }
         
+        /* 弹窗图片 - 1080x1920 比例 */
+        .event-modal-image-wrapper {
+            width: 100%;
+            max-width: 500px;
+            margin: 0 auto;
+        }
+        
         .event-modal-image {
             width: 100%;
-            height: 250px;
+            height: auto;
+            aspect-ratio: 9 / 16;
             object-fit: cover;
+            border-radius: 24px 24px 0 0;
         }
         
         .event-modal-body {
@@ -195,27 +229,39 @@
             position: absolute;
             top: 16px;
             right: 16px;
-            background: rgba(0,0,0,0.5);
+            background: rgba(0,0,0,0.6);
             border: none;
-            width: 36px;
-            height: 36px;
+            width: 40px;
+            height: 40px;
             border-radius: 50%;
             color: white;
-            font-size: 20px;
+            font-size: 24px;
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
             transition: 0.2s;
+            z-index: 10;
         }
         
         .close-modal-btn:hover {
-            background: rgba(201,176,149,0.3);
+            background: rgba(201,176,149,0.5);
+            transform: scale(1.05);
         }
         
         @media (max-width: 768px) {
             .events-grid {
                 grid-template-columns: 1fr;
+                gap: 16px;
+            }
+            
+            .event-modal-content {
+                width: 95vw;
+                max-height: 85vh;
+            }
+            
+            .event-modal-title {
+                font-size: 18px;
             }
         }
     </style>
@@ -273,7 +319,9 @@
     <div id="eventModal" class="event-modal">
         <div class="event-modal-content">
             <button class="close-modal-btn" onclick="closeEventModal()">&times;</button>
-            <img id="modalImage" class="event-modal-image" src="" alt="">
+            <div class="event-modal-image-wrapper">
+                <img id="modalImage" class="event-modal-image" src="" alt="">
+            </div>
             <div class="event-modal-body">
                 <h2 id="modalTitle" class="event-modal-title"></h2>
                 <div id="modalDate" class="event-modal-date"></div>
@@ -327,11 +375,13 @@
                     card.className = 'event-card';
                     card.onclick = () => showEventDetail(event);
                     
-                    const imageUrl = event.image_url || 'https://placehold.co/600x400/1a1f3a/C9B095?text=Event';
+                    const imageUrl = event.image_url || 'https://placehold.co/1080x1920/1a1f3a/C9B095?text=Event';
                     const eventDate = event.event_date ? new Date(event.event_date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) : 'Date TBA';
                     
                     card.innerHTML = `
-                        <img src="${imageUrl}" class="event-image" alt="${escapeHtml(event.title)}" onerror="this.src='https://placehold.co/600x400/1a1f3a/C9B095?text=Event'">
+                        <div class="event-image-wrapper">
+                            <img src="${imageUrl}" class="event-image" alt="${escapeHtml(event.title)}" onerror="this.src='https://placehold.co/1080x1920/1a1f3a/C9B095?text=Event'">
+                        </div>
                         <div class="event-content">
                             <div class="event-title">${escapeHtml(event.title)}</div>
                             <div class="event-date"><i class="fas fa-calendar-day"></i> ${eventDate}</div>
@@ -356,11 +406,11 @@
             const modalDescription = document.getElementById('modalDescription');
             const modalContent = document.getElementById('modalContent');
             
-            const imageUrl = event.image_url || 'https://placehold.co/600x400/1a1f3a/C9B095?text=Event';
+            const imageUrl = event.image_url || 'https://placehold.co/1080x1920/1a1f3a/C9B095?text=Event';
             const eventDate = event.event_date ? new Date(event.event_date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) : 'Date TBA';
             
             modalImage.src = imageUrl;
-            modalImage.onerror = () => { modalImage.src = 'https://placehold.co/600x400/1a1f3a/C9B095?text=Event'; };
+            modalImage.onerror = () => { modalImage.src = 'https://placehold.co/1080x1920/1a1f3a/C9B095?text=Event'; };
             modalTitle.innerText = event.title;
             modalDate.innerHTML = `<i class="fas fa-calendar-day"></i> ${eventDate}${event.end_date ? ` - ${new Date(event.end_date).toLocaleDateString()}` : ''}`;
             modalDescription.innerText = event.short_description || event.description || '';
