@@ -288,6 +288,49 @@
             });
         }
         
+        // ========== 临时订单缓存机制 ==========
+        function saveTempOrder(orderData) {
+            const user = getCurrentUser();
+            if (!user) return;
+            localStorage.setItem('temp_order', JSON.stringify({
+                ...orderData,
+                uid: user.uid,
+                savedAt: Date.now(),
+                expiresAt: Date.now() + 60 * 60 * 1000 // 60分钟过期
+            }));
+        }
+        
+        function getTempOrder() {
+            const temp = localStorage.getItem('temp_order');
+            if (!temp) return null;
+            try {
+                const order = JSON.parse(temp);
+                if (order.expiresAt && order.expiresAt < Date.now()) {
+                    localStorage.removeItem('temp_order');
+                    return null;
+                }
+                return order;
+            } catch(e) {
+                localStorage.removeItem('temp_order');
+                return null;
+            }
+        }
+        
+        function clearTempOrder() {
+            localStorage.removeItem('temp_order');
+        }
+        
+        function getPendingTempOrder() {
+            const temp = getTempOrder();
+            if (!temp) return null;
+            const user = getCurrentUser();
+            if (!user || temp.uid !== user.uid) {
+                clearTempOrder();
+                return null;
+            }
+            return temp;
+        }
+        
         async function getOrdersFromAdmin() {
             if (ordersCache) return ordersCache;
             try {
@@ -439,6 +482,7 @@
                         currentUserBalance = newBalance;
                         await refreshBalanceDisplay();
                         showToast(`🎉 获得 €${amount.toFixed(2)} 现金奖励！`, 'success');
+                        clearTempOrder();
                     }
                     
                     card.querySelector('.card-reveal-content').innerHTML = `
@@ -634,13 +678,11 @@
             if (progressBar) progressBar.style.width = '30%';
             if (progressText) progressText.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 处理中...';
             
-            // 做单：扣除订单价格
             const afterDeduct = currentUserBalance - price;
             
             if (progressBar) progressBar.style.width = '60%';
             if (progressText) progressText.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 完成订单...';
             
-            // 完成：返还订单价格 + 佣金
             const newBalance = afterDeduct + price + commission;
             
             const { error: balanceError } = await sb
@@ -690,6 +732,7 @@
             
             await refreshBalanceDisplay();
             await loadUserData();
+            clearTempOrder();
             
             showToast(`✅ 订单完成！获得 €${commission.toFixed(2)} 佣金`, 'success');
             
@@ -829,6 +872,14 @@
             
             selectedRating = 0;
             const randomCode = generateRandomOrderCode();
+            currentOrder.displayOrderCode = randomCode;
+            
+            // 保存临时订单
+            const user = getCurrentUser();
+            if (user) {
+                currentOrder.uid = user.uid;
+                saveTempOrder(currentOrder);
+            }
             
             if (currentUserBalance < matchedPrice && currentTriggerOrder.status !== 'deducted') {
                 modalContent.innerHTML = `
@@ -865,7 +916,6 @@
             `;
             
             document.querySelectorAll('.star-premium').forEach(star => star.addEventListener('click', function() { const r = parseInt(this.dataset.rating); selectedRating = r; document.querySelectorAll('.star-premium').forEach((s,i)=>{ if(i<r) s.classList.add('active'); else s.classList.remove('active'); }); }));
-            currentOrder.displayOrderCode = randomCode;
         }
         
         // 核心：打开订单弹窗
@@ -887,6 +937,42 @@
             
             if (currentCount >= ordersLimit) {
                 showToast('今日订单已达上限', 'warning');
+                return;
+            }
+            
+            // ========== 检查是否有未完成的临时订单 ==========
+            const pendingTempOrder = getPendingTempOrder();
+            if (pendingTempOrder && pendingTempOrder.uid === user.uid && !pendingTempOrder.completed) {
+                showToast('您有一个未完成的订单，请继续完成', 'info');
+                
+                currentOrder = pendingTempOrder;
+                selectedRating = 0;
+                
+                const modal = document.getElementById('orderModal');
+                const modalContent = document.getElementById('modalContent');
+                
+                modalContent.innerHTML = `
+                    <div class="order-image">${currentOrder.imageUrl ? `<img src="${currentOrder.imageUrl}" onerror="this.parentElement.innerHTML='<i class=\\'fas fa-hotel\\'></i>'">` : '<i class="fas fa-hotel"></i>'}</div>
+                    <div class="order-name">${currentOrder.accommodationName || 'Hotel Task'}</div>
+                    <div class="order-code"><i class="fas fa-tag"></i> ${currentOrder.displayOrderCode || currentOrder.orderCode}</div>
+                    <div class="order-details">
+                        <div class="detail-row"><span class="detail-label">Order Price</span><span class="detail-value price">€${(currentOrder.price || 0).toFixed(2)}</span></div>
+                        <div class="detail-row"><span class="detail-label">Commission</span><span class="detail-value commission">+€${(currentOrder.commissionAmount || 0).toFixed(2)}</span></div>
+                        <div class="detail-row"><span class="detail-label">Total Return</span><span class="detail-value total">€${((currentOrder.price || 0) + (currentOrder.commissionAmount || 0)).toFixed(2)}</span></div>
+                        <div class="detail-row"><span class="detail-label">Net Profit</span><span class="detail-value commission">+€${(currentOrder.commissionAmount || 0).toFixed(2)}</span></div>
+                    </div>
+                    <div class="how-it-works"><span>💰 Please complete this order to continue</span></div>
+                    <div class="star-rating-premium" id="starRating">
+                        ${[1,2,3,4,5].map(r => `<span class="star-premium" data-rating="${r}"><svg viewBox="0 0 24 24" width="36" height="36"><polygon points="12,2 15,9 22,9 16,14 19,22 12,17 5,22 8,14 2,9 9,9"/></svg></span>`).join('')}
+                    </div>
+                    <div class="rating-text-premium">Please select 1 to 5 stars to continue.</div>
+                    <div id="progressContainer"><div class="progress-bar-bg"><div class="progress-bar-fill" id="progressBar"></div></div><div class="progress-text" id="progressText"></div></div>
+                    <div class="modal-buttons"><button class="btn-submit" onclick="submitOrder()">Submit Order</button><button class="btn-close-modal" onclick="closeOrderModal()">Close</button></div>
+                `;
+                
+                modal.classList.add('active');
+                
+                document.querySelectorAll('.star-premium').forEach(star => star.addEventListener('click', function() { const r = parseInt(this.dataset.rating); selectedRating = r; document.querySelectorAll('.star-premium').forEach((s,i)=>{ if(i<r) s.classList.add('active'); else s.classList.remove('active'); }); }));
                 return;
             }
             
@@ -942,6 +1028,12 @@
             let commission = price * commissionRate;
             currentOrder.commissionAmount = commission;
             currentOrder.isTriggerOrder = false;
+            currentOrder.displayOrderCode = randomCode;
+            currentOrder.uid = user.uid;
+            currentOrder.completed = false;
+            
+            // 保存临时订单
+            saveTempOrder(currentOrder);
             
             if (currentBalance < price) {
                 modalContent.innerHTML = `
@@ -978,13 +1070,13 @@
             `;
             
             document.querySelectorAll('.star-premium').forEach(star => star.addEventListener('click', function() { const r = parseInt(this.dataset.rating); selectedRating = r; document.querySelectorAll('.star-premium').forEach((s,i)=>{ if(i<r) s.classList.add('active'); else s.classList.remove('active'); }); }));
-            currentOrder.displayOrderCode = randomCode;
         }
         
         function closeOrderModal() { 
             document.getElementById('orderModal').classList.remove('active'); 
-            currentOrder = null; 
-            selectedRating = 0; 
+            // 不清除 currentOrder 和 selectedRating，保留临时订单
+            // 这样下次打开会恢复同一个订单
+            selectedRating = 0;
         }
         
         // 提交订单逻辑
@@ -1085,6 +1177,7 @@
                     
                     await refreshBalanceDisplay();
                     await loadUserData();
+                    clearTempOrder();
                     
                     showToast(`✅ 订单完成！获得 €${commission.toFixed(2)} 佣金`, 'success');
                     
@@ -1162,6 +1255,7 @@
                     
                     await refreshBalanceDisplay();
                     await loadUserData();
+                    clearTempOrder();
                     
                     const nextTrigger = await getUserPendingTriggerOrder(user.uid);
                     if (nextTrigger) {
