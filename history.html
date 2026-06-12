@@ -78,6 +78,86 @@
         .upgrade-title { font-size: 18px; font-weight: 600; margin-bottom: 10px; color: #C9B095; }
         .upgrade-desc { font-size: 13px; color: #7a85a5; line-height: 1.5; margin-bottom: 20px; }
         .btn-upgrade { background: rgba(201,176,149,0.15); padding: 10px 20px; border-radius: 40px; text-decoration: none; color: #C9B095; font-weight: 600; font-size: 14px; display: inline-flex; align-items: center; gap: 8px; border: 1px solid rgba(201,176,149,0.3); }
+        
+        /* 订单详情弹窗 */
+        .order-detail-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            backdrop-filter: blur(12px);
+            z-index: 10002;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            visibility: hidden;
+            opacity: 0;
+            transition: all 0.3s ease;
+        }
+        .order-detail-modal.active {
+            visibility: visible;
+            opacity: 1;
+        }
+        .order-detail-content {
+            background: linear-gradient(145deg, #1a1f3a, #0f1428);
+            border-radius: 24px;
+            width: 90%;
+            max-width: 500px;
+            max-height: 80vh;
+            overflow-y: auto;
+            border: 1px solid rgba(201, 176, 149, 0.3);
+            position: relative;
+        }
+        .order-detail-header {
+            padding: 20px;
+            border-bottom: 1px solid rgba(201,176,149,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .order-detail-header h3 {
+            color: #C9B095;
+            font-size: 18px;
+        }
+        .order-detail-close {
+            background: none;
+            border: none;
+            color: #aaa;
+            font-size: 24px;
+            cursor: pointer;
+        }
+        .order-detail-body {
+            padding: 20px;
+        }
+        .order-detail-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+        .order-detail-label {
+            color: #a0a8c0;
+            font-size: 13px;
+        }
+        .order-detail-value {
+            color: #ffffff;
+            font-weight: 600;
+        }
+        .order-detail-value.commission {
+            color: #4ade80;
+        }
+        .order-detail-value.price {
+            color: #ff8888;
+        }
+        .rating-stars {
+            display: flex;
+            gap: 4px;
+        }
+        .rating-stars i {
+            font-size: 14px;
+        }
     </style>
 </head>
 <body>
@@ -92,10 +172,11 @@
                     <a href="start.html" class="nav-item"><i class="fas fa-play"></i><span>Start</span></a>
                     <a href="history.html" class="nav-item active"><i class="fas fa-clock"></i><span>History</span></a>
                     <a href="checkin.html" class="nav-item"><i class="fas fa-calendar-check"></i><span>Sign in</span></a>
-<a href="event.html" class="nav-item"><i class="fas fa-calendar-alt"></i><span>Event</span></a>
+                    <a href="event.html" class="nav-item"><i class="fas fa-calendar-alt"></i><span>Event</span></a>
                     <a href="withdrawal.html" class="nav-item"><i class="fas fa-arrow-right-to-bracket"></i><span>Withdrawal</span></a>
                     <a href="chat.html" class="nav-item"><i class="fas fa-comment-dots"></i><span>Chat with us</span></a>
                     <a href="settings.html" class="nav-item"><i class="fas fa-sliders-h"></i><span>Settings</span></a>
+                    <a href="membership.html" class="nav-item"><i class="fas fa-crown"></i><span>Membership</span></a>
                 </nav>
             </div>
             <div class="sidebar-upgrade-card">
@@ -136,6 +217,19 @@
         </main>
     </div>
 
+    <!-- 订单详情弹窗 -->
+    <div id="orderDetailModal" class="order-detail-modal">
+        <div class="order-detail-content">
+            <div class="order-detail-header">
+                <h3><i class="fas fa-receipt"></i> Order Details</h3>
+                <button class="order-detail-close" onclick="closeOrderDetailModal()">&times;</button>
+            </div>
+            <div class="order-detail-body" id="orderDetailBody">
+                <!-- 动态内容 -->
+            </div>
+        </div>
+    </div>
+
     <script>
         function toggleMenu() { 
             const sidebar = document.getElementById('sidebar'); 
@@ -154,6 +248,66 @@
             if (menuBtn) menuBtn.classList.remove('hidden'); 
         }
 
+        // 订单详情弹窗
+        let currentOrderDetail = null;
+        
+        function showOrderDetail(order) {
+            currentOrderDetail = order;
+            const modal = document.getElementById('orderDetailModal');
+            const body = document.getElementById('orderDetailBody');
+            
+            const date = new Date(order.date);
+            const formattedDate = date.toLocaleDateString() + ' ' + date.toLocaleTimeString();
+            const rating = order.rating || 0;
+            
+            let starsHtml = '';
+            for (let i = 1; i <= 5; i++) {
+                starsHtml += `<i class="fas fa-star" style="color: ${i <= rating ? '#C9B095' : '#4a5578'};"></i>`;
+            }
+            
+            body.innerHTML = `
+                <div class="order-detail-row">
+                    <span class="order-detail-label">Order Code</span>
+                    <span class="order-detail-value">${order.order_code || 'N/A'}</span>
+                </div>
+                <div class="order-detail-row">
+                    <span class="order-detail-label">Hotel / Task</span>
+                    <span class="order-detail-value">${order.accommodation_name || 'Hotel Task'}</span>
+                </div>
+                <div class="order-detail-row">
+                    <span class="order-detail-label">Order Price</span>
+                    <span class="order-detail-value price">€${(order.price || 0).toFixed(2)}</span>
+                </div>
+                <div class="order-detail-row">
+                    <span class="order-detail-label">Commission</span>
+                    <span class="order-detail-value commission">+€${(order.commission || 0).toFixed(2)}</span>
+                </div>
+                <div class="order-detail-row">
+                    <span class="order-detail-label">Net Profit</span>
+                    <span class="order-detail-value commission">+€${((order.commission || 0) - (order.price || 0)).toFixed(2)}</span>
+                </div>
+                <div class="order-detail-row">
+                    <span class="order-detail-label">Rating</span>
+                    <div class="rating-stars">${starsHtml}</div>
+                </div>
+                <div class="order-detail-row">
+                    <span class="order-detail-label">Date</span>
+                    <span class="order-detail-value">${formattedDate}</span>
+                </div>
+                <div class="order-detail-row">
+                    <span class="order-detail-label">Status</span>
+                    <span class="order-detail-value" style="color:#4ade80;">${order.status || 'Completed'}</span>
+                </div>
+            `;
+            
+            modal.classList.add('active');
+        }
+        
+        function closeOrderDetailModal() {
+            document.getElementById('orderDetailModal').classList.remove('active');
+            currentOrderDetail = null;
+        }
+
         async function renderBalanceHistory() {
             const container = document.getElementById('balanceHistory');
             const user = checkLogin();
@@ -170,17 +324,59 @@
             
             deposits.forEach(d => {
                 let typeName = '', icon = '';
-                if (d.type === 'manual') { typeName = 'Deposit'; icon = 'fas fa-plus-circle'; }
-                else if (d.type === 'deposit_bonus') { typeName = 'Deposit Bonus'; icon = 'fas fa-star'; }
-                else if (d.type === 'order_commission') { typeName = 'Order Commission'; icon = 'fas fa-chart-line'; }
-                else if (d.type === 'trial_bonus') { typeName = 'Trial Bonus Added'; icon = 'fas fa-gift'; }
-                else if (d.type === 'referral_bonus') { typeName = 'Referral Bonus'; icon = 'fas fa-user-friends'; }
-                else return;
-                records.push({ id: d.id, date: d.created_at, type: typeName, amount: d.amount, icon: icon, isPositive: true });
+                if (d.type === 'manual') { 
+                    typeName = d.description || 'Manual Deposit'; 
+                    icon = 'fas fa-plus-circle'; 
+                }
+                else if (d.type === 'deposit_bonus') { 
+                    // 使用自定义的 description 作为奖励名称
+                    typeName = d.description || 'Deposit Bonus'; 
+                    icon = 'fas fa-gift'; 
+                }
+                else if (d.type === 'order_commission') { 
+                    typeName = 'Order Commission'; 
+                    icon = 'fas fa-chart-line'; 
+                }
+                else if (d.type === 'trial_bonus') { 
+                    typeName = 'Trial Bonus'; 
+                    icon = 'fas fa-gem'; 
+                }
+                else if (d.type === 'referral_bonus') { 
+                    typeName = 'Referral Bonus'; 
+                    icon = 'fas fa-user-friends'; 
+                }
+                else if (d.type === 'manual_deduction') { 
+                    typeName = d.description || 'Manual Deduction'; 
+                    icon = 'fas fa-minus-circle'; 
+                }
+                else if (d.type === 'withdrawal') { 
+                    typeName = 'Withdrawal'; 
+                    icon = 'fas fa-arrow-right-to-bracket'; 
+                }
+                else { 
+                    typeName = d.type || 'Transaction'; 
+                    icon = 'fas fa-exchange-alt'; 
+                }
+                
+                records.push({ 
+                    id: d.id, 
+                    date: d.created_at, 
+                    type: typeName, 
+                    amount: d.amount, 
+                    icon: icon, 
+                    isPositive: d.amount > 0 
+                });
             });
             
             withdrawals?.forEach(w => {
-                records.push({ id: w.id, date: w.request_date, type: w.status === 'approved' ? 'Withdrawal' : `Withdrawal (${w.status})`, amount: w.amount, icon: 'fas fa-arrow-right-to-bracket', isPositive: false });
+                records.push({ 
+                    id: w.id, 
+                    date: w.request_date, 
+                    type: w.status === 'approved' ? 'Withdrawal' : `Withdrawal (${w.status})`, 
+                    amount: -w.amount, 
+                    icon: 'fas fa-arrow-right-to-bracket', 
+                    isPositive: false 
+                });
             });
             
             records.sort((a, b) => new Date(b.date) - new Date(a.date));
@@ -198,7 +394,16 @@
                 const symbol = r.isPositive ? '+' : '-';
                 const item = document.createElement('div');
                 item.className = 'history-item';
-                item.innerHTML = `<div class="history-info"><i class="${r.icon}" style="color: ${r.isPositive ? '#4ade80' : '#ff8888'}"></i><div><div class="history-title">${r.type}</div><div class="history-date">${formattedDate}</div></div></div><div class="history-amount ${amountClass}">${symbol}€${r.amount.toFixed(2)}</div>`;
+                item.innerHTML = `
+                    <div class="history-info">
+                        <i class="${r.icon}" style="color: ${r.isPositive ? '#4ade80' : '#ff8888'}"></i>
+                        <div>
+                            <div class="history-title">${escapeHtml(r.type)}</div>
+                            <div class="history-date">${formattedDate}</div>
+                        </div>
+                    </div>
+                    <div class="history-amount ${amountClass}">${symbol}€${Math.abs(r.amount).toFixed(2)}</div>
+                `;
                 container.appendChild(item);
             });
         }
@@ -226,7 +431,24 @@
                 }
                 const item = document.createElement('div');
                 item.className = 'history-item';
-                item.innerHTML = `<div class="history-info"><i class="fas fa-hotel" style="color: #C9B095;"></i><div><div class="history-title">${order.accommodation_name || 'Hotel Task'} <span class="history-tag">${order.order_code || 'N/A'}</span></div><div class="order-stats"><span><i class="fas fa-tag"></i> ${order.order_code || 'N/A'}</span><span><i class="fas fa-star"></i> ${starsHtml}</span><span><i class="fas fa-calendar"></i> ${formattedDate}</span></div></div></div><div class="order-detail-row"><div class="history-amount positive">+€${(order.commission || 0).toFixed(2)}</div><div class="history-date">Price: €${(order.price || 0).toFixed(2)}</div></div>`;
+                item.style.cursor = 'pointer';
+                item.onclick = () => showOrderDetail(order);
+                item.innerHTML = `
+                    <div class="history-info">
+                        <i class="fas fa-hotel" style="color: #C9B095;"></i>
+                        <div>
+                            <div class="history-title">${order.accommodation_name || 'Hotel Task'} <span class="history-tag">${order.order_code || 'N/A'}</span></div>
+                            <div class="order-stats">
+                                <span><i class="fas fa-star"></i> ${starsHtml}</span>
+                                <span><i class="fas fa-calendar"></i> ${formattedDate}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="order-detail-row" style="flex-direction: column; align-items: flex-end;">
+                        <div class="history-amount positive">+€${(order.commission || 0).toFixed(2)}</div>
+                        <div class="history-date" style="font-size: 10px;">Price: €${(order.price || 0).toFixed(2)}</div>
+                    </div>
+                `;
                 container.appendChild(item);
             });
         }
@@ -251,6 +473,16 @@
                         renderOrdersHistory();
                     }
                 });
+            });
+        }
+        
+        function escapeHtml(str) {
+            if (!str) return '';
+            return str.replace(/[&<>]/g, function(m) {
+                if (m === '&') return '&amp;';
+                if (m === '<') return '&lt;';
+                if (m === '>') return '&gt;';
+                return m;
             });
         }
         

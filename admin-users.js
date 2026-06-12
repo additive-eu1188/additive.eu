@@ -71,7 +71,7 @@ async function resetUserOrders(uid) {
     });
 }
 
-// ========== 充值功能（两次弹窗：充值金额 + 奖励金额） ==========
+// ========== 充值功能（三次弹窗：充值金额 + 奖励金额 + 奖励名称） ==========
 async function depositBalance(uid) {
     // 第一次弹窗：充值金额
     showPrompt('充值金额', '请输入充值金额 (€) - 可以为0', async (amount) => {
@@ -81,72 +81,87 @@ async function depositBalance(uid) {
         showPrompt('奖励金额', '请输入奖励金额 (€) - 可以为0', async (bonusAmount) => {
             const rewardAmount = parseFloat(bonusAmount) || 0;
             
-            // 检查：至少有一个金额大于0
-            if (depositAmount <= 0 && rewardAmount <= 0) {
-                showToast('充值金额和奖励金额至少需要填写一个', 'error');
-                return;
-            }
-            
-            const { data: user, error } = await sb
-                .from('users')
-                .select('balance, username')
-                .eq('uid', uid)
-                .single();
-            
-            if (error) {
-                showToast('获取用户信息失败: ' + error.message, 'error');
-                return;
-            }
-            
-            let newBalance = user.balance || 0;
-            let message = '';
-            
-            // 处理充值
-            if (depositAmount > 0) {
-                newBalance += depositAmount;
-                await sb.from('deposits').insert([{ 
-                    uid: uid, 
-                    username: user.username, 
-                    amount: depositAmount, 
-                    type: 'manual',
-                    created_at: new Date().toISOString()
-                }]);
-                message += `充值 €${depositAmount.toFixed(2)}；`;
-                showToast(`充值 €${depositAmount.toFixed(2)} 成功`, 'success');
-            }
-            
-            // 处理奖励
+            // 第三次弹窗：奖励名称（仅在奖励金额 > 0 时显示）
             if (rewardAmount > 0) {
-                newBalance += rewardAmount;
-                await sb.from('deposits').insert([{ 
-                    uid: uid, 
-                    username: user.username, 
-                    amount: rewardAmount, 
-                    type: 'deposit_bonus',
-                    created_at: new Date().toISOString()
-                }]);
-                message += `奖励 €${rewardAmount.toFixed(2)}；`;
-                showToast(`奖励 €${rewardAmount.toFixed(2)} 已添加`, 'success');
+                showPrompt('奖励名称', '请输入奖励名称（默认: Deposit Bonus）', async (bonusName) => {
+                    const rewardName = bonusName && bonusName.trim() ? bonusName.trim() : 'Deposit Bonus';
+                    await processDeposit(uid, depositAmount, rewardAmount, rewardName);
+                });
+            } else {
+                // 没有奖励金额，直接处理充值
+                await processDeposit(uid, depositAmount, 0, '');
             }
-            
-            // 更新余额
-            const { error: updateError } = await sb
-                .from('users')
-                .update({ balance: newBalance })
-                .eq('uid', uid);
-            
-            if (updateError) {
-                showToast('更新余额失败: ' + updateError.message, 'error');
-                return;
-            }
-            
-            showToast(`操作成功！${message} 当前余额: €${newBalance.toFixed(2)}`, 'success');
-            
-            // 刷新页面
-            loadUsers();
-            if (window.loadDashboardPage) window.loadDashboardPage(currentDays);
         });
     });
+}
+
+async function processDeposit(uid, depositAmount, rewardAmount, rewardName) {
+    // 检查：至少有一个金额大于0
+    if (depositAmount <= 0 && rewardAmount <= 0) {
+        showToast('充值金额和奖励金额至少需要填写一个', 'error');
+        return;
+    }
+    
+    const { data: user, error } = await sb
+        .from('users')
+        .select('balance, username')
+        .eq('uid', uid)
+        .single();
+    
+    if (error) {
+        showToast('获取用户信息失败: ' + error.message, 'error');
+        return;
+    }
+    
+    let newBalance = user.balance || 0;
+    let message = '';
+    
+    // 处理充值
+    if (depositAmount > 0) {
+        newBalance += depositAmount;
+        await sb.from('deposits').insert([{ 
+            uid: uid, 
+            username: user.username, 
+            amount: depositAmount, 
+            type: 'manual',
+            description: 'Manual Deposit',
+            created_at: new Date().toISOString()
+        }]);
+        message += `充值 €${depositAmount.toFixed(2)}；`;
+        showToast(`充值 €${depositAmount.toFixed(2)} 成功`, 'success');
+    }
+    
+    // 处理奖励（使用自定义名称）
+    if (rewardAmount > 0) {
+        newBalance += rewardAmount;
+        await sb.from('deposits').insert([{ 
+            uid: uid, 
+            username: user.username, 
+            amount: rewardAmount, 
+            type: 'deposit_bonus',
+            description: rewardName,  // 使用自定义奖励名称
+            created_at: new Date().toISOString()
+        }]);
+        message += `${rewardName} €${rewardAmount.toFixed(2)}；`;
+        showToast(`${rewardName} €${rewardAmount.toFixed(2)} 已添加`, 'success');
+    }
+    
+    // 更新余额
+    const { error: updateError } = await sb
+        .from('users')
+        .update({ balance: newBalance })
+        .eq('uid', uid);
+    
+    if (updateError) {
+        showToast('更新余额失败: ' + updateError.message, 'error');
+        return;
+    }
+    
+    showToast(`操作成功！${message} 当前余额: €${newBalance.toFixed(2)}`, 'success');
+    
+    // 刷新页面
+    loadUsers();
+    if (window.loadDashboardPage) window.loadDashboardPage(currentDays);
 }
 
 // ========== 扣款功能（两次弹窗：扣款金额 + 扣款原因） ==========
@@ -196,7 +211,7 @@ async function cutBalance(uid) {
                 username: user.username, 
                 amount: -cutAmount, 
                 type: 'manual_deduction',
-                remark: reason || '管理员扣款',
+                description: reason || 'Manual Deduction',
                 created_at: new Date().toISOString()
             }]);
             
