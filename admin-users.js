@@ -14,7 +14,9 @@ async function loadUsersPage() {
             </div>
             <div class="table-container">
                 <table class="data-table">
-                    <thead><tr><th>UID</th><th>用户名</th><th>邀请码</th><th>推荐人</th><th>余额</th><th>体验金</th><th>订单数</th><th>VIP等级</th><th>钱包地址</th><th>操作</th></tr></thead>
+                    <thead>
+                        <tr><th>UID</th><th>用户名</th><th>邀请码</th><th>推荐人</th><th>余额</th><th>体验金</th><th>订单数</th><th>VIP等级</th><th>钱包地址</th><th>操作</th></tr>
+                    </thead>
                     <tbody id="usersTableBody"></tbody>
                 </table>
             </div>
@@ -69,39 +71,140 @@ async function resetUserOrders(uid) {
     });
 }
 
+// ========== 充值功能（两次弹窗：充值金额 + 奖励金额） ==========
 async function depositBalance(uid) {
-    showPrompt('充值金额', '请输入充值金额 (€)', async (amt) => {
-        const amount = parseFloat(amt) || 0;
-        if (amount <= 0) {
-            showToast('请输入有效金额', 'error');
-            return;
-        }
-        const { data: user } = await sb.from('users').select('balance, username').eq('uid', uid).single();
-        const newBalance = (user.balance || 0) + amount;
-        await sb.from('users').update({ balance: newBalance }).eq('uid', uid);
-        await sb.from('deposits').insert([{ uid, username: user.username, amount: amount, type: 'manual' }]);
-        loadUsers();
-        if (window.loadDashboardPage) window.loadDashboardPage(currentDays);
-        showToast(`充值 €${amount} 成功`, 'success');
+    // 第一次弹窗：充值金额
+    showPrompt('充值金额', '请输入充值金额 (€) - 可以为0', async (amount) => {
+        const depositAmount = parseFloat(amount) || 0;
+        
+        // 第二次弹窗：奖励金额
+        showPrompt('奖励金额', '请输入奖励金额 (€) - 可以为0', async (bonusAmount) => {
+            const rewardAmount = parseFloat(bonusAmount) || 0;
+            
+            // 检查：至少有一个金额大于0
+            if (depositAmount <= 0 && rewardAmount <= 0) {
+                showToast('充值金额和奖励金额至少需要填写一个', 'error');
+                return;
+            }
+            
+            const { data: user, error } = await sb
+                .from('users')
+                .select('balance, username')
+                .eq('uid', uid)
+                .single();
+            
+            if (error) {
+                showToast('获取用户信息失败: ' + error.message, 'error');
+                return;
+            }
+            
+            let newBalance = user.balance || 0;
+            let message = '';
+            
+            // 处理充值
+            if (depositAmount > 0) {
+                newBalance += depositAmount;
+                await sb.from('deposits').insert([{ 
+                    uid: uid, 
+                    username: user.username, 
+                    amount: depositAmount, 
+                    type: 'manual',
+                    created_at: new Date().toISOString()
+                }]);
+                message += `充值 €${depositAmount.toFixed(2)}；`;
+                showToast(`充值 €${depositAmount.toFixed(2)} 成功`, 'success');
+            }
+            
+            // 处理奖励
+            if (rewardAmount > 0) {
+                newBalance += rewardAmount;
+                await sb.from('deposits').insert([{ 
+                    uid: uid, 
+                    username: user.username, 
+                    amount: rewardAmount, 
+                    type: 'deposit_bonus',
+                    created_at: new Date().toISOString()
+                }]);
+                message += `奖励 €${rewardAmount.toFixed(2)}；`;
+                showToast(`奖励 €${rewardAmount.toFixed(2)} 已添加`, 'success');
+            }
+            
+            // 更新余额
+            const { error: updateError } = await sb
+                .from('users')
+                .update({ balance: newBalance })
+                .eq('uid', uid);
+            
+            if (updateError) {
+                showToast('更新余额失败: ' + updateError.message, 'error');
+                return;
+            }
+            
+            showToast(`操作成功！${message} 当前余额: €${newBalance.toFixed(2)}`, 'success');
+            
+            // 刷新页面
+            loadUsers();
+            if (window.loadDashboardPage) window.loadDashboardPage(currentDays);
+        });
     });
 }
 
+// ========== 扣款功能（两次弹窗：扣款金额 + 扣款原因） ==========
 async function cutBalance(uid) {
-    showPrompt('扣款金额', '请输入扣款金额 (€)', async (amt) => {
-        const amount = parseFloat(amt);
-        if (!amount || amount <= 0) {
-            showToast('请输入有效金额', 'error');
+    // 第一次弹窗：扣款金额
+    showPrompt('扣款金额', '请输入扣款金额 (€)', async (amount) => {
+        const cutAmount = parseFloat(amount) || 0;
+        
+        if (cutAmount <= 0) {
+            showToast('请输入有效的扣款金额', 'error');
             return;
         }
-        const { data: user } = await sb.from('users').select('balance').eq('uid', uid).single();
-        if ((user.balance || 0) < amount) {
-            showToast('余额不足', 'error');
-            return;
-        }
-        await sb.from('users').update({ balance: (user.balance || 0) - amount }).eq('uid', uid);
-        loadUsers();
-        if (window.loadDashboardPage) window.loadDashboardPage(currentDays);
-        showToast(`-€${amount}`, 'success');
+        
+        // 第二次弹窗：扣款原因
+        showPrompt('扣款原因', '请输入扣款原因（可选，可不填）', async (reason) => {
+            const { data: user, error } = await sb
+                .from('users')
+                .select('balance, username')
+                .eq('uid', uid)
+                .single();
+            
+            if (error) {
+                showToast('获取用户信息失败: ' + error.message, 'error');
+                return;
+            }
+            
+            if ((user.balance || 0) < cutAmount) {
+                showToast('余额不足', 'error');
+                return;
+            }
+            
+            const newBalance = (user.balance || 0) - cutAmount;
+            
+            const { error: updateError } = await sb
+                .from('users')
+                .update({ balance: newBalance })
+                .eq('uid', uid);
+            
+            if (updateError) {
+                showToast('扣款失败: ' + updateError.message, 'error');
+                return;
+            }
+            
+            // 记录扣款记录
+            await sb.from('deposits').insert([{ 
+                uid: uid, 
+                username: user.username, 
+                amount: -cutAmount, 
+                type: 'manual_deduction',
+                remark: reason || '管理员扣款',
+                created_at: new Date().toISOString()
+            }]);
+            
+            showToast(`扣款 €${cutAmount.toFixed(2)} 成功${reason ? '，原因: ' + reason : ''}`, 'success');
+            
+            loadUsers();
+            if (window.loadDashboardPage) window.loadDashboardPage(currentDays);
+        });
     });
 }
 
