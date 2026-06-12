@@ -1,0 +1,732 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>ADDITIVE - Withdrawal</title>
+    <link rel="stylesheet" href="common.css">
+    <link rel="stylesheet" href="toast.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="user-data.js"></script>
+    <script src="toast.js"></script>
+    <style>
+        .page-header { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 24px; flex-wrap: wrap; gap: 12px; }
+        .page-header h1 { font-size: 28px; font-weight: 700; color: #ffffff; }
+        .step-indicator { font-size: 12px; color: #C9B095; background: rgba(201,176,149,0.15); padding: 4px 12px; border-radius: 30px; }
+        
+        .step-container {
+            background: rgba(20, 30, 55, 0.6);
+            backdrop-filter: blur(10px);
+            border-radius: 24px;
+            padding: 28px 24px;
+            margin-bottom: 24px;
+            border: 1px solid rgba(201, 176, 149, 0.15);
+        }
+        .step-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: #C9B095;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .step-title i { font-size: 22px; }
+        
+        .docs-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        .doc-card {
+            background: rgba(10, 18, 43, 0.6);
+            border: 2px solid rgba(201, 176, 149, 0.2);
+            border-radius: 20px;
+            padding: 20px 12px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .doc-card.selected {
+            border-color: #C9B095;
+            background: rgba(201, 176, 149, 0.1);
+            box-shadow: 0 0 15px rgba(201,176,149,0.2);
+        }
+        .doc-card i { font-size: 40px; color: #C9B095; margin-bottom: 12px; display: block; }
+        .doc-card h4 { font-size: 14px; margin-bottom: 6px; }
+        .doc-card p { font-size: 10px; color: #a0a8c0; }
+        
+        .upload-area {
+            background: rgba(0, 0, 0, 0.3);
+            border: 2px dashed rgba(201, 176, 149, 0.3);
+            border-radius: 16px;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: 0.2s;
+            margin-bottom: 20px;
+        }
+        .upload-area:hover { border-color: #C9B095; background: rgba(201,176,149,0.05); }
+        .upload-area i { font-size: 36px; color: #C9B095; margin-bottom: 10px; display: block; }
+        .upload-area .hint { font-size: 11px; color: #7a85a5; margin-top: 8px; }
+        
+        .upload-row {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        .upload-item {
+            flex: 1;
+            background: rgba(0, 0, 0, 0.3);
+            border: 2px dashed rgba(201, 176, 149, 0.3);
+            border-radius: 16px;
+            padding: 16px;
+            text-align: center;
+            cursor: pointer;
+        }
+        .upload-item.has-image { border-color: #4ade80; border-style: solid; }
+        .upload-item i { font-size: 28px; color: #C9B095; margin-bottom: 8px; display: block; }
+        .upload-item .label { font-size: 12px; margin-bottom: 6px; }
+        .upload-item .status { font-size: 10px; color: #4ade80; }
+        
+        .step-btn {
+            width: 100%;
+            background: linear-gradient(135deg, #C9B095, #b8944a);
+            border: none;
+            padding: 14px;
+            border-radius: 40px;
+            color: #0A122B;
+            font-weight: 700;
+            font-size: 16px;
+            cursor: pointer;
+            margin-top: 16px;
+        }
+        .step-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        
+        .payment-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        .payment-card {
+            background: rgba(10, 18, 43, 0.6);
+            border: 2px solid rgba(201, 176, 149, 0.2);
+            border-radius: 20px;
+            padding: 20px 12px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            position: relative;
+        }
+        .payment-card.disabled {
+            opacity: 0.5;
+            cursor: pointer;
+        }
+        .payment-card.disabled:hover { border-color: rgba(201,176,149,0.2); transform: none; }
+        .payment-card i { font-size: 32px; color: #C9B095; margin-bottom: 10px; display: block; }
+        .payment-card h4 { font-size: 14px; margin-bottom: 4px; }
+        .payment-card p { font-size: 10px; color: #a0a8c0; }
+        .payment-card .disabled-tag { font-size: 9px; color: #ff8888; margin-top: 6px; display: block; }
+        
+        .address-cards {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+        }
+        .address-card {
+            flex: 1;
+            background: rgba(10, 18, 43, 0.6);
+            border: 2px solid rgba(201, 176, 149, 0.2);
+            border-radius: 20px;
+            padding: 16px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .address-card.selected {
+            border-color: #C9B095;
+            background: rgba(201, 176, 149, 0.1);
+        }
+        .address-card i { font-size: 28px; color: #C9B095; margin-bottom: 8px; display: block; }
+        
+        .address-input {
+            width: 100%;
+            background: rgba(0,0,0,0.4);
+            border: 1px solid #2a3560;
+            border-radius: 14px;
+            padding: 14px 18px;
+            color: white;
+            font-size: 14px;
+            margin-bottom: 20px;
+        }
+        .address-input:focus { border-color: #C9B095; outline: none; }
+        
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(8px);
+            z-index: 10000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            visibility: hidden;
+            opacity: 0;
+            transition: visibility 0.2s, opacity 0.2s;
+        }
+        .loading-overlay.active {
+            visibility: visible;
+            opacity: 1;
+        }
+        .loading-content {
+            text-align: center;
+            background: linear-gradient(145deg, #1a1f3a, #0f1428);
+            padding: 32px 48px;
+            border-radius: 32px;
+            border: 1px solid rgba(201,176,149,0.3);
+        }
+        .loading-content i {
+            font-size: 56px;
+            color: #C9B095;
+            margin-bottom: 16px;
+            display: inline-block;
+            animation: spin 1.5s linear infinite;
+        }
+        .loading-content p {
+            font-size: 16px;
+            color: #fff;
+            margin-top: 12px;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        @media (max-width: 768px) {
+            .docs-grid, .payment-grid { grid-template-columns: 1fr; }
+            .address-cards { flex-direction: column; }
+            .upload-row { flex-direction: column; }
+        }
+    </style>
+</head>
+<body>
+    <div class="menu-overlay" onclick="window.closeMenu && window.closeMenu()"></div>
+
+    <div class="app">
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-top">
+                <div class="logo">ADDITIVE</div>
+                <nav class="nav">
+                    <a href="dashboard.html" class="nav-item"><i class="fas fa-th-large"></i><span>Dashboard</span></a>
+                    <a href="start.html" class="nav-item"><i class="fas fa-play"></i><span>Start</span></a>
+                    <a href="history.html" class="nav-item"><i class="fas fa-clock"></i><span>History</span></a>
+                    <a href="checkin.html" class="nav-item"><i class="fas fa-calendar-check"></i><span>Sign in</span></a>
+                    <a href="withdrawal.html" class="nav-item active"><i class="fas fa-arrow-right-to-bracket"></i><span>Withdrawal</span></a>
+                    <a href="chat.html" class="nav-item"><i class="fas fa-comment-dots"></i><span>Chat with us</span></a>
+                    <a href="settings.html" class="nav-item"><i class="fas fa-sliders-h"></i><span>Settings</span></a>
+                </nav>
+            </div>
+            <div class="sidebar-upgrade-card">
+                <div class="sidebar-premium-badge">PREMIUM ACCESS</div>
+                <div class="sidebar-upgrade-title">Upgrade your membership</div>
+                <div class="sidebar-upgrade-desc">Unlock higher rewards,<br>priority support, and premium<br>hotel discovery benefits</div>
+                <a href="membership.html" class="sidebar-upgrade-btn">Upgrade Now <i class="fas fa-arrow-right"></i></a>
+            </div>
+        </aside>
+
+        <main class="main" style="max-width: 700px;">
+            <div class="menu-toggle" id="menuToggleBtn" onclick="window.toggleMenu && window.toggleMenu()">
+                <i class="fas fa-bars"></i>
+            </div>
+
+            <div class="page-header">
+                <h1>WITHDRAWAL</h1>
+                <div class="step-indicator" id="stepIndicator"><i class="fas fa-circle"></i> STEP 1 OF 4</div>
+            </div>
+
+            <!-- Step 1: KYC 验证 -->
+            <div id="step1Container" class="step-container">
+                <div class="step-title"><i class="fas fa-id-card"></i> Identity Verification</div>
+                <div class="docs-grid">
+                    <div class="doc-card" data-doc-type="passport">
+                        <i class="fas fa-passport"></i>
+                        <h4>Passport</h4>
+                        <p>Upload passport page</p>
+                    </div>
+                    <div class="doc-card" data-doc-type="resident_permit">
+                        <i class="fas fa-id-card"></i>
+                        <h4>Resident Permit</h4>
+                        <p>Upload permit document</p>
+                    </div>
+                    <div class="doc-card" data-doc-type="national_id">
+                        <i class="fas fa-address-card"></i>
+                        <h4>National ID Card</h4>
+                        <p>Front + Back sides</p>
+                    </div>
+                </div>
+                <div id="uploadArea"></div>
+                <button id="submitKycBtn" class="step-btn">Submit Verification</button>
+            </div>
+
+            <!-- Step 2: 选择支付方式 -->
+            <div id="step2Container" class="step-container" style="display: none;">
+                <div class="step-title"><i class="fas fa-credit-card"></i> Select Withdrawal Method</div>
+                <div class="payment-grid">
+                    <div class="payment-card disabled" data-method="paypal">
+                        <i class="fab fa-paypal"></i>
+                        <h4>PAYPAL</h4>
+                        <p>Your employment contract has not yet been activated</p>
+                        <span class="disabled-tag">Unavailable</span>
+                    </div>
+                    <div class="payment-card disabled" data-method="sepa">
+                        <i class="fas fa-university"></i>
+                        <h4>SEPA INSTANT</h4>
+                        <p>Your employment contract has not yet been activated</p>
+                        <span class="disabled-tag">Unavailable</span>
+                    </div>
+                    <div class="payment-card" data-method="crypto">
+                        <i class="fab fa-bitcoin"></i>
+                        <h4>CRYPTO CURRENCIES</h4>
+                        <p>Available for withdrawal</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 3: 绑定地址 -->
+            <div id="step3Container" class="step-container" style="display: none;">
+                <div class="step-title"><i class="fas fa-link"></i> Bind Withdrawal Address</div>
+                <div class="address-cards">
+                    <div class="address-card" data-address-type="usdt">
+                        <i class="fab fa-bitcoin"></i>
+                        <div>USDT (TRC20)</div>
+                        <small style="font-size: 10px;">Tether</small>
+                    </div>
+                    <div class="address-card" data-address-type="eth">
+                        <i class="fab fa-ethereum"></i>
+                        <div>ETH (ERC20)</div>
+                        <small style="font-size: 10px;">Ethereum</small>
+                    </div>
+                    <div class="address-card" data-address-type="btc">
+                        <i class="fab fa-bitcoin"></i>
+                        <div>BTC</div>
+                        <small style="font-size: 10px;">Bitcoin</small>
+                    </div>
+                    <div class="address-card" data-address-type="usdc">
+                        <i class="fas fa-dollar-sign"></i>
+                        <div>USDC</div>
+                        <small style="font-size: 10px;">Circle</small>
+                    </div>
+                </div>
+                <input type="text" id="addressInput" class="address-input" placeholder="Paste your wallet address here...">
+                <button id="bindAddressBtn" class="step-btn">Bind Address</button>
+            </div>
+
+            <!-- Step 4: 提款金额 -->
+            <div id="step4Container" class="step-container" style="display: none;">
+                <div class="step-title"><i class="fas fa-money-bill-wave"></i> Withdrawal Amount</div>
+                <div class="balance-info-card" style="background: rgba(0,0,0,0.3); border-radius: 20px; padding: 16px; margin-bottom: 20px;">
+                    <div style="display: flex; justify-content: space-between;">
+                        <span><i class="fas fa-wallet"></i> Available Balance</span>
+                        <span style="font-size: 24px; font-weight: 700; color: #C9B095;" id="availableBalance">€0.00</span>
+                    </div>
+                </div>
+                <div class="amount-section">
+                    <div class="amount-input-wrapper" style="position: relative;">
+                        <input type="number" id="amountInput" placeholder="0" value="" style="width:100%; background:rgba(0,0,0,0.4); border:1px solid #2a3560; border-radius:60px; padding:14px 20px; font-size:24px; font-weight:600; color:white;">
+                        <span style="position:absolute; right:20px; top:50%; transform:translateY(-50%); font-size:22px; color:#C9B095;">€</span>
+                    </div>
+                    <div class="amount-limits" style="display: flex; gap: 20px; font-size: 11px; color: #a0a8c0; margin-top: 12px;">
+                        <span>Minimum: €10</span>
+                        <span id="availableHint">Available: €0.00</span>
+                    </div>
+                </div>
+                <div class="quick-amounts" style="display: flex; gap: 10px; margin: 20px 0; flex-wrap: wrap;">
+                    <button class="quick-amount" data-value="10" style="background:rgba(201,176,149,0.1); border:1px solid rgba(201,176,149,0.2); padding:8px 20px; border-radius:40px; color:#C9B095;">€10</button>
+                    <button class="quick-amount" data-value="100" style="background:rgba(201,176,149,0.1); border:1px solid rgba(201,176,149,0.2); padding:8px 20px; border-radius:40px; color:#C9B095;">€100</button>
+                    <button class="quick-amount" data-value="1000" style="background:rgba(201,176,149,0.1); border:1px solid rgba(201,176,149,0.2); padding:8px 20px; border-radius:40px; color:#C9B095;">€1,000</button>
+                </div>
+                <button id="withdrawBtn" class="step-btn">Withdraw</button>
+            </div>
+
+            <!-- Loading 弹窗 -->
+            <div id="loadingOverlay" class="loading-overlay">
+                <div class="loading-content">
+                    <i class="fas fa-spinner"></i>
+                    <p>Verifying Your Document...</p>
+                    <p style="font-size: 12px; color: #a0a8c0; margin-top: 8px;">Please wait, this may take a few minutes</p>
+                    <button id="closeLoadingBtn" class="step-btn" style="margin-top: 20px; background: rgba(255,255,255,0.1); color: #fff;">Close</button>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // ========== 菜单函数（挂载到 window） ==========
+        window.toggleMenu = function() { 
+            const s = document.getElementById('sidebar'); 
+            const o = document.querySelector('.menu-overlay'); 
+            const m = document.getElementById('menuToggleBtn'); 
+            if (s) s.classList.toggle('open'); 
+            if (o) o.classList.toggle('active'); 
+            if (m) m.classList.toggle('hidden'); 
+        };
+        
+        window.closeMenu = function() { 
+            const s = document.getElementById('sidebar'); 
+            const o = document.querySelector('.menu-overlay'); 
+            const m = document.getElementById('menuToggleBtn'); 
+            if (s) s.classList.remove('open'); 
+            if (o) o.classList.remove('active'); 
+            if (m) m.classList.remove('hidden'); 
+        };
+        
+        // 全局变量
+        let currentUser = null;
+        let currentUserBalance = 0;
+        let selectedDocType = null;
+        let uploadedImages = { front: null, back: null };
+        let selectedMethod = null;
+        let selectedAddressType = null;
+        let boundAddress = null;
+        let isKycVerified = false;
+        let isKycPending = false;
+
+        // 获取用户KYC状态
+        async function getUserKycStatus(uid) {
+            const { data, error } = await sb.from('user_kyc_status').select('is_verified').eq('uid', uid).single();
+            if (error && error.code !== 'PGRST116') console.error('获取KYC状态失败:', error);
+            return data?.is_verified || false;
+        }
+
+        // 获取用户KYC是否正在审核中
+        async function isKycUnderReview(uid) {
+            const { data, error } = await sb.from('kyc_verifications').select('status').eq('uid', uid).eq('status', 'pending').limit(1);
+            if (error) return false;
+            return data && data.length > 0;
+        }
+
+        // 加载用户数据
+        async function loadUserData() {
+    currentUser = getCurrentUser();
+    if (!currentUser) { window.location.href = 'signin.html'; return; }
+    
+    const { data: userData } = await sb.from('users').select('balance, withdrawal_address, withdrawal_address_type').eq('uid', currentUser.uid).single();
+    if (userData) {
+        currentUserBalance = userData.balance || 0;
+        const balanceEl = document.getElementById('availableBalance');
+        const hintEl = document.getElementById('availableHint');
+        if (balanceEl) balanceEl.innerHTML = `€${currentUserBalance.toFixed(2)}`;
+        if (hintEl) hintEl.innerHTML = `Available: €${currentUserBalance.toFixed(2)}`;
+        boundAddress = userData.withdrawal_address || null;
+    }
+    
+    isKycVerified = await getUserKycStatus(currentUser.uid);
+    isKycPending = await isKycUnderReview(currentUser.uid);
+    
+    if (isKycVerified) {
+        // 已验证：检查是否已绑定地址
+        if (boundAddress) {
+            showStep4();  // 已绑定地址，直接提款
+        } else {
+            showStep2();  // 未绑定地址，需要绑定
+        }
+    } else if (isKycPending) {
+        showVerifyingLoading();
+    } else {
+        showStep1();
+    }
+}
+
+        function showStep1() {
+            document.getElementById('step1Container').style.display = 'block';
+            document.getElementById('step2Container').style.display = 'none';
+            document.getElementById('step3Container').style.display = 'none';
+            document.getElementById('step4Container').style.display = 'none';
+            document.getElementById('stepIndicator').innerHTML = '<i class="fas fa-circle"></i> STEP 1 OF 4';
+        }
+
+        function showStep2() {
+            document.getElementById('step1Container').style.display = 'none';
+            document.getElementById('step2Container').style.display = 'block';
+            document.getElementById('step3Container').style.display = 'none';
+            document.getElementById('step4Container').style.display = 'none';
+            document.getElementById('stepIndicator').innerHTML = '<i class="fas fa-circle"></i> STEP 2 OF 4';
+        }
+
+        function showStep3() {
+            document.getElementById('step1Container').style.display = 'none';
+            document.getElementById('step2Container').style.display = 'none';
+            document.getElementById('step3Container').style.display = 'block';
+            document.getElementById('step4Container').style.display = 'none';
+            document.getElementById('stepIndicator').innerHTML = '<i class="fas fa-circle"></i> STEP 3 OF 4';
+        }
+
+        function showStep4() {
+            document.getElementById('step1Container').style.display = 'none';
+            document.getElementById('step2Container').style.display = 'none';
+            document.getElementById('step3Container').style.display = 'none';
+            document.getElementById('step4Container').style.display = 'block';
+            document.getElementById('stepIndicator').innerHTML = '<i class="fas fa-circle"></i> STEP 4 OF 4';
+        }
+
+        function showVerifyingLoading() {
+            document.getElementById('step1Container').style.display = 'none';
+            document.getElementById('step2Container').style.display = 'none';
+            document.getElementById('step3Container').style.display = 'none';
+            document.getElementById('step4Container').style.display = 'none';
+            
+            const loadingOverlay = document.getElementById('loadingOverlay');
+            loadingOverlay.classList.add('active');
+            
+            const closeBtn = document.getElementById('closeLoadingBtn');
+            if (closeBtn) {
+                closeBtn.onclick = () => {
+                    window.location.href = 'dashboard.html';
+                };
+            }
+            
+            document.getElementById('stepIndicator').innerHTML = '<i class="fas fa-spinner fa-pulse"></i> VERIFYING';
+            
+            if (window.kycCheckInterval) clearInterval(window.kycCheckInterval);
+            window.kycCheckInterval = setInterval(async () => {
+                if (!currentUser) return;
+                const stillPending = await isKycUnderReview(currentUser.uid);
+                const nowVerified = await getUserKycStatus(currentUser.uid);
+                if (nowVerified) {
+                    clearInterval(window.kycCheckInterval);
+                    loadingOverlay.classList.remove('active');
+                    await loadUserData();
+                } else if (!stillPending && !nowVerified) {
+                    clearInterval(window.kycCheckInterval);
+                    loadingOverlay.classList.remove('active');
+                    location.reload();
+                }
+            }, 5000);
+        }
+
+        // 证件选择
+        function initDocSelection() {
+            const cards = document.querySelectorAll('.doc-card');
+            cards.forEach(card => {
+                card.addEventListener('click', () => {
+                    cards.forEach(c => c.classList.remove('selected'));
+                    card.classList.add('selected');
+                    selectedDocType = card.dataset.docType;
+                    updateUploadArea();
+                });
+            });
+        }
+
+        function updateUploadArea() {
+            const uploadArea = document.getElementById('uploadArea');
+            if (!uploadArea) return;
+            
+            if (selectedDocType === 'passport') {
+                uploadArea.innerHTML = `<div class="upload-area" id="uploadFront"><i class="fas fa-cloud-upload-alt"></i><div>Click to upload Passport</div><div class="hint">Supported: JPG, PNG, PDF (Max 10MB)</div></div>`;
+                initUpload('front', 'passport');
+            } else if (selectedDocType === 'resident_permit') {
+                uploadArea.innerHTML = `<div class="upload-area" id="uploadFront"><i class="fas fa-cloud-upload-alt"></i><div>Click to upload Resident Permit</div><div class="hint">Supported: JPG, PNG, PDF (Max 10MB)</div></div>`;
+                initUpload('front', 'resident_permit');
+            } else if (selectedDocType === 'national_id') {
+                uploadArea.innerHTML = `<div class="upload-row"><div class="upload-item" id="uploadFront"><i class="fas fa-id-card"></i><div class="label">Front Side</div><div class="status" id="frontStatus">Not uploaded</div></div><div class="upload-item" id="uploadBack"><i class="fas fa-id-card"></i><div class="label">Back Side</div><div class="status" id="backStatus">Not uploaded</div></div></div>`;
+                initUpload('front', 'national_id_front');
+                initUpload('back', 'national_id_back');
+            }
+        }
+
+        async function uploadImage(file, type) {
+            const fileName = `kyc/${currentUser.uid}/${Date.now()}_${type}.${file.name.split('.').pop()}`;
+            const { error } = await sb.storage.from('kyc-documents').upload(fileName, file);
+            if (error) { showToast('Upload failed: ' + error.message, 'error'); return null; }
+            const { data: urlData } = sb.storage.from('kyc-documents').getPublicUrl(fileName);
+            return urlData.publicUrl;
+        }
+
+        function initUpload(side, docTypeKey) {
+            const element = document.getElementById(`upload${side.charAt(0).toUpperCase() + side.slice(1)}`);
+            if (!element) return;
+            element.addEventListener('click', () => {
+                const input = document.createElement('input');
+                input.type = 'file';
+                input.accept = 'image/*,application/pdf';
+                input.onchange = async (e) => {
+                    const file = e.target.files[0];
+                    if (!file) return;
+                    showToast('Uploading...', 'info');
+                    const url = await uploadImage(file, docTypeKey);
+                    if (url) {
+                        uploadedImages[side] = url;
+                        if (side === 'front') {
+                            const statusEl = document.getElementById('frontStatus');
+                            if (statusEl) statusEl.innerHTML = '<i class="fas fa-check-circle"></i> Uploaded';
+                            element.classList.add('has-image');
+                        } else {
+                            const statusEl = document.getElementById('backStatus');
+                            if (statusEl) statusEl.innerHTML = '<i class="fas fa-check-circle"></i> Uploaded';
+                            element.classList.add('has-image');
+                        }
+                        showToast('Upload successful!', 'success');
+                    }
+                };
+                input.click();
+            });
+        }
+
+        // 提交KYC
+        async function submitKyc() {
+    if (!selectedDocType) { showToast('Please select a document type', 'error'); return; }
+    
+    let imagesToSubmit = [];
+    if (selectedDocType === 'national_id') {
+        if (!uploadedImages.front) { showToast('Please upload front side of ID', 'error'); return; }
+        if (!uploadedImages.back) { showToast('Please upload back side of ID', 'error'); return; }
+        imagesToSubmit = [
+            { type: 'national_id_front', url: uploadedImages.front },
+            { type: 'national_id_back', url: uploadedImages.back }
+        ];
+    } else {
+        if (!uploadedImages.front) { showToast('Please upload your document', 'error'); return; }
+        imagesToSubmit = [{ type: selectedDocType, url: uploadedImages.front }];
+    }
+    
+    // 先删除该用户相同类型的旧KYC记录
+    for (const img of imagesToSubmit) {
+        await sb
+            .from('kyc_verifications')
+            .delete()
+            .eq('uid', currentUser.uid)
+            .eq('document_type', img.type);
+    }
+    
+    // 插入新记录
+    for (const img of imagesToSubmit) {
+        const { error } = await sb.from('kyc_verifications').insert([{
+            uid: currentUser.uid,
+            username: currentUser.username,
+            document_type: img.type,
+            image_url: img.url,
+            status: 'pending',
+            uploaded_at: new Date().toISOString()
+        }]);
+        if (error) { 
+            showToast('Submit failed: ' + error.message, 'error'); 
+            return; 
+        }
+    }
+    
+    showToast('Documents submitted! Verification in progress...', 'success');
+    showVerifyingLoading();
+}
+
+        // Step 2: 支付方式选择
+        function initPaymentSelection() {
+            const cards = document.querySelectorAll('.payment-card');
+            cards.forEach(card => {
+                card.addEventListener('click', () => {
+                    if (card.classList.contains('disabled')) {
+                        showToast(card.querySelector('p')?.innerText || 'Not available', 'warning');
+                        return;
+                    }
+                    cards.forEach(c => c.classList.remove('selected'));
+                    card.classList.add('selected');
+                    selectedMethod = card.dataset.method;
+                    if (selectedMethod === 'crypto') {
+                        showStep3();
+                    }
+                });
+            });
+        }
+
+        // Step 3: 地址绑定
+        function initAddressSelection() {
+            const cards = document.querySelectorAll('.address-card');
+            cards.forEach(card => {
+                card.addEventListener('click', () => {
+                    cards.forEach(c => c.classList.remove('selected'));
+                    card.classList.add('selected');
+                    selectedAddressType = card.dataset.addressType;
+                });
+            });
+            
+            const bindBtn = document.getElementById('bindAddressBtn');
+            if (bindBtn) {
+                bindBtn.addEventListener('click', async () => {
+                    const address = document.getElementById('addressInput').value.trim();
+                    if (!selectedAddressType) { showToast('Please select address type', 'error'); return; }
+                    if (!address) { showToast('Please enter wallet address', 'error'); return; }
+                    
+                    const { error } = await sb.from('users').update({ 
+                        withdrawal_address: address,
+                        withdrawal_address_type: selectedAddressType 
+                    }).eq('uid', currentUser.uid);
+                    
+                    if (error) { showToast('Failed to bind address: ' + error.message, 'error'); return; }
+                    
+                    boundAddress = address;
+                    showToast('Address bound successfully!', 'success');
+                    showStep4();
+                });
+            }
+        }
+
+        // Step 4: 提款
+        async function requestWithdrawal() {
+            const amount = parseFloat(document.getElementById('amountInput').value);
+            if (isNaN(amount) || amount < 10) { showToast('Minimum withdrawal amount is €10', 'error'); return; }
+            if (amount > currentUserBalance) { showToast('Insufficient balance', 'error'); return; }
+            
+            const { data: userData } = await sb.from('users').select('withdrawal_address, withdrawal_address_type').eq('uid', currentUser.uid).single();
+            if (!userData?.withdrawal_address) { showToast('Please bind withdrawal address first', 'error'); return; }
+            
+            const newBalance = currentUserBalance - amount;
+            const { error: updateError } = await sb.from('users').update({ balance: newBalance }).eq('uid', currentUser.uid);
+            if (updateError) { showToast('Withdrawal failed: ' + updateError.message, 'error'); return; }
+            
+            const { error: withdrawalError } = await sb.from('withdrawals').insert({
+                uid: currentUser.uid,
+                username: currentUser.username,
+                amount: amount,
+                wallet_address: userData.withdrawal_address,
+                status: 'pending',
+                request_date: new Date().toISOString()
+            });
+            
+            if (withdrawalError) {
+                await sb.from('users').update({ balance: currentUserBalance }).eq('uid', currentUser.uid);
+                showToast('Withdrawal failed: ' + withdrawalError.message, 'error');
+                return;
+            }
+            
+            currentUserBalance = newBalance;
+            if (currentUser) { currentUser.balance = newBalance; localStorage.setItem('currentUser', JSON.stringify(currentUser)); }
+            document.getElementById('availableBalance').innerHTML = `€${newBalance.toFixed(2)}`;
+            document.getElementById('availableHint').innerHTML = `Available: €${newBalance.toFixed(2)}`;
+            document.getElementById('amountInput').value = '';
+            showToast(`Withdrawal of €${amount.toFixed(2)} submitted successfully!`, 'success');
+        }
+
+        // 快速金额按钮
+        document.querySelectorAll('.quick-amount').forEach(btn => {
+            btn.addEventListener('click', () => { document.getElementById('amountInput').value = btn.dataset.value; });
+        });
+
+        // 初始化
+        (async function init() {
+            await loadUserData();
+            initDocSelection();
+            document.getElementById('submitKycBtn').addEventListener('click', submitKyc);
+            initPaymentSelection();
+            initAddressSelection();
+            document.getElementById('withdrawBtn').addEventListener('click', requestWithdrawal);
+        })();
+    </script>
+</body>
+</html>

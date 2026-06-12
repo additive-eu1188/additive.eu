@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>ADDITIVE - Check In</title>
+    <link rel="stylesheet" href="common.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="user-data.js"></script>
+    <style>
+        .checkin-header { margin-bottom: 24px; }
+        .checkin-header h1 { font-size: 28px; font-weight: 700; color: #ffffff; margin-bottom: 6px; }
+        .checkin-header p { color: #7a85a5; font-size: 13px; }
+        .two-columns { display: flex; gap: 32px; flex-wrap: wrap; }
+        .left-column { flex: 1.2; }
+        .right-column { flex: 0.8; }
+        .days-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 10px; margin-bottom: 24px; }
+        .day-card {
+            background: rgba(20, 30, 55, 0.6);
+            border-radius: 14px;
+            padding: 14px 6px;
+            text-align: center;
+            border: 1px solid rgba(201, 176, 149, 0.15);
+            transition: 0.3s;
+        }
+        .day-card.completed { border-color: #4ade80; background: rgba(74,222,128,0.05); }
+        .day-card.today { border-color: #C9B095; background: rgba(201,176,149,0.08); box-shadow: 0 0 8px rgba(201,176,149,0.15); }
+        .day-num { font-size: 11px; color: #a0a8c0; margin-bottom: 6px; }
+        .day-reward { font-size: 14px; font-weight: 700; color: #ffffff; }
+        .day-card.completed .day-reward { color: #4ade80; }
+        .claim-btn {
+            background: rgba(201, 176, 149, 0.15);
+            border: 1px solid rgba(201, 176, 149, 0.3);
+            padding: 12px 28px;
+            border-radius: 40px;
+            color: #C9B095;
+            font-weight: 600;
+            cursor: pointer;
+            margin-bottom: 16px;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .claim-btn.disabled { opacity: 0.5; cursor: not-allowed; }
+        .claim-warning { font-size: 11px; color: #ffaa66; line-height: 1.4; }
+        .total-rewards-card {
+            background: rgba(20, 30, 55, 0.7);
+            border-radius: 20px;
+            padding: 20px;
+            text-align: center;
+            margin-bottom: 20px;
+            border: 1px solid rgba(201, 176, 149, 0.15);
+        }
+        .total-label { font-size: 12px; color: #a0a8c0; letter-spacing: 1px; margin-bottom: 8px; }
+        .total-value { font-size: 40px; font-weight: 800; color: #C9B095; }
+        .streak-card {
+            background: rgba(20, 30, 55, 0.7);
+            border-radius: 20px;
+            padding: 20px;
+            text-align: center;
+            margin-bottom: 20px;
+            border: 1px solid rgba(201, 176, 149, 0.15);
+        }
+        .streak-title { font-size: 12px; color: #a0a8c0; margin-bottom: 12px; }
+        .streak-progress { background: rgba(255,255,255,0.1); border-radius: 30px; height: 8px; overflow: hidden; margin-bottom: 10px; }
+        .streak-bar { background: linear-gradient(90deg, #C9B095, #d4c8a0); width: 0%; height: 100%; border-radius: 30px; transition: width 0.5s; }
+        .streak-text { font-size: 24px; font-weight: 700; color: #ffffff; }
+        .rules-card {
+            background: rgba(20, 30, 55, 0.5);
+            border-radius: 20px;
+            padding: 20px;
+            border: 1px solid rgba(201, 176, 149, 0.1);
+        }
+        .rules-card h3 { font-size: 14px; margin-bottom: 16px; color: #C9B095; }
+        .rule-item { margin-bottom: 14px; }
+        .rule-title { font-weight: 700; margin-bottom: 4px; color: #C9B095; font-size: 12px; }
+        .rule-desc { font-size: 11px; color: #a0a8c0; line-height: 1.4; }
+        .upgrade-card-pulse {
+            margin-top: 32px;
+            background: rgba(20, 30, 55, 0.6);
+            backdrop-filter: blur(12px);
+            border-radius: 28px;
+            padding: 24px;
+            animation: pulseGlow 2.5s ease-in-out infinite;
+            border: 1px solid rgba(201, 176, 149, 0.3);
+        }
+        @keyframes pulseGlow { 0% { box-shadow: inset 0 0 10px rgba(201,176,149,0.08), 0 0 5px rgba(201,176,149,0.05); border-color: rgba(201,176,149,0.2); } 50% { box-shadow: inset 0 0 25px rgba(201,176,149,0.25), 0 0 15px rgba(201,176,149,0.12); border-color: rgba(201,176,149,0.5); } 100% { box-shadow: inset 0 0 10px rgba(201,176,149,0.08), 0 0 5px rgba(201,176,149,0.05); border-color: rgba(201,176,149,0.2); } }
+        .upgrade-title { font-size: 18px; font-weight: 600; margin-bottom: 10px; color: #C9B095; }
+        .upgrade-desc { font-size: 13px; color: #7a85a5; line-height: 1.5; margin-bottom: 20px; }
+        .btn-upgrade { background: rgba(201,176,149,0.15); padding: 10px 20px; border-radius: 40px; text-decoration: none; color: #C9B095; font-weight: 600; font-size: 14px; display: inline-flex; align-items: center; gap: 8px; border: 1px solid rgba(201,176,149,0.3); }
+        @media (max-width: 1000px) { .days-grid { grid-template-columns: repeat(3, 1fr); } .two-columns { flex-direction: column; } }
+        @media (max-width: 700px) { .days-grid { grid-template-columns: repeat(2, 1fr); } }
+    </style>
+</head>
+<body>
+    <div class="menu-overlay" onclick="closeMenu()"></div>
+
+    <div class="app">
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-top">
+                <div class="logo">ADDITIVE<span>®</span></div>
+                <nav class="nav">
+                    <a href="dashboard.html" class="nav-item"><i class="fas fa-th-large"></i><span>Dashboard</span></a>
+                    <a href="start.html" class="nav-item"><i class="fas fa-play"></i><span>Start</span></a>
+                    <a href="history.html" class="nav-item"><i class="fas fa-clock"></i><span>History</span></a>
+                    <a href="checkin.html" class="nav-item active"><i class="fas fa-calendar-check"></i><span>Sign in</span></a>
+                    <a href="withdrawal.html" class="nav-item"><i class="fas fa-arrow-right-to-bracket"></i><span>Withdrawal</span></a>
+                    <a href="chat.html" class="nav-item"><i class="fas fa-comment-dots"></i><span>Chat with us</span></a>
+                    <a href="settings.html" class="nav-item"><i class="fas fa-sliders-h"></i><span>Settings</span></a>
+                </nav>
+            </div>
+            <div class="sidebar-upgrade-card">
+                <div class="sidebar-premium-badge">PREMIUM ACCESS</div>
+                <div class="sidebar-upgrade-title">Upgrade your membership</div>
+                <div class="sidebar-upgrade-desc">Unlock higher rewards,<br>priority support, and premium<br>hotel discovery benefits</div>
+                <a href="membership.html" class="sidebar-upgrade-btn">Upgrade Now <i class="fas fa-arrow-right"></i></a>
+            </div>
+        </aside>
+
+        <main class="main">
+            <div class="menu-toggle" id="menuToggleBtn" onclick="toggleMenu()">
+                <i class="fas fa-bars"></i>
+            </div>
+
+            <div class="checkin-header">
+                <h1>SIGN IN</h1>
+                <p>Build your daily reward streak and unlock exclusive member bonuses.</p>
+            </div>
+
+            <div class="two-columns">
+                <div class="left-column">
+                    <div class="days-grid" id="daysGrid"></div>
+                    <div class="claim-section">
+                        <button class="claim-btn" id="claimBtn" onclick="handleClaim()"><i class="fas fa-gift"></i> Claim now</button>
+                        <div class="claim-warning" id="claimWarning"></div>
+                    </div>
+                </div>
+                <div class="right-column">
+                    <div class="total-rewards-card"><div class="total-label">TOTAL REWARDS</div><div class="total-value" id="totalRewards">€0</div></div>
+                    <div class="streak-card"><div class="streak-title">CURRENT STREAK</div><div class="streak-progress"><div class="streak-bar" id="streakBar"></div></div><div class="streak-text" id="streakText">0/6 Days</div></div>
+                    <div class="rules-card"><h3>SIGN IN REWARDS RULES</h3><div class="rule-item"><div class="rule-title">ELIGIBILITY</div><div class="rule-desc">Complete <strong>30 orders</strong> to unlock reward claims.</div></div><div class="rule-item"><div class="rule-title">CLAIM LIMIT</div><div class="rule-desc">You can claim once per reset round.</div></div><div class="rule-item"><div class="rule-title">NEXT ROUND</div><div class="rule-desc">After claiming, wait for the next day to continue.</div></div></div>
+                </div>
+            </div>
+
+            <div class="upgrade-card-pulse">
+                <div class="upgrade-title">✨ Upgrade your membership</div>
+                <div class="upgrade-desc">Unlock higher rewards, priority support, and premium hotel discovery benefits.</div>
+                <a href="membership.html" class="btn-upgrade">Upgrade Now <i class="fas fa-arrow-right"></i></a>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        function toggleMenu() { 
+            const sidebar = document.getElementById('sidebar'); 
+            const overlay = document.querySelector('.menu-overlay'); 
+            const menuBtn = document.getElementById('menuToggleBtn'); 
+            if (sidebar) sidebar.classList.toggle('open'); 
+            if (overlay) overlay.classList.toggle('active'); 
+            if (menuBtn) menuBtn.classList.toggle('hidden'); 
+        }
+        function closeMenu() { 
+            const sidebar = document.getElementById('sidebar'); 
+            const overlay = document.querySelector('.menu-overlay'); 
+            const menuBtn = document.getElementById('menuToggleBtn'); 
+            if (sidebar) sidebar.classList.remove('open'); 
+            if (overlay) overlay.classList.remove('active'); 
+            if (menuBtn) menuBtn.classList.remove('hidden'); 
+        }
+
+        let signInRewards = [];
+        let userOrderCount = 0;
+
+        async function loadRewards() {
+            const { data, error } = await sb
+                .from('signin_rewards')
+                .select('*')
+                .order('day', { ascending: true });
+            
+            if (error) {
+                signInRewards = [{day:1,amount:10},{day:2,amount:30},{day:3,amount:50},{day:4,amount:90},{day:5,amount:110},{day:6,amount:200}];
+            } else {
+                signInRewards = data;
+            }
+        }
+        
+        function loadData() {
+            const saved = localStorage.getItem('additive_checkin');
+            if(saved) {
+                const data = JSON.parse(saved);
+                return {streak: data.streak || 0, lastClaimDate: data.lastClaimDate || null, claimedDays: data.claimedDays || []};
+            }
+            return {streak: 0, lastClaimDate: null, claimedDays: []};
+        }
+        
+        function saveData(streak, lastClaimDate, claimedDays) {
+            localStorage.setItem('additive_checkin', JSON.stringify({streak, lastClaimDate, claimedDays}));
+        }
+        
+        function hasClaimedToday(last){
+            if(!last) return false;
+            return new Date().toDateString() === new Date(last).toDateString();
+        }
+        
+        function isConsecutive(last){
+            if(!last) return false;
+            const today = new Date();
+            const yesterday = new Date(today);
+            yesterday.setDate(yesterday.getDate() - 1);
+            return new Date(last).toDateString() === yesterday.toDateString();
+        }
+        
+        async function getUserOrderCountFromDB() {
+            const user = getCurrentUser();
+            if (!user) return 0;
+            
+            const { data: orders } = await sb
+                .from('order_history')
+                .select('id', { count: 'exact' })
+                .eq('uid', user.uid);
+            
+            return orders?.length || 0;
+        }
+        
+        async function addReward(amount) {
+            const user = getCurrentUser();
+            if(!user) return;
+            
+            const { data: userData } = await sb
+                .from('users')
+                .select('balance')
+                .eq('uid', user.uid)
+                .single();
+            
+            const newBalance = (userData?.balance || 0) + amount;
+            await updateUserBalance(user.uid, newBalance);
+        }
+        
+        async function render() {
+            const {streak, lastClaimDate, claimedDays} = loadData();
+            const hasClaimed = hasClaimedToday(lastClaimDate);
+            userOrderCount = await getUserOrderCountFromDB();
+            
+            const total = signInRewards.reduce((s, r) => s + r.amount, 0);
+            document.getElementById('totalRewards').innerText = '€' + total;
+            
+            const grid = document.getElementById('daysGrid');
+            grid.innerHTML = '';
+            
+            signInRewards.forEach((r, idx) => {
+                const dayNum = r.day;
+                const isClaimed = claimedDays.includes(dayNum);
+                const isToday = (streak + 1) === dayNum && !hasClaimed;
+                const div = document.createElement('div');
+                div.className = 'day-card';
+                if(isClaimed) div.classList.add('completed');
+                if(isToday) div.classList.add('today');
+                div.innerHTML = `<div class="day-num">Day ${dayNum}</div><div class="day-reward">€${r.amount}</div>`;
+                grid.appendChild(div);
+            });
+            
+            const percent = (streak / signInRewards.length) * 100;
+            document.getElementById('streakBar').style.width = percent + '%';
+            document.getElementById('streakText').innerHTML = `${streak}/${signInRewards.length} Days`;
+            
+            const claimBtn = document.getElementById('claimBtn');
+            const nextDay = streak + 1;
+            const canClaim = !hasClaimed && nextDay <= signInRewards.length && userOrderCount >= 30;
+            
+            if(canClaim) {
+                claimBtn.classList.remove('disabled');
+                claimBtn.disabled = false;
+                document.getElementById('claimWarning').innerHTML = `Complete <strong>30 orders</strong> to unlock reward claims. You have ${userOrderCount}/30.`;
+            } else if(hasClaimed) {
+                claimBtn.classList.add('disabled');
+                claimBtn.disabled = true;
+                document.getElementById('claimWarning').innerHTML = `Already claimed today. Come back tomorrow.`;
+            } else if(userOrderCount < 30) {
+                claimBtn.classList.add('disabled');
+                claimBtn.disabled = true;
+                document.getElementById('claimWarning').innerHTML = `Complete ${30 - userOrderCount} more orders to unlock rewards.`;
+            } else {
+                claimBtn.classList.add('disabled');
+                claimBtn.disabled = true;
+                document.getElementById('claimWarning').innerHTML = `Complete Day ${streak + 1} to continue.`;
+            }
+        }
+        
+        async function handleClaim() {
+            const {streak, lastClaimDate, claimedDays} = loadData();
+            const hasClaimed = hasClaimedToday(lastClaimDate);
+            const nextDay = streak + 1;
+            
+            if(hasClaimed) { alert('Already claimed today'); return; }
+            if(nextDay > signInRewards.length) { alert('Completed all days!'); return; }
+            if(userOrderCount < 30) { alert(`Need 30 orders to claim rewards. You have ${userOrderCount}/30.`); return; }
+            
+            if(streak > 0 && !isConsecutive(lastClaimDate)) {
+                const amount = signInRewards[0].amount;
+                await addReward(amount);
+                saveData(1, new Date().toISOString(), [1]);
+                await render();
+                alert(`Day 1 claimed! +€${amount}`);
+                return;
+            }
+            
+            const amount = signInRewards[nextDay - 1].amount;
+            await addReward(amount);
+            saveData(streak + 1, new Date().toISOString(), [...claimedDays, nextDay]);
+            await render();
+            alert(`Day ${nextDay} claimed! +€${amount}`);
+        }
+        
+        checkLogin();
+        loadRewards();
+        render();
+    </script>
+</body>
+</html>

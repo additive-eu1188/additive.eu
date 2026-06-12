@@ -1,0 +1,969 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>CJDropshipping - Global Dropshipping Sourcing & Fulfillment</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700;14..32,800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #ffffff;
+            font-family: 'Times New Roman', Times, serif;
+            color: #1A1F2E;
+            line-height: 1.5;
+            min-height: 100vh;
+        }
+
+        /* 全局字体 */
+        h1, h2, h3, p, .subtitle, .feature-title, .feature-desc, .feature-list li, 
+        .platform-name, .section-title, .trusted-item, .agents-header h2, 
+        .agents-header p, .stat-label, .cta-section h2, .cta-section p,
+        .footer, .footer-links a, .badge, .agent-name, .agent-role, .agent-stats,
+        .btn-outline, .btn-primary, .btn-outline-small {
+            font-family: 'Times New Roman', Times, serif;
+        }
+
+        .container {
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 0 32px;
+            position: relative;
+            z-index: 2;
+        }
+
+        /* ========== 三层叠加渐变 ========== */
+        .gradient-wrapper {
+            background: 
+                /* 第四层：底部白色渐变 */
+                linear-gradient(180deg, 
+                    transparent 85%,
+                    rgba(255,255,255,0.3) 92%,
+                    rgba(255,255,255,0.7) 96%,
+                    #ffffff 100%
+                ),
+                /* 第三层：最顶层，增加更多黑色 */
+                linear-gradient(180deg, 
+                    #000000 30%, 
+                    #000000 30%, 
+                    transparent 100%
+                ),
+                /* 第二层：补充黑色 */
+                linear-gradient(180deg, 
+                    #000000 0%, 
+                    #000000 20%, 
+                    transparent 50%
+                ),
+                /* 第一层：基础褐色渐变 */
+                linear-gradient(180deg, 
+                    #000000 0%,
+                    #1a0a05 25%,
+                    #3a1a0a 45%,
+                    #6b3020 65%,
+                    #9a6040 85%,
+                    #d4b896 100%
+                );
+        }
+
+        /* 视频 Hero 区域 */
+        .video-hero-section {
+            position: relative;
+            overflow: hidden;
+        }
+        
+        /* 视频背景 */
+        .hero-video-background {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            z-index: 0;
+            opacity: 0.75;
+        }
+        
+        /* 视频底部黑色遮罩 */
+        .video-mask {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 60%;
+            background: linear-gradient(180deg, transparent 0%, #000000 100%);
+            z-index: 1;
+            pointer-events: none;
+            opacity: 1;
+        }
+        
+        .hero-content-wrapper {
+            position: relative;
+            z-index: 2;
+        }
+
+        /* ========== HEADER ========== */
+        .site-header {
+            padding: 16px 0;
+        }
+
+        .header-inner {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .logo img {
+            height: 48px;
+            width: auto;
+            max-width: 200px;
+            object-fit: contain;
+        }
+        .logo-text {
+            font-size: 20px;
+            font-weight: 800;
+            color: white;
+            text-decoration: none;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+            font-family: 'Times New Roman', Times, serif;
+        }
+        .logo-text span {
+            color: #FF7A2E;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 24px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        .nav-links a {
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+            color: #F5E6D8;
+            transition: 0.2s;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+            font-family: 'Times New Roman', Times, serif;
+        }
+        .nav-links a:hover {
+            color: #FF7A2E;
+        }
+        .btn-outline {
+            border: 1px solid #FF7A2E;
+            padding: 8px 24px;
+            border-radius: 40px;
+            font-weight: 600;
+            color: #FF7A2E;
+            background: transparent;
+            transition: 0.2s;
+            cursor: pointer;
+            font-family: 'Times New Roman', Times, serif;
+        }
+        .btn-outline:hover {
+            background: #FF7A2E;
+            color: white;
+            transform: translateY(-1px);
+        }
+
+        /* ========== HERO 内容 ========== */
+        .hero-content {
+            text-align: center;
+            padding: 80px 0 60px;
+        }
+        .hero-content h1 {
+            font-size: 52px;
+            font-weight: 700;
+            line-height: 1.2;
+            letter-spacing: -0.5px;
+            max-width: 900px;
+            margin: 0 auto;
+            color: white;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.3);
+            font-family: 'Times New Roman', Times, serif;
+        }
+        .hero-content h1 .orange-text {
+            color: #FF7A2E;
+        }
+        /* Dropshipping 橙色 + 渐变下划线 */
+        .orange-word {
+            color: #FF7A2E;
+            position: relative;
+            display: inline-block;
+        }
+        .orange-word::after {
+            content: '';
+            position: absolute;
+            bottom: 6px;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background: linear-gradient(90deg, #FF7A2E, transparent);
+            border-radius: 2px;
+        }
+        .hero-content .sub-headline {
+            font-size: 20px;
+            font-weight: 500;
+            color: #F5E6D8;
+            margin: 16px auto 12px;
+            max-width: 700px;
+            text-shadow: 0 1px 5px rgba(0,0,0,0.2);
+            font-family: 'Times New Roman', Times, serif;
+        }
+        .hero-content p {
+            font-size: 16px;
+            color: #E6D5C8;
+            max-width: 600px;
+            margin: 16px auto 28px;
+            line-height: 1.5;
+            font-family: 'Times New Roman', Times, serif;
+        }
+        .btn-primary {
+            background: #FF7A2E;
+            border: none;
+            padding: 12px 32px;
+            border-radius: 40px;
+            font-weight: 600;
+            font-size: 15px;
+            color: white;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: 0.2s;
+            font-family: 'Times New Roman', Times, serif;
+        }
+        .btn-primary:hover {
+            background: #E5671C;
+            transform: scale(1.01);
+        }
+
+        /* ========== TRUSTED ROW ========== */
+        .trusted-row {
+            padding: 24px 0;
+            margin: 0;
+            display: flex;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 24px;
+            background: transparent;
+            border-top: none;
+            border-bottom: none;
+        }
+        .trusted-item {
+            font-size: 16px;
+            font-weight: 600;
+            color: #F5E6D8;
+            letter-spacing: 0.3px;
+            font-family: 'Times New Roman', Times, serif;
+        }
+        .trusted-item strong {
+            font-size: 18px;
+            color: #FF7A2E;
+        }
+
+        /* ========== 平台集成区域 ========== */
+        .platforms-section {
+            margin: 40px 0 40px;
+            text-align: center;
+        }
+        .platforms-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #ffffff;
+            letter-spacing: 1px;
+            margin-bottom: 24px;
+            font-family: 'Times New Roman', Times, serif;
+        }
+        .platforms-grid {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 28px;
+        }
+        .platform-item {
+            text-align: center;
+        }
+        .platform-img-wrapper {
+            width: 180px;
+            height: 110px;
+            background: rgba(255,255,255,0.08);
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+        .platform-img-wrapper img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+        .platform-img-wrapper i {
+            font-size: 32px;
+            color: #FF7A2E;
+        }
+        .platform-name {
+            display: block;
+            margin-top: 8px;
+            font-size: 12px;
+            font-weight: 500;
+            color: #ffffff;
+            font-family: 'Times New Roman', Times, serif;
+        }
+
+        /* ========== 滚动评价区域 ========== */
+        .section-title {
+            font-size: 28px;
+            font-weight: 700;
+            margin: 56px 0 28px;
+            text-align: center;
+            color: #ffffff;
+            font-family: 'Times New Roman', Times, serif;
+        }
+        .section-title .orange-text {
+            color: #FF7A2E;
+        }
+        
+        .marquee-container {
+            overflow: hidden;
+            white-space: nowrap;
+            background: rgba(255,255,255,0.9);
+            border-radius: 24px;
+            padding: 20px 0;
+            border: 1px solid rgba(44,24,16,0.1);
+            margin-bottom: 56px;
+        }
+        .marquee-content {
+            display: inline-block;
+            animation: scrollTestimonials 40s linear infinite;
+        }
+        .testimonial-item {
+            display: inline-block;
+            width: 340px;
+            margin: 0 16px;
+            vertical-align: top;
+            background: #ffffff;
+            border-radius: 20px;
+            padding: 20px;
+            border: 1px solid #EBF0F5;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.02);
+            white-space: normal;
+            text-align: left;
+            transition: all 0.3s;
+        }
+        .testimonial-item:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 20px rgba(0,0,0,0.04);
+            border-color: #FF7A2E40;
+        }
+        .testimonial-text {
+            font-size: 13px;
+            line-height: 1.6;
+            color: #4A5A6A;
+            margin-bottom: 16px;
+            font-style: italic;
+            font-family: 'Times New Roman', Times, serif;
+        }
+        .testimonial-author {
+            font-weight: 700;
+            color: #FF7A2E;
+            margin-bottom: 4px;
+            font-size: 13px;
+            font-family: 'Times New Roman', Times, serif;
+        }
+        .testimonial-title {
+            font-size: 11px;
+            color: #7A8A9A;
+            font-family: 'Times New Roman', Times, serif;
+        }
+        
+        @keyframes scrollTestimonials {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-50%); }
+        }
+
+        /* ========== STATS GRID ========== */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 24px;
+            margin: 40px 0 40px;
+        }
+        .stat-card {
+            background: rgba(255,255,255,0.95);
+            border: 1px solid rgba(44,24,16,0.1);
+            border-radius: 20px;
+            padding: 24px 16px;
+            text-align: center;
+            transition: 0.3s;
+        }
+        .stat-card:hover {
+            transform: translateY(-2px);
+            border-color: #FF7A2E40;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.04);
+        }
+        .stat-number {
+            font-size: 36px;
+            font-weight: 800;
+            color: #FF7A2E;
+            margin-bottom: 6px;
+            font-family: 'Times New Roman', Times, serif;
+        }
+        .stat-label {
+            font-size: 12px;
+            color: #e0d0c0;
+            font-weight: 500;
+            font-family: 'Times New Roman', Times, serif;
+        }
+
+        /* ========== FEATURE 2-COLUMN ========== */
+        .feature-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 48px;
+            align-items: start;
+            margin: 64px 0;
+        }
+        .feature-title {
+            font-size: 26px;
+            font-weight: 700;
+            margin-bottom: 16px;
+            color: #ffffff;
+            font-family: 'Times New Roman', Times, serif;
+        }
+        .feature-title .orange-text {
+            color: #FF7A2E;
+        }
+        .feature-desc {
+            color: #e0d0c0;
+            margin-bottom: 20px;
+            line-height: 1.6;
+            font-size: 14px;
+            font-family: 'Times New Roman', Times, serif;
+        }
+        .feature-list {
+            list-style: none;
+        }
+        .feature-list li {
+            margin-bottom: 14px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 13px;
+            color: #ffffff;
+            font-family: 'Times New Roman', Times, serif;
+        }
+        .feature-list i {
+            color: #FF7A2E;
+            font-size: 16px;
+            width: 22px;
+        }
+
+        /* ========== SOURCING AGENTS SECTION ========== */
+        .agents-section {
+            margin: 72px 0 30px;
+            background: transparent;
+        }
+        .agents-header {
+            text-align: center;
+            max-width: 800px;
+            margin: 0 auto 48px;
+        }
+        .agents-header h2 {
+            font-size: 32px;
+            font-weight: 700;
+            color: #ffffff;
+            margin-bottom: 16px;
+            font-family: 'Times New Roman', Times, serif;
+        }
+        .agents-header p {
+            font-size: 15px;
+            color: #e0d0c0;
+            line-height: 1.6;
+            font-family: 'Times New Roman', Times, serif;
+        }
+        .agents-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 24px;
+        }
+        .agent-card {
+            background: #ffffff;
+            border: 1px solid #EBF0F5;
+            border-radius: 20px;
+            padding: 24px 16px;
+            text-align: center;
+            transition: all 0.3s;
+        }
+        .agent-card:hover {
+            transform: translateY(-4px);
+            border-color: #FF7A2E40;
+            box-shadow: 0 12px 24px rgba(0,0,0,0.05);
+        }
+        .agent-avatar {
+            width: 80px;
+            height: 80px;
+            background: #F4F7FB;
+            border-radius: 50%;
+            margin: 0 auto 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #B0C0D0;
+            font-size: 32px;
+            border: 1px solid #EBF0F5;
+        }
+        .agent-name {
+            font-size: 18px;
+            font-weight: 700;
+            color: #1A1F2E;
+            margin-bottom: 4px;
+            font-family: 'Times New Roman', Times, serif;
+        }
+        .agent-role {
+            font-size: 12px;
+            color: #FF7A2E;
+            font-weight: 600;
+            margin-bottom: 12px;
+            font-family: 'Times New Roman', Times, serif;
+        }
+        .agent-badge {
+            background: #F8FAFD;
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 30px;
+            font-size: 10px;
+            font-weight: 600;
+            color: #2C3E50;
+            margin-bottom: 14px;
+            border: 1px solid #EBF0F5;
+            font-family: 'Times New Roman', Times, serif;
+        }
+        .agent-stats {
+            font-size: 11px;
+            color: #6B7A8A;
+            margin: 12px 0;
+            line-height: 1.5;
+            font-family: 'Times New Roman', Times, serif;
+        }
+        .agent-stats i {
+            color: #FF7A2E;
+            margin-right: 6px;
+            width: 14px;
+        }
+        .btn-outline-small {
+            background: transparent;
+            border: 1px solid #FF7A2E;
+            padding: 6px 16px;
+            border-radius: 30px;
+            font-weight: 600;
+            font-size: 12px;
+            color: #FF7A2E;
+            cursor: pointer;
+            transition: 0.2s;
+            margin-top: 8px;
+            display: inline-block;
+            font-family: 'Times New Roman', Times, serif;
+        }
+        .btn-outline-small:hover {
+            background: #FF7A2E;
+            color: white;
+        }
+
+        /* ========== CTA ========== */
+        .cta-section {
+            background: #F8FAFD;
+            border-radius: 28px;
+            padding: 56px 40px;
+            margin: 56px 0;
+            text-align: center;
+            border: 1px solid #EBF0F5;
+        }
+        .cta-section h2 {
+            font-size: 30px;
+            font-weight: 700;
+            color: #2C1810;
+            margin-bottom: 14px;
+            font-family: 'Times New Roman', Times, serif;
+        }
+        .cta-section p {
+            font-size: 15px;
+            color: #6B7A8A;
+            max-width: 520px;
+            margin: 0 auto 28px;
+            font-family: 'Times New Roman', Times, serif;
+        }
+
+        /* ========== FOOTER ========== */
+        .footer {
+            border-top: 1px solid #EBF0F5;
+            padding: 40px 0 32px;
+            font-size: 12px;
+            color: #7A8A9A;
+            text-align: center;
+            background: #ffffff;
+        }
+        .footer-links {
+            display: flex;
+            justify-content: center;
+            gap: 28px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        .footer-links a {
+            color: #5A6874;
+            text-decoration: none;
+            transition: 0.2s;
+            font-weight: 500;
+            font-size: 12px;
+            font-family: 'Times New Roman', Times, serif;
+        }
+        .footer-links a:hover {
+            color: #FF7A2E;
+        }
+        .footer div {
+            font-family: 'Times New Roman', Times, serif;
+        }
+
+        /* ========== 手机版左对齐 ========== */
+        @media (max-width: 768px) {
+            .hero-content h1 {
+                text-align: left;
+            }
+            .hero-content {
+                text-align: left;
+                padding-left: 0;
+                padding-right: 0;
+            }
+            .hero-content .sub-headline {
+                text-align: left;
+            }
+            .hero-content p {
+                text-align: left;
+            }
+            .container {
+                padding: 0 20px;
+            }
+            .hero-content h1 {
+                font-size: 32px;
+            }
+            .hero-content .sub-headline {
+                font-size: 18px;
+            }
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            .feature-grid {
+                grid-template-columns: 1fr;
+                gap: 40px;
+            }
+            .testimonial-item {
+                width: 280px;
+            }
+            .agents-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 20px;
+            }
+            .agents-header h2 {
+                font-size: 26px;
+            }
+            .platform-img-wrapper {
+                width: 140px;
+                height: 86px;
+            }
+            .hero-content {
+                padding: 50px 0 40px;
+            }
+        }
+        @media (max-width: 600px) {
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+            .hero-content h1 {
+                font-size: 28px;
+            }
+            .hero-content {
+                padding: 40px 0 30px;
+            }
+            .cta-section {
+                padding: 32px 24px;
+            }
+            .section-title {
+                font-size: 24px;
+            }
+            .agents-grid {
+                grid-template-columns: 1fr;
+            }
+            .platforms-grid {
+                gap: 16px;
+            }
+            .platform-img-wrapper {
+                width: 120px;
+                height: 74px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="gradient-wrapper">
+        <div class="video-hero-section">
+            <video class="hero-video-background" id="heroVideo" autoplay loop muted playsinline></video>
+            <div class="video-mask"></div>
+
+            <div class="hero-content-wrapper">
+                <div class="container">
+                    <header class="site-header">
+                        <div class="header-inner">
+                            <div class="logo" id="logoContainer">
+                                <span class="logo-text">CJD<span> | ADDITIVE</span></span>
+                            </div>
+                            <div class="nav-links">
+                                <a href="#">Sourcing</a>
+                                <a href="#">Fulfillment</a>
+                                <a href="#">Pricing</a>
+                                <a href="#">Resources</a>
+                                <a href="register.html" class="btn-outline">Sign Up</a>
+                                <a href="signin.html" class="btn-outline">Sign In</a>
+                            </div>
+                        </div>
+                    </header>
+
+                    <div class="hero-content">
+                        <h1>
+                            Fulfill Your <span class="orange-word">Dropshipping</span> Dreams<br>
+                            with <span style="color: #ffffff;">CJ's All-in-One Solution</span>
+                        </h1>
+                        <div class="sub-headline">From Global Suppliers to Seamless Automation – Your Gateway to Hassle-Free Success Starts Here!</div>
+                        <p>Connect your store, source trending products, and ship orders from 20+ warehouses worldwide. Start your dropshipping business today.</p>
+                        <button class="btn-primary" onclick="location.href='register.html'">Get Started <i class="fas fa-arrow-right"></i></button>
+                    </div>
+
+                    <div class="trusted-row">
+                        <span class="trusted-item">Trusted by <strong>50,000+</strong> brands</span>
+                        <span class="trusted-item"><strong>20+</strong> global warehouses</span>
+                        <span class="trusted-item">
+                            <i class="fas fa-star" style="color: #FF7A2E;"></i>
+                            <i class="fas fa-star" style="color: #FF7A2E;"></i>
+                            <i class="fas fa-star" style="color: #FF7A2E;"></i>
+                            <i class="fas fa-star" style="color: #FF7A2E;"></i>
+                            <i class="fas fa-star-half-alt" style="color: #FF7A2E;"></i>
+                            <strong>4.8/5</strong> from 2,000+ reviews
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="container">
+            <div class="platforms-section">
+                <div class="platforms-title">INTEGRATED WITH LEADING PLATFORMS</div>
+                <div class="platforms-grid" id="platformsGrid"></div>
+            </div>
+        </div>
+
+        <div class="container">
+            <h2 class="section-title">What our <span class="orange-text">partners say</span></h2>
+            <div class="marquee-container">
+                <div class="marquee-content" id="marqueeContent"></div>
+            </div>
+
+            <div class="stats-grid">
+                <div class="stat-card"><div class="stat-number">250K+</div><div class="stat-label">Products Available</div></div>
+                <div class="stat-card"><div class="stat-number">20+</div><div class="stat-label">Warehouses Worldwide</div></div>
+                <div class="stat-card"><div class="stat-number">99.5%</div><div class="stat-label">Fulfillment Rate</div></div>
+                <div class="stat-card"><div class="stat-number">30%</div><div class="stat-label">Avg. Cost Savings</div></div>
+            </div>
+
+            <div class="feature-grid">
+                <div>
+                    <h2 class="feature-title">AI‑Powered <span class="orange-text">Product Sourcing</span></h2>
+                    <p class="feature-desc">Find winning products in seconds. Our AI analyzes market trends, supplier reliability, and profit margins to recommend the best items for your store.</p>
+                    <ul class="feature-list">
+                        <li><i class="fas fa-check-circle"></i> 1‑click import to your store</li>
+                        <li><i class="fas fa-check-circle"></i> Private labeling & custom packaging</li>
+                        <li><i class="fas fa-check-circle"></i> Dedicated sourcing agent</li>
+                    </ul>
+                </div>
+                <div>
+                    <h2 class="feature-title">Automated <span class="orange-text">Global Fulfillment</span></h2>
+                    <p class="feature-desc">Sync orders automatically, pick from the nearest warehouse, and deliver to customers in 2‑5 days. Reduce shipping costs by up to 60%.</p>
+                    <ul class="feature-list">
+                        <li><i class="fas fa-chart-line"></i> Real‑time inventory sync</li>
+                        <li><i class="fas fa-chart-pie"></i> Branded tracking & packing slips</li>
+                        <li><i class="fas fa-euro-sign"></i> Transparent per‑unit pricing</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- agents-section 在渐变内部 -->
+        <div class="agents-section">
+            <div class="agents-header">
+                <h2>Get the Best Sourcing Agent Services</h2>
+                <p>We possess extensive sourcing agent resources and high-quality cross-border procurement services to ensure that your project objectives and deadlines are fulfilled. Please review the profiles of our premium sourcing agents below to identify the best match for your business.</p>
+            </div>
+            <div class="agents-grid" id="agentsGrid"></div>
+        </div>
+
+    </div>  <!-- gradient-wrapper 结束 -->
+
+    <!-- CTA 和 Footer 在渐变外面 -->
+    <div class="container">
+        <div class="cta-section">
+            <h2>Ready to scale your dropshipping business?</h2>
+            <p>Join 50,000+ merchants who trust us for sourcing, fulfillment, and growth.</p>
+            <button class="btn-primary" onclick="location.href='register.html'">Start Sourcing Now <i class="fas fa-arrow-right"></i></button>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-links">
+                <a href="#">About Us</a>
+                <a href="#">Sourcing</a>
+                <a href="#">Fulfillment</a>
+                <a href="#">Pricing</a>
+                <a href="#">Affiliate Program</a>
+                <a href="#">API</a>
+                <a href="#">Contact</a>
+            </div>
+            <div>© 2026 CJDropshipping | Global Dropshipping Platform</div>
+        </div>
+    </footer>
+
+    <script>
+        const SUPABASE_URL = 'https://ygeawapbjcfytjoxpttk.supabase.co';
+        const SUPABASE_KEY = 'sb_publishable_3X4gUSBt2i7OXB1IsajBiQ__NM-OIGn';
+        const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        const platforms = [
+            { name: "Shopify", icon: "fab fa-shopify" },
+            { name: "WooCommerce", icon: "fab fa-wordpress" },
+            { name: "TikTok Shop", icon: "fab fa-tiktok" },
+            { name: "eBay", icon: "fab fa-ebay" },
+            { name: "Shopee", icon: "fas fa-store" },
+            { name: "Lazada", icon: "fas fa-shopping-cart" },
+            { name: "Mercado", icon: "fas fa-chart-line" },
+            { name: "Etsy", icon: "fab fa-etsy" },
+            { name: "API", icon: "fas fa-code" }
+        ];
+
+        async function loadWebsiteConfig() {
+            const { data: config, error } = await sb
+                .from('website_config')
+                .select('*')
+                .eq('id', 1)
+                .single();
+            
+            if (config) {
+                if (config.logo_url) {
+                    const logoContainer = document.getElementById('logoContainer');
+                    if (logoContainer) {
+                        logoContainer.innerHTML = `<img src="${config.logo_url}" alt="Logo" style="height:48px; width:auto;">`;
+                    }
+                }
+                
+                if (config.hero_video_url) {
+                    const video = document.getElementById('heroVideo');
+                    if (video) {
+                        video.src = config.hero_video_url;
+                        video.play().catch(e => console.log('自动播放被阻止'));
+                    }
+                }
+                
+                const platformImages = config.platform_images || {};
+                renderPlatformsFromConfig(platformImages);
+            }
+        }
+
+        function renderPlatformsFromConfig(platformImages) {
+            const grid = document.getElementById('platformsGrid');
+            if (!grid) return;
+            grid.innerHTML = '';
+            platforms.forEach(p => {
+                const imgUrl = platformImages[p.name] || '';
+                const div = document.createElement('div');
+                div.className = 'platform-item';
+                div.innerHTML = `
+                    <div class="platform-img-wrapper">
+                        ${imgUrl ? `<img src="${imgUrl}" alt="${p.name}">` : `<i class="${p.icon}"></i>`}
+                    </div>
+                    <span class="platform-name">${p.name}</span>
+                `;
+                grid.appendChild(div);
+            });
+        }
+
+        (function() {
+            const testimonials = [
+                { text: "“The sourcing agent found me a supplier with 30% lower cost. My profit margin has never been better.”", author: "Emma Richardson", title: "Shopify Store Owner" },
+                { text: "“Fulfillment to the US takes only 4 days on average. My customers are thrilled.”", author: "James O'Connor", title: "TikTok Shop Seller" },
+                { text: "“I've scaled from zero to $50k/month in 6 months thanks to their product research tools.”", author: "Sophie Laurent", title: "E‑commerce Entrepreneur" },
+                { text: "“The private labeling service helped me build a real brand. Highly recommended.”", author: "Liam Wilson", title: "Brand Founder" },
+                { text: "“Their warehousing network saved me thousands in shipping costs. Game changer.”", author: "Chloe Martinez", title: "Dropshipper since 2021" },
+                { text: "“Best decision for my business. Support team is responsive and actually helpful.”", author: "Oliver Schmidt", title: "German Online Seller" }
+            ];
+            
+            const container = document.getElementById('marqueeContent');
+            if(container) {
+                for (let i = 0; i < 2; i++) {
+                    testimonials.forEach(t => {
+                        const div = document.createElement('div');
+                        div.className = 'testimonial-item';
+                        div.innerHTML = `
+                            <div class="testimonial-text">${t.text}</div>
+                            <div class="testimonial-author">${t.author}</div>
+                            <div class="testimonial-title">${t.title}</div>
+                        `;
+                        container.appendChild(div);
+                    });
+                }
+            }
+        })();
+
+        const agentsData = [
+            { name: "Lukas Weber", role: "Senior Sourcing Specialist", badge: "Premium Agent", experience: "8+ years in EU sourcing", successRate: "98% client satisfaction", languages: "English, German, French" },
+            { name: "Eleonora Conti", role: "Procurement Manager", badge: "Top Rated", experience: "12 years in fashion & electronics", successRate: "99% on-time delivery", languages: "Italian, English, Spanish" },
+            { name: "Thomas Andersen", role: "Global Supply Chain Expert", badge: "Verified Partner", experience: "10+ years cross-border", successRate: "300+ happy brands", languages: "Danish, English, Mandarin" },
+            { name: "Clara Dubois", role: "Quality Control Agent", badge: "Gold Supplier", experience: "Specialized in hard goods", successRate: "99.5% quality pass rate", languages: "French, English, German" }
+        ];
+
+        const agentsGrid = document.getElementById('agentsGrid');
+        if (agentsGrid) {
+            agentsData.forEach(agent => {
+                const card = document.createElement('div');
+                card.className = 'agent-card';
+                card.innerHTML = `
+                    <div class="agent-avatar"><i class="fas fa-user-circle"></i></div>
+                    <div class="agent-name">${agent.name}</div>
+                    <div class="agent-role">${agent.role}</div>
+                    <div class="agent-badge">${agent.badge}</div>
+                    <div class="agent-stats">
+                        <div><i class="fas fa-briefcase"></i> ${agent.experience}</div>
+                        <div><i class="fas fa-chart-line"></i> ${agent.successRate}</div>
+                        <div><i class="fas fa-language"></i> ${agent.languages}</div>
+                    </div>
+                    <button class="btn-outline-small">Contact Agent →</button>
+                `;
+                agentsGrid.appendChild(card);
+            });
+        }
+
+        loadWebsiteConfig();
+    </script>
+</body>
+</html>

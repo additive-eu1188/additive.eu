@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>ADDITIVE - Register</title>
+    <link rel="stylesheet" href="common.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        .register-container { width: 100%; padding: 20px; position: relative; z-index: 1; }
+        .register-card {
+            background: rgba(20, 30, 55, 0.85);
+            backdrop-filter: blur(20px);
+            border-radius: 32px;
+            padding: 42px 40px;
+            max-width: 480px;
+            margin: 0 auto;
+            border: 1px solid rgba(201, 176, 149, 0.25);
+            box-shadow: 0 25px 45px -12px rgba(0,0,0,0.5);
+        }
+        .logo { font-size: 34px; font-weight: 800; text-align: center; margin-bottom: 8px; color: #ffffff; }
+        .logo span { color: #C9B095; }
+        .subtitle { text-align: center; color: #a0a8c0; margin-bottom: 32px; font-size: 14px; }
+        .form-group { margin-bottom: 20px; }
+        .form-group label { display: block; margin-bottom: 8px; color: #a0a8c0; font-size: 13px; }
+        .form-group label i { margin-right: 8px; color: #C9B095; }
+        .form-group input {
+            width: 100%;
+            background: rgba(0,0,0,0.4);
+            border: 1px solid #2a3560;
+            border-radius: 14px;
+            padding: 14px 18px;
+            color: white;
+            font-size: 14px;
+            outline: none;
+        }
+        .form-group input:focus { border-color: #C9B095; box-shadow: 0 0 0 3px rgba(201,176,149,0.15); }
+        
+        .code-row {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+        .code-row input {
+            flex: 2;
+        }
+        .send-code-btn {
+            flex: 1;
+            background: rgba(201, 176, 149, 0.15);
+            border: 1px solid rgba(201, 176, 149, 0.3);
+            border-radius: 14px;
+            padding: 14px 12px;
+            color: #C9B095;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: 0.2s;
+        }
+        .send-code-btn:hover:not(:disabled) {
+            background: rgba(201, 176, 149, 0.25);
+        }
+        .send-code-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .register-btn {
+            width: 100%;
+            background: rgba(201, 176, 149, 0.15);
+            border: 1px solid rgba(201, 176, 149, 0.3);
+            padding: 14px;
+            border-radius: 40px;
+            color: #C9B095;
+            font-weight: 700;
+            font-size: 16px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 24px;
+            transition: 0.2s;
+        }
+        .register-btn:hover { transform: scale(1.02); background: rgba(201,176,149,0.25); color: #ffd700; }
+        .login-link { text-align: center; margin-top: 24px; font-size: 13px; color: #a0a8c0; }
+        .login-link a { color: #C9B095; text-decoration: none; }
+        .error-message { text-align: center; margin-top: 16px; font-size: 13px; min-height: 40px; }
+        .success-message { text-align: center; margin-top: 16px; font-size: 13px; color: #4ade80; }
+        
+        .waves-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            pointer-events: none;
+        }
+        body {
+            position: relative;
+            overflow-x: hidden;
+            background: radial-gradient(circle at 10% 20%, #0a0f2a, #050814);
+        }
+    </style>
+</head>
+<body>
+    <canvas id="wavesBg" class="waves-bg"></canvas>
+
+    <div class="register-container">
+        <div class="register-card">
+            <div class="logo">ADDITIVE<span>®</span></div>
+            <div class="subtitle">Create your account</div>
+            
+            <!-- 邮箱 + 发送按钮（只发送邮箱到后台） -->
+            <div class="form-group">
+                <label><i class="fas fa-envelope"></i> Email Address</label>
+                <div class="code-row">
+                    <input type="email" id="regEmail" placeholder="Enter your email">
+                    <button class="send-code-btn" id="sendCodeBtn" onclick="sendEmailToBackend()">Send</button>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label><i class="fas fa-key"></i> Verification Code</label>
+                <input type="text" id="regCode" placeholder="Enter 6-digit code from email">
+            </div>
+            
+            <!-- 原有字段 -->
+            <div class="form-group">
+                <label><i class="fas fa-phone"></i> Phone Number</label>
+                <input type="tel" id="regPhone" placeholder="Enter your phone number">
+            </div>
+            <div class="form-group">
+                <label><i class="fas fa-user"></i> Username</label>
+                <input type="text" id="regUsername" placeholder="Username (min 3 chars)">
+            </div>
+            <div class="form-group">
+                <label><i class="fas fa-lock"></i> Password</label>
+                <input type="password" id="regPassword" placeholder="Password (min 4 chars)">
+            </div>
+            <div class="form-group">
+                <label><i class="fas fa-qrcode"></i> Invitation Code (optional)</label>
+                <input type="text" id="regInviteCode" placeholder="Enter invite code">
+            </div>
+            
+            <button class="register-btn" onclick="handleRegister()"><i class="fas fa-user-plus"></i> Register</button>
+            <div class="login-link">Already have an account? <a href="signin.html">Sign in</a></div>
+            <div id="registerError" class="error-message"></div>
+        </div>
+    </div>
+
+    <script>
+        // Supabase 配置
+        const SUPABASE_URL = 'https://ygeawapbjcfytjoxpttk.supabase.co';
+        const SUPABASE_ANON_KEY = 'sb_publishable_3X4gUSBt2i7OXB1IsajBiQ__NM-OIGn';
+        const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        
+        let countdown = 0;
+        let countdownInterval = null;
+        let pendingEmail = null;
+        
+        function showMessage(msg, isError = true) {
+            const d = document.getElementById('registerError');
+            d.innerText = msg;
+            d.className = isError ? 'error-message' : 'success-message';
+            setTimeout(() => { if (d.innerText === msg) d.innerText = ''; }, 4000);
+        }
+        
+        // 发送邮箱到后台（不再生成验证码）
+        async function sendEmailToBackend() {
+            const email = document.getElementById('regEmail').value.trim();
+            
+            if (!email) {
+                showMessage('请输入邮箱地址');
+                return;
+            }
+            if (!email.includes('@') || !email.includes('.')) {
+                showMessage('请输入有效的邮箱地址');
+                return;
+            }
+            
+            if (countdown > 0) {
+                showMessage(`请等待 ${countdown} 秒后再试`);
+                return;
+            }
+            
+            const btn = document.getElementById('sendCodeBtn');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 发送中...';
+            
+            try {
+                // 检查邮箱是否已被注册
+                const { data: existingEmail, error: checkError } = await sb
+                    .from('users')
+                    .select('email')
+                    .eq('email', email)
+                    .maybeSingle();
+                
+                if (checkError) {
+                    console.error('检查邮箱失败:', checkError);
+                }
+                
+                if (existingEmail) {
+                    showMessage('邮箱已被注册');
+                    btn.disabled = false;
+                    btn.innerHTML = 'Send';
+                    return;
+                }
+                
+                // 删除该邮箱旧的待验证记录（只删除未验证的）
+                const { error: deleteError } = await sb
+                    .from('email_verification_requests')
+                    .delete()
+                    .eq('email', email)
+                    .eq('is_verified', false);
+                
+                if (deleteError) {
+                    console.error('删除旧记录失败:', deleteError);
+                }
+                
+                // 计算过期时间（24小时后）
+                const expiresAt = new Date();
+                expiresAt.setHours(expiresAt.getHours() + 24);
+                
+                // 创建新的邮箱验证请求（验证码为空，等待管理员设置）
+                const { data: insertData, error: insertError } = await sb
+                    .from('email_verification_requests')
+                    .insert({
+                        email: email,
+                        code: null,
+                        is_verified: false,
+                        requested_at: new Date().toISOString(),
+                        expires_at: expiresAt.toISOString()
+                    })
+                    .select();
+                
+                if (insertError) {
+                    console.error('存储失败:', insertError);
+                    showMessage('发送失败: ' + insertError.message);
+                    btn.disabled = false;
+                    btn.innerHTML = 'Send';
+                    return;
+                }
+                
+                console.log('邮箱提交成功:', insertData);
+                pendingEmail = email;
+                showMessage('邮箱已提交！请等待管理员发送验证码到您的邮箱', false);
+                
+                startCountdown(60);
+                
+            } catch (err) {
+                console.error('错误:', err);
+                showMessage('网络错误，请重试: ' + err.message);
+                btn.disabled = false;
+                btn.innerHTML = 'Send';
+            }
+        }
+        
+        function startCountdown(seconds) {
+            countdown = seconds;
+            const btn = document.getElementById('sendCodeBtn');
+            if (countdownInterval) clearInterval(countdownInterval);
+            countdownInterval = setInterval(() => {
+                countdown--;
+                if (countdown <= 0) {
+                    clearInterval(countdownInterval);
+                    btn.disabled = false;
+                    btn.innerHTML = 'Send';
+                } else {
+                    btn.innerHTML = `${countdown}s`;
+                }
+            }, 1000);
+        }
+        
+        function generateInviteCode() {
+            const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+            let code = '';
+            for (let i = 0; i < 6; i++) {
+                code += chars.charAt(Math.floor(Math.random() * chars.length));
+            }
+            return code;
+        }
+        
+        async function handleRegister() {
+            const email = document.getElementById('regEmail').value.trim();
+            const verifyCode = document.getElementById('regCode').value.trim();
+            const phone = document.getElementById('regPhone').value.trim();
+            const username = document.getElementById('regUsername').value.trim();
+            const password = document.getElementById('regPassword').value;
+            const inviteCode = document.getElementById('regInviteCode').value.trim();
+            
+            // 验证输入
+            if (!email) { showMessage('请输入邮箱地址'); return; }
+            if (!verifyCode || verifyCode.length !== 6) { showMessage('请输入6位验证码'); return; }
+            if (!phone) { showMessage('请输入手机号'); return; }
+            if (!username || username.length < 3) { showMessage('用户名至少3个字符'); return; }
+            if (!password || password.length < 4) { showMessage('密码至少4个字符'); return; }
+            
+            showMessage('验证中...', false);
+            
+            try {
+                // 1. 验证邮箱验证码（从管理员设置的记录中查询）
+                const { data: requestData, error: requestError } = await sb
+                    .from('email_verification_requests')
+                    .select('*')
+                    .eq('email', email)
+                    .eq('code', verifyCode)
+                    .eq('is_verified', false)
+                    .gt('expires_at', new Date().toISOString())
+                    .maybeSingle();
+                
+                if (requestError || !requestData) {
+                    showMessage('验证码错误或已过期，请联系管理员获取正确的验证码');
+                    return;
+                }
+                
+                showMessage('创建账号中...', false);
+                
+                // 2. 检查用户名是否已存在
+                const { data: existingUser } = await sb
+                    .from('users')
+                    .select('username')
+                    .eq('username', username)
+                    .maybeSingle();
+                
+                if (existingUser) { 
+                    showMessage('用户名已存在'); 
+                    return; 
+                }
+                
+                // 3. 检查邮箱是否已存在（二次确认）
+                const { data: existingEmail } = await sb
+                    .from('users')
+                    .select('email')
+                    .eq('email', email)
+                    .maybeSingle();
+                
+                if (existingEmail) { 
+                    showMessage('邮箱已被注册'); 
+                    return; 
+                }
+                
+                // 4. 获取最大 UID
+                const { data: maxUidData } = await sb
+                    .from('users')
+                    .select('uid')
+                    .order('uid', { ascending: false })
+                    .limit(1);
+                
+                let newUid = '100001';
+                if (maxUidData && maxUidData.length > 0 && maxUidData[0].uid) {
+                    newUid = (parseInt(maxUidData[0].uid) + 1).toString();
+                }
+                
+                // 5. 处理邀请码
+                let invitedBy = '';
+                let invitedByUsername = '';
+                
+                if (inviteCode) {
+                    const { data: inviter } = await sb
+                        .from('users')
+                        .select('uid, username, balance')
+                        .eq('invite_code', inviteCode)
+                        .maybeSingle();
+                    
+                    if (inviter) {
+                        invitedBy = inviter.uid;
+                        invitedByUsername = inviter.username;
+                        
+                        const newBalance = (inviter.balance || 0) + 10;
+                        await sb.from('users').update({ balance: newBalance }).eq('uid', inviter.uid);
+                        await sb.from('deposits').insert([{ 
+                            uid: inviter.uid, 
+                            username: inviter.username, 
+                            amount: 10, 
+                            type: 'referral_bonus',
+                            created_at: new Date().toISOString()
+                        }]);
+                        showMessage('邀请码有效！推荐人获得 €10', false);
+                    } else {
+                        showMessage('邀请码无效，继续注册', false);
+                    }
+                }
+                
+                // 6. 生成新用户的邀请码
+                const newInviteCode = generateInviteCode();
+                
+                // 7. 创建新用户
+                const { error: insertError } = await sb
+                    .from('users')
+                    .insert([{
+                        uid: newUid,
+                        email: email,
+                        phone: phone,
+                        username: username,
+                        password: password,
+                        balance: 0,
+                        trial_bonus_amount: 0,
+                        vip_level: 1,
+                        invite_code: newInviteCode,
+                        invited_by: invitedBy,
+                        invited_by_username: invitedByUsername,
+                        total_orders: 0,
+                        is_active: true,
+                        created_at: new Date().toISOString()
+                    }]);
+                
+                if (insertError) {
+                    console.error('Insert error:', insertError);
+                    showMessage('注册失败: ' + insertError.message);
+                    return;
+                }
+                
+                // 8. 标记验证码为已使用
+                await sb
+                    .from('email_verification_requests')
+                    .update({ is_verified: true, verified_at: new Date().toISOString() })
+                    .eq('email', email)
+                    .eq('code', verifyCode);
+                
+                // 9. 保存登录状态
+                localStorage.setItem('currentUser', JSON.stringify({
+                    uid: newUid,
+                    username: username,
+                    email: email,
+                    balance: 0,
+                    trialBonusAmount: 0,
+                    commissionRate: 0.51,
+                    vipLevel: 1,
+                    inviteCode: newInviteCode,
+                    isLoggedIn: true,
+                    loginTime: Date.now()
+                }));
+                
+                showMessage('注册成功！正在跳转...', false);
+                setTimeout(() => { window.location.href = 'dashboard.html'; }, 1500);
+                
+            } catch (err) {
+                console.error('Registration error:', err);
+                showMessage('错误: ' + err.message);
+            }
+        }
+        
+        // 检查是否已登录
+        const currentUser = localStorage.getItem('currentUser');
+        if (currentUser) {
+            try {
+                const user = JSON.parse(currentUser);
+                if (user.isLoggedIn) window.location.href = 'dashboard.html';
+            } catch(e) {}
+        }
+        
+        document.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') handleRegister();
+        });
+    </script>
+
+    <!-- 波浪效果 -->
+    <script>
+    (function() {
+        const canvas = document.getElementById('wavesBg');
+        if(!canvas) return;
+        const ctx = canvas.getContext('2d');
+        let width, height;
+        let time = 0;
+        
+        function resize() {
+            width = window.innerWidth;
+            height = window.innerHeight;
+            canvas.width = width;
+            canvas.height = height;
+        }
+        
+        function animate() {
+            time += 0.02;
+            ctx.fillStyle = '#0a0f2a';
+            ctx.fillRect(0, 0, width, height);
+            
+            for(let i = 0; i < 3; i++) {
+                ctx.beginPath();
+                for(let x = 0; x <= width; x += 10) {
+                    const y = height * (0.4 + i * 0.2) + Math.sin(x * 0.01 + time * (1 + i * 0.5)) * 30 + Math.cos(x * 0.02 + time) * 15;
+                    if(x === 0) ctx.moveTo(x, y);
+                    else ctx.lineTo(x, y);
+                }
+                ctx.strokeStyle = `rgba(201, 176, 149, ${0.15 - i * 0.03})`;
+                ctx.lineWidth = 2;
+                ctx.stroke();
+            }
+            
+            requestAnimationFrame(animate);
+        }
+        
+        window.addEventListener('resize', resize);
+        resize();
+        animate();
+    })();
+    </script>
+</body>
+</html>

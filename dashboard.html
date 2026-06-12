@@ -1,0 +1,874 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>ADDITIVE - Dashboard</title>
+    <link rel="stylesheet" href="common.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="user-data.js"></script>
+    <style>
+        /* Dashboard 特有样式 */
+        .welcome-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+            gap: 16px;
+            padding: 0 32px;
+        }
+        .welcome-header h1 { font-size: 24px; font-weight: 600; margin: 0; }
+        
+        .username {
+            color: #C9B095 !important;
+            background: none !important;
+            -webkit-background-clip: unset !important;
+            background-clip: unset !important;
+            font-weight: 700;
+        }
+        
+        .uid-badge {
+            font-size: 12px;
+            color: #a0a8c0;
+            background: rgba(201, 176, 149, 0.1);
+            display: inline-block;
+            padding: 4px 12px;
+            margin-top: 10px;
+            border-radius: 20px;
+        }
+        
+        .premium-tag {
+            background: rgba(201, 176, 149, 0.12);
+            border: 1px solid rgba(201, 176, 149, 0.3);
+            padding: 6px 16px;
+            border-radius: 40px;
+            font-size: 12px;
+            font-weight: 600;
+            color: #C9B095;
+        }
+        .premium-tag i { color: #C9B095; }
+
+        .two-columns {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 28px;
+            padding: 0 32px;
+        }
+        .card {
+            background: radial-gradient(ellipse at center, rgba(0, 132, 255, 0.12), rgba(0, 100, 200, 0.05), rgba(20, 30, 55, 0.5));
+            backdrop-filter: blur(12px);
+            border: 1px solid #0a84ff;
+            border-radius: 24px;
+            padding: 20px;
+            transition: 0.3s;
+            box-shadow: 0 0 12px rgba(10, 132, 255, 0.1);
+        }
+        .card:hover {
+            transform: translateY(-4px);
+            border-color: #3a9eff;
+            box-shadow: 0 0 20px rgba(10, 132, 255, 0.25);
+        }
+        .balance-amount { font-size: 42px; font-weight: 800; margin: 12px 0; color: #fff; }
+        
+        .membership-badge {
+            background: rgba(201, 176, 149, 0.15);
+            padding: 4px 12px;
+            border-radius: 30px;
+            font-size: 11px;
+            color: #C9B095;
+        }
+        .upgrade-link-sm {
+            color: #C9B095;
+            text-decoration: none;
+            font-size: 12px;
+        }
+
+        .action-row {
+            display: grid;
+            grid-template-columns: repeat(4,1fr);
+            gap: 16px;
+            margin-bottom: 32px;
+            padding: 0 32px;
+        }
+        .action-card {
+            background: rgba(20,30,55,0.5);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(201, 176, 149, 0.15);
+            border-radius: 18px;
+            padding: 16px;
+            text-align: center;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+        .action-card i {
+            font-size: 24px;
+            color: #C9B095;
+            margin-bottom: 8px;
+            display: inline-block;
+        }
+        .action-card:hover {
+            background: rgba(201, 176, 149, 0.08);
+            border-color: rgba(201, 176, 149, 0.3);
+            transform: translateY(-4px);
+        }
+        .action-text { font-weight: 600; margin-bottom: 4px; font-size: 14px; color: #fff; }
+        .action-sub { font-size: 11px; color: #a0a8c0; }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 32px 0 20px 0;
+            padding: 0 32px;
+        }
+        .section-header h3 { font-size: 18px; font-weight: 600; }
+        .view-all { color: #C9B095; text-decoration: none; font-size: 13px; }
+
+        .cards-grid {
+            display: flex;
+            overflow-x: auto;
+            scroll-snap-type: x mandatory;
+            gap: 16px;
+            padding: 0 32px 20px 32px;
+            -webkit-overflow-scrolling: touch;
+        }
+        .overview-card {
+            flex: 0 0 280px;
+            scroll-snap-align: start;
+            position: relative;
+            border-radius: 20px;
+            overflow: hidden;
+        }
+        .overview-card-content {
+            background: linear-gradient(135deg, #2a2418 0%, #4a3a28 50%, #8b7355 100%);
+            border-radius: 20px;
+            padding: 24px 20px;
+            border: 1px solid rgba(201, 176, 149, 0.4);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            min-height: 200px;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            z-index: 2;
+            overflow: hidden;
+        }
+        .overview-title-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            margin-bottom: 16px;
+        }
+        .overview-label {
+            font-size: 14px;
+            color: #d4af7a;
+            font-weight: 300;
+            letter-spacing: 2px;
+        }
+        .overview-value {
+            font-size: 28px;
+            color: #f0d89a;
+            font-weight: 300;
+            margin-bottom: 12px;
+        }
+        .overview-tag {
+            background: rgba(0,0,0,0.4);
+            display: inline-block;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 11px;
+            color: rgba(255,255,255,0.7);
+            width: fit-content;
+            cursor: pointer;
+        }
+        .card-icon {
+            position: absolute;
+            bottom: 12px;
+            right: 16px;
+            font-size: 90px;
+            color: rgba(255, 140, 0, 0.15);
+            z-index: 1;
+            pointer-events: none;
+        }
+        .coin-icon {
+            position: absolute;
+            bottom: 12px;
+            right: 0px;
+            font-size: 90px;
+            color: rgba(255, 140, 0, 0.15);
+            z-index: 1;
+            pointer-events: none;
+        }
+        .bubble-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+            border-radius: 20px;
+        }
+
+        .bookings-list {
+            background: rgba(20,30,55,0.4);
+            backdrop-filter: blur(8px);
+            border-radius: 20px;
+            overflow: hidden;
+            border: 1px solid rgba(201, 176, 149, 0.1);
+            margin: 0 32px;
+        }
+        .booking-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 14px 20px;
+            border-bottom: 1px solid rgba(201, 176, 149, 0.08);
+        }
+        .booking-info { display: flex; align-items: center; gap: 12px; }
+        .booking-info i { font-size: 18px; color: #C9B095; }
+        .booking-name { font-weight: 500; margin-bottom: 3px; font-size: 13px; color: #fff; }
+        .booking-date { font-size: 10px; color: #a0a8c0; }
+        .booking-amount { font-weight: 600; font-size: 14px; }
+        .booking-amount.positive { color: #4ade80; }
+        .empty-bookings { text-align: center; padding: 40px; color: #a0a8c0; }
+        .empty-bookings i { font-size: 40px; color: #5a6388; margin-bottom: 10px; display: block; }
+
+        .footer-note {
+            margin-top: 40px;
+            text-align: center;
+            font-size: 11px;
+            color: #5a6388;
+            padding: 16px 0;
+            border-top: 1px solid rgba(201, 176, 149, 0.1);
+            margin: 0 32px;
+        }
+
+        .upgrade-card-pulse {
+            background: rgba(20,30,55,0.6);
+            backdrop-filter: blur(12px);
+            border-radius: 24px;
+            padding: 20px;
+            animation: pulseGlow 2.5s ease-in-out infinite;
+            border: 1px solid rgba(255,140,0,0.3);
+        }
+        @keyframes pulseGlow {
+            0% { box-shadow: inset 0 0 10px rgba(255,140,0,0.08),0 0 5px rgba(255,140,0,0.05); border-color: rgba(255,140,0,0.2); }
+            50% { box-shadow: inset 0 0 25px rgba(255,140,0,0.25),0 0 15px rgba(255,140,0,0.12); border-color: rgba(255,140,0,0.5); }
+            100% { box-shadow: inset 0 0 10px rgba(255,140,0,0.08),0 0 5px rgba(255,140,0,0.05); border-color: rgba(255,140,0,0.2); }
+        }
+        .upgrade-title { font-size: 17px; font-weight: 600; margin-bottom: 8px; color: #ff9f4a; }
+        .upgrade-desc { font-size: 12px; color: #7a85a5; line-height: 1.4; margin-bottom: 16px; }
+        .btn-upgrade {
+            background: rgba(255,140,0,0.15);
+            padding: 8px 18px;
+            border-radius: 40px;
+            text-decoration: none;
+            color: #ff9f4a;
+            font-weight: 600;
+            font-size: 13px;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            border: 1px solid rgba(255,140,0,0.3);
+        }
+
+        /* 产品推荐区域样式 */
+        .products-slider-container {
+            position: relative;
+            overflow-x: hidden;
+            padding: 10px 0 30px 0;
+            margin: 0 32px;
+        }
+        .step-scroll-products {
+            display: flex;
+            gap: 20px;
+            transition: transform 0.5s ease-in-out;
+            will-change: transform;
+        }
+        .product-card-style7 {
+            width: 240px;
+            background: transparent;
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+        .product-card-style7 .image-wrapper {
+            position: relative;
+            height: 180px;
+            overflow: hidden;
+            border-radius: 20px 20px 0 0;
+        }
+        .product-card-style7 .image-wrapper img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .product-card-style7 .video-badge {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(0,0,0,0.6);
+            backdrop-filter: blur(4px);
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+            color: white;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .product-card-style7 .floating-content {
+            background: white;
+            margin: -20px 12px 0 12px;
+            padding: 14px 12px;
+            border-radius: 16px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+            position: relative;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .product-card-style7:hover .floating-content {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 28px rgba(0,0,0,0.15);
+        }
+        .product-card-style7 .product-name {
+            font-weight: 600;
+            font-size: 14px;
+            color: #1e293b;
+            margin-bottom: 10px;
+            line-height: 1.4;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            min-height: 38px;
+        }
+        .product-card-style7 .price-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            margin-bottom: 8px;
+        }
+        .product-card-style7 .price-label {
+            font-size: 12px;
+            color: #94a3b8;
+        }
+        .product-card-style7 .price-value {
+            font-weight: 700;
+            font-size: 18px;
+            color: #CBB79C;
+        }
+        .product-card-style7 .margin-badge {
+            display: inline-block;
+            background: #dcfce7;
+            color: #15803d;
+            font-size: 11px;
+            font-weight: 600;
+            padding: 4px 10px;
+            border-radius: 20px;
+            margin-top: 6px;
+        }
+
+        @media (max-width: 768px) {
+            .two-columns .upgrade-card-pulse { display: none; }
+            .two-columns {
+                grid-template-columns: 1fr;
+                gap: 0;
+                padding: 0 8px;
+            }
+            .two-columns .card {
+                width: 100%;
+                margin: 0;
+                padding: 20px 12px;
+            }
+            .balance-amount { font-size: 36px; }
+            .action-row {
+                padding: 0 8px;
+                gap: 8px;
+            }
+            .action-card { padding: 10px 4px; }
+            .action-card i { font-size: 20px; }
+            .action-text { font-size: 11px; }
+            .action-sub { font-size: 9px; }
+            .welcome-header {
+                flex-direction: column;
+                align-items: flex-start;
+                padding: 0 0px;
+            }
+            .welcome-header h1 { font-size: 22px; margin-bottom: 4px; }
+            .welcome-header h1 .username { font-size: 20px; display: inline; margin-left: 4px; }
+            .premium-tag { align-self: flex-end; margin-top: -40px; }
+            .uid-badge { font-size: 12px; padding: 4px 12px; }
+            .section-header { padding: 0 16px; }
+            .cards-grid { gap: 12px; padding: 0 16px 16px 16px; }
+            .overview-card { flex: 0 0 260px; }
+            .overview-card-content { padding: 18px 14px; min-height: 170px; }
+            .overview-label { font-size: 13px; }
+            .overview-value { font-size: 26px; }
+            .card-icon, .coin-icon { font-size: 70px; bottom: 8px; }
+            .coin-icon { right: 0px; }
+            .card-icon { right: 12px; }
+            .bookings-list { margin: 0 16px; }
+            .footer-note { margin: 0 16px; }
+            .products-slider-container { margin: 0 16px; }
+            .product-card-style7 { width: 170px; }
+            .product-card-style7 .image-wrapper { height: 130px; }
+            .product-card-style7 .floating-content { margin: -16px 8px 0 8px; padding: 10px 10px; }
+            .product-card-style7 .product-name { font-size: 12px; margin-bottom: 6px; min-height: 32px; }
+            .product-card-style7 .price-label { font-size: 10px; }
+            .product-card-style7 .price-value { font-size: 14px; }
+            .step-scroll-products { gap: 12px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="menu-overlay" onclick="closeMenu()"></div>
+
+    <div class="app">
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-top">
+                <div class="logo">ADDITIVE<span>®</span></div>
+                <nav class="nav">
+                    <a href="dashboard.html" class="nav-item active"><i class="fas fa-th-large"></i><span>Dashboard</span></a>
+                    <a href="start.html" class="nav-item"><i class="fas fa-play"></i><span>Start</span></a>
+                    <a href="history.html" class="nav-item"><i class="fas fa-clock"></i><span>History</span></a>
+                    <a href="checkin.html" class="nav-item"><i class="fas fa-calendar-check"></i><span>Sign in</span></a>
+                    <a href="withdrawal.html" class="nav-item"><i class="fas fa-arrow-right-to-bracket"></i><span>Withdrawal</span></a>
+                    <a href="chat.html" class="nav-item"><i class="fas fa-comment-dots"></i><span>Chat with us</span></a>
+                    <a href="settings.html" class="nav-item"><i class="fas fa-sliders-h"></i><span>Settings</span></a>
+                </nav>
+            </div>
+            <div class="sidebar-upgrade-card">
+                <div class="sidebar-premium-badge">PREMIUM ACCESS</div>
+                <div class="sidebar-upgrade-title">Upgrade your membership</div>
+                <div class="sidebar-upgrade-desc">Unlock higher rewards,<br>priority support, and premium<br>hotel discovery benefits</div>
+                <a href="membership.html" class="sidebar-upgrade-btn">Upgrade Now <i class="fas fa-arrow-right"></i></a>
+            </div>
+        </aside>
+
+        <main class="main">
+            <div class="menu-toggle" id="menuToggleBtn" onclick="toggleMenu()">
+                <i class="fas fa-bars"></i>
+            </div>
+
+            <div class="welcome-header">
+                <div>
+                    <h1>Welcome, <span class="username" id="displayUsername">Loading...</span></h1>
+                    <div class="uid-badge">UID: <span id="displayUid">---</span></div>
+                </div>
+                <div class="premium-tag"><i class="fas fa-gem"></i> OPERATOR ACCESS</div>
+            </div>
+
+            <div class="two-columns">
+                <div class="card">
+                    <div class="card-label"><i class="fas fa-wallet"></i> Available Balance</div>
+                    <div class="balance-amount" id="displayBalance">€0.00</div>
+                    <div class="membership-info">
+                        <span class="membership-badge" id="displayMembership">Membership Normal</span>
+                        <a href="membership.html" class="upgrade-link-sm">Upgrade Now →</a>
+                    </div>
+                </div>
+                <div class="upgrade-card-pulse">
+                    <div class="upgrade-title">✨ Upgrade your membership</div>
+                    <div class="upgrade-desc">Unlock higher rewards, priority support, and premium hotel discovery benefits.</div>
+                    <a href="membership.html" class="btn-upgrade">Upgrade Now <i class="fas fa-arrow-right"></i></a>
+                </div>
+            </div>
+
+            <div class="action-row">
+                <div class="action-card" onclick="location.href='withdrawal.html'"><i class="fas fa-arrow-right-to-bracket"></i><div class="action-text">Withdraw</div><div class="action-sub">Request payout</div></div>
+                <div class="action-card" onclick="location.href='start.html'"><i class="fas fa-rocket"></i><div class="action-text">Start</div><div class="action-sub">Complete tasks</div></div>
+                <div class="action-card" onclick="location.href='history.html'"><i class="fas fa-chart-line"></i><div class="action-text">History</div><div class="action-sub">View records</div></div>
+                <div class="action-card" onclick="location.href='chat.html'"><i class="fas fa-headset"></i><div class="action-text">Support</div><div class="action-sub">24/7 help</div></div>
+            </div>
+
+            <div class="section-header"><h3>OVERVIEW</h3><a href="#" class="view-all">View all <i class="fas fa-chevron-right"></i></a></div>
+            
+            <div class="cards-grid">
+                <div class="overview-card" id="card1">
+                    <div class="overview-card-content">
+                        <canvas id="bubbleCanvas1" class="bubble-canvas"></canvas>
+                        <i class="fas fa-coins coin-icon"></i>
+                        <div class="overview-title-row">
+                            <span class="overview-label">TOTAL EARNINGS</span>
+                        </div>
+                        <div class="overview-value" id="totalEarnings">€0.00</div>
+                        <div class="overview-tag">Lifetime earnings</div>
+                    </div>
+                </div>
+                <div class="overview-card" id="card2">
+                    <div class="overview-card-content">
+                        <canvas id="bubbleCanvas2" class="bubble-canvas"></canvas>
+                        <i class="fas fa-chart-simple card-icon"></i>
+                        <div class="overview-title-row">
+                            <span class="overview-label">CURRENT EVENT</span>
+                        </div>
+                        <div class="overview-value">+15%</div>
+                        <div class="overview-tag">VIP bonus active</div>
+                    </div>
+                </div>
+                <div class="overview-card" id="card3">
+                    <div class="overview-card-content">
+                        <canvas id="bubbleCanvas3" class="bubble-canvas"></canvas>
+                        <i class="fas fa-gem card-icon"></i>
+                        <div class="overview-title-row">
+                            <span class="overview-label">PREMIUM STATUS</span>
+                        </div>
+                        <div class="overview-value" id="premiumStatusText">Normal</div>
+                        <div class="overview-tag" onclick="location.href='membership.html'">Upgrade Now</div>
+                    </div>
+                </div>
+                <div class="overview-card" id="card4">
+                    <div class="overview-card-content">
+                        <canvas id="bubbleCanvas4" class="bubble-canvas"></canvas>
+                        <i class="fas fa-award card-icon"></i>
+                        <div class="overview-title-row">
+                            <span class="overview-label">CERTIFICATE</span>
+                        </div>
+                        <div class="overview-value" id="certificateStatus">Not Earned</div>
+                        <div class="overview-tag" id="certificateTag">Complete 100 orders</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 产品推荐区域 -->
+            <div class="section-header" style="margin-top: 20px;">
+                <h3><i class="fas fa-box-open"></i> RECOMMENDED PRODUCTS</h3>
+                <a href="start.html" class="view-all">View all →</a>
+            </div>
+
+            <div class="products-slider-container">
+                <div id="featuredProductsGrid" class="step-scroll-products">
+                    <div style="text-align: center; padding: 40px; color: #a0a8c0; width: 100%;">加载产品中...</div>
+                </div>
+            </div>
+
+            <div class="section-header"><h3>RECENT BOOKINGS</h3><a href="history.html" class="view-all">View all <i class="fas fa-chevron-right"></i></a></div>
+            <div class="bookings-list" id="recentBookings">
+                <div class="empty-bookings"><i class="fas fa-calendar-alt"></i><p>No bookings yet</p><span>Start your first task to see recent bookings here</span></div>
+            </div>
+
+            <div class="footer-note"><i class="fas fa-lock"></i> Secure platform · Protected by ADDITIVE</div>
+        </main>
+    </div>
+
+    <script>
+    // ========== 辅助函数 ==========
+    function escapeHtml(str) {
+        if (!str) return '';
+        return str.replace(/[&<>]/g, function(m) {
+            if (m === '&') return '&amp;';
+            if (m === '<') return '&lt;';
+            if (m === '>') return '&gt;';
+            return m;
+        });
+    }
+    
+    function toggleMenu() { 
+        const sidebar = document.getElementById('sidebar'); 
+        const overlay = document.querySelector('.menu-overlay'); 
+        const menuBtn = document.getElementById('menuToggleBtn'); 
+        if (sidebar) sidebar.classList.toggle('open'); 
+        if (overlay) overlay.classList.toggle('active'); 
+        if (menuBtn) menuBtn.classList.toggle('hidden'); 
+    }
+    function closeMenu() { 
+        const sidebar = document.getElementById('sidebar'); 
+        const overlay = document.querySelector('.menu-overlay'); 
+        const menuBtn = document.getElementById('menuToggleBtn'); 
+        if (sidebar) sidebar.classList.remove('open'); 
+        if (overlay) overlay.classList.remove('active'); 
+        if (menuBtn) menuBtn.classList.remove('hidden'); 
+    }
+
+    // 气泡特效
+    function startBubble(canvasId, wrapperId) {
+        const canvas = document.getElementById(canvasId);
+        const wrapper = document.getElementById(wrapperId);
+        if (!canvas || !wrapper) return;
+        const ctx = canvas.getContext('2d');
+        let w = 0, h = 0, bubbles = [];
+        
+        function resize() {
+            const rect = wrapper.getBoundingClientRect();
+            w = rect.width;
+            h = rect.height;
+            canvas.width = w;
+            canvas.height = h;
+        }
+        
+        function createBubble() {
+            return {
+                x: Math.random() * w,
+                y: h + 15,
+                radius: Math.random() * 10 + 4,
+                alpha: Math.random() * 0.3 + 0.1,
+                speedY: -0.8 - Math.random() * 1.0,
+                wobble: Math.random() * Math.PI * 2,
+                wobbleSpeed: 0.02 + Math.random() * 0.04
+            };
+        }
+        
+        function animate() {
+            if (!w || !h) {
+                requestAnimationFrame(animate);
+                return;
+            }
+            if (Math.random() < 0.04 && bubbles.length < 15) {
+                bubbles.push(createBubble());
+            }
+            ctx.clearRect(0, 0, w, h);
+            for (let i = bubbles.length - 1; i >= 0; i--) {
+                const b = bubbles[i];
+                b.y += b.speedY;
+                b.wobble += b.wobbleSpeed;
+                b.x += Math.sin(b.wobble) * 0.4;
+                b.alpha -= 0.002;
+                if (b.y < -30 || b.alpha <= 0.01) {
+                    bubbles.splice(i, 1);
+                    continue;
+                }
+                ctx.beginPath();
+                ctx.arc(b.x, b.y, b.radius, 0, Math.PI * 2);
+                ctx.fillStyle = `rgba(255, 140, 0, ${b.alpha * 0.5})`;
+                ctx.fill();
+                ctx.beginPath();
+                ctx.arc(b.x, b.y, b.radius, 0, Math.PI * 2);
+                ctx.strokeStyle = `rgba(255, 140, 0, ${b.alpha * 0.6})`;
+                ctx.lineWidth = 1;
+                ctx.stroke();
+                ctx.beginPath();
+                ctx.arc(b.x - b.radius * 0.3, b.y - b.radius * 0.3, b.radius * 0.2, 0, Math.PI * 2);
+                ctx.fillStyle = `rgba(255, 200, 100, ${b.alpha * 0.5})`;
+                ctx.fill();
+            }
+            requestAnimationFrame(animate);
+        }
+        
+        const observer = new ResizeObserver(() => {
+            resize();
+            bubbles = [];
+        });
+        observer.observe(wrapper);
+        resize();
+        animate();
+        return () => observer.disconnect();
+    }
+    
+    function initAllBubbles() {
+        startBubble('bubbleCanvas1', 'card1');
+        startBubble('bubbleCanvas2', 'card2');
+        startBubble('bubbleCanvas3', 'card3');
+        startBubble('bubbleCanvas4', 'card4');
+    }
+    
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initAllBubbles);
+    } else {
+        initAllBubbles();
+    }
+    window.addEventListener('resize', function() { setTimeout(initAllBubbles, 200); });
+
+    // ========== 产品展示轮播功能 ==========
+    let currentStepIndex = 0;
+    let scrollInterval = null;
+    let cardsPerStep = 2;
+    let originalProducts = [];
+
+    function initStepScroll() {
+        if (scrollInterval) clearInterval(scrollInterval);
+        const container = document.getElementById('featuredProductsGrid');
+        if (!container) return;
+        const cards = container.querySelectorAll('.product-card-style7');
+        const actualProductCount = originalProducts.length;
+        if (actualProductCount <= cardsPerStep) return;
+        
+        scrollInterval = setInterval(() => { stepScrollNextSmooth(); }, 1500);
+        
+        const sliderContainer = document.querySelector('.products-slider-container');
+        if (sliderContainer) {
+            sliderContainer.addEventListener('mouseenter', () => {
+                if (scrollInterval) clearInterval(scrollInterval);
+            });
+            sliderContainer.addEventListener('mouseleave', () => {
+                if (scrollInterval) clearInterval(scrollInterval);
+                scrollInterval = setInterval(() => stepScrollNextSmooth(), 1500);
+            });
+        }
+    }
+
+    function stepScrollNextSmooth() {
+        const container = document.getElementById('featuredProductsGrid');
+        if (!container) return;
+        const cards = container.querySelectorAll('.product-card-style7');
+        const totalCards = cards.length;
+        const actualProductCount = originalProducts.length;
+        const cardWidth = cards[0]?.offsetWidth || 240;
+        const gap = 20;
+        const stepWidth = (cardWidth + gap) * cardsPerStep;
+        
+        currentStepIndex++;
+        
+        if (currentStepIndex * stepWidth + (cardWidth + gap) * cardsPerStep >= totalCards * (cardWidth + gap)) {
+            let newHtml = '';
+            originalProducts.forEach(product => {
+                const randomMargin = (Math.random() * 10 + 5).toFixed(2);
+                newHtml += generateProductCardHtml(product, randomMargin);
+            });
+            container.insertAdjacentHTML('beforeend', newHtml);
+        }
+        container.style.transform = `translateX(-${currentStepIndex * stepWidth}px)`;
+    }
+
+    function generateProductCardHtml(product, randomMargin) {
+        return `
+            <div class="product-card-style7" onclick="handleProductClick(${JSON.stringify(product).replace(/'/g, "\\'")})">
+                <div class="image-wrapper">
+                    <img src="${product.image_url || 'https://placehold.co/240x180/e2e8f0/64748b?text=No+Image'}" 
+                         onerror="this.src='https://placehold.co/240x180/e2e8f0/64748b?text=No+Image'"
+                         alt="${escapeHtml(product.name)}">
+                    ${product.video_url ? '<div class="video-badge"><i class="fas fa-play"></i> 视频</div>' : ''}
+                </div>
+                <div class="floating-content">
+                    <div class="product-name">${escapeHtml(product.name)}</div>
+                    <div class="price-row">
+                        <span class="price-label">Price</span>
+                        <span class="price-value">$${product.price?.toFixed(2) || '0.00'}</span>
+                    </div>
+                    <div class="margin-badge">Margin: +${randomMargin}%</div>
+                </div>
+            </div>
+        `;
+    }
+
+    function showProductVideoModal(product) {
+        const modalHtml = `
+            <div id="productVideoModal" class="modal-overlay" style="visibility: visible; opacity: 1; z-index: 10001;">
+                <div class="modal-card" style="max-width: 700px; width: 90%;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                        <h3 style="color: #8ca3ff;">${escapeHtml(product.name)}</h3>
+                        <button onclick="closeProductVideoModal()" style="background: none; font-size: 24px; border: none; cursor: pointer; color: white;">&times;</button>
+                    </div>
+                    <div style="background: #000; border-radius: 12px; overflow: hidden;">
+                        <video src="${product.video_url}" controls autoplay style="width: 100%; max-height: 400px;"></video>
+                    </div>
+                    <div style="margin-top: 12px; color: #666;">价格: $${product.price?.toFixed(2)}</div>
+                </div>
+            </div>
+        `;
+        const existing = document.getElementById('productVideoModal');
+        if (existing) existing.remove();
+        document.body.insertAdjacentHTML('beforeend', modalHtml);
+    }
+
+    function closeProductVideoModal() {
+        const modal = document.getElementById('productVideoModal');
+        if (modal) modal.remove();
+    }
+
+    window.handleProductClick = function(product) {
+        if (product.video_url) {
+            showProductVideoModal(product);
+        } else if (product.image_url) {
+            window.open(product.image_url, '_blank');
+        }
+    };
+
+    // 加载 Dashboard 产品展示
+    async function loadDashboardProducts() {
+        const container = document.getElementById('featuredProductsGrid');
+        if (!container) return;
+        
+        try {
+            const { data: products, error } = await sb
+                .from('dashboard_products')
+                .select('*')
+                .eq('status', 'active')
+                .order('sort_order', { ascending: true })
+                .limit(20);
+            
+            if (error) throw error;
+            if (!products || products.length === 0) {
+                container.innerHTML = '<div style="text-align: center; padding: 40px; color: #a0a8c0; width: 100%;">暂无产品，请在后台添加</div>';
+                return;
+            }
+            
+            originalProducts = products;
+            let productsHtml = '';
+            products.forEach(product => {
+                const randomMargin = (Math.random() * 10 + 5).toFixed(2);
+                productsHtml += generateProductCardHtml(product, randomMargin);
+            });
+            
+            container.innerHTML = productsHtml + productsHtml;
+            currentStepIndex = 0;
+            container.style.transform = `translateX(0)`;
+            setTimeout(() => initStepScroll(), 100);
+        } catch(e) {
+            console.error('加载产品失败:', e);
+            container.innerHTML = '<div style="text-align: center; padding: 40px; color: #a0a8c0; width: 100%;">加载失败</div>';
+        }
+    }
+
+    // ========== 数据加载 ==========
+    async function loadDashboard() {
+        const user = checkLogin();
+        if (!user) return;
+        const fresh = await syncUserData();
+        if (fresh) {
+            document.getElementById('displayUsername').innerText = fresh.username;
+            document.getElementById('displayUid').innerText = fresh.uid;
+            document.getElementById('displayBalance').innerHTML = '€' + (fresh.balance || 0).toFixed(2);
+            const vipMap = {1: 'Normal', 2: 'VIP', 3: 'SVIP'};
+            const currentLevel = vipMap[fresh.vipLevel] || 'Normal';
+            document.getElementById('displayMembership').innerText = `Membership ${currentLevel}`;
+            document.getElementById('premiumStatusText').innerHTML = currentLevel;
+        }
+        
+        const { data: allOrders } = await sb.from('order_history').select('commission').eq('uid', user.uid);
+        const totalEarnings = allOrders?.reduce((sum, o) => sum + (o.commission || 0), 0) || 0;
+        document.getElementById('totalEarnings').innerHTML = '€' + totalEarnings.toFixed(2);
+        
+        const orderCount = allOrders?.length || 0;
+        const certStatus = document.getElementById('certificateStatus');
+        const certTag = document.getElementById('certificateTag');
+        if (orderCount >= 100) {
+            certStatus.innerHTML = '✓ Earned';
+            certStatus.style.color = '#4ade80';
+            certTag.innerHTML = 'Congratulations!';
+            certTag.style.background = 'rgba(74,222,128,0.2)';
+            certTag.style.color = '#4ade80';
+        } else {
+            certStatus.innerHTML = `${orderCount}/100`;
+            certStatus.style.color = '#ff9f4a';
+            certTag.innerHTML = `${100 - orderCount} orders to go`;
+            certTag.style.background = 'rgba(255,140,0,0.1)';
+            certTag.style.color = '#ff9f4a';
+        }
+        
+        // 加载产品
+        await loadDashboardProducts();
+    }
+    
+    async function loadRecent() {
+        const user = getCurrentUser(); 
+        if (!user) return;
+        const orders = await fetchUserOrders(user.uid, 5);
+        const container = document.getElementById('recentBookings');
+        if (!orders.length) { 
+            container.innerHTML = '<div class="empty-bookings"><i class="fas fa-calendar-alt"></i><p>No bookings yet</p><span>Start your first task to see recent bookings here</span></div>'; 
+            return; 
+        }
+        container.innerHTML = '';
+        orders.forEach(o => {
+            const d = new Date(o.date);
+            container.innerHTML += `<div class="booking-item"><div class="booking-info"><i class="fas fa-hotel"></i><div><div class="booking-name">${o.accommodation_name || 'Hotel Task'}</div><div class="booking-date">${d.toLocaleDateString()}, ${d.toLocaleTimeString()}</div></div></div><div class="booking-amount positive">+€${(o.commission || 0).toFixed(2)}</div></div>`;
+        });
+    }
+    
+    loadDashboard();
+    loadRecent();
+    </script>
+</body>
+</html>

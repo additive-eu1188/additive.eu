@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>ADDITIVE - Settings</title>
+    <link rel="stylesheet" href="common.css">
+    <link rel="stylesheet" href="toast.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="user-data.js"></script>
+    <script src="toast.js"></script>
+    <style>
+        .settings-header { margin-bottom: 24px; }
+        .settings-header h1 { font-size: 28px; font-weight: 700; color: #ffffff; margin-bottom: 6px; }
+        .settings-header p { color: #7a85a5; font-size: 13px; max-width: 550px; }
+        .settings-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 32px; }
+        .settings-section {
+            background: rgba(20, 30, 55, 0.6);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 20px;
+            border: 1px solid rgba(201, 176, 149, 0.15);
+        }
+        .settings-section h3 { font-size: 15px; margin-bottom: 20px; display: flex; align-items: center; gap: 8px; color: #C9B095; }
+        
+        /* UID 和邀请码卡片样式 */
+        .info-card {
+            background: rgba(0,0,0,0.3);
+            border-radius: 14px;
+            padding: 12px 14px;
+            margin-bottom: 20px;
+        }
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+        .info-row:last-child {
+            margin-bottom: 0;
+        }
+        .info-label {
+            font-size: 12px;
+            color: #a0a8c0;
+        }
+        .info-value {
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: #ffffff;
+            font-size: 13px;
+        }
+        .copy-btn {
+            background: rgba(201,176,149,0.15);
+            border: none;
+            padding: 4px 10px;
+            border-radius: 20px;
+            color: #C9B095;
+            font-size: 11px;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .copy-btn:hover {
+            background: rgba(201,176,149,0.3);
+        }
+        
+        .setting-item { display: flex; justify-content: space-between; align-items: center; padding: 14px 0; border-bottom: 1px solid rgba(201,176,149,0.08); }
+        .setting-item:last-child { border-bottom: none; }
+        .setting-title { font-weight: 500; margin-bottom: 3px; color: #ffffff; font-size: 14px; }
+        .setting-desc { font-size: 11px; color: #a0a8c0; }
+        .setting-action { background: rgba(201,176,149,0.15); border: none; padding: 5px 14px; border-radius: 30px; color: #C9B095; font-size: 12px; cursor: pointer; transition: 0.2s; }
+        .setting-action:hover { background: rgba(201,176,149,0.25); }
+        .setting-action.logout-btn { background: rgba(255,80,80,0.15); color: #ff8888; }
+        .setting-action.logout-btn:hover { background: rgba(255,80,80,0.3); }
+        .upgrade-card-pulse {
+            margin-top: 24px;
+            background: rgba(20, 30, 55, 0.6);
+            backdrop-filter: blur(12px);
+            border-radius: 28px;
+            padding: 24px;
+            animation: pulseGlow 2.5s ease-in-out infinite;
+            border: 1px solid rgba(201, 176, 149, 0.3);
+        }
+        @keyframes pulseGlow { 0% { box-shadow: inset 0 0 10px rgba(201,176,149,0.08), 0 0 5px rgba(201,176,149,0.05); border-color: rgba(201,176,149,0.2); } 50% { box-shadow: inset 0 0 25px rgba(201,176,149,0.25), 0 0 15px rgba(201,176,149,0.12); border-color: rgba(201,176,149,0.5); } 100% { box-shadow: inset 0 0 10px rgba(201,176,149,0.08), 0 0 5px rgba(201,176,149,0.05); border-color: rgba(201,176,149,0.2); } }
+        .upgrade-title { font-size: 18px; font-weight: 600; margin-bottom: 10px; color: #C9B095; }
+        .upgrade-desc { font-size: 13px; color: #7a85a5; line-height: 1.5; margin-bottom: 20px; }
+        .btn-upgrade { background: rgba(201,176,149,0.15); padding: 10px 20px; border-radius: 40px; text-decoration: none; color: #C9B095; font-weight: 600; font-size: 14px; display: inline-flex; align-items: center; gap: 8px; border: 1px solid rgba(201,176,149,0.3); }
+        .footer-links { margin-top: 32px; text-align: center; font-size: 11px; color: #5a6388; }
+        .footer-links a { color: #7a85a5; text-decoration: none; margin: 0 12px; }
+        .footer-links a:hover { color: #C9B095; }
+        @media (max-width: 900px) { .settings-grid { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+    <div class="menu-overlay" onclick="closeMenu()"></div>
+
+    <div class="app">
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-top">
+                <div class="logo">ADDITIVE<span>®</span></div>
+                <nav class="nav">
+                    <a href="dashboard.html" class="nav-item"><i class="fas fa-th-large"></i><span>Dashboard</span></a>
+                    <a href="start.html" class="nav-item"><i class="fas fa-play"></i><span>Start</span></a>
+                    <a href="history.html" class="nav-item"><i class="fas fa-clock"></i><span>History</span></a>
+                    <a href="checkin.html" class="nav-item"><i class="fas fa-calendar-check"></i><span>Sign in</span></a>
+                    <a href="withdrawal.html" class="nav-item"><i class="fas fa-arrow-right-to-bracket"></i><span>Withdrawal</span></a>
+                    <a href="chat.html" class="nav-item"><i class="fas fa-comment-dots"></i><span>Chat with us</span></a>
+                    <a href="settings.html" class="nav-item active"><i class="fas fa-sliders-h"></i><span>Settings</span></a>
+                </nav>
+            </div>
+            <div class="sidebar-upgrade-card">
+                <div class="sidebar-premium-badge">PREMIUM ACCESS</div>
+                <div class="sidebar-upgrade-title">Upgrade your membership</div>
+                <div class="sidebar-upgrade-desc">Unlock higher rewards,<br>priority support, and premium<br>hotel discovery benefits</div>
+                <a href="membership.html" class="sidebar-upgrade-btn">Upgrade Now <i class="fas fa-arrow-right"></i></a>
+            </div>
+        </aside>
+
+        <main class="main">
+            <div class="menu-toggle" id="menuToggleBtn" onclick="toggleMenu()">
+                <i class="fas fa-bars"></i>
+            </div>
+
+            <div class="settings-header">
+                <h1>SETTINGS</h1>
+                <p>Manage account security, language preferences, withdrawal PIN, and support access.</p>
+            </div>
+
+            <div class="settings-grid">
+                <div class="settings-section">
+    <h3><i class="fas fa-user-circle"></i> ACCOUNT CENTER</h3>
+    
+    <!-- UID 和邀请码卡片 -->
+    <div class="info-card">
+        <div class="info-row">
+            <span class="info-label">UID</span>
+            <div class="info-value">
+                <span id="displayUid">---</span>
+                <button class="copy-btn" onclick="copyUID()"><i class="fas fa-copy"></i> Copy</button>
+            </div>
+        </div>
+        <div class="info-row-divider"></div>
+        <div class="info-row">
+            <span class="info-label">Invitation Code</span>
+            <div class="info-value">
+                <span id="displayInviteCode">---</span>
+                <button class="copy-btn" onclick="copyInviteCode()"><i class="fas fa-copy"></i> Copy</button>
+            </div>
+        </div>
+    </div>
+    
+    <div class="setting-item"><div><div class="setting-title">Change Password</div><div class="setting-desc">Update your login password</div></div><button class="setting-action" onclick="changePassword()">→</button></div>
+    <div class="setting-item"><div><div class="setting-title">Set Withdrawal PIN</div><div class="setting-desc">Create a PIN to protect your withdrawals</div></div><button class="setting-action" onclick="setWithdrawalPin()">→</button></div>
+    <div class="setting-item"><div><div class="setting-title">Change Withdrawal PIN</div><div class="setting-desc">Update your withdrawal PIN</div></div><button class="setting-action" onclick="changeWithdrawalPin()">→</button></div>
+    <div class="setting-item"><div><div class="setting-title">Contact Support</div><div class="setting-desc">Chat with customer service</div></div><button class="setting-action" onclick="contactSupport()">→</button></div>
+</div>
+                <div class="settings-section">
+                    <h3><i class="fas fa-shield-alt"></i> SECURITY OPTIONS</h3>
+                    <div class="setting-item"><div><div class="setting-title">Language</div><div class="setting-desc">Change app language</div></div><button class="setting-action" onclick="changeLanguage()">English ▼</button></div>
+                    <div class="setting-item"><div><div class="setting-title">Logout</div><div class="setting-desc">Sign out from this device</div></div><button class="setting-action logout-btn" onclick="logout()">Logout</button></div>
+                </div>
+            </div>
+
+            <div class="upgrade-card-pulse">
+                <div class="upgrade-title">✨ Upgrade your membership</div>
+                <div class="upgrade-desc">Unlock higher rewards, priority support, and premium hotel discovery benefits.</div>
+                <a href="membership.html" class="btn-upgrade">Upgrade Now <i class="fas fa-arrow-right"></i></a>
+            </div>
+
+            <div class="footer-links"><a href="#">T&C</a> · <a href="#">Privacy & Security</a> · <a href="#">Platform Rules</a></div>
+        </main>
+    </div>
+
+    <script>
+        function toggleMenu() { 
+            const sidebar = document.getElementById('sidebar'); 
+            const overlay = document.querySelector('.menu-overlay'); 
+            const menuBtn = document.getElementById('menuToggleBtn'); 
+            if (sidebar) sidebar.classList.toggle('open'); 
+            if (overlay) overlay.classList.toggle('active'); 
+            if (menuBtn) menuBtn.classList.toggle('hidden'); 
+        }
+        function closeMenu() { 
+            const sidebar = document.getElementById('sidebar'); 
+            const overlay = document.querySelector('.menu-overlay'); 
+            const menuBtn = document.getElementById('menuToggleBtn'); 
+            if (sidebar) sidebar.classList.remove('open'); 
+            if (overlay) overlay.classList.remove('active'); 
+            if (menuBtn) menuBtn.classList.remove('hidden'); 
+        }
+
+        async function loadSettings() {
+            const user = checkLogin();
+            if (!user) return;
+            
+            const freshUser = await syncUserData();
+            if (freshUser) {
+                document.getElementById('displayUid').innerText = freshUser.uid;
+                document.getElementById('displayInviteCode').innerText = freshUser.inviteCode || '------';
+            }
+        }
+        
+        function logout() { 
+            showConfirm('Logout', 'Are you sure you want to logout?', () => {
+                localStorage.removeItem('currentUser'); 
+                window.location.href = 'signin.html';
+            });
+        }
+        
+        function copyUID() { 
+            const uid = document.getElementById('displayUid').innerText; 
+            navigator.clipboard.writeText(uid); 
+            showToast('UID copied: ' + uid, 'success');
+        }
+        
+        function copyInviteCode() { 
+            const inviteCode = document.getElementById('displayInviteCode').innerText; 
+            navigator.clipboard.writeText(inviteCode); 
+            showToast('Invitation code copied: ' + inviteCode, 'success');
+        }
+        
+        async function changePassword() { 
+            showPrompt('Change Password', 'Enter new password (min 4 characters):', async (newPwd) => {
+                if(!newPwd) {
+                    showToast('Password change cancelled', 'info');
+                    return;
+                }
+                if(newPwd.length < 4) { 
+                    showToast('Password must be at least 4 characters', 'error');
+                    return; 
+                }
+                
+                const user = getCurrentUser();
+                if(user){ 
+                    const { error } = await sb
+                        .from('users')
+                        .update({ password: newPwd })
+                        .eq('uid', user.uid);
+                    
+                    if(error) {
+                        showToast('Password change failed: ' + error.message, 'error');
+                        return;
+                    }
+                    showToast('Password changed! Please login again.', 'success');
+                    setTimeout(() => { logout(); }, 1500);
+                } 
+            });
+        }
+        
+        async function setWithdrawalPin() { 
+            const user = getCurrentUser();
+            if(user){ 
+                const { data: userData } = await sb
+                    .from('users')
+                    .select('pin')
+                    .eq('uid', user.uid)
+                    .single();
+                
+                if(userData && userData.pin && userData.pin !== '0000' && userData.pin !== ''){ 
+                    showToast('PIN already set. Use "Change Withdrawal PIN" instead.', 'warning'); 
+                    return; 
+                } 
+                
+                showPrompt('Set Withdrawal PIN', 'Enter 4-digit PIN:', (pin) => {
+                    if(!pin) {
+                        showToast('PIN setup cancelled', 'info');
+                        return;
+                    }
+                    if(pin && pin.length === 4 && !isNaN(pin)){ 
+                        sb.from('users').update({ pin: pin }).eq('uid', user.uid)
+                            .then(() => { showToast('PIN set successfully!', 'success'); })
+                            .catch(err => { showToast('Failed to set PIN: ' + err.message, 'error'); });
+                    } else { 
+                        showToast('PIN must be exactly 4 digits', 'error'); 
+                    }
+                });
+            } 
+        }
+        
+        async function changeWithdrawalPin() { 
+            const user = getCurrentUser();
+            if(user){ 
+                showPrompt('Change Withdrawal PIN', 'Enter current PIN:', async (oldPin) => {
+                    if(!oldPin) {
+                        showToast('PIN change cancelled', 'info');
+                        return;
+                    }
+                    
+                    const { data: userData } = await sb
+                        .from('users')
+                        .select('pin')
+                        .eq('uid', user.uid)
+                        .single();
+                    
+                    if(userData && userData.pin !== oldPin){ 
+                        showToast('Wrong current PIN', 'error');
+                        return; 
+                    }
+                    
+                    showPrompt('Change Withdrawal PIN', 'Enter new 4-digit PIN:', (newPin) => {
+                        if(!newPin) {
+                            showToast('PIN change cancelled', 'info');
+                            return;
+                        }
+                        if(newPin && newPin.length === 4 && !isNaN(newPin)){ 
+                            sb.from('users').update({ pin: newPin }).eq('uid', user.uid)
+                                .then(() => { showToast('PIN changed successfully!', 'success'); })
+                                .catch(err => { showToast('Failed to change PIN: ' + err.message, 'error'); });
+                        } else { 
+                            showToast('PIN must be exactly 4 digits', 'error'); 
+                        }
+                    });
+                });
+            } 
+        }
+        
+        function contactSupport() { 
+            window.location.href = 'chat.html'; 
+        }
+        
+        function changeLanguage() { 
+            showToast('English only at this time.', 'info');
+        }
+        
+        loadSettings();
+    </script>
+</body>
+</html>
