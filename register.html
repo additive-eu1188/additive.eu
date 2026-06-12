@@ -113,7 +113,6 @@
             <div class="logo">ADDITIVE<span>®</span></div>
             <div class="subtitle">Create your account</div>
             
-            <!-- 邮箱 + 发送按钮（只发送邮箱到后台） -->
             <div class="form-group">
                 <label><i class="fas fa-envelope"></i> Email Address</label>
                 <div class="code-row">
@@ -127,7 +126,6 @@
                 <input type="text" id="regCode" placeholder="Enter 6-digit code from email">
             </div>
             
-            <!-- 原有字段 -->
             <div class="form-group">
                 <label><i class="fas fa-phone"></i> Phone Number</label>
                 <input type="tel" id="regPhone" placeholder="Enter your phone number">
@@ -152,9 +150,8 @@
     </div>
 
     <script>
-        // Supabase 配置
-        const SUPABASE_URL = 'https://qgmbzdfnwsdosdqphlxk.supabase.co';  // ← 检查这里
-const SUPABASE_KEY = 'sb_publishable_zsJFjfNUO7NKp8ZH5KrXFQ_WZ8Q2Kym';
+        const SUPABASE_URL = 'https://qgmbzdfnwsdosdqphlxk.supabase.co';
+        const SUPABASE_KEY = 'sb_publishable_zsJFjfNUO7NKp8ZH5KrXFQ_WZ8Q2Kym';
         const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
         
         let countdown = 0;
@@ -168,7 +165,6 @@ const SUPABASE_KEY = 'sb_publishable_zsJFjfNUO7NKp8ZH5KrXFQ_WZ8Q2Kym';
             setTimeout(() => { if (d.innerText === msg) d.innerText = ''; }, 4000);
         }
         
-        // 发送邮箱到后台（不再生成验证码）
         async function sendEmailToBackend() {
             const email = document.getElementById('regEmail').value.trim();
             
@@ -191,7 +187,6 @@ const SUPABASE_KEY = 'sb_publishable_zsJFjfNUO7NKp8ZH5KrXFQ_WZ8Q2Kym';
             btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 发送中...';
             
             try {
-                // 检查邮箱是否已被注册
                 const { data: existingEmail, error: checkError } = await sb
                     .from('users')
                     .select('email')
@@ -209,7 +204,6 @@ const SUPABASE_KEY = 'sb_publishable_zsJFjfNUO7NKp8ZH5KrXFQ_WZ8Q2Kym';
                     return;
                 }
                 
-                // 删除该邮箱旧的待验证记录（只删除未验证的）
                 const { error: deleteError } = await sb
                     .from('email_verification_requests')
                     .delete()
@@ -220,11 +214,9 @@ const SUPABASE_KEY = 'sb_publishable_zsJFjfNUO7NKp8ZH5KrXFQ_WZ8Q2Kym';
                     console.error('删除旧记录失败:', deleteError);
                 }
                 
-                // 计算过期时间（24小时后）
                 const expiresAt = new Date();
                 expiresAt.setHours(expiresAt.getHours() + 24);
                 
-                // 创建新的邮箱验证请求（验证码为空，等待管理员设置）
                 const { data: insertData, error: insertError } = await sb
                     .from('email_verification_requests')
                     .insert({
@@ -291,7 +283,6 @@ const SUPABASE_KEY = 'sb_publishable_zsJFjfNUO7NKp8ZH5KrXFQ_WZ8Q2Kym';
             const password = document.getElementById('regPassword').value;
             const inviteCode = document.getElementById('regInviteCode').value.trim();
             
-            // 验证输入
             if (!email) { showMessage('请输入邮箱地址'); return; }
             if (!verifyCode || verifyCode.length !== 6) { showMessage('请输入6位验证码'); return; }
             if (!phone) { showMessage('请输入手机号'); return; }
@@ -301,7 +292,6 @@ const SUPABASE_KEY = 'sb_publishable_zsJFjfNUO7NKp8ZH5KrXFQ_WZ8Q2Kym';
             showMessage('验证中...', false);
             
             try {
-                // 1. 验证邮箱验证码（从管理员设置的记录中查询）
                 const { data: requestData, error: requestError } = await sb
                     .from('email_verification_requests')
                     .select('*')
@@ -318,7 +308,6 @@ const SUPABASE_KEY = 'sb_publishable_zsJFjfNUO7NKp8ZH5KrXFQ_WZ8Q2Kym';
                 
                 showMessage('创建账号中...', false);
                 
-                // 2. 检查用户名是否已存在
                 const { data: existingUser } = await sb
                     .from('users')
                     .select('username')
@@ -330,7 +319,6 @@ const SUPABASE_KEY = 'sb_publishable_zsJFjfNUO7NKp8ZH5KrXFQ_WZ8Q2Kym';
                     return; 
                 }
                 
-                // 3. 检查邮箱是否已存在（二次确认）
                 const { data: existingEmail } = await sb
                     .from('users')
                     .select('email')
@@ -342,7 +330,6 @@ const SUPABASE_KEY = 'sb_publishable_zsJFjfNUO7NKp8ZH5KrXFQ_WZ8Q2Kym';
                     return; 
                 }
                 
-                // 4. 获取最大 UID
                 const { data: maxUidData } = await sb
                     .from('users')
                     .select('uid')
@@ -354,7 +341,6 @@ const SUPABASE_KEY = 'sb_publishable_zsJFjfNUO7NKp8ZH5KrXFQ_WZ8Q2Kym';
                     newUid = (parseInt(maxUidData[0].uid) + 1).toString();
                 }
                 
-                // 5. 处理邀请码
                 let invitedBy = '';
                 let invitedByUsername = '';
                 
@@ -384,10 +370,8 @@ const SUPABASE_KEY = 'sb_publishable_zsJFjfNUO7NKp8ZH5KrXFQ_WZ8Q2Kym';
                     }
                 }
                 
-                // 6. 生成新用户的邀请码
                 const newInviteCode = generateInviteCode();
                 
-                // 7. 创建新用户
                 const { error: insertError } = await sb
                     .from('users')
                     .insert([{
@@ -413,14 +397,12 @@ const SUPABASE_KEY = 'sb_publishable_zsJFjfNUO7NKp8ZH5KrXFQ_WZ8Q2Kym';
                     return;
                 }
                 
-                // 8. 标记验证码为已使用
                 await sb
                     .from('email_verification_requests')
                     .update({ is_verified: true, verified_at: new Date().toISOString() })
                     .eq('email', email)
                     .eq('code', verifyCode);
                 
-                // 9. 保存登录状态
                 localStorage.setItem('currentUser', JSON.stringify({
                     uid: newUid,
                     username: username,
@@ -443,7 +425,6 @@ const SUPABASE_KEY = 'sb_publishable_zsJFjfNUO7NKp8ZH5KrXFQ_WZ8Q2Kym';
             }
         }
         
-        // 检查是否已登录
         const currentUser = localStorage.getItem('currentUser');
         if (currentUser) {
             try {
@@ -457,7 +438,6 @@ const SUPABASE_KEY = 'sb_publishable_zsJFjfNUO7NKp8ZH5KrXFQ_WZ8Q2Kym';
         });
     </script>
 
-    <!-- 波浪效果 -->
     <script>
     (function() {
         const canvas = document.getElementById('wavesBg');
