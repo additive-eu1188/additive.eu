@@ -1,6 +1,6 @@
 // admin-common.js - 完整版（包含自定义弹窗和通知 + 所有页面实时刷新）
-const SUPABASE_URL = 'https://ygeawapbjcfytjoxpttk.supabase.co';
-const SUPABASE_KEY = 'sb_publishable_3X4gUSBt2i7OXB1IsajBiQ__NM-OIGn';
+const SUPABASE_URL = 'https://qgmbzdfnwsdosdqphlxk.supabase.co';  // ← 检查这里
+const SUPABASE_KEY = 'sb_publishable_zsJFjfNUO7NKp8ZH5KrXFQ_WZ8Q2Kym';
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 let currentDays = 1;
