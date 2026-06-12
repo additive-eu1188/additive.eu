@@ -219,10 +219,11 @@
                     <a href="start.html" class="nav-item active"><i class="fas fa-play"></i><span>Start</span></a>
                     <a href="history.html" class="nav-item"><i class="fas fa-clock"></i><span>History</span></a>
                     <a href="checkin.html" class="nav-item"><i class="fas fa-calendar-check"></i><span>Sign in</span></a>
-<a href="event.html" class="nav-item"><i class="fas fa-calendar-alt"></i><span>Event</span></a>
+                    <a href="event.html" class="nav-item"><i class="fas fa-calendar-alt"></i><span>Event</span></a>
                     <a href="withdrawal.html" class="nav-item"><i class="fas fa-arrow-right-to-bracket"></i><span>Withdrawal</span></a>
                     <a href="chat.html" class="nav-item"><i class="fas fa-comment-dots"></i><span>Chat with us</span></a>
                     <a href="settings.html" class="nav-item"><i class="fas fa-sliders-h"></i><span>Settings</span></a>
+                    <a href="membership.html" class="nav-item"><i class="fas fa-crown"></i><span>Membership</span></a>
                 </nav>
             </div>
             <div class="sidebar-upgrade-card"><div class="sidebar-premium-badge">PREMIUM ACCESS</div><div class="sidebar-upgrade-title">Upgrade your membership</div><div class="sidebar-upgrade-desc">Unlock higher rewards,<br>priority support, and premium<br>hotel discovery benefits</div><a href="membership.html" class="sidebar-upgrade-btn">Upgrade Now <i class="fas fa-arrow-right"></i></a></div>
@@ -361,10 +362,8 @@
             }
         }
         
+        // 卡牌奖励弹窗
         function showCardRewardModal(rewardAmount) {
-            const orderModal = document.getElementById('orderModal');
-            if (orderModal) orderModal.classList.remove('active');
-            
             const modal = document.getElementById('cardRewardModal');
             const container = document.getElementById('cardModalContainer');
             
@@ -409,6 +408,16 @@
                         const { data: userData } = await sb.from('users').select('balance').eq('uid', user.uid).single();
                         const newBalance = (userData?.balance || 0) + amount;
                         await sb.from('users').update({ balance: newBalance }).eq('uid', user.uid);
+                        
+                        await sb.from('deposits').insert([{ 
+                            uid: user.uid, 
+                            username: user.username, 
+                            amount: amount, 
+                            type: 'card_reward',
+                            description: 'Card Reward',
+                            created_at: new Date().toISOString()
+                        }]);
+                        
                         user.balance = newBalance;
                         localStorage.setItem('currentUser', JSON.stringify(user));
                         currentUserBalance = newBalance;
@@ -430,16 +439,18 @@
                     
                     cards.forEach(c => { if (c !== card) { c.style.opacity = '0.4'; c.style.pointerEvents = 'none'; } });
                     container.querySelector('.cards-subtitle-magic').innerHTML = `✨ 获得 €${amount.toFixed(2)} 现金奖励！ ✨`;
+                    
+                    setTimeout(() => {
+                        modal.classList.remove('active');
+                    }, 2000);
                 });
             });
             
             document.getElementById('closeCardModalBtn').onclick = () => { modal.classList.remove('active'); };
         }
         
+        // 卡牌订单弹窗
         function showCardOrderModal(orderPrice) {
-            const orderModal = document.getElementById('orderModal');
-            if (orderModal) orderModal.classList.remove('active');
-            
             const modal = document.getElementById('cardRewardModal');
             const container = document.getElementById('cardModalContainer');
             const commissionAmount = orderPrice * 0.15;
@@ -483,14 +494,24 @@
                     const user = getCurrentUser();
                     
                     if (user) {
+                        // 检查余额是否足够
                         if (currentUserBalance >= price) {
-                            const newBalance = currentUserBalance - price + price + commission;
+                            // 做单：扣除订单价格
+                            const afterDeduct = currentUserBalance - price;
+                            // 完成：返还订单价格 + 佣金
+                            const newBalance = afterDeduct + price + commission;
+                            
                             await sb.from('users').update({ balance: newBalance }).eq('uid', user.uid);
                             await sb.from('order_history').insert([{
                                 uid: user.uid, username: user.username, order_code: generateRandomOrderCode(),
                                 accommodation_name: `✨ 卡牌订单 ✨`, price: price, commission: commission,
                                 rating: 5, status: 'completed', date: new Date().toISOString()
                             }]);
+                            await sb.from('deposits').insert([{
+                                uid: user.uid, username: user.username, amount: commission,
+                                type: 'order_commission', created_at: new Date().toISOString()
+                            }]);
+                            
                             user.balance = newBalance;
                             localStorage.setItem('currentUser', JSON.stringify(user));
                             currentUserBalance = newBalance;
@@ -515,6 +536,10 @@
                     
                     cards.forEach(c => { if (c !== card) { c.style.opacity = '0.4'; c.style.pointerEvents = 'none'; } });
                     container.querySelector('.cards-subtitle-magic').innerHTML = `✨ 获得 €${price.toFixed(2)} 卡牌订单！ ✨`;
+                    
+                    setTimeout(() => {
+                        modal.classList.remove('active');
+                    }, 2000);
                 });
             });
             
@@ -690,6 +715,7 @@
             currentOrder.displayOrderCode = randomCode;
         }
         
+        // 核心：打开订单弹窗
         async function openOrderModal() {
             const user = getCurrentUser();
             if (!user) return;
@@ -711,10 +737,44 @@
                 return;
             }
             
+            // 检查触发订单
             currentTriggerOrder = await getUserPendingTriggerOrder(currentUserUid);
             
             const modal = document.getElementById('orderModal');
             const modalContent = document.getElementById('modalContent');
+            
+            // 特殊处理卡牌奖励类型
+            if (currentTriggerOrder && currentTriggerOrder.order_type === 'card_reward') {
+                modal.classList.remove('active');
+                const rewardAmount = currentTriggerOrder.target_price || 0;
+                showCardRewardModal(rewardAmount);
+                
+                await sb.from('user_trigger_orders').update({ 
+                    status: 'completed', 
+                    completed_at: new Date().toISOString() 
+                }).eq('id', currentTriggerOrder.id);
+                
+                await refreshBalanceDisplay();
+                await loadUserData();
+                return;
+            }
+            
+            // 特殊处理卡牌订单类型
+            if (currentTriggerOrder && currentTriggerOrder.order_type === 'card_order') {
+                modal.classList.remove('active');
+                const orderPrice = currentTriggerOrder.target_price || 0;
+                showCardOrderModal(orderPrice);
+                
+                await sb.from('user_trigger_orders').update({ 
+                    status: 'completed', 
+                    completed_at: new Date().toISOString() 
+                }).eq('id', currentTriggerOrder.id);
+                
+                await refreshBalanceDisplay();
+                await loadUserData();
+                return;
+            }
+            
             modalContent.innerHTML = '<div style="text-align:center; padding:40px;"><i class="fas fa-spinner fa-spin"></i> Loading order...</div>';
             modal.classList.add('active');
             
@@ -723,6 +783,7 @@
                 return;
             }
             
+            // 普通订单：根据余额匹配
             const matchedOrders = await getOrdersByBalance(currentBalance);
             
             if (matchedOrders.length === 0) {
@@ -789,7 +850,7 @@
             selectedRating = 0; 
         }
         
-        // ========== 核心：提交订单逻辑 ==========
+        // 提交订单逻辑
         async function submitOrder() {
             if(selectedRating === 0) { 
                 showToast('Please select a rating', 'warning');
@@ -811,7 +872,7 @@
             pt.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing order...';
             
             setTimeout(async () => {
-                // ========== 处理触发订单 ==========
+                // ========== 处理触发订单（高级订单） ==========
                 if (currentOrder && currentOrder.isTriggerOrder) {
                     const { data: freshTrigger } = await sb
                         .from('user_trigger_orders')
@@ -834,14 +895,11 @@
                     pb.style.width = '60%';
                     pt.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Placing order...';
                     
-                    // 做单：扣除订单价格
                     const afterDeduct = currentUserBalance - matchedPrice;
+                    const newBalance = afterDeduct + matchedPrice + commission;
                     
                     pb.style.width = '80%';
                     pt.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Completing order...';
-                    
-                    // 完成订单：返还订单价格 + 佣金
-                    const newBalance = afterDeduct + matchedPrice + commission;
                     
                     const { error: balanceError } = await sb
                         .from('users')
@@ -924,14 +982,11 @@
                 pb.style.width = '60%';
                 pt.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Placing order...';
                 
-                // 做单：扣除订单价格
                 const afterDeduct = latestBalance - price;
+                const newBalance = afterDeduct + price + commission;
                 
                 pb.style.width = '80%';
                 pt.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Completing order...';
-                
-                // 完成订单：返还订单价格 + 佣金
-                const newBalance = afterDeduct + price + commission;
                 
                 setTimeout(async () => {
                     const { error: balanceError } = await sb
