@@ -148,11 +148,11 @@
         /* ========== HERO 视频区域 ========== */
         .hero-section {
             position: relative;
-            min-height: 85vh;
+            min-height: 100vh;
             display: flex;
             align-items: center;
-            justify-content: center;
-            text-align: center;
+            justify-content: flex-start;
+            text-align: left;
             overflow: hidden;
         }
         .hero-video-bg {
@@ -163,13 +163,13 @@
             height: 100%;
             object-fit: cover;
             z-index: 0;
-            opacity: 0.3;
         }
+        /* 移除蓝色遮罩层 - 原问题1修复 */
         .hero-content {
             position: relative;
             z-index: 2;
-            max-width: 900px;
-            padding: 120px 20px 80px;
+            max-width: 700px;
+            padding: 120px 32px 80px;
             color: var(--text-white);
         }
         .hero-content h1 {
@@ -189,11 +189,43 @@
         .hero-buttons {
             display: flex;
             gap: 16px;
-            justify-content: center;
+            margin-top: 16px;
         }
+        
+        /* 手机版本适配 - 原问题2和3修复 */
         @media (max-width: 768px) {
-            .hero-content h1 { font-size: 36px; }
-            .hero-buttons { flex-direction: column; align-items: center; }
+            .hero-section {
+                min-height: 100vh;
+                align-items: center;
+            }
+            .hero-content {
+                padding: 100px 20px 60px;
+                max-width: 100%;
+            }
+            .hero-content h1 {
+                font-size: 36px;
+                text-align: left;
+            }
+            .hero-content p {
+                font-size: 16px;
+                text-align: left;
+            }
+            .hero-buttons {
+                flex-direction: column;
+                align-items: flex-start;
+                width: 100%;
+            }
+            .hero-buttons .btn-primary,
+            .hero-buttons .btn-outline {
+                width: 100%;
+                text-align: center;
+                justify-content: center;
+            }
+            /* 视频在手机上完整显示 */
+            .hero-video-bg {
+                object-fit: cover;
+                object-position: center;
+            }
         }
 
         /* ========== 客户评价滚动区 ========== */
@@ -395,11 +427,11 @@
     </div>
 </header>
 
-<!-- Hero 视频区域 -->
+<!-- Hero 视频区域 - 文字左对齐 -->
 <section class="hero-section">
     <video class="hero-video-bg" id="heroVideo" autoplay loop muted playsinline></video>
     <div class="hero-content">
-        <h1>Digitales Hotelmarketing.<br><span class="highlight">Messbar, präzise & spezialisiert.</span></h1>
+        <h1>Digitales<br>Hotelmarketing.<br><span class="highlight">Messbar, präzise &<br>spezialisiert.</span></h1>
         <p>Die erste spezialisierte Performance Marketing Agentur für Hotels.<br>Mit klarem Fokus auf Daten, messbare Ergebnisse und mehr Direktbuchungen.</p>
         <div class="hero-buttons">
             <button class="btn-primary" onclick="location.href='register.html'">Kostenlose Beratung <i class="fas fa-arrow-right"></i></button>
@@ -516,7 +548,6 @@
         const container = document.getElementById('marqueeContent');
         if (!container) return;
         
-        // 复制两份以实现无缝滚动
         for (let i = 0; i < 2; i++) {
             testimonials.forEach(t => {
                 const div = document.createElement('div');
