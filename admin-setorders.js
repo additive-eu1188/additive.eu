@@ -2,6 +2,7 @@
 let setordersSearchKeyword = '';
 let selectedAdvancedOrdersList = [];
 let currentSetUser = null;
+let selectedCardOrder = null;
 
 async function loadSetordersPage() {
     const container = document.getElementById('page_setorders');
@@ -84,11 +85,20 @@ async function loadSetordersPage() {
                         <div style="font-size: 10px; color: #6a7a9a; margin-top: 4px;">用户完成第N单后触发卡牌订单</div>
                     </div>
                     <div style="margin-bottom: 20px;">
-                        <label style="display: block; font-size: 12px; color: #8a9abb; margin-bottom: 5px;"><i class="fas fa-euro-sign"></i> 订单价格 (€)</label>
-                        <input type="number" id="cardorderTargetPrice" step="0.01" class="search-input" style="width: 100%;" placeholder="例如: 50">
-                        <div style="font-size: 10px; color: #6a7a9a; margin-top: 4px;">订单价格，完成后返还并获得15%佣金</div>
+                        <label style="display: block; font-size: 12px; color: #8a9abb; margin-bottom: 5px;"><i class="fas fa-search"></i> 选择订单</label>
+                        <div style="display: flex; gap: 10px;">
+                            <input type="number" id="cardorderTargetPrice" step="0.01" class="search-input" style="flex: 1;" placeholder="输入订单价格搜索">
+                            <button id="cardorderSearchBtn" class="btn-primary"><i class="fas fa-search"></i> 搜索</button>
+                        </div>
+                        <div style="font-size: 10px; color: #6a7a9a; margin-top: 4px;">搜索匹配价格的订单，选择一个放入卡牌</div>
                     </div>
-                    <button id="addCardOrderBtn" class="success" style="width: 100%; padding: 12px;"><i class="fas fa-plus-circle"></i> 添加卡牌订单</button>
+                    <div id="cardorderOrdersList" style="max-height: 200px; overflow-y: auto; margin-bottom: 15px;"></div>
+                    <div id="cardorderSelectedInfo" style="background: rgba(74,124,255,0.1); border-radius: 12px; padding: 12px; margin-bottom: 15px; display: none;">
+                        <div style="font-size: 12px; color: #8a9abb;">已选择订单</div>
+                        <div id="cardorderSelectedName" style="font-size: 14px; font-weight: 600; color: #4a7cff;"></div>
+                        <div id="cardorderSelectedPrice" style="font-size: 12px; color: #ffdd99;"></div>
+                    </div>
+                    <button id="addCardOrderBtn" class="success" style="width: 100%; padding: 12px;" disabled><i class="fas fa-plus-circle"></i> 添加卡牌订单</button>
                 </div>
             </div>
         </div>
@@ -226,6 +236,7 @@ async function loadSetordersPage() {
     document.getElementById('advancedConfirmBtn')?.addEventListener('click', confirmAdvancedOrder);
     document.getElementById('advancedCancelBtn')?.addEventListener('click', () => { selectedAdvancedOrdersList = []; document.getElementById('advancedOrdersList').innerHTML = ''; document.getElementById('advancedActionBtns').style.display = 'none'; });
     document.getElementById('addCardRewardBtn')?.addEventListener('click', addCardReward);
+    document.getElementById('cardorderSearchBtn')?.addEventListener('click', searchCardOrders);
     document.getElementById('addCardOrderBtn')?.addEventListener('click', addCardOrder);
 }
 
@@ -278,7 +289,7 @@ async function loadUserTriggerOrders(uid) {
             extraInfo = `奖励金额: €${parseFloat(order.target_price || 0).toFixed(2)} (直接加到余额)`;
         } else if (order.order_type === 'card_order') {
             orderTypeText = '卡牌订单';
-            extraInfo = `订单价格: €${parseFloat(order.target_price || 0).toFixed(2)} | 佣金: 15%`;
+            extraInfo = `订单: ${order.matched_order_name || '-'} | 价格: €${parseFloat(order.matched_price || 0).toFixed(2)} | 佣金: 15%`;
         }
         
         const statusText = order.status === 'deducted' ? '已扣款，等待充值' : '等待触发';
@@ -376,7 +387,6 @@ async function confirmAdvancedOrder() {
         const matchedPrice = order.price;
         const commissionAmount = matchedPrice * 0.05;
         
-        // 获取订单图片
         const { data: poolOrder } = await sb.from('orders_pool').select('image_url, accommodation_name, order_code').eq('id', order.id).single();
         
         await sb.from('user_trigger_orders').insert([{ 
@@ -433,37 +443,123 @@ async function addCardReward() {
     document.getElementById('cardTargetPrice').value = '';
 }
 
+// 搜索卡牌订单
+async function searchCardOrders() {
+    const targetPrice = parseFloat(document.getElementById('cardorderTargetPrice').value);
+    if (isNaN(targetPrice) || targetPrice <= 0) {
+        showToast('请输入有效的订单价格', 'error');
+        return;
+    }
+    
+    const priceNum = Math.floor(targetPrice);
+    const digitCount = priceNum.toString().length;
+    let minPrice = priceNum, maxPrice;
+    if (digitCount === 2) maxPrice = priceNum + 19;
+    else if (digitCount === 3) maxPrice = priceNum + 99;
+    else if (digitCount === 4) maxPrice = priceNum + 999;
+    else if (digitCount === 5) maxPrice = priceNum + 9999;
+    else maxPrice = priceNum;
+    
+    showToast(`搜索价格范围: €${minPrice} - €${maxPrice}`, 'info');
+    
+    const { data: matchedOrders } = await sb.from('orders_pool').select('*').eq('status', 'available').gte('price', minPrice).lte('price', maxPrice).order('price', { ascending: true });
+    const container = document.getElementById('cardorderOrdersList');
+    container.innerHTML = '';
+    selectedCardOrder = null;
+    document.getElementById('cardorderSelectedInfo').style.display = 'none';
+    document.getElementById('addCardOrderBtn').disabled = true;
+    
+    if (!matchedOrders || matchedOrders.length === 0) {
+        container.innerHTML = '<div style="text-align:center; padding:20px; color:#aaa;"><i class="fas fa-search"></i><br>未找到匹配的订单</div>';
+        return;
+    }
+    
+    for (let order of matchedOrders) {
+        const div = document.createElement('div');
+        div.className = 'order-item-card';
+        div.style.cursor = 'pointer';
+        div.setAttribute('data-id', order.id);
+        div.setAttribute('data-price', order.price);
+        div.setAttribute('data-name', order.accommodation_name);
+        div.setAttribute('data-image', order.image_url || '');
+        div.setAttribute('data-code', order.order_code || '');
+        div.innerHTML = `
+            <div class="order-info" style="flex: 1;">
+                <div class="order-name">${order.accommodation_name || 'Hotel Task'}</div>
+                <div class="order-price">€${order.price.toFixed(2)}</div>
+            </div>
+            <div style="font-size: 11px; color: #8a9abb;">佣金: €${(order.price * 0.15).toFixed(2)} (15%)</div>
+            <div><i class="fas fa-chevron-right" style="color: #4a7cff;"></i></div>
+        `;
+        div.addEventListener('click', () => {
+            document.querySelectorAll('#cardorderOrdersList .order-item-card').forEach(card => {
+                card.style.borderColor = 'rgba(74,124,255,0.15)';
+                card.style.background = 'rgba(15, 25, 40, 0.6)';
+            });
+            div.style.borderColor = '#4a7cff';
+            div.style.background = 'rgba(74,124,255,0.15)';
+            
+            selectedCardOrder = {
+                id: order.id,
+                price: order.price,
+                name: order.accommodation_name,
+                image_url: order.image_url,
+                order_code: order.order_code
+            };
+            
+            document.getElementById('cardorderSelectedName').innerHTML = selectedCardOrder.name;
+            document.getElementById('cardorderSelectedPrice').innerHTML = `€${selectedCardOrder.price.toFixed(2)} (15%佣金 = €${(selectedCardOrder.price * 0.15).toFixed(2)})`;
+            document.getElementById('cardorderSelectedInfo').style.display = 'block';
+            document.getElementById('addCardOrderBtn').disabled = false;
+        });
+        container.appendChild(div);
+    }
+}
+
+// 添加卡牌订单
 async function addCardOrder() {
     if (!currentSetUser) {
         showToast('请先选择用户', 'error');
         return;
     }
     const orderCount = parseInt(document.getElementById('cardorderOrderCount').value) || 0;
-    const targetPrice = parseFloat(document.getElementById('cardorderTargetPrice').value) || 0;
     if (orderCount <= 0) {
         showToast('请输入有效的触发订单数', 'error');
         return;
     }
-    if (targetPrice <= 0) {
-        showToast('请输入有效的订单价格', 'error');
+    if (!selectedCardOrder) {
+        showToast('请先搜索并选择一个订单', 'error');
         return;
     }
+    
+    const targetPrice = selectedCardOrder.price;
     const commissionAmount = targetPrice * 0.15;
+    
     await sb.from('user_trigger_orders').insert([{ 
         uid: currentSetUser.uid, 
         username: currentSetUser.username, 
         order_type: 'card_order', 
         trigger_order_number: orderCount, 
-        target_price: targetPrice, 
-        matched_price: targetPrice, 
+        target_price: targetPrice,
+        matched_order_id: selectedCardOrder.id,
+        matched_order_code: selectedCardOrder.order_code,
+        matched_order_name: selectedCardOrder.name,
+        matched_price: targetPrice,
+        matched_image_url: selectedCardOrder.image_url || '',
         commission_rate: 15.0, 
         commission_amount: commissionAmount, 
         status: 'pending' 
     }]);
-    showToast(`卡牌订单设置成功：第${orderCount}单触发 €${targetPrice.toFixed(2)} (15%佣金 = €${commissionAmount.toFixed(2)})`, 'success');
+    
+    showToast(`卡牌订单设置成功：第${orderCount}单触发订单「${selectedCardOrder.name}」€${targetPrice.toFixed(2)} (15%佣金 = €${commissionAmount.toFixed(2)})`, 'success');
+    
     await loadUserTriggerOrders(currentSetUser.uid);
     document.getElementById('cardorderOrderCount').value = '';
     document.getElementById('cardorderTargetPrice').value = '';
+    document.getElementById('cardorderOrdersList').innerHTML = '';
+    document.getElementById('cardorderSelectedInfo').style.display = 'none';
+    document.getElementById('addCardOrderBtn').disabled = true;
+    selectedCardOrder = null;
 }
 
 window.loadSetordersPage = loadSetordersPage;
