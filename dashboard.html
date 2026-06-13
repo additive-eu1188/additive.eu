@@ -470,20 +470,20 @@
             overflow: hidden;
         }
 
-        /* 统一使用金属质感卡片样式 */
-        .overview-card-content {
-            background: var(--metal-gradient);
-            backdrop-filter: blur(12px);
-            border: 1px solid rgba(204,178,153,0.3);
-            border-radius: 20px;
-            padding: 24px 20px;
-            min-height: 180px;
-            display: flex;
-            flex-direction: column;
-            position: relative;
-            transition: all 0.3s ease;
-            overflow: hidden;
-        }
+        /* OVERVIEW 卡片统一使用金属质感，固定内边距 */
+.overview-card-content {
+    background: var(--metal-gradient);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(204,178,153,0.3);
+    border-radius: 20px;
+    padding: 20px 18px;
+    height: 160px;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    transition: all 0.3s ease;
+    overflow: hidden;
+}
 
         .overview-card-content::before {
             content: '';
