@@ -360,6 +360,12 @@
             .action-text { font-size: 9px; }
             .action-sub { font-size: 7px; }
         }
+.dashboard-row {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+    }
+}
     </style>
 </head>
 <body>
@@ -421,25 +427,10 @@
                 <div class="action-card" onclick="location.href='chat.html'"><i class="fas fa-headset"></i><div class="action-text">Support</div><div class="action-sub">24/7 help</div></div>
             </div>
 
-            <!-- QUICK STATS 和 图表 并排区域 -->
+                        <!-- 图表 和 QUICK STATS 区域（图表在上，QUICK STATS 在下） -->
             <div class="dashboard-row">
-                <!-- 左侧：QUICK STATS -->
+                <!-- 上方：图表 -->
                 <div class="dashboard-left">
-                    <div class="card">
-                        <div class="card-label"><i class="fas fa-chart-line"></i> QUICK STATS</div>
-                        <div style="display: flex; justify-content: space-between; margin: 20px 0;">
-                            <div><div style="font-size: 28px; font-weight: 700;" id="totalOrdersStat">0</div><div style="font-size: 11px; color: var(--text-secondary);">Total Orders</div></div>
-                            <div><div style="font-size: 28px; font-weight: 700;" id="totalCommissionStat">€0</div><div style="font-size: 11px; color: var(--text-secondary);">Commission</div></div>
-                        </div>
-                        <div class="membership-info">
-                            <span class="membership-badge"><i class="fas fa-chart-simple"></i> Lifetime Earnings</span>
-                            <span id="lifetimeEarnings" style="color: var(--accent-gold); font-weight: 600;">€0</span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- 右侧：图表 -->
-                <div class="dashboard-right">
                     <div class="chart-container">
                         <div class="chart-header">
                             <div class="chart-title-section">
@@ -467,6 +458,21 @@
                                 <div class="chart-stat-label">Best Day</div>
                                 <div class="chart-stat-value" id="chartBestCommission">€0.00</div>
                             </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 下方：QUICK STATS -->
+                <div class="dashboard-right">
+                    <div class="card">
+                        <div class="card-label"><i class="fas fa-chart-line"></i> QUICK STATS</div>
+                        <div style="display: flex; justify-content: space-between; margin: 20px 0;">
+                            <div><div style="font-size: 28px; font-weight: 700;" id="totalOrdersStat">0</div><div style="font-size: 11px; color: var(--text-secondary);">Total Orders</div></div>
+                            <div><div style="font-size: 28px; font-weight: 700;" id="totalCommissionStat">€0</div><div style="font-size: 11px; color: var(--text-secondary);">Commission</div></div>
+                        </div>
+                        <div class="membership-info">
+                            <span class="membership-badge"><i class="fas fa-chart-simple"></i> Lifetime Earnings</span>
+                            <span id="lifetimeEarnings" style="color: var(--accent-gold); font-weight: 600;">€0</span>
                         </div>
                     </div>
                 </div>
