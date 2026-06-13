@@ -636,3 +636,25 @@ body {
         }
     }
 }
+
+.overview-card-content {
+    position: relative;
+    z-index: 1;
+}
+
+.overview-card-content .overview-label,
+.overview-card-content .overview-value,
+.overview-card-content .overview-tag {
+    position: relative;
+    z-index: 2;
+}
+
+.bubble-canvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 0;  /* 确保在最底层 */
+}
