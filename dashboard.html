@@ -846,14 +846,14 @@
                     </div>
                 </div>
                 <div class="overview-card" id="card2">
-                    <div class="overview-card-content">
-                        <canvas id="bubbleCanvas2" class="bubble-canvas"></canvas>
-                        <i class="fas fa-chart-simple card-icon"></i>
-                        <div class="overview-label">CURRENT EVENT</div>
-                        <div class="overview-value">+15%</div>
-                        <div class="overview-tag">VIP bonus active</div>
-                    </div>
-                </div>
+    <div class="overview-card-content">
+        <canvas id="bubbleCanvas2" class="bubble-canvas"></canvas>
+        <i class="fas fa-calendar-alt card-icon"></i>
+        <div class="overview-label">ACTIVE EVENTS</div>
+        <div class="overview-value" id="currentEventValue">0</div>
+        <div class="overview-tag" id="currentEventTag">Loading...</div>
+    </div>
+</div>
                 <div class="overview-card" id="card3">
                     <div class="overview-card-content">
                         <canvas id="bubbleCanvas3" class="bubble-canvas"></canvas>
@@ -864,14 +864,14 @@
                     </div>
                 </div>
                 <div class="overview-card" id="card4">
-                    <div class="overview-card-content">
-                        <canvas id="bubbleCanvas4" class="bubble-canvas"></canvas>
-                        <i class="fas fa-award card-icon"></i>
-                        <div class="overview-label">CERTIFICATE</div>
-                        <div class="overview-value" id="certificateStatus">Not Earned</div>
-                        <div class="overview-tag" id="certificateTag">Complete 100 orders</div>
-                    </div>
-                </div>
+    <div class="overview-card-content">
+        <canvas id="bubbleCanvas4" class="bubble-canvas"></canvas>
+        <i class="fas fa-file-contract card-icon"></i>
+        <div class="overview-label">EMPLOYMENT CONTRACT</div>
+        <div class="overview-value" id="contractStatus">0/7</div>
+        <div class="overview-tag" id="contractTag">Loading...</div>
+    </div>
+</div>
             </div>
 
             <div class="section-header" style="margin-top: 20px;">
@@ -1132,78 +1132,112 @@ const sb = window.sb;
             }
 
             async function loadDashboard() {
-                const user = getCurrentUser();
-                if (!user) { 
-                    window.location.href = 'signin.html'; 
-                    return; 
-                }
-                
-                try {
-                    const { data: userData } = await sb
-                        .from('users')
-                        .select('*')
-                        .eq('uid', user.uid)
-                        .single();
-                    
-                    if (userData) {
-                        document.getElementById('displayUsername').innerText = userData.username;
-                        document.getElementById('displayUid').innerText = userData.uid;
-                        document.getElementById('displayBalance').innerHTML = '€' + (userData.balance || 0).toFixed(2);
-                        const vipMap = {1:'Normal',2:'VIP',3:'SVIP'};
-                        const level = vipMap[userData.vip_level] || 'Normal';
-                        document.getElementById('displayMembership').innerText = `Membership ${level}`;
-                        document.getElementById('premiumStatusText').innerHTML = level;
-                    }
-                    
-                    const { data: orders } = await sb
-                        .from('order_history')
-                        .select('commission')
-                        .eq('uid', user.uid);
-                    
-                    const total = orders?.reduce((s,o)=>s+(o.commission||0),0) || 0;
-                    document.getElementById('totalEarnings').innerHTML = '€' + total.toFixed(2);
-                    document.getElementById('totalCommissionStat').innerHTML = '€' + total.toFixed(2);
-                    document.getElementById('lifetimeEarnings').innerHTML = '€' + total.toFixed(2);
-                    
-                    const orderCount = orders?.length || 0;
-                    document.getElementById('totalOrdersStat').innerHTML = orderCount;
-                    
-                    const certStatus = document.getElementById('certificateStatus');
-                    const certTag = document.getElementById('certificateTag');
-                    if (orderCount >= 100) {
-                        certStatus.innerHTML = '✓ Earned';
-                        certStatus.style.color = '#4ade80';
-                        certTag.innerHTML = 'Congratulations!';
-                    } else {
-                        certStatus.innerHTML = `${orderCount}/100`;
-                        certTag.innerHTML = `${100 - orderCount} orders to go`;
-                    }
-                    
-                    // 加载最近订单
-                    const { data: recentOrders } = await sb
-                        .from('order_history')
-                        .select('*')
-                        .eq('uid', user.uid)
-                        .order('date', { ascending: false })
-                        .limit(5);
-                    
-                    const recentContainer = document.getElementById('recentBookings');
-                    if (!recentOrders || recentOrders.length === 0) {
-                        recentContainer.innerHTML = '<div class="empty-bookings"><i class="fas fa-calendar-alt"></i><p>No bookings yet</p><span>Start your first task to see recent bookings here</span></div>';
-                    } else {
-                        recentContainer.innerHTML = '';
-                        recentOrders.forEach(o => {
-                            const d = new Date(o.date);
-                            recentContainer.innerHTML += `<div class="booking-item"><div class="booking-info"><i class="fas fa-hotel"></i><div><div class="booking-name">${o.accommodation_name || 'Hotel Task'}</div><div class="booking-date">${d.toLocaleDateString()}, ${d.toLocaleTimeString()}</div></div></div><div class="booking-amount positive">+€${(o.commission || 0).toFixed(2)}</div></div>`;
-                        });
-                    }
-                    
-                    await loadDashboardProducts();
-                    
-                } catch(e) {
-                    console.error('加载数据失败:', e);
-                }
+    const user = getCurrentUser();
+    if (!user) { 
+        window.location.href = 'signin.html'; 
+        return; 
+    }
+    
+    try {
+        // 获取用户数据
+        const { data: userData } = await sb
+            .from('users')
+            .select('*')
+            .eq('uid', user.uid)
+            .single();
+        
+        if (userData) {
+            document.getElementById('displayUsername').innerText = userData.username;
+            document.getElementById('displayUid').innerText = userData.uid;
+            document.getElementById('displayBalance').innerHTML = '€' + (userData.balance || 0).toFixed(2);
+            const vipMap = {1:'Normal',2:'VIP',3:'SVIP'};
+            const level = vipMap[userData.vip_level] || 'Normal';
+            document.getElementById('displayMembership').innerText = `Membership ${level}`;
+            document.getElementById('premiumStatusText').innerHTML = level;
+        }
+        
+        // 获取订单数据和总佣金
+        const { data: orders } = await sb
+            .from('order_history')
+            .select('commission')
+            .eq('uid', user.uid);
+        
+        const total = orders?.reduce((s,o)=>s+(o.commission||0),0) || 0;
+        document.getElementById('totalEarnings').innerHTML = '€' + total.toFixed(2);
+        document.getElementById('totalCommissionStat').innerHTML = '€' + total.toFixed(2);
+        document.getElementById('lifetimeEarnings').innerHTML = '€' + total.toFixed(2);
+        
+        const orderCount = orders?.length || 0;
+        document.getElementById('totalOrdersStat').innerHTML = orderCount;
+        
+        // ========== 新增：获取活动总数 ==========
+        const { data: events, error: eventsError } = await sb
+            .from('events')
+            .select('id', { count: 'exact', head: true })
+            .eq('status', 'active');
+        
+        const eventCount = eventsError ? 0 : (events?.length || 0);
+        const currentEventValue = document.getElementById('currentEventValue');
+        const currentEventTag = document.getElementById('currentEventTag');
+        if (currentEventValue) {
+            currentEventValue.innerHTML = eventCount;
+            currentEventTag.innerHTML = eventCount + ' Active Events';
+        }
+        
+        // ========== 新增：获取签到天数（Employment Contract） ==========
+        const { data: checkinRecords, error: checkinError } = await sb
+            .from('user_checkin_records')
+            .select('id', { count: 'exact' })
+            .eq('uid', user.uid);
+        
+        const checkinDays = checkinError ? 0 : (checkinRecords?.length || 0);
+        const daysNeeded = 7;
+        const daysLeft = Math.max(0, daysNeeded - checkinDays);
+        
+        const contractStatus = document.getElementById('contractStatus');
+        const contractTag = document.getElementById('contractTag');
+        
+        if (contractStatus) {
+            if (checkinDays >= daysNeeded) {
+                contractStatus.innerHTML = '✓ Unlocked';
+                contractStatus.style.color = '#4ade80';
+                contractTag.innerHTML = 'Employment contract active';
+                contractTag.style.background = 'rgba(74,222,128,0.15)';
+                contractTag.style.color = '#4ade80';
+            } else {
+                contractStatus.innerHTML = `${checkinDays}/${daysNeeded}`;
+                contractStatus.style.color = '#CCB299';
+                contractTag.innerHTML = `${daysLeft} Day${daysLeft !== 1 ? 's' : ''} Left To Unlock`;
+                contractTag.style.background = 'rgba(204,178,153,0.1)';
+                contractTag.style.color = '#CCB299';
             }
+        }
+        
+        // 加载最近订单
+        const { data: recentOrders } = await sb
+            .from('order_history')
+            .select('*')
+            .eq('uid', user.uid)
+            .order('date', { ascending: false })
+            .limit(5);
+        
+        const recentContainer = document.getElementById('recentBookings');
+        if (!recentOrders || recentOrders.length === 0) {
+            recentContainer.innerHTML = '<div class="empty-bookings"><i class="fas fa-calendar-alt"></i><p>No bookings yet</p><span>Start your first task to see recent bookings here</span></div>';
+        } else {
+            recentContainer.innerHTML = '';
+            recentOrders.forEach(o => {
+                const d = new Date(o.date);
+                recentContainer.innerHTML += `<div class="booking-item"><div class="booking-info"><i class="fas fa-hotel"></i><div><div class="booking-name">${o.accommodation_name || 'Hotel Task'}</div><div class="booking-date">${d.toLocaleDateString()}, ${d.toLocaleTimeString()}</div></div></div><div class="booking-amount positive">+€${(o.commission || 0).toFixed(2)}</div></div>`;
+            });
+        }
+        
+        await loadDashboardProducts();
+        
+    } catch(e) {
+        console.error('加载数据失败:', e);
+    }
+}
             
             loadDashboard();
         })();
