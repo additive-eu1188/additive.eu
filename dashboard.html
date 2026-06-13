@@ -1292,43 +1292,72 @@
             let currentChartType = 'line';
 
             async function fetchCommissionData() {
-                const user = getCurrentUser();
-                if (!user) return { dates: [], commissions: [], total: 0, avg: 0, best: 0 };
-                
-                const dates = [];
-                for (let i = 6; i >= 0; i--) {
-                    const d = new Date();
-                    d.setDate(d.getDate() - i);
-                    dates.push(d.toISOString().split('T')[0]);
-                }
-                
-                const { data: orders, error } = await sb
-                    .from('order_history')
-                    .select('commission, date')
-                    .eq('uid', user.uid);
-                
-                if (error || !orders) return { dates: dates.map(d => d.slice(5)), commissions: Array(7).fill(0), total: 0, avg: 0, best: 0 };
-                
-                const dailyCommission = {};
-                orders.forEach(order => {
-                    const orderDate = order.date?.split('T')[0];
-                    if (orderDate) {
-                        dailyCommission[orderDate] = (dailyCommission[orderDate] || 0) + (order.commission || 0);
-                    }
-                });
-                
-                const commissions = dates.map(date => dailyCommission[date] || 0);
-                const total = commissions.reduce((a, b) => a + b, 0);
-                const avg = total / 7;
-                const best = Math.max(...commissions);
-                
-                const displayDates = dates.map(d => {
-                    const [month, day] = d.slice(5).split('-');
-                    return `${month}/${day}`;
-                });
-                
-                return { dates: displayDates, commissions, total, avg, best };
+    const user = getCurrentUser();
+    if (!user) return { dates: [], commissions: [], total: 0, avg: 0, best: 0 };
+    
+    // 获取最近7天的日期
+    const dates = [];
+    for (let i = 6; i >= 0; i--) {
+        const d = new Date();
+        d.setDate(d.getDate() - i);
+        dates.push(d.toISOString().split('T')[0]);
+    }
+    
+    // 获取订单佣金
+    const { data: orders, error: ordersError } = await sb
+        .from('order_history')
+        .select('commission, date')
+        .eq('uid', user.uid);
+    
+    // 获取奖励（充值奖励、卡牌奖励、推荐奖励）- 不包括 manual 和 trial_bonus
+    const { data: deposits, error: depositsError } = await sb
+        .from('deposits')
+        .select('amount, type, created_at')
+        .eq('uid', user.uid)
+        .in('type', ['deposit_bonus', 'card_reward', 'referral_bonus']);
+    
+    // 按日期分组计算每日总收入
+    const dailyTotal = {};
+    
+    // 初始化最近7天的数据为0
+    dates.forEach(date => {
+        dailyTotal[date] = 0;
+    });
+    
+    // 添加订单佣金
+    if (orders && !ordersError) {
+        orders.forEach(order => {
+            const orderDate = order.date?.split('T')[0];
+            if (orderDate && dailyTotal.hasOwnProperty(orderDate)) {
+                dailyTotal[orderDate] += (order.commission || 0);
             }
+        });
+    }
+    
+    // 添加奖励（充值奖励、卡牌奖励、推荐奖励）
+    if (deposits && !depositsError) {
+        deposits.forEach(deposit => {
+            const depositDate = deposit.created_at?.split('T')[0];
+            if (depositDate && dailyTotal.hasOwnProperty(depositDate)) {
+                dailyTotal[depositDate] += (deposit.amount || 0);
+            }
+        });
+    }
+    
+    // 生成最近7天的佣金数组和显示日期
+    const commissions = dates.map(date => dailyTotal[date] || 0);
+    const total = commissions.reduce((a, b) => a + b, 0);
+    const avg = total / 7;
+    const best = Math.max(...commissions);
+    
+    // 格式化日期显示 (MM/DD)
+    const displayDates = dates.map(d => {
+        const [month, day] = d.slice(5).split('-');
+        return `${month}/${day}`;
+    });
+    
+    return { dates: displayDates, commissions, total, avg, best };
+}
 
             function updateChartStats(total, avg, best) {
                 const totalEl = document.getElementById('chartTotalCommission');
