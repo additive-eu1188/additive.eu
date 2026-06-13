@@ -1170,19 +1170,20 @@ const sb = window.sb;
         const orderCount = orders?.length || 0;
         document.getElementById('totalOrdersStat').innerHTML = orderCount;
         
-        // ========== 新增：获取活动总数 ==========
-        const { data: events, error: eventsError } = await sb
-            .from('events')
-            .select('id', { count: 'exact', head: true })
-            .eq('status', 'active');
-        
-        const eventCount = eventsError ? 0 : (events?.length || 0);
-        const currentEventValue = document.getElementById('currentEventValue');
-        const currentEventTag = document.getElementById('currentEventTag');
-        if (currentEventValue) {
-            currentEventValue.innerHTML = eventCount;
-            currentEventTag.innerHTML = eventCount + ' Active Events';
-        }
+        // ========== 获取活动总数 ==========
+const { data: events, error: eventsError } = await sb
+    .from('events')
+    .select('id')
+    .eq('status', 'active');
+
+const eventCount = eventsError ? 0 : (events?.length || 0);
+const currentEventValue = document.getElementById('currentEventValue');
+const currentEventTag = document.getElementById('currentEventTag');
+if (currentEventValue) {
+    currentEventValue.innerHTML = eventCount;
+    currentEventTag.innerHTML = eventCount + ' Active Events';
+}
+console.log('活动总数:', eventCount);  // 添加日志便于调试
         
         // ========== 新增：获取签到天数（Employment Contract） ==========
         const { data: checkinRecords, error: checkinError } = await sb
