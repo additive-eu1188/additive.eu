@@ -7,6 +7,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700;14..32,800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <style>
         * {
             margin: 0;
@@ -257,7 +258,7 @@
             box-shadow: 0 8px 32px rgba(204,178,153,0.1);
         }
 
-        /* 金属质感卡片 - Available Balance 和 OVERVIEW 卡片统一使用 */
+        /* 金属质感卡片 */
         .metal-card {
             background: var(--metal-gradient);
             backdrop-filter: blur(12px);
@@ -322,13 +323,6 @@
             text-shadow: 0 2px 4px rgba(0,0,0,0.2);
         }
 
-        .metal-card .overview-value {
-    font-size: 32px;
-    font-weight: 700;
-    margin: 12px 0;
-    color: #CCB299;  /* 直接使用金色，不依赖渐变 */
-}
-
         .metal-card .membership-info {
             display: flex;
             justify-content: space-between;
@@ -371,6 +365,101 @@
             color: var(--accent-gold);
             text-decoration: none;
             font-size: 12px;
+        }
+
+        /* ========== 佣金趋势图表 ========== */
+        .chart-container {
+            background: rgba(18, 18, 50, 0.5);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(204, 178, 153, 0.2);
+            border-radius: 20px;
+            padding: 20px;
+            margin-bottom: 24px;
+            transition: all 0.3s ease;
+        }
+
+        .chart-container:hover {
+            border-color: rgba(204, 178, 153, 0.4);
+        }
+
+        .chart-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .chart-title-section {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            color: #CCB299;
+        }
+
+        .chart-subtitle {
+            font-size: 11px;
+            color: #8a9ab0;
+            font-weight: normal;
+        }
+
+        .chart-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        .chart-btn {
+            background: rgba(204, 178, 153, 0.1);
+            border: 1px solid rgba(204, 178, 153, 0.2);
+            padding: 6px 14px;
+            border-radius: 30px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: 0.2s;
+            color: #B8C5D6;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .chart-btn.active {
+            background: #CCB299;
+            color: #0B0B21;
+            border-color: #CCB299;
+        }
+
+        .chart-btn:hover {
+            background: rgba(204, 178, 153, 0.2);
+        }
+
+        .chart-wrapper {
+            margin-bottom: 16px;
+        }
+
+        .chart-stats {
+            display: flex;
+            justify-content: space-around;
+            padding-top: 12px;
+            border-top: 1px solid rgba(204, 178, 153, 0.1);
+        }
+
+        .chart-stat-item {
+            text-align: center;
+        }
+
+        .chart-stat-label {
+            font-size: 10px;
+            color: #8a9ab0;
+            margin-bottom: 4px;
+        }
+
+        .chart-stat-value {
+            font-size: 16px;
+            font-weight: 700;
+            color: #CCB299;
         }
 
         /* ========== 操作行 ========== */
@@ -417,7 +506,7 @@
             color: var(--text-secondary);
         }
 
-        /* ========== 概览卡片 - 统一使用金属质感 ========== */
+        /* ========== 概览卡片 ========== */
         .section-header {
             display: flex;
             justify-content: space-between;
@@ -467,21 +556,20 @@
             overflow: hidden;
         }
 
-        /* OVERVIEW 卡片统一使用金属质感，固定内边距 */
-.overview-card-content {
-    background: var(--metal-gradient);
-    backdrop-filter: blur(12px);
-    border: 1px solid rgba(204,178,153,0.3);
-    border-radius: 20px;
-    padding: 20px 18px;
-    height: 160px;
-    display: flex;
-    flex-direction: column;
-    position: relative;
-    z-index: 1;  /* 添加这一行 */
-    transition: all 0.3s ease;
-    overflow: hidden;
-}
+        .overview-card-content {
+            background: var(--metal-gradient);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(204,178,153,0.3);
+            border-radius: 20px;
+            padding: 20px 18px;
+            height: 160px;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            z-index: 1;
+            transition: all 0.3s ease;
+            overflow: hidden;
+        }
 
         .overview-card-content::before {
             content: '';
@@ -507,11 +595,11 @@
         }
 
         .overview-value {
-    font-size: 28px;
-    font-weight: 700;
-    margin-bottom: 12px;
-    color: #CCB299;  /* 改为纯色，不用渐变 */
-}
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 12px;
+            color: #CCB299;
+        }
 
         .overview-tag {
             background: rgba(0,0,0,0.3);
@@ -533,25 +621,23 @@
             pointer-events: none;
         }
 
-/* 在这里添加 ↓↓↓ */
-.bubble-canvas {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    pointer-events: none;
-    z-index: 0;
-    border-radius: 20px;
-}
+        .bubble-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+            border-radius: 20px;
+        }
 
-/* 确保文字在气泡上方 */
-.overview-label,
-.overview-value,
-.overview-tag {
-    position: relative;
-    z-index: 2;
-}
+        .overview-label,
+        .overview-value,
+        .overview-tag {
+            position: relative;
+            z-index: 2;
+        }
 
         /* ========== 产品推荐区域 ========== */
         .products-slider-container {
@@ -728,6 +814,8 @@
             .sidebar { width: 240px; }
             .main { padding: 24px; }
             .action-row { grid-template-columns: repeat(2, 1fr); }
+            .chart-stats { flex-direction: column; gap: 12px; align-items: center; }
+            .chart-header { flex-direction: column; align-items: flex-start; }
         }
 
         @media (max-width: 768px) {
@@ -758,6 +846,8 @@
             .metal-card .balance-amount { font-size: 36px; }
             .balance-amount { font-size: 36px; }
             .overview-card { flex: 0 0 260px; }
+            .overview-card-content { height: 150px; padding: 16px; }
+            .overview-value { font-size: 24px; }
             .product-card-style7 { width: 170px; }
             .product-card-style7 .image-wrapper { height: 130px; }
         }
@@ -826,6 +916,37 @@
                 </div>
             </div>
 
+            <!-- 佣金趋势图表 - 玻璃态 -->
+            <div class="chart-container">
+                <div class="chart-header">
+                    <div class="chart-title-section">
+                        <i class="fas fa-chart-line"></i> Commission Trend
+                        <span class="chart-subtitle">Last 7 days</span>
+                    </div>
+                    <div class="chart-buttons">
+                        <button class="chart-btn line-btn active" data-type="line"><i class="fas fa-chart-line"></i> Line</button>
+                        <button class="chart-btn bar-btn" data-type="bar"><i class="fas fa-chart-bar"></i> Bar</button>
+                    </div>
+                </div>
+                <div class="chart-wrapper">
+                    <canvas id="commissionChart" height="200"></canvas>
+                </div>
+                <div class="chart-stats">
+                    <div class="chart-stat-item">
+                        <div class="chart-stat-label">Total Commission</div>
+                        <div class="chart-stat-value" id="chartTotalCommission">€0.00</div>
+                    </div>
+                    <div class="chart-stat-item">
+                        <div class="chart-stat-label">Average / Day</div>
+                        <div class="chart-stat-value" id="chartAvgCommission">€0.00</div>
+                    </div>
+                    <div class="chart-stat-item">
+                        <div class="chart-stat-label">Best Day</div>
+                        <div class="chart-stat-value" id="chartBestCommission">€0.00</div>
+                    </div>
+                </div>
+            </div>
+
             <div class="action-row">
                 <div class="action-card" onclick="location.href='withdrawal.html'"><i class="fas fa-arrow-right-to-bracket"></i><div class="action-text">Withdraw</div><div class="action-sub">Request payout</div></div>
                 <div class="action-card" onclick="location.href='start.html'"><i class="fas fa-rocket"></i><div class="action-text">Start</div><div class="action-sub">Complete tasks</div></div>
@@ -846,14 +967,14 @@
                     </div>
                 </div>
                 <div class="overview-card" id="card2">
-    <div class="overview-card-content">
-        <canvas id="bubbleCanvas2" class="bubble-canvas"></canvas>
-        <i class="fas fa-calendar-alt card-icon"></i>
-        <div class="overview-label">ACTIVE EVENTS</div>
-        <div class="overview-value" id="currentEventValue">0</div>
-        <div class="overview-tag" id="currentEventTag">Loading...</div>
-    </div>
-</div>
+                    <div class="overview-card-content">
+                        <canvas id="bubbleCanvas2" class="bubble-canvas"></canvas>
+                        <i class="fas fa-calendar-alt card-icon"></i>
+                        <div class="overview-label">ACTIVE EVENTS</div>
+                        <div class="overview-value" id="currentEventValue">0</div>
+                        <div class="overview-tag" id="currentEventTag">Loading...</div>
+                    </div>
+                </div>
                 <div class="overview-card" id="card3">
                     <div class="overview-card-content">
                         <canvas id="bubbleCanvas3" class="bubble-canvas"></canvas>
@@ -864,14 +985,14 @@
                     </div>
                 </div>
                 <div class="overview-card" id="card4">
-    <div class="overview-card-content">
-        <canvas id="bubbleCanvas4" class="bubble-canvas"></canvas>
-        <i class="fas fa-file-contract card-icon"></i>
-        <div class="overview-label">EMPLOYMENT CONTRACT</div>
-        <div class="overview-value" id="contractStatus">0/7</div>
-        <div class="overview-tag" id="contractTag">Loading...</div>
-    </div>
-</div>
+                    <div class="overview-card-content">
+                        <canvas id="bubbleCanvas4" class="bubble-canvas"></canvas>
+                        <i class="fas fa-file-contract card-icon"></i>
+                        <div class="overview-label">EMPLOYMENT CONTRACT</div>
+                        <div class="overview-value" id="contractStatus">0/7</div>
+                        <div class="overview-tag" id="contractTag">Loading...</div>
+                    </div>
+                </div>
             </div>
 
             <div class="section-header" style="margin-top: 20px;">
@@ -896,9 +1017,9 @@
     <script>
         (function() {
             const SUPABASE_URL = 'https://qgmbzdfnwsdosdqphlxk.supabase.co';
-const SUPABASE_KEY = 'sb_publishable_zsJFjfNUO7NKp8ZH5KrXFQ_WZ8Q2Kym';
-window.sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-const sb = window.sb;
+            const SUPABASE_KEY = 'sb_publishable_zsJFjfNUO7NKp8ZH5KrXFQ_WZ8Q2Kym';
+            window.sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+            const sb = window.sb;
 
             window.toggleMenu = function() { 
                 const sidebar = document.getElementById('sidebar'); 
@@ -1131,114 +1252,278 @@ const sb = window.sb;
                 }
             }
 
-            async function loadDashboard() {
-    const user = getCurrentUser();
-    if (!user) { 
-        window.location.href = 'signin.html'; 
-        return; 
-    }
-    
-    try {
-        // 获取用户数据
-        const { data: userData } = await sb
-            .from('users')
-            .select('*')
-            .eq('uid', user.uid)
-            .single();
-        
-        if (userData) {
-            document.getElementById('displayUsername').innerText = userData.username;
-            document.getElementById('displayUid').innerText = userData.uid;
-            document.getElementById('displayBalance').innerHTML = '€' + (userData.balance || 0).toFixed(2);
-            const vipMap = {1:'Normal',2:'VIP',3:'SVIP'};
-            const level = vipMap[userData.vip_level] || 'Normal';
-            document.getElementById('displayMembership').innerText = `Membership ${level}`;
-            document.getElementById('premiumStatusText').innerHTML = level;
-        }
-        
-        // 获取订单数据和总佣金
-        const { data: orders } = await sb
-            .from('order_history')
-            .select('commission')
-            .eq('uid', user.uid);
-        
-        const total = orders?.reduce((s,o)=>s+(o.commission||0),0) || 0;
-        document.getElementById('totalEarnings').innerHTML = '€' + total.toFixed(2);
-        document.getElementById('totalCommissionStat').innerHTML = '€' + total.toFixed(2);
-        document.getElementById('lifetimeEarnings').innerHTML = '€' + total.toFixed(2);
-        
-        const orderCount = orders?.length || 0;
-        document.getElementById('totalOrdersStat').innerHTML = orderCount;
-        
-        // ========== 获取活动总数 ==========
-const { data: events, error: eventsError } = await sb
-    .from('events')
-    .select('id')
-    .eq('status', 'active');
+            // ========== 佣金趋势图表（玻璃态样式06） ==========
+            let commissionChart = null;
+            let currentChartType = 'line';
 
-const eventCount = eventsError ? 0 : (events?.length || 0);
-const currentEventValue = document.getElementById('currentEventValue');
-const currentEventTag = document.getElementById('currentEventTag');
-if (currentEventValue) {
-    currentEventValue.innerHTML = eventCount;
-    currentEventTag.innerHTML = eventCount + ' Active Events';
-}
-console.log('活动总数:', eventCount);  // 添加日志便于调试
-        
-        // ========== 新增：获取签到天数（Employment Contract） ==========
-        const { data: checkinRecords, error: checkinError } = await sb
-            .from('user_checkin_records')
-            .select('id', { count: 'exact' })
-            .eq('uid', user.uid);
-        
-        const checkinDays = checkinError ? 0 : (checkinRecords?.length || 0);
-        const daysNeeded = 7;
-        const daysLeft = Math.max(0, daysNeeded - checkinDays);
-        
-        const contractStatus = document.getElementById('contractStatus');
-        const contractTag = document.getElementById('contractTag');
-        
-        if (contractStatus) {
-            if (checkinDays >= daysNeeded) {
-                contractStatus.innerHTML = '✓ Unlocked';
-                contractStatus.style.color = '#4ade80';
-                contractTag.innerHTML = 'Employment contract active';
-                contractTag.style.background = 'rgba(74,222,128,0.15)';
-                contractTag.style.color = '#4ade80';
-            } else {
-                contractStatus.innerHTML = `${checkinDays}/${daysNeeded}`;
-                contractStatus.style.color = '#CCB299';
-                contractTag.innerHTML = `${daysLeft} Day${daysLeft !== 1 ? 's' : ''} Left To Unlock`;
-                contractTag.style.background = 'rgba(204,178,153,0.1)';
-                contractTag.style.color = '#CCB299';
+            async function fetchCommissionData() {
+                const user = getCurrentUser();
+                if (!user) return { dates: [], commissions: [], total: 0, avg: 0, best: 0 };
+                
+                const dates = [];
+                for (let i = 6; i >= 0; i--) {
+                    const d = new Date();
+                    d.setDate(d.getDate() - i);
+                    dates.push(d.toISOString().split('T')[0]);
+                }
+                
+                const { data: orders, error } = await sb
+                    .from('order_history')
+                    .select('commission, date')
+                    .eq('uid', user.uid);
+                
+                if (error || !orders) return { dates: dates.map(d => d.slice(5)), commissions: Array(7).fill(0), total: 0, avg: 0, best: 0 };
+                
+                const dailyCommission = {};
+                orders.forEach(order => {
+                    const orderDate = order.date?.split('T')[0];
+                    if (orderDate) {
+                        dailyCommission[orderDate] = (dailyCommission[orderDate] || 0) + (order.commission || 0);
+                    }
+                });
+                
+                const commissions = dates.map(date => dailyCommission[date] || 0);
+                const total = commissions.reduce((a, b) => a + b, 0);
+                const avg = total / 7;
+                const best = Math.max(...commissions);
+                
+                const displayDates = dates.map(d => {
+                    const [month, day] = d.slice(5).split('-');
+                    return `${month}/${day}`;
+                });
+                
+                return { dates: displayDates, commissions, total, avg, best };
             }
-        }
-        
-        // 加载最近订单
-        const { data: recentOrders } = await sb
-            .from('order_history')
-            .select('*')
-            .eq('uid', user.uid)
-            .order('date', { ascending: false })
-            .limit(5);
-        
-        const recentContainer = document.getElementById('recentBookings');
-        if (!recentOrders || recentOrders.length === 0) {
-            recentContainer.innerHTML = '<div class="empty-bookings"><i class="fas fa-calendar-alt"></i><p>No bookings yet</p><span>Start your first task to see recent bookings here</span></div>';
-        } else {
-            recentContainer.innerHTML = '';
-            recentOrders.forEach(o => {
-                const d = new Date(o.date);
-                recentContainer.innerHTML += `<div class="booking-item"><div class="booking-info"><i class="fas fa-hotel"></i><div><div class="booking-name">${o.accommodation_name || 'Hotel Task'}</div><div class="booking-date">${d.toLocaleDateString()}, ${d.toLocaleTimeString()}</div></div></div><div class="booking-amount positive">+€${(o.commission || 0).toFixed(2)}</div></div>`;
-            });
-        }
-        
-        await loadDashboardProducts();
-        
-    } catch(e) {
-        console.error('加载数据失败:', e);
-    }
-}
+
+            function updateChartStats(total, avg, best) {
+                const totalEl = document.getElementById('chartTotalCommission');
+                const avgEl = document.getElementById('chartAvgCommission');
+                const bestEl = document.getElementById('chartBestCommission');
+                if (totalEl) totalEl.innerHTML = `€${total.toFixed(2)}`;
+                if (avgEl) avgEl.innerHTML = `€${avg.toFixed(2)}`;
+                if (bestEl) bestEl.innerHTML = `€${best.toFixed(2)}`;
+            }
+
+            async function initCommissionChart() {
+                const { dates, commissions, total, avg, best } = await fetchCommissionData();
+                updateChartStats(total, avg, best);
+                
+                const ctx = document.getElementById('commissionChart').getContext('2d');
+                const lineColor = '#20b2aa';
+                const fillColor = 'rgba(32, 178, 170, 0.1)';
+                const barColor = '#20b2aa';
+                
+                const commonOptions = {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: { 
+                            callbacks: { 
+                                label: (ctx) => `€${ctx.raw.toFixed(2)}` 
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            min: 0,
+                            max: 500,
+                            ticks: {
+                                stepSize: 100,
+                                callback: (value) => '€' + value,
+                                color: '#B8C5D6'
+                            },
+                            grid: { color: 'rgba(255,255,255,0.05)' }
+                        },
+                        x: {
+                            ticks: { color: '#B8C5D6' },
+                            grid: { display: false }
+                        }
+                    }
+                };
+                
+                if (commissionChart) {
+                    commissionChart.destroy();
+                }
+                
+                if (currentChartType === 'line') {
+                    commissionChart = new Chart(ctx, {
+                        type: 'line',
+                        data: {
+                            labels: dates,
+                            datasets: [{
+                                label: 'Commission (€)',
+                                data: commissions,
+                                borderColor: lineColor,
+                                backgroundColor: fillColor,
+                                borderWidth: 2,
+                                pointRadius: 4,
+                                pointBackgroundColor: lineColor,
+                                pointBorderColor: '#0B0B21',
+                                pointBorderWidth: 1,
+                                tension: 0.3,
+                                fill: true
+                            }]
+                        },
+                        options: commonOptions
+                    });
+                } else {
+                    commissionChart = new Chart(ctx, {
+                        type: 'bar',
+                        data: {
+                            labels: dates,
+                            datasets: [{
+                                label: 'Commission (€)',
+                                data: commissions,
+                                backgroundColor: barColor,
+                                borderRadius: 8,
+                                borderSkipped: false,
+                                barPercentage: 0.7,
+                                categoryPercentage: 0.8
+                            }]
+                        },
+                        options: commonOptions
+                    });
+                }
+            }
+
+            function switchChartType(type) {
+                currentChartType = type;
+                initCommissionChart();
+            }
+
+            function bindChartButtons() {
+                const lineBtn = document.querySelector('.chart-buttons .line-btn');
+                const barBtn = document.querySelector('.chart-buttons .bar-btn');
+                
+                if (lineBtn) {
+                    lineBtn.addEventListener('click', () => {
+                        if (currentChartType === 'line') return;
+                        lineBtn.classList.add('active');
+                        barBtn.classList.remove('active');
+                        switchChartType('line');
+                    });
+                }
+                
+                if (barBtn) {
+                    barBtn.addEventListener('click', () => {
+                        if (currentChartType === 'bar') return;
+                        barBtn.classList.add('active');
+                        lineBtn.classList.remove('active');
+                        switchChartType('bar');
+                    });
+                }
+            }
+
+            async function loadDashboard() {
+                const user = getCurrentUser();
+                if (!user) { 
+                    window.location.href = 'signin.html'; 
+                    return; 
+                }
+                
+                try {
+                    const { data: userData } = await sb
+                        .from('users')
+                        .select('*')
+                        .eq('uid', user.uid)
+                        .single();
+                    
+                    if (userData) {
+                        document.getElementById('displayUsername').innerText = userData.username;
+                        document.getElementById('displayUid').innerText = userData.uid;
+                        document.getElementById('displayBalance').innerHTML = '€' + (userData.balance || 0).toFixed(2);
+                        const vipMap = {1:'Normal',2:'VIP',3:'SVIP'};
+                        const level = vipMap[userData.vip_level] || 'Normal';
+                        document.getElementById('displayMembership').innerText = `Membership ${level}`;
+                        document.getElementById('premiumStatusText').innerHTML = level;
+                    }
+                    
+                    const { data: orders } = await sb
+                        .from('order_history')
+                        .select('commission')
+                        .eq('uid', user.uid);
+                    
+                    const total = orders?.reduce((s,o)=>s+(o.commission||0),0) || 0;
+                    document.getElementById('totalEarnings').innerHTML = '€' + total.toFixed(2);
+                    document.getElementById('totalCommissionStat').innerHTML = '€' + total.toFixed(2);
+                    document.getElementById('lifetimeEarnings').innerHTML = '€' + total.toFixed(2);
+                    
+                    const orderCount = orders?.length || 0;
+                    document.getElementById('totalOrdersStat').innerHTML = orderCount;
+                    
+                    // 获取活动总数
+                    const { data: events, error: eventsError } = await sb
+                        .from('events')
+                        .select('id')
+                        .eq('status', 'active');
+                    
+                    const eventCount = eventsError ? 0 : (events?.length || 0);
+                    const currentEventValue = document.getElementById('currentEventValue');
+                    const currentEventTag = document.getElementById('currentEventTag');
+                    if (currentEventValue) {
+                        currentEventValue.innerHTML = eventCount;
+                        currentEventTag.innerHTML = eventCount + ' Active Events';
+                    }
+                    
+                    // 获取签到天数
+                    const { data: checkinRecords, error: checkinError } = await sb
+                        .from('user_checkin_records')
+                        .select('id', { count: 'exact' })
+                        .eq('uid', user.uid);
+                    
+                    const checkinDays = checkinError ? 0 : (checkinRecords?.length || 0);
+                    const daysNeeded = 7;
+                    const daysLeft = Math.max(0, daysNeeded - checkinDays);
+                    
+                    const contractStatus = document.getElementById('contractStatus');
+                    const contractTag = document.getElementById('contractTag');
+                    
+                    if (contractStatus) {
+                        if (checkinDays >= daysNeeded) {
+                            contractStatus.innerHTML = '✓ Unlocked';
+                            contractStatus.style.color = '#4ade80';
+                            contractTag.innerHTML = 'Employment contract active';
+                            contractTag.style.background = 'rgba(74,222,128,0.15)';
+                            contractTag.style.color = '#4ade80';
+                        } else {
+                            contractStatus.innerHTML = `${checkinDays}/${daysNeeded}`;
+                            contractStatus.style.color = '#CCB299';
+                            contractTag.innerHTML = `${daysLeft} Day${daysLeft !== 1 ? 's' : ''} Left To Unlock`;
+                            contractTag.style.background = 'rgba(204,178,153,0.1)';
+                            contractTag.style.color = '#CCB299';
+                        }
+                    }
+                    
+                    // 加载最近订单
+                    const { data: recentOrders } = await sb
+                        .from('order_history')
+                        .select('*')
+                        .eq('uid', user.uid)
+                        .order('date', { ascending: false })
+                        .limit(5);
+                    
+                    const recentContainer = document.getElementById('recentBookings');
+                    if (!recentOrders || recentOrders.length === 0) {
+                        recentContainer.innerHTML = '<div class="empty-bookings"><i class="fas fa-calendar-alt"></i><p>No bookings yet</p><span>Start your first task to see recent bookings here</span></div>';
+                    } else {
+                        recentContainer.innerHTML = '';
+                        recentOrders.forEach(o => {
+                            const d = new Date(o.date);
+                            recentContainer.innerHTML += `<div class="booking-item"><div class="booking-info"><i class="fas fa-hotel"></i><div><div class="booking-name">${o.accommodation_name || 'Hotel Task'}</div><div class="booking-date">${d.toLocaleDateString()}, ${d.toLocaleTimeString()}</div></div></div><div class="booking-amount positive">+€${(o.commission || 0).toFixed(2)}</div></div>`;
+                        });
+                    }
+                    
+                    await loadDashboardProducts();
+                    
+                    // 初始化图表
+                    await initCommissionChart();
+                    bindChartButtons();
+                    
+                } catch(e) {
+                    console.error('加载数据失败:', e);
+                }
+            }
             
             loadDashboard();
         })();
