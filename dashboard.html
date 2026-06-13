@@ -448,6 +448,7 @@
 
         .chart-stat-item {
             text-align: center;
+            flex: 1;
         }
 
         .chart-stat-label {
@@ -814,8 +815,6 @@
             .sidebar { width: 240px; }
             .main { padding: 24px; }
             .action-row { grid-template-columns: repeat(2, 1fr); }
-            .chart-stats { flex-direction: column; gap: 12px; align-items: center; }
-            .chart-header { flex-direction: column; align-items: flex-start; }
         }
 
         @media (max-width: 768px) {
@@ -841,7 +840,7 @@
             }
             .menu-overlay.active { display: block; }
             .main { padding: 16px; margin-top: 10px; }
-            .two-columns { grid-template-columns: 1fr; }
+            .two-columns { grid-template-columns: 1fr; gap: 16px; }
             .action-row { grid-template-columns: repeat(2, 1fr); gap: 12px; }
             .metal-card .balance-amount { font-size: 36px; }
             .balance-amount { font-size: 36px; }
@@ -850,6 +849,42 @@
             .overview-value { font-size: 24px; }
             .product-card-style7 { width: 170px; }
             .product-card-style7 .image-wrapper { height: 130px; }
+            
+            /* 手机版图表统计横向显示 */
+            .chart-stats {
+                flex-direction: row;
+                flex-wrap: wrap;
+                gap: 8px;
+            }
+            .chart-stat-item {
+                flex: 1;
+                min-width: 80px;
+            }
+            .chart-stat-label {
+                font-size: 9px;
+            }
+            .chart-stat-value {
+                font-size: 13px;
+            }
+            .chart-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            .chart-buttons {
+                margin-top: 8px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .chart-stat-item {
+                min-width: 70px;
+            }
+            .chart-stat-label {
+                font-size: 8px;
+            }
+            .chart-stat-value {
+                font-size: 11px;
+            }
         }
     </style>
 </head>
@@ -916,7 +951,7 @@
                 </div>
             </div>
 
-            <!-- 佣金趋势图表 - 玻璃态 -->
+            <!-- 佣金趋势图表 - 玻璃态（放在 QUICK STATS 上方） -->
             <div class="chart-container">
                 <div class="chart-header">
                     <div class="chart-title-section">
