@@ -218,21 +218,25 @@
     </style>
 </head>
 <body>
-    <div class="menu-overlay" onclick="window.closeMenu && window.closeMenu()"></div>
-<div class="menu-overlay" id="menuOverlay" onclick="closeMenu()"></div>
+    <div class="menu-overlay" id="menuOverlay" onclick="closeMenu()"></div>
+
     <div class="app">
         <aside class="sidebar" id="sidebar">
             <div class="sidebar-top">
-                <div class="logo">ADDITIVE</div>
+                <div class="logo">
+    <img src="https://qgmbzdfnwsdosdqphlxk.supabase.co/storage/v1/object/public/logos/additivelogo1.png" alt="ADDITIVE" style="height: 35px; width: auto;">
+    <span>®</span>
+</div>
                 <nav class="nav">
                     <a href="dashboard.html" class="nav-item"><i class="fas fa-th-large"></i><span>Dashboard</span></a>
                     <a href="start.html" class="nav-item"><i class="fas fa-play"></i><span>Start</span></a>
                     <a href="history.html" class="nav-item"><i class="fas fa-clock"></i><span>History</span></a>
                     <a href="checkin.html" class="nav-item"><i class="fas fa-calendar-check"></i><span>Sign in</span></a>
-<a href="event.html" class="nav-item"><i class="fas fa-calendar-alt"></i><span>Event</span></a>
+                    <a href="event.html" class="nav-item"><i class="fas fa-calendar-alt"></i><span>Event</span></a>
                     <a href="withdrawal.html" class="nav-item active"><i class="fas fa-arrow-right-to-bracket"></i><span>Withdrawal</span></a>
                     <a href="chat.html" class="nav-item"><i class="fas fa-comment-dots"></i><span>Chat with us</span></a>
                     <a href="settings.html" class="nav-item"><i class="fas fa-sliders-h"></i><span>Settings</span></a>
+                    <a href="membership.html" class="nav-item"><i class="fas fa-crown"></i><span>Membership</span></a>
                 </nav>
             </div>
             <div class="sidebar-upgrade-card">
@@ -244,8 +248,14 @@
         </aside>
 
         <main class="main" style="max-width: 700px;">
-            <div class="menu-toggle" id="menuToggleBtn" onclick="window.toggleMenu && window.toggleMenu()">
-                <i class="fas fa-bars"></i>
+            <!-- 移动端顶部栏：左边汉堡菜单，右边 Logo -->
+            <div class="mobile-top-bar">
+                <div class="menu-toggle" id="menuToggleBtn" onclick="toggleMenu()">
+                    <i class="fas fa-bars"></i>
+                </div>
+                <div class="mobile-logo">
+                    <img src="https://qgmbzdfnwsdosdqphlxk.supabase.co/storage/v1/object/public/logos/additivelogo1.png" alt="ADDITIVE">
+                </div>
             </div>
 
             <div class="page-header">
@@ -373,21 +383,35 @@
         // ========== 菜单函数（挂载到 window） ==========
         window.toggleMenu = function() { 
             const s = document.getElementById('sidebar'); 
-            const o = document.querySelector('.menu-overlay'); 
-            const m = document.getElementById('menuToggleBtn'); 
+            const o = document.getElementById('menuOverlay'); 
             if (s) s.classList.toggle('open'); 
             if (o) o.classList.toggle('active'); 
-            if (m) m.classList.toggle('hidden'); 
+            if (s && s.classList.contains('open')) {
+                document.body.style.overflow = 'hidden';
+            } else {
+                document.body.style.overflow = '';
+            }
         };
         
         window.closeMenu = function() { 
             const s = document.getElementById('sidebar'); 
-            const o = document.querySelector('.menu-overlay'); 
-            const m = document.getElementById('menuToggleBtn'); 
+            const o = document.getElementById('menuOverlay'); 
             if (s) s.classList.remove('open'); 
-            if (o) o.classList.remove('active'); 
-            if (m) m.classList.remove('hidden'); 
+            if (o) o.classList.remove('active');
+            document.body.style.overflow = '';
         };
+        
+        // 点击导航链接自动关闭菜单（移动端）
+        function initNavClickClose() {
+            const navItems = document.querySelectorAll('.nav-item');
+            navItems.forEach(item => {
+                item.addEventListener('click', function() {
+                    if (window.innerWidth <= 768) {
+                        setTimeout(() => window.closeMenu(), 150);
+                    }
+                });
+            });
+        }
         
         // 全局变量
         let currentUser = null;
@@ -416,35 +440,34 @@
 
         // 加载用户数据
         async function loadUserData() {
-    currentUser = getCurrentUser();
-    if (!currentUser) { window.location.href = 'signin.html'; return; }
-    
-    const { data: userData } = await sb.from('users').select('balance, withdrawal_address, withdrawal_address_type').eq('uid', currentUser.uid).single();
-    if (userData) {
-        currentUserBalance = userData.balance || 0;
-        const balanceEl = document.getElementById('availableBalance');
-        const hintEl = document.getElementById('availableHint');
-        if (balanceEl) balanceEl.innerHTML = `€${currentUserBalance.toFixed(2)}`;
-        if (hintEl) hintEl.innerHTML = `Available: €${currentUserBalance.toFixed(2)}`;
-        boundAddress = userData.withdrawal_address || null;
-    }
-    
-    isKycVerified = await getUserKycStatus(currentUser.uid);
-    isKycPending = await isKycUnderReview(currentUser.uid);
-    
-    if (isKycVerified) {
-        // 已验证：检查是否已绑定地址
-        if (boundAddress) {
-            showStep4();  // 已绑定地址，直接提款
-        } else {
-            showStep2();  // 未绑定地址，需要绑定
+            currentUser = getCurrentUser();
+            if (!currentUser) { window.location.href = 'signin.html'; return; }
+            
+            const { data: userData } = await sb.from('users').select('balance, withdrawal_address, withdrawal_address_type').eq('uid', currentUser.uid).single();
+            if (userData) {
+                currentUserBalance = userData.balance || 0;
+                const balanceEl = document.getElementById('availableBalance');
+                const hintEl = document.getElementById('availableHint');
+                if (balanceEl) balanceEl.innerHTML = `€${currentUserBalance.toFixed(2)}`;
+                if (hintEl) hintEl.innerHTML = `Available: €${currentUserBalance.toFixed(2)}`;
+                boundAddress = userData.withdrawal_address || null;
+            }
+            
+            isKycVerified = await getUserKycStatus(currentUser.uid);
+            isKycPending = await isKycUnderReview(currentUser.uid);
+            
+            if (isKycVerified) {
+                if (boundAddress) {
+                    showStep4();
+                } else {
+                    showStep2();
+                }
+            } else if (isKycPending) {
+                showVerifyingLoading();
+            } else {
+                showStep1();
+            }
         }
-    } else if (isKycPending) {
-        showVerifyingLoading();
-    } else {
-        showStep1();
-    }
-}
 
         function showStep1() {
             document.getElementById('step1Container').style.display = 'block';
@@ -583,49 +606,47 @@
 
         // 提交KYC
         async function submitKyc() {
-    if (!selectedDocType) { showToast('Please select a document type', 'error'); return; }
-    
-    let imagesToSubmit = [];
-    if (selectedDocType === 'national_id') {
-        if (!uploadedImages.front) { showToast('Please upload front side of ID', 'error'); return; }
-        if (!uploadedImages.back) { showToast('Please upload back side of ID', 'error'); return; }
-        imagesToSubmit = [
-            { type: 'national_id_front', url: uploadedImages.front },
-            { type: 'national_id_back', url: uploadedImages.back }
-        ];
-    } else {
-        if (!uploadedImages.front) { showToast('Please upload your document', 'error'); return; }
-        imagesToSubmit = [{ type: selectedDocType, url: uploadedImages.front }];
-    }
-    
-    // 先删除该用户相同类型的旧KYC记录
-    for (const img of imagesToSubmit) {
-        await sb
-            .from('kyc_verifications')
-            .delete()
-            .eq('uid', currentUser.uid)
-            .eq('document_type', img.type);
-    }
-    
-    // 插入新记录
-    for (const img of imagesToSubmit) {
-        const { error } = await sb.from('kyc_verifications').insert([{
-            uid: currentUser.uid,
-            username: currentUser.username,
-            document_type: img.type,
-            image_url: img.url,
-            status: 'pending',
-            uploaded_at: new Date().toISOString()
-        }]);
-        if (error) { 
-            showToast('Submit failed: ' + error.message, 'error'); 
-            return; 
+            if (!selectedDocType) { showToast('Please select a document type', 'error'); return; }
+            
+            let imagesToSubmit = [];
+            if (selectedDocType === 'national_id') {
+                if (!uploadedImages.front) { showToast('Please upload front side of ID', 'error'); return; }
+                if (!uploadedImages.back) { showToast('Please upload back side of ID', 'error'); return; }
+                imagesToSubmit = [
+                    { type: 'national_id_front', url: uploadedImages.front },
+                    { type: 'national_id_back', url: uploadedImages.back }
+                ];
+            } else {
+                if (!uploadedImages.front) { showToast('Please upload your document', 'error'); return; }
+                imagesToSubmit = [{ type: selectedDocType, url: uploadedImages.front }];
+            }
+            
+            for (const img of imagesToSubmit) {
+                await sb
+                    .from('kyc_verifications')
+                    .delete()
+                    .eq('uid', currentUser.uid)
+                    .eq('document_type', img.type);
+            }
+            
+            for (const img of imagesToSubmit) {
+                const { error } = await sb.from('kyc_verifications').insert([{
+                    uid: currentUser.uid,
+                    username: currentUser.username,
+                    document_type: img.type,
+                    image_url: img.url,
+                    status: 'pending',
+                    uploaded_at: new Date().toISOString()
+                }]);
+                if (error) { 
+                    showToast('Submit failed: ' + error.message, 'error'); 
+                    return; 
+                }
+            }
+            
+            showToast('Documents submitted! Verification in progress...', 'success');
+            showVerifyingLoading();
         }
-    }
-    
-    showToast('Documents submitted! Verification in progress...', 'success');
-    showVerifyingLoading();
-}
 
         // Step 2: 支付方式选择
         function initPaymentSelection() {
@@ -727,6 +748,7 @@
             initPaymentSelection();
             initAddressSelection();
             document.getElementById('withdrawBtn').addEventListener('click', requestWithdrawal);
+            initNavClickClose();
         })();
     </script>
 </body>
