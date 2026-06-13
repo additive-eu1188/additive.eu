@@ -174,13 +174,13 @@
 
         // 获取内容标题
         function getContentTitle(type) {
-            const titles = {
-                'tc': 'T&C',
-                'privacy': 'Privacy & Security',
-                'rules': 'Platform Rules'
-            };
-            return titles[type] || 'Content';
-        }
+    const titles = {
+        'tc': 'Über uns',
+        'privacy': 'Datenschutz & Sicherheit',
+        'rules': 'Plattformregeln'
+    };
+    return titles[type] || 'Content';
+}
 
         async function loadContent() {
             const container = document.getElementById('contentContainer');
