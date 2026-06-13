@@ -238,3 +238,43 @@ async function cancelTriggerOrder(triggerId) {
     
     return !error;
 }
+
+// ========== 统一菜单控制函数（所有页面共用） ==========
+window.toggleMenu = function() { 
+    var sidebar = document.getElementById('sidebar'); 
+    var overlay = document.getElementById('menuOverlay'); 
+    if (sidebar) sidebar.classList.toggle('open');
+    if (overlay) overlay.classList.toggle('active');
+    if (sidebar && sidebar.classList.contains('open')) {
+        document.body.style.overflow = 'hidden';
+    } else {
+        document.body.style.overflow = '';
+    }
+};
+
+window.closeMenu = function() { 
+    var sidebar = document.getElementById('sidebar'); 
+    var overlay = document.getElementById('menuOverlay'); 
+    if (sidebar) sidebar.classList.remove('open'); 
+    if (overlay) overlay.classList.remove('active');
+    document.body.style.overflow = '';
+};
+
+// 点击导航链接自动关闭菜单（移动端）
+function initNavClickClose() {
+    var navItems = document.querySelectorAll('.nav-item');
+    navItems.forEach(function(item) {
+        item.addEventListener('click', function() {
+            if (window.innerWidth <= 768) {
+                setTimeout(function() { window.closeMenu(); }, 150);
+            }
+        });
+    });
+}
+
+// 页面加载时初始化
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initNavClickClose);
+} else {
+    initNavClickClose();
+}
