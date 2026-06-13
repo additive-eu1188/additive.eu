@@ -881,8 +881,9 @@
     <script>
         (function() {
             const SUPABASE_URL = 'https://qgmbzdfnwsdosdqphlxk.supabase.co';
-            const SUPABASE_KEY = 'sb_publishable_zsJFjfNUO7NKp8ZH5KrXFQ_WZ8Q2Kym';
-            const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+const SUPABASE_KEY = 'sb_publishable_zsJFjfNUO7NKp8ZH5KrXFQ_WZ8Q2Kym';
+window.sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+const sb = window.sb;
 
             window.toggleMenu = function() { 
                 const sidebar = document.getElementById('sidebar'); 
