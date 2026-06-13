@@ -849,6 +849,47 @@
             .overview-value { font-size: 24px; }
             .product-card-style7 { width: 170px; }
             .product-card-style7 .image-wrapper { height: 130px; }
+
+/* 确保图表在 QUICK STATS 上方 */
+    .chart-container {
+        order: -1;
+        margin-bottom: 16px;
+    }
+    
+    /* 调整 two-columns 和 chart-container 的显示顺序 */
+    .main {
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .two-columns {
+        order: 2;
+    }
+    
+    .action-row {
+        order: 3;
+    }
+    
+    .section-header {
+        order: 4;
+    }
+    
+    .cards-grid {
+        order: 5;
+    }
+    
+    .products-slider-container {
+        order: 6;
+    }
+    
+    .bookings-list {
+        order: 7;
+    }
+    
+    .footer-note {
+        order: 8;
+    }
+}
             
             /* 手机版图表统计横向显示 */
             .chart-stats {
