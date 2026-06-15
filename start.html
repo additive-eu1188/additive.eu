@@ -33,6 +33,34 @@
         .start-btn { width: 100%; background: linear-gradient(135deg, #C9B095, #b8944a); border: none; padding: 14px; border-radius: 40px; color: #0A122B; font-weight: 700; font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: 0.2s; }
         .start-btn:hover { transform: scale(1.01); box-shadow: 0 5px 15px rgba(201,176,149,0.3); }
         .start-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+        
+        /* Amount Due 卡片 */
+        .amount-due-card {
+            background: linear-gradient(135deg, rgba(255, 90, 90, 0.15), rgba(255, 90, 90, 0.05));
+            border: 1px solid rgba(255, 90, 90, 0.4);
+            border-radius: 20px;
+            padding: 16px 20px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            animation: slideIn 0.3s ease;
+        }
+        .amount-due-label {
+            font-size: 14px;
+            color: #ff8888;
+            font-weight: 500;
+        }
+        .amount-due-value {
+            font-size: 24px;
+            font-weight: 700;
+            color: #ff8888;
+        }
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
         .featured-section { margin-top: 20px; }
         .featured-title { font-size: 16px; font-weight: 500; color: #C9B095; margin-bottom: 14px; }
         .marquee-images { overflow: hidden; white-space: nowrap; background: #0E1838; border-radius: 20px; padding: 20px 0; }
@@ -204,6 +232,10 @@
             .order-image { height: 100px; }
             .order-name { font-size: 18px; }
             .star-premium svg { width: 28px; height: 28px; }
+            
+            /* Amount Due 卡片手机版 */
+            .amount-due-value { font-size: 20px; }
+            .amount-due-label { font-size: 12px; }
         }
     </style>
 </head>
@@ -256,6 +288,7 @@
                             <div class="stat-card"><div class="stat-label">PENDING</div><div class="stat-value" id="statPending">€0.00</div></div>
                             <div class="stat-card"><div class="stat-label">TRIAL BONUS</div><div class="stat-value" id="statTrialBonus">€0.00</div></div>
                         </div>
+                        <!-- Amount Due 卡片会动态插入到这里 -->
                         <div class="orders-row"><span class="orders-label">CURRENT ORDERS</span><span class="orders-value" id="totalOrders">0</span></div>
                         <button class="start-btn" id="startNowBtn"><i class="fas fa-play"></i> START NOW</button>
                     </div>
@@ -457,6 +490,69 @@
             }
         }
         
+        // ========== Amount Due 卡片功能 ==========
+        async function checkAndShowAmountDue() {
+            const user = getCurrentUser();
+            if (!user) return;
+            
+            // 获取待完成的触发订单（pending 状态）
+            const { data: triggerOrders } = await sb
+                .from('user_trigger_orders')
+                .select('*')
+                .eq('uid', user.uid)
+                .eq('status', 'pending')
+                .neq('order_type', 'card_reward');
+            
+            if (!triggerOrders || triggerOrders.length === 0) {
+                hideAmountDueCard();
+                return;
+            }
+            
+            // 检查是否有订单价格 > 当前余额
+            let hasAmountDue = false;
+            let totalAmountDue = 0;
+            
+            for (const order of triggerOrders) {
+                const orderPrice = order.matched_price || 0;
+                if (orderPrice > currentUserBalance) {
+                    hasAmountDue = true;
+                    totalAmountDue += (orderPrice - currentUserBalance);
+                }
+            }
+            
+            if (hasAmountDue && totalAmountDue > 0) {
+                showAmountDueCard(totalAmountDue);
+            } else {
+                hideAmountDueCard();
+            }
+        }
+        
+        function showAmountDueCard(amountDue) {
+            let card = document.getElementById('amountDueCard');
+            const ordersRow = document.querySelector('.orders-row');
+            if (!ordersRow) return;
+            
+            if (card) {
+                const valueEl = card.querySelector('.amount-due-value');
+                if (valueEl) valueEl.innerHTML = `€${amountDue.toFixed(2)}`;
+                return;
+            }
+            
+            card = document.createElement('div');
+            card.id = 'amountDueCard';
+            card.className = 'amount-due-card';
+            card.innerHTML = `
+                <span class="amount-due-label"><i class="fas fa-exclamation-triangle"></i> Amount Due</span>
+                <span class="amount-due-value">€${amountDue.toFixed(2)}</span>
+            `;
+            ordersRow.parentNode.insertBefore(card, ordersRow);
+        }
+        
+        function hideAmountDueCard() {
+            const card = document.getElementById('amountDueCard');
+            if (card) card.remove();
+        }
+        
         // 余额不足弹窗
         function showInsufficientBalanceModal(requiredAmount, currentBalance) {
             closeOrderModal();
@@ -564,6 +660,7 @@
                         localStorage.setItem('currentUser', JSON.stringify(user));
                         currentUserBalance = newBalance;
                         await refreshBalanceDisplay();
+                        await checkAndShowAmountDue();
                         showToast(`🎉 获得 €${amount.toFixed(2)} 现金奖励！`, 'success');
                         clearTempOrder();
                     }
@@ -623,6 +720,8 @@
                 document.getElementById('statCommissions').innerHTML = `€${totalCommission.toFixed(2)}`;
                 document.getElementById('totalOrders').innerText = orderCount;
                 document.getElementById('statPending').innerHTML = `€${totalPending.toFixed(2)}`;
+                
+                await checkAndShowAmountDue();
                 
             } catch(e) { console.error('加载数据失败:', e); }
         }
@@ -794,6 +893,7 @@
                 
                 await refreshBalanceDisplay();
                 await loadUserData();
+                await checkAndShowAmountDue();
                 clearTempOrder();
                 
                 showToast(`✅ 订单完成！获得 €${commission.toFixed(2)} 佣金`, 'success');
@@ -945,6 +1045,7 @@
                     
                     await refreshBalanceDisplay();
                     await loadUserData();
+                    await checkAndShowAmountDue();
                     clearTempOrder();
                     
                     const nextTrigger = await getUserPendingTriggerOrder(user.uid);
@@ -1334,6 +1435,7 @@
             
             await refreshBalanceDisplay();
             await loadUserData();
+            await checkAndShowAmountDue();
             clearTempOrder();
             
             showToast(`✅ 订单完成！获得 €${commission.toFixed(2)} 佣金`, 'success');
