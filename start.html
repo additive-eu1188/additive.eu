@@ -355,46 +355,47 @@
         }
         
         async function getOrdersByBalance(balance) {
-            let allOrders = await getOrdersFromAdmin();
-            if (!allOrders || allOrders.length === 0) return [];
-            
-            let minPrice = 0;
-            let maxPrice = 0;
-            
-            if (balance < 30) {
-                return [];
-            } else if (balance >= 30 && balance < 100) {
-                minPrice = 10;
-                maxPrice = 50;
-            } else if (balance >= 100 && balance < 300) {
-                minPrice = 30;
-                maxPrice = 150;
-            } else if (balance >= 300 && balance < 600) {
-                minPrice = 50;
-                maxPrice = 250;
-            } else if (balance >= 600 && balance < 1500) {
-                minPrice = 100;
-                maxPrice = 500;
-            } else if (balance >= 1500 && balance < 5000) {
-                minPrice = 300;
-                maxPrice = 1500;
-            } else if (balance >= 5000) {
-                minPrice = 1000;
-                maxPrice = balance * 0.8;
-            }
-            
-            let matchedOrders = allOrders.filter(order => {
-                let price = order.price || 0;
-                return price >= minPrice && price <= maxPrice;
-            });
-            
-            if (matchedOrders.length === 0) {
-                matchedOrders = allOrders.filter(order => order.price <= balance * 0.5);
-                matchedOrders.sort((a, b) => b.price - a.price);
-            }
-            
-            return matchedOrders;
-        }
+    let allOrders = await getOrdersFromAdmin();
+    
+    // 余额低于50，不能做单
+    if (balance < 50) {
+        return [];
+    }
+    
+    // 计算订单价格范围：余额的 80% ~ 95%
+    let minPrice = balance * 0.8;
+    let maxPrice = balance * 0.95;
+    
+    // 在价格范围内匹配订单
+    let matchedOrders = allOrders.filter(order => {
+        let price = order.price || 0;
+        return price >= minPrice && price <= maxPrice;
+    });
+    
+    // 如果没有匹配到，扩大范围到 70% ~ 98%
+    if (matchedOrders.length === 0) {
+        let widerMin = balance * 0.7;
+        let widerMax = balance * 0.98;
+        matchedOrders = allOrders.filter(order => {
+            let price = order.price || 0;
+            return price >= widerMin && price <= widerMax;
+        });
+    }
+    
+    // 如果还是没有匹配到，取价格最接近余额 85% 的订单
+    if (matchedOrders.length === 0) {
+        let targetPrice = balance * 0.85;
+        matchedOrders = allOrders.filter(order => order.price <= balance);
+        matchedOrders.sort((a, b) => {
+            let diffA = Math.abs(a.price - targetPrice);
+            let diffB = Math.abs(b.price - targetPrice);
+            return diffA - diffB;
+        });
+        matchedOrders = matchedOrders.slice(0, 5);
+    }
+    
+    return matchedOrders;
+}
         
         async function getUserPendingTriggerOrder(uid) {
             const { data: orders } = await sb.from('order_history').select('id', { count: 'exact' }).eq('uid', uid);
