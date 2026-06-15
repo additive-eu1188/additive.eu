@@ -817,16 +817,13 @@
     const { dates, commissions, total, avg, best } = await fetchCommissionData();
     updateChartStats(total, avg, best);
     
-    // 计算最大佣金
-    let maxCommission = Math.max(...commissions, 10);
+    const maxCommission = Math.max(...commissions, 10);
     let minY = 0;
     
-    // 如果最大佣金大于 200，Y 轴从 100 开始
     if (maxCommission > 200) {
         minY = 100;
     }
     
-    // 计算 Y 轴最大值：向上取整到合适的整数
     let yAxisMax;
     if (maxCommission <= 100) {
         yAxisMax = Math.ceil(maxCommission / 20) * 20;
@@ -839,11 +836,9 @@
         yAxisMax = Math.ceil(maxCommission / 200) * 200;
     }
     
-    // 计算刻度间隔（分成 5 段，取整）
     let stepSize = Math.ceil((yAxisMax - minY) / 5);
     if (stepSize < 1) stepSize = 1;
     
-    // 确保刻度是整数（10, 20, 50, 100 等）
     if (stepSize <= 10) stepSize = 10;
     else if (stepSize <= 20) stepSize = 20;
     else if (stepSize <= 50) stepSize = 50;
@@ -866,7 +861,7 @@
                     stepSize: stepSize, 
                     callback: (value) => '€' + value, 
                     color: '#B8C5D6',
-                    precision: 0  // 确保显示整数，不显示小数
+                    precision: 0      // 👈 关键：不显示小数点
                 }, 
                 grid: { color: 'rgba(255,255,255,0.05)' } 
             }, 
