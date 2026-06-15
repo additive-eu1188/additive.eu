@@ -599,6 +599,35 @@
             window.location.href = 'chat.html';
         }
         
+function showInsufficientModalForLimit(message) {
+    const modalHtml = `
+        <div id="limitModal" class="order-modal-container" style="visibility: visible; opacity: 1;">
+            <div class="order-modal">
+                <div class="modal-header">
+                    <h2><i class="fas fa-check-circle"></i> Orders Completed</h2>
+                    <button class="modal-close" onclick="closeLimitModal()">&times;</button>
+                </div>
+                <div class="modal-body" style="text-align: center; padding: 30px;">
+                    <i class="fas fa-trophy" style="font-size: 64px; color: #4ade80; margin-bottom: 20px; display: block;"></i>
+                    <p style="margin-bottom: 30px; color: #c0c8e0; line-height: 1.6;">${message}</p>
+                    <div class="modal-buttons" style="display: flex; gap: 12px; justify-content: center;">
+                        <button class="btn-close-modal" onclick="closeLimitModal()">Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    const existing = document.getElementById('limitModal');
+    if (existing) existing.remove();
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
+}
+
+function closeLimitModal() {
+    const modal = document.getElementById('limitModal');
+    if (modal) modal.remove();
+}
+
         async function loadUserData() {
             const user = getCurrentUser();
             if (!user) { window.location.href = 'signin.html'; return; }
@@ -1047,13 +1076,14 @@
             }
             
             const { data: ordersData } = await sb.from('order_history').select('id', { count: 'exact' }).eq('uid', user.uid);
-            const currentCount = ordersData?.length || 0;
-            const ordersLimit = await getUserOrdersLimit();
-            
-            if (currentCount > ordersLimit) {
-                showToast('今日订单已达上限', 'warning');
-                return;
-            }
+const currentCount = ordersData?.length || 0;
+const ordersLimit = await getUserOrdersLimit();
+
+// 当达到上限时，显示提示弹窗，不允许再做单
+if (currentCount >= ordersLimit) {
+    showInsufficientModalForLimit('Your orders are completed, please contact usersupport to reset your working account.');
+    return;
+}
             
             const pendingTempOrder = getPendingTempOrder();
             if (pendingTempOrder && pendingTempOrder.uid === user.uid && !pendingTempOrder.completed) {
