@@ -820,30 +820,43 @@
     const maxCommission = Math.max(...commissions, 10);
     let minY = 0;
     
+    // 如果最大佣金大于 200，Y 轴从 100 开始
     if (maxCommission > 200) {
         minY = 100;
     }
     
-    let yAxisMax;
+    // 根据最大佣金智能计算 Y 轴最大值和间隔
+    let yAxisMax, stepSize;
+    
     if (maxCommission <= 100) {
+        // 小金额：间隔 20
         yAxisMax = Math.ceil(maxCommission / 20) * 20;
         if (yAxisMax < 20) yAxisMax = 20;
-    } else if (maxCommission <= 500) {
+        stepSize = yAxisMax / 5;
+    } else if (maxCommission <= 300) {
+        // 中等金额：间隔 50
         yAxisMax = Math.ceil(maxCommission / 50) * 50;
-    } else if (maxCommission <= 1000) {
+        stepSize = 50;
+    } else if (maxCommission <= 800) {
+        // 较大金额：间隔 100
         yAxisMax = Math.ceil(maxCommission / 100) * 100;
-    } else {
+        stepSize = 100;
+    } else if (maxCommission <= 2000) {
+        // 大金额：间隔 200
         yAxisMax = Math.ceil(maxCommission / 200) * 200;
+        stepSize = 200;
+    } else if (maxCommission <= 5000) {
+        // 更大金额：间隔 500
+        yAxisMax = Math.ceil(maxCommission / 500) * 500;
+        stepSize = 500;
+    } else {
+        // 超大金额：间隔 1000
+        yAxisMax = Math.ceil(maxCommission / 1000) * 1000;
+        stepSize = 1000;
     }
     
-    let stepSize = Math.ceil((yAxisMax - minY) / 5);
-    if (stepSize < 1) stepSize = 1;
-    
-    if (stepSize <= 10) stepSize = 10;
-    else if (stepSize <= 20) stepSize = 20;
-    else if (stepSize <= 50) stepSize = 50;
-    else if (stepSize <= 100) stepSize = 100;
-    else stepSize = Math.ceil(stepSize / 50) * 50;
+    // 确保 stepSize 是整数且合理
+    stepSize = Math.max(stepSize, 1);
     
     const ctx = document.getElementById('commissionChart').getContext('2d');
     const commonOptions = {
@@ -861,7 +874,7 @@
                     stepSize: stepSize, 
                     callback: (value) => '€' + value, 
                     color: '#B8C5D6',
-                    precision: 0      // 👈 关键：不显示小数点
+                    precision: 0
                 }, 
                 grid: { color: 'rgba(255,255,255,0.05)' } 
             }, 
