@@ -234,10 +234,27 @@
         .chart-btn.active { background: #CCB299; color: #0B0B21; border-color: #CCB299; }
         .chart-btn:hover { background: rgba(204, 178, 153, 0.2); }
         .chart-wrapper { margin-bottom: 16px; }
-        .chart-stats { display: flex; justify-content: space-around; padding-top: 12px; border-top: 1px solid rgba(204, 178, 153, 0.1); }
-        .chart-stat-item { text-align: center; flex: 1; }
-        .chart-stat-label { font-size: 10px; color: #8a9ab0; margin-bottom: 4px; }
-        .chart-stat-value { font-size: 16px; font-weight: 700; color: #CCB299; }
+        .chart-stats {
+    display: flex;
+    justify-content: space-around;
+    padding-top: 12px;
+    border-top: 1px solid rgba(204, 178, 153, 0.1);
+}
+.chart-stat-item { 
+    text-align: center; 
+    flex: 1; 
+}
+.chart-stat-label { 
+    font-size: 12px;        /* 从 10px 改为 12px */
+    color: #8a9ab0; 
+    margin-bottom: 6px;     /* 从 4px 改为 6px */
+    font-weight: 500;       /* 加粗 */
+}
+.chart-stat-value { 
+    font-size: 18px;        /* 从 16px 改为 18px */
+    font-weight: 700; 
+    color: #CCB299;
+}
 
         /* ========== 操作行 ========== */
         .action-row {
@@ -424,9 +441,10 @@
             .card { padding: 16px; }
             .chart-container { padding: 16px; margin-top: 0; }
             .chart-stats { flex-direction: row; flex-wrap: wrap; gap: 8px; }
-            .chart-stat-item { flex: 1; min-width: 70px; }
-            .chart-stat-label { font-size: 8px; }
-            .chart-stat-value { font-size: 11px; }
+            @media (max-width: 768px) {
+    .chart-stat-item { flex: 1; min-width: 70px; }
+    .chart-stat-label { font-size: 10px; }      /* 手机版稍微小一点，但比之前大 */
+    .chart-stat-value { font-size: 14px; }      /* 手机版 14px */
             .chart-header { flex-direction: column; align-items: flex-start; }
             .chart-buttons { margin-top: 8px; }
             .overview-card { flex: 0 0 260px; }
