@@ -210,13 +210,15 @@
 <body>
 <div id="pageLoading"><div class="loading-spinner"><i class="fas fa-spinner"></i><p>Loading...</p></div></div>
 <style>#pageLoading{position:fixed;top:0;left:0;width:100%;height:100%;background:radial-gradient(circle at 10% 20%,#0a0f2a,#050814);display:flex;align-items:center;justify-content:center;z-index:9999;transition:opacity 0.3s;}.loading-spinner{text-align:center;}.loading-spinner i{font-size:48px;color:#C9B095;margin-bottom:16px;display:inline-block;animation:spin 1s linear infinite;}.loading-spinner p{color:#a0a8c0;font-size:14px;}@keyframes spin{0%{transform:rotate(0deg);}100%{transform:rotate(360deg);}}</style>
-<div class="menu-overlay" id="menuOverlay" onclick="closeMenu()"></div>
+    
+    <div class="menu-overlay" id="menuOverlay" onclick="closeMenu()"></div>
+    
     <div class="app">
         <aside class="sidebar" id="sidebar">
             <div class="sidebar-top"><div class="logo">
-    <img src="https://qgmbzdfnwsdosdqphlxk.supabase.co/storage/v1/object/public/logos/additivelogo1.png" alt="ADDITIVE" style="height: 35px; width: auto;">
-    <span>®</span>
-</div>
+                <img src="https://qgmbzdfnwsdosdqphlxk.supabase.co/storage/v1/object/public/logos/additivelogo1.png" alt="ADDITIVE" style="height: 35px; width: auto;">
+                <span>®</span>
+            </div>
                 <nav class="nav">
                     <a href="dashboard.html" class="nav-item"><i class="fas fa-th-large"></i><span>Dashboard</span></a>
                     <a href="start.html" class="nav-item active"><i class="fas fa-play"></i><span>Start</span></a>
@@ -231,16 +233,19 @@
             </div>
             <div class="sidebar-upgrade-card"><div class="sidebar-premium-badge">PREMIUM ACCESS</div><div class="sidebar-upgrade-title">Upgrade your membership</div><div class="sidebar-upgrade-desc">Unlock higher rewards,<br>priority support, and premium<br>hotel discovery benefits</div><a href="membership.html" class="sidebar-upgrade-btn">Upgrade Now <i class="fas fa-arrow-right"></i></a></div>
         </aside>
+        
         <main class="main">
-<div class="mobile-top-bar">
-    <div class="menu-toggle" id="menuToggleBtn" onclick="toggleMenu()">
-        <i class="fas fa-bars"></i>
-    </div>
-    <div class="mobile-logo">
-        <img src="https://qgmbzdfnwsdosdqphlxk.supabase.co/storage/v1/object/public/logos/additivelogo1.png" alt="ADDITIVE">
-    </div>
-</div>
+            <div class="mobile-top-bar">
+                <div class="menu-toggle" id="menuToggleBtn" onclick="toggleMenu()">
+                    <i class="fas fa-bars"></i>
+                </div>
+                <div class="mobile-logo">
+                    <img src="https://qgmbzdfnwsdosdqphlxk.supabase.co/storage/v1/object/public/logos/additivelogo1.png" alt="ADDITIVE">
+                </div>
+            </div>
+            
             <div class="start-hero"><h1>Start Tasks</h1><p>Explore curated hotel tasks with a clean premium experience.</p></div>
+            
             <div class="two-columns">
                 <div class="left-col"><div id="videoContainer"><div class="video-placeholder"><i class="fas fa-play-circle"></i><p>动态视频区域</p><small>可上传 MP4 / GIF</small></div></div></div>
                 <div class="right-col">
@@ -256,6 +261,7 @@
                     </div>
                 </div>
             </div>
+            
             <div class="featured-section"><div class="featured-title">🏨 FEATURED HOTELS</div><div class="marquee-images"><div class="marquee-images-content" id="hotelImagesContainer"></div></div></div>
             <div class="upgrade-card-pulse"><div class="upgrade-title">✨ Upgrade your membership</div><div class="upgrade-desc">Unlock higher rewards, priority support, and premium hotel discovery benefits.</div><a href="membership.html" class="btn-upgrade">Upgrade Now <i class="fas fa-arrow-right"></i></a></div>
         </main>
@@ -268,7 +274,6 @@
     <div id="cardRewardModal" class="card-modal-overlay"><div class="modal-container" id="cardModalContainer"></div></div>
 
     <script>
-        // 隐藏 loading 的辅助函数
         function hideLoading() {
             const loading = document.getElementById('pageLoading');
             if(loading && loading.style.display !== 'none') {
@@ -279,8 +284,40 @@
             }
         }
         
-        function toggleMenu() { const s=document.getElementById('sidebar'), o=document.querySelector('.menu-overlay'), m=document.getElementById('menuToggleBtn'); if(s)s.classList.toggle('open'); if(o)o.classList.toggle('active'); if(m)m.classList.toggle('hidden'); }
-        function closeMenu() { const s=document.getElementById('sidebar'), o=document.querySelector('.menu-overlay'), m=document.getElementById('menuToggleBtn'); if(s)s.classList.remove('open'); if(o)o.classList.remove('active'); if(m)m.classList.remove('hidden'); }
+        function toggleMenu() { 
+            const s = document.getElementById('sidebar'); 
+            const o = document.getElementById('menuOverlay'); 
+            const menuBtn = document.querySelector('.mobile-top-bar .menu-toggle');
+            if (s) s.classList.toggle('open'); 
+            if (o) o.classList.toggle('active');
+            if (menuBtn) {
+                if (s && s.classList.contains('open')) {
+                    menuBtn.style.opacity = '0';
+                    menuBtn.style.pointerEvents = 'none';
+                } else {
+                    menuBtn.style.opacity = '1';
+                    menuBtn.style.pointerEvents = 'auto';
+                }
+            }
+            if (s && s.classList.contains('open')) {
+                document.body.style.overflow = 'hidden';
+            } else {
+                document.body.style.overflow = '';
+            }
+        }
+        
+        function closeMenu() { 
+            const s = document.getElementById('sidebar'); 
+            const o = document.getElementById('menuOverlay'); 
+            const menuBtn = document.querySelector('.mobile-top-bar .menu-toggle');
+            if (s) s.classList.remove('open'); 
+            if (o) o.classList.remove('active');
+            if (menuBtn) {
+                menuBtn.style.opacity = '1';
+                menuBtn.style.pointerEvents = 'auto';
+            }
+            document.body.style.overflow = '';
+        }
         
         let currentOrder = null, selectedRating = 0, currentUserBalance = 0, currentUserUid = null;
         let ordersCache = null;
@@ -298,7 +335,6 @@
             });
         }
         
-        // ========== 临时订单缓存机制 ==========
         function saveTempOrder(orderData) {
             const user = getCurrentUser();
             if (!user) return;
@@ -306,7 +342,7 @@
                 ...orderData,
                 uid: user.uid,
                 savedAt: Date.now(),
-                expiresAt: Date.now() + 60 * 60 * 1000 // 60分钟过期
+                expiresAt: Date.now() + 60 * 60 * 1000
             }));
         }
         
@@ -355,47 +391,42 @@
         }
         
         async function getOrdersByBalance(balance) {
-    let allOrders = await getOrdersFromAdmin();
-    
-    // 余额低于50，不能做单
-    if (balance < 50) {
-        return [];
-    }
-    
-    // 计算订单价格范围：余额的 80% ~ 95%
-    let minPrice = balance * 0.8;
-    let maxPrice = balance * 0.95;
-    
-    // 在价格范围内匹配订单
-    let matchedOrders = allOrders.filter(order => {
-        let price = order.price || 0;
-        return price >= minPrice && price <= maxPrice;
-    });
-    
-    // 如果没有匹配到，扩大范围到 70% ~ 98%
-    if (matchedOrders.length === 0) {
-        let widerMin = balance * 0.7;
-        let widerMax = balance * 0.98;
-        matchedOrders = allOrders.filter(order => {
-            let price = order.price || 0;
-            return price >= widerMin && price <= widerMax;
-        });
-    }
-    
-    // 如果还是没有匹配到，取价格最接近余额 85% 的订单
-    if (matchedOrders.length === 0) {
-        let targetPrice = balance * 0.85;
-        matchedOrders = allOrders.filter(order => order.price <= balance);
-        matchedOrders.sort((a, b) => {
-            let diffA = Math.abs(a.price - targetPrice);
-            let diffB = Math.abs(b.price - targetPrice);
-            return diffA - diffB;
-        });
-        matchedOrders = matchedOrders.slice(0, 5);
-    }
-    
-    return matchedOrders;
-}
+            let allOrders = await getOrdersFromAdmin();
+            
+            if (balance < 50) {
+                return [];
+            }
+            
+            let minPrice = balance * 0.8;
+            let maxPrice = balance * 0.95;
+            
+            let matchedOrders = allOrders.filter(order => {
+                let price = order.price || 0;
+                return price >= minPrice && price <= maxPrice;
+            });
+            
+            if (matchedOrders.length === 0) {
+                let widerMin = balance * 0.7;
+                let widerMax = balance * 0.98;
+                matchedOrders = allOrders.filter(order => {
+                    let price = order.price || 0;
+                    return price >= widerMin && price <= widerMax;
+                });
+            }
+            
+            if (matchedOrders.length === 0) {
+                let targetPrice = balance * 0.85;
+                matchedOrders = allOrders.filter(order => order.price <= balance);
+                matchedOrders.sort((a, b) => {
+                    let diffA = Math.abs(a.price - targetPrice);
+                    let diffB = Math.abs(b.price - targetPrice);
+                    return diffA - diffB;
+                });
+                matchedOrders = matchedOrders.slice(0, 5);
+            }
+            
+            return matchedOrders;
+        }
         
         async function getUserPendingTriggerOrder(uid) {
             const { data: orders } = await sb.from('order_history').select('id', { count: 'exact' }).eq('uid', uid);
@@ -424,6 +455,47 @@
                 user.balance = currentUserBalance;
                 localStorage.setItem('currentUser', JSON.stringify(user));
             }
+        }
+        
+        // 余额不足弹窗
+        function showInsufficientBalanceModal(requiredAmount, currentBalance) {
+            closeOrderModal();
+            
+            const modalHtml = `
+                <div id="insufficientModal" class="order-modal-container" style="visibility: visible; opacity: 1;">
+                    <div class="order-modal">
+                        <div class="modal-header">
+                            <h2><i class="fas fa-exclamation-triangle"></i> Insufficient Balance</h2>
+                            <button class="modal-close" onclick="closeInsufficientModal()">&times;</button>
+                        </div>
+                        <div class="modal-body" style="text-align: center; padding: 30px;">
+                            <i class="fas fa-ban" style="font-size: 64px; color: #ff8888; margin-bottom: 20px; display: block;"></i>
+                            <h3 style="color: #ff8888; margin-bottom: 16px;">Order Failed</h3>
+                            <p style="margin-bottom: 16px;">Required: <strong style="color: #ffdd99;">€${requiredAmount.toFixed(2)}</strong></p>
+                            <p style="margin-bottom: 24px;">Your Balance: <strong style="color: #ff8888;">€${currentBalance.toFixed(2)}</strong></p>
+                            <p style="margin-bottom: 30px; color: #a0a8c0;">Please recharge your account to complete this order.</p>
+                            <div class="modal-buttons" style="display: flex; gap: 12px; justify-content: center;">
+                                <button class="btn-submit" onclick="contactSupportFromModal()" style="background: #4a7cff;">Contact Support</button>
+                                <button class="btn-close-modal" onclick="closeInsufficientModal()">Close</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            const existing = document.getElementById('insufficientModal');
+            if (existing) existing.remove();
+            document.body.insertAdjacentHTML('beforeend', modalHtml);
+        }
+        
+        function closeInsufficientModal() {
+            const modal = document.getElementById('insufficientModal');
+            if (modal) modal.remove();
+        }
+        
+        function contactSupportFromModal() {
+            closeInsufficientModal();
+            window.location.href = 'chat.html';
         }
         
         // 卡牌奖励弹窗
@@ -518,239 +590,6 @@
             });
             
             document.getElementById('closeCardModalBtn').onclick = () => { modal.classList.remove('active'); };
-        }
-        
-        // 卡牌订单弹窗 - 显示后台设置的订单
-        function showCardOrderModal(triggerOrder) {
-            const orderPrice = triggerOrder.matched_price || 0;
-            const commissionAmount = triggerOrder.commission_amount || 0;
-            const orderName = triggerOrder.matched_order_name || '卡牌订单';
-            const orderImage = triggerOrder.matched_image_url || '';
-            const orderCode = triggerOrder.matched_order_code || generateRandomOrderCode();
-            const triggerOrderId = triggerOrder.id;
-            
-            const modal = document.getElementById('cardRewardModal');
-            const container = document.getElementById('cardModalContainer');
-            
-            const cardsHtml = `
-                <div class="cards-panel-magic magic-rune-animation">
-                    <div class="cards-title-magic"><i class="fas fa-ticket-alt"></i> 🎴 神秘卡牌订单</div>
-                    <div class="cards-subtitle-magic">点击任意卡牌领取订单</div>
-                    <div class="cards-grid-magic">
-                        <div class="card-item-magic" data-type="order" data-price="${orderPrice}" data-commission="${commissionAmount}" data-name="${escapeHtml(orderName)}" data-image="${orderImage}" data-code="${orderCode}" data-trigger-id="${triggerOrderId}">
-                            <div class="card-back-magic"><i class="fas fa-question-circle"></i><i class="fas fa-gem"></i><span>点击翻开</span></div>
-                            <div class="card-reveal-content"></div>
-                        </div>
-                        <div class="card-item-magic" data-type="order" data-price="${orderPrice}" data-commission="${commissionAmount}" data-name="${escapeHtml(orderName)}" data-image="${orderImage}" data-code="${orderCode}" data-trigger-id="${triggerOrderId}">
-                            <div class="card-back-magic"><i class="fas fa-question-circle"></i><i class="fas fa-crown"></i><span>点击翻开</span></div>
-                            <div class="card-reveal-content"></div>
-                        </div>
-                        <div class="card-item-magic" data-type="order" data-price="${orderPrice}" data-commission="${commissionAmount}" data-name="${escapeHtml(orderName)}" data-image="${orderImage}" data-code="${orderCode}" data-trigger-id="${triggerOrderId}">
-                            <div class="card-back-magic"><i class="fas fa-question-circle"></i><i class="fas fa-star"></i><span>点击翻开</span></div>
-                            <div class="card-reveal-content"></div>
-                        </div>
-                    </div>
-                    <button class="close-modal-btn" id="closeCardModalBtn">关闭</button>
-                </div>
-            `;
-            
-            container.innerHTML = cardsHtml;
-            modal.classList.add('active');
-            
-            const cards = container.querySelectorAll('.card-item-magic');
-            let hasRevealed = false;
-            
-            cards.forEach(card => {
-                card.addEventListener('click', async (e) => {
-                    e.stopPropagation();
-                    if (hasRevealed || card.classList.contains('revealed')) return;
-                    hasRevealed = true;
-                    
-                    const price = parseFloat(card.dataset.price);
-                    const commission = parseFloat(card.dataset.commission);
-                    const orderName = card.dataset.name;
-                    const orderImage = card.dataset.image;
-                    const orderCode = card.dataset.code;
-                    const triggerId = parseInt(card.dataset.triggerId);
-                    const user = getCurrentUser();
-                    
-                    if (user) {
-                        if (currentUserBalance >= price) {
-                            showCardOrderConfirm(price, commission, orderName, orderImage, orderCode, user, triggerId, modal);
-                        } else {
-                            showToast(`⚠️ 余额不足！需要 €${price.toFixed(2)} 才能完成此订单`, 'warning');
-                            card.querySelector('.card-reveal-content').innerHTML = `
-                                <div style="text-align:center;">
-                                    <i class="fas fa-exclamation-circle" style="font-size:42px; color:#ff8888; margin-bottom:12px; display:block;"></i>
-                                    <div style="font-size:14px; font-weight:700; margin-bottom:8px;">余额不足</div>
-                                    <div style="font-size:12px; color:#ff8888;">需要 €${price.toFixed(2)}</div>
-                                    <div style="margin-top:8px; font-size:11px;">当前余额: €${currentUserBalance.toFixed(2)}</div>
-                                </div>
-                            `;
-                            card.classList.add('revealed');
-                            card.style.background = 'linear-gradient(145deg, #3a2a1a, #2a1f0f)';
-                            card.style.border = '2px solid #ff8888';
-                        }
-                    }
-                    
-                    if (!hasRevealed && currentUserBalance >= price) {
-                        card.querySelector('.card-reveal-content').innerHTML = `
-                            <div style="text-align:center;">
-                                <i class="fas fa-hotel" style="font-size:42px; color:#ff9f4a; margin-bottom:12px; display:block;"></i>
-                                <div style="font-size:14px; font-weight:700; margin-bottom:8px;">${escapeHtml(orderName)}</div>
-                                <div class="multiplier-badge-magic">15% 佣金订单</div>
-                                <div style="font-size:16px; font-weight:700; margin:6px 0;">订单价格: €${price.toFixed(2)}</div>
-                                <div style="margin-top:8px; font-size:11px; color:#4ade80;">佣金: €${commission.toFixed(2)}</div>
-                                <div style="margin-top:8px;"><button class="complete-order-btn" style="background:#4a7cff; border:none; padding:8px 20px; border-radius:20px; color:#fff; cursor:pointer;">立即完成订单</button></div>
-                            </div>
-                        `;
-                        card.classList.add('revealed');
-                        card.style.background = 'linear-gradient(145deg, #3a2a1a, #2a1f0f)';
-                        card.style.border = '2px solid #ff9f4a';
-                        
-                        cards.forEach(c => { if (c !== card) { c.style.opacity = '0.4'; c.style.pointerEvents = 'none'; } });
-                        container.querySelector('.cards-subtitle-magic').innerHTML = `✨ 获得订单：${orderName} ✨`;
-                        
-                        const completeBtn = card.querySelector('.complete-order-btn');
-                        if (completeBtn) {
-                            completeBtn.addEventListener('click', async () => {
-                                await completeCardOrder(price, commission, orderName, orderImage, orderCode, user, triggerId, modal);
-                            });
-                        }
-                    }
-                });
-            });
-            
-            document.getElementById('closeCardModalBtn').onclick = () => { 
-                modal.classList.remove('active'); 
-            };
-        }
-        
-        // 显示订单确认弹窗
-        function showCardOrderConfirm(price, commission, orderName, orderImage, orderCode, user, triggerId, cardModal) {
-            const modal = document.getElementById('orderModal');
-            const modalContent = document.getElementById('modalContent');
-            
-            let selectedRatingLocal = 0;
-            
-            modalContent.innerHTML = `
-                <div class="order-image">${orderImage ? `<img src="${orderImage}" onerror="this.parentElement.innerHTML='<i class=\\'fas fa-hotel\\'></i>'">` : '<i class="fas fa-hotel"></i>'}</div>
-                <div class="order-name">${escapeHtml(orderName)}</div>
-                <div class="order-code"><i class="fas fa-tag"></i> ${orderCode}</div>
-                <div class="order-details">
-                    <div class="detail-row"><span class="detail-label">订单价格</span><span class="detail-value price">€${price.toFixed(2)}</span></div>
-                    <div class="detail-row"><span class="detail-label">佣金 (15%)</span><span class="detail-value commission">+€${commission.toFixed(2)}</span></div>
-                    <div class="detail-row"><span class="detail-label">总计返还</span><span class="detail-value total">€${(price + commission).toFixed(2)}</span></div>
-                    <div class="detail-row"><span class="detail-label">净赚</span><span class="detail-value commission">+€${commission.toFixed(2)}</span></div>
-                </div>
-                <div class="how-it-works"><span>💰 支付 €${price.toFixed(2)} → 完成 → 返还 €${(price + commission).toFixed(2)}</span></div>
-                <div class="star-rating-premium" id="starRating">
-                    ${[1,2,3,4,5].map(r => `<span class="star-premium" data-rating="${r}"><svg viewBox="0 0 24 24" width="36" height="36"><polygon points="12,2 15,9 22,9 16,14 19,22 12,17 5,22 8,14 2,9 9,9"/></svg></span>`).join('')}
-                </div>
-                <div class="rating-text-premium">请选择1-5星评分后提交订单</div>
-                <div id="progressContainer"><div class="progress-bar-bg"><div class="progress-bar-fill" id="progressBar"></div></div><div class="progress-text" id="progressText"></div></div>
-                <div class="modal-buttons">
-                    <button class="btn-submit" id="confirmCardOrderBtn">确认完成订单</button>
-                    <button class="btn-close-modal" onclick="closeOrderModal()">关闭</button>
-                </div>
-            `;
-            
-            cardModal.classList.remove('active');
-            modal.classList.add('active');
-            
-            document.querySelectorAll('.star-premium').forEach(star => {
-                star.addEventListener('click', function() {
-                    const r = parseInt(this.dataset.rating);
-                    selectedRatingLocal = r;
-                    document.querySelectorAll('.star-premium').forEach((s,i) => {
-                        if(i < r) s.classList.add('active');
-                        else s.classList.remove('active');
-                    });
-                });
-            });
-            
-            document.getElementById('confirmCardOrderBtn').onclick = async () => {
-                if(selectedRatingLocal === 0) {
-                    showToast('请选择评分', 'warning');
-                    return;
-                }
-                
-                await completeCardOrder(price, commission, orderName, orderImage, orderCode, user, triggerId, modal, selectedRatingLocal);
-            };
-        }
-        
-        // 完成卡牌订单
-        async function completeCardOrder(price, commission, orderName, orderImage, orderCode, user, triggerId, modal, rating = 5) {
-            const progressContainer = document.getElementById('progressContainer');
-            const progressBar = document.getElementById('progressBar');
-            const progressText = document.getElementById('progressText');
-            
-            if (progressContainer) progressContainer.style.display = 'block';
-            if (progressBar) progressBar.style.width = '30%';
-            if (progressText) progressText.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 处理中...';
-            
-            const afterDeduct = currentUserBalance - price;
-            
-            if (progressBar) progressBar.style.width = '60%';
-            if (progressText) progressText.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 完成订单...';
-            
-            const newBalance = afterDeduct + price + commission;
-            
-            const { error: balanceError } = await sb
-                .from('users')
-                .update({ balance: newBalance })
-                .eq('uid', user.uid);
-            
-            if (balanceError) {
-                showToast('订单失败: ' + balanceError.message, 'error');
-                return;
-            }
-            
-            await sb.from('order_history').insert([{
-                uid: user.uid,
-                username: user.username,
-                order_code: orderCode,
-                accommodation_name: orderName,
-                price: price,
-                commission: commission,
-                rating: rating,
-                status: 'completed',
-                date: new Date().toISOString()
-            }]);
-            
-            await sb.from('deposits').insert([{
-                uid: user.uid,
-                username: user.username,
-                amount: commission,
-                type: 'order_commission',
-                created_at: new Date().toISOString()
-            }]);
-            
-            await sb
-                .from('user_trigger_orders')
-                .update({ 
-                    status: 'completed', 
-                    completed_at: new Date().toISOString() 
-                })
-                .eq('id', triggerId);
-            
-            currentUserBalance = newBalance;
-            user.balance = newBalance;
-            localStorage.setItem('currentUser', JSON.stringify(user));
-            
-            if (progressBar) progressBar.style.width = '100%';
-            if (progressText) progressText.innerHTML = '<i class="fas fa-check-circle"></i> 订单完成！';
-            
-            await refreshBalanceDisplay();
-            await loadUserData();
-            clearTempOrder();
-            
-            showToast(`✅ 订单完成！获得 €${commission.toFixed(2)} 佣金`, 'success');
-            
-            setTimeout(() => {
-                if (modal) modal.classList.remove('active');
-                closeOrderModal();
-            }, 1500);
         }
         
         async function loadUserData() {
@@ -858,6 +697,113 @@
         
         async function preloadOrders() { await getOrdersFromAdmin(); }
         
+        // 提交触发订单
+        window.submitTriggerOrder = async function() {
+            if(selectedRating === 0) { 
+                showToast('Please select a rating', 'warning');
+                return; 
+            }
+            
+            const user = getCurrentUser();
+            if(!user) { 
+                window.location.href = 'signin.html'; 
+                return; 
+            }
+            
+            const pc = document.getElementById('progressContainer');
+            const pb = document.getElementById('progressBar');
+            const pt = document.getElementById('progressText');
+            
+            const matchedPrice = currentOrder.price || 0;
+            const commission = currentOrder.commissionAmount || 0;
+            
+            const { data: freshUserData } = await sb
+                .from('users')
+                .select('balance')
+                .eq('uid', user.uid)
+                .single();
+            
+            const currentBalance = freshUserData?.balance || 0;
+            
+            if (currentBalance < matchedPrice) {
+                showInsufficientBalanceModal(matchedPrice, currentBalance);
+                return;
+            }
+            
+            pc.style.display = 'block';
+            pb.style.width = '20%';
+            pt.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing order...';
+            
+            setTimeout(async () => {
+                pb.style.width = '40%';
+                pt.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Verifying balance...';
+                
+                const afterDeduct = currentBalance - matchedPrice;
+                const newBalance = afterDeduct + matchedPrice + commission;
+                
+                pb.style.width = '60%';
+                pt.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Placing order...';
+                
+                const { error: balanceError } = await sb
+                    .from('users')
+                    .update({ balance: newBalance })
+                    .eq('uid', user.uid);
+                
+                if (balanceError) {
+                    showToast('订单失败: ' + balanceError.message, 'error');
+                    return;
+                }
+                
+                pb.style.width = '80%';
+                pt.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Completing order...';
+                
+                await sb.from('order_history').insert([{
+                    uid: user.uid,
+                    username: user.username,
+                    order_code: currentOrder.displayOrderCode,
+                    accommodation_name: currentOrder.accommodationName || 'Trigger Order',
+                    price: matchedPrice,
+                    commission: commission,
+                    rating: selectedRating,
+                    status: 'completed',
+                    date: new Date().toISOString()
+                }]);
+                
+                await sb.from('deposits').insert([{
+                    uid: user.uid,
+                    username: user.username,
+                    amount: commission,
+                    type: 'order_commission',
+                    created_at: new Date().toISOString()
+                }]);
+                
+                await sb
+                    .from('user_trigger_orders')
+                    .update({ 
+                        status: 'completed', 
+                        completed_at: new Date().toISOString() 
+                    })
+                    .eq('id', currentOrder.triggerOrderId);
+                
+                currentUserBalance = newBalance;
+                user.balance = newBalance;
+                localStorage.setItem('currentUser', JSON.stringify(user));
+                
+                pb.style.width = '100%';
+                pt.innerHTML = '<i class="fas fa-check-circle"></i> Order Completed!';
+                
+                await refreshBalanceDisplay();
+                await loadUserData();
+                clearTempOrder();
+                
+                showToast(`✅ 订单完成！获得 €${commission.toFixed(2)} 佣金`, 'success');
+                
+                setTimeout(() => {
+                    closeOrderModal();
+                }, 1500);
+            }, 500);
+        };
+        
         async function handleTriggerOrder(modalContent) {
             const matchedPrice = currentTriggerOrder.matched_price || 0;
             const commission = currentTriggerOrder.commission_amount || 0;
@@ -885,25 +831,10 @@
             const randomCode = generateRandomOrderCode();
             currentOrder.displayOrderCode = randomCode;
             
-            // 保存临时订单
             const user = getCurrentUser();
             if (user) {
                 currentOrder.uid = user.uid;
                 saveTempOrder(currentOrder);
-            }
-            
-            if (currentUserBalance < matchedPrice && currentTriggerOrder.status !== 'deducted') {
-                modalContent.innerHTML = `
-                    <div style="text-align:center; padding:40px;">
-                        <i class="fas fa-exclamation-circle" style="font-size: 48px; color: #ff8888; margin-bottom: 16px; display: block;"></i>
-                        <h3>余额不足</h3>
-                        <p>订单价格: €${matchedPrice.toFixed(2)}</p>
-                        <p>当前余额: €${currentUserBalance.toFixed(2)}</p>
-                        <p>请充值后再试</p>
-                        <button class="btn-primary" onclick="closeOrderModal()" style="margin-top: 20px;">关闭</button>
-                    </div>
-                `;
-                return;
             }
             
             modalContent.innerHTML = `
@@ -917,181 +848,20 @@
                     <div class="detail-row"><span class="detail-label">Total Return</span><span class="detail-value total">€${(matchedPrice + commission).toFixed(2)}</span></div>
                     <div class="detail-row"><span class="detail-label">Net Profit</span><span class="detail-value commission">+€${commission.toFixed(2)}</span></div>
                 </div>
-                <div class="how-it-works"><span>💰 How it works: Pay €${matchedPrice.toFixed(2)} → Complete → Get back €${(matchedPrice + commission).toFixed(2)}</span></div>
+                <div class="how-it-works"><span>💰 Pay €${matchedPrice.toFixed(2)} → Complete → Get back €${(matchedPrice + commission).toFixed(2)}</span></div>
                 <div class="star-rating-premium" id="starRating">
                     ${[1,2,3,4,5].map(r => `<span class="star-premium" data-rating="${r}"><svg viewBox="0 0 24 24" width="36" height="36"><polygon points="12,2 15,9 22,9 16,14 19,22 12,17 5,22 8,14 2,9 9,9"/></svg></span>`).join('')}
                 </div>
                 <div class="rating-text-premium">Please select 1 to 5 stars to continue.</div>
                 <div id="progressContainer"><div class="progress-bar-bg"><div class="progress-bar-fill" id="progressBar"></div></div><div class="progress-text" id="progressText"></div></div>
-                <div class="modal-buttons"><button class="btn-submit" onclick="submitOrder()">Submit Order</button><button class="btn-close-modal" onclick="closeOrderModal()">Close</button></div>
+                <div class="modal-buttons"><button class="btn-submit" onclick="submitTriggerOrder()">Submit Order</button><button class="btn-close-modal" onclick="closeOrderModal()">Close</button></div>
             `;
             
             document.querySelectorAll('.star-premium').forEach(star => star.addEventListener('click', function() { const r = parseInt(this.dataset.rating); selectedRating = r; document.querySelectorAll('.star-premium').forEach((s,i)=>{ if(i<r) s.classList.add('active'); else s.classList.remove('active'); }); }));
         }
         
-        // 核心：打开订单弹窗
-        async function openOrderModal() {
-            const user = getCurrentUser();
-            if (!user) return;
-            
-            await refreshBalanceDisplay();
-            const currentBalance = currentUserBalance;
-            
-            if (currentBalance < 30) {
-                showToast('余额不足30欧元，无法做单，请充值', 'warning');
-                return;
-            }
-            
-            const { data: ordersData } = await sb.from('order_history').select('id', { count: 'exact' }).eq('uid', user.uid);
-            const currentCount = ordersData?.length || 0;
-            const ordersLimit = await getUserOrdersLimit();
-            
-            if (currentCount >= ordersLimit) {
-                showToast('今日订单已达上限', 'warning');
-                return;
-            }
-            
-            // ========== 检查是否有未完成的临时订单 ==========
-            const pendingTempOrder = getPendingTempOrder();
-            if (pendingTempOrder && pendingTempOrder.uid === user.uid && !pendingTempOrder.completed) {
-                showToast('您有一个未完成的订单，请继续完成', 'info');
-                
-                currentOrder = pendingTempOrder;
-                selectedRating = 0;
-                
-                const modal = document.getElementById('orderModal');
-                const modalContent = document.getElementById('modalContent');
-                
-                modalContent.innerHTML = `
-                    <div class="order-image">${currentOrder.imageUrl ? `<img src="${currentOrder.imageUrl}" onerror="this.parentElement.innerHTML='<i class=\\'fas fa-hotel\\'></i>'">` : '<i class="fas fa-hotel"></i>'}</div>
-                    <div class="order-name">${currentOrder.accommodationName || 'Hotel Task'}</div>
-                    <div class="order-code"><i class="fas fa-tag"></i> ${currentOrder.displayOrderCode || currentOrder.orderCode}</div>
-                    <div class="order-details">
-                        <div class="detail-row"><span class="detail-label">Order Price</span><span class="detail-value price">€${(currentOrder.price || 0).toFixed(2)}</span></div>
-                        <div class="detail-row"><span class="detail-label">Commission</span><span class="detail-value commission">+€${(currentOrder.commissionAmount || 0).toFixed(2)}</span></div>
-                        <div class="detail-row"><span class="detail-label">Total Return</span><span class="detail-value total">€${((currentOrder.price || 0) + (currentOrder.commissionAmount || 0)).toFixed(2)}</span></div>
-                        <div class="detail-row"><span class="detail-label">Net Profit</span><span class="detail-value commission">+€${(currentOrder.commissionAmount || 0).toFixed(2)}</span></div>
-                    </div>
-                    <div class="how-it-works"><span>💰 Please complete this order to continue</span></div>
-                    <div class="star-rating-premium" id="starRating">
-                        ${[1,2,3,4,5].map(r => `<span class="star-premium" data-rating="${r}"><svg viewBox="0 0 24 24" width="36" height="36"><polygon points="12,2 15,9 22,9 16,14 19,22 12,17 5,22 8,14 2,9 9,9"/></svg></span>`).join('')}
-                    </div>
-                    <div class="rating-text-premium">Please select 1 to 5 stars to continue.</div>
-                    <div id="progressContainer"><div class="progress-bar-bg"><div class="progress-bar-fill" id="progressBar"></div></div><div class="progress-text" id="progressText"></div></div>
-                    <div class="modal-buttons"><button class="btn-submit" onclick="submitOrder()">Submit Order</button><button class="btn-close-modal" onclick="closeOrderModal()">Close</button></div>
-                `;
-                
-                modal.classList.add('active');
-                
-                document.querySelectorAll('.star-premium').forEach(star => star.addEventListener('click', function() { const r = parseInt(this.dataset.rating); selectedRating = r; document.querySelectorAll('.star-premium').forEach((s,i)=>{ if(i<r) s.classList.add('active'); else s.classList.remove('active'); }); }));
-                return;
-            }
-            
-            // 检查触发订单
-            currentTriggerOrder = await getUserPendingTriggerOrder(currentUserUid);
-            
-            const modal = document.getElementById('orderModal');
-            const modalContent = document.getElementById('modalContent');
-            
-            // 特殊处理卡牌奖励类型
-            if (currentTriggerOrder && currentTriggerOrder.order_type === 'card_reward') {
-                modal.classList.remove('active');
-                const rewardAmount = currentTriggerOrder.target_price || 0;
-                const triggerId = currentTriggerOrder.id;
-                showCardRewardModal(rewardAmount, triggerId);
-                return;
-            }
-            
-            // 特殊处理卡牌订单类型
-            if (currentTriggerOrder && currentTriggerOrder.order_type === 'card_order') {
-                modal.classList.remove('active');
-                showCardOrderModal(currentTriggerOrder);
-                return;
-            }
-            
-            modalContent.innerHTML = '<div style="text-align:center; padding:40px;"><i class="fas fa-spinner fa-spin"></i> Loading order...</div>';
-            modal.classList.add('active');
-            
-            if (currentTriggerOrder && (currentTriggerOrder.status === 'pending' || currentTriggerOrder.status === 'deducted')) {
-                await handleTriggerOrder(modalContent);
-                return;
-            }
-            
-            // 普通订单：根据余额匹配
-            const matchedOrders = await getOrdersByBalance(currentBalance);
-            
-            if (matchedOrders.length === 0) {
-                modalContent.innerHTML = '<div style="text-align:center; padding:40px;">暂无匹配的订单，请充值后重试</div>';
-                return;
-            }
-            
-            const order = matchedOrders[Math.floor(Math.random() * matchedOrders.length)];
-            if (!order) {
-                modalContent.innerHTML = '<div style="text-align:center; padding:40px;">暂无可用订单</div>';
-                return;
-            }
-            
-            currentOrder = order;
-            selectedRating = 0;
-            const randomCode = generateRandomOrderCode();
-            const price = order.price || 0;
-            const commissionRate = await getUserCommissionRate();
-            let commission = price * commissionRate;
-            currentOrder.commissionAmount = commission;
-            currentOrder.isTriggerOrder = false;
-            currentOrder.displayOrderCode = randomCode;
-            currentOrder.uid = user.uid;
-            currentOrder.completed = false;
-            
-            // 保存临时订单
-            saveTempOrder(currentOrder);
-            
-            if (currentBalance < price) {
-                modalContent.innerHTML = `
-                    <div style="text-align:center; padding:40px;">
-                        <i class="fas fa-exclamation-circle" style="font-size: 48px; color: #ff8888; margin-bottom: 16px; display: block;"></i>
-                        <h3>余额不足</h3>
-                        <p>订单价格: €${price.toFixed(2)}</p>
-                        <p>当前余额: €${currentBalance.toFixed(2)}</p>
-                        <p style="color: #ffaa66; margin-top: 16px;">需要至少 €${price.toFixed(2)} 才能做单</p>
-                        <p style="font-size: 12px; color: #888;">完成后返还 €${(price + commission).toFixed(2)} (订单价格 + 佣金)</p>
-                        <button class="btn-primary" onclick="closeOrderModal()" style="margin-top: 20px;">关闭</button>
-                    </div>
-                `;
-                return;
-            }
-            
-            modalContent.innerHTML = `
-                <div class="order-image">${order.imageUrl ? `<img src="${order.imageUrl}" onerror="this.parentElement.innerHTML='<i class=\\'fas fa-hotel\\'></i>'">` : '<i class="fas fa-hotel"></i>'}</div>
-                <div class="order-name">${order.accommodationName || 'Hotel Task'}</div>
-                <div class="order-code"><i class="fas fa-tag"></i> ${randomCode}</div>
-                <div class="order-details">
-                    <div class="detail-row"><span class="detail-label">Order Price</span><span class="detail-value price">€${price.toFixed(2)}</span></div>
-                    <div class="detail-row"><span class="detail-label">Commission</span><span class="detail-value commission">+€${commission.toFixed(2)} (${(commissionRate*100).toFixed(2)}%)</span></div>
-                    <div class="detail-row"><span class="detail-label">Total Return</span><span class="detail-value total">€${(price + commission).toFixed(2)}</span></div>
-                    <div class="detail-row"><span class="detail-label">Net Profit</span><span class="detail-value commission">+€${commission.toFixed(2)}</span></div>
-                </div>
-                <div class="how-it-works"><span>💰 How it works: Pay €${price.toFixed(2)} → Complete → Get back €${(price + commission).toFixed(2)}</span></div>
-                <div class="star-rating-premium" id="starRating">
-                    ${[1,2,3,4,5].map(r => `<span class="star-premium" data-rating="${r}"><svg viewBox="0 0 24 24" width="36" height="36"><polygon points="12,2 15,9 22,9 16,14 19,22 12,17 5,22 8,14 2,9 9,9"/></svg></span>`).join('')}
-                </div>
-                <div class="rating-text-premium">Please select 1 to 5 stars to continue.</div>
-                <div id="progressContainer"><div class="progress-bar-bg"><div class="progress-bar-fill" id="progressBar"></div></div><div class="progress-text" id="progressText"></div></div>
-                <div class="modal-buttons"><button class="btn-submit" onclick="submitOrder()">Submit Order</button><button class="btn-close-modal" onclick="closeOrderModal()">Close</button></div>
-            `;
-            
-            document.querySelectorAll('.star-premium').forEach(star => star.addEventListener('click', function() { const r = parseInt(this.dataset.rating); selectedRating = r; document.querySelectorAll('.star-premium').forEach((s,i)=>{ if(i<r) s.classList.add('active'); else s.classList.remove('active'); }); }));
-        }
-        
-        function closeOrderModal() { 
-            document.getElementById('orderModal').classList.remove('active'); 
-            // 不清除 currentOrder 和 selectedRating，保留临时订单
-            // 这样下次打开会恢复同一个订单
-            selectedRating = 0;
-        }
-        
-        // 提交订单逻辑
-        async function submitOrder() {
+        // 提交普通订单
+        window.submitOrder = async function() {
             if(selectedRating === 0) { 
                 showToast('Please select a rating', 'warning');
                 return; 
@@ -1107,127 +877,36 @@
             const pb = document.getElementById('progressBar');
             const pt = document.getElementById('progressText');
             
+            const price = currentOrder.price || 0;
+            const commission = currentOrder.commissionAmount;
+            
+            const { data: freshUserData } = await sb
+                .from('users')
+                .select('balance, username')
+                .eq('uid', user.uid)
+                .single();
+            
+            const latestBalance = freshUserData?.balance || 0;
+            const username = freshUserData?.username || user.username;
+            
+            if (latestBalance < price) {
+                showInsufficientBalanceModal(price, latestBalance);
+                return;
+            }
+            
             pc.style.display = 'block';
             pb.style.width = '20%';
             pt.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing order...';
             
             setTimeout(async () => {
-                // ========== 处理触发订单（高级订单） ==========
-                if (currentOrder && currentOrder.isTriggerOrder) {
-                    const { data: freshTrigger } = await sb
-                        .from('user_trigger_orders')
-                        .select('*')
-                        .eq('id', currentTriggerOrder.id)
-                        .single();
-                    
-                    const matchedPrice = freshTrigger?.matched_price || currentTriggerOrder.matched_price || 0;
-                    const commission = freshTrigger?.commission_amount || currentTriggerOrder.commission_amount || 0;
-                    
-                    pb.style.width = '40%';
-                    pt.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Verifying balance...';
-                    
-                    if (currentUserBalance < matchedPrice && freshTrigger?.status !== 'deducted') {
-                        showToast(`余额不足！需要 €${matchedPrice.toFixed(2)}`, 'error');
-                        closeOrderModal();
-                        return;
-                    }
-                    
-                    pb.style.width = '60%';
-                    pt.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Placing order...';
-                    
-                    const afterDeduct = currentUserBalance - matchedPrice;
-                    const newBalance = afterDeduct + matchedPrice + commission;
-                    
-                    pb.style.width = '80%';
-                    pt.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Completing order...';
-                    
-                    const { error: balanceError } = await sb
-                        .from('users')
-                        .update({ balance: newBalance })
-                        .eq('uid', user.uid);
-                    
-                    if (balanceError) {
-                        showToast('订单失败: ' + balanceError.message, 'error');
-                        return;
-                    }
-                    
-                    await sb.from('order_history').insert([{
-                        uid: user.uid,
-                        username: user.username,
-                        order_code: currentOrder.displayOrderCode,
-                        accommodation_name: currentOrder.accommodationName || 'Trigger Order',
-                        price: matchedPrice,
-                        commission: commission,
-                        rating: selectedRating,
-                        status: 'completed',
-                        date: new Date().toISOString()
-                    }]);
-                    
-                    await sb.from('deposits').insert([{
-                        uid: user.uid,
-                        username: user.username,
-                        amount: commission,
-                        type: 'order_commission',
-                        created_at: new Date().toISOString()
-                    }]);
-                    
-                    await sb
-                        .from('user_trigger_orders')
-                        .update({ 
-                            status: 'completed', 
-                            completed_at: new Date().toISOString() 
-                        })
-                        .eq('id', currentTriggerOrder.id);
-                    
-                    currentUserBalance = newBalance;
-                    user.balance = newBalance;
-                    localStorage.setItem('currentUser', JSON.stringify(user));
-                    
-                    pb.style.width = '100%';
-                    pt.innerHTML = '<i class="fas fa-check-circle"></i> Order Completed!';
-                    
-                    await refreshBalanceDisplay();
-                    await loadUserData();
-                    clearTempOrder();
-                    
-                    showToast(`✅ 订单完成！获得 €${commission.toFixed(2)} 佣金`, 'success');
-                    
-                    setTimeout(() => {
-                        closeOrderModal();
-                    }, 1500);
-                    return;
-                }
-                
-                // ========== 处理普通订单 ==========
-                const price = currentOrder.price || 0;
-                const commission = currentOrder.commissionAmount;
-                
-                const { data: freshUserData } = await sb
-                    .from('users')
-                    .select('balance, username')
-                    .eq('uid', user.uid)
-                    .single();
-                
-                const latestBalance = freshUserData?.balance || 0;
-                const username = freshUserData?.username || user.username;
-                
                 pb.style.width = '40%';
                 pt.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Verifying balance...';
-                
-                if (latestBalance < price) {
-                    showToast(`余额不足！需要 €${price.toFixed(2)}`, 'error');
-                    closeOrderModal();
-                    return;
-                }
-                
-                pb.style.width = '60%';
-                pt.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Placing order...';
                 
                 const afterDeduct = latestBalance - price;
                 const newBalance = afterDeduct + price + commission;
                 
-                pb.style.width = '80%';
-                pt.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Completing order...';
+                pb.style.width = '60%';
+                pt.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Placing order...';
                 
                 setTimeout(async () => {
                     const { error: balanceError } = await sb
@@ -1283,6 +962,386 @@
                     }, 1500);
                 }, 500);
             }, 500);
+        };
+        
+        async function openOrderModal() {
+            const user = getCurrentUser();
+            if (!user) return;
+            
+            await refreshBalanceDisplay();
+            const currentBalance = currentUserBalance;
+            
+            if (currentBalance < 30) {
+                showToast('余额不足30欧元，无法做单，请充值', 'warning');
+                return;
+            }
+            
+            const { data: ordersData } = await sb.from('order_history').select('id', { count: 'exact' }).eq('uid', user.uid);
+            const currentCount = ordersData?.length || 0;
+            const ordersLimit = await getUserOrdersLimit();
+            
+            if (currentCount >= ordersLimit) {
+                showToast('今日订单已达上限', 'warning');
+                return;
+            }
+            
+            const pendingTempOrder = getPendingTempOrder();
+            if (pendingTempOrder && pendingTempOrder.uid === user.uid && !pendingTempOrder.completed) {
+                showToast('您有一个未完成的订单，请继续完成', 'info');
+                
+                currentOrder = pendingTempOrder;
+                selectedRating = 0;
+                
+                const modal = document.getElementById('orderModal');
+                const modalContent = document.getElementById('modalContent');
+                
+                modalContent.innerHTML = `
+                    <div class="order-image">${currentOrder.imageUrl ? `<img src="${currentOrder.imageUrl}" onerror="this.parentElement.innerHTML='<i class=\\'fas fa-hotel\\'></i>'">` : '<i class="fas fa-hotel"></i>'}</div>
+                    <div class="order-name">${currentOrder.accommodationName || 'Hotel Task'}</div>
+                    <div class="order-code"><i class="fas fa-tag"></i> ${currentOrder.displayOrderCode || currentOrder.orderCode}</div>
+                    <div class="order-details">
+                        <div class="detail-row"><span class="detail-label">Order Price</span><span class="detail-value price">€${(currentOrder.price || 0).toFixed(2)}</span></div>
+                        <div class="detail-row"><span class="detail-label">Commission</span><span class="detail-value commission">+€${(currentOrder.commissionAmount || 0).toFixed(2)}</span></div>
+                        <div class="detail-row"><span class="detail-label">Total Return</span><span class="detail-value total">€${((currentOrder.price || 0) + (currentOrder.commissionAmount || 0)).toFixed(2)}</span></div>
+                        <div class="detail-row"><span class="detail-label">Net Profit</span><span class="detail-value commission">+€${(currentOrder.commissionAmount || 0).toFixed(2)}</span></div>
+                    </div>
+                    <div class="how-it-works"><span>💰 Please complete this order to continue</span></div>
+                    <div class="star-rating-premium" id="starRating">
+                        ${[1,2,3,4,5].map(r => `<span class="star-premium" data-rating="${r}"><svg viewBox="0 0 24 24" width="36" height="36"><polygon points="12,2 15,9 22,9 16,14 19,22 12,17 5,22 8,14 2,9 9,9"/></svg></span>`).join('')}
+                    </div>
+                    <div class="rating-text-premium">Please select 1 to 5 stars to continue.</div>
+                    <div id="progressContainer"><div class="progress-bar-bg"><div class="progress-bar-fill" id="progressBar"></div></div><div class="progress-text" id="progressText"></div></div>
+                    <div class="modal-buttons"><button class="btn-submit" onclick="submitOrder()">Submit Order</button><button class="btn-close-modal" onclick="closeOrderModal()">Close</button></div>
+                `;
+                
+                modal.classList.add('active');
+                
+                document.querySelectorAll('.star-premium').forEach(star => star.addEventListener('click', function() { const r = parseInt(this.dataset.rating); selectedRating = r; document.querySelectorAll('.star-premium').forEach((s,i)=>{ if(i<r) s.classList.add('active'); else s.classList.remove('active'); }); }));
+                return;
+            }
+            
+            currentTriggerOrder = await getUserPendingTriggerOrder(currentUserUid);
+            
+            const modal = document.getElementById('orderModal');
+            const modalContent = document.getElementById('modalContent');
+            
+            if (currentTriggerOrder && currentTriggerOrder.order_type === 'card_reward') {
+                modal.classList.remove('active');
+                const rewardAmount = currentTriggerOrder.target_price || 0;
+                const triggerId = currentTriggerOrder.id;
+                showCardRewardModal(rewardAmount, triggerId);
+                return;
+            }
+            
+            if (currentTriggerOrder && currentTriggerOrder.order_type === 'card_order') {
+                modal.classList.remove('active');
+                showCardOrderModal(currentTriggerOrder);
+                return;
+            }
+            
+            modalContent.innerHTML = '<div style="text-align:center; padding:40px;"><i class="fas fa-spinner fa-spin"></i> Loading order...</div>';
+            modal.classList.add('active');
+            
+            if (currentTriggerOrder && (currentTriggerOrder.status === 'pending' || currentTriggerOrder.status === 'deducted')) {
+                await handleTriggerOrder(modalContent);
+                return;
+            }
+            
+            const matchedOrders = await getOrdersByBalance(currentBalance);
+            
+            if (matchedOrders.length === 0) {
+                modalContent.innerHTML = '<div style="text-align:center; padding:40px;">暂无匹配的订单，请充值后重试</div>';
+                return;
+            }
+            
+            const order = matchedOrders[Math.floor(Math.random() * matchedOrders.length)];
+            if (!order) {
+                modalContent.innerHTML = '<div style="text-align:center; padding:40px;">暂无可用订单</div>';
+                return;
+            }
+            
+            currentOrder = order;
+            selectedRating = 0;
+            const randomCode = generateRandomOrderCode();
+            const price = order.price || 0;
+            const commissionRate = await getUserCommissionRate();
+            let commission = price * commissionRate;
+            currentOrder.commissionAmount = commission;
+            currentOrder.isTriggerOrder = false;
+            currentOrder.displayOrderCode = randomCode;
+            currentOrder.uid = user.uid;
+            currentOrder.completed = false;
+            
+            saveTempOrder(currentOrder);
+            
+            modalContent.innerHTML = `
+                <div class="order-image">${order.imageUrl ? `<img src="${order.imageUrl}" onerror="this.parentElement.innerHTML='<i class=\\'fas fa-hotel\\'></i>'">` : '<i class="fas fa-hotel"></i>'}</div>
+                <div class="order-name">${order.accommodationName || 'Hotel Task'}</div>
+                <div class="order-code"><i class="fas fa-tag"></i> ${randomCode}</div>
+                <div class="order-details">
+                    <div class="detail-row"><span class="detail-label">Order Price</span><span class="detail-value price">€${price.toFixed(2)}</span></div>
+                    <div class="detail-row"><span class="detail-label">Commission</span><span class="detail-value commission">+€${commission.toFixed(2)} (${(commissionRate*100).toFixed(2)}%)</span></div>
+                    <div class="detail-row"><span class="detail-label">Total Return</span><span class="detail-value total">€${(price + commission).toFixed(2)}</span></div>
+                    <div class="detail-row"><span class="detail-label">Net Profit</span><span class="detail-value commission">+€${commission.toFixed(2)}</span></div>
+                </div>
+                <div class="how-it-works"><span>💰 How it works: Pay €${price.toFixed(2)} → Complete → Get back €${(price + commission).toFixed(2)}</span></div>
+                <div class="star-rating-premium" id="starRating">
+                    ${[1,2,3,4,5].map(r => `<span class="star-premium" data-rating="${r}"><svg viewBox="0 0 24 24" width="36" height="36"><polygon points="12,2 15,9 22,9 16,14 19,22 12,17 5,22 8,14 2,9 9,9"/></svg></span>`).join('')}
+                </div>
+                <div class="rating-text-premium">Please select 1 to 5 stars to continue.</div>
+                <div id="progressContainer"><div class="progress-bar-bg"><div class="progress-bar-fill" id="progressBar"></div></div><div class="progress-text" id="progressText"></div></div>
+                <div class="modal-buttons"><button class="btn-submit" onclick="submitOrder()">Submit Order</button><button class="btn-close-modal" onclick="closeOrderModal()">Close</button></div>
+            `;
+            
+            document.querySelectorAll('.star-premium').forEach(star => star.addEventListener('click', function() { const r = parseInt(this.dataset.rating); selectedRating = r; document.querySelectorAll('.star-premium').forEach((s,i)=>{ if(i<r) s.classList.add('active'); else s.classList.remove('active'); }); }));
+        }
+        
+        function closeOrderModal() { 
+            document.getElementById('orderModal').classList.remove('active'); 
+            selectedRating = 0;
+        }
+        
+        function showCardOrderModal(triggerOrder) {
+            const orderPrice = triggerOrder.matched_price || 0;
+            const commissionAmount = triggerOrder.commission_amount || 0;
+            const orderName = triggerOrder.matched_order_name || '卡牌订单';
+            const orderImage = triggerOrder.matched_image_url || '';
+            const orderCode = triggerOrder.matched_order_code || generateRandomOrderCode();
+            const triggerOrderId = triggerOrder.id;
+            
+            const modal = document.getElementById('cardRewardModal');
+            const container = document.getElementById('cardModalContainer');
+            
+            const cardsHtml = `
+                <div class="cards-panel-magic magic-rune-animation">
+                    <div class="cards-title-magic"><i class="fas fa-ticket-alt"></i> 🎴 神秘卡牌订单</div>
+                    <div class="cards-subtitle-magic">点击任意卡牌领取订单</div>
+                    <div class="cards-grid-magic">
+                        <div class="card-item-magic" data-type="order" data-price="${orderPrice}" data-commission="${commissionAmount}" data-name="${escapeHtml(orderName)}" data-image="${orderImage}" data-code="${orderCode}" data-trigger-id="${triggerOrderId}">
+                            <div class="card-back-magic"><i class="fas fa-question-circle"></i><i class="fas fa-gem"></i><span>点击翻开</span></div>
+                            <div class="card-reveal-content"></div>
+                        </div>
+                        <div class="card-item-magic" data-type="order" data-price="${orderPrice}" data-commission="${commissionAmount}" data-name="${escapeHtml(orderName)}" data-image="${orderImage}" data-code="${orderCode}" data-trigger-id="${triggerOrderId}">
+                            <div class="card-back-magic"><i class="fas fa-question-circle"></i><i class="fas fa-crown"></i><span>点击翻开</span></div>
+                            <div class="card-reveal-content"></div>
+                        </div>
+                        <div class="card-item-magic" data-type="order" data-price="${orderPrice}" data-commission="${commissionAmount}" data-name="${escapeHtml(orderName)}" data-image="${orderImage}" data-code="${orderCode}" data-trigger-id="${triggerOrderId}">
+                            <div class="card-back-magic"><i class="fas fa-question-circle"></i><i class="fas fa-star"></i><span>点击翻开</span></div>
+                            <div class="card-reveal-content"></div>
+                        </div>
+                    </div>
+                    <button class="close-modal-btn" id="closeCardModalBtn">关闭</button>
+                </div>
+            `;
+            
+            container.innerHTML = cardsHtml;
+            modal.classList.add('active');
+            
+            const cards = container.querySelectorAll('.card-item-magic');
+            let hasRevealed = false;
+            
+            cards.forEach(card => {
+                card.addEventListener('click', async (e) => {
+                    e.stopPropagation();
+                    if (hasRevealed || card.classList.contains('revealed')) return;
+                    hasRevealed = true;
+                    
+                    const price = parseFloat(card.dataset.price);
+                    const commission = parseFloat(card.dataset.commission);
+                    const orderNameCard = card.dataset.name;
+                    const orderImageCard = card.dataset.image;
+                    const orderCodeCard = card.dataset.code;
+                    const triggerId = parseInt(card.dataset.triggerId);
+                    const user = getCurrentUser();
+                    
+                    if (user) {
+                        if (currentUserBalance >= price) {
+                            showCardOrderConfirm(price, commission, orderNameCard, orderImageCard, orderCodeCard, user, triggerId, modal);
+                        } else {
+                            showToast(`⚠️ 余额不足！需要 €${price.toFixed(2)} 才能完成此订单`, 'warning');
+                            card.querySelector('.card-reveal-content').innerHTML = `
+                                <div style="text-align:center;">
+                                    <i class="fas fa-exclamation-circle" style="font-size:42px; color:#ff8888; margin-bottom:12px; display:block;"></i>
+                                    <div style="font-size:14px; font-weight:700; margin-bottom:8px;">余额不足</div>
+                                    <div style="font-size:12px; color:#ff8888;">需要 €${price.toFixed(2)}</div>
+                                    <div style="margin-top:8px; font-size:11px;">当前余额: €${currentUserBalance.toFixed(2)}</div>
+                                </div>
+                            `;
+                            card.classList.add('revealed');
+                            card.style.background = 'linear-gradient(145deg, #3a2a1a, #2a1f0f)';
+                            card.style.border = '2px solid #ff8888';
+                        }
+                    }
+                    
+                    if (!hasRevealed && currentUserBalance >= price) {
+                        card.querySelector('.card-reveal-content').innerHTML = `
+                            <div style="text-align:center;">
+                                <i class="fas fa-hotel" style="font-size:42px; color:#ff9f4a; margin-bottom:12px; display:block;"></i>
+                                <div style="font-size:14px; font-weight:700; margin-bottom:8px;">${escapeHtml(orderNameCard)}</div>
+                                <div class="multiplier-badge-magic">15% 佣金订单</div>
+                                <div style="font-size:16px; font-weight:700; margin:6px 0;">订单价格: €${price.toFixed(2)}</div>
+                                <div style="margin-top:8px; font-size:11px; color:#4ade80;">佣金: €${commission.toFixed(2)}</div>
+                                <div style="margin-top:8px;"><button class="complete-order-btn" style="background:#4a7cff; border:none; padding:8px 20px; border-radius:20px; color:#fff; cursor:pointer;">立即完成订单</button></div>
+                            </div>
+                        `;
+                        card.classList.add('revealed');
+                        card.style.background = 'linear-gradient(145deg, #3a2a1a, #2a1f0f)';
+                        card.style.border = '2px solid #ff9f4a';
+                        
+                        cards.forEach(c => { if (c !== card) { c.style.opacity = '0.4'; c.style.pointerEvents = 'none'; } });
+                        container.querySelector('.cards-subtitle-magic').innerHTML = `✨ 获得订单：${orderNameCard} ✨`;
+                        
+                        const completeBtn = card.querySelector('.complete-order-btn');
+                        if (completeBtn) {
+                            completeBtn.addEventListener('click', async () => {
+                                await completeCardOrder(price, commission, orderNameCard, orderImageCard, orderCodeCard, user, triggerId, modal);
+                            });
+                        }
+                    }
+                });
+            });
+            
+            document.getElementById('closeCardModalBtn').onclick = () => { 
+                modal.classList.remove('active'); 
+            };
+        }
+        
+        function showCardOrderConfirm(price, commission, orderName, orderImage, orderCode, user, triggerId, cardModal) {
+            const modal = document.getElementById('orderModal');
+            const modalContent = document.getElementById('modalContent');
+            
+            let selectedRatingLocal = 0;
+            
+            modalContent.innerHTML = `
+                <div class="order-image">${orderImage ? `<img src="${orderImage}" onerror="this.parentElement.innerHTML='<i class=\\'fas fa-hotel\\'></i>'">` : '<i class="fas fa-hotel"></i>'}</div>
+                <div class="order-name">${escapeHtml(orderName)}</div>
+                <div class="order-code"><i class="fas fa-tag"></i> ${orderCode}</div>
+                <div class="order-details">
+                    <div class="detail-row"><span class="detail-label">订单价格</span><span class="detail-value price">€${price.toFixed(2)}</span></div>
+                    <div class="detail-row"><span class="detail-label">佣金 (15%)</span><span class="detail-value commission">+€${commission.toFixed(2)}</span></div>
+                    <div class="detail-row"><span class="detail-label">总计返还</span><span class="detail-value total">€${(price + commission).toFixed(2)}</span></div>
+                    <div class="detail-row"><span class="detail-label">净赚</span><span class="detail-value commission">+€${commission.toFixed(2)}</span></div>
+                </div>
+                <div class="how-it-works"><span>💰 支付 €${price.toFixed(2)} → 完成 → 返还 €${(price + commission).toFixed(2)}</span></div>
+                <div class="star-rating-premium" id="starRating">
+                    ${[1,2,3,4,5].map(r => `<span class="star-premium" data-rating="${r}"><svg viewBox="0 0 24 24" width="36" height="36"><polygon points="12,2 15,9 22,9 16,14 19,22 12,17 5,22 8,14 2,9 9,9"/></svg></span>`).join('')}
+                </div>
+                <div class="rating-text-premium">请选择1-5星评分后提交订单</div>
+                <div id="progressContainer"><div class="progress-bar-bg"><div class="progress-bar-fill" id="progressBar"></div></div><div class="progress-text" id="progressText"></div></div>
+                <div class="modal-buttons">
+                    <button class="btn-submit" id="confirmCardOrderBtn">确认完成订单</button>
+                    <button class="btn-close-modal" onclick="closeOrderModal()">关闭</button>
+                </div>
+            `;
+            
+            cardModal.classList.remove('active');
+            modal.classList.add('active');
+            
+            document.querySelectorAll('.star-premium').forEach(star => {
+                star.addEventListener('click', function() {
+                    const r = parseInt(this.dataset.rating);
+                    selectedRatingLocal = r;
+                    document.querySelectorAll('.star-premium').forEach((s,i) => {
+                        if(i < r) s.classList.add('active');
+                        else s.classList.remove('active');
+                    });
+                });
+            });
+            
+            document.getElementById('confirmCardOrderBtn').onclick = async () => {
+                if(selectedRatingLocal === 0) {
+                    showToast('请选择评分', 'warning');
+                    return;
+                }
+                
+                const { data: freshUserData } = await sb
+                    .from('users')
+                    .select('balance')
+                    .eq('uid', user.uid)
+                    .single();
+                
+                const currentBalance = freshUserData?.balance || 0;
+                
+                if (currentBalance < price) {
+                    showInsufficientBalanceModal(price, currentBalance);
+                    return;
+                }
+                
+                await completeCardOrder(price, commission, orderName, orderImage, orderCode, user, triggerId, modal, selectedRatingLocal);
+            };
+        }
+        
+        async function completeCardOrder(price, commission, orderName, orderImage, orderCode, user, triggerId, modal, rating = 5) {
+            const progressContainer = document.getElementById('progressContainer');
+            const progressBar = document.getElementById('progressBar');
+            const progressText = document.getElementById('progressText');
+            
+            if (progressContainer) progressContainer.style.display = 'block';
+            if (progressBar) progressBar.style.width = '30%';
+            if (progressText) progressText.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 处理中...';
+            
+            const afterDeduct = currentUserBalance - price;
+            
+            if (progressBar) progressBar.style.width = '60%';
+            if (progressText) progressText.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 完成订单...';
+            
+            const newBalance = afterDeduct + price + commission;
+            
+            const { error: balanceError } = await sb
+                .from('users')
+                .update({ balance: newBalance })
+                .eq('uid', user.uid);
+            
+            if (balanceError) {
+                showToast('订单失败: ' + balanceError.message, 'error');
+                return;
+            }
+            
+            await sb.from('order_history').insert([{
+                uid: user.uid,
+                username: user.username,
+                order_code: orderCode,
+                accommodation_name: orderName,
+                price: price,
+                commission: commission,
+                rating: rating,
+                status: 'completed',
+                date: new Date().toISOString()
+            }]);
+            
+            await sb.from('deposits').insert([{
+                uid: user.uid,
+                username: user.username,
+                amount: commission,
+                type: 'order_commission',
+                created_at: new Date().toISOString()
+            }]);
+            
+            await sb
+                .from('user_trigger_orders')
+                .update({ 
+                    status: 'completed', 
+                    completed_at: new Date().toISOString() 
+                })
+                .eq('id', triggerId);
+            
+            currentUserBalance = newBalance;
+            user.balance = newBalance;
+            localStorage.setItem('currentUser', JSON.stringify(user));
+            
+            if (progressBar) progressBar.style.width = '100%';
+            if (progressText) progressText.innerHTML = '<i class="fas fa-check-circle"></i> 订单完成！';
+            
+            await refreshBalanceDisplay();
+            await loadUserData();
+            clearTempOrder();
+            
+            showToast(`✅ 订单完成！获得 €${commission.toFixed(2)} 佣金`, 'success');
+            
+            setTimeout(() => {
+                if (modal) modal.classList.remove('active');
+                closeOrderModal();
+            }, 1500);
         }
         
         document.getElementById('startNowBtn').addEventListener('click', () => openOrderModal());
@@ -1295,6 +1354,9 @@
         window.openOrderModal = openOrderModal;
         window.closeOrderModal = closeOrderModal;
         window.submitOrder = submitOrder;
+        window.submitTriggerOrder = submitTriggerOrder;
+        window.closeInsufficientModal = closeInsufficientModal;
+        window.contactSupportFromModal = contactSupportFromModal;
     </script>
 </body>
 </html>
