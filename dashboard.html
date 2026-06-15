@@ -818,12 +818,9 @@
     updateChartStats(total, avg, best);
     
     const maxCommission = Math.max(...commissions, 10);
-    let minY = 0;
     
-    // 如果最大佣金大于 200，Y 轴从 100 开始
-    if (maxCommission > 200) {
-        minY = 100;
-    }
+    // Y 轴始终从 0 开始
+    const minY = 0;
     
     // 根据最大佣金智能计算 Y 轴最大值和间隔
     let yAxisMax, stepSize;
@@ -868,7 +865,7 @@
         },
         scales: { 
             y: { 
-                min: minY, 
+                min: minY,           // 始终为 0
                 max: yAxisMax, 
                 ticks: { 
                     stepSize: stepSize, 
