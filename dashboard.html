@@ -814,82 +814,111 @@
             }
             
             async function initCommissionChart() {
-                const { dates, commissions, total, avg, best } = await fetchCommissionData();
-                updateChartStats(total, avg, best);
-                
-                // 动态计算 Y 轴范围 - 根据实际佣金数据
-                const maxCommission = Math.max(...commissions, 10);
-                const yAxisMax = Math.ceil(maxCommission * 1.2);
-                const stepSize = Math.ceil(maxCommission / 5);
-                
-                const ctx = document.getElementById('commissionChart').getContext('2d');
-                const commonOptions = {
-                    responsive: true, 
-                    maintainAspectRatio: true,
-                    plugins: { 
-                        legend: { display: false }, 
-                        tooltip: { callbacks: { label: (ctx) => `€${ctx.raw.toFixed(2)}` } } 
-                    },
-                    scales: { 
-                        y: { 
-                            min: 0, 
-                            max: yAxisMax, 
-                            ticks: { 
-                                stepSize: stepSize, 
-                                callback: (value) => '€' + value, 
-                                color: '#B8C5D6' 
-                            }, 
-                            grid: { color: 'rgba(255,255,255,0.05)' } 
-                        }, 
-                        x: { 
-                            ticks: { color: '#B8C5D6' }, 
-                            grid: { display: false } 
-                        } 
-                    }
-                };
-                
-                if (commissionChart) commissionChart.destroy();
-                
-                if (currentChartType === 'line') {
-                    commissionChart = new Chart(ctx, { 
-                        type: 'line', 
-                        data: { 
-                            labels: dates, 
-                            datasets: [{ 
-                                label: 'Commission (€)', 
-                                data: commissions, 
-                                borderColor: '#20b2aa', 
-                                backgroundColor: 'rgba(32, 178, 170, 0.1)', 
-                                borderWidth: 2, 
-                                pointRadius: 4, 
-                                pointBackgroundColor: '#20b2aa', 
-                                pointBorderColor: '#0B0B21', 
-                                pointBorderWidth: 1, 
-                                tension: 0.3, 
-                                fill: true 
-                            }] 
-                        }, 
-                        options: commonOptions 
-                    });
-                } else {
-                    commissionChart = new Chart(ctx, { 
-                        type: 'bar', 
-                        data: { 
-                            labels: dates, 
-                            datasets: [{ 
-                                label: 'Commission (€)', 
-                                data: commissions, 
-                                backgroundColor: '#20b2aa', 
-                                borderRadius: 8, 
-                                borderSkipped: false, 
-                                barPercentage: 0.7, 
-                                categoryPercentage: 0.8 
-                            }] 
-                        }, 
-                        options: commonOptions 
-                    });
-                }
-            }
+    const { dates, commissions, total, avg, best } = await fetchCommissionData();
+    updateChartStats(total, avg, best);
+    
+    // 计算最大佣金
+    let maxCommission = Math.max(...commissions, 10);
+    let minY = 0;
+    
+    // 如果最大佣金大于 200，Y 轴从 100 开始
+    if (maxCommission > 200) {
+        minY = 100;
+    }
+    
+    // 计算 Y 轴最大值：向上取整到合适的整数
+    let yAxisMax;
+    if (maxCommission <= 100) {
+        yAxisMax = Math.ceil(maxCommission / 20) * 20;
+        if (yAxisMax < 20) yAxisMax = 20;
+    } else if (maxCommission <= 500) {
+        yAxisMax = Math.ceil(maxCommission / 50) * 50;
+    } else if (maxCommission <= 1000) {
+        yAxisMax = Math.ceil(maxCommission / 100) * 100;
+    } else {
+        yAxisMax = Math.ceil(maxCommission / 200) * 200;
+    }
+    
+    // 计算刻度间隔（分成 5 段，取整）
+    let stepSize = Math.ceil((yAxisMax - minY) / 5);
+    if (stepSize < 1) stepSize = 1;
+    
+    // 确保刻度是整数（10, 20, 50, 100 等）
+    if (stepSize <= 10) stepSize = 10;
+    else if (stepSize <= 20) stepSize = 20;
+    else if (stepSize <= 50) stepSize = 50;
+    else if (stepSize <= 100) stepSize = 100;
+    else stepSize = Math.ceil(stepSize / 50) * 50;
+    
+    const ctx = document.getElementById('commissionChart').getContext('2d');
+    const commonOptions = {
+        responsive: true, 
+        maintainAspectRatio: true,
+        plugins: { 
+            legend: { display: false }, 
+            tooltip: { callbacks: { label: (ctx) => `€${ctx.raw.toFixed(2)}` } } 
+        },
+        scales: { 
+            y: { 
+                min: minY, 
+                max: yAxisMax, 
+                ticks: { 
+                    stepSize: stepSize, 
+                    callback: (value) => '€' + value, 
+                    color: '#B8C5D6',
+                    precision: 0  // 确保显示整数，不显示小数
+                }, 
+                grid: { color: 'rgba(255,255,255,0.05)' } 
+            }, 
+            x: { 
+                ticks: { color: '#B8C5D6' }, 
+                grid: { display: false } 
+            } 
+        }
+    };
+    
+    if (commissionChart) commissionChart.destroy();
+    
+    if (currentChartType === 'line') {
+        commissionChart = new Chart(ctx, { 
+            type: 'line', 
+            data: { 
+                labels: dates, 
+                datasets: [{ 
+                    label: 'Commission (€)', 
+                    data: commissions, 
+                    borderColor: '#20b2aa', 
+                    backgroundColor: 'rgba(32, 178, 170, 0.1)', 
+                    borderWidth: 2, 
+                    pointRadius: 4, 
+                    pointBackgroundColor: '#20b2aa', 
+                    pointBorderColor: '#0B0B21', 
+                    pointBorderWidth: 1, 
+                    tension: 0.3, 
+                    fill: true 
+                }] 
+            }, 
+            options: commonOptions 
+        });
+    } else {
+        commissionChart = new Chart(ctx, { 
+            type: 'bar', 
+            data: { 
+                labels: dates, 
+                datasets: [{ 
+                    label: 'Commission (€)', 
+                    data: commissions, 
+                    backgroundColor: '#20b2aa', 
+                    borderRadius: 8, 
+                    borderSkipped: false, 
+                    barPercentage: 0.7, 
+                    categoryPercentage: 0.8 
+                }] 
+            }, 
+            options: commonOptions 
+        });
+    }
+}
             
             function switchChartType(type) { currentChartType = type; initCommissionChart(); }
             function bindChartButtons() {
