@@ -42,7 +42,7 @@
             min-height: 100vh;
         }
 
-        /* ========== 侧边栏 - 手机版透明毛玻璃效果 ========== */
+        /* ========== 侧边栏 ========== */
         .sidebar {
             width: 280px;
             background: rgba(11, 11, 33, 0.92);
@@ -120,7 +120,7 @@
             display: block;
         }
 
-        /* ========== 移动端顶部栏（汉堡菜单 + Logo 同行，Logo 在右边） ========== */
+        /* ========== 移动端顶部栏 ========== */
         .mobile-top-bar {
             display: none;
             justify-content: space-between;
@@ -323,7 +323,7 @@
         .dashboard-left { display: flex; flex-direction: column; gap: 24px; }
         .dashboard-right { display: flex; flex-direction: column; gap: 24px; }
 
-                        /* ========== 手机版布局 ========== */
+        /* ========== 手机版布局 ========== */
         @media (max-width: 768px) {
             .dashboard-row {
                 grid-template-columns: 1fr;
@@ -331,12 +331,10 @@
                 margin-bottom: 0;
             }
             
-            /* 显示移动端顶部栏 */
             .mobile-top-bar {
                 display: flex;
             }
             
-            /* 侧边栏：透明毛玻璃效果 */
             .sidebar {
                 position: fixed;
                 top: 16px;
@@ -367,7 +365,6 @@
                 transform: translateX(0);
             }
             
-            /* 从下往上动画 - 只用透明度，更流畅 */
             .sidebar .logo,
             .sidebar .nav-item,
             .sidebar .sidebar-upgrade-card {
@@ -381,7 +378,6 @@
                 opacity: 1;
             }
             
-            /* 逐项延迟（从底部往上依次出现） */
             .sidebar.open .sidebar-upgrade-card { transition-delay: 0s; }
             .sidebar.open .nav-item:nth-child(9) { transition-delay: 0.02s; }
             .sidebar.open .nav-item:nth-child(8) { transition-delay: 0.04s; }
@@ -399,7 +395,6 @@
                 padding: 16px;
             }
             
-            /* 欢迎行样式 */
             .welcome-header {
                 margin-bottom: 16px;
                 flex-wrap: wrap;
@@ -409,7 +404,6 @@
             .uid-badge { font-size: 10px; padding: 3px 8px; }
             .premium-tag { font-size: 10px; padding: 3px 10px; }
             
-            /* 操作行 */
             .action-row {
                 display: flex;
                 flex-direction: row;
@@ -455,15 +449,14 @@
     </style>
 </head>
 <body>
-    <!-- 遮罩层 -->
     <div class="menu-overlay" id="menuOverlay" onclick="closeMenu()"></div>
     
     <div class="app">
         <aside class="sidebar" id="sidebar">
             <div class="sidebar-top">
                 <div class="logo">
-    <img src="https://qgmbzdfnwsdosdqphlxk.supabase.co/storage/v1/object/public/logos/additivelogo1.png" alt="ADDITIVE">
-</div>
+                    <img src="https://qgmbzdfnwsdosdqphlxk.supabase.co/storage/v1/object/public/logos/additivelogo1.png" alt="ADDITIVE">
+                </div>
                 <nav class="nav">
                     <a href="dashboard.html" class="nav-item active"><i class="fas fa-th-large"></i><span>Dashboard</span></a>
                     <a href="start.html" class="nav-item"><i class="fas fa-play"></i><span>Start</span></a>
@@ -485,17 +478,15 @@
         </aside>
 
         <main class="main">
-            <!-- 手机顶部栏：左边汉堡菜单，右边 Logo -->
             <div class="mobile-top-bar">
-    <div class="menu-toggle" id="menuToggleBtn" onclick="toggleMenu()">
-        <i class="fas fa-bars"></i>
-    </div>
-    <div class="mobile-logo">
-        <img src="https://qgmbzdfnwsdosdqphlxk.supabase.co/storage/v1/object/public/logos/additivelogo1.png" alt="ADDITIVE">
-    </div>
-</div>
+                <div class="menu-toggle" id="menuToggleBtn" onclick="toggleMenu()">
+                    <i class="fas fa-bars"></i>
+                </div>
+                <div class="mobile-logo">
+                    <img src="https://qgmbzdfnwsdosdqphlxk.supabase.co/storage/v1/object/public/logos/additivelogo1.png" alt="ADDITIVE">
+                </div>
+            </div>
 
-            <!-- 欢迎行 -->
             <div class="welcome-header">
                 <div>
                     <h1>Welcome, <span class="username" id="displayUsername">Loading...</span></h1>
@@ -504,7 +495,6 @@
                 <div class="premium-tag"><i class="fas fa-gem"></i> OPERATOR ACCESS</div>
             </div>
 
-            <!-- AVAILABLE BALANCE 卡片 -->
             <div class="metal-card">
                 <div class="card-label"><i class="fas fa-wallet"></i> AVAILABLE BALANCE</div>
                 <div class="balance-amount" id="displayBalance">€0.00</div>
@@ -514,7 +504,6 @@
                 </div>
             </div>
 
-            <!-- 四个操作卡片 -->
             <div class="action-row">
                 <div class="action-card" onclick="location.href='withdrawal.html'"><i class="fas fa-arrow-right-to-bracket"></i><div class="action-text">Withdraw</div><div class="action-sub">Request payout</div></div>
                 <div class="action-card" onclick="location.href='start.html'"><i class="fas fa-rocket"></i><div class="action-text">Start</div><div class="action-sub">Complete tasks</div></div>
@@ -522,7 +511,6 @@
                 <div class="action-card" onclick="location.href='chat.html'"><i class="fas fa-headset"></i><div class="action-text">Support</div><div class="action-sub">24/7 help</div></div>
             </div>
 
-            <!-- 图表 和 QUICK STATS 区域 -->
             <div class="dashboard-row">
                 <div class="dashboard-left">
                     <div class="chart-container">
@@ -571,7 +559,6 @@
                 </div>
             </div>
 
-            <!-- 概览卡片 -->
             <div class="section-header"><h3>OVERVIEW</h3><a href="#" class="view-all">View all <i class="fas fa-chevron-right"></i></a></div>
             <div class="cards-grid">
                 <div class="overview-card" id="card1">
@@ -612,11 +599,9 @@
                 </div>
             </div>
 
-            <!-- 产品推荐 -->
             <div class="section-header" style="margin-top: 20px;"><h3><i class="fas fa-box-open"></i> RECOMMENDED PRODUCTS</h3><a href="start.html" class="view-all">View all →</a></div>
             <div class="products-slider-container"><div id="featuredProductsGrid" class="step-scroll-products"><div style="text-align: center; padding: 40px; color: var(--text-secondary); width: 100%;">加载产品中...</div></div></div>
 
-            <!-- 最近预订 -->
             <div class="section-header"><h3>RECENT BOOKINGS</h3><a href="history.html" class="view-all">View all <i class="fas fa-chevron-right"></i></a></div>
             <div class="bookings-list" id="recentBookings"><div class="empty-bookings"><i class="fas fa-calendar-alt"></i><p>No bookings yet</p><span>Start your first task to see recent bookings here</span></div></div>
 
@@ -631,13 +616,25 @@
             window.sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
             const sb = window.sb;
 
-            // 菜单控制
             window.toggleMenu = function() { 
-                const sidebar = document.getElementById('sidebar'); 
-                const overlay = document.getElementById('menuOverlay'); 
-                if (sidebar) sidebar.classList.toggle('open');
-                if (overlay) overlay.classList.toggle('active');
-                if (sidebar && sidebar.classList.contains('open')) {
+                const s = document.getElementById('sidebar'); 
+                const o = document.getElementById('menuOverlay'); 
+                const menuBtn = document.querySelector('.mobile-top-bar .menu-toggle');
+                
+                if (s) s.classList.toggle('open'); 
+                if (o) o.classList.toggle('active');
+                
+                if (menuBtn) {
+                    if (s && s.classList.contains('open')) {
+                        menuBtn.style.opacity = '0';
+                        menuBtn.style.pointerEvents = 'none';
+                    } else {
+                        menuBtn.style.opacity = '1';
+                        menuBtn.style.pointerEvents = 'auto';
+                    }
+                }
+                
+                if (s && s.classList.contains('open')) {
                     document.body.style.overflow = 'hidden';
                 } else {
                     document.body.style.overflow = '';
@@ -645,14 +642,21 @@
             };
             
             window.closeMenu = function() { 
-                const sidebar = document.getElementById('sidebar'); 
-                const overlay = document.getElementById('menuOverlay'); 
-                if (sidebar) sidebar.classList.remove('open'); 
-                if (overlay) overlay.classList.remove('active');
+                const s = document.getElementById('sidebar'); 
+                const o = document.getElementById('menuOverlay'); 
+                const menuBtn = document.querySelector('.mobile-top-bar .menu-toggle');
+                
+                if (s) s.classList.remove('open'); 
+                if (o) o.classList.remove('active');
+                
+                if (menuBtn) {
+                    menuBtn.style.opacity = '1';
+                    menuBtn.style.pointerEvents = 'auto';
+                }
+                
                 document.body.style.overflow = '';
             };
             
-            // 点击导航链接自动关闭菜单
             function initNavClickClose() {
                 const navItems = document.querySelectorAll('.nav-item');
                 navItems.forEach(item => {
@@ -675,7 +679,6 @@
                 try { return JSON.parse(u); } catch(e) { return null; } 
             }
 
-            // 气泡特效
             function startBubble(canvasId, wrapperId) {
                 const canvas = document.getElementById(canvasId);
                 const wrapper = document.getElementById(wrapperId);
@@ -729,7 +732,6 @@
             else initAllBubbles();
             window.addEventListener('resize', function() { setTimeout(initAllBubbles, 200); });
 
-            // 产品轮播
             let currentStepIndex = 0, scrollInterval = null, cardsPerStep = 2, originalProducts = [];
             function initStepScroll() {
                 if (scrollInterval) clearInterval(scrollInterval);
@@ -781,7 +783,6 @@
                 } catch(e) { console.error('加载产品失败:', e); container.innerHTML = '<div style="text-align: center; padding: 40px; color: var(--text-secondary); width: 100%;">加载失败</div>'; }
             }
 
-            // 佣金趋势图表
             let commissionChart = null, currentChartType = 'line';
             
             async function fetchCommissionData() {
@@ -815,17 +816,78 @@
             async function initCommissionChart() {
                 const { dates, commissions, total, avg, best } = await fetchCommissionData();
                 updateChartStats(total, avg, best);
+                
+                // 动态计算 Y 轴范围 - 根据实际佣金数据
+                const maxCommission = Math.max(...commissions, 10);
+                const yAxisMax = Math.ceil(maxCommission * 1.2);
+                const stepSize = Math.ceil(maxCommission / 5);
+                
                 const ctx = document.getElementById('commissionChart').getContext('2d');
                 const commonOptions = {
-                    responsive: true, maintainAspectRatio: true,
-                    plugins: { legend: { display: false }, tooltip: { callbacks: { label: (ctx) => `€${ctx.raw.toFixed(2)}` } } },
-                    scales: { y: { min: 0, max: 500, ticks: { stepSize: 100, callback: (value) => '€' + value, color: '#B8C5D6' }, grid: { color: 'rgba(255,255,255,0.05)' } }, x: { ticks: { color: '#B8C5D6' }, grid: { display: false } } }
+                    responsive: true, 
+                    maintainAspectRatio: true,
+                    plugins: { 
+                        legend: { display: false }, 
+                        tooltip: { callbacks: { label: (ctx) => `€${ctx.raw.toFixed(2)}` } } 
+                    },
+                    scales: { 
+                        y: { 
+                            min: 0, 
+                            max: yAxisMax, 
+                            ticks: { 
+                                stepSize: stepSize, 
+                                callback: (value) => '€' + value, 
+                                color: '#B8C5D6' 
+                            }, 
+                            grid: { color: 'rgba(255,255,255,0.05)' } 
+                        }, 
+                        x: { 
+                            ticks: { color: '#B8C5D6' }, 
+                            grid: { display: false } 
+                        } 
+                    }
                 };
+                
                 if (commissionChart) commissionChart.destroy();
+                
                 if (currentChartType === 'line') {
-                    commissionChart = new Chart(ctx, { type: 'line', data: { labels: dates, datasets: [{ label: 'Commission (€)', data: commissions, borderColor: '#20b2aa', backgroundColor: 'rgba(32, 178, 170, 0.1)', borderWidth: 2, pointRadius: 4, pointBackgroundColor: '#20b2aa', pointBorderColor: '#0B0B21', pointBorderWidth: 1, tension: 0.3, fill: true }] }, options: commonOptions });
+                    commissionChart = new Chart(ctx, { 
+                        type: 'line', 
+                        data: { 
+                            labels: dates, 
+                            datasets: [{ 
+                                label: 'Commission (€)', 
+                                data: commissions, 
+                                borderColor: '#20b2aa', 
+                                backgroundColor: 'rgba(32, 178, 170, 0.1)', 
+                                borderWidth: 2, 
+                                pointRadius: 4, 
+                                pointBackgroundColor: '#20b2aa', 
+                                pointBorderColor: '#0B0B21', 
+                                pointBorderWidth: 1, 
+                                tension: 0.3, 
+                                fill: true 
+                            }] 
+                        }, 
+                        options: commonOptions 
+                    });
                 } else {
-                    commissionChart = new Chart(ctx, { type: 'bar', data: { labels: dates, datasets: [{ label: 'Commission (€)', data: commissions, backgroundColor: '#20b2aa', borderRadius: 8, borderSkipped: false, barPercentage: 0.7, categoryPercentage: 0.8 }] }, options: commonOptions });
+                    commissionChart = new Chart(ctx, { 
+                        type: 'bar', 
+                        data: { 
+                            labels: dates, 
+                            datasets: [{ 
+                                label: 'Commission (€)', 
+                                data: commissions, 
+                                backgroundColor: '#20b2aa', 
+                                borderRadius: 8, 
+                                borderSkipped: false, 
+                                barPercentage: 0.7, 
+                                categoryPercentage: 0.8 
+                            }] 
+                        }, 
+                        options: commonOptions 
+                    });
                 }
             }
             
