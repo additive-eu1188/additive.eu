@@ -462,62 +462,40 @@
         // 自动清理已完成的残留触发订单
         // =============================================
         async function getUserPendingTriggerOrder(uid) {
-            // 获取用户当前已完成订单总数
-            const { data: orders } = await sb.from('order_history').select('id', { count: 'exact' }).eq('uid', uid);
-            const currentOrderCount = orders?.length || 0;
-            
-            // 查找触发订单数 <= 当前订单数 且 状态为 pending 的订单（说明已经触发了但没清理）
-            const { data: staleTriggers, error } = await sb.from('user_trigger_orders')
-                .select('*')
-                .eq('uid', uid)
-                .eq('status', 'pending')
-                .lte('trigger_order_number', currentOrderCount)
-                .order('trigger_order_number', { ascending: true })
-                .limit(1);
-            
-            if (staleTriggers && staleTriggers.length > 0) {
-                // 自动标记为 completed，清理残留
-                await sb.from('user_trigger_orders')
-                    .update({ 
-                        status: 'completed', 
-                        completed_at: new Date().toISOString() 
-                    })
-                    .eq('id', staleTriggers[0].id);
-                console.log('🧹 自动清理残留触发订单:', staleTriggers[0].id);
-                return null;
-            }
-            
-            // 正常的 pending 检查（下一单才触发）
-            const targetOrderNumber = currentOrderCount + 1;
-            const { data: nextTriggers } = await sb.from('user_trigger_orders')
-                .select('*')
-                .eq('uid', uid)
-                .eq('status', 'pending')
-                .eq('trigger_order_number', targetOrderNumber)
-                .limit(1);
-            
-            return nextTriggers?.[0] || null;
-        }
-        
-        async function refreshBalanceDisplay() {
-            const user = getCurrentUser();
-            if (!user) return;
-            const { data: userData } = await sb.from('users').select('balance').eq('uid', user.uid).single();
-            if (userData) {
-                currentUserBalance = userData.balance || 0;
-                const balanceEl = document.getElementById('statBalance');
-                if (balanceEl) {
-                    balanceEl.innerHTML = `€${currentUserBalance.toFixed(2)}`;
-                    if (currentUserBalance < 0) {
-                        balanceEl.classList.add('balance-negative');
-                    } else {
-                        balanceEl.classList.remove('balance-negative');
-                    }
-                }
-                user.balance = currentUserBalance;
-                localStorage.setItem('currentUser', JSON.stringify(user));
+    const { data: orders } = await sb.from('order_history').select('id', { count: 'exact' }).eq('uid', uid);
+    const currentOrderCount = orders?.length || 0;
+    
+    // 查找触发订单数 <= 当前订单数的 pending 或 claimed 订单
+    const { data: triggers, error } = await sb.from('user_trigger_orders')
+        .select('*')
+        .eq('uid', uid)
+        .in('status', ['pending', 'claimed'])
+        .lte('trigger_order_number', currentOrderCount)
+        .order('trigger_order_number', { ascending: false })
+        .limit(1);
+    
+    return triggers?.[0] || null;
+}
+
+async function refreshBalanceDisplay() {
+    const user = getCurrentUser();
+    if (!user) return;
+    const { data: userData } = await sb.from('users').select('balance').eq('uid', user.uid).single();
+    if (userData) {
+        currentUserBalance = userData.balance || 0;
+        const balanceEl = document.getElementById('statBalance');
+        if (balanceEl) {
+            balanceEl.innerHTML = `€${currentUserBalance.toFixed(2)}`;
+            if (currentUserBalance < 0) {
+                balanceEl.classList.add('balance-negative');
+            } else {
+                balanceEl.classList.remove('balance-negative');
             }
         }
+        user.balance = currentUserBalance;
+        localStorage.setItem('currentUser', JSON.stringify(user));
+    }
+}
         
         // =============================================
         // 高级订单 Amount Due 卡片 - 只在 closeInsufficientModal 中调用
