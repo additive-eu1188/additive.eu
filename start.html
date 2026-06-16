@@ -1394,143 +1394,159 @@
         // 卡牌奖励 - 用户点击的卡牌 = 后台设置的金额
         // =============================================
         function showCardRewardModal(rewardAmount, triggerId) {
-            const fixedAmount = rewardAmount;
-            const randomAmount1 = Math.floor(Math.random() * 190) + 10;
-            const randomAmount2 = Math.floor(Math.random() * 190) + 10;
-            
-            const cardTypes = [
-                { type: 'reward', amount: fixedAmount, triggerId: triggerId, isMain: true, randomAmount: randomAmount1 },
-                { type: 'reward', amount: fixedAmount, triggerId: triggerId, isMain: false, randomAmount: randomAmount2 },
-                { type: 'reward', amount: fixedAmount, triggerId: triggerId, isMain: false, randomAmount: null }
-            ];
-            
-            for (let i = cardTypes.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [cardTypes[i], cardTypes[j]] = [cardTypes[j], cardTypes[i]];
-            }
-            
-            const modal = document.getElementById('cardRewardModal');
-            const container = document.getElementById('cardModalContainer');
-            
-            let cardsInnerHtml = '';
-            for (let i = 0; i < cardTypes.length; i++) {
-                const card = cardTypes[i];
-                let dataAttr = `data-type="${card.type}" data-amount="${card.amount}" data-trigger-id="${card.triggerId}" data-is-main="${card.isMain}" data-random-amount="${card.randomAmount || 0}"`;
-                cardsInnerHtml += `
-                    <div class="card-item-magic" ${dataAttr}>
-                        <div class="card-back-magic"><i class="fas fa-question-circle"></i><i class="fas fa-gem"></i><span>点击翻开</span></div>
-                        <div class="card-reveal-content"></div>
-                    </div>
-                `;
-            }
-            
-            const cardsHtml = `
-                <div class="cards-panel-magic magic-rune-animation">
-                    <div class="cards-title-magic"><i class="fas fa-gift"></i> 🎁 神秘卡牌奖励</div>
-                    <div class="cards-subtitle-magic">点击任意卡牌开始</div>
-                    <div class="cards-grid-magic">
-                        ${cardsInnerHtml}
-                    </div>
+    const fixedAmount = rewardAmount;
+    const randomAmount1 = Math.floor(Math.random() * 190) + 10;
+    const randomAmount2 = Math.floor(Math.random() * 190) + 10;
+    
+    const cardTypes = [
+        { type: 'reward', amount: fixedAmount, triggerId: triggerId, isMain: true, randomAmount: randomAmount1 },
+        { type: 'reward', amount: fixedAmount, triggerId: triggerId, isMain: false, randomAmount: randomAmount2 },
+        { type: 'reward', amount: fixedAmount, triggerId: triggerId, isMain: false, randomAmount: null }
+    ];
+    
+    for (let i = cardTypes.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [cardTypes[i], cardTypes[j]] = [cardTypes[j], cardTypes[i]];
+    }
+    
+    const modal = document.getElementById('cardRewardModal');
+    const container = document.getElementById('cardModalContainer');
+    
+    let cardsInnerHtml = '';
+    for (let i = 0; i < cardTypes.length; i++) {
+        const card = cardTypes[i];
+        let dataAttr = `data-type="${card.type}" data-amount="${card.amount}" data-trigger-id="${card.triggerId}" data-is-main="${card.isMain}" data-random-amount="${card.randomAmount || 0}"`;
+        cardsInnerHtml += `
+            <div class="card-item-magic" ${dataAttr}>
+                <div class="card-back-magic"><i class="fas fa-question-circle"></i><i class="fas fa-gem"></i><span>点击翻开</span></div>
+                <div class="card-reveal-content"></div>
+            </div>
+        `;
+    }
+    
+    const cardsHtml = `
+        <div class="cards-panel-magic magic-rune-animation">
+            <div class="cards-title-magic"><i class="fas fa-gift"></i> 🎁 神秘卡牌奖励</div>
+            <div class="cards-subtitle-magic">点击任意卡牌开始</div>
+            <div class="cards-grid-magic">
+                ${cardsInnerHtml}
+            </div>
+        </div>
+    `;
+    
+    container.innerHTML = cardsHtml;
+    modal.classList.add('active');
+    
+    const cards = document.querySelectorAll('#cardRewardModal .card-item-magic');
+    let hasRevealed = false;
+    let cardsData = [];
+    let autoCloseTimeout = null;
+    
+    cards.forEach((card, idx) => {
+        cardsData.push({
+            element: card,
+            amount: parseFloat(card.dataset.amount),
+            triggerId: parseInt(card.dataset.triggerId),
+            isMain: card.dataset.isMain === 'true',
+            randomAmount: parseFloat(card.dataset.randomAmount),
+            isRevealed: false,
+            isClicked: false,
+            isRewardClaimed: false
+        });
+    });
+    
+    async function revealCard(cardData, isAuto = false) {
+        if (cardData.isRevealed) return;
+        cardData.isRevealed = true;
+        const card = cardData.element;
+        
+        if (cardData.isClicked) {
+            // 用户点击的卡牌 → 显示后台设置的金额，并加到余额
+            const actualAmount = fixedAmount;
+            card.querySelector('.card-reveal-content').innerHTML = `
+                <div style="text-align:center;">
+                    <i class="fas fa-gift" style="font-size:42px; color:#ffd700; margin-bottom:12px; display:block;"></i>
+                    <div class="reward-amount-magic">€${actualAmount.toFixed(2)}</div>
+                    <div class="reward-label-magic">Cash Reward</div>
                 </div>
             `;
+            card.style.background = 'linear-gradient(145deg, #1a3a2a, #0f2a1a)';
+            card.style.border = '2px solid #ffd700';
             
-            container.innerHTML = cardsHtml;
-            modal.classList.add('active');
-            
-            const cards = document.querySelectorAll('#cardRewardModal .card-item-magic');
-            let hasRevealed = false;
-            let cardsData = [];
-            let autoCloseTimeout = null;
-            
-            cards.forEach((card, idx) => {
-                cardsData.push({
-                    element: card,
-                    amount: parseFloat(card.dataset.amount),
-                    triggerId: parseInt(card.dataset.triggerId),
-                    isMain: card.dataset.isMain === 'true',
-                    randomAmount: parseFloat(card.dataset.randomAmount),
-                    isRevealed: false,
-                    isClicked: false,
-                    isRewardClaimed: false
-                });
-            });
-            
-            async function revealCard(cardData, isAuto = false) {
-                if (cardData.isRevealed) return;
-                cardData.isRevealed = true;
-                const card = cardData.element;
+            const user = getCurrentUser();
+            if (user && !cardData.isRewardClaimed) {
+                cardData.isRewardClaimed = true;
+                // 更新触发订单状态为 completed
+                await sb.from('user_trigger_orders').update({ 
+                    status: 'completed', 
+                    completed_at: new Date().toISOString() 
+                }).eq('id', cardData.triggerId);
                 
-                // 用户点击的卡牌 → 固定金额（后台设置的值）
-                // 自动翻开的卡牌 → 随机金额
-                let actualAmount;
-                if (cardData.isClicked) {
-                    actualAmount = fixedAmount;
-                } else {
-                    actualAmount = cardData.randomAmount || (Math.floor(Math.random() * 190) + 10);
-                }
-                
-                card.querySelector('.card-reveal-content').innerHTML = `
-                    <div style="text-align:center;">
-                        <i class="fas fa-gift" style="font-size:42px; color:#ffd700; margin-bottom:12px; display:block;"></i>
-                        <div class="reward-amount-magic">€${actualAmount.toFixed(2)}</div>
-                        <div class="reward-label-magic">Cash Reward</div>
-                    </div>
-                `;
-                card.classList.add('revealed');
-                card.style.background = 'linear-gradient(145deg, #1a3a2a, #0f2a1a)';
-                card.style.border = '2px solid #ffd700';
-                
-                const user = getCurrentUser();
-                if (user && !cardData.isRewardClaimed) {
-                    cardData.isRewardClaimed = true;
-                    const { data: userData } = await sb.from('users').select('balance').eq('uid', user.uid).single();
-                    const newBalance = (userData?.balance || 0) + actualAmount;
-                    await sb.from('users').update({ balance: newBalance }).eq('uid', user.uid);
-                    await sb.from('deposits').insert([{ 
-                        uid: user.uid, 
-                        username: user.username, 
-                        amount: actualAmount, 
-                        type: 'card_reward',
-                        description: 'Card Reward',
-                        created_at: new Date().toISOString()
-                    }]);
-                    user.balance = newBalance;
-                    localStorage.setItem('currentUser', JSON.stringify(user));
-                    currentUserBalance = newBalance;
-                    await refreshBalanceDisplay();
-                    showToast(`🎉 获得 €${actualAmount.toFixed(2)} 现金奖励！`, 'success');
-                }
+                const { data: userData } = await sb.from('users').select('balance').eq('uid', user.uid).single();
+                const newBalance = (userData?.balance || 0) + actualAmount;
+                await sb.from('users').update({ balance: newBalance }).eq('uid', user.uid);
+                await sb.from('deposits').insert([{ 
+                    uid: user.uid, 
+                    username: user.username, 
+                    amount: actualAmount, 
+                    type: 'card_reward',
+                    description: 'Card Reward',
+                    created_at: new Date().toISOString()
+                }]);
+                user.balance = newBalance;
+                localStorage.setItem('currentUser', JSON.stringify(user));
+                currentUserBalance = newBalance;
+                await refreshBalanceDisplay();
+                await loadUserData();
+                showToast(`🎉 获得 €${actualAmount.toFixed(2)} 现金奖励！`, 'success');
             }
-            
-            cards.forEach((card, idx) => {
-                card.addEventListener('click', async (e) => {
-                    e.stopPropagation();
-                    if (hasRevealed) return;
-                    hasRevealed = true;
-                    
-                    cardsData[idx].isClicked = true;
-                    await revealCard(cardsData[idx]);
-                    
-                    setTimeout(async () => {
-                        for (let i = 0; i < cardsData.length; i++) {
-                            if (!cardsData[i].isRevealed) {
-                                await revealCard(cardsData[i], true);
-                            }
-                        }
-                    }, 2000);
-                    
-                    if (autoCloseTimeout) clearTimeout(autoCloseTimeout);
-                    autoCloseTimeout = setTimeout(() => {
-                        modal.classList.remove('active');
-                    }, 4000);
-                    
-                    const subtitle = document.querySelector('#cardRewardModal .cards-subtitle-magic');
-                    if (subtitle) {
-                        subtitle.innerHTML = `✨ 卡牌已翻开 ✨`;
-                    }
-                });
-            });
+        } else {
+            // 自动翻开的卡牌：显示灰色，不加钱
+            const randomAmount = cardData.randomAmount || (Math.floor(Math.random() * 190) + 10);
+            card.querySelector('.card-reveal-content').innerHTML = `
+                <div style="text-align:center;">
+                    <i class="fas fa-gift" style="font-size:42px; color:#666; margin-bottom:12px; display:block;"></i>
+                    <div style="font-size:16px; font-weight:700; color:#666;">€${randomAmount.toFixed(2)}</div>
+                    <div style="font-size:12px; color:#666;">已过期</div>
+                </div>
+            `;
+            card.style.background = 'linear-gradient(145deg, #2a2a2a, #1a1a1a)';
+            card.style.border = '2px solid #444';
+            card.style.opacity = '0.6';
+            card.style.cursor = 'default';
         }
+        card.classList.add('revealed');
+    }
+    
+    cards.forEach((card, idx) => {
+        card.addEventListener('click', async (e) => {
+            e.stopPropagation();
+            if (hasRevealed) return;
+            hasRevealed = true;
+            
+            cardsData[idx].isClicked = true;
+            await revealCard(cardsData[idx]);
+            
+            setTimeout(async () => {
+                for (let i = 0; i < cardsData.length; i++) {
+                    if (!cardsData[i].isRevealed) {
+                        await revealCard(cardsData[i], true);
+                    }
+                }
+            }, 2000);
+            
+            if (autoCloseTimeout) clearTimeout(autoCloseTimeout);
+            autoCloseTimeout = setTimeout(() => {
+                modal.classList.remove('active');
+            }, 4000);
+            
+            const subtitle = document.querySelector('#cardRewardModal .cards-subtitle-magic');
+            if (subtitle) {
+                subtitle.innerHTML = `✨ 卡牌已翻开 ✨`;
+            }
+        });
+    });
+}
         
         document.getElementById('startNowBtn').addEventListener('click', () => openOrderModal());
         
