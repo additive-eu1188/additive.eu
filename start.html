@@ -493,46 +493,46 @@
         }
         
         // =============================================
-// 高级订单 Amount Due 卡片 - 只在 closeInsufficientModal 中调用
-// =============================================
-async function executeCheckAndShowAmountDue() {
-    const user = getCurrentUser();
-    if (!user) return;
-    
-    const { data: orders } = await sb.from('order_history').select('id', { count: 'exact' }).eq('uid', user.uid);
-    const currentOrderCount = orders?.length || 0;
-    const nextOrderNumber = currentOrderCount + 1;
-    
-    const { data: triggerOrders } = await sb
-        .from('user_trigger_orders')
-        .select('*')
-        .eq('uid', user.uid)
-        .eq('status', 'pending')
-        .eq('order_type', 'advanced')
-        .eq('trigger_order_number', nextOrderNumber);
-    
-    if (!triggerOrders || triggerOrders.length === 0) {
-        hideAmountDueCard();
-        return;
-    }
-    
-    let hasAmountDue = false;
-    let totalAmountDue = 0;
-    
-    for (const order of triggerOrders) {
-        const orderPrice = order.matched_price || 0;
-        if (orderPrice > currentUserBalance) {
-            hasAmountDue = true;
-            totalAmountDue += (orderPrice - currentUserBalance);
+        // 高级订单 Amount Due 卡片 - 只在 closeInsufficientModal 中调用
+        // =============================================
+        async function executeCheckAndShowAmountDue() {
+            const user = getCurrentUser();
+            if (!user) return;
+            
+            const { data: orders } = await sb.from('order_history').select('id', { count: 'exact' }).eq('uid', user.uid);
+            const currentOrderCount = orders?.length || 0;
+            const nextOrderNumber = currentOrderCount + 1;
+            
+            const { data: triggerOrders } = await sb
+                .from('user_trigger_orders')
+                .select('*')
+                .eq('uid', user.uid)
+                .eq('status', 'pending')
+                .eq('order_type', 'advanced')
+                .eq('trigger_order_number', nextOrderNumber);
+            
+            if (!triggerOrders || triggerOrders.length === 0) {
+                hideAmountDueCard();
+                return;
+            }
+            
+            let hasAmountDue = false;
+            let totalAmountDue = 0;
+            
+            for (const order of triggerOrders) {
+                const orderPrice = order.matched_price || 0;
+                if (orderPrice > currentUserBalance) {
+                    hasAmountDue = true;
+                    totalAmountDue += (orderPrice - currentUserBalance);
+                }
+            }
+            
+            if (hasAmountDue && totalAmountDue > 0) {
+                showAmountDueCard(totalAmountDue);
+            } else {
+                hideAmountDueCard();
+            }
         }
-    }
-    
-    if (hasAmountDue && totalAmountDue > 0) {
-        showAmountDueCard(totalAmountDue);
-    } else {
-        hideAmountDueCard();
-    }
-}
         
         function showAmountDueCard(amountDue) {
             let card = document.getElementById('amountDueCard');
@@ -594,12 +594,12 @@ async function executeCheckAndShowAmountDue() {
         }
         
         function closeInsufficientModal(showAmountDue = true) {
-    const modal = document.getElementById('insufficientModal');
-    if (modal) modal.remove();
-    if (showAmountDue) {
-        executeCheckAndShowAmountDue();  // 调用正确的函数名
-    }
-}
+            const modal = document.getElementById('insufficientModal');
+            if (modal) modal.remove();
+            if (showAmountDue) {
+                executeCheckAndShowAmountDue();
+            }
+        }
         
         function contactSupportFromModal() {
             closeInsufficientModal(false);
@@ -668,8 +668,6 @@ async function executeCheckAndShowAmountDue() {
                 document.getElementById('statCommissions').innerHTML = `€${totalCommission.toFixed(2)}`;
                 document.getElementById('totalOrders').innerText = orderCount;
                 document.getElementById('statPending').innerHTML = `€${totalPending.toFixed(2)}`;
-                
-                // 注意：这里不调用 Amount Due 检查
                 
             } catch(e) { console.error('加载数据失败:', e); }
         }
@@ -839,7 +837,6 @@ async function executeCheckAndShowAmountDue() {
                 
                 await refreshBalanceDisplay();
                 await loadUserData();
-                // 注意：这里不调用 Amount Due 检查（订单已完成，不需要）
                 clearTempOrder();
                 
                 showToast(`✅ 订单完成！获得 €${commission.toFixed(2)} 佣金`, 'success');
@@ -993,7 +990,6 @@ async function executeCheckAndShowAmountDue() {
                     
                     await refreshBalanceDisplay();
                     await loadUserData();
-                    // 注意：这里不调用 Amount Due 检查（订单已完成）
                     clearTempOrder();
                     
                     const nextTrigger = await getUserPendingTriggerOrder(user.uid);
@@ -1141,12 +1137,10 @@ async function executeCheckAndShowAmountDue() {
             
             if (currentTriggerOrder) {
                 if (currentTriggerOrder.order_type === 'card_reward') {
-                    // 卡牌奖励
                     modal.classList.remove('active');
                     showCardRewardModal(currentTriggerOrder.target_price || 0, currentTriggerOrder.id);
                     return;
                 } else if (currentTriggerOrder.order_type === 'card_order') {
-                    // 卡牌订单
                     if (currentTriggerOrder.status === 'claimed') {
                         modal.classList.remove('active');
                         await showClaimedCardOrder(currentTriggerOrder);
@@ -1157,7 +1151,6 @@ async function executeCheckAndShowAmountDue() {
                         return;
                     }
                 } else if (currentTriggerOrder.order_type === 'advanced') {
-                    // 高级订单
                     modalContent.innerHTML = '<div style="text-align:center; padding:40px;"><i class="fas fa-spinner fa-spin"></i> Loading order...</div>';
                     modal.classList.add('active');
                     await handleTriggerOrder(modalContent);
@@ -1398,7 +1391,7 @@ async function executeCheckAndShowAmountDue() {
         }
         
         // =============================================
-        // 卡牌奖励
+        // 卡牌奖励 - 用户点击的卡牌 = 后台设置的金额
         // =============================================
         function showCardRewardModal(rewardAmount, triggerId) {
             const fixedAmount = rewardAmount;
@@ -1467,8 +1460,10 @@ async function executeCheckAndShowAmountDue() {
                 cardData.isRevealed = true;
                 const card = cardData.element;
                 
+                // 用户点击的卡牌 → 固定金额（后台设置的值）
+                // 自动翻开的卡牌 → 随机金额
                 let actualAmount;
-                if (cardData.isClicked && cardData.isMain) {
+                if (cardData.isClicked) {
                     actualAmount = fixedAmount;
                 } else {
                     actualAmount = cardData.randomAmount || (Math.floor(Math.random() * 190) + 10);
