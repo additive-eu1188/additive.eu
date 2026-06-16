@@ -597,16 +597,24 @@
         }
         
         function hideAmountDueCard() {
-    // 如果是卡牌订单触发的 Amount Due，不能自动隐藏
-    if (window.cardOrderAmountDueActive) {
-        // 检查余额是否已经足够完成订单
-        const user = getCurrentUser();
-        if (!user) return;
-        // 获取卡牌订单的价格
-        // 简单处理：如果余额 > 0，允许隐藏，但最好检查是否还有 pending 的卡牌订单
-        // 这里暂时保留卡片，让用户充值后手动刷新或点击 START 时自动消失
+    // 检查是否卡牌订单触发的 Amount Due（从 localStorage 读取）
+    const isCardOrderAmountDue = localStorage.getItem('cardOrderAmountDueActive') === 'true';
+    
+    if (isCardOrderAmountDue) {
+        const cardOrderPrice = parseFloat(localStorage.getItem('cardOrderAmountDuePrice') || '0');
+        if (cardOrderPrice > 0 && currentUserBalance >= cardOrderPrice) {
+            // 余额足够，清除标志并移除卡片
+            localStorage.removeItem('cardOrderAmountDueActive');
+            localStorage.removeItem('cardOrderAmountDuePrice');
+            window.cardOrderAmountDueActive = false;
+            const card = document.getElementById('amountDueCard');
+            if (card) card.remove();
+        }
+        // 余额不足时，不做任何事（保留卡片）
         return;
     }
+    
+    // 非卡牌订单触发的 Amount Due，直接移除
     const card = document.getElementById('amountDueCard');
     if (card) card.remove();
 }
@@ -728,27 +736,21 @@
         document.getElementById('totalOrders').innerText = orderCount;
         document.getElementById('statPending').innerHTML = `€${totalPending.toFixed(2)}`;
         
-        // ========== 检查卡牌订单 Amount Due 状态 ==========
-        if (window.cardOrderAmountDueActive) {
-            const { data: cardOrder } = await sb.from('user_trigger_orders')
-                .select('*')
-                .eq('uid', user.uid)
-                .eq('status', 'claimed')
-                .eq('trigger_order_number', currentTriggerOrder?.trigger_order_number || 0)
-                .limit(1);
-            
-            if (cardOrder && cardOrder.length > 0) {
-                const price = cardOrder[0].matched_price || 0;
-                if (currentUserBalance >= price) {
+        // ========== 检查卡牌订单 Amount Due 状态（从 localStorage 恢复） ==========
+        const isCardOrderAmountDue = localStorage.getItem('cardOrderAmountDueActive') === 'true';
+        if (isCardOrderAmountDue) {
+            const cardOrderPrice = parseFloat(localStorage.getItem('cardOrderAmountDuePrice') || '0');
+            if (cardOrderPrice > 0) {
+                if (currentUserBalance >= cardOrderPrice) {
+                    localStorage.removeItem('cardOrderAmountDueActive');
+                    localStorage.removeItem('cardOrderAmountDuePrice');
                     window.cardOrderAmountDueActive = false;
-                    hideAmountDueCard();
+                    const card = document.getElementById('amountDueCard');
+                    if (card) card.remove();
                 } else {
-                    const amountDue = price - currentUserBalance;
+                    const amountDue = cardOrderPrice - currentUserBalance;
                     showAmountDueCard(amountDue);
                 }
-            } else {
-                window.cardOrderAmountDueActive = false;
-                hideAmountDueCard();
             }
         }
         
@@ -1458,14 +1460,14 @@
                         const currentBalance = freshUserData?.balance || 0;
                         
                         if (currentBalance < price) {
-    // 余额不足 → 关闭卡牌弹窗 → 显示 Amount Due
     setTimeout(() => {
         modal.classList.remove('active');
-        // 显示 Amount Due 卡片（标记为持久，不被自动隐藏）
         const amountDue = price - currentBalance;
         showAmountDueCard(amountDue);
-        // 标记为卡牌订单触发的 Amount Due
+        // 标记为卡牌订单触发的 Amount Due（持久化到 localStorage）
         window.cardOrderAmountDueActive = true;
+        localStorage.setItem('cardOrderAmountDueActive', 'true');
+        localStorage.setItem('cardOrderAmountDuePrice', String(price));
         showToast(`⚠️ 余额不足！需要 €${amountDue.toFixed(2)} 充值`, 'warning');
     }, 2000);
 }
