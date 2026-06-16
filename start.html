@@ -497,38 +497,45 @@
         // 只在 Submit 后余额不足，关闭弹窗后才显示
         // =============================================
         async function checkAndShowAmountDue() {
-            const user = getCurrentUser();
-            if (!user) return;
-            
-            const { data: triggerOrders } = await sb
-                .from('user_trigger_orders')
-                .select('*')
-                .eq('uid', user.uid)
-                .eq('status', 'pending')
-                .eq('order_type', 'advanced');
-            
-            if (!triggerOrders || triggerOrders.length === 0) {
-                hideAmountDueCard();
-                return;
-            }
-            
-            let hasAmountDue = false;
-            let totalAmountDue = 0;
-            
-            for (const order of triggerOrders) {
-                const orderPrice = order.matched_price || 0;
-                if (orderPrice > currentUserBalance) {
-                    hasAmountDue = true;
-                    totalAmountDue += (orderPrice - currentUserBalance);
-                }
-            }
-            
-            if (hasAmountDue && totalAmountDue > 0) {
-                showAmountDueCard(totalAmountDue);
-            } else {
-                hideAmountDueCard();
-            }
+    const user = getCurrentUser();
+    if (!user) return;
+    
+    // 获取用户当前订单数
+    const { data: orders } = await sb.from('order_history').select('id', { count: 'exact' }).eq('uid', user.uid);
+    const currentOrderCount = orders?.length || 0;
+    const nextOrderNumber = currentOrderCount + 1;
+    
+    // 只检查触发订单数等于下一单号的 advanced 订单
+    const { data: triggerOrders } = await sb
+        .from('user_trigger_orders')
+        .select('*')
+        .eq('uid', user.uid)
+        .eq('status', 'pending')
+        .eq('order_type', 'advanced')
+        .eq('trigger_order_number', nextOrderNumber);  // 👈 加这一行
+    
+    if (!triggerOrders || triggerOrders.length === 0) {
+        hideAmountDueCard();
+        return;
+    }
+    
+    let hasAmountDue = false;
+    let totalAmountDue = 0;
+    
+    for (const order of triggerOrders) {
+        const orderPrice = order.matched_price || 0;
+        if (orderPrice > currentUserBalance) {
+            hasAmountDue = true;
+            totalAmountDue += (orderPrice - currentUserBalance);
         }
+    }
+    
+    if (hasAmountDue && totalAmountDue > 0) {
+        showAmountDueCard(totalAmountDue);
+    } else {
+        hideAmountDueCard();
+    }
+}
         
         function showAmountDueCard(amountDue) {
             let card = document.getElementById('amountDueCard');
