@@ -458,44 +458,80 @@
         }
         
         // =============================================
-        // 核心修复：获取用户待触发的订单
-        // 自动清理已完成的残留触发订单
+        // 核心：获取用户待触发的订单
+        // 逻辑：currentOrderCount + 1 = trigger_order_number 时触发
         // =============================================
         async function getUserPendingTriggerOrder(uid) {
-    const { data: orders } = await sb.from('order_history').select('id', { count: 'exact' }).eq('uid', uid);
-    const currentOrderCount = orders?.length || 0;
-    
-    // 查找触发订单数 <= 当前订单数的 pending 或 claimed 订单
-    const { data: triggers, error } = await sb.from('user_trigger_orders')
-        .select('*')
-        .eq('uid', uid)
-        .in('status', ['pending', 'claimed'])
-        .lte('trigger_order_number', currentOrderCount)
-        .order('trigger_order_number', { ascending: false })
-        .limit(1);
-    
-    return triggers?.[0] || null;
-}
-
-async function refreshBalanceDisplay() {
-    const user = getCurrentUser();
-    if (!user) return;
-    const { data: userData } = await sb.from('users').select('balance').eq('uid', user.uid).single();
-    if (userData) {
-        currentUserBalance = userData.balance || 0;
-        const balanceEl = document.getElementById('statBalance');
-        if (balanceEl) {
-            balanceEl.innerHTML = `€${currentUserBalance.toFixed(2)}`;
-            if (currentUserBalance < 0) {
-                balanceEl.classList.add('balance-negative');
-            } else {
-                balanceEl.classList.remove('balance-negative');
+            const { data: orders } = await sb.from('order_history').select('id', { count: 'exact' }).eq('uid', uid);
+            const currentOrderCount = orders?.length || 0;
+            
+            // 下一单的订单号 = 当前已完成订单数 + 1
+            const targetOrderNumber = currentOrderCount + 1;
+            
+            // 1. 先检查 claimed 状态的卡牌订单（已翻开，等待做单）
+            const { data: claimedTriggers } = await sb.from('user_trigger_orders')
+                .select('*')
+                .eq('uid', uid)
+                .eq('status', 'claimed')
+                .eq('trigger_order_number', targetOrderNumber)
+                .limit(1);
+            
+            if (claimedTriggers && claimedTriggers.length > 0) {
+                console.log('🎯 匹配到 claimed 卡牌订单:', claimedTriggers[0].id);
+                return claimedTriggers[0];
+            }
+            
+            // 2. 检查 pending 状态的触发订单（新触发）
+            const { data: pendingTriggers } = await sb.from('user_trigger_orders')
+                .select('*')
+                .eq('uid', uid)
+                .eq('status', 'pending')
+                .eq('trigger_order_number', targetOrderNumber)
+                .limit(1);
+            
+            if (pendingTriggers && pendingTriggers.length > 0) {
+                console.log('🎯 匹配到 pending 触发订单:', pendingTriggers[0].id);
+                return pendingTriggers[0];
+            }
+            
+            // 3. 自动清理残留：trigger_order_number < targetOrderNumber 的 pending 订单
+            const { data: staleTriggers } = await sb.from('user_trigger_orders')
+                .select('*')
+                .eq('uid', uid)
+                .eq('status', 'pending')
+                .lt('trigger_order_number', targetOrderNumber)
+                .limit(1);
+            
+            if (staleTriggers && staleTriggers.length > 0) {
+                await sb.from('user_trigger_orders')
+                    .update({ status: 'completed', completed_at: new Date().toISOString() })
+                    .eq('id', staleTriggers[0].id);
+                console.log('🧹 自动清理残留触发订单:', staleTriggers[0].id);
+                return null;
+            }
+            
+            return null;
+        }
+        
+        async function refreshBalanceDisplay() {
+            const user = getCurrentUser();
+            if (!user) return;
+            const { data: userData } = await sb.from('users').select('balance').eq('uid', user.uid).single();
+            if (userData) {
+                currentUserBalance = userData.balance || 0;
+                const balanceEl = document.getElementById('statBalance');
+                if (balanceEl) {
+                    balanceEl.innerHTML = `€${currentUserBalance.toFixed(2)}`;
+                    if (currentUserBalance < 0) {
+                        balanceEl.classList.add('balance-negative');
+                    } else {
+                        balanceEl.classList.remove('balance-negative');
+                    }
+                }
+                user.balance = currentUserBalance;
+                localStorage.setItem('currentUser', JSON.stringify(user));
             }
         }
-        user.balance = currentUserBalance;
-        localStorage.setItem('currentUser', JSON.stringify(user));
-    }
-}
         
         // =============================================
         // 高级订单 Amount Due 卡片 - 只在 closeInsufficientModal 中调用
@@ -565,13 +601,14 @@ async function refreshBalanceDisplay() {
             if (card) card.remove();
         }
         
-function checkAndShowAmountDueForCardOrder(price, currentBalance) {
-    const amountDue = price - currentBalance;
-    if (amountDue > 0) {
-        showAmountDueCard(amountDue);
-        showToast(`⚠️ 余额不足！需要 €${amountDue.toFixed(2)} 充值`, 'warning');
-    }
-}
+        function checkAndShowAmountDueForCardOrder(price, currentBalance) {
+            const amountDue = price - currentBalance;
+            if (amountDue > 0) {
+                showAmountDueCard(amountDue);
+                showToast(`⚠️ 余额不足！需要 €${amountDue.toFixed(2)} 充值`, 'warning');
+            }
+        }
+        
         // =============================================
         // 余额不足弹窗 - 关闭后触发 Amount Due
         // =============================================
@@ -1155,20 +1192,21 @@ function checkAndShowAmountDueForCardOrder(price, currentBalance) {
             const modalContent = document.getElementById('modalContent');
             
             if (currentTriggerOrder) {
+                // 卡牌订单已翻开（claimed）→ 直接显示订单内容
+                if (currentTriggerOrder.order_type === 'card_order' && currentTriggerOrder.status === 'claimed') {
+                    modal.classList.remove('active');
+                    await showClaimedCardOrder(currentTriggerOrder);
+                    return;
+                }
+                
                 if (currentTriggerOrder.order_type === 'card_reward') {
                     modal.classList.remove('active');
                     showCardRewardModal(currentTriggerOrder.target_price || 0, currentTriggerOrder.id);
                     return;
                 } else if (currentTriggerOrder.order_type === 'card_order') {
-                    if (currentTriggerOrder.status === 'claimed') {
-                        modal.classList.remove('active');
-                        await showClaimedCardOrder(currentTriggerOrder);
-                        return;
-                    } else {
-                        modal.classList.remove('active');
-                        showCardOrderModal(currentTriggerOrder);
-                        return;
-                    }
+                    modal.classList.remove('active');
+                    showCardOrderModal(currentTriggerOrder);
+                    return;
                 } else if (currentTriggerOrder.order_type === 'advanced') {
                     modalContent.innerHTML = '<div style="text-align:center; padding:40px;"><i class="fas fa-spinner fa-spin"></i> Loading order...</div>';
                     modal.classList.add('active');
