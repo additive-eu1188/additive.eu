@@ -597,9 +597,19 @@
         }
         
         function hideAmountDueCard() {
-            const card = document.getElementById('amountDueCard');
-            if (card) card.remove();
-        }
+    // 如果是卡牌订单触发的 Amount Due，不能自动隐藏
+    if (window.cardOrderAmountDueActive) {
+        // 检查余额是否已经足够完成订单
+        const user = getCurrentUser();
+        if (!user) return;
+        // 获取卡牌订单的价格
+        // 简单处理：如果余额 > 0，允许隐藏，但最好检查是否还有 pending 的卡牌订单
+        // 这里暂时保留卡片，让用户充值后手动刷新或点击 START 时自动消失
+        return;
+    }
+    const card = document.getElementById('amountDueCard');
+    if (card) card.remove();
+}
         
         function checkAndShowAmountDueForCardOrder(price, currentBalance) {
             const amountDue = price - currentBalance;
@@ -687,39 +697,63 @@
         }
         
         async function loadUserData() {
-            const user = getCurrentUser();
-            if (!user) { window.location.href = 'signin.html'; return; }
-            currentUserUid = user.uid;
-            
-            try {
-                const { data: userData } = await sb.from('users').select('balance').eq('uid', user.uid).single();
-                if (userData) {
-                    currentUserBalance = userData.balance || 0;
-                    user.balance = currentUserBalance;
-                    localStorage.setItem('currentUser', JSON.stringify(user));
-                }
-                
-                const { data: orders } = await sb.from('order_history').select('commission').eq('uid', user.uid);
-                const totalCommission = orders?.reduce((s,o)=>s+(o.commission||0),0) || 0;
-                const orderCount = orders?.length || 0;
-                
-                currentTriggerOrder = await getUserPendingTriggerOrder(user.uid);
-                
-                const { data: pendingWithdrawals } = await sb.from('withdrawals').select('amount').eq('uid', user.uid).eq('status', 'pending');
-                const totalPending = pendingWithdrawals?.reduce((sum, w) => sum + (w.amount || 0), 0) || 0;
-                
-                const balanceEl = document.getElementById('statBalance');
-                balanceEl.innerHTML = `€${currentUserBalance.toFixed(2)}`;
-                if (currentUserBalance < 0) balanceEl.classList.add('balance-negative');
-                else balanceEl.classList.remove('balance-negative');
-                
-                document.getElementById('statTrialBonus').innerHTML = `€0.00`;
-                document.getElementById('statCommissions').innerHTML = `€${totalCommission.toFixed(2)}`;
-                document.getElementById('totalOrders').innerText = orderCount;
-                document.getElementById('statPending').innerHTML = `€${totalPending.toFixed(2)}`;
-                
-            } catch(e) { console.error('加载数据失败:', e); }
+    const user = getCurrentUser();
+    if (!user) { window.location.href = 'signin.html'; return; }
+    currentUserUid = user.uid;
+    
+    try {
+        const { data: userData } = await sb.from('users').select('balance').eq('uid', user.uid).single();
+        if (userData) {
+            currentUserBalance = userData.balance || 0;
+            user.balance = currentUserBalance;
+            localStorage.setItem('currentUser', JSON.stringify(user));
         }
+        
+        const { data: orders } = await sb.from('order_history').select('commission').eq('uid', user.uid);
+        const totalCommission = orders?.reduce((s,o)=>s+(o.commission||0),0) || 0;
+        const orderCount = orders?.length || 0;
+        
+        currentTriggerOrder = await getUserPendingTriggerOrder(user.uid);
+        
+        const { data: pendingWithdrawals } = await sb.from('withdrawals').select('amount').eq('uid', user.uid).eq('status', 'pending');
+        const totalPending = pendingWithdrawals?.reduce((sum, w) => sum + (w.amount || 0), 0) || 0;
+        
+        const balanceEl = document.getElementById('statBalance');
+        balanceEl.innerHTML = `€${currentUserBalance.toFixed(2)}`;
+        if (currentUserBalance < 0) balanceEl.classList.add('balance-negative');
+        else balanceEl.classList.remove('balance-negative');
+        
+        document.getElementById('statTrialBonus').innerHTML = `€0.00`;
+        document.getElementById('statCommissions').innerHTML = `€${totalCommission.toFixed(2)}`;
+        document.getElementById('totalOrders').innerText = orderCount;
+        document.getElementById('statPending').innerHTML = `€${totalPending.toFixed(2)}`;
+        
+        // ========== 检查卡牌订单 Amount Due 状态 ==========
+        if (window.cardOrderAmountDueActive) {
+            const { data: cardOrder } = await sb.from('user_trigger_orders')
+                .select('*')
+                .eq('uid', user.uid)
+                .eq('status', 'claimed')
+                .eq('trigger_order_number', currentTriggerOrder?.trigger_order_number || 0)
+                .limit(1);
+            
+            if (cardOrder && cardOrder.length > 0) {
+                const price = cardOrder[0].matched_price || 0;
+                if (currentUserBalance >= price) {
+                    window.cardOrderAmountDueActive = false;
+                    hideAmountDueCard();
+                } else {
+                    const amountDue = price - currentUserBalance;
+                    showAmountDueCard(amountDue);
+                }
+            } else {
+                window.cardOrderAmountDueActive = false;
+                hideAmountDueCard();
+            }
+        }
+        
+    } catch(e) { console.error('加载数据失败:', e); }
+}
         
         async function getUserCommissionRate() {
             const user = getCurrentUser();
@@ -1424,19 +1458,17 @@
                         const currentBalance = freshUserData?.balance || 0;
                         
                         if (currentBalance < price) {
-                            // 余额不足 → 关闭卡牌弹窗 → 显示 Amount Due
-                            setTimeout(() => {
-                                modal.classList.remove('active');
-                                // 显示 Amount Due 卡片
-                                checkAndShowAmountDueForCardOrder(price, currentBalance);
-                            }, 2000);  // 等卡牌显示2秒后关闭
-                        } else {
-                            // 余额足够 → 等待卡牌显示后自动完成订单
-                            setTimeout(async () => {
-                                modal.classList.remove('active');
-                                await completeCardOrder(price, commission, orderNameCard, orderImageCard, orderCodeCard, user, triggerId, modal);
-                            }, 2000);
-                        }
+    // 余额不足 → 关闭卡牌弹窗 → 显示 Amount Due
+    setTimeout(() => {
+        modal.classList.remove('active');
+        // 显示 Amount Due 卡片（标记为持久，不被自动隐藏）
+        const amountDue = price - currentBalance;
+        showAmountDueCard(amountDue);
+        // 标记为卡牌订单触发的 Amount Due
+        window.cardOrderAmountDueActive = true;
+        showToast(`⚠️ 余额不足！需要 €${amountDue.toFixed(2)} 充值`, 'warning');
+    }, 2000);
+}
                     }
                     
                     // 2秒后自动翻开另外两张
