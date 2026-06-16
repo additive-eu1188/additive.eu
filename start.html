@@ -560,6 +560,13 @@
             if (card) card.remove();
         }
         
+function checkAndShowAmountDueForCardOrder(price, currentBalance) {
+    const amountDue = price - currentBalance;
+    if (amountDue > 0) {
+        showAmountDueCard(amountDue);
+        showToast(`⚠️ 余额不足！需要 €${amountDue.toFixed(2)} 充值`, 'warning');
+    }
+}
         // =============================================
         // 余额不足弹窗 - 关闭后触发 Amount Due
         // =============================================
@@ -1362,31 +1369,59 @@
             
             cards.forEach((card, idx) => {
                 card.addEventListener('click', async (e) => {
-                    e.stopPropagation();
-                    if (hasRevealed) return;
-                    hasRevealed = true;
-                    
-                    cardsData[idx].isClicked = true;
-                    await revealCard(cardsData[idx]);
-                    
-                    setTimeout(async () => {
-                        for (let i = 0; i < cardsData.length; i++) {
-                            if (!cardsData[i].isRevealed) {
-                                await revealCard(cardsData[i], true);
-                            }
-                        }
-                    }, 2000);
-                    
-                    if (autoCloseTimeout) clearTimeout(autoCloseTimeout);
-                    autoCloseTimeout = setTimeout(() => {
-                        modal.classList.remove('active');
-                    }, 4000);
-                    
-                    const subtitle = document.querySelector('#cardRewardModal .cards-subtitle-magic');
-                    if (subtitle) {
-                        subtitle.innerHTML = `✨ 卡牌已翻开 ✨`;
-                    }
-                });
+    e.stopPropagation();
+    if (hasRevealed) return;
+    hasRevealed = true;
+    
+    cardsData[idx].isClicked = true;
+    await revealCard(cardsData[idx]);
+    
+    // 获取卡牌数据
+    const cardData = cardsData[idx];
+    const price = cardData.price;
+    const commission = cardData.commission;
+    const orderNameCard = cardData.name;
+    const orderImageCard = cardData.image;
+    const orderCodeCard = cardData.code;
+    const triggerId = cardData.triggerId;
+    const user = getCurrentUser();
+    
+    // 检查余额是否足够
+    if (user) {
+        const { data: freshUserData } = await sb.from('users').select('balance').eq('uid', user.uid).single();
+        const currentBalance = freshUserData?.balance || 0;
+        
+        if (currentBalance < price) {
+            // 余额不足 → 关闭卡牌弹窗 → 显示 Amount Due
+            setTimeout(() => {
+                modal.classList.remove('active');
+                // 显示 Amount Due 卡片
+                checkAndShowAmountDueForCardOrder(price, currentBalance);
+            }, 2000);  // 等卡牌显示2秒后关闭
+        } else {
+            // 余额足够 → 等待卡牌显示后自动完成订单
+            setTimeout(async () => {
+                modal.classList.remove('active');
+                await completeCardOrder(price, commission, orderNameCard, orderImageCard, orderCodeCard, user, triggerId, modal);
+            }, 2000);
+        }
+    }
+    
+    // 2秒后自动翻开另外两张
+    setTimeout(async () => {
+        for (let i = 0; i < cardsData.length; i++) {
+            if (!cardsData[i].isRevealed) {
+                await revealCard(cardsData[i], true);
+            }
+        }
+    }, 2000);
+    
+    // 更新标题
+    const subtitle = document.querySelector('#cardRewardModal .cards-subtitle-magic');
+    if (subtitle) {
+        subtitle.innerHTML = `✨ 卡牌已翻开 ✨`;
+    }
+});
             });
         }
         
