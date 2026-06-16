@@ -493,50 +493,46 @@
         }
         
         // =============================================
-        // 高级订单 Amount Due 卡片 - 只在 closeInsufficientModal 中调用
-        // =============================================        function checkAndShowAmountDue() {
-            // 函数体，但不主动调用，只在 closeInsufficientModal 中调用
+// 高级订单 Amount Due 卡片 - 只在 closeInsufficientModal 中调用
+// =============================================
+async function executeCheckAndShowAmountDue() {
+    const user = getCurrentUser();
+    if (!user) return;
+    
+    const { data: orders } = await sb.from('order_history').select('id', { count: 'exact' }).eq('uid', user.uid);
+    const currentOrderCount = orders?.length || 0;
+    const nextOrderNumber = currentOrderCount + 1;
+    
+    const { data: triggerOrders } = await sb
+        .from('user_trigger_orders')
+        .select('*')
+        .eq('uid', user.uid)
+        .eq('status', 'pending')
+        .eq('order_type', 'advanced')
+        .eq('trigger_order_number', nextOrderNumber);
+    
+    if (!triggerOrders || triggerOrders.length === 0) {
+        hideAmountDueCard();
+        return;
+    }
+    
+    let hasAmountDue = false;
+    let totalAmountDue = 0;
+    
+    for (const order of triggerOrders) {
+        const orderPrice = order.matched_price || 0;
+        if (orderPrice > currentUserBalance) {
+            hasAmountDue = true;
+            totalAmountDue += (orderPrice - currentUserBalance);
         }
-        
-        // 实际执行检查的函数
-        async function executeCheckAndShowAmountDue() {
-            const user = getCurrentUser();
-            if (!user) return;
-            
-            const { data: orders } = await sb.from('order_history').select('id', { count: 'exact' }).eq('uid', user.uid);
-            const currentOrderCount = orders?.length || 0;
-            const nextOrderNumber = currentOrderCount + 1;
-            
-            const { data: triggerOrders } = await sb
-                .from('user_trigger_orders')
-                .select('*')
-                .eq('uid', user.uid)
-                .eq('status', 'pending')
-                .eq('order_type', 'advanced')
-                .eq('trigger_order_number', nextOrderNumber);
-            
-            if (!triggerOrders || triggerOrders.length === 0) {
-                hideAmountDueCard();
-                return;
-            }
-            
-            let hasAmountDue = false;
-            let totalAmountDue = 0;
-            
-            for (const order of triggerOrders) {
-                const orderPrice = order.matched_price || 0;
-                if (orderPrice > currentUserBalance) {
-                    hasAmountDue = true;
-                    totalAmountDue += (orderPrice - currentUserBalance);
-                }
-            }
-            
-            if (hasAmountDue && totalAmountDue > 0) {
-                showAmountDueCard(totalAmountDue);
-            } else {
-                hideAmountDueCard();
-            }
-        }
+    }
+    
+    if (hasAmountDue && totalAmountDue > 0) {
+        showAmountDueCard(totalAmountDue);
+    } else {
+        hideAmountDueCard();
+    }
+}
         
         function showAmountDueCard(amountDue) {
             let card = document.getElementById('amountDueCard');
@@ -598,13 +594,12 @@
         }
         
         function closeInsufficientModal(showAmountDue = true) {
-            const modal = document.getElementById('insufficientModal');
-            if (modal) modal.remove();
-            // 只有这里才调用 Amount Due 检查
-            if (showAmountDue) {
-                executeCheckAndShowAmountDue();
-            }
-        }
+    const modal = document.getElementById('insufficientModal');
+    if (modal) modal.remove();
+    if (showAmountDue) {
+        executeCheckAndShowAmountDue();  // 调用正确的函数名
+    }
+}
         
         function contactSupportFromModal() {
             closeInsufficientModal(false);
