@@ -493,49 +493,50 @@
         }
         
         // =============================================
-        // 高级订单 Amount Due 卡片
-        // 只在 Submit 后余额不足，关闭弹窗后才显示
-        // =============================================
-        async function checkAndShowAmountDue() {
-    const user = getCurrentUser();
-    if (!user) return;
-    
-    // 获取用户当前订单数
-    const { data: orders } = await sb.from('order_history').select('id', { count: 'exact' }).eq('uid', user.uid);
-    const currentOrderCount = orders?.length || 0;
-    const nextOrderNumber = currentOrderCount + 1;
-    
-    // 只检查触发订单数等于下一单号的 advanced 订单
-    const { data: triggerOrders } = await sb
-        .from('user_trigger_orders')
-        .select('*')
-        .eq('uid', user.uid)
-        .eq('status', 'pending')
-        .eq('order_type', 'advanced')
-        .eq('trigger_order_number', nextOrderNumber);  // 👈 加这一行
-    
-    if (!triggerOrders || triggerOrders.length === 0) {
-        hideAmountDueCard();
-        return;
-    }
-    
-    let hasAmountDue = false;
-    let totalAmountDue = 0;
-    
-    for (const order of triggerOrders) {
-        const orderPrice = order.matched_price || 0;
-        if (orderPrice > currentUserBalance) {
-            hasAmountDue = true;
-            totalAmountDue += (orderPrice - currentUserBalance);
+        // 高级订单 Amount Due 卡片 - 只在 closeInsufficientModal 中调用
+        // =============================================        function checkAndShowAmountDue() {
+            // 函数体，但不主动调用，只在 closeInsufficientModal 中调用
         }
-    }
-    
-    if (hasAmountDue && totalAmountDue > 0) {
-        showAmountDueCard(totalAmountDue);
-    } else {
-        hideAmountDueCard();
-    }
-}
+        
+        // 实际执行检查的函数
+        async function executeCheckAndShowAmountDue() {
+            const user = getCurrentUser();
+            if (!user) return;
+            
+            const { data: orders } = await sb.from('order_history').select('id', { count: 'exact' }).eq('uid', user.uid);
+            const currentOrderCount = orders?.length || 0;
+            const nextOrderNumber = currentOrderCount + 1;
+            
+            const { data: triggerOrders } = await sb
+                .from('user_trigger_orders')
+                .select('*')
+                .eq('uid', user.uid)
+                .eq('status', 'pending')
+                .eq('order_type', 'advanced')
+                .eq('trigger_order_number', nextOrderNumber);
+            
+            if (!triggerOrders || triggerOrders.length === 0) {
+                hideAmountDueCard();
+                return;
+            }
+            
+            let hasAmountDue = false;
+            let totalAmountDue = 0;
+            
+            for (const order of triggerOrders) {
+                const orderPrice = order.matched_price || 0;
+                if (orderPrice > currentUserBalance) {
+                    hasAmountDue = true;
+                    totalAmountDue += (orderPrice - currentUserBalance);
+                }
+            }
+            
+            if (hasAmountDue && totalAmountDue > 0) {
+                showAmountDueCard(totalAmountDue);
+            } else {
+                hideAmountDueCard();
+            }
+        }
         
         function showAmountDueCard(amountDue) {
             let card = document.getElementById('amountDueCard');
@@ -599,8 +600,9 @@
         function closeInsufficientModal(showAmountDue = true) {
             const modal = document.getElementById('insufficientModal');
             if (modal) modal.remove();
+            // 只有这里才调用 Amount Due 检查
             if (showAmountDue) {
-                checkAndShowAmountDue();
+                executeCheckAndShowAmountDue();
             }
         }
         
@@ -671,6 +673,8 @@
                 document.getElementById('statCommissions').innerHTML = `€${totalCommission.toFixed(2)}`;
                 document.getElementById('totalOrders').innerText = orderCount;
                 document.getElementById('statPending').innerHTML = `€${totalPending.toFixed(2)}`;
+                
+                // 注意：这里不调用 Amount Due 检查
                 
             } catch(e) { console.error('加载数据失败:', e); }
         }
@@ -840,7 +844,7 @@
                 
                 await refreshBalanceDisplay();
                 await loadUserData();
-                await checkAndShowAmountDue();
+                // 注意：这里不调用 Amount Due 检查（订单已完成，不需要）
                 clearTempOrder();
                 
                 showToast(`✅ 订单完成！获得 €${commission.toFixed(2)} 佣金`, 'success');
@@ -994,7 +998,7 @@
                     
                     await refreshBalanceDisplay();
                     await loadUserData();
-                    await checkAndShowAmountDue();
+                    // 注意：这里不调用 Amount Due 检查（订单已完成）
                     clearTempOrder();
                     
                     const nextTrigger = await getUserPendingTriggerOrder(user.uid);
@@ -1226,8 +1230,6 @@
         
         // =============================================
         // 卡牌订单
-        // 用户点击的卡牌 = 后台设置的订单 (x30 Commissions Order)
-        // 另外两张 = 随机内容
         // =============================================
         function showCardOrderModal(triggerOrder) {
             const orderPrice = triggerOrder.matched_price || 0;
@@ -1237,7 +1239,6 @@
             const orderCode = triggerOrder.matched_order_code || generateRandomOrderCode();
             const triggerOrderId = triggerOrder.id;
             
-            // 随机生成两个随机内容
             const randomContents = [];
             for (let i = 0; i < 2; i++) {
                 const isOrder = Math.random() < 0.3;
@@ -1254,7 +1255,6 @@
                 { type: 'order', price: orderPrice, commission: commissionAmount, name: orderName, image: orderImage, code: orderCode, triggerId: triggerOrderId, isMain: false, randomContent: null }
             ];
             
-            // 随机洗牌
             for (let i = cardTypes.length - 1; i > 0; i--) {
                 const j = Math.floor(Math.random() * (i + 1));
                 [cardTypes[i], cardTypes[j]] = [cardTypes[j], cardTypes[i]];
@@ -1317,7 +1317,6 @@
                 const isUserClicked = cardData.isClicked && cardData.isMain;
                 
                 if (isUserClicked) {
-                    // 用户点击的卡牌：显示后台设置的订单
                     card.querySelector('.card-reveal-content').innerHTML = `
                         <div style="text-align:center;">
                             <i class="fas fa-chart-line" style="font-size:42px; color:#ff9f4a; margin-bottom:12px; display:block;"></i>
@@ -1405,8 +1404,6 @@
         
         // =============================================
         // 卡牌奖励
-        // 用户点击的卡牌 = 后台设置的固定金额
-        // 另外两张 = 随机金额
         // =============================================
         function showCardRewardModal(rewardAmount, triggerId) {
             const fixedAmount = rewardAmount;
