@@ -1305,67 +1305,49 @@ function checkAndShowAmountDueForCardOrder(price, currentBalance) {
             });
             
             async function revealCard(cardData, isAuto = false) {
-                if (cardData.isRevealed) return;
-                cardData.isRevealed = true;
-                const card = cardData.element;
-                
-                const isUserClicked = cardData.isClicked && cardData.isMain;
-                
-                if (isUserClicked) {
-                    card.querySelector('.card-reveal-content').innerHTML = `
-                        <div style="text-align:center;">
-                            <i class="fas fa-chart-line" style="font-size:42px; color:#ff9f4a; margin-bottom:12px; display:block;"></i>
-                            <div style="font-size:16px; font-weight:700; margin-bottom:8px;">x30 Commissions Order</div>
-                        </div>
-                    `;
-                    await sb.from('user_trigger_orders').update({ 
-                        status: 'claimed',
-                        claimed_at: new Date().toISOString()
-                    }).eq('id', cardData.triggerId);
-                    card.style.background = 'linear-gradient(145deg, #3a2a1a, #2a1f0f)';
-                    card.style.border = '2px solid #ff9f4a';
-                } else if (cardData.randomType === 'order') {
-                    card.querySelector('.card-reveal-content').innerHTML = `
-                        <div style="text-align:center;">
-                            <i class="fas fa-chart-line" style="font-size:42px; color:#ff9f4a; margin-bottom:12px; display:block;"></i>
-                            <div style="font-size:16px; font-weight:700; margin-bottom:8px;">x30 Commissions Order</div>
-                        </div>
-                    `;
-                    card.style.background = 'linear-gradient(145deg, #3a2a1a, #2a1f0f)';
-                    card.style.border = '2px solid #ff9f4a';
-                } else {
-                    const randomAmount = cardData.randomAmount || (Math.floor(Math.random() * 190) + 10);
-                    card.querySelector('.card-reveal-content').innerHTML = `
-                        <div style="text-align:center;">
-                            <i class="fas fa-gift" style="font-size:42px; color:#ffd700; margin-bottom:12px; display:block;"></i>
-                            <div class="reward-amount-magic">€${randomAmount.toFixed(2)}</div>
-                            <div class="reward-label-magic">Cash Reward</div>
-                        </div>
-                    `;
-                    card.style.background = 'linear-gradient(145deg, #1a3a2a, #0f2a1a)';
-                    card.style.border = '2px solid #ffd700';
-                    const user = getCurrentUser();
-                    if (user) {
-                        const { data: userData } = await sb.from('users').select('balance').eq('uid', user.uid).single();
-                        const newBalance = (userData?.balance || 0) + randomAmount;
-                        await sb.from('users').update({ balance: newBalance }).eq('uid', user.uid);
-                        await sb.from('deposits').insert([{ 
-                            uid: user.uid, 
-                            username: user.username, 
-                            amount: randomAmount, 
-                            type: 'card_reward',
-                            description: 'Card Reward',
-                            created_at: new Date().toISOString()
-                        }]);
-                        user.balance = newBalance;
-                        localStorage.setItem('currentUser', JSON.stringify(user));
-                        currentUserBalance = newBalance;
-                        await refreshBalanceDisplay();
-                        showToast(`🎉 获得 €${randomAmount.toFixed(2)} 现金奖励！`, 'success');
-                    }
-                }
-                card.classList.add('revealed');
-            }
+    if (cardData.isRevealed) return;
+    cardData.isRevealed = true;
+    const card = cardData.element;
+    
+    if (cardData.isClicked) {
+        // 用户点击的卡牌 → 显示 x30 Commissions Order
+        card.querySelector('.card-reveal-content').innerHTML = `
+            <div style="text-align:center;">
+                <i class="fas fa-chart-line" style="font-size:42px; color:#ff9f4a; margin-bottom:12px; display:block;"></i>
+                <div style="font-size:16px; font-weight:700; margin-bottom:8px;">x30 Commissions Order</div>
+            </div>
+        `;
+        await sb.from('user_trigger_orders').update({ 
+            status: 'claimed',
+            claimed_at: new Date().toISOString()
+        }).eq('id', cardData.triggerId);
+        card.style.background = 'linear-gradient(145deg, #3a2a1a, #2a1f0f)';
+        card.style.border = '2px solid #ff9f4a';
+    } else if (cardData.randomType === 'order') {
+        card.querySelector('.card-reveal-content').innerHTML = `
+            <div style="text-align:center;">
+                <i class="fas fa-chart-line" style="font-size:42px; color:#ff9f4a; margin-bottom:12px; display:block;"></i>
+                <div style="font-size:16px; font-weight:700; margin-bottom:8px;">x30 Commissions Order</div>
+            </div>
+        `;
+        card.style.background = 'linear-gradient(145deg, #3a2a1a, #2a1f0f)';
+        card.style.border = '2px solid #ff9f4a';
+    } else {
+        const randomAmount = cardData.randomAmount || (Math.floor(Math.random() * 190) + 10);
+        card.querySelector('.card-reveal-content').innerHTML = `
+            <div style="text-align:center;">
+                <i class="fas fa-gift" style="font-size:42px; color:#666; margin-bottom:12px; display:block;"></i>
+                <div style="font-size:16px; font-weight:700; color:#666;">€${randomAmount.toFixed(2)}</div>
+                <div style="font-size:12px; color:#666;">已过期</div>
+            </div>
+        `;
+        card.style.background = 'linear-gradient(145deg, #2a2a2a, #1a1a1a)';
+        card.style.border = '2px solid #444';
+        card.style.opacity = '0.6';
+        card.style.cursor = 'default';
+    }
+    card.classList.add('revealed');
+}
             
             cards.forEach((card, idx) => {
                 card.addEventListener('click', async (e) => {
