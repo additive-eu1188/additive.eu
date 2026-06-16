@@ -1084,6 +1084,8 @@ function checkAndShowAmountDueForCardOrder(price, currentBalance) {
         async function openOrderModal() {
             const user = getCurrentUser();
             if (!user) return;
+
+currentTriggerOrder = await getUserPendingTriggerOrder(currentUserUid);
             
             await refreshBalanceDisplay();
             const currentBalance = currentUserBalance;
