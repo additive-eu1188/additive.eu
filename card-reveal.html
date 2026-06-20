@@ -281,13 +281,13 @@
 
     <script>
         // ============================================================
-        // 解析 URL 参数（后台设置的值）
+        // 解析 URL 参数（后台设置的内容）
         // ============================================================
         function getParams() {
             const url = new URL(window.location.href);
             return {
-                type: url.searchParams.get('type') || 'reward',
-                amount: parseFloat(url.searchParams.get('amount')) || 0,
+                type: url.searchParams.get('type') || 'reward',           // 'reward' 或 'order'
+                amount: parseFloat(url.searchParams.get('amount')) || 0,  // 奖励金额
                 triggerId: parseInt(url.searchParams.get('triggerId')) || 0,
                 orderPrice: parseFloat(url.searchParams.get('orderPrice')) || 0,
                 orderCommission: parseFloat(url.searchParams.get('orderCommission')) || 0,
@@ -299,11 +299,11 @@
         const isReward = params.type === 'reward';
 
         // ============================================================
-        // 动态生成卡牌数据（1张主卡显示固定内容，2张副卡随机）
+        // 生成卡牌数据（1张主卡显示固定内容，2张副卡随机）
         // ============================================================
-        let cardData = [];
         const randomMin = 5;
         const randomMax = 200;
+        let cardData = [];
 
         if (isReward) {
             const fixed = params.amount;
@@ -334,14 +334,14 @@
             ];
         }
 
-        // 打乱顺序
+        // 打乱顺序（让主卡位置随机，增加趣味性）
         for (let i = cardData.length - 1; i > 0; i--) {
             const j = Math.floor(Math.random() * (i + 1));
             [cardData[i], cardData[j]] = [cardData[j], cardData[i]];
         }
 
         // ============================================================
-        // 渲染卡牌到网格
+        // 渲染卡牌
         // ============================================================
         const grid = document.getElementById('cardsGrid');
         let html = '';
@@ -498,13 +498,13 @@
             const cx = window.innerWidth / 2 - rect.width / 2;
             const cy = window.innerHeight / 2 - rect.height / 2;
 
-            // 步骤1：蒙层 + 其他卡牌变暗
+            // 1. 蒙层 + 其他卡牌变暗
             overlayBlur.classList.add('active');
             all.forEach(c => {
                 if (c !== card) c.classList.add('dim');
             });
 
-            // 创建克隆体
+            // 2. 克隆体
             clone = card.cloneNode(true);
             clone.classList.add('clone-card');
             clone.classList.remove('dim');
@@ -514,7 +514,7 @@
             card.style.opacity = '0';
             card.style.pointerEvents = 'none';
 
-            // 步骤2：移动 + 放大
+            // 3. 移动 + 放大
             let start = performance.now();
 
             function moveStep(time) {
@@ -528,7 +528,7 @@
                 if (p < 1) {
                     requestAnimationFrame(moveStep);
                 } else {
-                    // 步骤3：翻牌 + 爆炸
+                    // 4. 翻牌 + 爆炸
                     setTimeout(() => {
                         clone.classList.add('flipped', 'glow');
                         const centerX = cx + rect.width / 2;
@@ -536,7 +536,7 @@
                         explode(centerX, centerY);
                     }, 200);
 
-                    // 步骤4：归位 + 移除蒙层
+                    // 5. 归位 + 移除蒙层
                     setTimeout(() => {
                         overlayBlur.classList.remove('active');
                         clone.style.transition = 'left 0.6s cubic-bezier(0.2,0.8,0.2,1), top 0.6s cubic-bezier(0.2,0.8,0.2,1), transform 0.6s cubic-bezier(0.2,0.8,0.2,1)';
@@ -545,7 +545,7 @@
                         clone.style.transform = 'scale(1)';
                         clone.classList.remove('glow');
 
-                        // 步骤5：最终状态
+                        // 6. 最终状态
                         setTimeout(() => {
                             // 移除克隆体
                             clone.remove();
@@ -557,7 +557,7 @@
                             card.classList.add('flipped');
                             card.classList.remove('dim');
 
-                            // ===== 步骤6：其他卡牌依次翻开（显示背面奖励内容） =====
+                            // 7. 其他卡牌依次翻开（显示背面随机内容）
                             let delay = 400;
                             all.forEach(c => {
                                 if (c !== chosenCard) {
@@ -571,22 +571,20 @@
                                 }
                             });
 
-                            // ===== 步骤7：停顿2秒后关闭 =====
+                            // 8. 停顿 2 秒后发送固定奖励并关闭
                             setTimeout(() => {
-                                // ⭐ 关键：无论点击哪张卡，都强制使用后台设置的值
-                                const isWinner = true;
-                                const triggerId = params.triggerId; // 直接使用参数中的 triggerId
+                                // ⭐⭐⭐ 关键修复：无论点击哪张卡，都发送后台设置的内容
+                                const triggerId = params.triggerId;
                                 let amount = 0;
                                 if (isReward) {
-                                    amount = params.amount; // 后台设置的现金奖励金额
+                                    amount = params.amount;   // 后台设置的固定金额
                                 } else {
-                                    amount = params.orderPrice; // 后台设置的订单价格（用于标识）
+                                    amount = params.orderPrice; // 后台设置的订单价格
                                 }
-                                console.log('🎯 发送奖励金额:', amount, '类型:', isReward ? 'reward' : 'order');
                                 if (window.parent !== window) {
                                     window.parent.postMessage({
                                         action: 'cardRevealComplete',
-                                        isWinner: isWinner,
+                                        isWinner: true,           // 总是中奖
                                         triggerId: triggerId,
                                         amount: amount,
                                         type: isReward ? 'reward' : 'order'
@@ -611,7 +609,7 @@
             });
         });
 
-        console.log('✅ card-reveal 已加载（点击任意卡牌获得后台设置值，副卡显示随机内容）');
+        console.log('✅ card-reveal 已加载（1张固定 + 2张随机，点击任意卡都获得固定奖励）');
     </script>
 </body>
 </html>
