@@ -9,9 +9,9 @@ async function loadKycPage() {
             <div class="search-bar" style="justify-content: space-between; flex-wrap: wrap;">
                 <h3 style="margin:0;"><i class="fas fa-id-card"></i> KYC Verification</h3>
                 <div style="display: flex; gap: 12px;">
-                    <button id="tabPending" class="tab-kyc-btn active" data-tab="pending">📋 待审核</button>
-                    <button id="tabVerified" class="tab-kyc-btn" data-tab="verified">✅ 已验证记录</button>
-                    <button id="refreshKycBtn" class="btn-primary"><i class="fas fa-sync-alt"></i> 刷新</button>
+                    <button id="tabPending" class="tab-kyc-btn active" data-tab="pending">📋 Pending Verification</button>
+                    <button id="tabVerified" class="tab-kyc-btn" data-tab="verified">✅ Verified Records</button>
+                    <button id="refreshKycBtn" class="btn-primary"><i class="fas fa-sync-alt"></i> Refresh</button>
                 </div>
             </div>
             <div id="kycPendingContainer" class="kyc-container"></div>
@@ -68,12 +68,12 @@ async function getUsername(uid) {
 async function loadKycPending() {
     const container = document.getElementById('kycPendingContainer');
     if (!container) return;
-    container.innerHTML = '<div style="text-align:center; padding:40px;">加载中... <i class="fas fa-spinner fa-spin"></i></div>';
+    container.innerHTML = '<div style="text-align:center; padding:40px;">Loading... <i class="fas fa-spinner fa-spin"></i></div>';
     
     const { data: kycList } = await sb.from('kyc_verifications').select('*').in('status', ['pending', 'rejected']).order('uploaded_at', { ascending: false });
     
     if (!kycList || kycList.length === 0) {
-        container.innerHTML = '<div style="text-align:center; padding:40px; color:#6a7a9a;">暂无待审核KYC申请</div>';
+        container.innerHTML = '<div style="text-align:center; padding:40px; color:#6a7a9a;">No Pending KYC</div>';
         return;
     }
     
@@ -104,21 +104,21 @@ async function loadKycPending() {
         if (nationalIdFront || nationalIdBack) {
             imagesHtml += `<div class="kyc-images">`;
             if (nationalIdFront) {
-                imagesHtml += `<div class="kyc-image-box"><img src="${nationalIdFront.image_url}" onclick="window.open('${nationalIdFront.image_url}','_blank')"><div class="kyc-image-label">身份证正面</div></div>`;
+                imagesHtml += `<div class="kyc-image-box"><img src="${nationalIdFront.image_url}" onclick="window.open('${nationalIdFront.image_url}','_blank')"><div class="kyc-image-label">Front ID Card</div></div>`;
             }
             if (nationalIdBack) {
-                imagesHtml += `<div class="kyc-image-box"><img src="${nationalIdBack.image_url}" onclick="window.open('${nationalIdBack.image_url}','_blank')"><div class="kyc-image-label">身份证背面</div></div>`;
+                imagesHtml += `<div class="kyc-image-box"><img src="${nationalIdBack.image_url}" onclick="window.open('${nationalIdBack.image_url}','_blank')"><div class="kyc-image-label">Back ID Card</div></div>`;
             }
             imagesHtml += `</div>`;
         }
         
         for (const doc of otherDocs) {
-            let docName = doc.document_type === 'passport' ? '护照' : doc.document_type === 'resident_permit' ? '居留证' : doc.document_type;
+            let docName = doc.document_type === 'passport' ? 'Passport' : doc.document_type === 'resident_permit' ? 'Resident Permit' : doc.document_type;
             imagesHtml += `<div class="kyc-images"><div class="kyc-image-box"><img src="${doc.image_url}" onclick="window.open('${doc.image_url}','_blank')"><div class="kyc-image-label">${docName}</div></div></div>`;
         }
         
         const hasPending = items.some(i => i.status === 'pending');
-        const statusHtml = hasPending ? '<span class="kyc-status status-pending">⏳ 待审核</span>' : '<span class="kyc-status status-rejected">❌ 已拒绝</span>';
+        const statusHtml = hasPending ? '<span class="kyc-status status-pending">⏳ Pending Verification</span>' : '<span class="kyc-status status-rejected">❌ Rejected</span>';
         
         card.innerHTML = `
             <div class="kyc-header">
@@ -126,10 +126,10 @@ async function loadKycPending() {
                 <div>${statusHtml}</div>
             </div>
             ${imagesHtml}
-            <div class="kyc-time">提交时间: ${new Date(items[0].uploaded_at).toLocaleString()}</div>
+            <div class="kyc-time">Submit Time: ${new Date(items[0].uploaded_at).toLocaleString()}</div>
             <div style="margin-top: 16px;">
-                <button class="btn-sm success approve-kyc" data-uid="${uid}" style="background:#2f6b3a; border:none; padding:6px 16px; border-radius:20px; color:#fff; cursor:pointer;">✓ 批准</button>
-                <button class="btn-sm danger reject-kyc" data-uid="${uid}" style="background:#7a2f2f; border:none; padding:6px 16px; border-radius:20px; color:#fff; cursor:pointer;">✗ 拒绝</button>
+                <button class="btn-sm success approve-kyc" data-uid="${uid}" style="background:#2f6b3a; border:none; padding:6px 16px; border-radius:20px; color:#fff; cursor:pointer;">✓ Approved</button>
+                <button class="btn-sm danger reject-kyc" data-uid="${uid}" style="background:#7a2f2f; border:none; padding:6px 16px; border-radius:20px; color:#fff; cursor:pointer;">✗ Rejected</button>
             </div>
         `;
         container.appendChild(card);
@@ -156,12 +156,12 @@ async function loadKycPending() {
 async function loadKycVerified() {
     const container = document.getElementById('kycVerifiedContainer');
     if (!container) return;
-    container.innerHTML = '<div style="text-align:center; padding:40px;">加载中... <i class="fas fa-spinner fa-spin"></i></div>';
+    container.innerHTML = '<div style="text-align:center; padding:40px;">Loading... <i class="fas fa-spinner fa-spin"></i></div>';
     
     const { data: kycList } = await sb.from('kyc_verifications').select('*').eq('status', 'approved').order('uploaded_at', { ascending: false });
     
     if (!kycList || kycList.length === 0) {
-        container.innerHTML = '<div style="text-align:center; padding:40px; color:#6a7a9a;">暂无已验证的KYC记录</div>';
+        container.innerHTML = '<div style="text-align:center; padding:40px; color:#6a7a9a;">No Records</div>';
         return;
     }
     
