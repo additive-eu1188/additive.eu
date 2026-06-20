@@ -936,7 +936,7 @@
             return result.data?.orders_limit || 30;
         }
 
-        async function loadAnimatedConfig() {
+        function loadAnimatedConfig() {
             try {
                 var result = await sb.from('animated_settings').select('*').eq('id', 1).single();
                 var data = result.data;
