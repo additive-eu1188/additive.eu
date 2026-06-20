@@ -20,12 +20,14 @@ async function loadUsersPage() {
                             <th style="min-width: 80px;">User ID</th>
                             <th style="min-width: 100px;">Referrer</th>
                             <th style="min-width: 70px;">Country</th>
+                            <th style="min-width: 100px;">VIP Level</th>
                             <th style="min-width: 90px;">Pending (€)</th>
-                            <th style="min-width: 90px;">Balance (€)</th>
+                            <th style="min-width: 110px;">Balance (€)</th>
                             <th style="min-width: 120px;">Orders</th>
                             <th style="min-width: 180px;">Edit Orders</th>
                             <th style="min-width: 130px;">Registered IP</th>
                             <th style="min-width: 150px;">Time Registered</th>
+                            <th style="min-width: 100px;">Actions</th>
                         </tr>
                     </thead>
                     <tbody id="usersTableBody"></tbody>
@@ -81,7 +83,37 @@ async function loadUsersPage() {
         }
         .btn-reset { background: #7a5f2f; }
         .btn-save { background: #2f6b3a; }
-        .btn-edit { background: #2f5f7a; }
+        .btn-deposit { background: #2f6b3a; }
+        .btn-edit-user { background: #2f5f7a; }
+        .btn-vip { background: #7a5f8a; }
+        .vip-select {
+            background: #0f172a;
+            border: 1px solid #1e2a3a;
+            border-radius: 6px;
+            padding: 2px 6px;
+            color: #fff;
+            font-size: 11px;
+            cursor: pointer;
+            width: 75px;
+        }
+        .vip-select:focus {
+            border-color: #4a7cff;
+            outline: none;
+        }
+        .vip-select option {
+            background: #0f172a;
+            color: #fff;
+        }
+        .vip-badge {
+            display: inline-block;
+            padding: 2px 10px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+        .vip-badge.level1 { background: rgba(74,124,255,0.15); color: #4a7cff; }
+        .vip-badge.level2 { background: rgba(255,184,77,0.15); color: #ffb84d; }
+        .vip-badge.level3 { background: rgba(255,215,0,0.2); color: #ffd700; }
         .country-flag {
             font-size: 16px;
             margin-right: 4px;
@@ -115,12 +147,21 @@ async function loadUsersPage() {
             margin-right: 4px;
             white-space: nowrap;
         }
-        @media (max-width: 1200px) {
+        .actions-wrapper {
+            display: flex;
+            gap: 4px;
+            flex-wrap: wrap;
+        }
+        .actions-wrapper .btn-sm {
+            font-size: 9px;
+            padding: 3px 8px;
+        }
+        @media (max-width: 1400px) {
             .table-container {
                 overflow-x: auto;
             }
             .data-table {
-                min-width: 1200px;
+                min-width: 1400px;
             }
         }
     `;
@@ -163,13 +204,19 @@ async function loadUsers() {
     const tbody = document.getElementById('usersTableBody');
     if (!tbody) return;
     
-    tbody.innerHTML = '<tr><td colspan="10" style="text-align:center; padding:40px;"><i class="fas fa-spinner fa-spin"></i> 加载中...</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="12" style="text-align:center; padding:40px;"><i class="fas fa-spinner fa-spin"></i> 加载中...</td></tr>';
     
     try {
         // 获取 VIP 设置用于订单限制
         const { data: vipSettings } = await sb.from('vip_settings').select('*');
         const vipLimitMap = {};
-        if (vipSettings) vipSettings.forEach(v => vipLimitMap[v.level] = v.orders_limit);
+        const vipNameMap = {};
+        if (vipSettings) {
+            vipSettings.forEach(v => {
+                vipLimitMap[v.level] = v.orders_limit;
+                vipNameMap[v.level] = v.rank_name || (v.level === 1 ? 'Normal' : v.level === 2 ? 'VIP' : 'SVIP');
+            });
+        }
         
         // 构建查询
         let query = sb.from('users').select('*', { count: 'exact' });
@@ -187,7 +234,7 @@ async function loadUsers() {
         window.userTotalCount = count || 0;
         
         if (!users || users.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="10" style="text-align:center; padding:40px; color:#6a7a9a;">暂无用户</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="12" style="text-align:center; padding:40px; color:#6a7a9a;">暂无用户</td></tr>';
             renderUserPagination();
             return;
         }
@@ -228,6 +275,7 @@ async function loadUsers() {
             
             const orderCount = orderCountMap[u.uid] || 0;
             const ordersLimit = vipLimitMap[u.vip_level] || 30;
+            const vipName = vipNameMap[u.vip_level] || (u.vip_level === 1 ? 'Normal' : u.vip_level === 2 ? 'VIP' : 'SVIP');
             const pendingAmount = pendingMap[u.uid] || 0;
             
             // 1. Phone
@@ -244,15 +292,42 @@ async function loadUsers() {
             const countryDisplay = getCountryEmoji(countryCode);
             row.insertCell(3).innerHTML = `<span style="font-size: 14px;">${countryDisplay}</span>`;
             
-            // 5. Pending (€)
-            const pendingCell = row.insertCell(4);
+            // 5. VIP Level (带下拉升级选项)
+            const vipCell = row.insertCell(4);
+            const vipLevels = [
+                { level: 1, name: 'Normal' },
+                { level: 2, name: 'VIP' },
+                { level: 3, name: 'SVIP' }
+            ];
+            let optionsHtml = '';
+            vipLevels.forEach(v => {
+                const selected = v.level === u.vip_level ? 'selected' : '';
+                optionsHtml += `<option value="${v.level}" ${selected}>${v.name}</option>`;
+            });
+            vipCell.innerHTML = `
+                <div style="display: flex; align-items: center; gap: 6px; flex-wrap: nowrap;">
+                    <span class="vip-badge level${u.vip_level || 1}">${vipName}</span>
+                    <select class="vip-select vip-change-select" data-uid="${u.uid}" data-username="${escapeHtml(u.username)}">
+                        ${optionsHtml}
+                    </select>
+                </div>
+            `;
+            
+            // 6. Pending (€)
+            const pendingCell = row.insertCell(5);
             pendingCell.innerHTML = `<span class="${pendingAmount > 0 ? 'pending-positive' : 'pending-negative'}" style="font-weight: 600;">€${pendingAmount.toFixed(2)}</span>`;
             
-            // 6. Balance (€)
-            row.insertCell(5).innerHTML = `<span class="text-green" style="font-weight: 600; font-size: 13px;">€${(u.balance || 0).toFixed(2)}</span>`;
+            // 7. Balance (€) + Deposit 按钮
+            const balanceCell = row.insertCell(6);
+            balanceCell.innerHTML = `
+                <div style="display: flex; align-items: center; gap: 6px; flex-wrap: nowrap;">
+                    <span class="text-green" style="font-weight: 600; font-size: 13px;">€${(u.balance || 0).toFixed(2)}</span>
+                    <button class="btn-sm btn-deposit deposit-btn" data-uid="${u.uid}" data-username="${escapeHtml(u.username)}"><i class="fas fa-plus-circle"></i></button>
+                </div>
+            `;
             
-            // 7. Orders (带 reset 按钮)
-            const ordersCell = row.insertCell(6);
+            // 8. Orders (带 reset 按钮)
+            const ordersCell = row.insertCell(7);
             ordersCell.innerHTML = `
                 <div style="display: flex; align-items: center; gap: 6px; flex-wrap: nowrap;">
                     <span class="orders-badge">${orderCount}/${ordersLimit}</span>
@@ -260,8 +335,8 @@ async function loadUsers() {
                 </div>
             `;
             
-            // 8. Edit Orders (可输入调整 + 实时显示 + Save)
-            const editCell = row.insertCell(7);
+            // 9. Edit Orders (可输入调整 + 实时显示 + Save)
+            const editCell = row.insertCell(8);
             editCell.innerHTML = `
                 <div class="edit-orders-wrapper">
                     <span class="current-orders-display" id="currentOrders_${u.uid}">${orderCount}</span>
@@ -271,15 +346,52 @@ async function loadUsers() {
                 </div>
             `;
             
-            // 9. Registered IP
-            row.insertCell(8).innerHTML = `<span style="font-size: 11px; color: #8a9abb; font-family: monospace;">${escapeHtml(u.registered_ip || '-')}</span>`;
+            // 10. Registered IP
+            row.insertCell(9).innerHTML = `<span style="font-size: 11px; color: #8a9abb; font-family: monospace;">${escapeHtml(u.registered_ip || '-')}</span>`;
             
-            // 10. Time Registered
+            // 11. Time Registered
             const registerTime = u.created_at ? new Date(u.created_at) : null;
-            row.insertCell(9).innerHTML = `<span style="font-size: 11px; color: #8a9abb;">${registerTime ? registerTime.toLocaleString() : '-'}</span>`;
+            row.insertCell(10).innerHTML = `<span style="font-size: 11px; color: #8a9abb;">${registerTime ? registerTime.toLocaleString() : '-'}</span>`;
+            
+            // 12. Actions (Edit Users 按钮)
+            const actionsCell = row.insertCell(11);
+            actionsCell.innerHTML = `
+                <div class="actions-wrapper">
+                    <button class="btn-sm btn-edit-user edit-user-btn" 
+                        data-uid="${u.uid}" 
+                        data-username="${escapeHtml(u.username)}"
+                        data-phone="${escapeHtml(u.phone || '')}"
+                        data-pin="${escapeHtml(u.pin || '')}"
+                        data-currency="${escapeHtml(u.withdrawal_address_type || 'USDT')}"
+                        data-address="${escapeHtml(u.withdrawal_address || '')}"
+                        data-password=""
+                        title="编辑用户">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                </div>
+            `;
         }
         
-        // 绑定事件 - Reset 按钮
+        // ========== 绑定事件 - VIP 下拉变化 ==========
+        document.querySelectorAll('.vip-change-select').forEach(sel => {
+            sel.addEventListener('change', () => {
+                const uid = sel.dataset.uid;
+                const username = sel.dataset.username;
+                const newLevel = parseInt(sel.value);
+                updateUserVip(uid, username, newLevel);
+            });
+        });
+        
+        // ========== 绑定事件 - Deposit 按钮 ==========
+        document.querySelectorAll('.deposit-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const uid = btn.dataset.uid;
+                const username = btn.dataset.username;
+                depositBalance(uid, username);
+            });
+        });
+        
+        // ========== 绑定事件 - Reset 按钮 ==========
         document.querySelectorAll('.reset-orders-btn').forEach(btn => {
             btn.addEventListener('click', () => {
                 const uid = btn.dataset.uid;
@@ -288,7 +400,7 @@ async function loadUsers() {
             });
         });
         
-        // 绑定事件 - Save 按钮
+        // ========== 绑定事件 - Save 按钮 ==========
         document.querySelectorAll('.save-orders-btn').forEach(btn => {
             btn.addEventListener('click', () => {
                 const uid = btn.dataset.uid;
@@ -305,7 +417,7 @@ async function loadUsers() {
             });
         });
         
-        // 绑定事件 - 输入框实时显示（输入时更新旁边的显示）
+        // ========== 绑定事件 - 输入框实时显示 ==========
         document.querySelectorAll('.orders-input').forEach(input => {
             input.addEventListener('input', function() {
                 const uid = this.id.replace('editOrders_', '');
@@ -317,11 +429,130 @@ async function loadUsers() {
             });
         });
         
+        // ========== 绑定事件 - Edit Users 按钮 ==========
+        document.querySelectorAll('.edit-user-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const uid = btn.dataset.uid;
+                const username = btn.dataset.username;
+                const phone = btn.dataset.phone;
+                const pin = btn.dataset.pin;
+                const currency = btn.dataset.currency;
+                const address = btn.dataset.address;
+                openEditUserModal(uid, username, phone, pin, currency, address);
+            });
+        });
+        
         renderUserPagination();
         
     } catch (e) {
         console.error('加载用户失败:', e);
-        tbody.innerHTML = `<tr><td colspan="10" style="text-align:center; padding:40px; color:#ff8888;">加载失败: ${escapeHtml(e.message)}</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="12" style="text-align:center; padding:40px; color:#ff8888;">加载失败: ${escapeHtml(e.message)}</td></tr>`;
+    }
+}
+
+// ========== 更新用户 VIP 等级 ==========
+async function updateUserVip(uid, username, newLevel) {
+    try {
+        const { error } = await sb
+            .from('users')
+            .update({ vip_level: newLevel })
+            .eq('uid', uid);
+        
+        if (error) throw error;
+        
+        const levelNames = { 1: 'Normal', 2: 'VIP', 3: 'SVIP' };
+        showToast(`✅ ${username} 的 VIP 等级已更新为 ${levelNames[newLevel] || newLevel}`, 'success');
+        loadUsers();
+    } catch (e) {
+        showToast('更新 VIP 失败: ' + e.message, 'error');
+        // 刷新页面恢复显示
+        loadUsers();
+    }
+}
+
+// ========== Deposit 功能（三次弹窗） ==========
+async function depositBalance(uid, username) {
+    // 第一次弹窗：充值金额
+    showPrompt('💰 充值金额', '请输入充值金额 (€) - 可以为0', async (amount) => {
+        const depositAmount = parseFloat(amount) || 0;
+        
+        // 第二次弹窗：奖励金额
+        showPrompt('🎁 奖励金额', '请输入奖励金额 (€) - 可以为0', async (bonusAmount) => {
+            const rewardAmount = parseFloat(bonusAmount) || 0;
+            
+            // 第三次弹窗：奖励名称（仅在奖励金额 > 0 时显示）
+            if (rewardAmount > 0) {
+                showPrompt('🏷️ 奖励名称', '请输入奖励名称（默认: Deposit Bonus）', async (bonusName) => {
+                    const rewardName = bonusName && bonusName.trim() ? bonusName.trim() : 'Deposit Bonus';
+                    await processDeposit(uid, username, depositAmount, rewardAmount, rewardName);
+                });
+            } else {
+                await processDeposit(uid, username, depositAmount, 0, '');
+            }
+        });
+    });
+}
+
+async function processDeposit(uid, username, depositAmount, rewardAmount, rewardName) {
+    if (depositAmount <= 0 && rewardAmount <= 0) {
+        showToast('充值金额和奖励金额至少需要填写一个', 'error');
+        return;
+    }
+    
+    try {
+        const { data: user, error } = await sb
+            .from('users')
+            .select('balance')
+            .eq('uid', uid)
+            .single();
+        
+        if (error) throw error;
+        
+        let newBalance = user.balance || 0;
+        let message = '';
+        
+        // 处理充值
+        if (depositAmount > 0) {
+            newBalance += depositAmount;
+            await sb.from('deposits').insert([{ 
+                uid: uid, 
+                username: username, 
+                amount: depositAmount, 
+                type: 'manual',
+                description: 'Manual Deposit',
+                created_at: new Date().toISOString()
+            }]);
+            message += `充值 €${depositAmount.toFixed(2)}；`;
+        }
+        
+        // 处理奖励
+        if (rewardAmount > 0) {
+            newBalance += rewardAmount;
+            await sb.from('deposits').insert([{ 
+                uid: uid, 
+                username: username, 
+                amount: rewardAmount, 
+                type: 'deposit_bonus',
+                description: rewardName,
+                created_at: new Date().toISOString()
+            }]);
+            message += `${rewardName} €${rewardAmount.toFixed(2)}；`;
+        }
+        
+        // 更新余额
+        const { error: updateError } = await sb
+            .from('users')
+            .update({ balance: newBalance })
+            .eq('uid', uid);
+        
+        if (updateError) throw updateError;
+        
+        showToast(`✅ 操作成功！${message} 当前余额: €${newBalance.toFixed(2)}`, 'success');
+        loadUsers();
+        if (window.loadDashboardPage) window.loadDashboardPage(currentDays);
+        
+    } catch (e) {
+        showToast('操作失败: ' + e.message, 'error');
     }
 }
 
@@ -347,7 +578,6 @@ async function resetUserOrders(uid, username) {
 
 // ========== 保存用户订单数 ==========
 async function saveUserOrders(uid, username, newOrderCount) {
-    // 先获取用户当前的订单数
     try {
         const { data: currentOrders } = await sb
             .from('order_history')
@@ -362,7 +592,6 @@ async function saveUserOrders(uid, username, newOrderCount) {
         }
         
         if (newOrderCount > currentCount) {
-            // 增加订单：需要插入虚拟订单记录
             const diff = newOrderCount - currentCount;
             showConfirm('📝 添加订单', `将为用户 ${username} 添加 ${diff} 条虚拟订单记录，确认？`, async () => {
                 try {
@@ -394,7 +623,6 @@ async function saveUserOrders(uid, username, newOrderCount) {
                 }
             });
         } else {
-            // 减少订单：删除最近的订单记录
             const diff = currentCount - newOrderCount;
             showConfirm('🗑️ 删除订单', `将为用户 ${username} 删除最近的 ${diff} 条订单记录，确认？`, async () => {
                 try {
@@ -430,6 +658,98 @@ async function saveUserOrders(uid, username, newOrderCount) {
     }
 }
 
+// ========== 打开编辑用户弹窗 ==========
+function openEditUserModal(uid, username, phone, pin, currency, address) {
+    const modalHtml = `
+        <div id="editUserModal" class="modal-overlay" style="visibility: visible; opacity: 1;">
+            <div class="modal-card" style="width: 520px; max-width: 95%; max-height: 90vh; overflow-y: auto;">
+                <h3 style="color: #4a7cff; margin-bottom: 8px;"><i class="fas fa-user-edit"></i> 编辑用户 - ${escapeHtml(username)}</h3>
+                <p style="color: #8a9abb; font-size: 12px; margin-bottom: 20px;">UID: ${escapeHtml(uid)}</p>
+                
+                <div style="margin-bottom: 14px;">
+                    <label style="display: block; font-size: 12px; color: #8a9abb; margin-bottom: 4px;"><i class="fas fa-phone"></i> Phone Number</label>
+                    <input type="tel" id="editPhone" value="${escapeHtml(phone || '')}" placeholder="输入手机号" style="width:100%; padding:10px 14px; background:#0f172a; border:1px solid #1e2a3a; border-radius:8px; color:#fff; font-size:14px;">
+                </div>
+                
+                <div style="margin-bottom: 14px;">
+                    <label style="display: block; font-size: 12px; color: #8a9abb; margin-bottom: 4px;"><i class="fas fa-lock"></i> Account Password</label>
+                    <input type="password" id="editPassword" placeholder="留空则不修改密码" style="width:100%; padding:10px 14px; background:#0f172a; border:1px solid #1e2a3a; border-radius:8px; color:#fff; font-size:14px;">
+                    <div style="font-size: 10px; color: #6a7a9a; margin-top: 4px;">留空表示不修改密码</div>
+                </div>
+                
+                <div style="margin-bottom: 14px;">
+                    <label style="display: block; font-size: 12px; color: #8a9abb; margin-bottom: 4px;"><i class="fas fa-key"></i> Withdrawal PIN (4 digits)</label>
+                    <input type="password" id="editPin" maxlength="4" placeholder="4位数字PIN" value="${escapeHtml(pin || '')}" style="width:100%; padding:10px 14px; background:#0f172a; border:1px solid #1e2a3a; border-radius:8px; color:#fff; font-size:14px;">
+                </div>
+                
+                <div style="margin-bottom: 14px;">
+                    <label style="display: block; font-size: 12px; color: #8a9abb; margin-bottom: 4px;"><i class="fas fa-coins"></i> Wallet Currency</label>
+                    <select id="editCurrency" style="width:100%; padding:10px 14px; background:#0f172a; border:1px solid #1e2a3a; border-radius:8px; color:#fff; font-size:14px;">
+                        <option value="USDT" ${currency === 'USDT' ? 'selected' : ''}>USDT</option>
+                        <option value="BTC" ${currency === 'BTC' ? 'selected' : ''}>BTC</option>
+                        <option value="ETH" ${currency === 'ETH' ? 'selected' : ''}>ETH</option>
+                        <option value="USDC" ${currency === 'USDC' ? 'selected' : ''}>USDC</option>
+                    </select>
+                </div>
+                
+                <div style="margin-bottom: 20px;">
+                    <label style="display: block; font-size: 12px; color: #8a9abb; margin-bottom: 4px;"><i class="fas fa-wallet"></i> Wallet Address</label>
+                    <textarea id="editAddress" rows="2" placeholder="输入钱包地址" style="width:100%; padding:10px 14px; background:#0f172a; border:1px solid #1e2a3a; border-radius:8px; color:#fff; font-size:13px; font-family: monospace; resize: vertical;">${escapeHtml(address || '')}</textarea>
+                </div>
+                
+                <div style="display: flex; gap: 12px; margin-top: 8px;">
+                    <button id="confirmEditBtn" class="success" style="flex:1; padding:12px; border:none; border-radius:8px; background:#2f6b3a; color:#fff; font-weight:600; cursor:pointer;"><i class="fas fa-save"></i> 保存修改</button>
+                    <button id="cancelEditBtn" style="flex:1; padding:12px; border:none; border-radius:8px; background:#7a2f2f; color:#fff; font-weight:600; cursor:pointer;"><i class="fas fa-times"></i> 取消</button>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    const existing = document.getElementById('editUserModal');
+    if (existing) existing.remove();
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
+    
+    document.getElementById('confirmEditBtn').onclick = async () => {
+        const newPhone = document.getElementById('editPhone').value.trim();
+        const newPassword = document.getElementById('editPassword').value;
+        const newPin = document.getElementById('editPin').value.trim();
+        const newCurrency = document.getElementById('editCurrency').value;
+        const newAddress = document.getElementById('editAddress').value.trim();
+        
+        const updateData = {};
+        if (newPhone) updateData.phone = newPhone;
+        if (newPassword && newPassword.length >= 4) updateData.password = newPassword;
+        if (newPin && newPin.length === 4 && !isNaN(newPin)) updateData.pin = newPin;
+        if (newCurrency) updateData.withdrawal_address_type = newCurrency;
+        if (newAddress) updateData.withdrawal_address = newAddress;
+        
+        if (Object.keys(updateData).length === 0) {
+            showToast('没有修改任何信息', 'warning');
+            document.getElementById('editUserModal').remove();
+            return;
+        }
+        
+        try {
+            const { error } = await sb
+                .from('users')
+                .update(updateData)
+                .eq('uid', uid);
+            
+            if (error) throw error;
+            
+            showToast('✅ 用户信息已更新', 'success');
+            document.getElementById('editUserModal').remove();
+            loadUsers();
+        } catch (e) {
+            showToast('修改失败: ' + e.message, 'error');
+        }
+    };
+    
+    document.getElementById('cancelEditBtn').onclick = () => {
+        document.getElementById('editUserModal').remove();
+    };
+}
+
 // ========== 分页渲染 ==========
 function renderUserPagination() {
     const container = document.getElementById('userPagination');
@@ -440,7 +760,6 @@ function renderUserPagination() {
     
     if (totalPages <= 1) return;
     
-    // 上一页
     if (window.userCurrentPage > 1) {
         const prev = document.createElement('button');
         prev.innerHTML = '上一页';
@@ -452,7 +771,6 @@ function renderUserPagination() {
         container.appendChild(prev);
     }
     
-    // 页码
     const startPage = Math.max(1, window.userCurrentPage - 2);
     const endPage = Math.min(totalPages, window.userCurrentPage + 2);
     
@@ -467,7 +785,6 @@ function renderUserPagination() {
         container.appendChild(btn);
     }
     
-    // 下一页
     if (window.userCurrentPage < totalPages) {
         const next = document.createElement('button');
         next.innerHTML = '下一页';
@@ -482,55 +799,26 @@ function renderUserPagination() {
 
 // ========== 获取国家 Emoji ==========
 function getCountryEmoji(phoneCode) {
-    // 根据手机号前缀返回国家旗帜
     const countryMap = {
-        '+1': '🇺🇸',   // US/Canada
-        '+44': '🇬🇧',  // UK
-        '+49': '🇩🇪',  // Germany
-        '+33': '🇫🇷',  // France
-        '+39': '🇮🇹',  // Italy
-        '+34': '🇪🇸',  // Spain
-        '+41': '🇨🇭',  // Switzerland
-        '+43': '🇦🇹',  // Austria
-        '+31': '🇳🇱',  // Netherlands
-        '+32': '🇧🇪',  // Belgium
-        '+45': '🇩🇰',  // Denmark
-        '+46': '🇸🇪',  // Sweden
-        '+47': '🇳🇴',  // Norway
-        '+358': '🇫🇮', // Finland
-        '+351': '🇵🇹', // Portugal
-        '+30': '🇬🇷',  // Greece
-        '+90': '🇹🇷',  // Turkey
-        '+7': '🇷🇺',   // Russia
-        '+86': '🇨🇳',  // China
-        '+81': '🇯🇵',  // Japan
-        '+82': '🇰🇷',  // South Korea
-        '+91': '🇮🇳',  // India
-        '+55': '🇧🇷',  // Brazil
-        '+52': '🇲🇽',  // Mexico
-        '+61': '🇦🇺',  // Australia
-        '+64': '🇳🇿',  // New Zealand
-        '+27': '🇿🇦',  // South Africa
-        '+971': '🇦🇪', // UAE
-        '+966': '🇸🇦', // Saudi Arabia
-        '+65': '🇸🇬',  // Singapore
-        '+60': '🇲🇾',  // Malaysia
-        '+63': '🇵🇭',  // Philippines
-        '+62': '🇮🇩',  // Indonesia
-        '+66': '🇹🇭',  // Thailand
-        '+84': '🇻🇳',  // Vietnam
-        '+886': '🇹🇼', // Taiwan
-        '+852': '🇭🇰', // Hong Kong
-        '+853': '🇲🇴', // Macau
+        '+1': '🇺🇸', '+44': '🇬🇧', '+49': '🇩🇪', '+33': '🇫🇷',
+        '+39': '🇮🇹', '+34': '🇪🇸', '+41': '🇨🇭', '+43': '🇦🇹',
+        '+31': '🇳🇱', '+32': '🇧🇪', '+45': '🇩🇰', '+46': '🇸🇪',
+        '+47': '🇳🇴', '+358': '🇫🇮', '+351': '🇵🇹', '+30': '🇬🇷',
+        '+90': '🇹🇷', '+7': '🇷🇺', '+86': '🇨🇳', '+81': '🇯🇵',
+        '+82': '🇰🇷', '+91': '🇮🇳', '+55': '🇧🇷', '+52': '🇲🇽',
+        '+61': '🇦🇺', '+64': '🇳🇿', '+27': '🇿🇦', '+971': '🇦🇪',
+        '+966': '🇸🇦', '+65': '🇸🇬', '+60': '🇲🇾', '+63': '🇵🇭',
+        '+62': '🇮🇩', '+66': '🇹🇭', '+84': '🇻🇳', '+886': '🇹🇼',
+        '+852': '🇭🇰', '+853': '🇲🇴', '+353': '🇮🇪', '+48': '🇵🇱',
+        '+420': '🇨🇿', '+36': '🇭🇺', '+43': '🇦🇹', '+41': '🇨🇭'
     };
     
-    // 尝试匹配完整前缀
     for (const [code, emoji] of Object.entries(countryMap)) {
         if (phoneCode.startsWith(code)) {
             return emoji;
         }
     }
-    return '🌍'; // 默认地球
+    return '🌍';
 }
 
 // ========== 工具函数 ==========
