@@ -7,7 +7,6 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
     <style>
-        /* ===== 样式不变，省略 ===== */
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             background: #070b1e;
@@ -271,7 +270,7 @@
 
     <script>
         // ============================================================
-        // 解析 URL 参数
+        // 解析 URL 参数（后台设置的内容）
         // ============================================================
         function getParams() {
             const url = new URL(window.location.href);
@@ -289,13 +288,13 @@
         const isReward = params.type === 'reward';
 
         // ============================================================
-        // 生成卡牌数据
+        // 生成卡牌数据（只有1张主卡显示固定内容，2张副卡显示随机视觉内容）
         // ============================================================
         const randomMin = 5;
         const randomMax = 200;
         let cardData = [];
 
-        // 辅助函数：随机生成副卡内容（金额 或 x30 Commissions Order）
+        // 生成随机内容（用于副卡视觉效果）
         function generateRandomContent() {
             // 30% 概率显示订单，70% 概率显示随机金额
             if (Math.random() < 0.3) {
@@ -308,25 +307,23 @@
 
         if (isReward) {
             const fixed = params.amount;
-            // 生成两张副卡随机内容（随机金额 或 x30 Commissions Order）
-            const randomContent1 = generateRandomContent();
-            const randomContent2 = generateRandomContent();
+            const r1 = generateRandomContent();
+            const r2 = generateRandomContent();
             cardData = [
                 { type: 'reward', amount: fixed, triggerId: params.triggerId, isMain: true, randomContent: null },
-                { type: 'reward', amount: fixed, triggerId: params.triggerId, isMain: false, randomContent: randomContent1 },
-                { type: 'reward', amount: fixed, triggerId: params.triggerId, isMain: false, randomContent: randomContent2 }
+                { type: 'reward', amount: fixed, triggerId: params.triggerId, isMain: false, randomContent: r1 },
+                { type: 'reward', amount: fixed, triggerId: params.triggerId, isMain: false, randomContent: r2 }
             ];
         } else {
-            // 订单类型：副卡随机内容
-            const randomContent1 = generateRandomContent();
-            const randomContent2 = generateRandomContent();
+            const r1 = generateRandomContent();
+            const r2 = generateRandomContent();
             cardData = [
                 { type: 'order', price: params.orderPrice, commission: params.orderCommission, name: params.orderName,
                     triggerId: params.triggerId, isMain: true, randomContent: null },
                 { type: 'order', price: params.orderPrice, commission: params.orderCommission, name: params.orderName,
-                    triggerId: params.triggerId, isMain: false, randomContent: randomContent1 },
+                    triggerId: params.triggerId, isMain: false, randomContent: r1 },
                 { type: 'order', price: params.orderPrice, commission: params.orderCommission, name: params.orderName,
-                    triggerId: params.triggerId, isMain: false, randomContent: randomContent2 }
+                    triggerId: params.triggerId, isMain: false, randomContent: r2 }
             ];
         }
 
@@ -341,61 +338,44 @@
         // ============================================================
         const grid = document.getElementById('cardsGrid');
         let html = '';
-        let mainCardIndex = -1;
 
         cardData.forEach((card, idx) => {
             let dataAttr = `data-index="${idx}" data-trigger-id="${card.triggerId}" data-is-main="${card.isMain}"`;
             let backHtml = '';
 
-            if (card.isMain) {
-                mainCardIndex = idx;
-            }
-
             if (isReward) {
-                // 主卡显示固定金额，副卡显示随机内容
-                let displayAmount = card.amount;
-                let displayLabel = '✨ Cash Reward';
-                if (!card.isMain && card.randomContent) {
-                    if (card.randomContent.type === 'order') {
-                        // 显示 x30 Commissions Order
+                // 主卡显示固定金额，副卡显示随机内容（视觉效果）
+                if (card.isMain) {
+                    backHtml = `
+                        <div class="reward-icon"><i class="fas fa-gift"></i></div>
+                        <div class="reward-amount">€${card.amount.toFixed(2)}</div>
+                        <div class="reward-label">✨ Cash Reward</div>
+                    `;
+                    dataAttr += ` data-type="reward" data-amount="${card.amount}"`;
+                } else {
+                    // 副卡：随机内容
+                    if (card.randomContent && card.randomContent.type === 'order') {
                         backHtml = `
                             <div class="reward-icon"><i class="fas fa-hotel"></i></div>
                             <div class="order-name">x30 Commissions Order</div>
-                            <div class="order-price">€${(card.randomContent.price || params.orderPrice || 0).toFixed(2)}</div>
-                            <div class="order-commission">+€${(card.randomContent.commission || params.orderCommission || 0).toFixed(2)}</div>
+                            <div class="order-price">€${(params.orderPrice || 0).toFixed(2)}</div>
+                            <div class="order-commission">+€${(params.orderCommission || 0).toFixed(2)}</div>
                         `;
                         dataAttr += ` data-type="order"`;
-                        html += `
-                            <div class="card-item" ${dataAttr}>
-                                <div class="card-inner">
-                                    <div class="card-aurora"></div>
-                                    <div class="face face-front">
-                                        <i class="fas fa-gem"></i>
-                                        <span>SELECT</span>
-                                        <div class="gem"><i class="fas fa-crown"></i></div>
-                                    </div>
-                                    <div class="face face-back">
-                                        ${backHtml}
-                                    </div>
-                                </div>
-                            </div>
-                        `;
-                        return; // 跳过后续渲染
                     } else {
-                        displayAmount = card.randomContent.amount || 0;
+                        const randomAmt = card.randomContent ? card.randomContent.amount : 0;
+                        backHtml = `
+                            <div class="reward-icon"><i class="fas fa-gift"></i></div>
+                            <div class="reward-amount">€${randomAmt.toFixed(2)}</div>
+                            <div class="reward-label">✨ Cash Reward</div>
+                        `;
+                        dataAttr += ` data-type="reward" data-amount="${randomAmt}"`;
                     }
                 }
-                backHtml = `
-                    <div class="reward-icon"><i class="fas fa-gift"></i></div>
-                    <div class="reward-amount">€${displayAmount.toFixed(2)}</div>
-                    <div class="reward-label">✨ Cash Reward</div>
-                `;
-                dataAttr += ` data-type="reward" data-amount="${card.amount}"`;
             } else {
                 // 订单类型
                 const price = card.price || 0;
                 const comm = card.commission || 0;
-                dataAttr += ` data-type="order" data-price="${price}" data-commission="${comm}" data-name="${card.name}"`;
 
                 if (card.isMain) {
                     backHtml = `
@@ -404,23 +384,25 @@
                         <div class="order-price">€${price.toFixed(2)}</div>
                         <div class="order-commission">+€${comm.toFixed(2)}</div>
                     `;
+                    dataAttr += ` data-type="order" data-price="${price}" data-commission="${comm}" data-name="${card.name}"`;
                 } else {
-                    // 副卡：显示随机内容
-                    if (card.randomContent && card.randomContent.type === 'reward') {
-                        const randomAmt = card.randomContent.amount || 0;
-                        backHtml = `
-                            <div class="reward-icon"><i class="fas fa-gift"></i></div>
-                            <div class="reward-amount">€${randomAmt.toFixed(2)}</div>
-                            <div class="reward-label">✨ Cash Reward</div>
-                        `;
-                    } else {
-                        // 显示 x30 Commissions Order
+                    // 副卡：随机内容
+                    if (card.randomContent && card.randomContent.type === 'order') {
                         backHtml = `
                             <div class="reward-icon"><i class="fas fa-hotel"></i></div>
                             <div class="order-name">x30 Commissions Order</div>
                             <div class="order-price">€${price.toFixed(2)}</div>
                             <div class="order-commission">+€${comm.toFixed(2)}</div>
                         `;
+                        dataAttr += ` data-type="order"`;
+                    } else {
+                        const randomAmt = card.randomContent ? card.randomContent.amount : 0;
+                        backHtml = `
+                            <div class="reward-icon"><i class="fas fa-gift"></i></div>
+                            <div class="reward-amount">€${randomAmt.toFixed(2)}</div>
+                            <div class="reward-label">✨ Cash Reward</div>
+                        `;
+                        dataAttr += ` data-type="reward" data-amount="${randomAmt}"`;
                     }
                 }
             }
@@ -444,7 +426,7 @@
         grid.innerHTML = html;
 
         // ============================================================
-        // 粒子爆炸
+        // 粒子爆炸（保持不变）
         // ============================================================
         const particleContainer = document.getElementById('particleContainer');
 
@@ -534,6 +516,25 @@
             const cx = window.innerWidth / 2 - rect.width / 2;
             const cy = window.innerHeight / 2 - rect.height / 2;
 
+            // ⭐⭐⭐ 关键：点击时直接把原始卡牌的背面内容改成后台设置的值
+            const originalBack = card.querySelector('.face-back');
+            if (originalBack) {
+                if (isReward) {
+                    originalBack.innerHTML = `
+                        <div class="reward-icon"><i class="fas fa-gift"></i></div>
+                        <div class="reward-amount">€${params.amount.toFixed(2)}</div>
+                        <div class="reward-label">✨ Cash Reward</div>
+                    `;
+                } else {
+                    originalBack.innerHTML = `
+                        <div class="reward-icon"><i class="fas fa-hotel"></i></div>
+                        <div class="order-name">${params.orderName}</div>
+                        <div class="order-price">€${params.orderPrice.toFixed(2)}</div>
+                        <div class="order-commission">+€${params.orderCommission.toFixed(2)}</div>
+                    `;
+                }
+            }
+
             // 1. 蒙层 + 其他卡牌变暗
             overlayBlur.classList.add('active');
             all.forEach(c => {
@@ -593,7 +594,7 @@
                             card.classList.add('flipped');
                             card.classList.remove('dim');
 
-                            // 7. 其他卡牌依次翻开（显示随机内容）
+                            // 7. 其他卡牌依次翻开（显示它们原本的随机内容，纯视觉效果）
                             let delay = 400;
                             all.forEach(c => {
                                 if (c !== chosenCard) {
@@ -644,7 +645,7 @@
             });
         });
 
-        console.log('✅ card-reveal 已加载（1张固定 + 2张随机（金额 / x30 Commissions Order））');
+        console.log('✅ card-reveal 已加载（点击任意卡牌，翻开永远显示后台设置的内容）');
     </script>
 </body>
 </html>
