@@ -38,7 +38,7 @@
             position: relative;
             width: 100%;
             max-width: 900px;
-            margin: 0 auto 24px;
+            margin: 0 auto 16px;
             background: rgba(0,0,0,0.2);
             border-radius: 16px;
             overflow: hidden;
@@ -49,7 +49,7 @@
             align-items: center;
             justify-content: center;
             width: 100%;
-            padding-bottom: 143.11%; /* 1288/900 = 1.4311 */
+            padding-bottom: 143.11%;
             background: rgba(20, 30, 55, 0.3);
             color: #6a7a9a;
             font-size: 14px;
@@ -79,6 +79,48 @@
             width: 100%;
             height: 100%;
             object-fit: cover;
+        }
+        /* 多图网格 */
+        .content-card .image-grid-container {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        .content-card .image-grid-container .image-item {
+            position: relative;
+            width: 100%;
+            max-width: 900px;
+            margin: 0 auto;
+            background: rgba(0,0,0,0.2);
+            border-radius: 16px;
+            overflow: hidden;
+            border: 1px solid rgba(201, 176, 149, 0.1);
+        }
+        .content-card .image-grid-container .image-item .img-wrapper {
+            position: relative;
+            width: 100%;
+            padding-bottom: 143.11%;
+            background: rgba(20, 30, 55, 0.3);
+        }
+        .content-card .image-grid-container .image-item .img-wrapper img {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .content-card .image-grid-container .image-item .image-number {
+            position: absolute;
+            bottom: 8px;
+            right: 12px;
+            background: rgba(0,0,0,0.6);
+            padding: 2px 12px;
+            border-radius: 12px;
+            font-size: 11px;
+            color: #a0a8c0;
+            z-index: 2;
         }
         .content-card .content-text {
             color: #c0c8e0;
@@ -137,6 +179,9 @@
         .btn-upgrade { background: rgba(201,176,149,0.15); padding: 10px 20px; border-radius: 40px; text-decoration: none; color: #C9B095; font-weight: 600; font-size: 14px; display: inline-flex; align-items: center; gap: 8px; border: 1px solid rgba(201,176,149,0.3); }
         @media (max-width: 768px) {
             .content-card { padding: 20px; }
+            .content-card .image-grid-container .image-item {
+                border-radius: 12px;
+            }
             .content-card .content-image-wrapper {
                 border-radius: 12px;
             }
@@ -249,20 +294,42 @@
                 if (error) throw error;
 
                 if (data) {
-                    // 构建图片 HTML（使用 900x1288 比例）
-                    let imageHtml = '';
+                    // 解析图片数组
+                    let images = [];
                     if (data.image_url) {
-                        imageHtml = `
-                            <div class="content-image-wrapper">
-                                <img src="${data.image_url}" class="content-image" alt="Company Profile" onerror="this.parentElement.innerHTML='<div class=\\'image-placeholder\\'><i class=\\'fas fa-building\\'></i><span>Image not available</span></div>'">
-                            </div>
-                        `;
+                        try {
+                            const parsed = JSON.parse(data.image_url);
+                            if (Array.isArray(parsed)) {
+                                images = parsed;
+                            } else {
+                                images = [data.image_url];
+                            }
+                        } catch (e) {
+                            images = data.image_url ? [data.image_url] : [];
+                        }
+                    }
+
+                    // 构建多图 HTML
+                    let imagesHtml = '';
+                    if (images.length > 0) {
+                        imagesHtml = `<div class="image-grid-container">`;
+                        images.forEach((url, index) => {
+                            imagesHtml += `
+                                <div class="image-item">
+                                    <div class="img-wrapper">
+                                        <img src="${url}" alt="Company Image ${index + 1}" onerror="this.parentElement.innerHTML='<div class=\\'image-placeholder\\'><i class=\\'fas fa-building\\'></i><span>Image ${index + 1} not available</span></div>'">
+                                        <span class="image-number">${index + 1} / ${images.length}</span>
+                                    </div>
+                                </div>
+                            `;
+                        });
+                        imagesHtml += `</div>`;
                     } else {
-                        imageHtml = `
+                        imagesHtml = `
                             <div class="content-image-wrapper">
                                 <div class="image-placeholder">
                                     <i class="fas fa-building"></i>
-                                    <span>No image uploaded</span>
+                                    <span>No images uploaded</span>
                                 </div>
                             </div>
                         `;
@@ -270,7 +337,7 @@
 
                     container.innerHTML = `
                         <div class="content-card">
-                            ${imageHtml}
+                            ${imagesHtml}
                             <div class="content-text">
                                 ${data.content || '<p>Content coming soon...</p>'}
                             </div>

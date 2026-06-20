@@ -6,6 +6,10 @@ let currentContentTab = 'events';
 let uploadingImage = false;
 let currentImageUrl = '';
 
+// 存储当前编辑的图片列表
+let contractImages = [];
+let companyImages = [];
+
 async function loadContentPage() {
     const container = document.getElementById('page_content');
     if (!container) return;
@@ -231,6 +235,70 @@ async function loadContentPage() {
             border: 1px solid rgba(74,124,255,0.2);
             margin-top: 8px;
         }
+        .image-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 12px;
+            margin-top: 12px;
+        }
+        .image-grid-item {
+            position: relative;
+            border-radius: 8px;
+            overflow: hidden;
+            border: 1px solid rgba(74,124,255,0.15);
+            background: rgba(0,0,0,0.2);
+        }
+        .image-grid-item img {
+            width: 100%;
+            height: 120px;
+            object-fit: cover;
+            display: block;
+        }
+        .image-grid-item .delete-image-btn {
+            position: absolute;
+            top: 4px;
+            right: 4px;
+            background: rgba(122, 47, 47, 0.9);
+            border: none;
+            border-radius: 50%;
+            width: 28px;
+            height: 28px;
+            color: #fff;
+            cursor: pointer;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: 0.2s;
+        }
+        .image-grid-item .delete-image-btn:hover {
+            background: #9b3f3f;
+            transform: scale(1.1);
+        }
+        .image-grid-item .image-index {
+            position: absolute;
+            bottom: 4px;
+            left: 4px;
+            background: rgba(0,0,0,0.6);
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 10px;
+            color: #8a9abb;
+        }
+        .no-images-placeholder {
+            text-align: center;
+            padding: 30px;
+            color: #6a7a9a;
+            font-size: 13px;
+            border: 1px dashed rgba(74,124,255,0.15);
+            border-radius: 8px;
+        }
+        .no-images-placeholder i {
+            font-size: 32px;
+            display: block;
+            margin-bottom: 8px;
+            opacity: 0.5;
+        }
         @media (max-width: 768px) {
             .tab-content-btn {
                 font-size: 11px;
@@ -242,6 +310,9 @@ async function loadContentPage() {
             }
             .image-upload-row {
                 flex-direction: column;
+            }
+            .image-grid {
+                grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
             }
         }
     `;
@@ -701,7 +772,7 @@ function openEditLegalModal(page) {
 }
 
 // ============================================================
-// 3. 雇佣合同管理（新功能）
+// 3. 雇佣合同管理（多图 + 删除功能）
 // ============================================================
 let contractData = null;
 
@@ -717,12 +788,43 @@ async function loadContractContent() {
     }
     
     contractData = data || null;
+    // 解析图片列表
+    if (contractData?.image_url) {
+        try {
+            contractImages = JSON.parse(contractData.image_url);
+            if (!Array.isArray(contractImages)) {
+                contractImages = [contractImages];
+            }
+        } catch (e) {
+            contractImages = contractData.image_url ? [contractData.image_url] : [];
+        }
+    } else {
+        contractImages = [];
+    }
     renderContractContent();
 }
 
 function renderContractContent() {
     const container = document.getElementById('contractPanel');
     if (!container) return;
+    
+    // 构建图片网格 HTML
+    let imagesHtml = '';
+    if (contractImages.length > 0) {
+        imagesHtml = `<div class="image-grid">`;
+        contractImages.forEach((url, index) => {
+            imagesHtml += `
+                <div class="image-grid-item">
+                    <img src="${url}" onclick="window.open('${url}','_blank')" onerror="this.style.display='none'">
+                    <button class="delete-image-btn" onclick="deleteContractImage(${index})" title="删除图片"><i class="fas fa-times"></i></button>
+                    <span class="image-index">#${index + 1}</span>
+                </div>
+            `;
+        });
+        imagesHtml += `</div>`;
+    } else {
+        imagesHtml = `<div class="no-images-placeholder"><i class="fas fa-image"></i>暂无图片，请上传</div>`;
+    }
     
     container.innerHTML = `
         <div style="margin-top: 16px;">
@@ -731,17 +833,17 @@ function renderContractContent() {
                 <p style="color: #8a9abb; font-size: 13px; margin-bottom: 16px;">上传合同图片和编辑合同内容，用户将在前端 "Employment Contract" 页面查看。</p>
                 
                 <div style="margin-bottom: 16px;">
-                    <label>合同图片</label>
+                    <label>合同图片（支持多张）</label>
                     <div class="image-upload-row">
-                        <input type="text" id="contractImageUrl" value="${escapeHtml(contractData?.image_url || '')}" placeholder="输入图片 URL" style="flex:1; background:#0f172a; border:1px solid #1e2a3a; border-radius:8px; padding:10px; color:#fff;">
                         <div class="upload-btn-area" id="contractUploadArea">
                             <i class="fas fa-cloud-upload-alt" style="color: #4a7cff;"></i>
                             <span style="color: #8a9abb; font-size: 12px;">上传图片</span>
                             <input type="file" id="contractFileInput" accept="image/*" style="display:none;">
                         </div>
+                        <span style="font-size: 11px; color: #6a7a9a;">已上传 ${contractImages.length} 张</span>
                     </div>
-                    <div id="contractPreviewContainer" style="margin-top: 8px;">
-                        ${contractData?.image_url ? `<img src="${contractData.image_url}" class="image-preview-thumb" onclick="window.open('${contractData.image_url}','_blank')">` : ''}
+                    <div id="contractImageGrid">
+                        ${imagesHtml}
                     </div>
                 </div>
                 
@@ -768,65 +870,147 @@ function renderContractContent() {
         fileInput.addEventListener('change', async (e) => {
             const file = e.target.files[0];
             if (!file) return;
-            await uploadContentImage(file, 'contract');
+            await uploadContractImage(file);
+            fileInput.value = '';
         });
     }
     
-    // 保存 - 雇佣合同
-document.getElementById('saveContractBtn').addEventListener('click', async () => {
-    const imageUrl = document.getElementById('contractImageUrl').value.trim();
-    const content = document.getElementById('contractContent').value;
+    // 保存
+    document.getElementById('saveContractBtn').addEventListener('click', async () => {
+        const content = document.getElementById('contractContent').value;
+        // 将图片数组保存为 JSON 字符串
+        const imageUrlsJson = JSON.stringify(contractImages);
+        
+        try {
+            const { data: existing } = await sb
+                .from('system_content')
+                .select('id')
+                .eq('type', 'contract')
+                .single();
+            
+            let error;
+            if (existing) {
+                const { error: updateError } = await sb
+                    .from('system_content')
+                    .update({
+                        title: 'Employment Contract',
+                        content: content,
+                        image_url: imageUrlsJson,
+                        updated_at: new Date().toISOString()
+                    })
+                    .eq('id', existing.id);
+                error = updateError;
+            } else {
+                const { error: insertError } = await sb
+                    .from('system_content')
+                    .insert({
+                        type: 'contract',
+                        title: 'Employment Contract',
+                        content: content,
+                        image_url: imageUrlsJson,
+                        created_at: new Date().toISOString(),
+                        updated_at: new Date().toISOString()
+                    });
+                error = insertError;
+            }
+            
+            if (error) {
+                showToast('保存失败: ' + error.message, 'error');
+            } else {
+                showToast('✅ 合同已保存', 'success');
+                await loadContractContent();
+            }
+        } catch (e) {
+            showToast('保存失败: ' + e.message, 'error');
+        }
+    });
+    
+    // 预览
+    document.getElementById('previewContractBtn').addEventListener('click', () => {
+        const content = document.getElementById('contractContent').value;
+        const panel = document.getElementById('contractPreviewPanel');
+        panel.style.display = 'block';
+        panel.innerHTML = content || '<em style="color:#6a7a9a;">暂无内容</em>';
+    });
+}
+
+// 删除合同图片
+window.deleteContractImage = function(index) {
+    showConfirm('确认删除', '确定要删除这张图片吗？', async () => {
+        contractImages.splice(index, 1);
+        // 重新渲染
+        renderContractContent();
+        // 自动保存
+        const content = document.getElementById('contractContent')?.value || '';
+        const imageUrlsJson = JSON.stringify(contractImages);
+        
+        try {
+            const { data: existing } = await sb
+                .from('system_content')
+                .select('id')
+                .eq('type', 'contract')
+                .single();
+            
+            if (existing) {
+                await sb
+                    .from('system_content')
+                    .update({
+                        content: content,
+                        image_url: imageUrlsJson,
+                        updated_at: new Date().toISOString()
+                    })
+                    .eq('id', existing.id);
+                showToast('图片已删除', 'success');
+            }
+        } catch (e) {
+            console.error('删除图片保存失败:', e);
+        }
+    });
+};
+
+// 上传合同图片
+async function uploadContractImage(file) {
+    if (!file.type.startsWith('image/')) {
+        showToast('请选择图片文件', 'error');
+        return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+        showToast('图片大小不能超过 5MB', 'error');
+        return;
+    }
+    
+    showToast('上传中...', 'info');
+    
+    const fileName = `contract/${Date.now()}_${file.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
+    const storageBucket = 'content-images';
     
     try {
-        // 先检查是否存在
-        const { data: existing } = await sb
-            .from('system_content')
-            .select('id')
-            .eq('type', 'contract')
-            .single();
+        const response = await fetch(`${SUPABASE_URL}/storage/v1/object/${storageBucket}/${fileName}`, {
+            method: 'POST',
+            headers: {
+                'apikey': SUPABASE_KEY,
+                'Authorization': `Bearer ${SUPABASE_KEY}`
+            },
+            body: file
+        });
         
-        let error;
-        if (existing) {
-            // 更新
-            const { error: updateError } = await sb
-                .from('system_content')
-                .update({
-                    title: 'Employment Contract',
-                    content: content,
-                    image_url: imageUrl,
-                    updated_at: new Date().toISOString()
-                })
-                .eq('id', existing.id);
-            error = updateError;
-        } else {
-            // 插入
-            const { error: insertError } = await sb
-                .from('system_content')
-                .insert({
-                    type: 'contract',
-                    title: 'Employment Contract',
-                    content: content,
-                    image_url: imageUrl,
-                    created_at: new Date().toISOString(),
-                    updated_at: new Date().toISOString()
-                });
-            error = insertError;
+        if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(errorText);
         }
         
-        if (error) {
-            showToast('保存失败: ' + error.message, 'error');
-        } else {
-            showToast('✅ 合同已保存', 'success');
-            await loadContractContent();
-        }
-    } catch (e) {
-        showToast('保存失败: ' + e.message, 'error');
+        const publicUrl = `${SUPABASE_URL}/storage/v1/object/public/${storageBucket}/${fileName}`;
+        contractImages.push(publicUrl);
+        showToast('图片上传成功！', 'success');
+        renderContractContent();
+    } catch (error) {
+        console.error('上传失败:', error);
+        showToast('上传失败: ' + error.message, 'error');
     }
-});
 }
 
 // ============================================================
-// 4. 公司简介管理（新功能）
+// 4. 公司简介管理（多图 + 删除功能）
 // ============================================================
 let companyData = null;
 
@@ -842,12 +1026,43 @@ async function loadCompanyContent() {
     }
     
     companyData = data || null;
+    // 解析图片列表
+    if (companyData?.image_url) {
+        try {
+            companyImages = JSON.parse(companyData.image_url);
+            if (!Array.isArray(companyImages)) {
+                companyImages = [companyImages];
+            }
+        } catch (e) {
+            companyImages = companyData.image_url ? [companyData.image_url] : [];
+        }
+    } else {
+        companyImages = [];
+    }
     renderCompanyContent();
 }
 
 function renderCompanyContent() {
     const container = document.getElementById('companyPanel');
     if (!container) return;
+    
+    // 构建图片网格 HTML
+    let imagesHtml = '';
+    if (companyImages.length > 0) {
+        imagesHtml = `<div class="image-grid">`;
+        companyImages.forEach((url, index) => {
+            imagesHtml += `
+                <div class="image-grid-item">
+                    <img src="${url}" onclick="window.open('${url}','_blank')" onerror="this.style.display='none'">
+                    <button class="delete-image-btn" onclick="deleteCompanyImage(${index})" title="删除图片"><i class="fas fa-times"></i></button>
+                    <span class="image-index">#${index + 1}</span>
+                </div>
+            `;
+        });
+        imagesHtml += `</div>`;
+    } else {
+        imagesHtml = `<div class="no-images-placeholder"><i class="fas fa-image"></i>暂无图片，请上传</div>`;
+    }
     
     container.innerHTML = `
         <div style="margin-top: 16px;">
@@ -856,17 +1071,17 @@ function renderCompanyContent() {
                 <p style="color: #8a9abb; font-size: 13px; margin-bottom: 16px;">上传公司图片和编辑公司简介，用户将在前端 "Company Profile" 页面查看。</p>
                 
                 <div style="margin-bottom: 16px;">
-                    <label>公司图片</label>
+                    <label>公司图片（支持多张）</label>
                     <div class="image-upload-row">
-                        <input type="text" id="companyImageUrl" value="${escapeHtml(companyData?.image_url || '')}" placeholder="输入图片 URL" style="flex:1; background:#0f172a; border:1px solid #1e2a3a; border-radius:8px; padding:10px; color:#fff;">
                         <div class="upload-btn-area" id="companyUploadArea">
                             <i class="fas fa-cloud-upload-alt" style="color: #4a7cff;"></i>
                             <span style="color: #8a9abb; font-size: 12px;">上传图片</span>
                             <input type="file" id="companyFileInput" accept="image/*" style="display:none;">
                         </div>
+                        <span style="font-size: 11px; color: #6a7a9a;">已上传 ${companyImages.length} 张</span>
                     </div>
-                    <div id="companyPreviewContainer" style="margin-top: 8px;">
-                        ${companyData?.image_url ? `<img src="${companyData.image_url}" class="image-preview-thumb" onclick="window.open('${companyData.image_url}','_blank')">` : ''}
+                    <div id="companyImageGrid">
+                        ${imagesHtml}
                     </div>
                 </div>
                 
@@ -893,67 +1108,103 @@ function renderCompanyContent() {
         fileInput.addEventListener('change', async (e) => {
             const file = e.target.files[0];
             if (!file) return;
-            await uploadContentImage(file, 'company');
+            await uploadCompanyImage(file);
+            fileInput.value = '';
         });
     }
     
-    // 保存 - 公司简介
-document.getElementById('saveCompanyBtn').addEventListener('click', async () => {
-    const imageUrl = document.getElementById('companyImageUrl').value.trim();
-    const content = document.getElementById('companyContent').value;
+    // 保存
+    document.getElementById('saveCompanyBtn').addEventListener('click', async () => {
+        const content = document.getElementById('companyContent').value;
+        const imageUrlsJson = JSON.stringify(companyImages);
+        
+        try {
+            const { data: existing } = await sb
+                .from('system_content')
+                .select('id')
+                .eq('type', 'company')
+                .single();
+            
+            let error;
+            if (existing) {
+                const { error: updateError } = await sb
+                    .from('system_content')
+                    .update({
+                        title: 'Company Profile',
+                        content: content,
+                        image_url: imageUrlsJson,
+                        updated_at: new Date().toISOString()
+                    })
+                    .eq('id', existing.id);
+                error = updateError;
+            } else {
+                const { error: insertError } = await sb
+                    .from('system_content')
+                    .insert({
+                        type: 'company',
+                        title: 'Company Profile',
+                        content: content,
+                        image_url: imageUrlsJson,
+                        created_at: new Date().toISOString(),
+                        updated_at: new Date().toISOString()
+                    });
+                error = insertError;
+            }
+            
+            if (error) {
+                showToast('保存失败: ' + error.message, 'error');
+            } else {
+                showToast('✅ 公司简介已保存', 'success');
+                await loadCompanyContent();
+            }
+        } catch (e) {
+            showToast('保存失败: ' + e.message, 'error');
+        }
+    });
     
-    try {
-        // 先检查是否存在
-        const { data: existing } = await sb
-            .from('system_content')
-            .select('id')
-            .eq('type', 'company')
-            .single();
-        
-        let error;
-        if (existing) {
-            // 更新
-            const { error: updateError } = await sb
-                .from('system_content')
-                .update({
-                    title: 'Company Profile',
-                    content: content,
-                    image_url: imageUrl,
-                    updated_at: new Date().toISOString()
-                })
-                .eq('id', existing.id);
-            error = updateError;
-        } else {
-            // 插入
-            const { error: insertError } = await sb
-                .from('system_content')
-                .insert({
-                    type: 'company',
-                    title: 'Company Profile',
-                    content: content,
-                    image_url: imageUrl,
-                    created_at: new Date().toISOString(),
-                    updated_at: new Date().toISOString()
-                });
-            error = insertError;
-        }
-        
-        if (error) {
-            showToast('保存失败: ' + error.message, 'error');
-        } else {
-            showToast('✅ 公司简介已保存', 'success');
-            await loadCompanyContent();
-        }
-    } catch (e) {
-        showToast('保存失败: ' + e.message, 'error');
-    }
-});
+    // 预览
+    document.getElementById('previewCompanyBtn').addEventListener('click', () => {
+        const content = document.getElementById('companyContent').value;
+        const panel = document.getElementById('companyPreviewPanel');
+        panel.style.display = 'block';
+        panel.innerHTML = content || '<em style="color:#6a7a9a;">暂无内容</em>';
+    });
 }
 
-// ============================================================
-// 5. 通用图片上传函数
-// ============================================================
-async function uploadContentImage(file, type) {
+// 删除公司图片
+window.deleteCompanyImage = function(index) {
+    showConfirm('确认删除', '确定要删除这张图片吗？', async () => {
+        companyImages.splice(index, 1);
+        renderCompanyContent();
+        const content = document.getElementById('companyContent')?.value || '';
+        const imageUrlsJson = JSON.stringify(companyImages);
+        
+        try {
+            const { data: existing } = await sb
+                .from('system_content')
+                .select('id')
+                .eq('type', 'company')
+                .single();
+            
+            if (existing) {
+                await sb
+                    .from('system_content')
+                    .update({
+                        content: content,
+                        image_url: imageUrlsJson,
+                        updated_at: new Date().toISOString()
+                    })
+                    .eq('id', existing.id);
+                showToast('图片已删除', 'success');
+            }
+        } catch (e) {
+            console.error('删除图片保存失败:', e);
+        }
+    });
+};
+
+// 上传公司图片
+async function uploadCompanyImage(file) {
     if (!file.type.startsWith('image/')) {
         showToast('请选择图片文件', 'error');
         return;
@@ -965,7 +1216,7 @@ async function uploadContentImage(file, type) {
     
     showToast('上传中...', 'info');
     
-    const fileName = `content/${type}/${Date.now()}_${file.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
+    const fileName = `company/${Date.now()}_${file.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
     const storageBucket = 'content-images';
     
     try {
@@ -984,17 +1235,9 @@ async function uploadContentImage(file, type) {
         }
         
         const publicUrl = `${SUPABASE_URL}/storage/v1/object/public/${storageBucket}/${fileName}`;
-        
-        // 更新对应的输入框
-        if (type === 'contract') {
-            document.getElementById('contractImageUrl').value = publicUrl;
-            document.getElementById('contractPreviewContainer').innerHTML = `<img src="${publicUrl}" class="image-preview-thumb" onclick="window.open('${publicUrl}','_blank')">`;
-        } else if (type === 'company') {
-            document.getElementById('companyImageUrl').value = publicUrl;
-            document.getElementById('companyPreviewContainer').innerHTML = `<img src="${publicUrl}" class="image-preview-thumb" onclick="window.open('${publicUrl}','_blank')">`;
-        }
-        
+        companyImages.push(publicUrl);
         showToast('图片上传成功！', 'success');
+        renderCompanyContent();
     } catch (error) {
         console.error('上传失败:', error);
         showToast('上传失败: ' + error.message, 'error');
@@ -1002,7 +1245,7 @@ async function uploadContentImage(file, type) {
 }
 
 // ============================================================
-// 6. 系统内容管理（原有功能）
+// 5. 系统内容管理（原有功能）
 // ============================================================
 async function loadContentList() {
     const { data: contents } = await sb.from('system_content').select('*').eq('type', 'page').order('id');
@@ -1098,7 +1341,7 @@ async function saveNewContent() {
 }
 
 // ============================================================
-// 7. 工具函数
+// 6. 工具函数
 // ============================================================
 function escapeHtml(str) {
     if (!str) return '';
