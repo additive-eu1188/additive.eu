@@ -1,4 +1,4 @@
-// admin-users.js - 完整版（使用自定义弹窗）
+// admin-users.js - 完整版（用户管理表格重新设计）
 let searchKeyword = '';
 
 async function loadUsersPage() {
@@ -7,284 +7,544 @@ async function loadUsersPage() {
     container.innerHTML = `
         <div class="card">
             <div class="search-bar">
-                <input type="text" id="searchUserInput" class="search-input" placeholder="🔍 搜索 UID 或用户名...">
+                <input type="text" id="searchUserInput" class="search-input" placeholder="🔍 搜索 UID、用户名或手机号...">
                 <button id="searchUserBtn" class="btn-primary"><i class="fas fa-search"></i> 搜索</button>
                 <button id="refreshUserBtn" class="btn-primary"><i class="fas fa-sync-alt"></i> 刷新</button>
                 <button id="addUserBtn" class="success"><i class="fas fa-user-plus"></i> 创建用户</button>
             </div>
-            <div class="table-container">
-                <table class="data-table">
+            <div class="table-container" style="max-height: 600px; overflow-y: auto;">
+                <table class="data-table" style="font-size: 12px;">
                     <thead>
-                        <tr><th>UID</th><th>用户名</th><th>邀请码</th><th>推荐人</th><th>余额</th><th>体验金</th><th>订单数</th><th>VIP等级</th><th>钱包地址</th><th>操作</th></tr>
+                        <tr>
+                            <th style="min-width: 100px;">Phone</th>
+                            <th style="min-width: 80px;">User ID</th>
+                            <th style="min-width: 100px;">Referrer</th>
+                            <th style="min-width: 70px;">Country</th>
+                            <th style="min-width: 90px;">Pending (€)</th>
+                            <th style="min-width: 90px;">Balance (€)</th>
+                            <th style="min-width: 120px;">Orders</th>
+                            <th style="min-width: 180px;">Edit Orders</th>
+                            <th style="min-width: 130px;">Registered IP</th>
+                            <th style="min-width: 150px;">Time Registered</th>
+                        </tr>
                     </thead>
                     <tbody id="usersTableBody"></tbody>
                 </table>
             </div>
+            <div class="pagination" id="userPagination"></div>
         </div>
     `;
-    await loadUsers();
-    document.getElementById('searchUserBtn')?.addEventListener('click', () => { searchKeyword = document.getElementById('searchUserInput').value; loadUsers(); });
-    document.getElementById('refreshUserBtn')?.addEventListener('click', () => { document.getElementById('searchUserInput').value = ''; searchKeyword = ''; loadUsers(); });
-    document.getElementById('addUserBtn')?.addEventListener('click', () => document.getElementById('addUserModal').classList.add('active'));
-}
-
-async function loadUsers() {
-    let query = sb.from('users').select('*').order('created_at', { ascending: false });
-    if (searchKeyword) query = query.or(`uid.ilike.%${searchKeyword}%,username.ilike.%${searchKeyword}%`);
-    const { data: users } = await query;
-    const { data: allOrders } = await sb.from('order_history').select('*');
-    const { data: vipSettings } = await sb.from('vip_settings').select('*');
-    const vipLimitMap = {};
-    if (vipSettings) vipSettings.forEach(v => vipLimitMap[v.level] = v.orders_limit);
-    const tbody = document.getElementById('usersTableBody');
-    if (tbody && users) {
-        tbody.innerHTML = '';
-        for (let u of users) {
-            const userOrders = allOrders?.filter(o => o.uid === u.uid).length || 0;
-            const ordersLimit = vipLimitMap[u.vip_level] || 30;
-            const row = tbody.insertRow();
-            row.insertCell(0).innerHTML = `<span class="badge">${u.uid}</span>`;
-            row.insertCell(1).innerText = u.username;
-            row.insertCell(2).innerHTML = `<span class="badge">${u.invite_code || '-'}</span>`;
-            row.insertCell(3).innerText = u.invited_by_username || '-';
-            row.insertCell(4).innerHTML = `<span class="text-green">€${(u.balance || 0).toFixed(2)}</span>`;
-            row.insertCell(5).innerHTML = `<span class="text-gold">€${(u.trial_bonus_amount || 0).toFixed(2)}</span>`;
-            row.insertCell(6).innerHTML = `${userOrders}/${ordersLimit} <button class="reset-orders-btn" data-uid="${u.uid}" style="background:#7a5f2f; padding:2px 8px; font-size:10px; margin-left:8px;"><i class="fas fa-undo-alt"></i> 重置</button>`;
-            row.insertCell(7).innerHTML = `<select class="vip-select" data-uid="${u.uid}" style="background:#0f172a; border:1px solid #1e2a3a; border-radius:8px; padding:4px 8px;"><option value="1" ${u.vip_level == 1 ? 'selected' : ''}>Normal</option><option value="2" ${u.vip_level == 2 ? 'selected' : ''}>VIP</option><option value="3" ${u.vip_level == 3 ? 'selected' : ''}>SVIP</option></select>`;
-            row.insertCell(8).innerHTML = u.withdrawal_address ? u.withdrawal_address.substring(0, 12) + '...' : '-';
-            row.insertCell(9).innerHTML = `<button class="deposit-btn" data-uid="${u.uid}" style="background:#2f6b3a; padding:4px 10px; font-size:11px; margin-right:4px;"><i class="fas fa-plus-circle"></i> 充值</button><button class="cut-btn" data-uid="${u.uid}" style="background:#7a2f2f; padding:4px 10px; font-size:11px; margin-right:4px;"><i class="fas fa-minus-circle"></i> 扣款</button><button class="edit-user-btn" data-uid="${u.uid}" data-phone="${u.phone || ''}" data-username="${u.username}" data-pin="${u.pin || ''}" style="background:#2f6b3a; padding:4px 10px; font-size:11px; margin-right:4px;"><i class="fas fa-edit"></i> 修改</button><button class="delete-btn" data-uid="${u.uid}" style="background:#7a2f2f; padding:4px 10px; font-size:11px;"><i class="fas fa-trash"></i> 删除</button>`;
+    
+    // 添加样式
+    const style = document.createElement('style');
+    style.textContent = `
+        .users-table-cell {
+            padding: 8px 10px !important;
+            vertical-align: middle;
+            font-size: 12px;
         }
-        document.querySelectorAll('.vip-select').forEach(sel => sel.addEventListener('change', () => updateVip(sel.dataset.uid, sel.value)));
-        document.querySelectorAll('.deposit-btn').forEach(btn => btn.addEventListener('click', () => depositBalance(btn.dataset.uid)));
-        document.querySelectorAll('.cut-btn').forEach(btn => btn.addEventListener('click', () => cutBalance(btn.dataset.uid)));
-        document.querySelectorAll('.edit-user-btn').forEach(btn => btn.addEventListener('click', () => openEditUserModal(btn.dataset.uid, btn.dataset.phone, btn.dataset.username, btn.dataset.pin)));
-        document.querySelectorAll('.delete-btn').forEach(btn => btn.addEventListener('click', () => delUser(btn.dataset.uid)));
-        document.querySelectorAll('.reset-orders-btn').forEach(btn => btn.addEventListener('click', () => resetUserOrders(btn.dataset.uid)));
-    }
-}
-
-async function resetUserOrders(uid) {
-    showConfirm('确认重置', '重置后该用户订单数将归0，订单记录将被删除，是否继续？', async () => {
-        await sb.from('order_history').delete().eq('uid', uid);
-        showToast('订单已重置', 'success');
-        loadUsers();
-    });
-}
-
-// ========== 充值功能（三次弹窗：充值金额 + 奖励金额 + 奖励名称） ==========
-async function depositBalance(uid) {
-    // 第一次弹窗：充值金额
-    showPrompt('充值金额', '请输入充值金额 (€) - 可以为0', async (amount) => {
-        const depositAmount = parseFloat(amount) || 0;
-        
-        // 第二次弹窗：奖励金额
-        showPrompt('奖励金额', '请输入奖励金额 (€) - 可以为0', async (bonusAmount) => {
-            const rewardAmount = parseFloat(bonusAmount) || 0;
-            
-            // 第三次弹窗：奖励名称（仅在奖励金额 > 0 时显示）
-            if (rewardAmount > 0) {
-                showPrompt('奖励名称', '请输入奖励名称（默认: Deposit Bonus）', async (bonusName) => {
-                    const rewardName = bonusName && bonusName.trim() ? bonusName.trim() : 'Deposit Bonus';
-                    await processDeposit(uid, depositAmount, rewardAmount, rewardName);
-                });
-            } else {
-                // 没有奖励金额，直接处理充值
-                await processDeposit(uid, depositAmount, 0, '');
+        .orders-badge {
+            display: inline-block;
+            background: rgba(74,124,255,0.15);
+            padding: 2px 10px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+            color: #4a7cff;
+        }
+        .orders-input {
+            width: 60px;
+            background: #0f172a;
+            border: 1px solid #1e2a3a;
+            border-radius: 6px;
+            padding: 4px 6px;
+            color: #fff;
+            font-size: 12px;
+            text-align: center;
+        }
+        .orders-input:focus {
+            border-color: #4a7cff;
+            outline: none;
+        }
+        .btn-sm {
+            padding: 3px 10px;
+            font-size: 10px;
+            border: none;
+            border-radius: 4px;
+            color: #fff;
+            cursor: pointer;
+            transition: 0.2s;
+            margin: 0 2px;
+        }
+        .btn-sm:hover {
+            opacity: 0.85;
+        }
+        .btn-reset { background: #7a5f2f; }
+        .btn-save { background: #2f6b3a; }
+        .btn-edit { background: #2f5f7a; }
+        .country-flag {
+            font-size: 16px;
+            margin-right: 4px;
+        }
+        .pending-negative {
+            color: #ff5a5a !important;
+        }
+        .pending-positive {
+            color: #ffb84d !important;
+        }
+        .user-row:hover {
+            background: rgba(74,124,255,0.03);
+        }
+        .edit-orders-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex-wrap: nowrap;
+        }
+        .edit-orders-wrapper .orders-input {
+            width: 55px;
+            flex-shrink: 0;
+        }
+        .edit-orders-wrapper .btn-sm {
+            flex-shrink: 0;
+            white-space: nowrap;
+        }
+        .edit-orders-wrapper .current-orders-display {
+            font-size: 12px;
+            color: #8a9abb;
+            margin-right: 4px;
+            white-space: nowrap;
+        }
+        @media (max-width: 1200px) {
+            .table-container {
+                overflow-x: auto;
             }
-        });
+            .data-table {
+                min-width: 1200px;
+            }
+        }
+    `;
+    document.head.appendChild(style);
+    
+    // 分页变量
+    window.userCurrentPage = 1;
+    window.userPageSize = 30;
+    window.userTotalCount = 0;
+    
+    await loadUsers();
+    
+    document.getElementById('searchUserBtn')?.addEventListener('click', () => { 
+        searchKeyword = document.getElementById('searchUserInput').value.trim(); 
+        window.userCurrentPage = 1;
+        loadUsers(); 
+    });
+    document.getElementById('refreshUserBtn')?.addEventListener('click', () => { 
+        document.getElementById('searchUserInput').value = ''; 
+        searchKeyword = ''; 
+        window.userCurrentPage = 1;
+        loadUsers(); 
+    });
+    document.getElementById('addUserBtn')?.addEventListener('click', () => {
+        document.getElementById('addUserModal').classList.add('active');
+    });
+    
+    // 回车搜索
+    document.getElementById('searchUserInput')?.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+            searchKeyword = document.getElementById('searchUserInput').value.trim();
+            window.userCurrentPage = 1;
+            loadUsers();
+        }
     });
 }
 
-async function processDeposit(uid, depositAmount, rewardAmount, rewardName) {
-    // 检查：至少有一个金额大于0
-    if (depositAmount <= 0 && rewardAmount <= 0) {
-        showToast('充值金额和奖励金额至少需要填写一个', 'error');
-        return;
-    }
+// ========== 加载用户列表 ==========
+async function loadUsers() {
+    const tbody = document.getElementById('usersTableBody');
+    if (!tbody) return;
     
-    const { data: user, error } = await sb
-        .from('users')
-        .select('balance, username')
-        .eq('uid', uid)
-        .single();
+    tbody.innerHTML = '<tr><td colspan="10" style="text-align:center; padding:40px;"><i class="fas fa-spinner fa-spin"></i> 加载中...</td></tr>';
     
-    if (error) {
-        showToast('获取用户信息失败: ' + error.message, 'error');
-        return;
-    }
-    
-    let newBalance = user.balance || 0;
-    let message = '';
-    
-    // 处理充值
-    if (depositAmount > 0) {
-        newBalance += depositAmount;
-        await sb.from('deposits').insert([{ 
-            uid: uid, 
-            username: user.username, 
-            amount: depositAmount, 
-            type: 'manual',
-            description: 'Manual Deposit',
-            created_at: new Date().toISOString()
-        }]);
-        message += `充值 €${depositAmount.toFixed(2)}；`;
-        showToast(`充值 €${depositAmount.toFixed(2)} 成功`, 'success');
-    }
-    
-    // 处理奖励（使用自定义名称）
-    if (rewardAmount > 0) {
-        newBalance += rewardAmount;
-        await sb.from('deposits').insert([{ 
-            uid: uid, 
-            username: user.username, 
-            amount: rewardAmount, 
-            type: 'deposit_bonus',
-            description: rewardName,  // 使用自定义奖励名称
-            created_at: new Date().toISOString()
-        }]);
-        message += `${rewardName} €${rewardAmount.toFixed(2)}；`;
-        showToast(`${rewardName} €${rewardAmount.toFixed(2)} 已添加`, 'success');
-    }
-    
-    // 更新余额
-    const { error: updateError } = await sb
-        .from('users')
-        .update({ balance: newBalance })
-        .eq('uid', uid);
-    
-    if (updateError) {
-        showToast('更新余额失败: ' + updateError.message, 'error');
-        return;
-    }
-    
-    showToast(`操作成功！${message} 当前余额: €${newBalance.toFixed(2)}`, 'success');
-    
-    // 刷新页面
-    loadUsers();
-    if (window.loadDashboardPage) window.loadDashboardPage(currentDays);
-}
-
-// ========== 扣款功能（两次弹窗：扣款金额 + 扣款原因） ==========
-async function cutBalance(uid) {
-    // 第一次弹窗：扣款金额
-    showPrompt('扣款金额', '请输入扣款金额 (€)', async (amount) => {
-        const cutAmount = parseFloat(amount) || 0;
+    try {
+        // 获取 VIP 设置用于订单限制
+        const { data: vipSettings } = await sb.from('vip_settings').select('*');
+        const vipLimitMap = {};
+        if (vipSettings) vipSettings.forEach(v => vipLimitMap[v.level] = v.orders_limit);
         
-        if (cutAmount <= 0) {
-            showToast('请输入有效的扣款金额', 'error');
+        // 构建查询
+        let query = sb.from('users').select('*', { count: 'exact' });
+        
+        if (searchKeyword) {
+            query = query.or(`uid.ilike.%${searchKeyword}%,username.ilike.%${searchKeyword}%,phone.ilike.%${searchKeyword}%`);
+        }
+        
+        const { data: users, error, count } = await query
+            .order('created_at', { ascending: false })
+            .range((window.userCurrentPage - 1) * window.userPageSize, window.userCurrentPage * window.userPageSize - 1);
+        
+        if (error) throw error;
+        
+        window.userTotalCount = count || 0;
+        
+        if (!users || users.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="10" style="text-align:center; padding:40px; color:#6a7a9a;">暂无用户</td></tr>';
+            renderUserPagination();
             return;
         }
         
-        // 第二次弹窗：扣款原因
-        showPrompt('扣款原因', '请输入扣款原因（可选，可不填）', async (reason) => {
-            const { data: user, error } = await sb
-                .from('users')
-                .select('balance, username')
-                .eq('uid', uid)
-                .single();
+        // 获取所有用户的订单数（批量查询）
+        const uids = users.map(u => u.uid);
+        const { data: allOrders } = await sb
+            .from('order_history')
+            .select('uid')
+            .in('uid', uids);
+        
+        const orderCountMap = {};
+        if (allOrders) {
+            allOrders.forEach(o => {
+                orderCountMap[o.uid] = (orderCountMap[o.uid] || 0) + 1;
+            });
+        }
+        
+        // 获取用户 pending 金额（提现中）
+        const { data: pendingWithdrawals } = await sb
+            .from('withdrawals')
+            .select('uid, amount')
+            .in('uid', uids)
+            .eq('status', 'pending');
+        
+        const pendingMap = {};
+        if (pendingWithdrawals) {
+            pendingWithdrawals.forEach(w => {
+                pendingMap[w.uid] = (pendingMap[w.uid] || 0) + w.amount;
+            });
+        }
+        
+        tbody.innerHTML = '';
+        
+        for (let u of users) {
+            const row = tbody.insertRow();
+            row.className = 'user-row';
             
-            if (error) {
-                showToast('获取用户信息失败: ' + error.message, 'error');
-                return;
-            }
+            const orderCount = orderCountMap[u.uid] || 0;
+            const ordersLimit = vipLimitMap[u.vip_level] || 30;
+            const pendingAmount = pendingMap[u.uid] || 0;
             
-            if ((user.balance || 0) < cutAmount) {
-                showToast('余额不足', 'error');
-                return;
-            }
+            // 1. Phone
+            row.insertCell(0).innerHTML = `<span style="font-size: 12px;">${escapeHtml(u.phone || '-')}</span>`;
             
-            const newBalance = (user.balance || 0) - cutAmount;
+            // 2. User ID (UID)
+            row.insertCell(1).innerHTML = `<span class="badge" style="font-size: 11px;">${escapeHtml(u.uid)}</span>`;
             
-            const { error: updateError } = await sb
-                .from('users')
-                .update({ balance: newBalance })
+            // 3. Referrer (推荐人)
+            row.insertCell(2).innerHTML = `<span style="font-size: 12px; color: #8a9abb;">${escapeHtml(u.invited_by_username || '-')}</span>`;
+            
+            // 4. Country (从手机号提取)
+            const countryCode = u.phone ? u.phone.replace(/[^0-9+]/g, '').substring(0, 4) : '';
+            const countryDisplay = getCountryEmoji(countryCode);
+            row.insertCell(3).innerHTML = `<span style="font-size: 14px;">${countryDisplay}</span>`;
+            
+            // 5. Pending (€)
+            const pendingCell = row.insertCell(4);
+            pendingCell.innerHTML = `<span class="${pendingAmount > 0 ? 'pending-positive' : 'pending-negative'}" style="font-weight: 600;">€${pendingAmount.toFixed(2)}</span>`;
+            
+            // 6. Balance (€)
+            row.insertCell(5).innerHTML = `<span class="text-green" style="font-weight: 600; font-size: 13px;">€${(u.balance || 0).toFixed(2)}</span>`;
+            
+            // 7. Orders (带 reset 按钮)
+            const ordersCell = row.insertCell(6);
+            ordersCell.innerHTML = `
+                <div style="display: flex; align-items: center; gap: 6px; flex-wrap: nowrap;">
+                    <span class="orders-badge">${orderCount}/${ordersLimit}</span>
+                    <button class="btn-sm btn-reset reset-orders-btn" data-uid="${u.uid}" data-username="${escapeHtml(u.username)}" title="重置订单数"><i class="fas fa-undo-alt"></i></button>
+                </div>
+            `;
+            
+            // 8. Edit Orders (可输入调整 + 实时显示 + Save)
+            const editCell = row.insertCell(7);
+            editCell.innerHTML = `
+                <div class="edit-orders-wrapper">
+                    <span class="current-orders-display" id="currentOrders_${u.uid}">${orderCount}</span>
+                    <span style="color: #4a7cff; font-size: 11px;">→</span>
+                    <input type="number" id="editOrders_${u.uid}" class="orders-input" value="${orderCount}" min="0" step="1" style="width: 55px;">
+                    <button class="btn-sm btn-save save-orders-btn" data-uid="${u.uid}" data-username="${escapeHtml(u.username)}"><i class="fas fa-save"></i></button>
+                </div>
+            `;
+            
+            // 9. Registered IP
+            row.insertCell(8).innerHTML = `<span style="font-size: 11px; color: #8a9abb; font-family: monospace;">${escapeHtml(u.registered_ip || '-')}</span>`;
+            
+            // 10. Time Registered
+            const registerTime = u.created_at ? new Date(u.created_at) : null;
+            row.insertCell(9).innerHTML = `<span style="font-size: 11px; color: #8a9abb;">${registerTime ? registerTime.toLocaleString() : '-'}</span>`;
+        }
+        
+        // 绑定事件 - Reset 按钮
+        document.querySelectorAll('.reset-orders-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const uid = btn.dataset.uid;
+                const username = btn.dataset.username;
+                resetUserOrders(uid, username);
+            });
+        });
+        
+        // 绑定事件 - Save 按钮
+        document.querySelectorAll('.save-orders-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const uid = btn.dataset.uid;
+                const username = btn.dataset.username;
+                const input = document.getElementById(`editOrders_${uid}`);
+                if (input) {
+                    const newValue = parseInt(input.value);
+                    if (!isNaN(newValue) && newValue >= 0) {
+                        saveUserOrders(uid, username, newValue);
+                    } else {
+                        showToast('请输入有效的订单数', 'error');
+                    }
+                }
+            });
+        });
+        
+        // 绑定事件 - 输入框实时显示（输入时更新旁边的显示）
+        document.querySelectorAll('.orders-input').forEach(input => {
+            input.addEventListener('input', function() {
+                const uid = this.id.replace('editOrders_', '');
+                const displayEl = document.getElementById(`currentOrders_${uid}`);
+                if (displayEl) {
+                    const val = parseInt(this.value);
+                    displayEl.textContent = !isNaN(val) ? val : '0';
+                }
+            });
+        });
+        
+        renderUserPagination();
+        
+    } catch (e) {
+        console.error('加载用户失败:', e);
+        tbody.innerHTML = `<tr><td colspan="10" style="text-align:center; padding:40px; color:#ff8888;">加载失败: ${escapeHtml(e.message)}</td></tr>`;
+    }
+}
+
+// ========== 重置用户订单 ==========
+async function resetUserOrders(uid, username) {
+    showConfirm('⚠️ 确认重置', `确定要重置用户 ${username} (UID: ${uid}) 的所有订单记录吗？\n此操作将删除所有订单历史且不可恢复！`, async () => {
+        try {
+            const { error } = await sb
+                .from('order_history')
+                .delete()
                 .eq('uid', uid);
             
-            if (updateError) {
-                showToast('扣款失败: ' + updateError.message, 'error');
-                return;
-            }
+            if (error) throw error;
             
-            // 记录扣款记录
-            await sb.from('deposits').insert([{ 
-                uid: uid, 
-                username: user.username, 
-                amount: -cutAmount, 
-                type: 'manual_deduction',
-                description: reason || 'Manual Deduction',
-                created_at: new Date().toISOString()
-            }]);
-            
-            showToast(`扣款 €${cutAmount.toFixed(2)} 成功${reason ? '，原因: ' + reason : ''}`, 'success');
-            
+            showToast(`✅ 用户 ${username} 的订单已重置`, 'success');
             loadUsers();
             if (window.loadDashboardPage) window.loadDashboardPage(currentDays);
-        });
+        } catch (e) {
+            showToast('重置失败: ' + e.message, 'error');
+        }
     });
 }
 
-function openEditUserModal(uid, phone, username, pin) {
-    const modalHtml = `
-        <div id="editUserModal" class="modal-overlay" style="visibility: visible; opacity: 1;">
-            <div class="modal-card">
-                <h3><i class="fas fa-edit"></i> 修改用户信息 - ${escapeHtml(username)}</h3>
-                <div><label>Phone Number</label><input type="tel" id="editPhone" value="${escapeHtml(phone || '')}" style="width:100%; margin:10px 0; padding:10px; background:#0f172a; border:1px solid #1e2a3a; border-radius:8px; color:#fff;"></div>
-                <div><label>Login Password</label><input type="password" id="editPassword" placeholder="留空则不修改" style="width:100%; margin:10px 0; padding:10px; background:#0f172a; border:1px solid #1e2a3a; border-radius:8px; color:#fff;"><small>留空表示不修改密码</small></div>
-                <div><label>Withdrawal PIN (4 digits)</label><input type="password" id="editPin" maxlength="4" value="${escapeHtml(pin || '')}" style="width:100%; margin:10px 0; padding:10px; background:#0f172a; border:1px solid #1e2a3a; border-radius:8px; color:#fff;"></div>
-                <div style="display: flex; gap: 12px; margin-top: 20px;">
-                    <button id="confirmEditBtn" class="success">保存修改</button>
-                    <button id="cancelEditBtn">取消</button>
-                </div>
-            </div>
-        </div>
-    `;
-    const existing = document.getElementById('editUserModal');
-    if (existing) existing.remove();
-    document.body.insertAdjacentHTML('beforeend', modalHtml);
-    const modal = document.getElementById('editUserModal');
-    document.getElementById('confirmEditBtn').onclick = async () => {
-        const newPhone = document.getElementById('editPhone').value.trim();
-        const newPassword = document.getElementById('editPassword').value;
-        const newPin = document.getElementById('editPin').value;
-        const updateData = {};
-        if (newPhone) updateData.phone = newPhone;
-        if (newPassword && newPassword.length >= 4) updateData.password = newPassword;
-        if (newPin && newPin.length === 4 && !isNaN(newPin)) updateData.pin = newPin;
-        if (Object.keys(updateData).length === 0) {
-            showToast('没有修改任何信息', 'warning');
-            modal.remove();
+// ========== 保存用户订单数 ==========
+async function saveUserOrders(uid, username, newOrderCount) {
+    // 先获取用户当前的订单数
+    try {
+        const { data: currentOrders } = await sb
+            .from('order_history')
+            .select('id')
+            .eq('uid', uid);
+        
+        const currentCount = currentOrders?.length || 0;
+        
+        if (newOrderCount === currentCount) {
+            showToast(`订单数已经是 ${newOrderCount}，无需修改`, 'info');
             return;
         }
-        const { error } = await sb.from('users').update(updateData).eq('uid', uid);
-        if (error) {
-            showToast('修改失败: ' + error.message, 'error');
+        
+        if (newOrderCount > currentCount) {
+            // 增加订单：需要插入虚拟订单记录
+            const diff = newOrderCount - currentCount;
+            showConfirm('📝 添加订单', `将为用户 ${username} 添加 ${diff} 条虚拟订单记录，确认？`, async () => {
+                try {
+                    const inserts = [];
+                    for (let i = 0; i < diff; i++) {
+                        inserts.push({
+                            uid: uid,
+                            username: username,
+                            order_code: `ADMIN-${Date.now()}-${i}`,
+                            accommodation_name: 'Admin Added Order',
+                            price: 0,
+                            commission: 0,
+                            rating: 5,
+                            status: 'completed',
+                            date: new Date().toISOString()
+                        });
+                    }
+                    
+                    const { error } = await sb
+                        .from('order_history')
+                        .insert(inserts);
+                    
+                    if (error) throw error;
+                    
+                    showToast(`✅ 已为 ${username} 添加 ${diff} 条订单`, 'success');
+                    loadUsers();
+                } catch (e) {
+                    showToast('添加订单失败: ' + e.message, 'error');
+                }
+            });
         } else {
-            showToast('用户信息已更新', 'success');
-            modal.remove();
-            loadUsers();
+            // 减少订单：删除最近的订单记录
+            const diff = currentCount - newOrderCount;
+            showConfirm('🗑️ 删除订单', `将为用户 ${username} 删除最近的 ${diff} 条订单记录，确认？`, async () => {
+                try {
+                    const { data: ordersToDelete } = await sb
+                        .from('order_history')
+                        .select('id')
+                        .eq('uid', uid)
+                        .order('date', { ascending: true })
+                        .limit(diff);
+                    
+                    if (!ordersToDelete || ordersToDelete.length === 0) {
+                        showToast('没有可删除的订单', 'warning');
+                        return;
+                    }
+                    
+                    const ids = ordersToDelete.map(o => o.id);
+                    const { error } = await sb
+                        .from('order_history')
+                        .delete()
+                        .in('id', ids);
+                    
+                    if (error) throw error;
+                    
+                    showToast(`✅ 已为 ${username} 删除 ${ids.length} 条订单`, 'success');
+                    loadUsers();
+                } catch (e) {
+                    showToast('删除订单失败: ' + e.message, 'error');
+                }
+            });
         }
+    } catch (e) {
+        showToast('操作失败: ' + e.message, 'error');
+    }
+}
+
+// ========== 分页渲染 ==========
+function renderUserPagination() {
+    const container = document.getElementById('userPagination');
+    if (!container) return;
+    
+    const totalPages = Math.ceil(window.userTotalCount / window.userPageSize);
+    container.innerHTML = '';
+    
+    if (totalPages <= 1) return;
+    
+    // 上一页
+    if (window.userCurrentPage > 1) {
+        const prev = document.createElement('button');
+        prev.innerHTML = '上一页';
+        prev.className = 'date-filter-btn';
+        prev.onclick = () => {
+            window.userCurrentPage--;
+            loadUsers();
+        };
+        container.appendChild(prev);
+    }
+    
+    // 页码
+    const startPage = Math.max(1, window.userCurrentPage - 2);
+    const endPage = Math.min(totalPages, window.userCurrentPage + 2);
+    
+    for (let i = startPage; i <= endPage; i++) {
+        const btn = document.createElement('button');
+        btn.innerText = i;
+        btn.className = 'date-filter-btn' + (i === window.userCurrentPage ? ' active' : '');
+        btn.onclick = () => {
+            window.userCurrentPage = i;
+            loadUsers();
+        };
+        container.appendChild(btn);
+    }
+    
+    // 下一页
+    if (window.userCurrentPage < totalPages) {
+        const next = document.createElement('button');
+        next.innerHTML = '下一页';
+        next.className = 'date-filter-btn';
+        next.onclick = () => {
+            window.userCurrentPage++;
+            loadUsers();
+        };
+        container.appendChild(next);
+    }
+}
+
+// ========== 获取国家 Emoji ==========
+function getCountryEmoji(phoneCode) {
+    // 根据手机号前缀返回国家旗帜
+    const countryMap = {
+        '+1': '🇺🇸',   // US/Canada
+        '+44': '🇬🇧',  // UK
+        '+49': '🇩🇪',  // Germany
+        '+33': '🇫🇷',  // France
+        '+39': '🇮🇹',  // Italy
+        '+34': '🇪🇸',  // Spain
+        '+41': '🇨🇭',  // Switzerland
+        '+43': '🇦🇹',  // Austria
+        '+31': '🇳🇱',  // Netherlands
+        '+32': '🇧🇪',  // Belgium
+        '+45': '🇩🇰',  // Denmark
+        '+46': '🇸🇪',  // Sweden
+        '+47': '🇳🇴',  // Norway
+        '+358': '🇫🇮', // Finland
+        '+351': '🇵🇹', // Portugal
+        '+30': '🇬🇷',  // Greece
+        '+90': '🇹🇷',  // Turkey
+        '+7': '🇷🇺',   // Russia
+        '+86': '🇨🇳',  // China
+        '+81': '🇯🇵',  // Japan
+        '+82': '🇰🇷',  // South Korea
+        '+91': '🇮🇳',  // India
+        '+55': '🇧🇷',  // Brazil
+        '+52': '🇲🇽',  // Mexico
+        '+61': '🇦🇺',  // Australia
+        '+64': '🇳🇿',  // New Zealand
+        '+27': '🇿🇦',  // South Africa
+        '+971': '🇦🇪', // UAE
+        '+966': '🇸🇦', // Saudi Arabia
+        '+65': '🇸🇬',  // Singapore
+        '+60': '🇲🇾',  // Malaysia
+        '+63': '🇵🇭',  // Philippines
+        '+62': '🇮🇩',  // Indonesia
+        '+66': '🇹🇭',  // Thailand
+        '+84': '🇻🇳',  // Vietnam
+        '+886': '🇹🇼', // Taiwan
+        '+852': '🇭🇰', // Hong Kong
+        '+853': '🇲🇴', // Macau
     };
-    document.getElementById('cancelEditBtn').onclick = () => modal.remove();
+    
+    // 尝试匹配完整前缀
+    for (const [code, emoji] of Object.entries(countryMap)) {
+        if (phoneCode.startsWith(code)) {
+            return emoji;
+        }
+    }
+    return '🌍'; // 默认地球
 }
 
-async function updateVip(uid, level) {
-    await sb.from('users').update({ vip_level: parseInt(level) }).eq('uid', uid);
-    loadUsers();
-}
-
-async function delUser(uid) {
-    showConfirm('确认删除', '永久删除用户？此操作不可恢复', async () => {
-        await sb.from('users').delete().eq('uid', uid);
-        await sb.from('order_history').delete().eq('uid', uid);
-        await sb.from('deposits').delete().eq('uid', uid);
-        await sb.from('withdrawals').delete().eq('uid', uid);
-        loadUsers();
-        if (window.loadDashboardPage) window.loadDashboardPage(currentDays);
-        showToast('已删除', 'success');
+// ========== 工具函数 ==========
+function escapeHtml(str) {
+    if (!str) return '';
+    return String(str).replace(/[&<>]/g, function(m) {
+        if (m === '&') return '&amp;';
+        if (m === '<') return '&lt;';
+        if (m === '>') return '&gt;';
+        return m;
     });
 }
 
-// 创建用户 Modal 事件
+// ========== 创建用户 Modal 事件 ==========
 document.getElementById('createUserBtn')?.addEventListener('click', async () => {
     const phone = document.getElementById('newPhone').value.trim();
     const username = document.getElementById('newUsername').value.trim();
@@ -293,20 +553,50 @@ document.getElementById('createUserBtn')?.addEventListener('click', async () => 
         showToast('请填写完整', 'error');
         return;
     }
-    const { data: exist } = await sb.from('users').select('username').eq('username', username).single();
+    
+    const { data: exist } = await sb
+        .from('users')
+        .select('username')
+        .eq('username', username)
+        .single();
+    
     if (exist) {
         showToast('用户名已存在', 'error');
         return;
     }
-    const { data: max } = await sb.from('users').select('uid').order('uid', { ascending: false }).limit(1);
+    
+    const { data: max } = await sb
+        .from('users')
+        .select('uid')
+        .order('uid', { ascending: false })
+        .limit(1);
+    
     let newUid = '100001';
     if (max && max.length) newUid = (parseInt(max[0].uid) + 1).toString();
-    const inviteCode = Array(6).fill().map(() => 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'[Math.floor(Math.random() * 36)]).join('');
-    const { error } = await sb.from('users').insert([{ uid: newUid, phone, username, password: pwd, invite_code: inviteCode, balance: 0, vip_level: 1, trial_bonus_amount: 0 }]);
+    
+    const inviteCode = Array(6).fill().map(() => 
+        'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'[Math.floor(Math.random() * 36)]
+    ).join('');
+    
+    const { error } = await sb
+        .from('users')
+        .insert([{ 
+            uid: newUid, 
+            phone, 
+            username, 
+            password: pwd, 
+            invite_code: inviteCode, 
+            balance: 0, 
+            vip_level: 1, 
+            trial_bonus_amount: 0,
+            created_at: new Date().toISOString()
+        }]);
+    
     if (error) {
         showToast(error.message, 'error');
         return;
     }
+    
     loadUsers();
     if (window.loadDashboardPage) window.loadDashboardPage(currentDays);
     document.getElementById('addUserModal').classList.remove('active');
@@ -316,6 +606,8 @@ document.getElementById('createUserBtn')?.addEventListener('click', async () => 
     document.getElementById('newPassword').value = '';
 });
 
-document.getElementById('closeUserModalBtn')?.addEventListener('click', () => document.getElementById('addUserModal').classList.remove('active'));
+document.getElementById('closeUserModalBtn')?.addEventListener('click', () => {
+    document.getElementById('addUserModal').classList.remove('active');
+});
 
 window.loadUsersPage = loadUsersPage;
