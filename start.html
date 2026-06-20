@@ -970,12 +970,13 @@
                     var container = document.getElementById('hotelImagesContainer');
                     if (container) {
                         container.innerHTML = '';
-                        data.featured_hotels.forEach(function(hotel) {
-                            var div = document.createElement('div');
-                            div.className = 'hotel-img-item';
-                            div.innerHTML = '<img src="' + (hotel.image || '') + '" alt="' + hotel.name + '" onerror="this.src=\'https://placehold.co/180x110/0E1838/C9B095?text=Hotel\'"><span class="hotel-name">' + hotel.name + '</span>';
-                            container.appendChild(div);
-                        });
+                        for (var hIdx = 0; hIdx < data.featured_hotels.length; hIdx++) {
+    var hotel = data.featured_hotels[hIdx];
+    var div = document.createElement('div');
+    div.className = 'hotel-img-item';
+    div.innerHTML = '<img src="' + (hotel.image || '') + '" alt="' + hotel.name + '" onerror="this.src=\'https://placehold.co/180x110/0E1838/C9B095?text=Hotel\'"><span class="hotel-name">' + hotel.name + '</span>';
+    container.appendChild(div);
+}
                         var items = container.innerHTML;
                         container.innerHTML = items + items;
                     }
