@@ -736,13 +736,14 @@
             if (updateError) { showToast('Withdrawal failed: ' + updateError.message, 'error'); return; }
             
             const { error: withdrawalError } = await sb.from('withdrawals').insert({
-                uid: currentUser.uid,
-                username: currentUser.username,
-                amount: amount,
-                wallet_address: userData.withdrawal_address,
-                status: 'pending',
-                request_date: new Date().toISOString()
-            });
+    uid: currentUser.uid,
+    username: currentUser.username,
+    amount: amount,
+    wallet_address: userData.withdrawal_address,
+    currency: userData.withdrawal_address_type || 'USDT',  // 用户绑定时选择的币种
+    status: 'pending',
+    request_date: new Date().toISOString()
+});
             
             if (withdrawalError) {
                 await sb.from('users').update({ balance: currentUserBalance }).eq('uid', currentUser.uid);
