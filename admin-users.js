@@ -288,9 +288,9 @@ async function loadUsers() {
             row.insertCell(2).innerHTML = `<span style="font-size: 12px; color: #8a9abb;">${escapeHtml(u.invited_by_username || '-')}</span>`;
             
             // 4. Country (从手机号提取)
-            const countryCode = u.phone ? u.phone.replace(/[^0-9+]/g, '').substring(0, 4) : '';
-            const countryDisplay = getCountryEmoji(countryCode);
-            row.insertCell(3).innerHTML = `<span style="font-size: 14px;">${countryDisplay}</span>`;
+const countryCode = u.phone ? u.phone.replace(/[^0-9+]/g, '').substring(0, 6) : '';
+const countryInfo = getCountryInfo(countryCode);
+row.insertCell(3).innerHTML = `<span style="font-size: 13px;">${countryInfo.emoji} ${countryInfo.name}</span>`;
             
             // 5. VIP Level (带下拉升级选项)
             const vipCell = row.insertCell(4);
@@ -797,28 +797,74 @@ function renderUserPagination() {
     }
 }
 
-// ========== 获取国家 Emoji ==========
-function getCountryEmoji(phoneCode) {
+// 替换 getCountryEmoji 函数为 getCountryInfo
+function getCountryInfo(phoneCode) {
     const countryMap = {
-        '+1': '🇺🇸', '+44': '🇬🇧', '+49': '🇩🇪', '+33': '🇫🇷',
-        '+39': '🇮🇹', '+34': '🇪🇸', '+41': '🇨🇭', '+43': '🇦🇹',
-        '+31': '🇳🇱', '+32': '🇧🇪', '+45': '🇩🇰', '+46': '🇸🇪',
-        '+47': '🇳🇴', '+358': '🇫🇮', '+351': '🇵🇹', '+30': '🇬🇷',
-        '+90': '🇹🇷', '+7': '🇷🇺', '+86': '🇨🇳', '+81': '🇯🇵',
-        '+82': '🇰🇷', '+91': '🇮🇳', '+55': '🇧🇷', '+52': '🇲🇽',
-        '+61': '🇦🇺', '+64': '🇳🇿', '+27': '🇿🇦', '+971': '🇦🇪',
-        '+966': '🇸🇦', '+65': '🇸🇬', '+60': '🇲🇾', '+63': '🇵🇭',
-        '+62': '🇮🇩', '+66': '🇹🇭', '+84': '🇻🇳', '+886': '🇹🇼',
-        '+852': '🇭🇰', '+853': '🇲🇴', '+353': '🇮🇪', '+48': '🇵🇱',
-        '+420': '🇨🇿', '+36': '🇭🇺', '+43': '🇦🇹', '+41': '🇨🇭'
+        '+1': { emoji: '🇺🇸', name: 'United States' },
+        '+44': { emoji: '🇬🇧', name: 'United Kingdom' },
+        '+49': { emoji: '🇩🇪', name: 'Germany' },
+        '+33': { emoji: '🇫🇷', name: 'France' },
+        '+39': { emoji: '🇮🇹', name: 'Italy' },
+        '+34': { emoji: '🇪🇸', name: 'Spain' },
+        '+41': { emoji: '🇨🇭', name: 'Switzerland' },
+        '+43': { emoji: '🇦🇹', name: 'Austria' },
+        '+31': { emoji: '🇳🇱', name: 'Netherlands' },
+        '+32': { emoji: '🇧🇪', name: 'Belgium' },
+        '+45': { emoji: '🇩🇰', name: 'Denmark' },
+        '+46': { emoji: '🇸🇪', name: 'Sweden' },
+        '+47': { emoji: '🇳🇴', name: 'Norway' },
+        '+358': { emoji: '🇫🇮', name: 'Finland' },
+        '+351': { emoji: '🇵🇹', name: 'Portugal' },
+        '+30': { emoji: '🇬🇷', name: 'Greece' },
+        '+90': { emoji: '🇹🇷', name: 'Turkey' },
+        '+7': { emoji: '🇷🇺', name: 'Russia' },
+        '+86': { emoji: '🇨🇳', name: 'China' },
+        '+81': { emoji: '🇯🇵', name: 'Japan' },
+        '+82': { emoji: '🇰🇷', name: 'South Korea' },
+        '+91': { emoji: '🇮🇳', name: 'India' },
+        '+55': { emoji: '🇧🇷', name: 'Brazil' },
+        '+52': { emoji: '🇲🇽', name: 'Mexico' },
+        '+61': { emoji: '🇦🇺', name: 'Australia' },
+        '+64': { emoji: '🇳🇿', name: 'New Zealand' },
+        '+27': { emoji: '🇿🇦', name: 'South Africa' },
+        '+971': { emoji: '🇦🇪', name: 'UAE' },
+        '+966': { emoji: '🇸🇦', name: 'Saudi Arabia' },
+        '+65': { emoji: '🇸🇬', name: 'Singapore' },
+        '+60': { emoji: '🇲🇾', name: 'Malaysia' },
+        '+63': { emoji: '🇵🇭', name: 'Philippines' },
+        '+62': { emoji: '🇮🇩', name: 'Indonesia' },
+        '+66': { emoji: '🇹🇭', name: 'Thailand' },
+        '+84': { emoji: '🇻🇳', name: 'Vietnam' },
+        '+886': { emoji: '🇹🇼', name: 'Taiwan' },
+        '+852': { emoji: '🇭🇰', name: 'Hong Kong' },
+        '+853': { emoji: '🇲🇴', name: 'Macau' },
+        '+353': { emoji: '🇮🇪', name: 'Ireland' },
+        '+48': { emoji: '🇵🇱', name: 'Poland' },
+        '+420': { emoji: '🇨🇿', name: 'Czech Republic' },
+        '+36': { emoji: '🇭🇺', name: 'Hungary' },
+        '+385': { emoji: '🇭🇷', name: 'Croatia' },
+        '+356': { emoji: '🇲🇹', name: 'Malta' },
+        '+357': { emoji: '🇨🇾', name: 'Cyprus' },
+        '+372': { emoji: '🇪🇪', name: 'Estonia' },
+        '+371': { emoji: '🇱🇻', name: 'Latvia' },
+        '+370': { emoji: '🇱🇹', name: 'Lithuania' },
+        '+373': { emoji: '🇲🇩', name: 'Moldova' },
+        '+377': { emoji: '🇲🇨', name: 'Monaco' },
+        '+423': { emoji: '🇱🇮', name: 'Liechtenstein' },
+        '+44-1624': { emoji: '🇮🇲', name: 'Isle of Man' },
+        '+299': { emoji: '🇬🇱', name: 'Greenland' },
+        '+298': { emoji: '🇫🇴', name: 'Faroe Islands' }
     };
     
-    for (const [code, emoji] of Object.entries(countryMap)) {
+    // 先尝试匹配完整前缀（如 +44-1624）
+    for (const [code, info] of Object.entries(countryMap)) {
         if (phoneCode.startsWith(code)) {
-            return emoji;
+            return info;
         }
     }
-    return '🌍';
+    
+    // 如果没匹配到，返回默认值
+    return { emoji: '🌍', name: 'Unknown' };
 }
 
 // ========== 工具函数 ==========
