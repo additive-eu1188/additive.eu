@@ -19,7 +19,7 @@ async function loadUsersPage() {
                             <th style="min-width: 100px;">Phone</th>
                             <th style="min-width: 80px;">User ID</th>
                             <th style="min-width: 100px;">Referrer</th>
-                            <th style="min-width: 70px;">Country</th>
+                            <th style="min-width: 100px;">Country</th>
                             <th style="min-width: 100px;">VIP Level</th>
                             <th style="min-width: 90px;">Pending (€)</th>
                             <th style="min-width: 110px;">Balance (€)</th>
@@ -27,7 +27,7 @@ async function loadUsersPage() {
                             <th style="min-width: 180px;">Edit Orders</th>
                             <th style="min-width: 130px;">Registered IP</th>
                             <th style="min-width: 150px;">Time Registered</th>
-                            <th style="min-width: 100px;">Actions</th>
+                            <th style="min-width: 110px;">Actions</th>
                         </tr>
                     </thead>
                     <tbody id="usersTableBody"></tbody>
@@ -85,7 +85,9 @@ async function loadUsersPage() {
         .btn-save { background: #2f6b3a; }
         .btn-deposit { background: #2f6b3a; }
         .btn-edit-user { background: #2f5f7a; }
-        .btn-vip { background: #7a5f8a; }
+        .btn-edit-user:hover { background: #3f7f9a; }
+        .btn-delete-user { background: #7a2f2f; }
+        .btn-delete-user:hover { background: #9b3f3f; }
         .vip-select {
             background: #0f172a;
             border: 1px solid #1e2a3a;
@@ -115,8 +117,12 @@ async function loadUsersPage() {
         .vip-badge.level2 { background: rgba(255,184,77,0.15); color: #ffb84d; }
         .vip-badge.level3 { background: rgba(255,215,0,0.2); color: #ffd700; }
         .country-flag {
-            font-size: 16px;
+            font-size: 14px;
             margin-right: 4px;
+        }
+        .country-name {
+            font-size: 12px;
+            color: #c0c8e0;
         }
         .pending-negative {
             color: #ff5a5a !important;
@@ -150,11 +156,34 @@ async function loadUsersPage() {
         .actions-wrapper {
             display: flex;
             gap: 4px;
-            flex-wrap: wrap;
+            flex-wrap: nowrap;
         }
         .actions-wrapper .btn-sm {
-            font-size: 9px;
+            font-size: 10px;
             padding: 3px 8px;
+        }
+        .balance-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex-wrap: nowrap;
+        }
+        .balance-wrapper .balance-amount {
+            font-weight: 600;
+            font-size: 13px;
+            color: #2ed15a;
+        }
+        .vip-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex-wrap: nowrap;
+        }
+        .orders-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex-wrap: nowrap;
         }
         @media (max-width: 1400px) {
             .table-container {
@@ -288,9 +317,9 @@ async function loadUsers() {
             row.insertCell(2).innerHTML = `<span style="font-size: 12px; color: #8a9abb;">${escapeHtml(u.invited_by_username || '-')}</span>`;
             
             // 4. Country (从手机号提取)
-const countryCode = u.phone ? u.phone.replace(/[^0-9+]/g, '').substring(0, 6) : '';
-const countryInfo = getCountryInfo(countryCode);
-row.insertCell(3).innerHTML = `<span style="font-size: 13px;">${countryInfo.emoji} ${countryInfo.name}</span>`;
+            const countryCode = u.phone ? u.phone.replace(/[^0-9+]/g, '').substring(0, 6) : '';
+            const countryInfo = getCountryInfo(countryCode);
+            row.insertCell(3).innerHTML = `<span class="country-flag">${countryInfo.emoji}</span> <span class="country-name">${countryInfo.name}</span>`;
             
             // 5. VIP Level (带下拉升级选项)
             const vipCell = row.insertCell(4);
@@ -305,7 +334,7 @@ row.insertCell(3).innerHTML = `<span style="font-size: 13px;">${countryInfo.emoj
                 optionsHtml += `<option value="${v.level}" ${selected}>${v.name}</option>`;
             });
             vipCell.innerHTML = `
-                <div style="display: flex; align-items: center; gap: 6px; flex-wrap: nowrap;">
+                <div class="vip-wrapper">
                     <span class="vip-badge level${u.vip_level || 1}">${vipName}</span>
                     <select class="vip-select vip-change-select" data-uid="${u.uid}" data-username="${escapeHtml(u.username)}">
                         ${optionsHtml}
@@ -320,16 +349,16 @@ row.insertCell(3).innerHTML = `<span style="font-size: 13px;">${countryInfo.emoj
             // 7. Balance (€) + Deposit 按钮
             const balanceCell = row.insertCell(6);
             balanceCell.innerHTML = `
-                <div style="display: flex; align-items: center; gap: 6px; flex-wrap: nowrap;">
-                    <span class="text-green" style="font-weight: 600; font-size: 13px;">€${(u.balance || 0).toFixed(2)}</span>
-                    <button class="btn-sm btn-deposit deposit-btn" data-uid="${u.uid}" data-username="${escapeHtml(u.username)}"><i class="fas fa-plus-circle"></i></button>
+                <div class="balance-wrapper">
+                    <span class="balance-amount">€${(u.balance || 0).toFixed(2)}</span>
+                    <button class="btn-sm btn-deposit deposit-btn" data-uid="${u.uid}" data-username="${escapeHtml(u.username)}" title="充值"><i class="fas fa-plus-circle"></i></button>
                 </div>
             `;
             
             // 8. Orders (带 reset 按钮)
             const ordersCell = row.insertCell(7);
             ordersCell.innerHTML = `
-                <div style="display: flex; align-items: center; gap: 6px; flex-wrap: nowrap;">
+                <div class="orders-wrapper">
                     <span class="orders-badge">${orderCount}/${ordersLimit}</span>
                     <button class="btn-sm btn-reset reset-orders-btn" data-uid="${u.uid}" data-username="${escapeHtml(u.username)}" title="重置订单数"><i class="fas fa-undo-alt"></i></button>
                 </div>
@@ -342,7 +371,7 @@ row.insertCell(3).innerHTML = `<span style="font-size: 13px;">${countryInfo.emoj
                     <span class="current-orders-display" id="currentOrders_${u.uid}">${orderCount}</span>
                     <span style="color: #4a7cff; font-size: 11px;">→</span>
                     <input type="number" id="editOrders_${u.uid}" class="orders-input" value="${orderCount}" min="0" step="1" style="width: 55px;">
-                    <button class="btn-sm btn-save save-orders-btn" data-uid="${u.uid}" data-username="${escapeHtml(u.username)}"><i class="fas fa-save"></i></button>
+                    <button class="btn-sm btn-save save-orders-btn" data-uid="${u.uid}" data-username="${escapeHtml(u.username)}" title="保存订单数"><i class="fas fa-save"></i></button>
                 </div>
             `;
             
@@ -353,7 +382,7 @@ row.insertCell(3).innerHTML = `<span style="font-size: 13px;">${countryInfo.emoj
             const registerTime = u.created_at ? new Date(u.created_at) : null;
             row.insertCell(10).innerHTML = `<span style="font-size: 11px; color: #8a9abb;">${registerTime ? registerTime.toLocaleString() : '-'}</span>`;
             
-            // 12. Actions (Edit Users 按钮)
+            // 12. Actions (Edit Users + Delete User 按钮)
             const actionsCell = row.insertCell(11);
             actionsCell.innerHTML = `
                 <div class="actions-wrapper">
@@ -367,6 +396,12 @@ row.insertCell(3).innerHTML = `<span style="font-size: 13px;">${countryInfo.emoj
                         data-password=""
                         title="编辑用户">
                         <i class="fas fa-edit"></i>
+                    </button>
+                    <button class="btn-sm btn-delete-user delete-user-btn" 
+                        data-uid="${u.uid}" 
+                        data-username="${escapeHtml(u.username)}"
+                        title="删除用户">
+                        <i class="fas fa-trash"></i>
                     </button>
                 </div>
             `;
@@ -442,6 +477,15 @@ row.insertCell(3).innerHTML = `<span style="font-size: 13px;">${countryInfo.emoj
             });
         });
         
+        // ========== 绑定事件 - Delete User 按钮 ==========
+        document.querySelectorAll('.delete-user-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const uid = btn.dataset.uid;
+                const username = btn.dataset.username;
+                deleteUser(uid, username);
+            });
+        });
+        
         renderUserPagination();
         
     } catch (e) {
@@ -465,7 +509,6 @@ async function updateUserVip(uid, username, newLevel) {
         loadUsers();
     } catch (e) {
         showToast('更新 VIP 失败: ' + e.message, 'error');
-        // 刷新页面恢复显示
         loadUsers();
     }
 }
@@ -658,6 +701,53 @@ async function saveUserOrders(uid, username, newOrderCount) {
     }
 }
 
+// ========== 删除用户 ==========
+async function deleteUser(uid, username) {
+    showConfirm(
+        '⚠️ 删除用户', 
+        `确定要永久删除用户 <strong>${escapeHtml(username)}</strong> (UID: ${uid}) 吗？<br><br>此操作将同时删除：<br>• 用户账户信息<br>• 订单历史<br>• 充值记录<br>• 提现记录<br>• KYC 验证记录<br><br><span style="color: #ff5a5a;">此操作不可恢复！</span>`,
+        async () => {
+            try {
+                showToast('正在删除用户数据...', 'info');
+                
+                // 1. 删除订单历史
+                await sb.from('order_history').delete().eq('uid', uid);
+                
+                // 2. 删除充值记录
+                await sb.from('deposits').delete().eq('uid', uid);
+                
+                // 3. 删除提现记录
+                await sb.from('withdrawals').delete().eq('uid', uid);
+                
+                // 4. 删除 KYC 记录
+                await sb.from('kyc_verifications').delete().eq('uid', uid);
+                
+                // 5. 删除用户 KYC 状态
+                await sb.from('user_kyc_status').delete().eq('uid', uid);
+                
+                // 6. 删除触发订单
+                await sb.from('user_trigger_orders').delete().eq('uid', uid);
+                
+                // 7. 最后删除用户
+                const { error: userError } = await sb
+                    .from('users')
+                    .delete()
+                    .eq('uid', uid);
+                
+                if (userError) throw userError;
+                
+                showToast(`✅ 用户 ${username} 已永久删除`, 'success');
+                loadUsers();
+                if (window.loadDashboardPage) window.loadDashboardPage(currentDays);
+                
+            } catch (e) {
+                console.error('删除用户失败:', e);
+                showToast('删除失败: ' + e.message, 'error');
+            }
+        }
+    );
+}
+
 // ========== 打开编辑用户弹窗 ==========
 function openEditUserModal(uid, username, phone, pin, currency, address) {
     const modalHtml = `
@@ -797,7 +887,7 @@ function renderUserPagination() {
     }
 }
 
-// 替换 getCountryEmoji 函数为 getCountryInfo
+// ========== 获取国家信息 ==========
 function getCountryInfo(phoneCode) {
     const countryMap = {
         '+1': { emoji: '🇺🇸', name: 'United States' },
@@ -851,12 +941,17 @@ function getCountryInfo(phoneCode) {
         '+373': { emoji: '🇲🇩', name: 'Moldova' },
         '+377': { emoji: '🇲🇨', name: 'Monaco' },
         '+423': { emoji: '🇱🇮', name: 'Liechtenstein' },
-        '+44-1624': { emoji: '🇮🇲', name: 'Isle of Man' },
         '+299': { emoji: '🇬🇱', name: 'Greenland' },
-        '+298': { emoji: '🇫🇴', name: 'Faroe Islands' }
+        '+298': { emoji: '🇫🇴', name: 'Faroe Islands' },
+        '+377': { emoji: '🇲🇨', name: 'Monaco' },
+        '+590': { emoji: '🇬🇵', name: 'Guadeloupe' },
+        '+596': { emoji: '🇲🇶', name: 'Martinique' },
+        '+262': { emoji: '🇷🇪', name: 'Reunion' },
+        '+687': { emoji: '🇳🇨', name: 'New Caledonia' },
+        '+689': { emoji: '🇵🇫', name: 'French Polynesia' }
     };
     
-    // 先尝试匹配完整前缀（如 +44-1624）
+    // 先尝试匹配完整前缀
     for (const [code, info] of Object.entries(countryMap)) {
         if (phoneCode.startsWith(code)) {
             return info;
