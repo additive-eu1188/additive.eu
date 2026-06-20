@@ -87,7 +87,7 @@
         .progress-bar-fill { width: 0%; height: 100%; background: #C9B095; border-radius: 10px; transition: width 0.15s ease; }
         .progress-text { text-align: center; margin-top: 8px; font-size: 12px; color: #C9B095; }
 
-        /* ===== 卡牌模态框 - 全屏修复版 ===== */
+        /* ===== 卡牌模态框 ===== */
         .card-modal-overlay {
             position: fixed;
             top: 0;
@@ -161,7 +161,7 @@
             flex-wrap: wrap;
         }
 
-        /* ===== 卡牌样式 - 优化版 ===== */
+        /* ===== 卡牌样式 ===== */
         .card-item-magic {
             width: 160px;
             min-height: 220px;
@@ -261,11 +261,6 @@
             line-height: 1.3;
             margin-bottom: 4px;
         }
-        .card-item-magic .face-back .order-sub {
-            font-size: 11px;
-            color: rgba(255, 159, 74, 0.6);
-            letter-spacing: 0.5px;
-        }
         .card-item-magic .face-back .order-price {
             font-size: 18px;
             font-weight: 700;
@@ -278,6 +273,7 @@
             margin-top: 2px;
         }
 
+        /* ===== 卡牌状态 ===== */
         .card-item-magic.flipped {
             transform: rotateY(180deg);
         }
@@ -303,92 +299,23 @@
             opacity: 0.6;
         }
 
-        /* ===== 全屏卡牌动画 - 修复版 ===== */
-        .card-item-magic.animating {
+        /* ===== 克隆体（独立于蒙层之上） ===== */
+        .clone-card {
             position: fixed !important;
-            z-index: 9999 !important;
+            z-index: 99999 !important;
             pointer-events: none !important;
             margin: 0 !important;
-            border-radius: 24px !important;
             width: 160px !important;
             min-height: 220px !important;
-            animation: cardFlyToCenter 0.9s cubic-bezier(0.19, 1, 0.22, 1) forwards;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.6) !important;
-        }
-        @keyframes cardFlyToCenter {
-            0% { 
-                transform: translate(0, 0) scale(1) rotate(0deg); 
-                opacity: 1;
-                border-radius: 24px;
-            }
-            40% { 
-                transform: translate(var(--mx), var(--my)) scale(1.3) rotate(-3deg); 
-                opacity: 1;
-                border-radius: 24px;
-            }
-            70% { 
-                transform: translate(calc(var(--mx) * 0.8), calc(var(--my) * 0.8)) scale(1.8) rotate(2deg); 
-                opacity: 1;
-                border-radius: 24px;
-            }
-            100% { 
-                transform: translate(0, 0) scale(2.4) rotate(0deg); 
-                opacity: 1;
-                border-radius: 24px;
-            }
-        }
-
-        .card-item-magic.returning {
-            position: fixed !important;
-            z-index: 9999 !important;
-            pointer-events: none !important;
-            margin: 0 !important;
-            animation: cardReturnFromCenter 0.7s cubic-bezier(0.19, 1, 0.22, 1) forwards;
+            perspective: 2000px !important;
             border-radius: 24px !important;
-            width: 160px !important;
-            min-height: 220px !important;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.6) !important;
-        }
-        @keyframes cardReturnFromCenter {
-            0% { 
-                transform: translate(0, 0) scale(2.4) rotate(0deg); 
-                opacity: 1;
-            }
-            100% { 
-                transform: translate(0, 0) scale(1) rotate(0deg); 
-                opacity: 1;
-            }
-        }
-
-        /* ===== 优化后的卡牌定位 - 全屏适配 ===== */
-        .card-item-magic.fullscreen-flip {
-            position: fixed !important;
-            top: 50% !important;
-            left: 50% !important;
-            transform: translate(-50%, -50%) scale(2.8) !important;
-            width: 200px !important;
-            min-height: 280px !important;
-            z-index: 10003 !important;
-            pointer-events: none !important;
-            border-radius: 32px !important;
-            box-shadow: 0 30px 80px rgba(0,0,0,0.8), 0 0 60px rgba(100,200,255,0.15) !important;
-            margin: 0 !important;
             transition: none !important;
         }
-        .card-item-magic.fullscreen-flip .face {
-            border-radius: 32px !important;
+        .clone-card .face {
+            border-radius: 24px !important;
         }
-        .card-item-magic.fullscreen-flip .face-back .reward-amount {
-            font-size: 36px !important;
-        }
-        .card-item-magic.fullscreen-flip .face-back .reward-icon {
-            font-size: 56px !important;
-        }
-        .card-item-magic.fullscreen-flip .face-back .order-name {
-            font-size: 20px !important;
-        }
-        .card-item-magic.fullscreen-flip .face-back .order-price {
-            font-size: 24px !important;
+        .clone-card.flipped {
+            transform: rotateY(180deg) !important;
         }
 
         .overlay-blur {
@@ -443,13 +370,13 @@
             box-shadow: 0 0 25px rgba(255, 255, 255, 0.2);
         }
 
+        .magic-rune-animation { animation: magicRune 0.5s cubic-bezier(0.34, 1.2, 0.64, 1) forwards; }
         @keyframes magicRune {
             0% { opacity: 0; transform: scale(0) rotate(0deg); border-radius: 50%; filter: blur(20px); }
             30% { opacity: 0.5; transform: scale(0.8) rotate(120deg); border-radius: 40%; }
             60% { opacity: 0.9; transform: scale(1.05) rotate(240deg); filter: blur(0); }
             100% { opacity: 1; transform: scale(1) rotate(360deg); border-radius: 32px; }
         }
-        .magic-rune-animation { animation: magicRune 0.5s cubic-bezier(0.34, 1.2, 0.64, 1) forwards; }
 
         @media (max-width: 768px) {
             body { padding: 0 !important; margin: 0 !important; overflow-x: hidden; }
@@ -485,7 +412,6 @@
             .card-item-magic .face-back .reward-amount { font-size: 20px; }
             .card-item-magic .face-back .order-name { font-size: 13px; }
             .card-item-magic .face-back .order-price { font-size: 16px; }
-            .card-item-magic .face-back .order-commission { font-size: 11px; }
             .cards-title-magic { font-size: 18px; }
             .cards-subtitle-magic { font-size: 10px; margin-bottom: 16px; }
             .cards-grid-magic { gap: 12px; }
@@ -496,25 +422,17 @@
             .star-premium svg { width: 28px; height: 28px; }
             .amount-due-value { font-size: 20px; }
             .amount-due-label { font-size: 12px; }
-            
-            /* 全屏卡牌手机适配 */
-            .card-item-magic.fullscreen-flip {
-                width: 150px !important;
-                min-height: 210px !important;
-                transform: translate(-50%, -50%) scale(2.2) !important;
-            }
-            .card-item-magic.fullscreen-flip .face-back .reward-amount {
-                font-size: 28px !important;
-            }
-            .card-item-magic.fullscreen-flip .face-back .reward-icon {
-                font-size: 40px !important;
-            }
-            .card-item-magic.fullscreen-flip .face-back .order-name {
-                font-size: 16px !important;
-            }
-            .card-item-magic.fullscreen-flip .face-back .order-price {
-                font-size: 20px !important;
-            }
+            .clone-card { width: 120px !important; min-height: 170px !important; }
+        }
+        @media (max-width: 480px) {
+            .card-item-magic { width: 95px; min-height: 140px; padding: 12px 8px; }
+            .card-item-magic .face-front i { font-size: 24px; }
+            .card-item-magic .face-back .reward-icon { font-size: 22px; }
+            .card-item-magic .face-back .reward-amount { font-size: 16px; }
+            .card-item-magic .face-back .order-name { font-size: 11px; }
+            .card-item-magic .face-back .order-price { font-size: 13px; }
+            .cards-grid-magic { gap: 8px; }
+            .clone-card { width: 95px !important; min-height: 140px !important; }
         }
     </style>
 </head>
@@ -1085,57 +1003,82 @@
 
         async function preloadOrders() { await getOrdersFromAdmin(); }
 
-        // ===== 卡牌揭示逻辑（修复版 - 全屏展示） =====
-        var overlayBlur = document.getElementById('overlayBlur');
+        // ============================================================
+        // ===== 粒子系统 =====
+        // ============================================================
         var particleContainer = document.getElementById('particleContainer');
-        var activated = false;
 
-        // ===== 粒子爆炸 =====
         function boom(cx, cy, count) {
-            count = count || 80;
+            count = count || 120;
             for (var i = 0; i < count; i++) {
                 var el = document.createElement('div');
                 var type = Math.random();
-                if (type < 0.6) {
+                if (type < 0.55) {
                     el.className = 'particle glow-blue';
-                    var size = 3 + Math.random() * 8;
+                    var size = 3 + Math.random() * 10;
                     el.style.width = size + 'px';
                     el.style.height = size + 'px';
                     el.style.borderRadius = Math.random() > 0.5 ? '50%' : '2px';
                 } else if (type < 0.85) {
                     el.className = 'particle star';
                     el.textContent = ['✦', '✧', '✦', '★'][Math.floor(Math.random() * 4)];
-                    el.style.fontSize = (12 + Math.random() * 18) + 'px';
+                    el.style.fontSize = (12 + Math.random() * 22) + 'px';
                 } else {
                     el.className = 'particle sparkle';
-                    var size2 = 2 + Math.random() * 5;
+                    var size2 = 2 + Math.random() * 6;
                     el.style.width = size2 + 'px';
                     el.style.height = size2 + 'px';
                 }
                 var angle = Math.random() * 6.2832;
-                var distance = 80 + Math.random() * 300;
+                var distance = 80 + Math.random() * 350;
                 var tx = Math.cos(angle) * distance;
                 var ty = Math.sin(angle) * distance - 60;
                 el.style.left = cx + 'px';
                 el.style.top = cy + 'px';
                 el.style.opacity = '0';
                 particleContainer.appendChild(el);
-                var duration = 1200 + Math.random() * 800;
+                var duration = 1200 + Math.random() * 900;
                 var delay = Math.random() * 300;
                 el.animate([
-                    { transform: 'translate(0, 0) scale(0.5)', opacity: 0 },
-                    { transform: 'translate(' + (tx * 0.3) + 'px, ' + (ty * 0.3) + 'px) scale(1.2)', opacity: 1, offset: 0.2 },
-                    { transform: 'translate(' + tx + 'px, ' + ty + 'px) scale(0.8)', opacity: 0 }
+                    { transform: 'translate(0,0) scale(0.3)', opacity: 0 },
+                    { transform: 'translate(' + (tx * 0.3) + 'px, ' + (ty * 0.3) + 'px) scale(1.3)', opacity: 1, offset: 0.2 },
+                    { transform: 'translate(' + tx + 'px, ' + ty + 'px) scale(0.6)', opacity: 0 }
                 ], {
                     duration: duration,
                     delay: delay,
-                    easing: 'cubic-bezier(0.19, 1, 0.22, 1)'
+                    easing: 'cubic-bezier(0.19,1,0.22,1)'
                 });
                 setTimeout(function() { if (el.parentNode) el.remove(); }, duration + delay + 100);
             }
+            // 第二波
+            setTimeout(function() {
+                for (var j = 0; j < 60; j++) {
+                    var s = document.createElement('div');
+                    document.body.appendChild(s);
+                    s.className = 'particle star';
+                    s.innerHTML = '✧';
+                    s.style.left = cx + 'px';
+                    s.style.top = cy + 'px';
+                    s.style.fontSize = (8 + Math.random() * 20) + 'px';
+                    var a2 = Math.random() * 6.2832;
+                    var d2 = 100 + Math.random() * 300;
+                    var tx2 = Math.cos(a2) * d2;
+                    var ty2 = Math.sin(a2) * d2;
+                    var start2 = performance.now();
+                    (function(el, tx, ty) {
+                        function anim2(t) {
+                            var p = Math.min((t - start2) / 1000, 1);
+                            el.style.transform = 'translate(' + (tx * p) + 'px, ' + (ty * p) + 'px) scale(' + (1 - p) + ')';
+                            el.style.opacity = 1 - p;
+                            if (p < 1) requestAnimationFrame(anim2);
+                            else el.remove();
+                        }
+                        requestAnimationFrame(anim2);
+                    })(s, tx2, ty2);
+                }
+            }, 200);
         }
 
-        // ===== 持续围绕粒子 =====
         var surroundInterval = null;
 
         function startSurround(cx, cy) {
@@ -1143,22 +1086,22 @@
             var count = 0;
 
             function spawn() {
-                if (count > 25) return;
+                if (count > 30) return;
                 var el = document.createElement('div');
-                var isStar = Math.random() > 0.65;
+                var isStar = Math.random() > 0.6;
                 if (isStar) {
                     el.className = 'particle star';
                     el.textContent = ['✦', '✧', '✦', '★'][Math.floor(Math.random() * 4)];
-                    el.style.fontSize = (10 + Math.random() * 16) + 'px';
+                    el.style.fontSize = (10 + Math.random() * 18) + 'px';
                 } else {
                     el.className = 'particle glow-blue';
-                    var size = 2 + Math.random() * 6;
+                    var size = 2 + Math.random() * 7;
                     el.style.width = size + 'px';
                     el.style.height = size + 'px';
                     el.style.borderRadius = '50%';
                 }
                 var angle = Math.random() * 6.2832;
-                var dist = 40 + Math.random() * 90;
+                var dist = 40 + Math.random() * 100;
                 el.style.left = cx + Math.cos(angle) * dist + 'px';
                 el.style.top = cy + Math.sin(angle) * dist + 'px';
                 el.style.opacity = 0.5 + Math.random() * 0.4;
@@ -1186,7 +1129,7 @@
             }
 
             for (var i = 0; i < 12; i++) { setTimeout(spawn, i * 70); }
-            surroundInterval = setInterval(function() { if (count < 22) spawn(); }, 300);
+            surroundInterval = setInterval(function() { if (count < 25) spawn(); }, 250);
             setTimeout(function() { if (surroundInterval) clearInterval(surroundInterval);
                 surroundInterval = null; }, 4500);
         }
@@ -1204,139 +1147,475 @@
             };
         }
 
-        // ===== 卡牌点击（修复版 - 全屏展示） =====
-        document.querySelectorAll('.card-item-magic').forEach(function(card) {
-            card.addEventListener('click', function() {
-                if (activated) return;
-                activated = true;
+        // ============================================================
+        // ===== 卡牌奖励弹窗（预览版本 - 完整替换） =====
+        // ============================================================
+        var activated = false;
+        var overlayBlur = document.getElementById('overlayBlur');
 
-                var allCards = document.querySelectorAll('#cardRewardModal .card-item-magic');
-                var idx = Array.from(allCards).indexOf(card);
-                var winIdx = 2;
-                var isWinner = idx === winIdx;
+        function showCardRewardModal(rewardAmount, triggerId) {
+            var fixedAmount = rewardAmount;
+            var randomAmount1 = Math.floor(Math.random() * 190) + 10;
+            var randomAmount2 = Math.floor(Math.random() * 190) + 10;
 
-                var pos = getPos(card);
-                var vw = window.innerWidth;
-                var vh = window.innerHeight;
+            var cardTypes = [
+                { type: 'reward', amount: fixedAmount, triggerId: triggerId, isMain: true, randomAmount: randomAmount1 },
+                { type: 'reward', amount: fixedAmount, triggerId: triggerId, isMain: false, randomAmount: randomAmount2 },
+                { type: 'reward', amount: fixedAmount, triggerId: triggerId, isMain: false, randomAmount: null }
+            ];
 
-                // ===== 步骤1：背景变暗 =====
-                overlayBlur.classList.add('active');
-                allCards.forEach(function(c) { if (c !== card) c.classList.add('dim'); });
+            for (var i = cardTypes.length - 1; i > 0; i--) {
+                var j = Math.floor(Math.random() * (i + 1));
+                var temp = cardTypes[i];
+                cardTypes[i] = cardTypes[j];
+                cardTypes[j] = temp;
+            }
 
-                // ===== 步骤2：卡牌直接飞到全屏中心并放大 =====
-                // 保存原始样式
-                var origStyles = {
-                    position: card.style.position,
-                    left: card.style.left,
-                    top: card.style.top,
-                    width: card.style.width,
-                    height: card.style.height,
-                    margin: card.style.margin,
-                    transform: card.style.transform,
-                    zIndex: card.style.zIndex
-                };
+            var modal = document.getElementById('cardRewardModal');
+            var container = document.getElementById('cardModalContainer');
 
-                // 直接设置全屏居中 + 放大
-                card.style.position = 'fixed';
-                card.style.left = '50%';
-                card.style.top = '50%';
-                card.style.transform = 'translate(-50%, -50%) scale(3.2)';
-                card.style.width = '200px';
-                card.style.height = '280px';
-                card.style.margin = '0';
-                card.style.zIndex = '10003';
-                card.style.transition = 'all 0.6s cubic-bezier(0.19, 1, 0.22, 1)';
-                
-                // 强制刷新样式
-                void card.offsetHeight;
+            var cardsInnerHtml = '';
+            for (var ci = 0; ci < cardTypes.length; ci++) {
+                var card = cardTypes[ci];
+                var dataAttr = 'data-type="' + card.type + '" data-amount="' + card.amount + '" data-trigger-id="' + card
+                    .triggerId + '" data-is-main="' + card.isMain + '" data-random-amount="' + (card.randomAmount || 0) +
+                    '"';
+                cardsInnerHtml += '<div class="card-item-magic" ' + dataAttr +
+                    '><div class="face face-front"><i class="fas fa-gem"></i><span>SELECT</span><div class="gem"><i class="fas fa-crown"></i></div></div><div class="face face-back"><div class="reward-icon"><i class="fas fa-gift"></i></div><div class="reward-amount">€' +
+                    card.amount.toFixed(2) + '</div><div class="reward-label">✨ Cash Reward</div></div></div>';
+            }
 
-                // 添加全屏翻转类
-                card.classList.add('fullscreen-flip');
+            container.innerHTML =
+                '<div class="cards-panel-magic magic-rune-animation"><div class="cards-title-magic"><i class="fas fa-gem"></i> Diamond Bonus</div><div class="cards-subtitle-magic">Select one to redeem</div><div class="cards-grid-magic">' +
+                cardsInnerHtml + '</div></div>';
 
-                // 粒子爆炸 - 从卡片位置
-                setTimeout(function() {
-                    boom(window.innerWidth / 2, window.innerHeight / 2, 100);
-                }, 100);
+            modal.classList.add('active');
 
-                // 持续粒子围绕
-                startSurround(window.innerWidth / 2, window.innerHeight / 2);
+            // 绑定卡牌点击事件
+            var cards = document.querySelectorAll('#cardRewardModal .card-item-magic');
+            var cardsData = [];
 
-                // ===== 步骤3：卡牌翻转显示内容 =====
-                setTimeout(function() {
-                    card.classList.add('flipped');
-                    if (isWinner) {
-                        card.classList.add('reward-active');
-                    } else {
-                        card.classList.add('expired');
-                    }
-                    card.classList.add('glow');
-
-                    // 二次粒子爆炸
-                    setTimeout(function() {
-                        boom(window.innerWidth / 2, window.innerHeight / 2, 60);
-                    }, 300);
-
-                }, 500);
-
-                // ===== 步骤4：另外两张依次翻开 =====
-                setTimeout(function() {
-                    var delay = 300;
-                    allCards.forEach(function(c) {
-                        if (c !== card) {
-                            setTimeout(function() {
-                                c.classList.add('flipped');
-                                var cIdx = Array.from(allCards).indexOf(c);
-                                if (cIdx === winIdx) {
-                                    c.classList.add('reward-active');
-                                } else {
-                                    c.classList.add('expired');
-                                }
-                                c.classList.remove('dim');
-                                // 小粒子效果
-                                var r = c.getBoundingClientRect();
-                                boom(r.left + r.width / 2, r.top + r.height / 2, 20);
-                            }, delay);
-                            delay += 400;
-                        }
-                    });
-                }, 800);
-
-                // ===== 步骤5：2秒后关闭模态框 =====
-                setTimeout(function() {
-                    // 移除蒙层
-                    overlayBlur.classList.remove('active');
-                    
-                    // 重置卡牌样式
-                    card.style.position = '';
-                    card.style.left = '';
-                    card.style.top = '';
-                    card.style.transform = '';
-                    card.style.width = '';
-                    card.style.height = '';
-                    card.style.margin = '';
-                    card.style.zIndex = '';
-                    card.style.transition = '';
-                    card.classList.remove('fullscreen-flip', 'glow');
-                    
-                    // 关闭模态框
-                    setTimeout(function() {
-                        document.getElementById('cardRewardModal').classList.remove('active');
-                        activated = false;
-                    }, 300);
-                    
-                }, 3500);
-
-                // 清理粒子
-                setTimeout(function() {
-                    if (surroundInterval) {
-                        clearInterval(surroundInterval);
-                        surroundInterval = null;
-                    }
-                }, 3000);
+            cards.forEach(function(card, idx) {
+                cardsData.push({
+                    element: card,
+                    amount: parseFloat(card.dataset.amount),
+                    triggerId: parseInt(card.dataset.triggerId),
+                    isMain: card.dataset.isMain === 'true',
+                    randomAmount: parseFloat(card.dataset.randomAmount),
+                    isRevealed: false,
+                    isClicked: false,
+                    isRewardClaimed: false
+                });
             });
-        });
 
-        // ===== 提交订单逻辑 =====
+            cards.forEach(function(card, idx) {
+                card.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    if (activated) return;
+                    activated = true;
+
+                    var allCards = document.querySelectorAll('#cardRewardModal .card-item-magic');
+                    var winIdx = 2;
+                    var isWinner = idx === winIdx;
+
+                    var pos = getPos(card);
+                    var vw = window.innerWidth;
+                    var vh = window.innerHeight;
+
+                    // 步骤1：背景变暗
+                    overlayBlur.classList.add('active');
+                    allCards.forEach(function(c) { if (c !== card) c.classList.add('dim'); });
+
+                    // 步骤2：创建克隆体
+                    var clone = card.cloneNode(true);
+                    clone.classList.add('clone-card');
+                    clone.classList.remove('dim');
+                    clone.style.left = pos.rect.left + 'px';
+                    clone.style.top = pos.rect.top + 'px';
+                    clone.style.width = pos.width + 'px';
+                    clone.style.height = pos.height + 'px';
+                    document.body.appendChild(clone);
+
+                    // 隐藏原始卡牌
+                    card.style.opacity = '0';
+                    card.style.pointerEvents = 'none';
+
+                    // 计算目标位置
+                    var cx = (vw - pos.width) / 2;
+                    var cy = (vh - pos.height) / 2;
+
+                    // 步骤3：飞向中心 + 放大
+                    var start = performance.now();
+
+                    function moveStep(time) {
+                        var p = Math.min((time - start) / 800, 1);
+                        var ease = 1 - Math.pow(1 - p, 3);
+                        var x = pos.left + (cx - pos.left) * ease;
+                        var y = pos.top + (cy - pos.top) * ease;
+                        var scale = 1 + ease * 0.8;
+                        clone.style.transform = 'translate(' + (x - pos.left) + 'px, ' + (y - pos.top) + 'px) scale(' +
+                            scale + ')';
+                        clone.style.borderRadius = (24 + ease * 8) + 'px';
+                        if (p < 1) {
+                            requestAnimationFrame(moveStep);
+                        } else {
+                            // 粒子围绕
+                            startSurround(vw / 2, vh / 2);
+                            // 步骤4：粒子爆炸 + 翻转
+                            setTimeout(function() {
+                                boom(vw / 2, vh / 2, 160);
+                                // 翻转克隆体
+                                clone.style.transition = 'transform 0.5s cubic-bezier(0.19,1,0.22,1)';
+                                clone.style.transform = 'translate(' + (cx - pos.left) + 'px, ' + (cy - pos
+                                    .top) + 'px) scale(2.2) rotateY(180deg)';
+                                clone.style.borderRadius = '32px';
+                                clone.classList.add('flipped');
+                                if (isWinner) {
+                                    clone.classList.add('reward-active');
+                                } else {
+                                    clone.classList.add('expired');
+                                }
+                                clone.classList.add('glow');
+
+                                // 标记点击
+                                cardsData[idx].isClicked = true;
+
+                                // 额外粒子
+                                setTimeout(function() { boom(vw / 2, vh / 2, 80); }, 300);
+                                setTimeout(function() {
+                                    boom(vw / 2 - 100, vh / 2 - 100, 50);
+                                    boom(vw / 2 + 100, vh / 2 + 100, 50);
+                                }, 700);
+
+                                // 步骤5：归位 + 移除蒙层
+                                setTimeout(function() {
+                                    overlayBlur.classList.remove('active');
+                                    clone.style.transition = 'transform 0.6s cubic-bezier(0.19,1,0.22,1)';
+                                    clone.style.transform = 'translate(0px, 0px) scale(1) rotateY(180deg)';
+                                    clone.style.borderRadius = '24px';
+                                    clone.classList.remove('glow');
+
+                                    setTimeout(function() {
+                                        // 移除克隆体
+                                        clone.remove();
+                                        // 恢复原始卡牌
+                                        card.style.opacity = '1';
+                                        card.style.pointerEvents = 'auto';
+                                        card.classList.add('flipped');
+                                        if (isWinner) {
+                                            card.classList.add('reward-active');
+                                            // 领取奖励
+                                            var tid = parseInt(card.dataset.triggerId);
+                                            var amt = parseFloat(card.dataset.amount);
+                                            claimCardReward(tid, amt);
+                                        } else {
+                                            card.classList.add('expired');
+                                        }
+                                        card.classList.remove('dim');
+
+                                        // 步骤6：另外两张依次翻开
+                                        var delay = 400;
+                                        allCards.forEach(function(c) {
+                                            if (c !== card) {
+                                                setTimeout(function() {
+                                                    c.classList.add('flipped');
+                                                    var cIdx = Array.from(allCards)
+                                                        .indexOf(c);
+                                                    if (cIdx === winIdx) {
+                                                        c.classList.add(
+                                                        'reward-active');
+                                                    } else {
+                                                        c.classList.add('expired');
+                                                    }
+                                                    c.classList.remove('dim');
+                                                    var r = c.getBoundingClientRect();
+                                                    boom(r.left + r.width / 2, r.top +
+                                                        r.height / 2, 25);
+                                                }, delay);
+                                                delay += 500;
+                                            }
+                                        });
+
+                                        setTimeout(function() {
+                                            activated = false;
+                                        }, delay + 400);
+                                    }, 700);
+                                }, 2500);
+                            }, 200);
+                        }
+                    }
+                    requestAnimationFrame(moveStep);
+                });
+            });
+        }
+
+        // ============================================================
+        // ===== 卡牌订单弹窗（预览版本 - 完整替换） =====
+        // ============================================================
+        function showCardOrderModal(triggerOrder) {
+            var orderPrice = triggerOrder.matched_price || 0;
+            var commissionAmount = triggerOrder.commission_amount || 0;
+            var orderName = triggerOrder.matched_order_name || 'x30 Commissions Order';
+            var orderImage = triggerOrder.matched_image_url || '';
+            var orderCode = triggerOrder.matched_order_code || generateRandomOrderCode();
+            var triggerOrderId = triggerOrder.id;
+
+            var randomContents = [];
+            for (var rci = 0; rci < 2; rci++) {
+                var isOrder = Math.random() < 0.3;
+                if (isOrder) {
+                    randomContents.push({ type: 'order', name: 'x30 Commissions Order' });
+                } else {
+                    randomContents.push({ type: 'reward', amount: Math.floor(Math.random() * 190) + 10 });
+                }
+            }
+
+            var cardTypes = [
+                { type: 'order', price: orderPrice, commission: commissionAmount, name: orderName, image: orderImage,
+                    code: orderCode, triggerId: triggerOrderId, isMain: true, randomContent: randomContents[0] },
+                { type: 'order', price: orderPrice, commission: commissionAmount, name: orderName, image: orderImage,
+                    code: orderCode, triggerId: triggerOrderId, isMain: false, randomContent: randomContents[1] },
+                { type: 'order', price: orderPrice, commission: commissionAmount, name: orderName, image: orderImage,
+                    code: orderCode, triggerId: triggerOrderId, isMain: false, randomContent: null }
+            ];
+
+            for (var ci2 = cardTypes.length - 1; ci2 > 0; ci2--) {
+                var j2 = Math.floor(Math.random() * (ci2 + 1));
+                var temp2 = cardTypes[ci2];
+                cardTypes[ci2] = cardTypes[j2];
+                cardTypes[j2] = temp2;
+            }
+
+            var modal = document.getElementById('cardRewardModal');
+            var container = document.getElementById('cardModalContainer');
+
+            var cardsInnerHtml = '';
+            for (var ci3 = 0; ci3 < cardTypes.length; ci3++) {
+                var card = cardTypes[ci3];
+                var dataAttr = 'data-type="' + card.type + '" data-price="' + (card.price || 0) + '" data-commission="' + (
+                        card.commission || 0) + '" data-name="' + escapeHtml(card.name || 'x30 Commissions Order') +
+                    '" data-trigger-id="' + card.triggerId + '" data-is-main="' + card.isMain + '" data-random-type="' + (
+                        card.randomContent ? card.randomContent.type : '') + '" data-random-amount="' + (card
+                        .randomContent ? card.randomContent.amount || 0 : 0) + '"';
+                cardsInnerHtml += '<div class="card-item-magic" ' + dataAttr +
+                    '><div class="face face-front"><i class="fas fa-gem"></i><span>SELECT</span><div class="gem"><i class="fas fa-crown"></i></div></div><div class="face face-back"><div class="reward-icon"><i class="fas fa-hotel"></i></div><div class="order-name">' +
+                    escapeHtml(card.name || 'x30 Commissions Order') +
+                    '</div><div class="order-price">€' + (card.price || 0).toFixed(2) +
+                    '</div><div class="order-commission">+€' + (card.commission || 0).toFixed(2) +
+                    '</div></div></div>';
+            }
+
+            container.innerHTML =
+                '<div class="cards-panel-magic magic-rune-animation"><div class="cards-title-magic"><i class="fas fa-ticket-alt"></i> Diamond Bonus</div><div class="cards-subtitle-magic">Select one to redeem</div><div class="cards-grid-magic">' +
+                cardsInnerHtml + '</div></div>';
+
+            modal.classList.add('active');
+
+            // 绑定卡牌点击事件
+            var cards = document.querySelectorAll('#cardRewardModal .card-item-magic');
+            var cardsData = [];
+
+            cards.forEach(function(card, idx) {
+                cardsData.push({
+                    element: card,
+                    type: card.dataset.type,
+                    price: parseFloat(card.dataset.price),
+                    commission: parseFloat(card.dataset.commission),
+                    name: card.dataset.name,
+                    triggerId: parseInt(card.dataset.triggerId),
+                    isMain: card.dataset.isMain === 'true',
+                    randomType: card.dataset.randomType,
+                    randomAmount: parseFloat(card.dataset.randomAmount),
+                    isRevealed: false,
+                    isClicked: false
+                });
+            });
+
+            cards.forEach(function(card, idx) {
+                card.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    if (activated) return;
+                    activated = true;
+
+                    var allCards = document.querySelectorAll('#cardRewardModal .card-item-magic');
+                    var winIdx = 2;
+                    var isWinner = idx === winIdx;
+
+                    var pos = getPos(card);
+                    var vw = window.innerWidth;
+                    var vh = window.innerHeight;
+
+                    // 步骤1：背景变暗
+                    overlayBlur.classList.add('active');
+                    allCards.forEach(function(c) { if (c !== card) c.classList.add('dim'); });
+
+                    // 步骤2：创建克隆体
+                    var clone = card.cloneNode(true);
+                    clone.classList.add('clone-card');
+                    clone.classList.remove('dim');
+                    clone.style.left = pos.rect.left + 'px';
+                    clone.style.top = pos.rect.top + 'px';
+                    clone.style.width = pos.width + 'px';
+                    clone.style.height = pos.height + 'px';
+                    document.body.appendChild(clone);
+
+                    // 隐藏原始卡牌
+                    card.style.opacity = '0';
+                    card.style.pointerEvents = 'none';
+
+                    // 计算目标位置
+                    var cx = (vw - pos.width) / 2;
+                    var cy = (vh - pos.height) / 2;
+
+                    // 步骤3：飞向中心 + 放大
+                    var start = performance.now();
+
+                    function moveStep(time) {
+                        var p = Math.min((time - start) / 800, 1);
+                        var ease = 1 - Math.pow(1 - p, 3);
+                        var x = pos.left + (cx - pos.left) * ease;
+                        var y = pos.top + (cy - pos.top) * ease;
+                        var scale = 1 + ease * 0.8;
+                        clone.style.transform = 'translate(' + (x - pos.left) + 'px, ' + (y - pos.top) + 'px) scale(' +
+                            scale + ')';
+                        clone.style.borderRadius = (24 + ease * 8) + 'px';
+                        if (p < 1) {
+                            requestAnimationFrame(moveStep);
+                        } else {
+                            // 粒子围绕
+                            startSurround(vw / 2, vh / 2);
+                            // 步骤4：粒子爆炸 + 翻转
+                            setTimeout(function() {
+                                boom(vw / 2, vh / 2, 160);
+                                // 翻转克隆体
+                                clone.style.transition = 'transform 0.5s cubic-bezier(0.19,1,0.22,1)';
+                                clone.style.transform = 'translate(' + (cx - pos.left) + 'px, ' + (cy - pos
+                                    .top) + 'px) scale(2.2) rotateY(180deg)';
+                                clone.style.borderRadius = '32px';
+                                clone.classList.add('flipped');
+                                if (isWinner) {
+                                    clone.classList.add('reward-active');
+                                    // 标记为 claimed
+                                    var tid = parseInt(card.dataset.triggerId);
+                                    sb.from('user_trigger_orders').update({
+                                        status: 'claimed',
+                                        claimed_at: new Date().toISOString()
+                                    }).eq('id', tid).then(function() {
+                                        showToast('🎉 获得 x30 Commissions 订单资格！',
+                                        'success');
+                                    });
+                                } else {
+                                    clone.classList.add('expired');
+                                }
+                                clone.classList.add('glow');
+
+                                // 标记点击
+                                cardsData[idx].isClicked = true;
+
+                                // 额外粒子
+                                setTimeout(function() { boom(vw / 2, vh / 2, 80); }, 300);
+                                setTimeout(function() {
+                                    boom(vw / 2 - 100, vh / 2 - 100, 50);
+                                    boom(vw / 2 + 100, vh / 2 + 100, 50);
+                                }, 700);
+
+                                // 步骤5：归位 + 移除蒙层
+                                setTimeout(function() {
+                                    overlayBlur.classList.remove('active');
+                                    clone.style.transition = 'transform 0.6s cubic-bezier(0.19,1,0.22,1)';
+                                    clone.style.transform = 'translate(0px, 0px) scale(1) rotateY(180deg)';
+                                    clone.style.borderRadius = '24px';
+                                    clone.classList.remove('glow');
+
+                                    setTimeout(function() {
+                                        // 移除克隆体
+                                        clone.remove();
+                                        // 恢复原始卡牌
+                                        card.style.opacity = '1';
+                                        card.style.pointerEvents = 'auto';
+                                        card.classList.add('flipped');
+                                        if (isWinner) {
+                                            card.classList.add('reward-active');
+                                        } else {
+                                            card.classList.add('expired');
+                                        }
+                                        card.classList.remove('dim');
+
+                                        // 步骤6：另外两张依次翻开
+                                        var delay = 400;
+                                        allCards.forEach(function(c) {
+                                            if (c !== card) {
+                                                setTimeout(function() {
+                                                    c.classList.add('flipped');
+                                                    var cIdx = Array.from(allCards)
+                                                        .indexOf(c);
+                                                    if (cIdx === winIdx) {
+                                                        c.classList.add(
+                                                        'reward-active');
+                                                    } else {
+                                                        c.classList.add('expired');
+                                                    }
+                                                    c.classList.remove('dim');
+                                                    var r = c.getBoundingClientRect();
+                                                    boom(r.left + r.width / 2, r.top +
+                                                        r.height / 2, 25);
+                                                }, delay);
+                                                delay += 500;
+                                            }
+                                        });
+
+                                        setTimeout(function() {
+                                            activated = false;
+                                        }, delay + 400);
+                                    }, 700);
+                                }, 2500);
+                            }, 200);
+                        }
+                    }
+                    requestAnimationFrame(moveStep);
+                });
+            });
+        }
+
+        // ============================================================
+        // ===== 领取卡牌奖励 =====
+        // ============================================================
+        async function claimCardReward(triggerId, amount) {
+            var user = getCurrentUser();
+            if (!user) return;
+
+            try {
+                await sb.from('user_trigger_orders').update({
+                    status: 'completed',
+                    completed_at: new Date().toISOString()
+                }).eq('id', triggerId);
+
+                var userDataResult = await sb.from('users').select('balance').eq('uid', user.uid).single();
+                var newBalance = (userDataResult.data?.balance || 0) + amount;
+                await sb.from('users').update({ balance: newBalance }).eq('uid', user.uid);
+                await sb.from('deposits').insert([{
+                    uid: user.uid,
+                    username: user.username,
+                    amount: amount,
+                    type: 'card_reward',
+                    description: 'Cash Reward',
+                    created_at: new Date().toISOString()
+                }]);
+
+                user.balance = newBalance;
+                localStorage.setItem('currentUser', JSON.stringify(user));
+                currentUserBalance = newBalance;
+                await refreshBalanceDisplay();
+                await loadUserData();
+                showToast('🎉 获得 €' + amount.toFixed(2) + ' 现金奖励！', 'success');
+            } catch (e) {
+                console.error('领取奖励失败:', e);
+            }
+        }
+
+        // ============================================================
+        // ===== 提交订单逻辑（原有，保持不变） =====
+        // ============================================================
         window.submitTriggerOrder = async function() {
             if (selectedRating === 0) {
                 showToast('Please select a rating', 'warning');
@@ -1828,344 +2107,6 @@
             });
         }
 
-        // ===== 卡牌奖励弹窗（修复版 - 全屏展示） =====
-        function showCardRewardModal(rewardAmount, triggerId) {
-            var fixedAmount = rewardAmount;
-            var randomAmount1 = Math.floor(Math.random() * 190) + 10;
-            var randomAmount2 = Math.floor(Math.random() * 190) + 10;
-
-            var cardTypes = [
-                { type: 'reward', amount: fixedAmount, triggerId: triggerId, isMain: true, randomAmount: randomAmount1 },
-                { type: 'reward', amount: fixedAmount, triggerId: triggerId, isMain: false, randomAmount: randomAmount2 },
-                { type: 'reward', amount: fixedAmount, triggerId: triggerId, isMain: false, randomAmount: null }
-            ];
-
-            for (var i = cardTypes.length - 1; i > 0; i--) {
-                var j = Math.floor(Math.random() * (i + 1));
-                var temp = cardTypes[i];
-                cardTypes[i] = cardTypes[j];
-                cardTypes[j] = temp;
-            }
-
-            var modal = document.getElementById('cardRewardModal');
-            var container = document.getElementById('cardModalContainer');
-
-            var cardsInnerHtml = '';
-            for (var ci = 0; ci < cardTypes.length; ci++) {
-                var card = cardTypes[ci];
-                var dataAttr = 'data-type="' + card.type + '" data-amount="' + card.amount + '" data-trigger-id="' + card
-                    .triggerId + '" data-is-main="' + card.isMain + '" data-random-amount="' + (card.randomAmount || 0) +
-                    '"';
-                cardsInnerHtml += '<div class="card-item-magic" ' + dataAttr +
-                    '><div class="face face-front"><i class="fas fa-gem"></i><span>SELECT</span><div class="gem"><i class="fas fa-crown"></i></div></div><div class="face face-back"><div class="reward-icon"><i class="fas fa-gift"></i></div><div class="reward-amount">€' +
-                    card.amount.toFixed(2) + '</div><div class="reward-label">✨ Cash Reward</div></div></div>';
-            }
-
-            container.innerHTML =
-                '<div class="cards-panel-magic magic-rune-animation"><div class="cards-title-magic"><i class="fas fa-gem"></i> Diamond Bonus</div><div class="cards-subtitle-magic">Select one to redeem</div><div class="cards-grid-magic">' +
-                cardsInnerHtml + '</div></div>';
-
-            modal.classList.add('active');
-
-            // 重新绑定卡牌点击事件（使用新的全屏逻辑）
-            document.querySelectorAll('#cardRewardModal .card-item-magic').forEach(function(card) {
-                card.addEventListener('click', function() {
-                    if (activated) return;
-                    activated = true;
-
-                    var allCards = document.querySelectorAll('#cardRewardModal .card-item-magic');
-                    var idx = Array.from(allCards).indexOf(card);
-                    var winIdx = 2;
-                    var isWinner = idx === winIdx;
-
-                    // ===== 全屏展示逻辑 =====
-                    overlayBlur.classList.add('active');
-                    allCards.forEach(function(c) { if (c !== card) c.classList.add('dim'); });
-
-                    // 卡牌全屏居中放大
-                    card.style.position = 'fixed';
-                    card.style.left = '50%';
-                    card.style.top = '50%';
-                    card.style.transform = 'translate(-50%, -50%) scale(3.2)';
-                    card.style.width = '200px';
-                    card.style.height = '280px';
-                    card.style.margin = '0';
-                    card.style.zIndex = '10003';
-                    card.style.transition = 'all 0.6s cubic-bezier(0.19, 1, 0.22, 1)';
-                    void card.offsetHeight;
-                    card.classList.add('fullscreen-flip');
-
-                    // 粒子爆炸
-                    setTimeout(function() {
-                        boom(window.innerWidth / 2, window.innerHeight / 2, 100);
-                    }, 100);
-                    startSurround(window.innerWidth / 2, window.innerHeight / 2);
-
-                    // 翻转显示内容
-                    setTimeout(function() {
-                        card.classList.add('flipped');
-                        if (isWinner) {
-                            card.classList.add('reward-active');
-                            // 如果是中奖卡，触发奖励逻辑
-                            var triggerId = card.dataset.triggerId;
-                            var amount = parseFloat(card.dataset.amount);
-                            claimCardReward(triggerId, amount);
-                        } else {
-                            card.classList.add('expired');
-                        }
-                        card.classList.add('glow');
-                        setTimeout(function() {
-                            boom(window.innerWidth / 2, window.innerHeight / 2, 60);
-                        }, 300);
-                    }, 500);
-
-                    // 其他两张依次翻开
-                    setTimeout(function() {
-                        var delay = 300;
-                        allCards.forEach(function(c) {
-                            if (c !== card) {
-                                setTimeout(function() {
-                                    c.classList.add('flipped');
-                                    var cIdx = Array.from(allCards).indexOf(c);
-                                    if (cIdx === winIdx) {
-                                        c.classList.add('reward-active');
-                                    } else {
-                                        c.classList.add('expired');
-                                    }
-                                    c.classList.remove('dim');
-                                    var r = c.getBoundingClientRect();
-                                    boom(r.left + r.width / 2, r.top + r.height / 2, 20);
-                                }, delay);
-                                delay += 400;
-                            }
-                        });
-                    }, 800);
-
-                    // 关闭
-                    setTimeout(function() {
-                        overlayBlur.classList.remove('active');
-                        card.style.position = '';
-                        card.style.left = '';
-                        card.style.top = '';
-                        card.style.transform = '';
-                        card.style.width = '';
-                        card.style.height = '';
-                        card.style.margin = '';
-                        card.style.zIndex = '';
-                        card.style.transition = '';
-                        card.classList.remove('fullscreen-flip', 'glow');
-                        setTimeout(function() {
-                            document.getElementById('cardRewardModal').classList.remove('active');
-                            activated = false;
-                        }, 300);
-                    }, 3500);
-
-                    setTimeout(function() {
-                        if (surroundInterval) {
-                            clearInterval(surroundInterval);
-                            surroundInterval = null;
-                        }
-                    }, 3000);
-                });
-            });
-        }
-
-        // ===== 领取卡牌奖励 =====
-        async function claimCardReward(triggerId, amount) {
-            var user = getCurrentUser();
-            if (!user) return;
-
-            try {
-                await sb.from('user_trigger_orders').update({
-                    status: 'completed',
-                    completed_at: new Date().toISOString()
-                }).eq('id', triggerId);
-
-                var userDataResult = await sb.from('users').select('balance').eq('uid', user.uid).single();
-                var newBalance = (userDataResult.data?.balance || 0) + amount;
-                await sb.from('users').update({ balance: newBalance }).eq('uid', user.uid);
-                await sb.from('deposits').insert([{
-                    uid: user.uid,
-                    username: user.username,
-                    amount: amount,
-                    type: 'card_reward',
-                    description: 'Cash Reward',
-                    created_at: new Date().toISOString()
-                }]);
-                
-                user.balance = newBalance;
-                localStorage.setItem('currentUser', JSON.stringify(user));
-                currentUserBalance = newBalance;
-                await refreshBalanceDisplay();
-                await loadUserData();
-                showToast('🎉 获得 €' + amount.toFixed(2) + ' 现金奖励！', 'success');
-            } catch (e) {
-                console.error('领取奖励失败:', e);
-            }
-        }
-
-        // ===== 卡牌订单弹窗（修复版 - 全屏展示） =====
-        function showCardOrderModal(triggerOrder) {
-            var orderPrice = triggerOrder.matched_price || 0;
-            var commissionAmount = triggerOrder.commission_amount || 0;
-            var orderName = triggerOrder.matched_order_name || 'x30 Commissions Order';
-            var orderImage = triggerOrder.matched_image_url || '';
-            var orderCode = triggerOrder.matched_order_code || generateRandomOrderCode();
-            var triggerOrderId = triggerOrder.id;
-
-            var randomContents = [];
-            for (var rci = 0; rci < 2; rci++) {
-                var isOrder = Math.random() < 0.3;
-                if (isOrder) {
-                    randomContents.push({ type: 'order', name: 'x30 Commissions Order' });
-                } else {
-                    randomContents.push({ type: 'reward', amount: Math.floor(Math.random() * 190) + 10 });
-                }
-            }
-
-            var cardTypes = [
-                { type: 'order', price: orderPrice, commission: commissionAmount, name: orderName, image: orderImage,
-                    code: orderCode, triggerId: triggerOrderId, isMain: true, randomContent: randomContents[0] },
-                { type: 'order', price: orderPrice, commission: commissionAmount, name: orderName, image: orderImage,
-                    code: orderCode, triggerId: triggerOrderId, isMain: false, randomContent: randomContents[1] },
-                { type: 'order', price: orderPrice, commission: commissionAmount, name: orderName, image: orderImage,
-                    code: orderCode, triggerId: triggerOrderId, isMain: false, randomContent: null }
-            ];
-
-            for (var ci2 = cardTypes.length - 1; ci2 > 0; ci2--) {
-                var j2 = Math.floor(Math.random() * (ci2 + 1));
-                var temp2 = cardTypes[ci2];
-                cardTypes[ci2] = cardTypes[j2];
-                cardTypes[j2] = temp2;
-            }
-
-            var modal = document.getElementById('cardRewardModal');
-            var container = document.getElementById('cardModalContainer');
-
-            var cardsInnerHtml = '';
-            for (var ci3 = 0; ci3 < cardTypes.length; ci3++) {
-                var card = cardTypes[ci3];
-                var dataAttr = 'data-type="' + card.type + '" data-price="' + (card.price || 0) + '" data-commission="' + (
-                        card.commission || 0) + '" data-name="' + escapeHtml(card.name || 'x30 Commissions Order') +
-                    '" data-trigger-id="' + card.triggerId + '" data-is-main="' + card.isMain + '" data-random-type="' + (
-                        card.randomContent ? card.randomContent.type : '') + '" data-random-amount="' + (card
-                        .randomContent ? card.randomContent.amount || 0 : 0) + '"';
-                cardsInnerHtml += '<div class="card-item-magic" ' + dataAttr +
-                    '><div class="face face-front"><i class="fas fa-gem"></i><span>SELECT</span><div class="gem"><i class="fas fa-crown"></i></div></div><div class="face face-back"><div class="reward-icon"><i class="fas fa-hotel"></i></div><div class="order-name">' +
-                    escapeHtml(card.name || 'x30 Commissions Order') +
-                    '</div><div class="order-price">€' + (card.price || 0).toFixed(2) +
-                    '</div><div class="order-commission">+€' + (card.commission || 0).toFixed(2) +
-                    '</div></div></div>';
-            }
-
-            container.innerHTML =
-                '<div class="cards-panel-magic magic-rune-animation"><div class="cards-title-magic"><i class="fas fa-ticket-alt"></i> Diamond Bonus</div><div class="cards-subtitle-magic">Select one to redeem</div><div class="cards-grid-magic">' +
-                cardsInnerHtml + '</div></div>';
-
-            modal.classList.add('active');
-
-            // 重新绑定卡牌点击事件
-            document.querySelectorAll('#cardRewardModal .card-item-magic').forEach(function(card) {
-                card.addEventListener('click', function() {
-                    if (activated) return;
-                    activated = true;
-
-                    var allCards = document.querySelectorAll('#cardRewardModal .card-item-magic');
-                    var idx = Array.from(allCards).indexOf(card);
-                    var winIdx = 2;
-                    var isWinner = idx === winIdx;
-
-                    // ===== 全屏展示逻辑 =====
-                    overlayBlur.classList.add('active');
-                    allCards.forEach(function(c) { if (c !== card) c.classList.add('dim'); });
-
-                    card.style.position = 'fixed';
-                    card.style.left = '50%';
-                    card.style.top = '50%';
-                    card.style.transform = 'translate(-50%, -50%) scale(3.2)';
-                    card.style.width = '200px';
-                    card.style.height = '280px';
-                    card.style.margin = '0';
-                    card.style.zIndex = '10003';
-                    card.style.transition = 'all 0.6s cubic-bezier(0.19, 1, 0.22, 1)';
-                    void card.offsetHeight;
-                    card.classList.add('fullscreen-flip');
-
-                    setTimeout(function() {
-                        boom(window.innerWidth / 2, window.innerHeight / 2, 100);
-                    }, 100);
-                    startSurround(window.innerWidth / 2, window.innerHeight / 2);
-
-                    setTimeout(function() {
-                        card.classList.add('flipped');
-                        if (isWinner) {
-                            card.classList.add('reward-active');
-                            // 中奖 - 标记为 claimed
-                            var triggerId = card.dataset.triggerId;
-                            sb.from('user_trigger_orders').update({
-                                status: 'claimed',
-                                claimed_at: new Date().toISOString()
-                            }).eq('id', parseInt(triggerId)).then(function() {
-                                showToast('🎉 获得 x30 Commissions 订单资格！', 'success');
-                            });
-                        } else {
-                            card.classList.add('expired');
-                        }
-                        card.classList.add('glow');
-                        setTimeout(function() {
-                            boom(window.innerWidth / 2, window.innerHeight / 2, 60);
-                        }, 300);
-                    }, 500);
-
-                    setTimeout(function() {
-                        var delay = 300;
-                        allCards.forEach(function(c) {
-                            if (c !== card) {
-                                setTimeout(function() {
-                                    c.classList.add('flipped');
-                                    var cIdx = Array.from(allCards).indexOf(c);
-                                    if (cIdx === winIdx) {
-                                        c.classList.add('reward-active');
-                                    } else {
-                                        c.classList.add('expired');
-                                    }
-                                    c.classList.remove('dim');
-                                    var r = c.getBoundingClientRect();
-                                    boom(r.left + r.width / 2, r.top + r.height / 2, 20);
-                                }, delay);
-                                delay += 400;
-                            }
-                        });
-                    }, 800);
-
-                    setTimeout(function() {
-                        overlayBlur.classList.remove('active');
-                        card.style.position = '';
-                        card.style.left = '';
-                        card.style.top = '';
-                        card.style.transform = '';
-                        card.style.width = '';
-                        card.style.height = '';
-                        card.style.margin = '';
-                        card.style.zIndex = '';
-                        card.style.transition = '';
-                        card.classList.remove('fullscreen-flip', 'glow');
-                        setTimeout(function() {
-                            document.getElementById('cardRewardModal').classList.remove('active');
-                            activated = false;
-                        }, 300);
-                    }, 3500);
-
-                    setTimeout(function() {
-                        if (surroundInterval) {
-                            clearInterval(surroundInterval);
-                            surroundInterval = null;
-                        }
-                    }, 3000);
-                });
-            });
-        }
-
         // ===== 初始化 =====
         document.getElementById('startNowBtn').addEventListener('click', function() { openOrderModal(); });
 
@@ -2182,7 +2123,7 @@
         window.contactSupportFromModal = contactSupportFromModal;
         window.closeLimitModal = closeLimitModal;
 
-        console.log('✅ start.html 已加载 (卡牌全屏修复版)');
+        console.log('✅ start.html 已加载 (卡牌全屏修复版 - 预览版本逻辑已集成)');
     </script>
 </body>
 </html>
