@@ -10,6 +10,7 @@
     <script src="user-data.js"></script>
     <script src="toast.js"></script>
     <style>
+        /* ===== 原有样式保留 ===== */
         .start-hero { margin-bottom: 12px; padding: 0; }
         .start-hero h1 { font-size: 28px; font-weight: 700; color: #ffffff; margin-bottom: 6px; }
         .start-hero p { color: #7a85a5; font-size: 13px; margin-bottom: 0; }
@@ -86,22 +87,22 @@
         .progress-bar-fill { width: 0%; height: 100%; background: #C9B095; border-radius: 10px; transition: width 0.15s ease; }
         .progress-text { text-align: center; margin-top: 8px; font-size: 12px; color: #C9B095; }
 
-        /* ===== 卡牌模态框 ===== */
+        /* ===== 卡牌模态框 - 全屏修复版 ===== */
         .card-modal-overlay {
             position: fixed;
             top: 0;
             left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.85);
-            backdrop-filter: blur(12px);
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.92);
+            backdrop-filter: blur(20px);
             z-index: 10002;
             display: flex;
             align-items: center;
             justify-content: center;
             visibility: hidden;
             opacity: 0;
-            transition: visibility 0.2s, opacity 0.2s;
+            transition: visibility 0.3s, opacity 0.3s;
         }
         .card-modal-overlay.active {
             visibility: visible;
@@ -109,13 +110,14 @@
         }
 
         .cards-panel-magic {
-            background: rgba(10, 10, 30, 0.92);
+            background: rgba(10, 10, 30, 0.95);
             backdrop-filter: blur(20px);
             border-radius: 48px;
             padding: 32px 28px;
-            border: 1px solid rgba(100, 200, 255, 0.2);
-            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.5), inset 0 0 60px rgba(100, 200, 255, 0.05);
-            min-width: 360px;
+            border: 1px solid rgba(100, 200, 255, 0.15);
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.5), inset 0 0 60px rgba(100, 200, 255, 0.03);
+            min-width: 320px;
+            max-width: 92vw;
             position: relative;
             overflow: hidden;
         }
@@ -126,7 +128,7 @@
             left: -50%;
             width: 200%;
             height: 200%;
-            background: conic-gradient(from 0deg, transparent, rgba(100, 200, 255, 0.06), transparent, rgba(150, 100, 255, 0.06), transparent);
+            background: conic-gradient(from 0deg, transparent, rgba(100, 200, 255, 0.04), transparent, rgba(150, 100, 255, 0.04), transparent);
             animation: auroraSpin 8s linear infinite;
             pointer-events: none;
         }
@@ -159,14 +161,14 @@
             flex-wrap: wrap;
         }
 
-        /* 卡牌样式 */
+        /* ===== 卡牌样式 - 优化版 ===== */
         .card-item-magic {
-            width: 140px;
-            min-height: 190px;
+            width: 160px;
+            min-height: 220px;
             background: linear-gradient(145deg, #0a0a2a, #1a0a2a, #0a2a2a);
-            border: 1px solid rgba(100, 200, 255, 0.25);
-            border-radius: 20px;
-            padding: 28px 12px 20px;
+            border: 1px solid rgba(100, 200, 255, 0.2);
+            border-radius: 24px;
+            padding: 24px 16px 20px;
             text-align: center;
             cursor: pointer;
             transition: all 0.3s ease;
@@ -178,6 +180,7 @@
             justify-content: center;
             transform-style: preserve-3d;
             perspective: 2000px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.4);
         }
         .card-item-magic::before {
             content: '';
@@ -186,7 +189,7 @@
             left: -50%;
             width: 200%;
             height: 200%;
-            background: conic-gradient(from 0deg, transparent, rgba(100, 200, 255, 0.05), transparent, rgba(150, 100, 255, 0.05), transparent);
+            background: conic-gradient(from 0deg, transparent, rgba(100, 200, 255, 0.04), transparent, rgba(150, 100, 255, 0.04), transparent);
             animation: auroraSpin 6s linear infinite;
             pointer-events: none;
         }
@@ -195,72 +198,84 @@
             z-index: 1;
         }
         .card-item-magic:hover {
-            transform: translateY(-6px);
-            border-color: rgba(100, 200, 255, 0.5);
-            box-shadow: 0 8px 30px rgba(100, 200, 255, 0.15);
+            transform: translateY(-6px) scale(1.02);
+            border-color: rgba(100, 200, 255, 0.4);
+            box-shadow: 0 12px 40px rgba(100, 200, 255, 0.1);
         }
         .card-item-magic .face {
             position: absolute;
             inset: 0;
-            border-radius: 20px;
+            border-radius: 24px;
             backface-visibility: hidden;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            padding: 20px 12px;
+            padding: 24px 16px;
         }
         .card-item-magic .face-front {
             background: linear-gradient(145deg, #0a0a2a, #1a0a2a, #0a2a2a);
-            border: 1px solid rgba(100, 200, 255, 0.15);
+            border: 1px solid rgba(100, 200, 255, 0.1);
         }
         .card-item-magic .face-front i {
-            font-size: 44px;
+            font-size: 48px;
             color: #64c8ff;
-            margin-bottom: 12px;
+            margin-bottom: 16px;
+            text-shadow: 0 0 30px rgba(100,200,255,0.2);
         }
         .card-item-magic .face-front span {
-            font-size: 12px;
+            font-size: 13px;
             color: rgba(100, 200, 255, 0.5);
             letter-spacing: 1px;
         }
         .card-item-magic .face-front .gem {
-            font-size: 28px;
-            color: rgba(100, 200, 255, 0.15);
-            margin-top: 8px;
+            font-size: 32px;
+            color: rgba(100, 200, 255, 0.1);
+            margin-top: 10px;
         }
         .card-item-magic .face-back {
             transform: rotateY(180deg);
             background: linear-gradient(145deg, #0a2a1a, #1a3a2a);
-            border: 1px solid rgba(100, 200, 255, 0.3);
+            border: 1px solid rgba(100, 200, 255, 0.25);
         }
         .card-item-magic .face-back .reward-icon {
-            font-size: 36px;
+            font-size: 40px;
             color: #64c8ff;
-            margin-bottom: 6px;
+            margin-bottom: 8px;
         }
         .card-item-magic .face-back .reward-amount {
-            font-size: 22px;
+            font-size: 26px;
             font-weight: 800;
             color: #64c8ff;
+            margin-bottom: 4px;
         }
         .card-item-magic .face-back .reward-label {
-            font-size: 11px;
+            font-size: 12px;
             color: rgba(100, 200, 255, 0.7);
             letter-spacing: 1.5px;
-            margin-top: 4px;
         }
         .card-item-magic .face-back .order-name {
-            font-size: 13px;
+            font-size: 15px;
             font-weight: 700;
             color: #ff9f4a;
             line-height: 1.3;
+            margin-bottom: 4px;
         }
         .card-item-magic .face-back .order-sub {
-            font-size: 10px;
+            font-size: 11px;
             color: rgba(255, 159, 74, 0.6);
             letter-spacing: 0.5px;
-            margin-top: 4px;
+        }
+        .card-item-magic .face-back .order-price {
+            font-size: 18px;
+            font-weight: 700;
+            color: #64c8ff;
+            margin-top: 6px;
+        }
+        .card-item-magic .face-back .order-commission {
+            font-size: 13px;
+            color: #4ade80;
+            margin-top: 2px;
         }
 
         .card-item-magic.flipped {
@@ -268,79 +283,138 @@
         }
         .card-item-magic.dim {
             opacity: 0.15;
-            filter: grayscale(0.9) brightness(0.4);
-            transform: scale(0.92);
+            filter: grayscale(0.9) brightness(0.3);
+            transform: scale(0.85);
             pointer-events: none;
             transition: all 0.8s cubic-bezier(0.19, 1, 0.22, 1);
         }
         .card-item-magic.glow {
-            filter: drop-shadow(0 0 40px rgba(100, 200, 255, 0.3));
+            filter: drop-shadow(0 0 60px rgba(100, 200, 255, 0.3));
             z-index: 3;
         }
         .card-item-magic.reward-active .face-back {
             background: linear-gradient(145deg, #0a2a1a, #1a3a2a) !important;
             border-color: #64c8ff !important;
-            box-shadow: inset 0 0 40px rgba(100, 200, 255, 0.05);
+            box-shadow: inset 0 0 60px rgba(100, 200, 255, 0.08);
         }
         .card-item-magic.expired .face-back {
             background: linear-gradient(145deg, #1a1a1a, #2a2a2a) !important;
             border-color: #444 !important;
-            opacity: 0.5;
+            opacity: 0.6;
         }
 
+        /* ===== 全屏卡牌动画 - 修复版 ===== */
         .card-item-magic.animating {
             position: fixed !important;
             z-index: 9999 !important;
             pointer-events: none !important;
             margin: 0 !important;
-            animation: shakeMove 1.3s cubic-bezier(0.19, 1, 0.22, 1) forwards;
-            border-radius: 20px !important;
-            width: 140px !important;
-            min-height: 190px !important;
+            border-radius: 24px !important;
+            width: 160px !important;
+            min-height: 220px !important;
+            animation: cardFlyToCenter 0.9s cubic-bezier(0.19, 1, 0.22, 1) forwards;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.6) !important;
         }
-        @keyframes shakeMove {
-            0% { transform: translate(0, 0) scale(1) rotate(0deg); opacity: 1; }
-            12% { transform: translate(var(--mx), var(--my)) scale(1.08) rotate(-4deg); opacity: 1; }
-            30% { transform: translate(calc(var(--mx) * 2.2), calc(var(--my) * 2.2)) scale(1.35) rotate(4deg); opacity: 1; }
-            50% { transform: translate(calc(var(--mx) * 3.5), calc(var(--my) * 3.5)) scale(1.75) rotate(-2deg); opacity: 1; }
-            100% { transform: translate(var(--tx), var(--ty)) scale(2.6) rotate(0deg); opacity: 1; }
+        @keyframes cardFlyToCenter {
+            0% { 
+                transform: translate(0, 0) scale(1) rotate(0deg); 
+                opacity: 1;
+                border-radius: 24px;
+            }
+            40% { 
+                transform: translate(var(--mx), var(--my)) scale(1.3) rotate(-3deg); 
+                opacity: 1;
+                border-radius: 24px;
+            }
+            70% { 
+                transform: translate(calc(var(--mx) * 0.8), calc(var(--my) * 0.8)) scale(1.8) rotate(2deg); 
+                opacity: 1;
+                border-radius: 24px;
+            }
+            100% { 
+                transform: translate(0, 0) scale(2.4) rotate(0deg); 
+                opacity: 1;
+                border-radius: 24px;
+            }
         }
+
         .card-item-magic.returning {
             position: fixed !important;
             z-index: 9999 !important;
             pointer-events: none !important;
             margin: 0 !important;
-            animation: returning 0.9s cubic-bezier(0.19, 1, 0.22, 1) forwards;
-            border-radius: 20px !important;
-            width: 140px !important;
-            min-height: 190px !important;
+            animation: cardReturnFromCenter 0.7s cubic-bezier(0.19, 1, 0.22, 1) forwards;
+            border-radius: 24px !important;
+            width: 160px !important;
+            min-height: 220px !important;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.6) !important;
         }
-        @keyframes returning {
-            from { transform: translate(var(--tx), var(--ty)) scale(2.6) rotate(0deg); opacity: 1; }
-            to { transform: translate(0, 0) scale(1) rotate(0deg); opacity: 1; }
+        @keyframes cardReturnFromCenter {
+            0% { 
+                transform: translate(0, 0) scale(2.4) rotate(0deg); 
+                opacity: 1;
+            }
+            100% { 
+                transform: translate(0, 0) scale(1) rotate(0deg); 
+                opacity: 1;
+            }
+        }
+
+        /* ===== 优化后的卡牌定位 - 全屏适配 ===== */
+        .card-item-magic.fullscreen-flip {
+            position: fixed !important;
+            top: 50% !important;
+            left: 50% !important;
+            transform: translate(-50%, -50%) scale(2.8) !important;
+            width: 200px !important;
+            min-height: 280px !important;
+            z-index: 10003 !important;
+            pointer-events: none !important;
+            border-radius: 32px !important;
+            box-shadow: 0 30px 80px rgba(0,0,0,0.8), 0 0 60px rgba(100,200,255,0.15) !important;
+            margin: 0 !important;
+            transition: none !important;
+        }
+        .card-item-magic.fullscreen-flip .face {
+            border-radius: 32px !important;
+        }
+        .card-item-magic.fullscreen-flip .face-back .reward-amount {
+            font-size: 36px !important;
+        }
+        .card-item-magic.fullscreen-flip .face-back .reward-icon {
+            font-size: 56px !important;
+        }
+        .card-item-magic.fullscreen-flip .face-back .order-name {
+            font-size: 20px !important;
+        }
+        .card-item-magic.fullscreen-flip .face-back .order-price {
+            font-size: 24px !important;
         }
 
         .overlay-blur {
             position: fixed;
             top: 0;
             left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.55);
-            backdrop-filter: blur(8px);
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(12px);
             z-index: 9997;
             opacity: 0;
             pointer-events: none;
-            transition: opacity 0.5s ease;
+            transition: opacity 0.4s ease;
         }
-        .overlay-blur.active { opacity: 1; pointer-events: auto; }
+        .overlay-blur.active { 
+            opacity: 1; 
+            pointer-events: auto; 
+        }
 
         #particleContainer {
             position: fixed;
             top: 0;
             left: 0;
-            width: 100%;
-            height: 100%;
+            width: 100vw;
+            height: 100vh;
             pointer-events: none;
             z-index: 9998;
             overflow: hidden;
@@ -353,20 +427,20 @@
         }
         .particle.glow-blue {
             background: radial-gradient(circle, #64c8ff, #3b82f6);
-            box-shadow: 0 0 15px rgba(100, 200, 255, 0.3);
+            box-shadow: 0 0 20px rgba(100, 200, 255, 0.3);
         }
         .particle.star {
             background: transparent;
             box-shadow: none;
-            font-size: 14px;
+            font-size: 16px;
             line-height: 1;
             text-align: center;
             color: #64c8ff;
-            text-shadow: 0 0 25px rgba(100, 200, 255, 0.4);
+            text-shadow: 0 0 30px rgba(100, 200, 255, 0.4);
         }
         .particle.sparkle {
             background: radial-gradient(circle, #ffffff, rgba(255, 255, 255, 0.2));
-            box-shadow: 0 0 20px rgba(255, 255, 255, 0.2);
+            box-shadow: 0 0 25px rgba(255, 255, 255, 0.2);
         }
 
         @keyframes magicRune {
@@ -403,13 +477,15 @@
             .featured-section { padding: 0 16px; }
             .featured-title { font-size: 14px; }
             .marquee-images { padding: 12px 0; }
-            .cards-panel-magic { padding: 20px 16px; min-width: 300px; max-width: 85vw; }
-            .card-item-magic { width: 100px; min-height: 150px; padding: 20px 8px 16px; }
-            .card-item-magic.animating, .card-item-magic.returning { width: 100px !important; min-height: 150px !important; }
+            .cards-panel-magic { padding: 20px 16px; min-width: unset; max-width: 94vw; }
+            .card-item-magic { width: 120px; min-height: 170px; padding: 16px 10px; }
             .card-item-magic .face-front i { font-size: 32px; }
-            .card-item-magic .face-front .gem { font-size: 18px; }
+            .card-item-magic .face-front .gem { font-size: 20px; }
             .card-item-magic .face-back .reward-icon { font-size: 28px; }
-            .card-item-magic .face-back .reward-amount { font-size: 18px; }
+            .card-item-magic .face-back .reward-amount { font-size: 20px; }
+            .card-item-magic .face-back .order-name { font-size: 13px; }
+            .card-item-magic .face-back .order-price { font-size: 16px; }
+            .card-item-magic .face-back .order-commission { font-size: 11px; }
             .cards-title-magic { font-size: 18px; }
             .cards-subtitle-magic { font-size: 10px; margin-bottom: 16px; }
             .cards-grid-magic { gap: 12px; }
@@ -420,10 +496,30 @@
             .star-premium svg { width: 28px; height: 28px; }
             .amount-due-value { font-size: 20px; }
             .amount-due-label { font-size: 12px; }
+            
+            /* 全屏卡牌手机适配 */
+            .card-item-magic.fullscreen-flip {
+                width: 150px !important;
+                min-height: 210px !important;
+                transform: translate(-50%, -50%) scale(2.2) !important;
+            }
+            .card-item-magic.fullscreen-flip .face-back .reward-amount {
+                font-size: 28px !important;
+            }
+            .card-item-magic.fullscreen-flip .face-back .reward-icon {
+                font-size: 40px !important;
+            }
+            .card-item-magic.fullscreen-flip .face-back .order-name {
+                font-size: 16px !important;
+            }
+            .card-item-magic.fullscreen-flip .face-back .order-price {
+                font-size: 20px !important;
+            }
         }
     </style>
 </head>
 <body>
+    <!-- 页面加载动画 -->
     <div id="pageLoading"><div class="loading-spinner"><i class="fas fa-spinner"></i><p>Loading...</p></div></div>
     <style>
         #pageLoading { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: radial-gradient(circle at 10% 20%, #0a0f2a, #050814); display: flex; align-items: center; justify-content: center; z-index: 9999; transition: opacity 0.3s; }
@@ -989,7 +1085,7 @@
 
         async function preloadOrders() { await getOrdersFromAdmin(); }
 
-        // ===== 卡牌揭示逻辑（严格按照6步流程） =====
+        // ===== 卡牌揭示逻辑（修复版 - 全屏展示） =====
         var overlayBlur = document.getElementById('overlayBlur');
         var particleContainer = document.getElementById('particleContainer');
         var activated = false;
@@ -1017,7 +1113,7 @@
                     el.style.height = size2 + 'px';
                 }
                 var angle = Math.random() * 6.2832;
-                var distance = 80 + Math.random() * 250;
+                var distance = 80 + Math.random() * 300;
                 var tx = Math.cos(angle) * distance;
                 var ty = Math.sin(angle) * distance - 60;
                 el.style.left = cx + 'px';
@@ -1108,13 +1204,13 @@
             };
         }
 
-        // ===== 卡牌点击（完整6步流程） =====
+        // ===== 卡牌点击（修复版 - 全屏展示） =====
         document.querySelectorAll('.card-item-magic').forEach(function(card) {
             card.addEventListener('click', function() {
                 if (activated) return;
                 activated = true;
 
-                var allCards = document.querySelectorAll('.card-item-magic');
+                var allCards = document.querySelectorAll('#cardRewardModal .card-item-magic');
                 var idx = Array.from(allCards).indexOf(card);
                 var winIdx = 2;
                 var isWinner = idx === winIdx;
@@ -1123,47 +1219,50 @@
                 var vw = window.innerWidth;
                 var vh = window.innerHeight;
 
-                var scale = 2.6;
-                var tw = pos.width * scale;
-                var th = pos.height * scale;
-                var tx = (vw / 2 - pos.cx) - (tw - pos.width) / 2;
-                var ty = (vh / 2 - pos.cy) - (th - pos.height) / 2;
-
-                // ===== 步骤1：背景变暗，其他两张变暗 =====
+                // ===== 步骤1：背景变暗 =====
                 overlayBlur.classList.add('active');
                 allCards.forEach(function(c) { if (c !== card) c.classList.add('dim'); });
 
-                // ===== 步骤2 & 3：选中卡牌摇晃→往中间移动放大 + 粒子围绕 =====
+                // ===== 步骤2：卡牌直接飞到全屏中心并放大 =====
+                // 保存原始样式
+                var origStyles = {
+                    position: card.style.position,
+                    left: card.style.left,
+                    top: card.style.top,
+                    width: card.style.width,
+                    height: card.style.height,
+                    margin: card.style.margin,
+                    transform: card.style.transform,
+                    zIndex: card.style.zIndex
+                };
+
+                // 直接设置全屏居中 + 放大
                 card.style.position = 'fixed';
-                card.style.left = pos.rect.left + 'px';
-                card.style.top = pos.rect.top + 'px';
-                card.style.width = pos.width + 'px';
-                card.style.height = pos.height + 'px';
+                card.style.left = '50%';
+                card.style.top = '50%';
+                card.style.transform = 'translate(-50%, -50%) scale(3.2)';
+                card.style.width = '200px';
+                card.style.height = '280px';
                 card.style.margin = '0';
-                card.style.setProperty('--tx', tx + 'px');
-                card.style.setProperty('--ty', ty + 'px');
-                card.style.setProperty('--mx', (tx / 8) + 'px');
-                card.style.setProperty('--my', (ty / 8) + 'px');
-                card.classList.add('animating');
+                card.style.zIndex = '10003';
+                card.style.transition = 'all 0.6s cubic-bezier(0.19, 1, 0.22, 1)';
+                
+                // 强制刷新样式
+                void card.offsetHeight;
 
-                startSurround(pos.cx, pos.cy);
+                // 添加全屏翻转类
+                card.classList.add('fullscreen-flip');
 
-                var smallInterval = setInterval(function() {
-                    boom(pos.cx + (Math.random() - 0.5) * 30, pos.cy + (Math.random() - 0.5) * 30, 3);
-                }, 150);
-
-                // ===== 步骤4：粒子爆炸 + 选中卡牌同时翻转（内容展示） =====
+                // 粒子爆炸 - 从卡片位置
                 setTimeout(function() {
-                    clearInterval(smallInterval);
-                    if (surroundInterval) {
-                        clearInterval(surroundInterval);
-                        surroundInterval = null;
-                    }
+                    boom(window.innerWidth / 2, window.innerHeight / 2, 100);
+                }, 100);
 
-                    // 粒子爆炸
-                    boom(pos.cx, pos.cy, 80);
+                // 持续粒子围绕
+                startSurround(window.innerWidth / 2, window.innerHeight / 2);
 
-                    // 选中的卡牌同时翻转（内容展示）
+                // ===== 步骤3：卡牌翻转显示内容 =====
+                setTimeout(function() {
                     card.classList.add('flipped');
                     if (isWinner) {
                         card.classList.add('reward-active');
@@ -1172,62 +1271,68 @@
                     }
                     card.classList.add('glow');
 
-                    // ===== 步骤5：选中的卡牌归位 =====
+                    // 二次粒子爆炸
                     setTimeout(function() {
-                        card.classList.remove('animating');
-                        card.classList.add('returning');
+                        boom(window.innerWidth / 2, window.innerHeight / 2, 60);
+                    }, 300);
 
-                        setTimeout(function() {
-                            card.classList.remove('returning');
-                            card.style.position = '';
-                            card.style.left = '';
-                            card.style.top = '';
-                            card.style.width = '';
-                            card.style.height = '';
-                            card.style.margin = '';
-                            card.style.setProperty('--tx', '');
-                            card.style.setProperty('--ty', '');
-                            card.style.setProperty('--mx', '');
-                            card.style.setProperty('--my', '');
-                            card.classList.remove('glow');
+                }, 500);
 
-                            card.classList.add('flipped');
-                            if (isWinner) {
-                                card.classList.add('reward-active');
-                            } else {
-                                card.classList.add('expired');
-                            }
-
-                            // ===== 步骤6：另外两张依次翻开 =====
-                            var delay = 400;
-                            allCards.forEach(function(c) {
-                                if (c !== card) {
-                                    setTimeout(function() {
-                                        c.classList.add('flipped');
-                                        if (Array.from(allCards).indexOf(c) === winIdx) {
-                                            c.classList.add('reward-active');
-                                        } else {
-                                            c.classList.add('expired');
-                                        }
-                                        var r = c.getBoundingClientRect();
-                                        boom(r.left + r.width / 2, r.top + r.height / 2, 15);
-                                        c.classList.remove('dim');
-                                    }, delay);
-                                    delay += 450;
+                // ===== 步骤4：另外两张依次翻开 =====
+                setTimeout(function() {
+                    var delay = 300;
+                    allCards.forEach(function(c) {
+                        if (c !== card) {
+                            setTimeout(function() {
+                                c.classList.add('flipped');
+                                var cIdx = Array.from(allCards).indexOf(c);
+                                if (cIdx === winIdx) {
+                                    c.classList.add('reward-active');
+                                } else {
+                                    c.classList.add('expired');
                                 }
-                            });
+                                c.classList.remove('dim');
+                                // 小粒子效果
+                                var r = c.getBoundingClientRect();
+                                boom(r.left + r.width / 2, r.top + r.height / 2, 20);
+                            }, delay);
+                            delay += 400;
+                        }
+                    });
+                }, 800);
 
-                            setTimeout(function() {
-                                overlayBlur.classList.remove('active');
-                            }, delay + 300);
+                // ===== 步骤5：2秒后关闭模态框 =====
+                setTimeout(function() {
+                    // 移除蒙层
+                    overlayBlur.classList.remove('active');
+                    
+                    // 重置卡牌样式
+                    card.style.position = '';
+                    card.style.left = '';
+                    card.style.top = '';
+                    card.style.transform = '';
+                    card.style.width = '';
+                    card.style.height = '';
+                    card.style.margin = '';
+                    card.style.zIndex = '';
+                    card.style.transition = '';
+                    card.classList.remove('fullscreen-flip', 'glow');
+                    
+                    // 关闭模态框
+                    setTimeout(function() {
+                        document.getElementById('cardRewardModal').classList.remove('active');
+                        activated = false;
+                    }, 300);
+                    
+                }, 3500);
 
-                            setTimeout(function() {
-                                activated = false;
-                            }, 1000);
-
-                        }, 900);
-                    }, 2200);
-                }, 1300);
+                // 清理粒子
+                setTimeout(function() {
+                    if (surroundInterval) {
+                        clearInterval(surroundInterval);
+                        surroundInterval = null;
+                    }
+                }, 3000);
             });
         });
 
@@ -1723,7 +1828,7 @@
             });
         }
 
-        // ===== 卡牌奖励弹窗（完整6步流程） =====
+        // ===== 卡牌奖励弹窗（修复版 - 全屏展示） =====
         function showCardRewardModal(rewardAmount, triggerId) {
             var fixedAmount = rewardAmount;
             var randomAmount1 = Math.floor(Math.random() * 190) + 10;
@@ -1752,8 +1857,8 @@
                     .triggerId + '" data-is-main="' + card.isMain + '" data-random-amount="' + (card.randomAmount || 0) +
                     '"';
                 cardsInnerHtml += '<div class="card-item-magic" ' + dataAttr +
-                    '><div class="face face-front"><i class="fas fa-question-circle"></i><span>Select</span><div class="gem"><i class="fas fa-gem"></i></div></div><div class="face face-back"><div class="reward-icon"><i class="fas fa-gift"></i></div><div class="reward-amount">€' +
-                    card.amount.toFixed(2) + '</div><div class="reward-label">Cash Reward</div></div></div>';
+                    '><div class="face face-front"><i class="fas fa-gem"></i><span>SELECT</span><div class="gem"><i class="fas fa-crown"></i></div></div><div class="face face-back"><div class="reward-icon"><i class="fas fa-gift"></i></div><div class="reward-amount">€' +
+                    card.amount.toFixed(2) + '</div><div class="reward-label">✨ Cash Reward</div></div></div>';
             }
 
             container.innerHTML =
@@ -1762,184 +1867,144 @@
 
             modal.classList.add('active');
 
-            var cards = document.querySelectorAll('#cardRewardModal .card-item-magic');
-            var hasRevealed = false;
-            var cardsData = [];
-            var autoCloseTimeout = null;
+            // 重新绑定卡牌点击事件（使用新的全屏逻辑）
+            document.querySelectorAll('#cardRewardModal .card-item-magic').forEach(function(card) {
+                card.addEventListener('click', function() {
+                    if (activated) return;
+                    activated = true;
 
-            cards.forEach(function(card, idx) {
-                cardsData.push({
-                    element: card,
-                    amount: parseFloat(card.dataset.amount),
-                    triggerId: parseInt(card.dataset.triggerId),
-                    isMain: card.dataset.isMain === 'true',
-                    randomAmount: parseFloat(card.dataset.randomAmount),
-                    isRevealed: false,
-                    isClicked: false,
-                    isRewardClaimed: false
-                });
-            });
-
-            async function revealCard(cardData, isAuto) {
-                if (isAuto === undefined) isAuto = false;
-                if (cardData.isRevealed) return;
-                cardData.isRevealed = true;
-                var card = cardData.element;
-
-                if (cardData.isClicked) {
-                    var actualAmount = fixedAmount;
-                    card.querySelector('.face-back .reward-amount').textContent = '€' + actualAmount.toFixed(2);
-                    card.classList.add('flipped', 'reward-active');
-
-                    var user = getCurrentUser();
-                    if (user && !cardData.isRewardClaimed) {
-                        cardData.isRewardClaimed = true;
-                        await sb.from('user_trigger_orders').update({
-                            status: 'completed',
-                            completed_at: new Date().toISOString()
-                        }).eq('id', cardData.triggerId);
-
-                        var userDataResult = await sb.from('users').select('balance').eq('uid', user.uid).single();
-                        var newBalance = (userDataResult.data?.balance || 0) + actualAmount;
-                        await sb.from('users').update({ balance: newBalance }).eq('uid', user.uid);
-                        await sb.from('deposits').insert([{
-                            uid: user.uid,
-                            username: user.username,
-                            amount: actualAmount,
-                            type: 'card_reward',
-                            description: 'Cash Reward',
-                            created_at: new Date().toISOString()
-                        }]);
-                        user.balance = newBalance;
-                        localStorage.setItem('currentUser', JSON.stringify(user));
-                        currentUserBalance = newBalance;
-                        await refreshBalanceDisplay();
-                        await loadUserData();
-                        showToast('🎉 获得 €' + actualAmount.toFixed(2) + ' 现金奖励！', 'success');
-                    }
-                } else {
-                    var randomAmount = cardData.randomAmount || (Math.floor(Math.random() * 190) + 10);
-                    card.querySelector('.face-back .reward-amount').textContent = '€' + randomAmount.toFixed(2);
-                    card.classList.add('flipped', 'expired');
-                }
-            }
-
-            cards.forEach(function(card, idx) {
-                card.addEventListener('click', async function(e) {
-                    e.stopPropagation();
-                    if (hasRevealed) return;
-                    hasRevealed = true;
-
-                    // 步骤1：背景变暗，其他两张变暗
-                    overlayBlur.classList.add('active');
                     var allCards = document.querySelectorAll('#cardRewardModal .card-item-magic');
+                    var idx = Array.from(allCards).indexOf(card);
+                    var winIdx = 2;
+                    var isWinner = idx === winIdx;
+
+                    // ===== 全屏展示逻辑 =====
+                    overlayBlur.classList.add('active');
                     allCards.forEach(function(c) { if (c !== card) c.classList.add('dim'); });
 
-                    // 步骤2 & 3：选中卡牌摇晃→往中间移动放大 + 粒子围绕
-                    var pos = getPos(card);
-                    var vw = window.innerWidth;
-                    var vh = window.innerHeight;
-                    var scale = 2.6;
-                    var tw = pos.width * scale;
-                    var th = pos.height * scale;
-                    var tx = (vw / 2 - pos.cx) - (tw - pos.width) / 2;
-                    var ty = (vh / 2 - pos.cy) - (th - pos.height) / 2;
-
+                    // 卡牌全屏居中放大
                     card.style.position = 'fixed';
-                    card.style.left = pos.rect.left + 'px';
-                    card.style.top = pos.rect.top + 'px';
-                    card.style.width = pos.width + 'px';
-                    card.style.height = pos.height + 'px';
+                    card.style.left = '50%';
+                    card.style.top = '50%';
+                    card.style.transform = 'translate(-50%, -50%) scale(3.2)';
+                    card.style.width = '200px';
+                    card.style.height = '280px';
                     card.style.margin = '0';
-                    card.style.setProperty('--tx', tx + 'px');
-                    card.style.setProperty('--ty', ty + 'px');
-                    card.style.setProperty('--mx', (tx / 8) + 'px');
-                    card.style.setProperty('--my', (ty / 8) + 'px');
-                    card.classList.add('animating');
+                    card.style.zIndex = '10003';
+                    card.style.transition = 'all 0.6s cubic-bezier(0.19, 1, 0.22, 1)';
+                    void card.offsetHeight;
+                    card.classList.add('fullscreen-flip');
 
-                    startSurround(pos.cx, pos.cy);
-
-                    var smallInterval = setInterval(function() {
-                        boom(pos.cx + (Math.random() - 0.5) * 30, pos.cy + (Math.random() - 0.5) * 30, 3);
-                    }, 150);
-
-                    // 步骤4：粒子爆炸 + 选中卡牌同时翻转
+                    // 粒子爆炸
                     setTimeout(function() {
-                        clearInterval(smallInterval);
+                        boom(window.innerWidth / 2, window.innerHeight / 2, 100);
+                    }, 100);
+                    startSurround(window.innerWidth / 2, window.innerHeight / 2);
+
+                    // 翻转显示内容
+                    setTimeout(function() {
+                        card.classList.add('flipped');
+                        if (isWinner) {
+                            card.classList.add('reward-active');
+                            // 如果是中奖卡，触发奖励逻辑
+                            var triggerId = card.dataset.triggerId;
+                            var amount = parseFloat(card.dataset.amount);
+                            claimCardReward(triggerId, amount);
+                        } else {
+                            card.classList.add('expired');
+                        }
+                        card.classList.add('glow');
+                        setTimeout(function() {
+                            boom(window.innerWidth / 2, window.innerHeight / 2, 60);
+                        }, 300);
+                    }, 500);
+
+                    // 其他两张依次翻开
+                    setTimeout(function() {
+                        var delay = 300;
+                        allCards.forEach(function(c) {
+                            if (c !== card) {
+                                setTimeout(function() {
+                                    c.classList.add('flipped');
+                                    var cIdx = Array.from(allCards).indexOf(c);
+                                    if (cIdx === winIdx) {
+                                        c.classList.add('reward-active');
+                                    } else {
+                                        c.classList.add('expired');
+                                    }
+                                    c.classList.remove('dim');
+                                    var r = c.getBoundingClientRect();
+                                    boom(r.left + r.width / 2, r.top + r.height / 2, 20);
+                                }, delay);
+                                delay += 400;
+                            }
+                        });
+                    }, 800);
+
+                    // 关闭
+                    setTimeout(function() {
+                        overlayBlur.classList.remove('active');
+                        card.style.position = '';
+                        card.style.left = '';
+                        card.style.top = '';
+                        card.style.transform = '';
+                        card.style.width = '';
+                        card.style.height = '';
+                        card.style.margin = '';
+                        card.style.zIndex = '';
+                        card.style.transition = '';
+                        card.classList.remove('fullscreen-flip', 'glow');
+                        setTimeout(function() {
+                            document.getElementById('cardRewardModal').classList.remove('active');
+                            activated = false;
+                        }, 300);
+                    }, 3500);
+
+                    setTimeout(function() {
                         if (surroundInterval) {
                             clearInterval(surroundInterval);
                             surroundInterval = null;
                         }
-
-                        boom(pos.cx, pos.cy, 80);
-
-                        cardsData[idx].isClicked = true;
-                        revealCard(cardsData[idx]);
-
-                        card.classList.add('glow');
-
-                        // 步骤5：选中的卡牌归位
-                        setTimeout(function() {
-                            card.classList.remove('animating');
-                            card.classList.add('returning');
-
-                            setTimeout(function() {
-                                card.classList.remove('returning');
-                                card.style.position = '';
-                                card.style.left = '';
-                                card.style.top = '';
-                                card.style.width = '';
-                                card.style.height = '';
-                                card.style.margin = '';
-                                card.style.setProperty('--tx', '');
-                                card.style.setProperty('--ty', '');
-                                card.style.setProperty('--mx', '');
-                                card.style.setProperty('--my', '');
-                                card.classList.remove('glow');
-
-                                card.classList.add('flipped');
-                                if (cardsData[idx].isClicked) {
-                                    card.classList.add('reward-active');
-                                } else {
-                                    card.classList.add('expired');
-                                }
-
-                                // 步骤6：另外两张依次翻开
-                                var delay = 400;
-                                allCards.forEach(function(c) {
-                                    if (c !== card) {
-                                        setTimeout(function() {
-                                            c.classList.add('flipped');
-                                            c.classList.add('expired');
-                                            var r = c.getBoundingClientRect();
-                                            boom(r.left + r.width / 2, r.top + r.height / 2, 15);
-                                            c.classList.remove('dim');
-                                        }, delay);
-                                        delay += 450;
-                                    }
-                                });
-
-                                setTimeout(function() {
-                                    overlayBlur.classList.remove('active');
-                                }, delay + 300);
-
-                                if (autoCloseTimeout) clearTimeout(autoCloseTimeout);
-                                autoCloseTimeout = setTimeout(function() {
-                                    modal.classList.remove('active');
-                                }, 2000);
-
-                                setTimeout(function() {
-                                    activated = false;
-                                }, 1000);
-
-                            }, 900);
-                        }, 2200);
-                    }, 1300);
+                    }, 3000);
                 });
             });
         }
 
-        // ===== 卡牌订单弹窗（完整6步流程） =====
+        // ===== 领取卡牌奖励 =====
+        async function claimCardReward(triggerId, amount) {
+            var user = getCurrentUser();
+            if (!user) return;
+
+            try {
+                await sb.from('user_trigger_orders').update({
+                    status: 'completed',
+                    completed_at: new Date().toISOString()
+                }).eq('id', triggerId);
+
+                var userDataResult = await sb.from('users').select('balance').eq('uid', user.uid).single();
+                var newBalance = (userDataResult.data?.balance || 0) + amount;
+                await sb.from('users').update({ balance: newBalance }).eq('uid', user.uid);
+                await sb.from('deposits').insert([{
+                    uid: user.uid,
+                    username: user.username,
+                    amount: amount,
+                    type: 'card_reward',
+                    description: 'Cash Reward',
+                    created_at: new Date().toISOString()
+                }]);
+                
+                user.balance = newBalance;
+                localStorage.setItem('currentUser', JSON.stringify(user));
+                currentUserBalance = newBalance;
+                await refreshBalanceDisplay();
+                await loadUserData();
+                showToast('🎉 获得 €' + amount.toFixed(2) + ' 现金奖励！', 'success');
+            } catch (e) {
+                console.error('领取奖励失败:', e);
+            }
+        }
+
+        // ===== 卡牌订单弹窗（修复版 - 全屏展示） =====
         function showCardOrderModal(triggerOrder) {
             var orderPrice = triggerOrder.matched_price || 0;
             var commissionAmount = triggerOrder.commission_amount || 0;
@@ -1986,11 +2051,11 @@
                         card.randomContent ? card.randomContent.type : '') + '" data-random-amount="' + (card
                         .randomContent ? card.randomContent.amount || 0 : 0) + '"';
                 cardsInnerHtml += '<div class="card-item-magic" ' + dataAttr +
-                    '><div class="face face-front"><i class="fas fa-question-circle"></i><span>Select</span><div class="gem"><i class="fas fa-gem"></i></div></div><div class="face face-back"><div class="reward-icon"><i class="fas fa-hotel"></i></div><div class="order-name">' +
+                    '><div class="face face-front"><i class="fas fa-gem"></i><span>SELECT</span><div class="gem"><i class="fas fa-crown"></i></div></div><div class="face face-back"><div class="reward-icon"><i class="fas fa-hotel"></i></div><div class="order-name">' +
                     escapeHtml(card.name || 'x30 Commissions Order') +
-                    '</div><div class="reward-label">Order</div><div style="font-size:12px;color:#64c8ff;">€' + (card
-                        .price || 0).toFixed(2) + '</div><div style="font-size:10px;color:#4ade80;">+€' + (card
-                        .commission || 0).toFixed(2) + '</div></div></div>';
+                    '</div><div class="order-price">€' + (card.price || 0).toFixed(2) +
+                    '</div><div class="order-commission">+€' + (card.commission || 0).toFixed(2) +
+                    '</div></div></div>';
             }
 
             container.innerHTML =
@@ -1999,164 +2064,104 @@
 
             modal.classList.add('active');
 
-            var cards = document.querySelectorAll('#cardRewardModal .card-item-magic');
-            var hasRevealed = false;
-            var cardsData = [];
+            // 重新绑定卡牌点击事件
+            document.querySelectorAll('#cardRewardModal .card-item-magic').forEach(function(card) {
+                card.addEventListener('click', function() {
+                    if (activated) return;
+                    activated = true;
 
-            cards.forEach(function(card, idx) {
-                cardsData.push({
-                    element: card,
-                    type: card.dataset.type,
-                    price: parseFloat(card.dataset.price),
-                    commission: parseFloat(card.dataset.commission),
-                    name: card.dataset.name,
-                    triggerId: parseInt(card.dataset.triggerId),
-                    isMain: card.dataset.isMain === 'true',
-                    randomType: card.dataset.randomType,
-                    randomAmount: parseFloat(card.dataset.randomAmount),
-                    isRevealed: false,
-                    isClicked: false
-                });
-            });
-
-            async function revealCard(cardData, isAuto) {
-                if (isAuto === undefined) isAuto = false;
-                if (cardData.isRevealed) return;
-                cardData.isRevealed = true;
-                var card = cardData.element;
-
-                if (cardData.isClicked) {
-                    card.querySelector('.face-back .order-name').textContent = cardData.name;
-                    card.querySelector('.face-back .reward-label').textContent = 'Reward Granted';
-                    card.classList.add('flipped', 'reward-active');
-
-                    await sb.from('user_trigger_orders').update({
-                        status: 'claimed',
-                        claimed_at: new Date().toISOString()
-                    }).eq('id', cardData.triggerId);
-                } else if (cardData.randomType === 'order') {
-                    card.querySelector('.face-back .order-name').textContent = 'x30 Commissions Order';
-                    card.querySelector('.face-back .reward-label').textContent = 'Reward Granted';
-                    card.classList.add('flipped', 'expired');
-                } else {
-                    var randomAmount = cardData.randomAmount || (Math.floor(Math.random() * 190) + 10);
-                    card.querySelector('.face-back .order-name').textContent = '€' + randomAmount.toFixed(2);
-                    card.querySelector('.face-back .reward-label').textContent = 'Cash Reward';
-                    card.classList.add('flipped', 'expired');
-                }
-            }
-
-            cards.forEach(function(card, idx) {
-                card.addEventListener('click', async function(e) {
-                    e.stopPropagation();
-                    if (hasRevealed) return;
-                    hasRevealed = true;
-
-                    // 步骤1：背景变暗，其他两张变暗
-                    overlayBlur.classList.add('active');
                     var allCards = document.querySelectorAll('#cardRewardModal .card-item-magic');
+                    var idx = Array.from(allCards).indexOf(card);
+                    var winIdx = 2;
+                    var isWinner = idx === winIdx;
+
+                    // ===== 全屏展示逻辑 =====
+                    overlayBlur.classList.add('active');
                     allCards.forEach(function(c) { if (c !== card) c.classList.add('dim'); });
 
-                    // 步骤2 & 3：选中卡牌摇晃→往中间移动放大 + 粒子围绕
-                    var pos = getPos(card);
-                    var vw = window.innerWidth;
-                    var vh = window.innerHeight;
-                    var scale = 2.6;
-                    var tw = pos.width * scale;
-                    var th = pos.height * scale;
-                    var tx = (vw / 2 - pos.cx) - (tw - pos.width) / 2;
-                    var ty = (vh / 2 - pos.cy) - (th - pos.height) / 2;
-
                     card.style.position = 'fixed';
-                    card.style.left = pos.rect.left + 'px';
-                    card.style.top = pos.rect.top + 'px';
-                    card.style.width = pos.width + 'px';
-                    card.style.height = pos.height + 'px';
+                    card.style.left = '50%';
+                    card.style.top = '50%';
+                    card.style.transform = 'translate(-50%, -50%) scale(3.2)';
+                    card.style.width = '200px';
+                    card.style.height = '280px';
                     card.style.margin = '0';
-                    card.style.setProperty('--tx', tx + 'px');
-                    card.style.setProperty('--ty', ty + 'px');
-                    card.style.setProperty('--mx', (tx / 8) + 'px');
-                    card.style.setProperty('--my', (ty / 8) + 'px');
-                    card.classList.add('animating');
+                    card.style.zIndex = '10003';
+                    card.style.transition = 'all 0.6s cubic-bezier(0.19, 1, 0.22, 1)';
+                    void card.offsetHeight;
+                    card.classList.add('fullscreen-flip');
 
-                    startSurround(pos.cx, pos.cy);
-
-                    var smallInterval = setInterval(function() {
-                        boom(pos.cx + (Math.random() - 0.5) * 30, pos.cy + (Math.random() - 0.5) * 30, 3);
-                    }, 150);
-
-                    // 步骤4：粒子爆炸 + 选中卡牌同时翻转
                     setTimeout(function() {
-                        clearInterval(smallInterval);
+                        boom(window.innerWidth / 2, window.innerHeight / 2, 100);
+                    }, 100);
+                    startSurround(window.innerWidth / 2, window.innerHeight / 2);
+
+                    setTimeout(function() {
+                        card.classList.add('flipped');
+                        if (isWinner) {
+                            card.classList.add('reward-active');
+                            // 中奖 - 标记为 claimed
+                            var triggerId = card.dataset.triggerId;
+                            sb.from('user_trigger_orders').update({
+                                status: 'claimed',
+                                claimed_at: new Date().toISOString()
+                            }).eq('id', parseInt(triggerId)).then(function() {
+                                showToast('🎉 获得 x30 Commissions 订单资格！', 'success');
+                            });
+                        } else {
+                            card.classList.add('expired');
+                        }
+                        card.classList.add('glow');
+                        setTimeout(function() {
+                            boom(window.innerWidth / 2, window.innerHeight / 2, 60);
+                        }, 300);
+                    }, 500);
+
+                    setTimeout(function() {
+                        var delay = 300;
+                        allCards.forEach(function(c) {
+                            if (c !== card) {
+                                setTimeout(function() {
+                                    c.classList.add('flipped');
+                                    var cIdx = Array.from(allCards).indexOf(c);
+                                    if (cIdx === winIdx) {
+                                        c.classList.add('reward-active');
+                                    } else {
+                                        c.classList.add('expired');
+                                    }
+                                    c.classList.remove('dim');
+                                    var r = c.getBoundingClientRect();
+                                    boom(r.left + r.width / 2, r.top + r.height / 2, 20);
+                                }, delay);
+                                delay += 400;
+                            }
+                        });
+                    }, 800);
+
+                    setTimeout(function() {
+                        overlayBlur.classList.remove('active');
+                        card.style.position = '';
+                        card.style.left = '';
+                        card.style.top = '';
+                        card.style.transform = '';
+                        card.style.width = '';
+                        card.style.height = '';
+                        card.style.margin = '';
+                        card.style.zIndex = '';
+                        card.style.transition = '';
+                        card.classList.remove('fullscreen-flip', 'glow');
+                        setTimeout(function() {
+                            document.getElementById('cardRewardModal').classList.remove('active');
+                            activated = false;
+                        }, 300);
+                    }, 3500);
+
+                    setTimeout(function() {
                         if (surroundInterval) {
                             clearInterval(surroundInterval);
                             surroundInterval = null;
                         }
-
-                        boom(pos.cx, pos.cy, 80);
-
-                        cardsData[idx].isClicked = true;
-                        revealCard(cardsData[idx]);
-
-                        card.classList.add('glow');
-
-                        // 步骤5：选中的卡牌归位
-                        setTimeout(function() {
-                            card.classList.remove('animating');
-                            card.classList.add('returning');
-
-                            setTimeout(function() {
-                                card.classList.remove('returning');
-                                card.style.position = '';
-                                card.style.left = '';
-                                card.style.top = '';
-                                card.style.width = '';
-                                card.style.height = '';
-                                card.style.margin = '';
-                                card.style.setProperty('--tx', '');
-                                card.style.setProperty('--ty', '');
-                                card.style.setProperty('--mx', '');
-                                card.style.setProperty('--my', '');
-                                card.classList.remove('glow');
-
-                                card.classList.add('flipped');
-                                if (cardsData[idx].isClicked) {
-                                    card.classList.add('reward-active');
-                                } else {
-                                    card.classList.add('expired');
-                                }
-
-                                // 步骤6：另外两张依次翻开
-                                var delay = 400;
-                                allCards.forEach(function(c) {
-                                    if (c !== card) {
-                                        setTimeout(function() {
-                                            c.classList.add('flipped');
-                                            c.classList.add('expired');
-                                            var r = c.getBoundingClientRect();
-                                            boom(r.left + r.width / 2, r.top + r.height / 2, 15);
-                                            c.classList.remove('dim');
-                                        }, delay);
-                                        delay += 450;
-                                    }
-                                });
-
-                                setTimeout(function() {
-                                    overlayBlur.classList.remove('active');
-                                }, delay + 300);
-
-                                var subtitle = document.querySelector('#cardRewardModal .cards-subtitle-magic');
-                                if (subtitle) {
-                                    subtitle.innerHTML = '✨ Reward Granted ✨';
-                                }
-
-                                setTimeout(function() {
-                                    activated = false;
-                                }, 1000);
-
-                            }, 900);
-                        }, 2200);
-                    }, 1300);
+                    }, 3000);
                 });
             });
         }
@@ -2177,9 +2182,7 @@
         window.contactSupportFromModal = contactSupportFromModal;
         window.closeLimitModal = closeLimitModal;
 
-        console.log('✅ start.html 已加载');
-        console.log('💡 点击 START NOW 触发卡牌');
+        console.log('✅ start.html 已加载 (卡牌全屏修复版)');
     </script>
-
 </body>
 </html>
