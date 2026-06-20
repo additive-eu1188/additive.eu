@@ -540,17 +540,19 @@
     <script>
         // ===== 页面加载 =====
         function hideLoading() {
-            const loading = document.getElementById('pageLoading');
+            var loading = document.getElementById('pageLoading');
             if (loading && loading.style.display !== 'none') {
                 loading.style.opacity = '0';
-                setTimeout(() => { loading.style.display = 'none'; }, 300);
+                setTimeout(function() {
+                    loading.style.display = 'none';
+                }, 300);
             }
         }
 
         function toggleMenu() {
-            const s = document.getElementById('sidebar');
-            const o = document.getElementById('menuOverlay');
-            const menuBtn = document.querySelector('.mobile-top-bar .menu-toggle');
+            var s = document.getElementById('sidebar');
+            var o = document.getElementById('menuOverlay');
+            var menuBtn = document.querySelector('.mobile-top-bar .menu-toggle');
             if (s) s.classList.toggle('open');
             if (o) o.classList.toggle('active');
             if (menuBtn) {
@@ -570,9 +572,9 @@
         }
 
         function closeMenu() {
-            const s = document.getElementById('sidebar');
-            const o = document.getElementById('menuOverlay');
-            const menuBtn = document.querySelector('.mobile-top-bar .menu-toggle');
+            var s = document.getElementById('sidebar');
+            var o = document.getElementById('menuOverlay');
+            var menuBtn = document.querySelector('.mobile-top-bar .menu-toggle');
             if (s) s.classList.remove('open');
             if (o) o.classList.remove('active');
             if (menuBtn) {
@@ -582,12 +584,15 @@
             document.body.style.overflow = '';
         }
 
-        let currentOrder = null, selectedRating = 0, currentUserBalance = 0, currentUserUid = null;
-        let ordersCache = null;
-        let currentTriggerOrder = null;
+        var currentOrder = null,
+            selectedRating = 0,
+            currentUserBalance = 0,
+            currentUserUid = null;
+        var ordersCache = null;
+        var currentTriggerOrder = null;
 
         function generateRandomOrderCode() {
-            const l = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+            var l = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
             return l[Math.floor(Math.random() * 26)] + l[Math.floor(Math.random() * 26)] + (Math.floor(Math.random() * 90000) + 10000);
         }
 
@@ -602,7 +607,7 @@
         }
 
         function saveTempOrder(orderData) {
-            const user = getCurrentUser();
+            var user = getCurrentUser();
             if (!user) return;
             localStorage.setItem('temp_order', JSON.stringify({
                 ...orderData,
@@ -613,10 +618,10 @@
         }
 
         function getTempOrder() {
-            const temp = localStorage.getItem('temp_order');
+            var temp = localStorage.getItem('temp_order');
             if (!temp) return null;
             try {
-                const order = JSON.parse(temp);
+                var order = JSON.parse(temp);
                 if (order.expiresAt && order.expiresAt < Date.now()) {
                     localStorage.removeItem('temp_order');
                     return null;
@@ -633,9 +638,9 @@
         }
 
         function getPendingTempOrder() {
-            const temp = getTempOrder();
+            var temp = getTempOrder();
             if (!temp) return null;
-            const user = getCurrentUser();
+            var user = getCurrentUser();
             if (!user || temp.uid !== user.uid) {
                 clearTempOrder();
                 return null;
@@ -646,43 +651,45 @@
         async function getOrdersFromAdmin() {
             if (ordersCache) return ordersCache;
             try {
-                const { data, error } = await sb.from('orders_pool').select('*').eq('status', 'available');
-                if (error) { console.error('获取订单失败:', error); return []; }
-                ordersCache = data.map(order => ({
-                    id: order.id,
-                    orderCode: order.order_code,
-                    accommodationName: order.accommodation_name,
-                    price: order.price,
-                    imageUrl: order.image_url,
-                    status: order.status
-                }));
+                var result = await sb.from('orders_pool').select('*').eq('status', 'available');
+                if (result.error) { console.error('获取订单失败:', result.error); return []; }
+                ordersCache = result.data.map(function(order) {
+                    return {
+                        id: order.id,
+                        orderCode: order.order_code,
+                        accommodationName: order.accommodation_name,
+                        price: order.price,
+                        imageUrl: order.image_url,
+                        status: order.status
+                    };
+                });
                 return ordersCache;
             } catch (e) { console.error('获取订单异常:', e); return []; }
         }
 
         async function getOrdersByBalance(balance) {
-            let allOrders = await getOrdersFromAdmin();
+            var allOrders = await getOrdersFromAdmin();
             if (balance < 50) { return []; }
-            let minPrice = balance * 0.8;
-            let maxPrice = balance * 0.95;
-            let matchedOrders = allOrders.filter(order => {
-                let price = order.price || 0;
+            var minPrice = balance * 0.8;
+            var maxPrice = balance * 0.95;
+            var matchedOrders = allOrders.filter(function(order) {
+                var price = order.price || 0;
                 return price >= minPrice && price <= maxPrice;
             });
             if (matchedOrders.length === 0) {
-                let widerMin = balance * 0.7;
-                let widerMax = balance * 0.98;
-                matchedOrders = allOrders.filter(order => {
-                    let price = order.price || 0;
+                var widerMin = balance * 0.7;
+                var widerMax = balance * 0.98;
+                matchedOrders = allOrders.filter(function(order) {
+                    var price = order.price || 0;
                     return price >= widerMin && price <= widerMax;
                 });
             }
             if (matchedOrders.length === 0) {
-                let targetPrice = balance * 0.85;
-                matchedOrders = allOrders.filter(order => order.price <= balance);
-                matchedOrders.sort((a, b) => {
-                    let diffA = Math.abs(a.price - targetPrice);
-                    let diffB = Math.abs(b.price - targetPrice);
+                var targetPrice = balance * 0.85;
+                matchedOrders = allOrders.filter(function(order) { return order.price <= balance; });
+                matchedOrders.sort(function(a, b) {
+                    var diffA = Math.abs(a.price - targetPrice);
+                    var diffB = Math.abs(b.price - targetPrice);
                     return diffA - diffB;
                 });
                 matchedOrders = matchedOrders.slice(0, 5);
@@ -691,57 +698,57 @@
         }
 
         async function getUserPendingTriggerOrder(uid) {
-            const { data: orders } = await sb.from('order_history').select('id', { count: 'exact' }).eq('uid', uid);
-            const currentOrderCount = orders?.length || 0;
-            const targetOrderNumber = currentOrderCount + 1;
+            var result = await sb.from('order_history').select('id', { count: 'exact' }).eq('uid', uid);
+            var currentOrderCount = result.data?.length || 0;
+            var targetOrderNumber = currentOrderCount + 1;
 
-            const { data: claimedTriggers } = await sb.from('user_trigger_orders')
+            var claimedResult = await sb.from('user_trigger_orders')
                 .select('*')
                 .eq('uid', uid)
                 .eq('status', 'claimed')
                 .eq('trigger_order_number', targetOrderNumber)
                 .limit(1);
-            if (claimedTriggers && claimedTriggers.length > 0) {
-                console.log('🎯 匹配到 claimed 卡牌订单:', claimedTriggers[0].id);
-                return claimedTriggers[0];
+            if (claimedResult.data && claimedResult.data.length > 0) {
+                console.log('🎯 匹配到 claimed 卡牌订单:', claimedResult.data[0].id);
+                return claimedResult.data[0];
             }
 
-            const { data: pendingTriggers } = await sb.from('user_trigger_orders')
+            var pendingResult = await sb.from('user_trigger_orders')
                 .select('*')
                 .eq('uid', uid)
                 .eq('status', 'pending')
                 .eq('trigger_order_number', targetOrderNumber)
                 .limit(1);
-            if (pendingTriggers && pendingTriggers.length > 0) {
-                console.log('🎯 匹配到 pending 触发订单:', pendingTriggers[0].id);
-                return pendingTriggers[0];
+            if (pendingResult.data && pendingResult.data.length > 0) {
+                console.log('🎯 匹配到 pending 触发订单:', pendingResult.data[0].id);
+                return pendingResult.data[0];
             }
 
-            const { data: staleTriggers } = await sb.from('user_trigger_orders')
+            var staleResult = await sb.from('user_trigger_orders')
                 .select('*')
                 .eq('uid', uid)
                 .eq('status', 'pending')
                 .lt('trigger_order_number', targetOrderNumber)
                 .limit(1);
-            if (staleTriggers && staleTriggers.length > 0) {
+            if (staleResult.data && staleResult.data.length > 0) {
                 await sb.from('user_trigger_orders')
                     .update({ status: 'completed', completed_at: new Date().toISOString() })
-                    .eq('id', staleTriggers[0].id);
-                console.log('🧹 自动清理残留触发订单:', staleTriggers[0].id);
+                    .eq('id', staleResult.data[0].id);
+                console.log('🧹 自动清理残留触发订单:', staleResult.data[0].id);
                 return null;
             }
             return null;
         }
 
         async function refreshBalanceDisplay() {
-            const user = getCurrentUser();
+            var user = getCurrentUser();
             if (!user) return;
-            const { data: userData } = await sb.from('users').select('balance').eq('uid', user.uid).single();
-            if (userData) {
-                currentUserBalance = userData.balance || 0;
-                const balanceEl = document.getElementById('statBalance');
+            var result = await sb.from('users').select('balance').eq('uid', user.uid).single();
+            if (result.data) {
+                currentUserBalance = result.data.balance || 0;
+                var balanceEl = document.getElementById('statBalance');
                 if (balanceEl) {
-                    balanceEl.innerHTML = `€${currentUserBalance.toFixed(2)}`;
+                    balanceEl.innerHTML = '€' + currentUserBalance.toFixed(2);
                     if (currentUserBalance < 0) {
                         balanceEl.classList.add('balance-negative');
                     } else {
@@ -754,13 +761,13 @@
         }
 
         async function executeCheckAndShowAmountDue() {
-            const user = getCurrentUser();
+            var user = getCurrentUser();
             if (!user) return;
-            const { data: orders } = await sb.from('order_history').select('id', { count: 'exact' }).eq('uid', user.uid);
-            const currentOrderCount = orders?.length || 0;
-            const nextOrderNumber = currentOrderCount + 1;
+            var ordersResult = await sb.from('order_history').select('id', { count: 'exact' }).eq('uid', user.uid);
+            var currentOrderCount = ordersResult.data?.length || 0;
+            var nextOrderNumber = currentOrderCount + 1;
 
-            const { data: triggerOrders } = await sb
+            var triggerResult = await sb
                 .from('user_trigger_orders')
                 .select('*')
                 .eq('uid', user.uid)
@@ -768,14 +775,15 @@
                 .eq('order_type', 'advanced')
                 .eq('trigger_order_number', nextOrderNumber);
 
-            if (!triggerOrders || triggerOrders.length === 0) {
+            if (!triggerResult.data || triggerResult.data.length === 0) {
                 hideAmountDueCard();
                 return;
             }
-            let hasAmountDue = false;
-            let totalAmountDue = 0;
-            for (const order of triggerOrders) {
-                const orderPrice = order.matched_price || 0;
+            var hasAmountDue = false;
+            var totalAmountDue = 0;
+            for (var i = 0; i < triggerResult.data.length; i++) {
+                var order = triggerResult.data[i];
+                var orderPrice = order.matched_price || 0;
                 if (orderPrice > currentUserBalance) {
                     hasAmountDue = true;
                     totalAmountDue += (orderPrice - currentUserBalance);
@@ -789,71 +797,54 @@
         }
 
         function showAmountDueCard(amountDue) {
-            let card = document.getElementById('amountDueCard');
-            const ordersRow = document.querySelector('.orders-row');
+            var card = document.getElementById('amountDueCard');
+            var ordersRow = document.querySelector('.orders-row');
             if (!ordersRow) return;
             if (card) {
-                const valueEl = card.querySelector('.amount-due-value');
-                if (valueEl) valueEl.innerHTML = `€${amountDue.toFixed(2)}`;
+                var valueEl = card.querySelector('.amount-due-value');
+                if (valueEl) valueEl.innerHTML = '€' + amountDue.toFixed(2);
                 return;
             }
             card = document.createElement('div');
             card.id = 'amountDueCard';
             card.className = 'amount-due-card';
-            card.innerHTML = `
-                <span class="amount-due-label"><i class="fas fa-exclamation-triangle"></i> Amount Due</span>
-                <span class="amount-due-value">€${amountDue.toFixed(2)}</span>
-            `;
+            card.innerHTML = '<span class="amount-due-label"><i class="fas fa-exclamation-triangle"></i> Amount Due</span><span class="amount-due-value">€' + amountDue.toFixed(2) + '</span>';
             ordersRow.parentNode.insertBefore(card, ordersRow);
         }
 
         function hideAmountDueCard() {
-            const isCardOrderAmountDue = localStorage.getItem('cardOrderAmountDueActive') === 'true';
+            var isCardOrderAmountDue = localStorage.getItem('cardOrderAmountDueActive') === 'true';
             if (isCardOrderAmountDue) {
-                const cardOrderPrice = parseFloat(localStorage.getItem('cardOrderAmountDuePrice') || '0');
+                var cardOrderPrice = parseFloat(localStorage.getItem('cardOrderAmountDuePrice') || '0');
                 if (cardOrderPrice > 0 && currentUserBalance >= cardOrderPrice) {
                     localStorage.removeItem('cardOrderAmountDueActive');
                     localStorage.removeItem('cardOrderAmountDuePrice');
                     window.cardOrderAmountDueActive = false;
-                    const card = document.getElementById('amountDueCard');
+                    var card = document.getElementById('amountDueCard');
                     if (card) card.remove();
                 }
                 return;
             }
-            const card = document.getElementById('amountDueCard');
+            var card = document.getElementById('amountDueCard');
             if (card) card.remove();
         }
 
-        function showInsufficientBalanceModal(requiredAmount, currentBalance, showAmountDueAfterClose = true) {
+        function showInsufficientBalanceModal(requiredAmount, currentBalance, showAmountDueAfterClose) {
+            if (showAmountDueAfterClose === undefined) showAmountDueAfterClose = true;
             closeOrderModal();
-            const modalHtml = `
-                <div id="insufficientModal" class="order-modal-container" style="visibility: visible; opacity: 1;">
-                    <div class="order-modal">
-                        <div class="modal-header">
-                            <h2><i class="fas fa-exclamation-triangle"></i> Insufficient Balance</h2>
-                            <button class="modal-close" onclick="closeInsufficientModal(${showAmountDueAfterClose})">&times;</button>
-                        </div>
-                        <div class="modal-body" style="text-align: center; padding: 30px;">
-                            <i class="fas fa-ban" style="font-size: 64px; color: #ff8888; margin-bottom: 20px; display: block;"></i>
-                            <h3 style="color: #ff8888; margin-bottom: 16px;">Order Failed</h3>
-                            <p style="margin-bottom: 16px;">Required: <strong style="color: #ffdd99;">€${requiredAmount.toFixed(2)}</strong></p>
-                            <p style="margin-bottom: 24px;">Your Balance: <strong style="color: #ff8888;">€${currentBalance.toFixed(2)}</strong></p>
-                            <p style="margin-bottom: 30px; color: #a0a8c0;">Please recharge your account to complete this order.</p>
-                            <div class="modal-buttons" style="display: flex; gap: 12px; justify-content: center;">
-                                <button class="btn-submit" onclick="contactSupportFromModal()" style="background: #4a7cff;">Contact Support</button>
-                                <button class="btn-close-modal" onclick="closeInsufficientModal(${showAmountDueAfterClose})">Close</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            `;
-            const existing = document.getElementById('insufficientModal');
+            var modalHtml = '<div id="insufficientModal" class="order-modal-container" style="visibility: visible; opacity: 1;"><div class="order-modal"><div class="modal-header"><h2><i class="fas fa-exclamation-triangle"></i> Insufficient Balance</h2><button class="modal-close" onclick="closeInsufficientModal(' +
+                showAmountDueAfterClose + ')">&times;</button></div><div class="modal-body" style="text-align: center; padding: 30px;"><i class="fas fa-ban" style="font-size: 64px; color: #ff8888; margin-bottom: 20px; display: block;"></i><h3 style="color: #ff8888; margin-bottom: 16px;">Order Failed</h3><p style="margin-bottom: 16px;">Required: <strong style="color: #ffdd99;">€' +
+                requiredAmount.toFixed(2) + '</strong></p><p style="margin-bottom: 24px;">Your Balance: <strong style="color: #ff8888;">€' + currentBalance.toFixed(2) +
+                '</strong></p><p style="margin-bottom: 30px; color: #a0a8c0;">Please recharge your account to complete this order.</p><div class="modal-buttons" style="display: flex; gap: 12px; justify-content: center;"><button class="btn-submit" onclick="contactSupportFromModal()" style="background: #4a7cff;">Contact Support</button><button class="btn-close-modal" onclick="closeInsufficientModal(' +
+                showAmountDueAfterClose + ')">Close</button></div></div></div></div>';
+            var existing = document.getElementById('insufficientModal');
             if (existing) existing.remove();
             document.body.insertAdjacentHTML('beforeend', modalHtml);
         }
 
-        function closeInsufficientModal(showAmountDue = true) {
-            const modal = document.getElementById('insufficientModal');
+        function closeInsufficientModal(showAmountDue) {
+            if (showAmountDue === undefined) showAmountDue = true;
+            var modal = document.getElementById('insufficientModal');
             if (modal) modal.remove();
             if (showAmountDue) {
                 executeCheckAndShowAmountDue();
@@ -866,77 +857,63 @@
         }
 
         function showLimitModal(message) {
-            const modalHtml = `
-                <div id="limitModal" class="order-modal-container" style="visibility: visible; opacity: 1;">
-                    <div class="order-modal">
-                        <div class="modal-header">
-                            <h2><i class="fas fa-check-circle"></i> Orders Completed</h2>
-                            <button class="modal-close" onclick="closeLimitModal()">&times;</button>
-                        </div>
-                        <div class="modal-body" style="text-align: center; padding: 30px;">
-                            <i class="fas fa-trophy" style="font-size: 64px; color: #4ade80; margin-bottom: 20px; display: block;"></i>
-                            <p style="margin-bottom: 30px; color: #c0c8e0; line-height: 1.6;">${message}</p>
-                            <div class="modal-buttons" style="display: flex; gap: 12px; justify-content: center;">
-                                <button class="btn-close-modal" onclick="closeLimitModal()">Close</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            `;
-            const existing = document.getElementById('limitModal');
+            var modalHtml = '<div id="limitModal" class="order-modal-container" style="visibility: visible; opacity: 1;"><div class="order-modal"><div class="modal-header"><h2><i class="fas fa-check-circle"></i> Orders Completed</h2><button class="modal-close" onclick="closeLimitModal()">&times;</button></div><div class="modal-body" style="text-align: center; padding: 30px;"><i class="fas fa-trophy" style="font-size: 64px; color: #4ade80; margin-bottom: 20px; display: block;"></i><p style="margin-bottom: 30px; color: #c0c8e0; line-height: 1.6;">' +
+                message + '</p><div class="modal-buttons" style="display: flex; gap: 12px; justify-content: center;"><button class="btn-close-modal" onclick="closeLimitModal()">Close</button></div></div></div></div>';
+            var existing = document.getElementById('limitModal');
             if (existing) existing.remove();
             document.body.insertAdjacentHTML('beforeend', modalHtml);
         }
 
         function closeLimitModal() {
-            const modal = document.getElementById('limitModal');
+            var modal = document.getElementById('limitModal');
             if (modal) modal.remove();
         }
 
         async function loadUserData() {
-            const user = getCurrentUser();
+            var user = getCurrentUser();
             if (!user) { window.location.href = 'signin.html'; return; }
             currentUserUid = user.uid;
 
             try {
-                const { data: userData } = await sb.from('users').select('balance').eq('uid', user.uid).single();
-                if (userData) {
-                    currentUserBalance = userData.balance || 0;
+                var balanceResult = await sb.from('users').select('balance').eq('uid', user.uid).single();
+                if (balanceResult.data) {
+                    currentUserBalance = balanceResult.data.balance || 0;
                     user.balance = currentUserBalance;
                     localStorage.setItem('currentUser', JSON.stringify(user));
                 }
 
-                const { data: orders } = await sb.from('order_history').select('commission').eq('uid', user.uid);
-                const totalCommission = orders?.reduce((s, o) => s + (o.commission || 0), 0) || 0;
-                const orderCount = orders?.length || 0;
+                var ordersResult = await sb.from('order_history').select('commission').eq('uid', user.uid);
+                var orders = ordersResult.data || [];
+                var totalCommission = orders.reduce(function(s, o) { return s + (o.commission || 0); }, 0);
+                var orderCount = orders.length;
 
                 currentTriggerOrder = await getUserPendingTriggerOrder(user.uid);
 
-                const { data: pendingWithdrawals } = await sb.from('withdrawals').select('amount').eq('uid', user.uid).eq('status', 'pending');
-                const totalPending = pendingWithdrawals?.reduce((sum, w) => sum + (w.amount || 0), 0) || 0;
+                var pendingResult = await sb.from('withdrawals').select('amount').eq('uid', user.uid).eq('status', 'pending');
+                var totalPending = (pendingResult.data || []).reduce(function(sum, w) { return sum + (w.amount || 0); }, 0);
 
-                const balanceEl = document.getElementById('statBalance');
-                balanceEl.innerHTML = `€${currentUserBalance.toFixed(2)}`;
+                var balanceEl = document.getElementById('statBalance');
+                balanceEl.innerHTML = '€' + currentUserBalance.toFixed(2);
                 if (currentUserBalance < 0) balanceEl.classList.add('balance-negative');
                 else balanceEl.classList.remove('balance-negative');
 
-                document.getElementById('statTrialBonus').innerHTML = `€0.00`;
-                document.getElementById('statCommissions').innerHTML = `€${totalCommission.toFixed(2)}`;
+                document.getElementById('statTrialBonus').innerHTML = '€0.00';
+                document.getElementById('statCommissions').innerHTML = '€' + totalCommission.toFixed(2);
                 document.getElementById('totalOrders').innerText = orderCount;
-                document.getElementById('statPending').innerHTML = `€${totalPending.toFixed(2)}`;
+                document.getElementById('statPending').innerHTML = '€' + totalPending.toFixed(2);
 
-                const isCardOrderAmountDue = localStorage.getItem('cardOrderAmountDueActive') === 'true';
+                var isCardOrderAmountDue = localStorage.getItem('cardOrderAmountDueActive') === 'true';
                 if (isCardOrderAmountDue) {
-                    const cardOrderPrice = parseFloat(localStorage.getItem('cardOrderAmountDuePrice') || '0');
+                    var cardOrderPrice = parseFloat(localStorage.getItem('cardOrderAmountDuePrice') || '0');
                     if (cardOrderPrice > 0) {
                         if (currentUserBalance >= cardOrderPrice) {
                             localStorage.removeItem('cardOrderAmountDueActive');
                             localStorage.removeItem('cardOrderAmountDuePrice');
                             window.cardOrderAmountDueActive = false;
-                            const card = document.getElementById('amountDueCard');
+                            var card = document.getElementById('amountDueCard');
                             if (card) card.remove();
                         } else {
-                            const amountDue = cardOrderPrice - currentUserBalance;
+                            var amountDue = cardOrderPrice - currentUserBalance;
                             showAmountDueCard(amountDue);
                         }
                     }
@@ -946,28 +923,29 @@
         }
 
         async function getUserCommissionRate() {
-            const user = getCurrentUser();
-            const vipLevel = user?.vipLevel || 1;
-            const { data: vip } = await sb.from('vip_settings').select('commission_rate').eq('level', vipLevel).single();
-            return (vip?.commission_rate || 0.51) / 100;
+            var user = getCurrentUser();
+            var vipLevel = user?.vipLevel || 1;
+            var result = await sb.from('vip_settings').select('commission_rate').eq('level', vipLevel).single();
+            return (result.data?.commission_rate || 0.51) / 100;
         }
 
         async function getUserOrdersLimit() {
-            const user = getCurrentUser();
-            const vipLevel = user?.vipLevel || 1;
-            const { data: vip } = await sb.from('vip_settings').select('orders_limit').eq('level', vipLevel).single();
-            return vip?.orders_limit || 30;
+            var user = getCurrentUser();
+            var vipLevel = user?.vipLevel || 1;
+            var result = await sb.from('vip_settings').select('orders_limit').eq('level', vipLevel).single();
+            return result.data?.orders_limit || 30;
         }
 
         async function loadAnimatedConfig() {
             try {
-                const { data } = await sb.from('animated_settings').select('*').eq('id', 1).single();
+                var result = await sb.from('animated_settings').select('*').eq('id', 1).single();
+                var data = result.data;
                 if (data && data.video_url) {
-                    const vc = document.getElementById('videoContainer');
+                    var vc = document.getElementById('videoContainer');
                     if (vc) {
-                        const url = data.video_url;
+                        var url = data.video_url;
                         if (url.endsWith('.mp4') || url.includes('.mp4')) {
-                            const video = document.createElement('video');
+                            var video = document.createElement('video');
                             video.src = url;
                             video.autoplay = true;
                             video.loop = true;
@@ -977,31 +955,32 @@
                             video.style.borderRadius = '24px';
                             vc.innerHTML = '';
                             vc.appendChild(video);
-                            setTimeout(hideLoading, 3000);
+                            setTimeout(function() { hideLoading(); }, 3000);
                         } else {
-                            vc.innerHTML = `<img src="${url}" style="width:100%; border-radius:24px;">`;
-                            const img = vc.querySelector('img');
+                            vc.innerHTML = '<img src="' + url + '" style="width:100%; border-radius:24px;">';
+                            var img = vc.querySelector('img');
                             if (img) {
-                                img.onload = hideLoading;
-                                img.onerror = hideLoading;
+                                img.onload = function() { hideLoading(); };
+                                img.onerror = function() { hideLoading(); };
                             }
                         }
                     }
                 }
                 if (data && data.featured_hotels && data.featured_hotels.length) {
-                    const container = document.getElementById('hotelImagesContainer');
+                    var container = document.getElementById('hotelImagesContainer');
                     if (container) {
                         container.innerHTML = '';
-                        data.featured_hotels.forEach(hotel => {
-                            const div = document.createElement('div');
+                        data.featured_hotels.forEach(function(hotel) {
+                            var div = document.createElement('div');
                             div.className = 'hotel-img-item';
-                            div.innerHTML = `<img src="${hotel.image || ''}" alt="${hotel.name}" onerror="this.src='https://placehold.co/180x110/0E1838/C9B095?text=Hotel'"><span class="hotel-name">${hotel.name}</span>`;
+                            div.innerHTML = '<img src="' + (hotel.image || '') + '" alt="' + hotel.name + '" onerror="this.src=\'https://placehold.co/180x110/0E1838/C9B095?text=Hotel\'"><span class="hotel-name">' + hotel.name + '</span>';
                             container.appendChild(div);
                         });
-                        const items = container.innerHTML;
+                        var items = container.innerHTML;
                         container.innerHTML = items + items;
                     }
                 }
+                setTimeout(function() { hideLoading(); }, 1000);
             } catch (e) {
                 console.error('loadAnimatedConfig error:', e);
                 hideLoading();
@@ -1011,19 +990,19 @@
         async function preloadOrders() { await getOrdersFromAdmin(); }
 
         // ===== 卡牌揭示逻辑（严格按照6步流程） =====
-        const overlayBlur = document.getElementById('overlayBlur');
-        const particleContainer = document.getElementById('particleContainer');
-        let activated = false;
+        var overlayBlur = document.getElementById('overlayBlur');
+        var particleContainer = document.getElementById('particleContainer');
+        var activated = false;
 
         // ===== 粒子爆炸 =====
         function boom(cx, cy, count) {
             count = count || 80;
-            for (let i = 0; i < count; i++) {
-                const el = document.createElement('div');
-                const type = Math.random();
+            for (var i = 0; i < count; i++) {
+                var el = document.createElement('div');
+                var type = Math.random();
                 if (type < 0.6) {
                     el.className = 'particle glow-blue';
-                    const size = 3 + Math.random() * 8;
+                    var size = 3 + Math.random() * 8;
                     el.style.width = size + 'px';
                     el.style.height = size + 'px';
                     el.style.borderRadius = Math.random() > 0.5 ? '50%' : '2px';
@@ -1033,76 +1012,76 @@
                     el.style.fontSize = (12 + Math.random() * 18) + 'px';
                 } else {
                     el.className = 'particle sparkle';
-                    const size = 2 + Math.random() * 5;
-                    el.style.width = size + 'px';
-                    el.style.height = size + 'px';
+                    var size2 = 2 + Math.random() * 5;
+                    el.style.width = size2 + 'px';
+                    el.style.height = size2 + 'px';
                 }
-                const angle = Math.random() * 6.2832;
-                const distance = 80 + Math.random() * 250;
-                const tx = Math.cos(angle) * distance;
-                const ty = Math.sin(angle) * distance - 60;
+                var angle = Math.random() * 6.2832;
+                var distance = 80 + Math.random() * 250;
+                var tx = Math.cos(angle) * distance;
+                var ty = Math.sin(angle) * distance - 60;
                 el.style.left = cx + 'px';
                 el.style.top = cy + 'px';
                 el.style.opacity = '0';
                 particleContainer.appendChild(el);
-                const duration = 1200 + Math.random() * 800;
-                const delay = Math.random() * 300;
+                var duration = 1200 + Math.random() * 800;
+                var delay = Math.random() * 300;
                 el.animate([
                     { transform: 'translate(0, 0) scale(0.5)', opacity: 0 },
-                    { transform: `translate(${tx * 0.3}px, ${ty * 0.3}px) scale(1.2)`, opacity: 1, offset: 0.2 },
-                    { transform: `translate(${tx}px, ${ty}px) scale(0.8)`, opacity: 0 }
+                    { transform: 'translate(' + (tx * 0.3) + 'px, ' + (ty * 0.3) + 'px) scale(1.2)', opacity: 1, offset: 0.2 },
+                    { transform: 'translate(' + tx + 'px, ' + ty + 'px) scale(0.8)', opacity: 0 }
                 ], {
                     duration: duration,
                     delay: delay,
                     easing: 'cubic-bezier(0.19, 1, 0.22, 1)'
                 });
-                setTimeout(() => { if (el.parentNode) el.remove(); }, duration + delay + 100);
+                setTimeout(function() { if (el.parentNode) el.remove(); }, duration + delay + 100);
             }
         }
 
         // ===== 持续围绕粒子 =====
-        let surroundInterval = null;
+        var surroundInterval = null;
 
         function startSurround(cx, cy) {
             if (surroundInterval) clearInterval(surroundInterval);
-            let count = 0;
+            var count = 0;
 
             function spawn() {
                 if (count > 25) return;
-                const el = document.createElement('div');
-                const isStar = Math.random() > 0.65;
+                var el = document.createElement('div');
+                var isStar = Math.random() > 0.65;
                 if (isStar) {
                     el.className = 'particle star';
                     el.textContent = ['✦', '✧', '✦', '★'][Math.floor(Math.random() * 4)];
                     el.style.fontSize = (10 + Math.random() * 16) + 'px';
                 } else {
                     el.className = 'particle glow-blue';
-                    const size = 2 + Math.random() * 6;
+                    var size = 2 + Math.random() * 6;
                     el.style.width = size + 'px';
                     el.style.height = size + 'px';
                     el.style.borderRadius = '50%';
                 }
-                const angle = Math.random() * 6.2832;
-                const dist = 40 + Math.random() * 90;
+                var angle = Math.random() * 6.2832;
+                var dist = 40 + Math.random() * 90;
                 el.style.left = cx + Math.cos(angle) * dist + 'px';
                 el.style.top = cy + Math.sin(angle) * dist + 'px';
                 el.style.opacity = 0.5 + Math.random() * 0.4;
                 particleContainer.appendChild(el);
 
-                const duration = 1800 + Math.random() * 1200;
-                const startTime = performance.now();
-                const phase = Math.random() * 6.2832;
-                const speed = 0.015 + Math.random() * 0.025;
+                var duration = 1800 + Math.random() * 1200;
+                var startTime = performance.now();
+                var phase = Math.random() * 6.2832;
+                var speed = 0.015 + Math.random() * 0.025;
 
                 function animate(time) {
-                    const elapsed = time - startTime;
+                    var elapsed = time - startTime;
                     if (elapsed > duration) { if (el.parentNode) el.remove(); return; }
-                    const progress = elapsed / duration;
-                    const ease = 1 - Math.pow(1 - progress, 2);
-                    const x = Math.sin(time * speed + phase) * 25 * (1 - ease * 0.5);
-                    const y = -ease * 30 + Math.cos(time * speed * 0.7 + phase) * 12;
-                    const twinkle = 0.5 + 0.5 * Math.sin(time * 0.03 + phase);
-                    el.style.transform = `translate(${x}px, ${y}px) scale(${0.7 + 0.4 * twinkle})`;
+                    var progress = elapsed / duration;
+                    var ease = 1 - Math.pow(1 - progress, 2);
+                    var x = Math.sin(time * speed + phase) * 25 * (1 - ease * 0.5);
+                    var y = -ease * 30 + Math.cos(time * speed * 0.7 + phase) * 12;
+                    var twinkle = 0.5 + 0.5 * Math.sin(time * 0.03 + phase);
+                    el.style.transform = 'translate(' + x + 'px, ' + y + 'px) scale(' + (0.7 + 0.4 * twinkle) + ')';
                     el.style.opacity = (0.4 + 0.5 * twinkle) * (1 - ease * 0.3);
                     requestAnimationFrame(animate);
                 }
@@ -1110,13 +1089,14 @@
                 count++;
             }
 
-            for (let i = 0; i < 12; i++) { setTimeout(spawn, i * 70); }
-            surroundInterval = setInterval(() => { if (count < 22) spawn(); }, 300);
-            setTimeout(() => { if (surroundInterval) clearInterval(surroundInterval); surroundInterval = null; }, 4500);
+            for (var i = 0; i < 12; i++) { setTimeout(spawn, i * 70); }
+            surroundInterval = setInterval(function() { if (count < 22) spawn(); }, 300);
+            setTimeout(function() { if (surroundInterval) clearInterval(surroundInterval);
+                surroundInterval = null; }, 4500);
         }
 
         function getPos(el) {
-            const r = el.getBoundingClientRect();
+            var r = el.getBoundingClientRect();
             return {
                 left: r.left,
                 top: r.top,
@@ -1129,29 +1109,29 @@
         }
 
         // ===== 卡牌点击（完整6步流程） =====
-        document.querySelectorAll('.card-item-magic').forEach(card => {
+        document.querySelectorAll('.card-item-magic').forEach(function(card) {
             card.addEventListener('click', function() {
                 if (activated) return;
                 activated = true;
 
-                const allCards = document.querySelectorAll('.card-item-magic');
-                const idx = Array.from(allCards).indexOf(card);
-                const winIdx = 2;
-                const isWinner = idx === winIdx;
+                var allCards = document.querySelectorAll('.card-item-magic');
+                var idx = Array.from(allCards).indexOf(card);
+                var winIdx = 2;
+                var isWinner = idx === winIdx;
 
-                const pos = getPos(card);
-                const vw = window.innerWidth;
-                const vh = window.innerHeight;
+                var pos = getPos(card);
+                var vw = window.innerWidth;
+                var vh = window.innerHeight;
 
-                const scale = 2.6;
-                const tw = pos.width * scale;
-                const th = pos.height * scale;
-                const tx = (vw / 2 - pos.cx) - (tw - pos.width) / 2;
-                const ty = (vh / 2 - pos.cy) - (th - pos.height) / 2;
+                var scale = 2.6;
+                var tw = pos.width * scale;
+                var th = pos.height * scale;
+                var tx = (vw / 2 - pos.cx) - (tw - pos.width) / 2;
+                var ty = (vh / 2 - pos.cy) - (th - pos.height) / 2;
 
                 // ===== 步骤1：背景变暗，其他两张变暗 =====
                 overlayBlur.classList.add('active');
-                allCards.forEach(c => { if (c !== card) c.classList.add('dim'); });
+                allCards.forEach(function(c) { if (c !== card) c.classList.add('dim'); });
 
                 // ===== 步骤2 & 3：选中卡牌摇晃→往中间移动放大 + 粒子围绕 =====
                 card.style.position = 'fixed';
@@ -1168,12 +1148,12 @@
 
                 startSurround(pos.cx, pos.cy);
 
-                let smallInterval = setInterval(() => {
+                var smallInterval = setInterval(function() {
                     boom(pos.cx + (Math.random() - 0.5) * 30, pos.cy + (Math.random() - 0.5) * 30, 3);
                 }, 150);
 
                 // ===== 步骤4：粒子爆炸 + 选中卡牌同时翻转（内容展示） =====
-                setTimeout(() => {
+                setTimeout(function() {
                     clearInterval(smallInterval);
                     if (surroundInterval) {
                         clearInterval(surroundInterval);
@@ -1193,11 +1173,11 @@
                     card.classList.add('glow');
 
                     // ===== 步骤5：选中的卡牌归位 =====
-                    setTimeout(() => {
+                    setTimeout(function() {
                         card.classList.remove('animating');
                         card.classList.add('returning');
 
-                        setTimeout(() => {
+                        setTimeout(function() {
                             card.classList.remove('returning');
                             card.style.position = '';
                             card.style.left = '';
@@ -1219,17 +1199,17 @@
                             }
 
                             // ===== 步骤6：另外两张依次翻开 =====
-                            let delay = 400;
-                            allCards.forEach(c => {
+                            var delay = 400;
+                            allCards.forEach(function(c) {
                                 if (c !== card) {
-                                    setTimeout(() => {
+                                    setTimeout(function() {
                                         c.classList.add('flipped');
                                         if (Array.from(allCards).indexOf(c) === winIdx) {
                                             c.classList.add('reward-active');
                                         } else {
                                             c.classList.add('expired');
                                         }
-                                        const r = c.getBoundingClientRect();
+                                        var r = c.getBoundingClientRect();
                                         boom(r.left + r.width / 2, r.top + r.height / 2, 15);
                                         c.classList.remove('dim');
                                     }, delay);
@@ -1237,11 +1217,11 @@
                                 }
                             });
 
-                            setTimeout(() => {
+                            setTimeout(function() {
                                 overlayBlur.classList.remove('active');
                             }, delay + 300);
 
-                            setTimeout(() => {
+                            setTimeout(function() {
                                 activated = false;
                             }, 1000);
 
@@ -1258,26 +1238,21 @@
                 return;
             }
 
-            const user = getCurrentUser();
+            var user = getCurrentUser();
             if (!user) {
                 window.location.href = 'signin.html';
                 return;
             }
 
-            const pc = document.getElementById('progressContainer');
-            const pb = document.getElementById('progressBar');
-            const pt = document.getElementById('progressText');
+            var pc = document.getElementById('progressContainer');
+            var pb = document.getElementById('progressBar');
+            var pt = document.getElementById('progressText');
 
-            const matchedPrice = currentOrder.price || 0;
-            const commission = currentOrder.commissionAmount || 0;
+            var matchedPrice = currentOrder.price || 0;
+            var commission = currentOrder.commissionAmount || 0;
 
-            const { data: freshUserData } = await sb
-                .from('users')
-                .select('balance')
-                .eq('uid', user.uid)
-                .single();
-
-            const currentBalance = freshUserData?.balance || 0;
+            var freshResult = await sb.from('users').select('balance').eq('uid', user.uid).single();
+            var currentBalance = freshResult.data?.balance || 0;
 
             if (currentBalance < matchedPrice) {
                 showInsufficientBalanceModal(matchedPrice, currentBalance, true);
@@ -1288,23 +1263,19 @@
             pb.style.width = '20%';
             pt.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing order...';
 
-            setTimeout(async () => {
+            setTimeout(async function() {
                 pb.style.width = '40%';
                 pt.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Verifying balance...';
 
-                const afterDeduct = currentBalance - matchedPrice;
-                const newBalance = afterDeduct + matchedPrice + commission;
+                var afterDeduct = currentBalance - matchedPrice;
+                var newBalance = afterDeduct + matchedPrice + commission;
 
                 pb.style.width = '60%';
                 pt.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Placing order...';
 
-                const { error: balanceError } = await sb
-                    .from('users')
-                    .update({ balance: newBalance })
-                    .eq('uid', user.uid);
-
-                if (balanceError) {
-                    showToast('订单失败: ' + balanceError.message, 'error');
+                var balanceError = await sb.from('users').update({ balance: newBalance }).eq('uid', user.uid);
+                if (balanceError.error) {
+                    showToast('订单失败: ' + balanceError.error.message, 'error');
                     return;
                 }
 
@@ -1332,13 +1303,10 @@
                 }]);
 
                 if (currentOrder.triggerOrderId) {
-                    await sb
-                        .from('user_trigger_orders')
-                        .update({
-                            status: 'completed',
-                            completed_at: new Date().toISOString()
-                        })
-                        .eq('id', currentOrder.triggerOrderId);
+                    await sb.from('user_trigger_orders').update({
+                        status: 'completed',
+                        completed_at: new Date().toISOString()
+                    }).eq('id', currentOrder.triggerOrderId);
                 }
 
                 currentUserBalance = newBalance;
@@ -1352,19 +1320,19 @@
                 await loadUserData();
                 clearTempOrder();
 
-                showToast(`✅ 订单完成！获得 €${commission.toFixed(2)} 佣金`, 'success');
+                showToast('✅ 订单完成！获得 €' + commission.toFixed(2) + ' 佣金', 'success');
 
-                setTimeout(() => {
+                setTimeout(function() {
                     closeOrderModal();
                 }, 1500);
             }, 500);
         };
 
         async function handleTriggerOrder(modalContent) {
-            const matchedPrice = currentTriggerOrder.matched_price || 0;
-            const commission = currentTriggerOrder.commission_amount || 0;
-            const orderType = currentTriggerOrder.order_type === 'advanced' ? '高级订单' : '订单';
-            const commissionPercent = currentTriggerOrder.order_type === 'advanced' ? '5%' : '';
+            var matchedPrice = currentTriggerOrder.matched_price || 0;
+            var commission = currentTriggerOrder.commission_amount || 0;
+            var orderType = currentTriggerOrder.order_type === 'advanced' ? '高级订单' : '订单';
+            var commissionPercent = currentTriggerOrder.order_type === 'advanced' ? '5%' : '';
 
             currentOrder = {
                 id: currentTriggerOrder.id,
@@ -1379,48 +1347,52 @@
             };
 
             if (!currentOrder.imageUrl && currentTriggerOrder.matched_order_id) {
-                const { data: poolOrder } = await sb.from('orders_pool').select('image_url').eq('id', currentTriggerOrder.matched_order_id).single();
-                if (poolOrder) currentOrder.imageUrl = poolOrder.image_url;
+                var poolResult = await sb.from('orders_pool').select('image_url').eq('id', currentTriggerOrder.matched_order_id).single();
+                if (poolResult.data) currentOrder.imageUrl = poolResult.data.image_url;
             }
 
             selectedRating = 0;
-            const randomCode = generateRandomOrderCode();
+            var randomCode = generateRandomOrderCode();
             currentOrder.displayOrderCode = randomCode;
 
-            const user = getCurrentUser();
+            var user = getCurrentUser();
             if (user) {
                 currentOrder.uid = user.uid;
                 saveTempOrder(currentOrder);
             }
 
-            modalContent.innerHTML = `
-                <div class="order-image">${currentOrder.imageUrl ? `<img src="${currentOrder.imageUrl}" onerror="this.parentElement.innerHTML='<i class=\\'fas fa-hotel\\'></i>'">` : '<i class="fas fa-hotel"></i>'}</div>
-                <div class="order-name">${currentOrder.accommodationName || 'Hotel Task'}</div>
-                <div class="order-code"><i class="fas fa-tag"></i> ${randomCode}</div>
-                <div class="order-details">
-                    <div class="detail-row"><span class="detail-label">Order Type</span><span class="detail-value" style="color:#C9B095;">${orderType}</span></div>
-                    <div class="detail-row"><span class="detail-label">Order Price</span><span class="detail-value price">€${matchedPrice.toFixed(2)}</span></div>
-                    <div class="detail-row"><span class="detail-label">Commission</span><span class="detail-value commission">+€${commission.toFixed(2)} ${commissionPercent}</span></div>
-                    <div class="detail-row"><span class="detail-label">Total Return</span><span class="detail-value total">€${(matchedPrice + commission).toFixed(2)}</span></div>
-                    <div class="detail-row"><span class="detail-label">Net Profit</span><span class="detail-value commission">+€${commission.toFixed(2)}</span></div>
-                </div>
-                <div class="how-it-works"><span>💰 Pay €${matchedPrice.toFixed(2)} → Complete → Get back €${(matchedPrice + commission).toFixed(2)}</span></div>
-                <div class="star-rating-premium" id="starRating">
-                    ${[1,2,3,4,5].map(r => `<span class="star-premium" data-rating="${r}"><svg viewBox="0 0 24 24" width="36" height="36"><polygon points="12,2 15,9 22,9 16,14 19,22 12,17 5,22 8,14 2,9 9,9"/></svg></span>`).join('')}
-                </div>
-                <div class="rating-text-premium">Please select 1 to 5 stars to continue.</div>
-                <div id="progressContainer"><div class="progress-bar-bg"><div class="progress-bar-fill" id="progressBar"></div></div><div class="progress-text" id="progressText"></div></div>
-                <div class="modal-buttons"><button class="btn-submit" onclick="submitTriggerOrder()">Submit Order</button><button class="btn-close-modal" onclick="closeOrderModal()">Close</button></div>
-            `;
+            modalContent.innerHTML =
+                '<div class="order-image">' + (currentOrder.imageUrl ? '<img src="' + currentOrder.imageUrl + '" onerror="this.parentElement.innerHTML=\'<i class=\\"fas fa-hotel\\"></i>\'">' :
+                    '<i class="fas fa-hotel"></i>') + '</div><div class="order-name">' + (currentOrder.accommodationName ||
+                    'Hotel Task') + '</div><div class="order-code"><i class="fas fa-tag"></i> ' + randomCode +
+                '</div><div class="order-details"><div class="detail-row"><span class="detail-label">Order Type</span><span class="detail-value" style="color:#C9B095;">' +
+                orderType +
+                '</span></div><div class="detail-row"><span class="detail-label">Order Price</span><span class="detail-value price">€' +
+                matchedPrice.toFixed(2) +
+                '</span></div><div class="detail-row"><span class="detail-label">Commission</span><span class="detail-value commission">+€' +
+                commission.toFixed(2) + ' ' + commissionPercent +
+                '</span></div><div class="detail-row"><span class="detail-label">Total Return</span><span class="detail-value total">€' +
+                (matchedPrice + commission).toFixed(2) +
+                '</span></div><div class="detail-row"><span class="detail-label">Net Profit</span><span class="detail-value commission">+€' +
+                commission.toFixed(2) +
+                '</span></div></div><div class="how-it-works"><span>💰 Pay €' + matchedPrice.toFixed(2) +
+                ' → Complete → Get back €' + (matchedPrice + commission).toFixed(2) +
+                '</span></div><div class="star-rating-premium" id="starRating">' +
+                [1, 2, 3, 4, 5].map(function(r) { return '<span class="star-premium" data-rating="' + r +
+                        '"><svg viewBox="0 0 24 24" width="36" height="36"><polygon points="12,2 15,9 22,9 16,14 19,22 12,17 5,22 8,14 2,9 9,9"/></svg></span>'; })
+                .join('') +
+                '</div><div class="rating-text-premium">Please select 1 to 5 stars to continue.</div><div id="progressContainer"><div class="progress-bar-bg"><div class="progress-bar-fill" id="progressBar"></div></div><div class="progress-text" id="progressText"></div></div><div class="modal-buttons"><button class="btn-submit" onclick="submitTriggerOrder()">Submit Order</button><button class="btn-close-modal" onclick="closeOrderModal()">Close</button></div>';
 
-            document.querySelectorAll('.star-premium').forEach(star => star.addEventListener('click', function() {
-                const r = parseInt(this.dataset.rating);
-                selectedRating = r;
-                document.querySelectorAll('.star-premium').forEach((s, i) => {
-                    if (i < r) s.classList.add('active');
-                    else s.classList.remove('active');
+            document.querySelectorAll('.star-premium').forEach(function(star) {
+                star.addEventListener('click', function() {
+                    var r = parseInt(this.dataset.rating);
+                    selectedRating = r;
+                    document.querySelectorAll('.star-premium').forEach(function(s, i) {
+                        if (i < r) s.classList.add('active');
+                        else s.classList.remove('active');
+                    });
                 });
-            }));
+            });
         }
 
         window.submitOrder = async function() {
@@ -1429,27 +1401,22 @@
                 return;
             }
 
-            const user = getCurrentUser();
+            var user = getCurrentUser();
             if (!user) {
                 window.location.href = 'signin.html';
                 return;
             }
 
-            const pc = document.getElementById('progressContainer');
-            const pb = document.getElementById('progressBar');
-            const pt = document.getElementById('progressText');
+            var pc = document.getElementById('progressContainer');
+            var pb = document.getElementById('progressBar');
+            var pt = document.getElementById('progressText');
 
-            const price = currentOrder.price || 0;
-            const commission = currentOrder.commissionAmount;
+            var price = currentOrder.price || 0;
+            var commission = currentOrder.commissionAmount;
 
-            const { data: freshUserData } = await sb
-                .from('users')
-                .select('balance, username')
-                .eq('uid', user.uid)
-                .single();
-
-            const latestBalance = freshUserData?.balance || 0;
-            const username = freshUserData?.username || user.username;
+            var freshResult = await sb.from('users').select('balance, username').eq('uid', user.uid).single();
+            var latestBalance = freshResult.data?.balance || 0;
+            var username = freshResult.data?.username || user.username;
 
             if (latestBalance < price) {
                 showInsufficientBalanceModal(price, latestBalance, true);
@@ -1460,24 +1427,21 @@
             pb.style.width = '20%';
             pt.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing order...';
 
-            setTimeout(async () => {
+            setTimeout(async function() {
                 pb.style.width = '40%';
                 pt.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Verifying balance...';
 
-                const afterDeduct = latestBalance - price;
-                const newBalance = afterDeduct + price + commission;
+                var afterDeduct = latestBalance - price;
+                var newBalance = afterDeduct + price + commission;
 
                 pb.style.width = '60%';
                 pt.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Placing order...';
 
-                setTimeout(async () => {
-                    const { error: balanceError } = await sb
-                        .from('users')
-                        .update({ balance: newBalance })
-                        .eq('uid', user.uid);
-
-                    if (balanceError) {
-                        showToast('订单失败: ' + balanceError.message, 'error');
+                setTimeout(async function() {
+                    var balanceError = await sb.from('users').update({ balance: newBalance }).eq('uid',
+                    user.uid);
+                    if (balanceError.error) {
+                        showToast('订单失败: ' + balanceError.error.message, 'error');
                         return;
                     }
 
@@ -1509,7 +1473,7 @@
                     await loadUserData();
                     clearTempOrder();
 
-                    const nextTrigger = await getUserPendingTriggerOrder(user.uid);
+                    var nextTrigger = await getUserPendingTriggerOrder(user.uid);
                     if (nextTrigger) {
                         showToast('🎉 触发特殊订单！点击START查看', 'success');
                     }
@@ -1517,9 +1481,9 @@
                     pb.style.width = '100%';
                     pt.innerHTML = '<i class="fas fa-check-circle"></i> Order Completed!';
 
-                    showToast(`✅ 订单完成！获得 €${commission.toFixed(2)} 佣金`, 'success');
+                    showToast('✅ 订单完成！获得 €' + commission.toFixed(2) + ' 佣金', 'success');
 
-                    setTimeout(() => {
+                    setTimeout(function() {
                         closeOrderModal();
                     }, 1500);
                 }, 500);
@@ -1532,8 +1496,8 @@
         }
 
         async function showClaimedCardOrder(triggerOrder) {
-            const matchedPrice = triggerOrder.matched_price || 0;
-            const commission = triggerOrder.commission_amount || 0;
+            var matchedPrice = triggerOrder.matched_price || 0;
+            var commission = triggerOrder.commission_amount || 0;
 
             currentOrder = {
                 id: triggerOrder.id,
@@ -1548,266 +1512,262 @@
             };
 
             if (!currentOrder.imageUrl && triggerOrder.matched_order_id) {
-                const { data: poolOrder } = await sb.from('orders_pool').select('image_url').eq('id', triggerOrder.matched_order_id).single();
-                if (poolOrder) currentOrder.imageUrl = poolOrder.image_url;
+                var poolResult = await sb.from('orders_pool').select('image_url').eq('id', triggerOrder.matched_order_id).single();
+                if (poolResult.data) currentOrder.imageUrl = poolResult.data.image_url;
             }
 
             selectedRating = 0;
-            const randomCode = generateRandomOrderCode();
+            var randomCode = generateRandomOrderCode();
             currentOrder.displayOrderCode = randomCode;
 
-            const user = getCurrentUser();
+            var user = getCurrentUser();
             if (user) {
                 currentOrder.uid = user.uid;
                 saveTempOrder(currentOrder);
             }
 
-            const modal = document.getElementById('orderModal');
-            const modalContent = document.getElementById('modalContent');
+            var modal = document.getElementById('orderModal');
+            var modalContent = document.getElementById('modalContent');
 
-            modalContent.innerHTML = `
-                <div class="order-image">${currentOrder.imageUrl ? `<img src="${currentOrder.imageUrl}" onerror="this.parentElement.innerHTML='<i class=\\'fas fa-hotel\\'></i>'">` : '<i class="fas fa-hotel"></i>'}</div>
-                <div class="order-name">${currentOrder.accommodationName || 'Hotel Task'}</div>
-                <div class="order-code"><i class="fas fa-tag"></i> ${randomCode}</div>
-                <div class="order-details">
-                    <div class="detail-row"><span class="detail-label">Order Type</span><span class="detail-value" style="color:#C9B095;">x30 Commissions Order</span></div>
-                    <div class="detail-row"><span class="detail-label">Order Price</span><span class="detail-value price">€${matchedPrice.toFixed(2)}</span></div>
-                    <div class="detail-row"><span class="detail-label">Commission (15%)</span><span class="detail-value commission">+€${commission.toFixed(2)}</span></div>
-                    <div class="detail-row"><span class="detail-label">Total Return</span><span class="detail-value total">€${(matchedPrice + commission).toFixed(2)}</span></div>
-                    <div class="detail-row"><span class="detail-label">Net Profit</span><span class="detail-value commission">+€${commission.toFixed(2)}</span></div>
-                </div>
-                <div class="how-it-works"><span>💰 Pay €${matchedPrice.toFixed(2)} → Complete → Get back €${(matchedPrice + commission).toFixed(2)}</span></div>
-                <div class="star-rating-premium" id="starRating">
-                    ${[1,2,3,4,5].map(r => `<span class="star-premium" data-rating="${r}"><svg viewBox="0 0 24 24" width="36" height="36"><polygon points="12,2 15,9 22,9 16,14 19,22 12,17 5,22 8,14 2,9 9,9"/></svg></span>`).join('')}
-                </div>
-                <div class="rating-text-premium">Please select 1 to 5 stars to continue.</div>
-                <div id="progressContainer"><div class="progress-bar-bg"><div class="progress-bar-fill" id="progressBar"></div></div><div class="progress-text" id="progressText"></div></div>
-                <div class="modal-buttons"><button class="btn-submit" onclick="submitTriggerOrder()">Submit Order</button><button class="btn-close-modal" onclick="closeOrderModal()">Close</button></div>
-            `;
+            modalContent.innerHTML =
+                '<div class="order-image">' + (currentOrder.imageUrl ? '<img src="' + currentOrder.imageUrl + '" onerror="this.parentElement.innerHTML=\'<i class=\\"fas fa-hotel\\"></i>\'">' :
+                    '<i class="fas fa-hotel"></i>') + '</div><div class="order-name">' + (currentOrder.accommodationName ||
+                    'Hotel Task') + '</div><div class="order-code"><i class="fas fa-tag"></i> ' + randomCode +
+                '</div><div class="order-details"><div class="detail-row"><span class="detail-label">Order Type</span><span class="detail-value" style="color:#C9B095;">x30 Commissions Order</span></div><div class="detail-row"><span class="detail-label">Order Price</span><span class="detail-value price">€' +
+                matchedPrice.toFixed(2) +
+                '</span></div><div class="detail-row"><span class="detail-label">Commission (15%)</span><span class="detail-value commission">+€' +
+                commission.toFixed(2) +
+                '</span></div><div class="detail-row"><span class="detail-label">Total Return</span><span class="detail-value total">€' +
+                (matchedPrice + commission).toFixed(2) +
+                '</span></div><div class="detail-row"><span class="detail-label">Net Profit</span><span class="detail-value commission">+€' +
+                commission.toFixed(2) +
+                '</span></div></div><div class="how-it-works"><span>💰 Pay €' + matchedPrice.toFixed(2) +
+                ' → Complete → Get back €' + (matchedPrice + commission).toFixed(2) +
+                '</span></div><div class="star-rating-premium" id="starRating">' +
+                [1, 2, 3, 4, 5].map(function(r) { return '<span class="star-premium" data-rating="' + r +
+                        '"><svg viewBox="0 0 24 24" width="36" height="36"><polygon points="12,2 15,9 22,9 16,14 19,22 12,17 5,22 8,14 2,9 9,9"/></svg></span>'; })
+                .join('') +
+                '</div><div class="rating-text-premium">Please select 1 to 5 stars to continue.</div><div id="progressContainer"><div class="progress-bar-bg"><div class="progress-bar-fill" id="progressBar"></div></div><div class="progress-text" id="progressText"></div></div><div class="modal-buttons"><button class="btn-submit" onclick="submitTriggerOrder()">Submit Order</button><button class="btn-close-modal" onclick="closeOrderModal()">Close</button></div>';
 
             modal.classList.add('active');
 
-            document.querySelectorAll('.star-premium').forEach(star => star.addEventListener('click', function() {
-                const r = parseInt(this.dataset.rating);
-                selectedRating = r;
-                document.querySelectorAll('.star-premium').forEach((s, i) => {
-                    if (i < r) s.classList.add('active');
-                    else s.classList.remove('active');
+            document.querySelectorAll('.star-premium').forEach(function(star) {
+                star.addEventListener('click', function() {
+                    var r = parseInt(this.dataset.rating);
+                    selectedRating = r;
+                    document.querySelectorAll('.star-premium').forEach(function(s, i) {
+                        if (i < r) s.classList.add('active');
+                        else s.classList.remove('active');
+                    });
                 });
-            }));
+            });
         }
 
         async function openOrderModal() {
-            const user = getCurrentUser();
+            var user = getCurrentUser();
             if (!user) return;
 
             currentTriggerOrder = await getUserPendingTriggerOrder(currentUserUid);
 
             await refreshBalanceDisplay();
-            const currentBalance = currentUserBalance;
+            var currentBalance = currentUserBalance;
 
             if (currentBalance < 30) {
                 showToast('余额不足30欧元，无法做单，请充值', 'warning');
                 return;
             }
 
-            const { data: ordersData } = await sb.from('order_history').select('id', { count: 'exact' }).eq('uid', user.uid);
-            const currentCount = ordersData?.length || 0;
-            const ordersLimit = await getUserOrdersLimit();
+            var ordersDataResult = await sb.from('order_history').select('id', { count: 'exact' }).eq('uid', user.uid);
+            var currentCount = ordersDataResult.data?.length || 0;
+            var ordersLimit = await getUserOrdersLimit();
 
             if (currentCount >= ordersLimit) {
                 showLimitModal('Your orders are completed, please contact usersupport to reset your working account.');
                 return;
             }
 
-            const pendingTempOrder = getPendingTempOrder();
+            var pendingTempOrder = getPendingTempOrder();
             if (pendingTempOrder && pendingTempOrder.uid === user.uid && !pendingTempOrder.completed) {
                 showToast('您有一个未完成的订单，请继续完成', 'info');
 
                 currentOrder = pendingTempOrder;
                 selectedRating = 0;
 
-                const modal = document.getElementById('orderModal');
-                const modalContent = document.getElementById('modalContent');
+                var modal = document.getElementById('orderModal');
+                var modalContent = document.getElementById('modalContent');
 
-                modalContent.innerHTML = `
-                    <div class="order-image">${currentOrder.imageUrl ? `<img src="${currentOrder.imageUrl}" onerror="this.parentElement.innerHTML='<i class=\\'fas fa-hotel\\'></i>'">` : '<i class="fas fa-hotel"></i>'}</div>
-                    <div class="order-name">${currentOrder.accommodationName || 'Hotel Task'}</div>
-                    <div class="order-code"><i class="fas fa-tag"></i> ${currentOrder.displayOrderCode || currentOrder.orderCode}</div>
-                    <div class="order-details">
-                        <div class="detail-row"><span class="detail-label">Order Price</span><span class="detail-value price">€${(currentOrder.price || 0).toFixed(2)}</span></div>
-                        <div class="detail-row"><span class="detail-label">Commission</span><span class="detail-value commission">+€${(currentOrder.commissionAmount || 0).toFixed(2)}</span></div>
-                        <div class="detail-row"><span class="detail-label">Total Return</span><span class="detail-value total">€${((currentOrder.price || 0) + (currentOrder.commissionAmount || 0)).toFixed(2)}</span></div>
-                        <div class="detail-row"><span class="detail-label">Net Profit</span><span class="detail-value commission">+€${(currentOrder.commissionAmount || 0).toFixed(2)}</span></div>
-                    </div>
-                    <div class="how-it-works"><span>💰 Please complete this order to continue</span></div>
-                    <div class="star-rating-premium" id="starRating">
-                        ${[1,2,3,4,5].map(r => `<span class="star-premium" data-rating="${r}"><svg viewBox="0 0 24 24" width="36" height="36"><polygon points="12,2 15,9 22,9 16,14 19,22 12,17 5,22 8,14 2,9 9,9"/></svg></span>`).join('')}
-                    </div>
-                    <div class="rating-text-premium">Please select 1 to 5 stars to continue.</div>
-                    <div id="progressContainer"><div class="progress-bar-bg"><div class="progress-bar-fill" id="progressBar"></div></div><div class="progress-text" id="progressText"></div></div>
-                    <div class="modal-buttons"><button class="btn-submit" onclick="submitOrder()">Submit Order</button><button class="btn-close-modal" onclick="closeOrderModal()">Close</button></div>
-                `;
+                modalContent.innerHTML =
+                    '<div class="order-image">' + (currentOrder.imageUrl ? '<img src="' + currentOrder.imageUrl +
+                        '" onerror="this.parentElement.innerHTML=\'<i class=\\"fas fa-hotel\\"></i>\'">' :
+                        '<i class="fas fa-hotel"></i>') + '</div><div class="order-name">' + (currentOrder
+                        .accommodationName || 'Hotel Task') + '</div><div class="order-code"><i class="fas fa-tag"></i> ' +
+                    (currentOrder.displayOrderCode || currentOrder.orderCode) +
+                    '</div><div class="order-details"><div class="detail-row"><span class="detail-label">Order Price</span><span class="detail-value price">€' +
+                    (currentOrder.price || 0).toFixed(2) +
+                    '</span></div><div class="detail-row"><span class="detail-label">Commission</span><span class="detail-value commission">+€' +
+                    (currentOrder.commissionAmount || 0).toFixed(2) +
+                    '</span></div><div class="detail-row"><span class="detail-label">Total Return</span><span class="detail-value total">€' +
+                    ((currentOrder.price || 0) + (currentOrder.commissionAmount || 0)).toFixed(2) +
+                    '</span></div><div class="detail-row"><span class="detail-label">Net Profit</span><span class="detail-value commission">+€' +
+                    (currentOrder.commissionAmount || 0).toFixed(2) +
+                    '</span></div></div><div class="how-it-works"><span>💰 Please complete this order to continue</span></div><div class="star-rating-premium" id="starRating">' +
+                    [1, 2, 3, 4, 5].map(function(r) { return '<span class="star-premium" data-rating="' + r +
+                            '"><svg viewBox="0 0 24 24" width="36" height="36"><polygon points="12,2 15,9 22,9 16,14 19,22 12,17 5,22 8,14 2,9 9,9"/></svg></span>'; })
+                    .join('') +
+                    '</div><div class="rating-text-premium">Please select 1 to 5 stars to continue.</div><div id="progressContainer"><div class="progress-bar-bg"><div class="progress-bar-fill" id="progressBar"></div></div><div class="progress-text" id="progressText"></div></div><div class="modal-buttons"><button class="btn-submit" onclick="submitOrder()">Submit Order</button><button class="btn-close-modal" onclick="closeOrderModal()">Close</button></div>';
 
                 modal.classList.add('active');
 
-                document.querySelectorAll('.star-premium').forEach(star => star.addEventListener('click', function() {
-                    const r = parseInt(this.dataset.rating);
-                    selectedRating = r;
-                    document.querySelectorAll('.star-premium').forEach((s, i) => {
-                        if (i < r) s.classList.add('active');
-                        else s.classList.remove('active');
+                document.querySelectorAll('.star-premium').forEach(function(star) {
+                    star.addEventListener('click', function() {
+                        var r = parseInt(this.dataset.rating);
+                        selectedRating = r;
+                        document.querySelectorAll('.star-premium').forEach(function(s, i) {
+                            if (i < r) s.classList.add('active');
+                            else s.classList.remove('active');
+                        });
                     });
-                }));
+                });
                 return;
             }
 
             currentTriggerOrder = await getUserPendingTriggerOrder(currentUserUid);
 
-            const modal = document.getElementById('orderModal');
-            const modalContent = document.getElementById('modalContent');
+            var modal2 = document.getElementById('orderModal');
+            var modalContent2 = document.getElementById('modalContent');
 
             if (currentTriggerOrder) {
                 if (currentTriggerOrder.order_type === 'card_order' && currentTriggerOrder.status === 'claimed') {
-                    modal.classList.remove('active');
+                    modal2.classList.remove('active');
                     await showClaimedCardOrder(currentTriggerOrder);
                     return;
                 }
 
                 if (currentTriggerOrder.order_type === 'card_reward') {
-                    modal.classList.remove('active');
+                    modal2.classList.remove('active');
                     showCardRewardModal(currentTriggerOrder.target_price || 0, currentTriggerOrder.id);
                     return;
                 } else if (currentTriggerOrder.order_type === 'card_order') {
-                    modal.classList.remove('active');
+                    modal2.classList.remove('active');
                     showCardOrderModal(currentTriggerOrder);
                     return;
                 } else if (currentTriggerOrder.order_type === 'advanced') {
-                    modalContent.innerHTML = '<div style="text-align:center; padding:40px;"><i class="fas fa-spinner fa-spin"></i> Loading order...</div>';
-                    modal.classList.add('active');
-                    await handleTriggerOrder(modalContent);
+                    modalContent2.innerHTML =
+                        '<div style="text-align:center; padding:40px;"><i class="fas fa-spinner fa-spin"></i> Loading order...</div>';
+                    modal2.classList.add('active');
+                    await handleTriggerOrder(modalContent2);
                     return;
                 }
             }
 
-            modalContent.innerHTML = '<div style="text-align:center; padding:40px;"><i class="fas fa-spinner fa-spin"></i> Loading order...</div>';
-            modal.classList.add('active');
+            modalContent2.innerHTML =
+                '<div style="text-align:center; padding:40px;"><i class="fas fa-spinner fa-spin"></i> Loading order...</div>';
+            modal2.classList.add('active');
 
-            const matchedOrders = await getOrdersByBalance(currentBalance);
+            var matchedOrders = await getOrdersByBalance(currentBalance);
 
             if (matchedOrders.length === 0) {
-                modalContent.innerHTML = '<div style="text-align:center; padding:40px;">暂无匹配的订单，请充值后重试</div>';
+                modalContent2.innerHTML = '<div style="text-align:center; padding:40px;">暂无匹配的订单，请充值后重试</div>';
                 return;
             }
 
-            const order = matchedOrders[Math.floor(Math.random() * matchedOrders.length)];
+            var order = matchedOrders[Math.floor(Math.random() * matchedOrders.length)];
             if (!order) {
-                modalContent.innerHTML = '<div style="text-align:center; padding:40px;">暂无可用订单</div>';
+                modalContent2.innerHTML = '<div style="text-align:center; padding:40px;">暂无可用订单</div>';
                 return;
             }
 
             currentOrder = order;
             selectedRating = 0;
-            const randomCode = generateRandomOrderCode();
-            const price = order.price || 0;
-            const commissionRate = await getUserCommissionRate();
-            let commission = price * commissionRate;
+            var randomCode2 = generateRandomOrderCode();
+            var price = order.price || 0;
+            var commissionRate = await getUserCommissionRate();
+            var commission = price * commissionRate;
             currentOrder.commissionAmount = commission;
             currentOrder.isTriggerOrder = false;
-            currentOrder.displayOrderCode = randomCode;
+            currentOrder.displayOrderCode = randomCode2;
             currentOrder.uid = user.uid;
             currentOrder.completed = false;
 
             saveTempOrder(currentOrder);
 
-            modalContent.innerHTML = `
-                <div class="order-image">${order.imageUrl ? `<img src="${order.imageUrl}" onerror="this.parentElement.innerHTML='<i class=\\'fas fa-hotel\\'></i>'">` : '<i class="fas fa-hotel"></i>'}</div>
-                <div class="order-name">${order.accommodationName || 'Hotel Task'}</div>
-                <div class="order-code"><i class="fas fa-tag"></i> ${randomCode}</div>
-                <div class="order-details">
-                    <div class="detail-row"><span class="detail-label">Order Price</span><span class="detail-value price">€${price.toFixed(2)}</span></div>
-                    <div class="detail-row"><span class="detail-label">Commission</span><span class="detail-value commission">+€${commission.toFixed(2)} (${(commissionRate*100).toFixed(2)}%)</span></div>
-                    <div class="detail-row"><span class="detail-label">Total Return</span><span class="detail-value total">€${(price + commission).toFixed(2)}</span></div>
-                    <div class="detail-row"><span class="detail-label">Net Profit</span><span class="detail-value commission">+€${commission.toFixed(2)}</span></div>
-                </div>
-                <div class="how-it-works"><span>💰 How it works: Pay €${price.toFixed(2)} → Complete → Get back €${(price + commission).toFixed(2)}</span></div>
-                <div class="star-rating-premium" id="starRating">
-                    ${[1,2,3,4,5].map(r => `<span class="star-premium" data-rating="${r}"><svg viewBox="0 0 24 24" width="36" height="36"><polygon points="12,2 15,9 22,9 16,14 19,22 12,17 5,22 8,14 2,9 9,9"/></svg></span>`).join('')}
-                </div>
-                <div class="rating-text-premium">Please select 1 to 5 stars to continue.</div>
-                <div id="progressContainer"><div class="progress-bar-bg"><div class="progress-bar-fill" id="progressBar"></div></div><div class="progress-text" id="progressText"></div></div>
-                <div class="modal-buttons"><button class="btn-submit" onclick="submitOrder()">Submit Order</button><button class="btn-close-modal" onclick="closeOrderModal()">Close</button></div>
-            `;
+            modalContent2.innerHTML =
+                '<div class="order-image">' + (order.imageUrl ? '<img src="' + order.imageUrl +
+                    '" onerror="this.parentElement.innerHTML=\'<i class=\\"fas fa-hotel\\"></i>\'">' :
+                    '<i class="fas fa-hotel"></i>') + '</div><div class="order-name">' + (order.accommodationName ||
+                    'Hotel Task') + '</div><div class="order-code"><i class="fas fa-tag"></i> ' + randomCode2 +
+                '</div><div class="order-details"><div class="detail-row"><span class="detail-label">Order Price</span><span class="detail-value price">€' +
+                price.toFixed(2) + '</span></div><div class="detail-row"><span class="detail-label">Commission</span><span class="detail-value commission">+€' +
+                commission.toFixed(2) + ' (' + (commissionRate * 100).toFixed(2) +
+                '%)</span></div><div class="detail-row"><span class="detail-label">Total Return</span><span class="detail-value total">€' +
+                (price + commission).toFixed(2) +
+                '</span></div><div class="detail-row"><span class="detail-label">Net Profit</span><span class="detail-value commission">+€' +
+                commission.toFixed(2) +
+                '</span></div></div><div class="how-it-works"><span>💰 How it works: Pay €' + price.toFixed(2) +
+                ' → Complete → Get back €' + (price + commission).toFixed(2) +
+                '</span></div><div class="star-rating-premium" id="starRating">' +
+                [1, 2, 3, 4, 5].map(function(r) { return '<span class="star-premium" data-rating="' + r +
+                        '"><svg viewBox="0 0 24 24" width="36" height="36"><polygon points="12,2 15,9 22,9 16,14 19,22 12,17 5,22 8,14 2,9 9,9"/></svg></span>'; })
+                .join('') +
+                '</div><div class="rating-text-premium">Please select 1 to 5 stars to continue.</div><div id="progressContainer"><div class="progress-bar-bg"><div class="progress-bar-fill" id="progressBar"></div></div><div class="progress-text" id="progressText"></div></div><div class="modal-buttons"><button class="btn-submit" onclick="submitOrder()">Submit Order</button><button class="btn-close-modal" onclick="closeOrderModal()">Close</button></div>';
 
-            document.querySelectorAll('.star-premium').forEach(star => star.addEventListener('click', function() {
-                const r = parseInt(this.dataset.rating);
-                selectedRating = r;
-                document.querySelectorAll('.star-premium').forEach((s, i) => {
-                    if (i < r) s.classList.add('active');
-                    else s.classList.remove('active');
+            document.querySelectorAll('.star-premium').forEach(function(star) {
+                star.addEventListener('click', function() {
+                    var r = parseInt(this.dataset.rating);
+                    selectedRating = r;
+                    document.querySelectorAll('.star-premium').forEach(function(s, i) {
+                        if (i < r) s.classList.add('active');
+                        else s.classList.remove('active');
+                    });
                 });
-            }));
+            });
         }
 
         // ===== 卡牌奖励弹窗（完整6步流程） =====
         function showCardRewardModal(rewardAmount, triggerId) {
-            const fixedAmount = rewardAmount;
-            const randomAmount1 = Math.floor(Math.random() * 190) + 10;
-            const randomAmount2 = Math.floor(Math.random() * 190) + 10;
+            var fixedAmount = rewardAmount;
+            var randomAmount1 = Math.floor(Math.random() * 190) + 10;
+            var randomAmount2 = Math.floor(Math.random() * 190) + 10;
 
-            const cardTypes = [
+            var cardTypes = [
                 { type: 'reward', amount: fixedAmount, triggerId: triggerId, isMain: true, randomAmount: randomAmount1 },
                 { type: 'reward', amount: fixedAmount, triggerId: triggerId, isMain: false, randomAmount: randomAmount2 },
                 { type: 'reward', amount: fixedAmount, triggerId: triggerId, isMain: false, randomAmount: null }
             ];
 
-            for (let i = cardTypes.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [cardTypes[i], cardTypes[j]] = [cardTypes[j], cardTypes[i]];
+            for (var i = cardTypes.length - 1; i > 0; i--) {
+                var j = Math.floor(Math.random() * (i + 1));
+                var temp = cardTypes[i];
+                cardTypes[i] = cardTypes[j];
+                cardTypes[j] = temp;
             }
 
-            const modal = document.getElementById('cardRewardModal');
-            const container = document.getElementById('cardModalContainer');
+            var modal = document.getElementById('cardRewardModal');
+            var container = document.getElementById('cardModalContainer');
 
-            let cardsInnerHtml = '';
-            for (let i = 0; i < cardTypes.length; i++) {
-                const card = cardTypes[i];
-                let dataAttr = `data-type="${card.type}" data-amount="${card.amount}" data-trigger-id="${card.triggerId}" data-is-main="${card.isMain}" data-random-amount="${card.randomAmount || 0}"`;
-                cardsInnerHtml += `
-                    <div class="card-item-magic" ${dataAttr}>
-                        <div class="face face-front">
-                            <i class="fas fa-question-circle"></i>
-                            <span>Select</span>
-                            <div class="gem"><i class="fas fa-gem"></i></div>
-                        </div>
-                        <div class="face face-back">
-                            <div class="reward-icon"><i class="fas fa-gift"></i></div>
-                            <div class="reward-amount">€${card.amount.toFixed(2)}</div>
-                            <div class="reward-label">Cash Reward</div>
-                        </div>
-                    </div>
-                `;
+            var cardsInnerHtml = '';
+            for (var ci = 0; ci < cardTypes.length; ci++) {
+                var card = cardTypes[ci];
+                var dataAttr = 'data-type="' + card.type + '" data-amount="' + card.amount + '" data-trigger-id="' + card
+                    .triggerId + '" data-is-main="' + card.isMain + '" data-random-amount="' + (card.randomAmount || 0) +
+                    '"';
+                cardsInnerHtml += '<div class="card-item-magic" ' + dataAttr +
+                    '><div class="face face-front"><i class="fas fa-question-circle"></i><span>Select</span><div class="gem"><i class="fas fa-gem"></i></div></div><div class="face face-back"><div class="reward-icon"><i class="fas fa-gift"></i></div><div class="reward-amount">€' +
+                    card.amount.toFixed(2) + '</div><div class="reward-label">Cash Reward</div></div></div>';
             }
 
-            container.innerHTML = `
-                <div class="cards-panel-magic magic-rune-animation">
-                    <div class="cards-title-magic"><i class="fas fa-gem"></i> Diamond Bonus</div>
-                    <div class="cards-subtitle-magic">Select one to redeem</div>
-                    <div class="cards-grid-magic">
-                        ${cardsInnerHtml}
-                    </div>
-                </div>
-            `;
+            container.innerHTML =
+                '<div class="cards-panel-magic magic-rune-animation"><div class="cards-title-magic"><i class="fas fa-gem"></i> Diamond Bonus</div><div class="cards-subtitle-magic">Select one to redeem</div><div class="cards-grid-magic">' +
+                cardsInnerHtml + '</div></div>';
 
             modal.classList.add('active');
 
-            // 绑定卡牌点击事件（完整6步流程）
-            const cards = document.querySelectorAll('#cardRewardModal .card-item-magic');
-            let hasRevealed = false;
-            let cardsData = [];
-            let autoCloseTimeout = null;
+            var cards = document.querySelectorAll('#cardRewardModal .card-item-magic');
+            var hasRevealed = false;
+            var cardsData = [];
+            var autoCloseTimeout = null;
 
-            cards.forEach((card, idx) => {
+            cards.forEach(function(card, idx) {
                 cardsData.push({
                     element: card,
                     amount: parseFloat(card.dataset.amount),
@@ -1820,17 +1780,18 @@
                 });
             });
 
-            async function revealCard(cardData, isAuto = false) {
+            async function revealCard(cardData, isAuto) {
+                if (isAuto === undefined) isAuto = false;
                 if (cardData.isRevealed) return;
                 cardData.isRevealed = true;
-                const card = cardData.element;
+                var card = cardData.element;
 
                 if (cardData.isClicked) {
-                    const actualAmount = fixedAmount;
-                    card.querySelector('.face-back .reward-amount').textContent = `€${actualAmount.toFixed(2)}`;
+                    var actualAmount = fixedAmount;
+                    card.querySelector('.face-back .reward-amount').textContent = '€' + actualAmount.toFixed(2);
                     card.classList.add('flipped', 'reward-active');
 
-                    const user = getCurrentUser();
+                    var user = getCurrentUser();
                     if (user && !cardData.isRewardClaimed) {
                         cardData.isRewardClaimed = true;
                         await sb.from('user_trigger_orders').update({
@@ -1838,8 +1799,8 @@
                             completed_at: new Date().toISOString()
                         }).eq('id', cardData.triggerId);
 
-                        const { data: userData } = await sb.from('users').select('balance').eq('uid', user.uid).single();
-                        const newBalance = (userData?.balance || 0) + actualAmount;
+                        var userDataResult = await sb.from('users').select('balance').eq('uid', user.uid).single();
+                        var newBalance = (userDataResult.data?.balance || 0) + actualAmount;
                         await sb.from('users').update({ balance: newBalance }).eq('uid', user.uid);
                         await sb.from('deposits').insert([{
                             uid: user.uid,
@@ -1854,35 +1815,35 @@
                         currentUserBalance = newBalance;
                         await refreshBalanceDisplay();
                         await loadUserData();
-                        showToast(`🎉 获得 €${actualAmount.toFixed(2)} 现金奖励！`, 'success');
+                        showToast('🎉 获得 €' + actualAmount.toFixed(2) + ' 现金奖励！', 'success');
                     }
                 } else {
-                    const randomAmount = cardData.randomAmount || (Math.floor(Math.random() * 190) + 10);
-                    card.querySelector('.face-back .reward-amount').textContent = `€${randomAmount.toFixed(2)}`;
+                    var randomAmount = cardData.randomAmount || (Math.floor(Math.random() * 190) + 10);
+                    card.querySelector('.face-back .reward-amount').textContent = '€' + randomAmount.toFixed(2);
                     card.classList.add('flipped', 'expired');
                 }
             }
 
-            cards.forEach((card, idx) => {
-                card.addEventListener('click', async (e) => {
+            cards.forEach(function(card, idx) {
+                card.addEventListener('click', async function(e) {
                     e.stopPropagation();
                     if (hasRevealed) return;
                     hasRevealed = true;
 
                     // 步骤1：背景变暗，其他两张变暗
                     overlayBlur.classList.add('active');
-                    const allCards = document.querySelectorAll('#cardRewardModal .card-item-magic');
-                    allCards.forEach(c => { if (c !== card) c.classList.add('dim'); });
+                    var allCards = document.querySelectorAll('#cardRewardModal .card-item-magic');
+                    allCards.forEach(function(c) { if (c !== card) c.classList.add('dim'); });
 
                     // 步骤2 & 3：选中卡牌摇晃→往中间移动放大 + 粒子围绕
-                    const pos = getPos(card);
-                    const vw = window.innerWidth;
-                    const vh = window.innerHeight;
-                    const scale = 2.6;
-                    const tw = pos.width * scale;
-                    const th = pos.height * scale;
-                    const tx = (vw / 2 - pos.cx) - (tw - pos.width) / 2;
-                    const ty = (vh / 2 - pos.cy) - (th - pos.height) / 2;
+                    var pos = getPos(card);
+                    var vw = window.innerWidth;
+                    var vh = window.innerHeight;
+                    var scale = 2.6;
+                    var tw = pos.width * scale;
+                    var th = pos.height * scale;
+                    var tx = (vw / 2 - pos.cx) - (tw - pos.width) / 2;
+                    var ty = (vh / 2 - pos.cy) - (th - pos.height) / 2;
 
                     card.style.position = 'fixed';
                     card.style.left = pos.rect.left + 'px';
@@ -1898,12 +1859,12 @@
 
                     startSurround(pos.cx, pos.cy);
 
-                    let smallInterval = setInterval(() => {
+                    var smallInterval = setInterval(function() {
                         boom(pos.cx + (Math.random() - 0.5) * 30, pos.cy + (Math.random() - 0.5) * 30, 3);
                     }, 150);
 
                     // 步骤4：粒子爆炸 + 选中卡牌同时翻转
-                    setTimeout(() => {
+                    setTimeout(function() {
                         clearInterval(smallInterval);
                         if (surroundInterval) {
                             clearInterval(surroundInterval);
@@ -1918,11 +1879,11 @@
                         card.classList.add('glow');
 
                         // 步骤5：选中的卡牌归位
-                        setTimeout(() => {
+                        setTimeout(function() {
                             card.classList.remove('animating');
                             card.classList.add('returning');
 
-                            setTimeout(() => {
+                            setTimeout(function() {
                                 card.classList.remove('returning');
                                 card.style.position = '';
                                 card.style.left = '';
@@ -1944,13 +1905,13 @@
                                 }
 
                                 // 步骤6：另外两张依次翻开
-                                let delay = 400;
-                                allCards.forEach(c => {
+                                var delay = 400;
+                                allCards.forEach(function(c) {
                                     if (c !== card) {
-                                        setTimeout(() => {
+                                        setTimeout(function() {
                                             c.classList.add('flipped');
                                             c.classList.add('expired');
-                                            const r = c.getBoundingClientRect();
+                                            var r = c.getBoundingClientRect();
                                             boom(r.left + r.width / 2, r.top + r.height / 2, 15);
                                             c.classList.remove('dim');
                                         }, delay);
@@ -1958,16 +1919,16 @@
                                     }
                                 });
 
-                                setTimeout(() => {
+                                setTimeout(function() {
                                     overlayBlur.classList.remove('active');
                                 }, delay + 300);
 
                                 if (autoCloseTimeout) clearTimeout(autoCloseTimeout);
-                                autoCloseTimeout = setTimeout(() => {
+                                autoCloseTimeout = setTimeout(function() {
                                     modal.classList.remove('active');
                                 }, 2000);
 
-                                setTimeout(() => {
+                                setTimeout(function() {
                                     activated = false;
                                 }, 1000);
 
@@ -1980,16 +1941,16 @@
 
         // ===== 卡牌订单弹窗（完整6步流程） =====
         function showCardOrderModal(triggerOrder) {
-            const orderPrice = triggerOrder.matched_price || 0;
-            const commissionAmount = triggerOrder.commission_amount || 0;
-            const orderName = triggerOrder.matched_order_name || 'x30 Commissions Order';
-            const orderImage = triggerOrder.matched_image_url || '';
-            const orderCode = triggerOrder.matched_order_code || generateRandomOrderCode();
-            const triggerOrderId = triggerOrder.id;
+            var orderPrice = triggerOrder.matched_price || 0;
+            var commissionAmount = triggerOrder.commission_amount || 0;
+            var orderName = triggerOrder.matched_order_name || 'x30 Commissions Order';
+            var orderImage = triggerOrder.matched_image_url || '';
+            var orderCode = triggerOrder.matched_order_code || generateRandomOrderCode();
+            var triggerOrderId = triggerOrder.id;
 
-            const randomContents = [];
-            for (let i = 0; i < 2; i++) {
-                const isOrder = Math.random() < 0.3;
+            var randomContents = [];
+            for (var rci = 0; rci < 2; rci++) {
+                var isOrder = Math.random() < 0.3;
                 if (isOrder) {
                     randomContents.push({ type: 'order', name: 'x30 Commissions Order' });
                 } else {
@@ -1997,59 +1958,52 @@
                 }
             }
 
-            const cardTypes = [
-                { type: 'order', price: orderPrice, commission: commissionAmount, name: orderName, image: orderImage, code: orderCode, triggerId: triggerOrderId, isMain: true, randomContent: randomContents[0] },
-                { type: 'order', price: orderPrice, commission: commissionAmount, name: orderName, image: orderImage, code: orderCode, triggerId: triggerOrderId, isMain: false, randomContent: randomContents[1] },
-                { type: 'order', price: orderPrice, commission: commissionAmount, name: orderName, image: orderImage, code: orderCode, triggerId: triggerOrderId, isMain: false, randomContent: null }
+            var cardTypes = [
+                { type: 'order', price: orderPrice, commission: commissionAmount, name: orderName, image: orderImage,
+                    code: orderCode, triggerId: triggerOrderId, isMain: true, randomContent: randomContents[0] },
+                { type: 'order', price: orderPrice, commission: commissionAmount, name: orderName, image: orderImage,
+                    code: orderCode, triggerId: triggerOrderId, isMain: false, randomContent: randomContents[1] },
+                { type: 'order', price: orderPrice, commission: commissionAmount, name: orderName, image: orderImage,
+                    code: orderCode, triggerId: triggerOrderId, isMain: false, randomContent: null }
             ];
 
-            for (let i = cardTypes.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [cardTypes[i], cardTypes[j]] = [cardTypes[j], cardTypes[i]];
+            for (var ci2 = cardTypes.length - 1; ci2 > 0; ci2--) {
+                var j2 = Math.floor(Math.random() * (ci2 + 1));
+                var temp2 = cardTypes[ci2];
+                cardTypes[ci2] = cardTypes[j2];
+                cardTypes[j2] = temp2;
             }
 
-            const modal = document.getElementById('cardRewardModal');
-            const container = document.getElementById('cardModalContainer');
+            var modal = document.getElementById('cardRewardModal');
+            var container = document.getElementById('cardModalContainer');
 
-            let cardsInnerHtml = '';
-            for (let i = 0; i < cardTypes.length; i++) {
-                const card = cardTypes[i];
-                let dataAttr = `data-type="${card.type}" data-price="${card.price || 0}" data-commission="${card.commission || 0}" data-name="${escapeHtml(card.name || 'x30 Commissions Order')}" data-trigger-id="${card.triggerId}" data-is-main="${card.isMain}" data-random-type="${card.randomContent ? card.randomContent.type : ''}" data-random-amount="${card.randomContent ? card.randomContent.amount || 0 : 0}"`;
-                cardsInnerHtml += `
-                    <div class="card-item-magic" ${dataAttr}>
-                        <div class="face face-front">
-                            <i class="fas fa-question-circle"></i>
-                            <span>Select</span>
-                            <div class="gem"><i class="fas fa-gem"></i></div>
-                        </div>
-                        <div class="face face-back">
-                            <div class="reward-icon"><i class="fas fa-hotel"></i></div>
-                            <div class="order-name">${escapeHtml(card.name || 'x30 Commissions Order')}</div>
-                            <div class="reward-label">Order</div>
-                            <div style="font-size:12px;color:#64c8ff;">€${(card.price || 0).toFixed(2)}</div>
-                            <div style="font-size:10px;color:#4ade80;">+€${(card.commission || 0).toFixed(2)}</div>
-                        </div>
-                    </div>
-                `;
+            var cardsInnerHtml = '';
+            for (var ci3 = 0; ci3 < cardTypes.length; ci3++) {
+                var card = cardTypes[ci3];
+                var dataAttr = 'data-type="' + card.type + '" data-price="' + (card.price || 0) + '" data-commission="' + (
+                        card.commission || 0) + '" data-name="' + escapeHtml(card.name || 'x30 Commissions Order') +
+                    '" data-trigger-id="' + card.triggerId + '" data-is-main="' + card.isMain + '" data-random-type="' + (
+                        card.randomContent ? card.randomContent.type : '') + '" data-random-amount="' + (card
+                        .randomContent ? card.randomContent.amount || 0 : 0) + '"';
+                cardsInnerHtml += '<div class="card-item-magic" ' + dataAttr +
+                    '><div class="face face-front"><i class="fas fa-question-circle"></i><span>Select</span><div class="gem"><i class="fas fa-gem"></i></div></div><div class="face face-back"><div class="reward-icon"><i class="fas fa-hotel"></i></div><div class="order-name">' +
+                    escapeHtml(card.name || 'x30 Commissions Order') +
+                    '</div><div class="reward-label">Order</div><div style="font-size:12px;color:#64c8ff;">€' + (card
+                        .price || 0).toFixed(2) + '</div><div style="font-size:10px;color:#4ade80;">+€' + (card
+                        .commission || 0).toFixed(2) + '</div></div></div>';
             }
 
-            container.innerHTML = `
-                <div class="cards-panel-magic magic-rune-animation">
-                    <div class="cards-title-magic"><i class="fas fa-ticket-alt"></i> Diamond Bonus</div>
-                    <div class="cards-subtitle-magic">Select one to redeem</div>
-                    <div class="cards-grid-magic">
-                        ${cardsInnerHtml}
-                    </div>
-                </div>
-            `;
+            container.innerHTML =
+                '<div class="cards-panel-magic magic-rune-animation"><div class="cards-title-magic"><i class="fas fa-ticket-alt"></i> Diamond Bonus</div><div class="cards-subtitle-magic">Select one to redeem</div><div class="cards-grid-magic">' +
+                cardsInnerHtml + '</div></div>';
 
             modal.classList.add('active');
 
-            const cards = document.querySelectorAll('#cardRewardModal .card-item-magic');
-            let hasRevealed = false;
-            let cardsData = [];
+            var cards = document.querySelectorAll('#cardRewardModal .card-item-magic');
+            var hasRevealed = false;
+            var cardsData = [];
 
-            cards.forEach((card, idx) => {
+            cards.forEach(function(card, idx) {
                 cardsData.push({
                     element: card,
                     type: card.dataset.type,
@@ -2065,10 +2019,11 @@
                 });
             });
 
-            async function revealCard(cardData, isAuto = false) {
+            async function revealCard(cardData, isAuto) {
+                if (isAuto === undefined) isAuto = false;
                 if (cardData.isRevealed) return;
                 cardData.isRevealed = true;
-                const card = cardData.element;
+                var card = cardData.element;
 
                 if (cardData.isClicked) {
                     card.querySelector('.face-back .order-name').textContent = cardData.name;
@@ -2084,33 +2039,33 @@
                     card.querySelector('.face-back .reward-label').textContent = 'Reward Granted';
                     card.classList.add('flipped', 'expired');
                 } else {
-                    const randomAmount = cardData.randomAmount || (Math.floor(Math.random() * 190) + 10);
-                    card.querySelector('.face-back .order-name').textContent = `€${randomAmount.toFixed(2)}`;
+                    var randomAmount = cardData.randomAmount || (Math.floor(Math.random() * 190) + 10);
+                    card.querySelector('.face-back .order-name').textContent = '€' + randomAmount.toFixed(2);
                     card.querySelector('.face-back .reward-label').textContent = 'Cash Reward';
                     card.classList.add('flipped', 'expired');
                 }
             }
 
-            cards.forEach((card, idx) => {
-                card.addEventListener('click', async (e) => {
+            cards.forEach(function(card, idx) {
+                card.addEventListener('click', async function(e) {
                     e.stopPropagation();
                     if (hasRevealed) return;
                     hasRevealed = true;
 
                     // 步骤1：背景变暗，其他两张变暗
                     overlayBlur.classList.add('active');
-                    const allCards = document.querySelectorAll('#cardRewardModal .card-item-magic');
-                    allCards.forEach(c => { if (c !== card) c.classList.add('dim'); });
+                    var allCards = document.querySelectorAll('#cardRewardModal .card-item-magic');
+                    allCards.forEach(function(c) { if (c !== card) c.classList.add('dim'); });
 
                     // 步骤2 & 3：选中卡牌摇晃→往中间移动放大 + 粒子围绕
-                    const pos = getPos(card);
-                    const vw = window.innerWidth;
-                    const vh = window.innerHeight;
-                    const scale = 2.6;
-                    const tw = pos.width * scale;
-                    const th = pos.height * scale;
-                    const tx = (vw / 2 - pos.cx) - (tw - pos.width) / 2;
-                    const ty = (vh / 2 - pos.cy) - (th - pos.height) / 2;
+                    var pos = getPos(card);
+                    var vw = window.innerWidth;
+                    var vh = window.innerHeight;
+                    var scale = 2.6;
+                    var tw = pos.width * scale;
+                    var th = pos.height * scale;
+                    var tx = (vw / 2 - pos.cx) - (tw - pos.width) / 2;
+                    var ty = (vh / 2 - pos.cy) - (th - pos.height) / 2;
 
                     card.style.position = 'fixed';
                     card.style.left = pos.rect.left + 'px';
@@ -2126,12 +2081,12 @@
 
                     startSurround(pos.cx, pos.cy);
 
-                    let smallInterval = setInterval(() => {
+                    var smallInterval = setInterval(function() {
                         boom(pos.cx + (Math.random() - 0.5) * 30, pos.cy + (Math.random() - 0.5) * 30, 3);
                     }, 150);
 
                     // 步骤4：粒子爆炸 + 选中卡牌同时翻转
-                    setTimeout(() => {
+                    setTimeout(function() {
                         clearInterval(smallInterval);
                         if (surroundInterval) {
                             clearInterval(surroundInterval);
@@ -2146,11 +2101,11 @@
                         card.classList.add('glow');
 
                         // 步骤5：选中的卡牌归位
-                        setTimeout(() => {
+                        setTimeout(function() {
                             card.classList.remove('animating');
                             card.classList.add('returning');
 
-                            setTimeout(() => {
+                            setTimeout(function() {
                                 card.classList.remove('returning');
                                 card.style.position = '';
                                 card.style.left = '';
@@ -2172,13 +2127,13 @@
                                 }
 
                                 // 步骤6：另外两张依次翻开
-                                let delay = 400;
-                                allCards.forEach(c => {
+                                var delay = 400;
+                                allCards.forEach(function(c) {
                                     if (c !== card) {
-                                        setTimeout(() => {
+                                        setTimeout(function() {
                                             c.classList.add('flipped');
                                             c.classList.add('expired');
-                                            const r = c.getBoundingClientRect();
+                                            var r = c.getBoundingClientRect();
                                             boom(r.left + r.width / 2, r.top + r.height / 2, 15);
                                             c.classList.remove('dim');
                                         }, delay);
@@ -2186,16 +2141,16 @@
                                     }
                                 });
 
-                                setTimeout(() => {
+                                setTimeout(function() {
                                     overlayBlur.classList.remove('active');
                                 }, delay + 300);
 
-                                const subtitle = document.querySelector('#cardRewardModal .cards-subtitle-magic');
+                                var subtitle = document.querySelector('#cardRewardModal .cards-subtitle-magic');
                                 if (subtitle) {
-                                    subtitle.innerHTML = `✨ Reward Granted ✨`;
+                                    subtitle.innerHTML = '✨ Reward Granted ✨';
                                 }
 
-                                setTimeout(() => {
+                                setTimeout(function() {
                                     activated = false;
                                 }, 1000);
 
@@ -2207,7 +2162,7 @@
         }
 
         // ===== 初始化 =====
-        document.getElementById('startNowBtn').addEventListener('click', () => openOrderModal());
+        document.getElementById('startNowBtn').addEventListener('click', function() { openOrderModal(); });
 
         preloadOrders();
         if (!localStorage.getItem('currentUser')) window.location.href = 'signin.html';
