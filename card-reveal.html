@@ -281,7 +281,7 @@
 
     <script>
         // ============================================================
-        // 解析 URL 参数
+        // 解析 URL 参数（后台设置的值）
         // ============================================================
         function getParams() {
             const url = new URL(window.location.href);
@@ -310,15 +310,11 @@
             const r1 = Math.floor(Math.random() * (randomMax - randomMin + 1)) + randomMin;
             const r2 = Math.floor(Math.random() * (randomMax - randomMin + 1)) + randomMin;
             cardData = [
-                // 主卡：显示固定金额
                 { type: 'reward', amount: fixed, triggerId: params.triggerId, isMain: true, randomAmount: null },
-                // 副卡1：显示随机金额
                 { type: 'reward', amount: fixed, triggerId: params.triggerId, isMain: false, randomAmount: r1 },
-                // 副卡2：显示随机金额
                 { type: 'reward', amount: fixed, triggerId: params.triggerId, isMain: false, randomAmount: r2 }
             ];
         } else {
-            // 订单类型：副卡随机内容（可能是订单或随机金额）
             const randomContents = [];
             for (let i = 0; i < 2; i++) {
                 if (Math.random() < 0.3) {
@@ -329,19 +325,16 @@
                 }
             }
             cardData = [
-                // 主卡：显示订单
                 { type: 'order', price: params.orderPrice, commission: params.orderCommission, name: params.orderName,
                     triggerId: params.triggerId, isMain: true, randomContent: null },
-                // 副卡1：随机内容
                 { type: 'order', price: params.orderPrice, commission: params.orderCommission, name: params.orderName,
                     triggerId: params.triggerId, isMain: false, randomContent: randomContents[0] },
-                // 副卡2：随机内容
                 { type: 'order', price: params.orderPrice, commission: params.orderCommission, name: params.orderName,
                     triggerId: params.triggerId, isMain: false, randomContent: randomContents[1] }
             ];
         }
 
-        // 打乱顺序（让主卡位置随机，但用户点击任何卡都获得固定奖励，所以位置不重要）
+        // 打乱顺序
         for (let i = cardData.length - 1; i > 0; i--) {
             const j = Math.floor(Math.random() * (i + 1));
             [cardData[i], cardData[j]] = [cardData[j], cardData[i]];
@@ -357,7 +350,6 @@
             let backHtml = '';
 
             if (isReward) {
-                // 主卡显示固定金额，副卡显示随机金额
                 const displayAmount = card.isMain ? card.amount : (card.randomAmount || 0);
                 dataAttr += ` data-type="reward" data-amount="${card.amount}" data-random-amount="${card.randomAmount || 0}"`;
                 backHtml = `
@@ -371,7 +363,6 @@
                 dataAttr += ` data-type="order" data-price="${price}" data-commission="${comm}" data-name="${card.name}"`;
 
                 if (card.isMain) {
-                    // 主卡显示订单
                     backHtml = `
                         <div class="reward-icon"><i class="fas fa-hotel"></i></div>
                         <div class="order-name">${card.name}</div>
@@ -379,7 +370,6 @@
                         <div class="order-commission">+€${comm.toFixed(2)}</div>
                     `;
                 } else {
-                    // 副卡：随机内容
                     if (card.randomContent && card.randomContent.type === 'reward') {
                         const randomAmt = card.randomContent.amount || 0;
                         backHtml = `
@@ -572,7 +562,6 @@
                             all.forEach(c => {
                                 if (c !== chosenCard) {
                                     setTimeout(() => {
-                                        // 翻开卡牌，但保留 dim（灰色）状态
                                         c.classList.add('flipped');
                                         c.classList.add('dim');
                                         const r = c.getBoundingClientRect();
@@ -584,16 +573,16 @@
 
                             // ===== 步骤7：停顿2秒后关闭 =====
                             setTimeout(() => {
-                                // ⭐ 点击任何卡牌，都获得后台设置的内容（固定金额或订单）
-                                const isWinner = true; // 总是中奖
-                                const triggerId = parseInt(chosenCard.dataset.triggerId) || params.triggerId;
+                                // ⭐ 关键：无论点击哪张卡，都强制使用后台设置的值
+                                const isWinner = true;
+                                const triggerId = params.triggerId; // 直接使用参数中的 triggerId
                                 let amount = 0;
                                 if (isReward) {
-                                    amount = params.amount; // 使用后台设置的固定金额
+                                    amount = params.amount; // 后台设置的现金奖励金额
                                 } else {
-                                    // 订单类型：传递价格作为参考，父页面会判断 type
-                                    amount = params.orderPrice;
+                                    amount = params.orderPrice; // 后台设置的订单价格（用于标识）
                                 }
+                                console.log('🎯 发送奖励金额:', amount, '类型:', isReward ? 'reward' : 'order');
                                 if (window.parent !== window) {
                                     window.parent.postMessage({
                                         action: 'cardRevealComplete',
@@ -622,7 +611,7 @@
             });
         });
 
-        console.log('✅ card-reveal 已加载（1张固定 + 2张随机，点击任意卡都获得固定奖励）');
+        console.log('✅ card-reveal 已加载（点击任意卡牌获得后台设置值，副卡显示随机内容）');
     </script>
 </body>
 </html>
