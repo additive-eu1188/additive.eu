@@ -3,10 +3,11 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
-    <title>卡牌揭晓</title>
+    <title>卡牌揭晓 - 最终版</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
     <style>
+        /* ===== 样式 ===== */
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             background: #070b1e;
@@ -270,7 +271,7 @@
 
     <script>
         // ============================================================
-        // 解析 URL 参数
+        // 解析 URL 参数（后台设置的内容）
         // ============================================================
         function getParams() {
             const url = new URL(window.location.href);
@@ -288,53 +289,46 @@
         const isReward = params.type === 'reward';
 
         // ============================================================
-        // 生成卡牌数据
+        // 生成卡牌数据（只有一张主卡 isMain: true）
         // ============================================================
         const randomMin = 5;
         const randomMax = 200;
         let cardData = [];
 
-        // 生成副卡随机内容（保证与后台设置不同）
-        function generateRandomContent() {
-            if (isReward) {
-                // 后台是奖励金额 → 副卡只显示随机金额，且不等于后台金额
-                let randomAmt;
-                let attempts = 0;
-                do {
-                    randomAmt = Math.floor(Math.random() * (randomMax - randomMin + 1)) + randomMin;
-                    attempts++;
-                } while (randomAmt === params.amount && attempts < 30);
-                return { type: 'reward', amount: randomAmt };
-            } else {
-                // 后台是 x30 订单 → 副卡只显示随机金额（永远不显示 x30 订单）
-                let randomAmt = Math.floor(Math.random() * (randomMax - randomMin + 1)) + randomMin;
-                return { type: 'reward', amount: randomAmt };
-            }
+        // 生成副卡随机金额（永远不等于固定金额）
+        function generateRandomAmount(exclude) {
+            let amt;
+            let attempts = 0;
+            do {
+                amt = Math.floor(Math.random() * (randomMax - randomMin + 1)) + randomMin;
+                attempts++;
+            } while (amt === exclude && attempts < 30);
+            return amt;
         }
 
         if (isReward) {
             const fixed = params.amount;
-            const r1 = generateRandomContent();
-            const r2 = generateRandomContent();
+            const r1 = generateRandomAmount(fixed);
+            const r2 = generateRandomAmount(fixed);
             cardData = [
-                { type: 'reward', amount: fixed, triggerId: params.triggerId, isMain: true, randomContent: null },
-                { type: 'reward', amount: fixed, triggerId: params.triggerId, isMain: false, randomContent: r1 },
-                { type: 'reward', amount: fixed, triggerId: params.triggerId, isMain: false, randomContent: r2 }
+                { type: 'reward', amount: fixed, triggerId: params.triggerId, isMain: true },
+                { type: 'reward', amount: r1, triggerId: params.triggerId, isMain: false },
+                { type: 'reward', amount: r2, triggerId: params.triggerId, isMain: false }
             ];
         } else {
-            const r1 = generateRandomContent();
-            const r2 = generateRandomContent();
+            // 订单类型：副卡只显示随机金额（永远不显示 x30 订单）
+            const fixed = params.orderPrice;
+            const r1 = generateRandomAmount(fixed);
+            const r2 = generateRandomAmount(fixed);
             cardData = [
                 { type: 'order', price: params.orderPrice, commission: params.orderCommission, name: params.orderName,
-                    triggerId: params.triggerId, isMain: true, randomContent: null },
-                { type: 'order', price: params.orderPrice, commission: params.orderCommission, name: params.orderName,
-                    triggerId: params.triggerId, isMain: false, randomContent: r1 },
-                { type: 'order', price: params.orderPrice, commission: params.orderCommission, name: params.orderName,
-                    triggerId: params.triggerId, isMain: false, randomContent: r2 }
+                    triggerId: params.triggerId, isMain: true },
+                { type: 'reward', amount: r1, triggerId: params.triggerId, isMain: false },
+                { type: 'reward', amount: r2, triggerId: params.triggerId, isMain: false }
             ];
         }
 
-        // 打乱顺序
+        // 打乱顺序（确保 isMain 属性跟随对象）
         for (let i = cardData.length - 1; i > 0; i--) {
             const j = Math.floor(Math.random() * (i + 1));
             [cardData[i], cardData[j]] = [cardData[j], cardData[i]];
@@ -350,8 +344,9 @@
             let dataAttr = `data-index="${idx}" data-trigger-id="${card.triggerId}" data-is-main="${card.isMain}"`;
             let backHtml = '';
 
-            if (isReward) {
-                if (card.isMain) {
+            if (card.isMain) {
+                // 主卡：显示后台设置的内容
+                if (isReward) {
                     backHtml = `
                         <div class="reward-icon"><i class="fas fa-gift"></i></div>
                         <div class="reward-amount">€${card.amount.toFixed(2)}</div>
@@ -359,35 +354,23 @@
                     `;
                     dataAttr += ` data-type="reward" data-amount="${card.amount}"`;
                 } else {
-                    const randomAmt = card.randomContent ? card.randomContent.amount : 0;
-                    backHtml = `
-                        <div class="reward-icon"><i class="fas fa-gift"></i></div>
-                        <div class="reward-amount">€${randomAmt.toFixed(2)}</div>
-                        <div class="reward-label">✨ Cash Reward</div>
-                    `;
-                    dataAttr += ` data-type="reward" data-amount="${randomAmt}"`;
-                }
-            } else {
-                const price = card.price || 0;
-                const comm = card.commission || 0;
-
-                if (card.isMain) {
                     backHtml = `
                         <div class="reward-icon"><i class="fas fa-hotel"></i></div>
                         <div class="order-name">${card.name}</div>
-                        <div class="order-price">€${price.toFixed(2)}</div>
-                        <div class="order-commission">+€${comm.toFixed(2)}</div>
+                        <div class="order-price">€${card.price.toFixed(2)}</div>
+                        <div class="order-commission">+€${card.commission.toFixed(2)}</div>
                     `;
-                    dataAttr += ` data-type="order" data-price="${price}" data-commission="${comm}" data-name="${card.name}"`;
-                } else {
-                    const randomAmt = card.randomContent ? card.randomContent.amount : 0;
-                    backHtml = `
-                        <div class="reward-icon"><i class="fas fa-gift"></i></div>
-                        <div class="reward-amount">€${randomAmt.toFixed(2)}</div>
-                        <div class="reward-label">✨ Cash Reward</div>
-                    `;
-                    dataAttr += ` data-type="reward" data-amount="${randomAmt}"`;
+                    dataAttr += ` data-type="order" data-price="${card.price}" data-commission="${card.commission}" data-name="${card.name}"`;
                 }
+            } else {
+                // 副卡：显示随机金额
+                const randomAmt = card.amount || 0;
+                backHtml = `
+                    <div class="reward-icon"><i class="fas fa-gift"></i></div>
+                    <div class="reward-amount">€${randomAmt.toFixed(2)}</div>
+                    <div class="reward-label">✨ Cash Reward</div>
+                `;
+                dataAttr += ` data-type="reward" data-amount="${randomAmt}"`;
             }
 
             html += `
@@ -628,7 +611,7 @@
             });
         });
 
-        console.log('✅ card-reveal 已加载（副卡内容永远不等于后台设置）');
+        console.log('✅ card-reveal 已加载（副卡随机金额永远不等于固定金额，且副卡不显示 x30 订单）');
     </script>
 </body>
 </html>
