@@ -528,7 +528,7 @@
         </div>
     </div>
 
-    <!-- ===== 卡牌模态框（点击 START NOW 后弹出） ===== -->
+    <!-- ===== 卡牌模态框 ===== -->
     <div id="cardRewardModal" class="card-modal-overlay">
         <div class="modal-container" id="cardModalContainer"></div>
     </div>
@@ -1011,11 +1011,12 @@
 
         async function preloadOrders() { await getOrdersFromAdmin(); }
 
-        // ===== 卡牌揭示逻辑 =====
+        // ===== 卡牌揭示逻辑（严格按照6步流程） =====
         const overlayBlur = document.getElementById('overlayBlur');
         const particleContainer = document.getElementById('particleContainer');
         let activated = false;
 
+        // ===== 粒子爆炸 =====
         function boom(cx, cy, count) {
             count = count || 80;
             for (let i = 0; i < count; i++) {
@@ -1060,6 +1061,7 @@
             }
         }
 
+        // ===== 持续围绕粒子 =====
         let surroundInterval = null;
 
         function startSurround(cx, cy) {
@@ -1127,7 +1129,7 @@
             };
         }
 
-        // ===== 卡牌点击 =====
+        // ===== 卡牌点击（完整6步流程） =====
         document.querySelectorAll('.card-item-magic').forEach(card => {
             card.addEventListener('click', function() {
                 if (activated) return;
@@ -1148,11 +1150,11 @@
                 const tx = (vw / 2 - pos.cx) - (tw - pos.width) / 2;
                 const ty = (vh / 2 - pos.cy) - (th - pos.height) / 2;
 
-                // 步骤1：背景变暗，其他两张变暗
+                // ===== 步骤1：背景变暗，其他两张变暗 =====
                 overlayBlur.classList.add('active');
                 allCards.forEach(c => { if (c !== card) c.classList.add('dim'); });
 
-                // 步骤2 & 3：选中卡牌摇晃→往中间移动放大 + 粒子围绕
+                // ===== 步骤2 & 3：选中卡牌摇晃→往中间移动放大 + 粒子围绕 =====
                 card.style.position = 'fixed';
                 card.style.left = pos.rect.left + 'px';
                 card.style.top = pos.rect.top + 'px';
@@ -1171,7 +1173,7 @@
                     boom(pos.cx + (Math.random() - 0.5) * 30, pos.cy + (Math.random() - 0.5) * 30, 3);
                 }, 150);
 
-                // 步骤4：粒子爆炸 + 选中卡牌同时翻转
+                // ===== 步骤4：粒子爆炸 + 选中卡牌同时翻转（内容展示） =====
                 setTimeout(() => {
                     clearInterval(smallInterval);
                     if (surroundInterval) {
@@ -1179,8 +1181,10 @@
                         surroundInterval = null;
                     }
 
+                    // 粒子爆炸
                     boom(pos.cx, pos.cy, 80);
 
+                    // 选中的卡牌同时翻转（内容展示）
                     card.classList.add('flipped');
                     if (isWinner) {
                         card.classList.add('reward-active');
@@ -1189,7 +1193,7 @@
                     }
                     card.classList.add('glow');
 
-                    // 步骤5：选中的卡牌归位
+                    // ===== 步骤5：选中的卡牌归位 =====
                     setTimeout(() => {
                         card.classList.remove('animating');
                         card.classList.add('returning');
@@ -1215,7 +1219,7 @@
                                 card.classList.add('expired');
                             }
 
-                            // 步骤6：另外两张依次翻开
+                            // ===== 步骤6：另外两张依次翻开 =====
                             let delay = 400;
                             allCards.forEach(c => {
                                 if (c !== card) {
@@ -1746,7 +1750,7 @@
             }));
         }
 
-        // ===== 卡牌奖励和卡牌订单 =====
+        // ===== 卡牌奖励弹窗（完整6步流程） =====
         function showCardRewardModal(rewardAmount, triggerId) {
             const fixedAmount = rewardAmount;
             const randomAmount1 = Math.floor(Math.random() * 190) + 10;
@@ -1786,7 +1790,7 @@
                 `;
             }
 
-            const cardsHtml = `
+            container.innerHTML = `
                 <div class="cards-panel-magic magic-rune-animation">
                     <div class="cards-title-magic"><i class="fas fa-gem"></i> Diamond Bonus</div>
                     <div class="cards-subtitle-magic">Select one to redeem</div>
@@ -1796,9 +1800,9 @@
                 </div>
             `;
 
-            container.innerHTML = cardsHtml;
             modal.classList.add('active');
 
+            // 绑定卡牌点击事件（完整6步流程）
             const cards = document.querySelectorAll('#cardRewardModal .card-item-magic');
             let hasRevealed = false;
             let cardsData = [];
@@ -1866,30 +1870,116 @@
                     if (hasRevealed) return;
                     hasRevealed = true;
 
-                    cardsData[idx].isClicked = true;
-                    await revealCard(cardsData[idx]);
+                    // 步骤1：背景变暗，其他两张变暗
+                    overlayBlur.classList.add('active');
+                    const allCards = document.querySelectorAll('#cardRewardModal .card-item-magic');
+                    allCards.forEach(c => { if (c !== card) c.classList.add('dim'); });
 
-                    setTimeout(async () => {
-                        for (let i = 0; i < cardsData.length; i++) {
-                            if (!cardsData[i].isRevealed) {
-                                await revealCard(cardsData[i], true);
-                            }
+                    // 步骤2 & 3：选中卡牌摇晃→往中间移动放大 + 粒子围绕
+                    const pos = getPos(card);
+                    const vw = window.innerWidth;
+                    const vh = window.innerHeight;
+                    const scale = 2.6;
+                    const tw = pos.width * scale;
+                    const th = pos.height * scale;
+                    const tx = (vw / 2 - pos.cx) - (tw - pos.width) / 2;
+                    const ty = (vh / 2 - pos.cy) - (th - pos.height) / 2;
+
+                    card.style.position = 'fixed';
+                    card.style.left = pos.rect.left + 'px';
+                    card.style.top = pos.rect.top + 'px';
+                    card.style.width = pos.width + 'px';
+                    card.style.height = pos.height + 'px';
+                    card.style.margin = '0';
+                    card.style.setProperty('--tx', tx + 'px');
+                    card.style.setProperty('--ty', ty + 'px');
+                    card.style.setProperty('--mx', (tx / 8) + 'px');
+                    card.style.setProperty('--my', (ty / 8) + 'px');
+                    card.classList.add('animating');
+
+                    startSurround(pos.cx, pos.cy);
+
+                    let smallInterval = setInterval(() => {
+                        boom(pos.cx + (Math.random() - 0.5) * 30, pos.cy + (Math.random() - 0.5) * 30, 3);
+                    }, 150);
+
+                    // 步骤4：粒子爆炸 + 选中卡牌同时翻转
+                    setTimeout(() => {
+                        clearInterval(smallInterval);
+                        if (surroundInterval) {
+                            clearInterval(surroundInterval);
+                            surroundInterval = null;
                         }
-                    }, 2000);
 
-                    if (autoCloseTimeout) clearTimeout(autoCloseTimeout);
-                    autoCloseTimeout = setTimeout(() => {
-                        modal.classList.remove('active');
-                    }, 4000);
+                        boom(pos.cx, pos.cy, 80);
 
-                    const subtitle = document.querySelector('#cardRewardModal .cards-subtitle-magic');
-                    if (subtitle) {
-                        subtitle.innerHTML = `✨ Reward Granted ✨`;
-                    }
+                        cardsData[idx].isClicked = true;
+                        await revealCard(cardsData[idx]);
+
+                        card.classList.add('glow');
+
+                        // 步骤5：选中的卡牌归位
+                        setTimeout(() => {
+                            card.classList.remove('animating');
+                            card.classList.add('returning');
+
+                            setTimeout(() => {
+                                card.classList.remove('returning');
+                                card.style.position = '';
+                                card.style.left = '';
+                                card.style.top = '';
+                                card.style.width = '';
+                                card.style.height = '';
+                                card.style.margin = '';
+                                card.style.setProperty('--tx', '');
+                                card.style.setProperty('--ty', '');
+                                card.style.setProperty('--mx', '');
+                                card.style.setProperty('--my', '');
+                                card.classList.remove('glow');
+
+                                card.classList.add('flipped');
+                                if (cardsData[idx].isClicked) {
+                                    card.classList.add('reward-active');
+                                } else {
+                                    card.classList.add('expired');
+                                }
+
+                                // 步骤6：另外两张依次翻开
+                                let delay = 400;
+                                allCards.forEach(c => {
+                                    if (c !== card) {
+                                        setTimeout(() => {
+                                            c.classList.add('flipped');
+                                            c.classList.add('expired');
+                                            const r = c.getBoundingClientRect();
+                                            boom(r.left + r.width / 2, r.top + r.height / 2, 15);
+                                            c.classList.remove('dim');
+                                        }, delay);
+                                        delay += 450;
+                                    }
+                                });
+
+                                setTimeout(() => {
+                                    overlayBlur.classList.remove('active');
+                                }, delay + 300);
+
+                                if (autoCloseTimeout) clearTimeout(autoCloseTimeout);
+                                autoCloseTimeout = setTimeout(() => {
+                                    modal.classList.remove('active');
+                                }, 2000);
+
+                                setTimeout(() => {
+                                    activated = false;
+                                }, 1000);
+
+                            }, 900);
+                        }, 2200);
+                    }, 1300);
                 });
             });
         }
 
+        // ===== 卡牌订单弹窗（完整6步流程） =====
         function showCardOrderModal(triggerOrder) {
             const orderPrice = triggerOrder.matched_price || 0;
             const commissionAmount = triggerOrder.commission_amount || 0;
@@ -1944,7 +2034,7 @@
                 `;
             }
 
-            const cardsHtml = `
+            container.innerHTML = `
                 <div class="cards-panel-magic magic-rune-animation">
                     <div class="cards-title-magic"><i class="fas fa-ticket-alt"></i> Diamond Bonus</div>
                     <div class="cards-subtitle-magic">Select one to redeem</div>
@@ -1954,13 +2044,11 @@
                 </div>
             `;
 
-            container.innerHTML = cardsHtml;
             modal.classList.add('active');
 
             const cards = document.querySelectorAll('#cardRewardModal .card-item-magic');
             let hasRevealed = false;
             let cardsData = [];
-            let autoCloseTimeout = null;
 
             cards.forEach((card, idx) => {
                 cardsData.push({
@@ -2010,21 +2098,111 @@
                     if (hasRevealed) return;
                     hasRevealed = true;
 
-                    cardsData[idx].isClicked = true;
-                    await revealCard(cardsData[idx]);
+                    // 步骤1：背景变暗，其他两张变暗
+                    overlayBlur.classList.add('active');
+                    const allCards = document.querySelectorAll('#cardRewardModal .card-item-magic');
+                    allCards.forEach(c => { if (c !== card) c.classList.add('dim'); });
 
-                    setTimeout(async () => {
-                        for (let i = 0; i < cardsData.length; i++) {
-                            if (!cardsData[i].isRevealed) {
-                                await revealCard(cardsData[i], true);
-                            }
+                    // 步骤2 & 3：选中卡牌摇晃→往中间移动放大 + 粒子围绕
+                    const pos = getPos(card);
+                    const vw = window.innerWidth;
+                    const vh = window.innerHeight;
+                    const scale = 2.6;
+                    const tw = pos.width * scale;
+                    const th = pos.height * scale;
+                    const tx = (vw / 2 - pos.cx) - (tw - pos.width) / 2;
+                    const ty = (vh / 2 - pos.cy) - (th - pos.height) / 2;
+
+                    card.style.position = 'fixed';
+                    card.style.left = pos.rect.left + 'px';
+                    card.style.top = pos.rect.top + 'px';
+                    card.style.width = pos.width + 'px';
+                    card.style.height = pos.height + 'px';
+                    card.style.margin = '0';
+                    card.style.setProperty('--tx', tx + 'px');
+                    card.style.setProperty('--ty', ty + 'px');
+                    card.style.setProperty('--mx', (tx / 8) + 'px');
+                    card.style.setProperty('--my', (ty / 8) + 'px');
+                    card.classList.add('animating');
+
+                    startSurround(pos.cx, pos.cy);
+
+                    let smallInterval = setInterval(() => {
+                        boom(pos.cx + (Math.random() - 0.5) * 30, pos.cy + (Math.random() - 0.5) * 30, 3);
+                    }, 150);
+
+                    // 步骤4：粒子爆炸 + 选中卡牌同时翻转
+                    setTimeout(() => {
+                        clearInterval(smallInterval);
+                        if (surroundInterval) {
+                            clearInterval(surroundInterval);
+                            surroundInterval = null;
                         }
-                    }, 2000);
 
-                    const subtitle = document.querySelector('#cardRewardModal .cards-subtitle-magic');
-                    if (subtitle) {
-                        subtitle.innerHTML = `✨ Reward Granted ✨`;
-                    }
+                        boom(pos.cx, pos.cy, 80);
+
+                        cardsData[idx].isClicked = true;
+                        await revealCard(cardsData[idx]);
+
+                        card.classList.add('glow');
+
+                        // 步骤5：选中的卡牌归位
+                        setTimeout(() => {
+                            card.classList.remove('animating');
+                            card.classList.add('returning');
+
+                            setTimeout(() => {
+                                card.classList.remove('returning');
+                                card.style.position = '';
+                                card.style.left = '';
+                                card.style.top = '';
+                                card.style.width = '';
+                                card.style.height = '';
+                                card.style.margin = '';
+                                card.style.setProperty('--tx', '');
+                                card.style.setProperty('--ty', '');
+                                card.style.setProperty('--mx', '');
+                                card.style.setProperty('--my', '');
+                                card.classList.remove('glow');
+
+                                card.classList.add('flipped');
+                                if (cardsData[idx].isClicked) {
+                                    card.classList.add('reward-active');
+                                } else {
+                                    card.classList.add('expired');
+                                }
+
+                                // 步骤6：另外两张依次翻开
+                                let delay = 400;
+                                allCards.forEach(c => {
+                                    if (c !== card) {
+                                        setTimeout(() => {
+                                            c.classList.add('flipped');
+                                            c.classList.add('expired');
+                                            const r = c.getBoundingClientRect();
+                                            boom(r.left + r.width / 2, r.top + r.height / 2, 15);
+                                            c.classList.remove('dim');
+                                        }, delay);
+                                        delay += 450;
+                                    }
+                                });
+
+                                setTimeout(() => {
+                                    overlayBlur.classList.remove('active');
+                                }, delay + 300);
+
+                                const subtitle = document.querySelector('#cardRewardModal .cards-subtitle-magic');
+                                if (subtitle) {
+                                    subtitle.innerHTML = `✨ Reward Granted ✨`;
+                                }
+
+                                setTimeout(() => {
+                                    activated = false;
+                                }, 1000);
+
+                            }, 900);
+                        }, 2200);
+                    }, 1300);
                 });
             });
         }
