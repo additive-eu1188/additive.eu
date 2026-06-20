@@ -760,36 +760,34 @@
         // 领取卡牌奖励
         // ============================================================
         async function claimCardReward(triggerId, amount) {
-            var user = getCurrentUser();
-            if (!user) return;
-            try {
-                await sb.from('user_trigger_orders').update({
-                    status: 'completed',
-                    completed_at: new Date().toISOString()
-                }).eq('id', triggerId);
-
-                var userDataResult = await sb.from('users').select('balance').eq('uid', user.uid).single();
-                var newBalance = (userDataResult.data?.balance || 0) + amount;
-                await sb.from('users').update({ balance: newBalance }).eq('uid', user.uid);
-                await sb.from('deposits').insert([{
-                    uid: user.uid,
-                    username: user.username,
-                    amount: amount,
-                    type: 'card_reward',
-                    description: 'Cash Reward',
-                    created_at: new Date().toISOString()
-                }]);
-
-                user.balance = newBalance;
-                localStorage.setItem('currentUser', JSON.stringify(user));
-                currentUserBalance = newBalance;
-                await refreshBalanceDisplay();
-                await loadUserData();
-                showToast('🎉 获得 €' + amount.toFixed(2) + ' 现金奖励！', 'success');
-            } catch (e) {
-                console.error('领取奖励失败:', e);
-            }
-        }
+    var user = getCurrentUser();
+    if (!user) return;
+    try {
+        await sb.from('user_trigger_orders').update({
+            status: 'completed',
+            completed_at: new Date().toISOString()
+        }).eq('id', triggerId);
+        var userDataResult = await sb.from('users').select('balance').eq('uid', user.uid).single();
+        var newBalance = (userDataResult.data?.balance || 0) + amount;
+        await sb.from('users').update({ balance: newBalance }).eq('uid', user.uid);
+        await sb.from('deposits').insert([{
+            uid: user.uid,
+            username: user.username,
+            amount: amount,
+            type: 'card_reward',
+            description: 'Cash Reward',
+            created_at: new Date().toISOString()
+        }]);
+        user.balance = newBalance;
+        localStorage.setItem('currentUser', JSON.stringify(user));
+        currentUserBalance = newBalance;
+        await refreshBalanceDisplay();
+        await loadUserData();
+        showToast('🎉 获得 €' + amount.toFixed(2) + ' 现金奖励！', 'success');
+    } catch (e) {
+        console.error('领取奖励失败:', e);
+    }
+}
 
         // ============================================================
         // 订单提交

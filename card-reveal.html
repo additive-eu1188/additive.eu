@@ -344,23 +344,47 @@
             let dataAttr = `data-index="${idx}" data-trigger-id="${card.triggerId}" data-is-main="${card.isMain}"`;
             let backHtml = '';
             if (isReward) {
-                dataAttr += ` data-type="reward" data-amount="${card.amount}" data-random-amount="${card.randomAmount || 0}"`;
-                backHtml = `
-                    <div class="reward-icon"><i class="fas fa-gift"></i></div>
-                    <div class="reward-amount">€${card.amount.toFixed(2)}</div>
-                    <div class="reward-label">✨ Cash Reward</div>
-                `;
+    // 中奖卡显示固定金额，非中奖卡显示随机金额
+    const displayAmount = card.isMain ? card.amount : (card.randomAmount || 0);
+    dataAttr += ` data-type="reward" data-amount="${card.amount}" data-random-amount="${card.randomAmount || 0}"`;
+    backHtml = `
+        <div class="reward-icon"><i class="fas fa-gift"></i></div>
+        <div class="reward-amount">€${displayAmount.toFixed(2)}</div>
+        <div class="reward-label">✨ Cash Reward</div>
+    `;
             } else {
-                const price = card.price || 0;
-                const comm = card.commission || 0;
-                dataAttr += ` data-type="order" data-price="${price}" data-commission="${comm}" data-name="${card.name}"`;
-                backHtml = `
-                    <div class="reward-icon"><i class="fas fa-hotel"></i></div>
-                    <div class="order-name">${card.name}</div>
-                    <div class="order-price">€${price.toFixed(2)}</div>
-                    <div class="order-commission">+€${comm.toFixed(2)}</div>
-                `;
-            }
+    const price = card.price || 0;
+    const comm = card.commission || 0;
+    dataAttr += ` data-type="order" data-price="${price}" data-commission="${comm}" data-name="${card.name}"`;
+    
+    // 如果是中奖卡，显示订单；否则显示随机内容
+    if (card.isMain) {
+        backHtml = `
+            <div class="reward-icon"><i class="fas fa-hotel"></i></div>
+            <div class="order-name">${card.name}</div>
+            <div class="order-price">€${price.toFixed(2)}</div>
+            <div class="order-commission">+€${comm.toFixed(2)}</div>
+        `;
+    } else {
+        // 随机内容
+        if (card.randomContent && card.randomContent.type === 'reward') {
+            const randomAmt = card.randomContent.amount || 0;
+            backHtml = `
+                <div class="reward-icon"><i class="fas fa-gift"></i></div>
+                <div class="reward-amount">€${randomAmt.toFixed(2)}</div>
+                <div class="reward-label">✨ Cash Reward</div>
+            `;
+        } else {
+            const randomName = card.randomContent ? card.randomContent.name : 'x30 Commissions Order';
+            backHtml = `
+                <div class="reward-icon"><i class="fas fa-hotel"></i></div>
+                <div class="order-name">${randomName}</div>
+                <div class="order-price">€${price.toFixed(2)}</div>
+                <div class="order-commission">+€${comm.toFixed(2)}</div>
+            `;
+        }
+    }
+}
             html += `
                 <div class="card-item" ${dataAttr}>
                     <div class="card-inner">
