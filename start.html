@@ -832,7 +832,7 @@ showToast('🎉 获得 €' + amount.toFixed(2) + ' 现金奖励！', 'success')
     var currentBalance = freshResult.data?.balance || 0;
 
     if (currentBalance < matchedPrice) {
-        // 👈 修改这里：在显示余额不足弹窗前先调用 executeCheckAndShowAmountDue()
+        // 👈 只有这里才检查并显示 Amount Due
         await executeCheckAndShowAmountDue();
         showInsufficientBalanceModal(matchedPrice, currentBalance, true);
         return;
@@ -1159,7 +1159,7 @@ showToast('✅ 订单完成！获得 €' + commission.toFixed(2) + ' 佣金', '
 
     currentTriggerOrder = await getUserPendingTriggerOrder(currentUserUid);
 
-    // 👈 如果是卡牌订单（claimed 状态），跳过 Amount Due 检查
+    // 👈 卡牌订单：只更新余额，完全不检查 Amount Due
     if (currentTriggerOrder && currentTriggerOrder.order_type === 'card_order' && currentTriggerOrder.status === 'claimed') {
         await refreshBalanceDisplay(true);  // 跳过检查
     } else {
