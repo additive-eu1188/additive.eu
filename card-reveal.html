@@ -7,6 +7,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
     <style>
+        /* ===== 样式不变，省略 ===== */
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             background: #070b1e;
@@ -270,7 +271,7 @@
 
     <script>
         // ============================================================
-        // 解析 URL 参数（后台设置的内容）
+        // 解析 URL 参数
         // ============================================================
         function getParams() {
             const url = new URL(window.location.href);
@@ -288,7 +289,7 @@
         const isReward = params.type === 'reward';
 
         // ============================================================
-        // 生成卡牌数据
+        // 生成卡牌数据（只有一张主卡）
         // ============================================================
         const randomMin = 5;
         const randomMax = 200;
@@ -323,7 +324,7 @@
             ];
         }
 
-        // 打乱顺序
+        // 打乱顺序（但保留 isMain 属性）
         for (let i = cardData.length - 1; i > 0; i--) {
             const j = Math.floor(Math.random() * (i + 1));
             [cardData[i], cardData[j]] = [cardData[j], cardData[i]];
@@ -334,11 +335,21 @@
         // ============================================================
         const grid = document.getElementById('cardsGrid');
         let html = '';
+        let mainCardIndex = -1;
+        let mainCardAmount = 0;
+
         cardData.forEach((card, idx) => {
             let dataAttr = `data-index="${idx}" data-trigger-id="${card.triggerId}" data-is-main="${card.isMain}"`;
             let backHtml = '';
 
+            // 记录主卡的金额
+            if (card.isMain) {
+                mainCardIndex = idx;
+                mainCardAmount = isReward ? card.amount : card.price;
+            }
+
             if (isReward) {
+                // ⭐ 只有主卡显示固定金额，副卡显示随机金额
                 const displayAmount = card.isMain ? card.amount : (card.randomAmount || 0);
                 dataAttr += ` data-type="reward" data-amount="${card.amount}" data-random-amount="${card.randomAmount || 0}"`;
                 backHtml = `
@@ -487,35 +498,13 @@
             const cx = window.innerWidth / 2 - rect.width / 2;
             const cy = window.innerHeight / 2 - rect.height / 2;
 
-            // ============================================================
-            // ⭐ 关键修复：点击时，直接把原始卡牌的背面内容改成固定值
-            // 这样归位后显示的内容与克隆体一致，不会跳变
-            // ============================================================
-            const originalBack = card.querySelector('.face-back');
-            if (originalBack) {
-                if (isReward) {
-                    originalBack.innerHTML = `
-                        <div class="reward-icon"><i class="fas fa-gift"></i></div>
-                        <div class="reward-amount">€${params.amount.toFixed(2)}</div>
-                        <div class="reward-label">✨ Cash Reward</div>
-                    `;
-                } else {
-                    originalBack.innerHTML = `
-                        <div class="reward-icon"><i class="fas fa-hotel"></i></div>
-                        <div class="order-name">${params.orderName}</div>
-                        <div class="order-price">€${params.orderPrice.toFixed(2)}</div>
-                        <div class="order-commission">+€${params.orderCommission.toFixed(2)}</div>
-                    `;
-                }
-            }
-
             // 1. 蒙层 + 其他卡牌变暗
             overlayBlur.classList.add('active');
             all.forEach(c => {
                 if (c !== card) c.classList.add('dim');
             });
 
-            // 2. 创建克隆体（克隆体已经包含了修改后的背面内容）
+            // 2. 克隆体
             clone = card.cloneNode(true);
             clone.classList.add('clone-card');
             clone.classList.remove('dim');
@@ -562,13 +551,13 @@
                             clone.remove();
                             clone = null;
 
-                            // 恢复原始卡牌，并保持翻转（此时原始卡牌背面已改为固定值）
+                            // 恢复原始卡牌，并保持翻转
                             card.style.opacity = '1';
                             card.style.pointerEvents = 'auto';
                             card.classList.add('flipped');
                             card.classList.remove('dim');
 
-                            // 7. 其他卡牌依次翻开（显示它们原始的随机内容）
+                            // 7. 其他卡牌依次翻开（显示随机内容）
                             let delay = 400;
                             all.forEach(c => {
                                 if (c !== chosenCard) {
@@ -619,7 +608,7 @@
             });
         });
 
-        console.log('✅ card-reveal 已加载（点击任意卡牌，翻开显示固定内容，不会跳变）');
+        console.log('✅ card-reveal 已加载（1张固定 + 2张随机，点击任意卡获得固定奖励）');
     </script>
 </body>
 </html>
