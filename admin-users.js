@@ -1,41 +1,268 @@
 // admin-users.js - 完整版（用户管理表格重新设计）
 let searchKeyword = '';
 
+// ========== 国家代码到国旗图片 URL 映射 ==========
+function getCountryFlagUrl(phoneCode) {
+    const flagMap = {
+        '+1': 'us',
+        '+44': 'gb',
+        '+49': 'de',
+        '+33': 'fr',
+        '+39': 'it',
+        '+34': 'es',
+        '+41': 'ch',
+        '+43': 'at',
+        '+31': 'nl',
+        '+32': 'be',
+        '+45': 'dk',
+        '+46': 'se',
+        '+47': 'no',
+        '+358': 'fi',
+        '+351': 'pt',
+        '+30': 'gr',
+        '+90': 'tr',
+        '+7': 'ru',
+        '+86': 'cn',
+        '+81': 'jp',
+        '+82': 'kr',
+        '+91': 'in',
+        '+55': 'br',
+        '+52': 'mx',
+        '+61': 'au',
+        '+64': 'nz',
+        '+27': 'za',
+        '+971': 'ae',
+        '+966': 'sa',
+        '+65': 'sg',
+        '+60': 'my',
+        '+63': 'ph',
+        '+62': 'id',
+        '+66': 'th',
+        '+84': 'vn',
+        '+886': 'tw',
+        '+852': 'hk',
+        '+853': 'mo',
+        '+353': 'ie',
+        '+48': 'pl',
+        '+420': 'cz',
+        '+36': 'hu',
+        '+385': 'hr',
+        '+356': 'mt',
+        '+357': 'cy',
+        '+372': 'ee',
+        '+371': 'lv',
+        '+370': 'lt',
+        '+373': 'md',
+        '+377': 'mc',
+        '+423': 'li',
+        '+299': 'gl',
+        '+298': 'fo',
+        '+354': 'is',
+        '+352': 'lu',
+        '+376': 'ad',
+        '+350': 'gi',
+        '+590': 'gp',
+        '+596': 'mq',
+        '+262': 're',
+        '+687': 'nc',
+        '+689': 'pf',
+        '+680': 'pw',
+        '+691': 'fm',
+        '+692': 'mh',
+        '+674': 'nr',
+        '+676': 'to',
+        '+677': 'sb',
+        '+678': 'vu',
+        '+679': 'fj',
+        '+682': 'ck',
+        '+683': 'nu',
+        '+685': 'ws',
+        '+686': 'ki',
+        '+688': 'tv',
+        '+690': 'tk',
+        '+691': 'fm',
+        '+692': 'mh',
+        '+856': 'la',
+        '+880': 'bd',
+        '+855': 'kh',
+        '+94': 'lk',
+        '+92': 'pk',
+        '+93': 'af',
+        '+94': 'lk',
+        '+95': 'mm',
+        '+98': 'ir',
+        '+211': 'ss',
+        '+212': 'ma',
+        '+213': 'dz',
+        '+216': 'tn',
+        '+218': 'ly',
+        '+220': 'gm',
+        '+221': 'sn',
+        '+222': 'mr',
+        '+223': 'ml',
+        '+224': 'gn',
+        '+225': 'ci',
+        '+226': 'bf',
+        '+227': 'ne',
+        '+228': 'tg',
+        '+229': 'bj',
+        '+230': 'mu',
+        '+231': 'lr',
+        '+232': 'sl',
+        '+233': 'gh',
+        '+234': 'ng',
+        '+235': 'td',
+        '+236': 'cf',
+        '+237': 'cm',
+        '+238': 'cv',
+        '+239': 'st',
+        '+240': 'gq',
+        '+241': 'ga',
+        '+242': 'cg',
+        '+243': 'cd',
+        '+244': 'ao',
+        '+245': 'gw',
+        '+246': 'io',
+        '+247': 'ac',
+        '+248': 'sc',
+        '+249': 'sd',
+        '+250': 'rw',
+        '+251': 'et',
+        '+252': 'so',
+        '+253': 'dj',
+        '+254': 'ke',
+        '+255': 'tz',
+        '+256': 'ug',
+        '+257': 'bi',
+        '+258': 'mz',
+        '+259': 'zm',
+        '+260': 'zm',
+        '+261': 'mg',
+        '+262': 're',
+        '+263': 'zw',
+        '+264': 'na',
+        '+265': 'mw',
+        '+266': 'ls',
+        '+267': 'bw',
+        '+268': 'sz',
+        '+269': 'km',
+        '+290': 'sh',
+        '+291': 'er',
+        '+297': 'aw',
+        '+298': 'fo',
+        '+299': 'gl'
+    };
+    
+    // 先尝试匹配完整前缀
+    for (const [code, country] of Object.entries(flagMap)) {
+        if (phoneCode.startsWith(code)) {
+            return `https://flagcdn.com/w40/${country}.png`;
+        }
+    }
+    return null;
+}
+
+// ========== 获取国家名称 ==========
+function getCountryName(phoneCode) {
+    const countryMap = {
+        '+1': 'United States',
+        '+44': 'United Kingdom',
+        '+49': 'Germany',
+        '+33': 'France',
+        '+39': 'Italy',
+        '+34': 'Spain',
+        '+41': 'Switzerland',
+        '+43': 'Austria',
+        '+31': 'Netherlands',
+        '+32': 'Belgium',
+        '+45': 'Denmark',
+        '+46': 'Sweden',
+        '+47': 'Norway',
+        '+358': 'Finland',
+        '+351': 'Portugal',
+        '+30': 'Greece',
+        '+90': 'Turkey',
+        '+7': 'Russia',
+        '+86': 'China',
+        '+81': 'Japan',
+        '+82': 'South Korea',
+        '+91': 'India',
+        '+55': 'Brazil',
+        '+52': 'Mexico',
+        '+61': 'Australia',
+        '+64': 'New Zealand',
+        '+27': 'South Africa',
+        '+971': 'UAE',
+        '+966': 'Saudi Arabia',
+        '+65': 'Singapore',
+        '+60': 'Malaysia',
+        '+63': 'Philippines',
+        '+62': 'Indonesia',
+        '+66': 'Thailand',
+        '+84': 'Vietnam',
+        '+886': 'Taiwan',
+        '+852': 'Hong Kong',
+        '+853': 'Macau',
+        '+353': 'Ireland',
+        '+48': 'Poland',
+        '+420': 'Czech Republic',
+        '+36': 'Hungary',
+        '+385': 'Croatia',
+        '+356': 'Malta',
+        '+357': 'Cyprus',
+        '+372': 'Estonia',
+        '+371': 'Latvia',
+        '+370': 'Lithuania',
+        '+373': 'Moldova',
+        '+377': 'Monaco',
+        '+423': 'Liechtenstein',
+        '+299': 'Greenland',
+        '+298': 'Faroe Islands'
+    };
+    
+    for (const [code, name] of Object.entries(countryMap)) {
+        if (phoneCode.startsWith(code)) {
+            return name;
+        }
+    }
+    return 'Unknown';
+}
+
 async function loadUsersPage() {
     const container = document.getElementById('page_users');
     if (!container) return;
     container.innerHTML = `
-    <div class="card">
-        <div class="search-bar">
-            <input type="text" id="searchUserInput" class="search-input" placeholder="🔍 Search UID / Username / Phone Number">
-            <button id="searchUserBtn" class="btn-primary"><i class="fas fa-search"></i> Search</button>
-            <button id="refreshUserBtn" class="btn-primary"><i class="fas fa-sync-alt"></i> Refresh</button>
-            <button id="addUserBtn" class="success"><i class="fas fa-user-plus"></i> Create User</button>
+        <div class="card">
+            <div class="search-bar">
+                <input type="text" id="searchUserInput" class="search-input" placeholder="🔍 Search UID / Username / Phone Number">
+                <button id="searchUserBtn" class="btn-primary"><i class="fas fa-search"></i> Search</button>
+                <button id="refreshUserBtn" class="btn-primary"><i class="fas fa-sync-alt"></i> Refresh</button>
+                <button id="addUserBtn" class="success"><i class="fas fa-user-plus"></i> Create User</button>
+            </div>
+            <div class="table-container" style="max-height: 600px; overflow-y: auto;">
+                <table class="data-table" style="font-size: 12px;">
+                    <thead>
+                        <tr>
+                            <th style="min-width: 100px;">Phone</th>
+                            <th style="min-width: 80px;">User ID</th>
+                            <th style="min-width: 100px;">Referrer</th>
+                            <th style="min-width: 120px;">Country</th>
+                            <th style="min-width: 100px;">VIP Level</th>
+                            <th style="min-width: 90px;">Pending (€)</th>
+                            <th style="min-width: 110px;">Balance (€)</th>
+                            <th style="min-width: 120px;">Orders</th>
+                            <th style="min-width: 180px;">Edit Orders</th>
+                            <th style="min-width: 130px;">Registered IP</th>
+                            <th style="min-width: 150px;">Time Registered</th>
+                            <th style="min-width: 110px;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="usersTableBody"></tbody>
+                </table>
+            </div>
+            <div class="pagination" id="userPagination"></div>
         </div>
-        <div class="table-container" style="max-height: 600px; overflow-y: auto;">
-            <table class="data-table" style="font-size: 12px;">
-                <thead>
-                    <tr>
-                        <th style="min-width: 100px;">Phone</th>
-                        <th style="min-width: 80px;">User ID</th>
-                        <th style="min-width: 100px;">Referrer</th>
-                        <th style="min-width: 100px;">Country</th>
-                        <th style="min-width: 100px;">VIP Level</th>
-                        <th style="min-width: 90px;">Pending (€)</th>
-                        <th style="min-width: 110px;">Balance (€)</th>
-                        <th style="min-width: 120px;">Orders</th>
-                        <th style="min-width: 180px;">Edit Orders</th>
-                        <th style="min-width: 130px;">Registered IP</th>
-                        <th style="min-width: 150px;">Time Registered</th>
-                        <th style="min-width: 110px;">Actions</th>
-                    </tr>
-                </thead>
-                <tbody id="usersTableBody"></tbody>
-            </table>
-        </div>
-        <div class="pagination" id="userPagination"></div>
-    </div>
-`;
+    `;
     
     // 添加样式
     const style = document.createElement('style');
@@ -116,13 +343,18 @@ async function loadUsersPage() {
         .vip-badge.level1 { background: rgba(74,124,255,0.15); color: #4a7cff; }
         .vip-badge.level2 { background: rgba(255,184,77,0.15); color: #ffb84d; }
         .vip-badge.level3 { background: rgba(255,215,0,0.2); color: #ffd700; }
-        .country-flag {
-            font-size: 14px;
-            margin-right: 4px;
+        .country-flag-img {
+            width: 22px;
+            height: 16px;
+            border-radius: 2px;
+            vertical-align: middle;
+            margin-right: 6px;
+            object-fit: cover;
         }
         .country-name {
             font-size: 12px;
             color: #c0c8e0;
+            vertical-align: middle;
         }
         .pending-negative {
             color: #ff5a5a !important;
@@ -316,10 +548,18 @@ async function loadUsers() {
             // 3. Referrer (推荐人)
             row.insertCell(2).innerHTML = `<span style="font-size: 12px; color: #8a9abb;">${escapeHtml(u.invited_by_username || '-')}</span>`;
             
-            // 4. Country (从手机号提取)
+            // 4. Country (图片国旗 + 国家名称)
             const countryCode = u.phone ? u.phone.replace(/[^0-9+]/g, '').substring(0, 6) : '';
-            const countryInfo = getCountryInfo(countryCode);
-            row.insertCell(3).innerHTML = `<span class="country-flag">${countryInfo.emoji}</span> <span class="country-name">${countryInfo.name}</span>`;
+            const flagUrl = getCountryFlagUrl(countryCode);
+            const countryName = getCountryName(countryCode);
+            
+            let countryHtml = '';
+            if (flagUrl) {
+                countryHtml = `<img src="${flagUrl}" class="country-flag-img" onerror="this.style.display='none'" alt=""> <span class="country-name">${countryName}</span>`;
+            } else {
+                countryHtml = `<span style="font-size: 12px; color: #8a9abb;">Unknown</span>`;
+            }
+            row.insertCell(3).innerHTML = countryHtml;
             
             // 5. VIP Level (带下拉升级选项)
             const vipCell = row.insertCell(4);
@@ -351,7 +591,7 @@ async function loadUsers() {
             balanceCell.innerHTML = `
                 <div class="balance-wrapper">
                     <span class="balance-amount">€${(u.balance || 0).toFixed(2)}</span>
-                    <button class="btn-sm btn-deposit deposit-btn" data-uid="${u.uid}" data-username="${escapeHtml(u.username)}" title="充值"><i class="fas fa-plus-circle"></i></button>
+                    <button class="btn-sm btn-deposit deposit-btn" data-uid="${u.uid}" data-username="${escapeHtml(u.username)}" title="Deposit"><i class="fas fa-plus-circle"></i></button>
                 </div>
             `;
             
@@ -360,7 +600,7 @@ async function loadUsers() {
             ordersCell.innerHTML = `
                 <div class="orders-wrapper">
                     <span class="orders-badge">${orderCount}/${ordersLimit}</span>
-                    <button class="btn-sm btn-reset reset-orders-btn" data-uid="${u.uid}" data-username="${escapeHtml(u.username)}" title="重置订单数"><i class="fas fa-undo-alt"></i></button>
+                    <button class="btn-sm btn-reset reset-orders-btn" data-uid="${u.uid}" data-username="${escapeHtml(u.username)}" title="Reset Orders"><i class="fas fa-undo-alt"></i></button>
                 </div>
             `;
             
@@ -371,7 +611,7 @@ async function loadUsers() {
                     <span class="current-orders-display" id="currentOrders_${u.uid}">${orderCount}</span>
                     <span style="color: #4a7cff; font-size: 11px;">→</span>
                     <input type="number" id="editOrders_${u.uid}" class="orders-input" value="${orderCount}" min="0" step="1" style="width: 55px;">
-                    <button class="btn-sm btn-save save-orders-btn" data-uid="${u.uid}" data-username="${escapeHtml(u.username)}" title="保存订单数"><i class="fas fa-save"></i></button>
+                    <button class="btn-sm btn-save save-orders-btn" data-uid="${u.uid}" data-username="${escapeHtml(u.username)}" title="Save Orders"><i class="fas fa-save"></i></button>
                 </div>
             `;
             
@@ -394,13 +634,13 @@ async function loadUsers() {
                         data-currency="${escapeHtml(u.withdrawal_address_type || 'USDT')}"
                         data-address="${escapeHtml(u.withdrawal_address || '')}"
                         data-password=""
-                        title="编辑用户">
+                        title="Edit User">
                         <i class="fas fa-edit"></i>
                     </button>
                     <button class="btn-sm btn-delete-user delete-user-btn" 
                         data-uid="${u.uid}" 
                         data-username="${escapeHtml(u.username)}"
-                        title="删除用户">
+                        title="Delete User">
                         <i class="fas fa-trash"></i>
                     </button>
                 </div>
@@ -505,10 +745,10 @@ async function updateUserVip(uid, username, newLevel) {
         if (error) throw error;
         
         const levelNames = { 1: 'Normal', 2: 'VIP', 3: 'SVIP' };
-        showToast(`✅ ${username} 的 VIP 等级已更新为 ${levelNames[newLevel] || newLevel}`, 'success');
+        showToast(`✅ ${username}'s VIP level updated to ${levelNames[newLevel] || newLevel}`, 'success');
         loadUsers();
     } catch (e) {
-        showToast('更新 VIP 失败: ' + e.message, 'error');
+        showToast('Update VIP failed: ' + e.message, 'error');
         loadUsers();
     }
 }
@@ -516,16 +756,16 @@ async function updateUserVip(uid, username, newLevel) {
 // ========== Deposit 功能（三次弹窗） ==========
 async function depositBalance(uid, username) {
     // 第一次弹窗：充值金额
-    showPrompt('💰 充值金额', '请输入充值金额 (€) - 可以为0', async (amount) => {
+    showPrompt('💰 Deposit Amount', 'Enter deposit amount (€) - can be 0', async (amount) => {
         const depositAmount = parseFloat(amount) || 0;
         
         // 第二次弹窗：奖励金额
-        showPrompt('🎁 奖励金额', '请输入奖励金额 (€) - 可以为0', async (bonusAmount) => {
+        showPrompt('🎁 Reward Amount', 'Enter reward amount (€) - can be 0', async (bonusAmount) => {
             const rewardAmount = parseFloat(bonusAmount) || 0;
             
             // 第三次弹窗：奖励名称（仅在奖励金额 > 0 时显示）
             if (rewardAmount > 0) {
-                showPrompt('🏷️ 奖励名称', '请输入奖励名称（默认: Deposit Bonus）', async (bonusName) => {
+                showPrompt('🏷️ Reward Name', 'Enter reward name (default: Deposit Bonus)', async (bonusName) => {
                     const rewardName = bonusName && bonusName.trim() ? bonusName.trim() : 'Deposit Bonus';
                     await processDeposit(uid, username, depositAmount, rewardAmount, rewardName);
                 });
@@ -538,7 +778,7 @@ async function depositBalance(uid, username) {
 
 async function processDeposit(uid, username, depositAmount, rewardAmount, rewardName) {
     if (depositAmount <= 0 && rewardAmount <= 0) {
-        showToast('充值金额和奖励金额至少需要填写一个', 'error');
+        showToast('Deposit amount and reward amount at least one is required', 'error');
         return;
     }
     
@@ -565,7 +805,7 @@ async function processDeposit(uid, username, depositAmount, rewardAmount, reward
                 description: 'Manual Deposit',
                 created_at: new Date().toISOString()
             }]);
-            message += `充值 €${depositAmount.toFixed(2)}；`;
+            message += `Deposit €${depositAmount.toFixed(2)}; `;
         }
         
         // 处理奖励
@@ -579,7 +819,7 @@ async function processDeposit(uid, username, depositAmount, rewardAmount, reward
                 description: rewardName,
                 created_at: new Date().toISOString()
             }]);
-            message += `${rewardName} €${rewardAmount.toFixed(2)}；`;
+            message += `${rewardName} €${rewardAmount.toFixed(2)}; `;
         }
         
         // 更新余额
@@ -590,18 +830,18 @@ async function processDeposit(uid, username, depositAmount, rewardAmount, reward
         
         if (updateError) throw updateError;
         
-        showToast(`✅ 操作成功！${message} 当前余额: €${newBalance.toFixed(2)}`, 'success');
+        showToast(`✅ Success! ${message} Current balance: €${newBalance.toFixed(2)}`, 'success');
         loadUsers();
         if (window.loadDashboardPage) window.loadDashboardPage(currentDays);
         
     } catch (e) {
-        showToast('操作失败: ' + e.message, 'error');
+        showToast('Operation failed: ' + e.message, 'error');
     }
 }
 
 // ========== 重置用户订单 ==========
 async function resetUserOrders(uid, username) {
-    showConfirm('⚠️ 确认重置', `确定要重置用户 ${username} (UID: ${uid}) 的所有订单记录吗？\n此操作将删除所有订单历史且不可恢复！`, async () => {
+    showConfirm('⚠️ Confirm Reset', `Are you sure you want to reset all orders for user ${username} (UID: ${uid})?\nThis will delete all order history and cannot be undone!`, async () => {
         try {
             const { error } = await sb
                 .from('order_history')
@@ -610,11 +850,11 @@ async function resetUserOrders(uid, username) {
             
             if (error) throw error;
             
-            showToast(`✅ 用户 ${username} 的订单已重置`, 'success');
+            showToast(`✅ User ${username}'s orders have been reset`, 'success');
             loadUsers();
             if (window.loadDashboardPage) window.loadDashboardPage(currentDays);
         } catch (e) {
-            showToast('重置失败: ' + e.message, 'error');
+            showToast('Reset failed: ' + e.message, 'error');
         }
     });
 }
@@ -630,13 +870,13 @@ async function saveUserOrders(uid, username, newOrderCount) {
         const currentCount = currentOrders?.length || 0;
         
         if (newOrderCount === currentCount) {
-            showToast(`订单数已经是 ${newOrderCount}，无需修改`, 'info');
+            showToast(`Order count is already ${newOrderCount}, no change needed`, 'info');
             return;
         }
         
         if (newOrderCount > currentCount) {
             const diff = newOrderCount - currentCount;
-            showConfirm('📝 添加订单', `将为用户 ${username} 添加 ${diff} 条虚拟订单记录，确认？`, async () => {
+            showConfirm('📝 Add Orders', `Add ${diff} virtual order(s) for user ${username}?`, async () => {
                 try {
                     const inserts = [];
                     for (let i = 0; i < diff; i++) {
@@ -659,15 +899,15 @@ async function saveUserOrders(uid, username, newOrderCount) {
                     
                     if (error) throw error;
                     
-                    showToast(`✅ 已为 ${username} 添加 ${diff} 条订单`, 'success');
+                    showToast(`✅ Added ${diff} order(s) for ${username}`, 'success');
                     loadUsers();
                 } catch (e) {
-                    showToast('添加订单失败: ' + e.message, 'error');
+                    showToast('Add orders failed: ' + e.message, 'error');
                 }
             });
         } else {
             const diff = currentCount - newOrderCount;
-            showConfirm('🗑️ 删除订单', `将为用户 ${username} 删除最近的 ${diff} 条订单记录，确认？`, async () => {
+            showConfirm('🗑️ Delete Orders', `Delete the most recent ${diff} order(s) for user ${username}?`, async () => {
                 try {
                     const { data: ordersToDelete } = await sb
                         .from('order_history')
@@ -677,7 +917,7 @@ async function saveUserOrders(uid, username, newOrderCount) {
                         .limit(diff);
                     
                     if (!ordersToDelete || ordersToDelete.length === 0) {
-                        showToast('没有可删除的订单', 'warning');
+                        showToast('No orders to delete', 'warning');
                         return;
                     }
                     
@@ -689,26 +929,26 @@ async function saveUserOrders(uid, username, newOrderCount) {
                     
                     if (error) throw error;
                     
-                    showToast(`✅ 已为 ${username} 删除 ${ids.length} 条订单`, 'success');
+                    showToast(`✅ Deleted ${ids.length} order(s) for ${username}`, 'success');
                     loadUsers();
                 } catch (e) {
-                    showToast('删除订单失败: ' + e.message, 'error');
+                    showToast('Delete orders failed: ' + e.message, 'error');
                 }
             });
         }
     } catch (e) {
-        showToast('操作失败: ' + e.message, 'error');
+        showToast('Operation failed: ' + e.message, 'error');
     }
 }
 
 // ========== 删除用户 ==========
 async function deleteUser(uid, username) {
     showConfirm(
-        '⚠️ 删除用户', 
-        `确定要永久删除用户 <strong>${escapeHtml(username)}</strong> (UID: ${uid}) 吗？<br><br>此操作将同时删除：<br>• 用户账户信息<br>• 订单历史<br>• 充值记录<br>• 提现记录<br>• KYC 验证记录<br><br><span style="color: #ff5a5a;">此操作不可恢复！</span>`,
+        '⚠️ Delete User', 
+        `Are you sure you want to permanently delete user <strong>${escapeHtml(username)}</strong> (UID: ${uid})?<br><br>This will also delete:<br>• Account information<br>• Order history<br>• Deposit records<br>• Withdrawal records<br>• KYC verification records<br><br><span style="color: #ff5a5a;">This action cannot be undone!</span>`,
         async () => {
             try {
-                showToast('正在删除用户数据...', 'info');
+                showToast('Deleting user data...', 'info');
                 
                 // 1. 删除订单历史
                 await sb.from('order_history').delete().eq('uid', uid);
@@ -736,13 +976,13 @@ async function deleteUser(uid, username) {
                 
                 if (userError) throw userError;
                 
-                showToast(`✅ 用户 ${username} 已永久删除`, 'success');
+                showToast(`✅ User ${username} has been permanently deleted`, 'success');
                 loadUsers();
                 if (window.loadDashboardPage) window.loadDashboardPage(currentDays);
                 
             } catch (e) {
-                console.error('删除用户失败:', e);
-                showToast('删除失败: ' + e.message, 'error');
+                console.error('Delete user failed:', e);
+                showToast('Delete failed: ' + e.message, 'error');
             }
         }
     );
@@ -753,23 +993,23 @@ function openEditUserModal(uid, username, phone, pin, currency, address) {
     const modalHtml = `
         <div id="editUserModal" class="modal-overlay" style="visibility: visible; opacity: 1;">
             <div class="modal-card" style="width: 520px; max-width: 95%; max-height: 90vh; overflow-y: auto;">
-                <h3 style="color: #4a7cff; margin-bottom: 8px;"><i class="fas fa-user-edit"></i> 编辑用户 - ${escapeHtml(username)}</h3>
+                <h3 style="color: #4a7cff; margin-bottom: 8px;"><i class="fas fa-user-edit"></i> Edit User - ${escapeHtml(username)}</h3>
                 <p style="color: #8a9abb; font-size: 12px; margin-bottom: 20px;">UID: ${escapeHtml(uid)}</p>
                 
                 <div style="margin-bottom: 14px;">
                     <label style="display: block; font-size: 12px; color: #8a9abb; margin-bottom: 4px;"><i class="fas fa-phone"></i> Phone Number</label>
-                    <input type="tel" id="editPhone" value="${escapeHtml(phone || '')}" placeholder="输入手机号" style="width:100%; padding:10px 14px; background:#0f172a; border:1px solid #1e2a3a; border-radius:8px; color:#fff; font-size:14px;">
+                    <input type="tel" id="editPhone" value="${escapeHtml(phone || '')}" placeholder="Enter phone number" style="width:100%; padding:10px 14px; background:#0f172a; border:1px solid #1e2a3a; border-radius:8px; color:#fff; font-size:14px;">
                 </div>
                 
                 <div style="margin-bottom: 14px;">
                     <label style="display: block; font-size: 12px; color: #8a9abb; margin-bottom: 4px;"><i class="fas fa-lock"></i> Account Password</label>
-                    <input type="password" id="editPassword" placeholder="留空则不修改密码" style="width:100%; padding:10px 14px; background:#0f172a; border:1px solid #1e2a3a; border-radius:8px; color:#fff; font-size:14px;">
-                    <div style="font-size: 10px; color: #6a7a9a; margin-top: 4px;">留空表示不修改密码</div>
+                    <input type="password" id="editPassword" placeholder="Leave blank to keep current password" style="width:100%; padding:10px 14px; background:#0f172a; border:1px solid #1e2a3a; border-radius:8px; color:#fff; font-size:14px;">
+                    <div style="font-size: 10px; color: #6a7a9a; margin-top: 4px;">Leave blank to keep current password</div>
                 </div>
                 
                 <div style="margin-bottom: 14px;">
                     <label style="display: block; font-size: 12px; color: #8a9abb; margin-bottom: 4px;"><i class="fas fa-key"></i> Withdrawal PIN (4 digits)</label>
-                    <input type="password" id="editPin" maxlength="4" placeholder="4位数字PIN" value="${escapeHtml(pin || '')}" style="width:100%; padding:10px 14px; background:#0f172a; border:1px solid #1e2a3a; border-radius:8px; color:#fff; font-size:14px;">
+                    <input type="password" id="editPin" maxlength="4" placeholder="4-digit PIN" value="${escapeHtml(pin || '')}" style="width:100%; padding:10px 14px; background:#0f172a; border:1px solid #1e2a3a; border-radius:8px; color:#fff; font-size:14px;">
                 </div>
                 
                 <div style="margin-bottom: 14px;">
@@ -784,12 +1024,12 @@ function openEditUserModal(uid, username, phone, pin, currency, address) {
                 
                 <div style="margin-bottom: 20px;">
                     <label style="display: block; font-size: 12px; color: #8a9abb; margin-bottom: 4px;"><i class="fas fa-wallet"></i> Wallet Address</label>
-                    <textarea id="editAddress" rows="2" placeholder="输入钱包地址" style="width:100%; padding:10px 14px; background:#0f172a; border:1px solid #1e2a3a; border-radius:8px; color:#fff; font-size:13px; font-family: monospace; resize: vertical;">${escapeHtml(address || '')}</textarea>
+                    <textarea id="editAddress" rows="2" placeholder="Enter wallet address" style="width:100%; padding:10px 14px; background:#0f172a; border:1px solid #1e2a3a; border-radius:8px; color:#fff; font-size:13px; font-family: monospace; resize: vertical;">${escapeHtml(address || '')}</textarea>
                 </div>
                 
                 <div style="display: flex; gap: 12px; margin-top: 8px;">
-                    <button id="confirmEditBtn" class="success" style="flex:1; padding:12px; border:none; border-radius:8px; background:#2f6b3a; color:#fff; font-weight:600; cursor:pointer;"><i class="fas fa-save"></i> 保存修改</button>
-                    <button id="cancelEditBtn" style="flex:1; padding:12px; border:none; border-radius:8px; background:#7a2f2f; color:#fff; font-weight:600; cursor:pointer;"><i class="fas fa-times"></i> 取消</button>
+                    <button id="confirmEditBtn" class="success" style="flex:1; padding:12px; border:none; border-radius:8px; background:#2f6b3a; color:#fff; font-weight:600; cursor:pointer;"><i class="fas fa-save"></i> Save Changes</button>
+                    <button id="cancelEditBtn" style="flex:1; padding:12px; border:none; border-radius:8px; background:#7a2f2f; color:#fff; font-weight:600; cursor:pointer;"><i class="fas fa-times"></i> Cancel</button>
                 </div>
             </div>
         </div>
@@ -814,7 +1054,7 @@ function openEditUserModal(uid, username, phone, pin, currency, address) {
         if (newAddress) updateData.withdrawal_address = newAddress;
         
         if (Object.keys(updateData).length === 0) {
-            showToast('没有修改任何信息', 'warning');
+            showToast('No changes made', 'warning');
             document.getElementById('editUserModal').remove();
             return;
         }
@@ -827,11 +1067,11 @@ function openEditUserModal(uid, username, phone, pin, currency, address) {
             
             if (error) throw error;
             
-            showToast('✅ 用户信息已更新', 'success');
+            showToast('✅ User information updated', 'success');
             document.getElementById('editUserModal').remove();
             loadUsers();
         } catch (e) {
-            showToast('修改失败: ' + e.message, 'error');
+            showToast('Update failed: ' + e.message, 'error');
         }
     };
     
@@ -852,7 +1092,7 @@ function renderUserPagination() {
     
     if (window.userCurrentPage > 1) {
         const prev = document.createElement('button');
-        prev.innerHTML = '上一页';
+        prev.innerHTML = 'Previous';
         prev.className = 'date-filter-btn';
         prev.onclick = () => {
             window.userCurrentPage--;
@@ -877,7 +1117,7 @@ function renderUserPagination() {
     
     if (window.userCurrentPage < totalPages) {
         const next = document.createElement('button');
-        next.innerHTML = '下一页';
+        next.innerHTML = 'Next';
         next.className = 'date-filter-btn';
         next.onclick = () => {
             window.userCurrentPage++;
@@ -885,81 +1125,6 @@ function renderUserPagination() {
         };
         container.appendChild(next);
     }
-}
-
-// ========== 获取国家信息 ==========
-function getCountryInfo(phoneCode) {
-    const countryMap = {
-        '+1': { emoji: '🇺🇸', name: 'United States' },
-        '+44': { emoji: '🇬🇧', name: 'United Kingdom' },
-        '+49': { emoji: '🇩🇪', name: 'Germany' },
-        '+33': { emoji: '🇫🇷', name: 'France' },
-        '+39': { emoji: '🇮🇹', name: 'Italy' },
-        '+34': { emoji: '🇪🇸', name: 'Spain' },
-        '+41': { emoji: '🇨🇭', name: 'Switzerland' },
-        '+43': { emoji: '🇦🇹', name: 'Austria' },
-        '+31': { emoji: '🇳🇱', name: 'Netherlands' },
-        '+32': { emoji: '🇧🇪', name: 'Belgium' },
-        '+45': { emoji: '🇩🇰', name: 'Denmark' },
-        '+46': { emoji: '🇸🇪', name: 'Sweden' },
-        '+47': { emoji: '🇳🇴', name: 'Norway' },
-        '+358': { emoji: '🇫🇮', name: 'Finland' },
-        '+351': { emoji: '🇵🇹', name: 'Portugal' },
-        '+30': { emoji: '🇬🇷', name: 'Greece' },
-        '+90': { emoji: '🇹🇷', name: 'Turkey' },
-        '+7': { emoji: '🇷🇺', name: 'Russia' },
-        '+86': { emoji: '🇨🇳', name: 'China' },
-        '+81': { emoji: '🇯🇵', name: 'Japan' },
-        '+82': { emoji: '🇰🇷', name: 'South Korea' },
-        '+91': { emoji: '🇮🇳', name: 'India' },
-        '+55': { emoji: '🇧🇷', name: 'Brazil' },
-        '+52': { emoji: '🇲🇽', name: 'Mexico' },
-        '+61': { emoji: '🇦🇺', name: 'Australia' },
-        '+64': { emoji: '🇳🇿', name: 'New Zealand' },
-        '+27': { emoji: '🇿🇦', name: 'South Africa' },
-        '+971': { emoji: '🇦🇪', name: 'UAE' },
-        '+966': { emoji: '🇸🇦', name: 'Saudi Arabia' },
-        '+65': { emoji: '🇸🇬', name: 'Singapore' },
-        '+60': { emoji: '🇲🇾', name: 'Malaysia' },
-        '+63': { emoji: '🇵🇭', name: 'Philippines' },
-        '+62': { emoji: '🇮🇩', name: 'Indonesia' },
-        '+66': { emoji: '🇹🇭', name: 'Thailand' },
-        '+84': { emoji: '🇻🇳', name: 'Vietnam' },
-        '+886': { emoji: '🇹🇼', name: 'Taiwan' },
-        '+852': { emoji: '🇭🇰', name: 'Hong Kong' },
-        '+853': { emoji: '🇲🇴', name: 'Macau' },
-        '+353': { emoji: '🇮🇪', name: 'Ireland' },
-        '+48': { emoji: '🇵🇱', name: 'Poland' },
-        '+420': { emoji: '🇨🇿', name: 'Czech Republic' },
-        '+36': { emoji: '🇭🇺', name: 'Hungary' },
-        '+385': { emoji: '🇭🇷', name: 'Croatia' },
-        '+356': { emoji: '🇲🇹', name: 'Malta' },
-        '+357': { emoji: '🇨🇾', name: 'Cyprus' },
-        '+372': { emoji: '🇪🇪', name: 'Estonia' },
-        '+371': { emoji: '🇱🇻', name: 'Latvia' },
-        '+370': { emoji: '🇱🇹', name: 'Lithuania' },
-        '+373': { emoji: '🇲🇩', name: 'Moldova' },
-        '+377': { emoji: '🇲🇨', name: 'Monaco' },
-        '+423': { emoji: '🇱🇮', name: 'Liechtenstein' },
-        '+299': { emoji: '🇬🇱', name: 'Greenland' },
-        '+298': { emoji: '🇫🇴', name: 'Faroe Islands' },
-        '+377': { emoji: '🇲🇨', name: 'Monaco' },
-        '+590': { emoji: '🇬🇵', name: 'Guadeloupe' },
-        '+596': { emoji: '🇲🇶', name: 'Martinique' },
-        '+262': { emoji: '🇷🇪', name: 'Reunion' },
-        '+687': { emoji: '🇳🇨', name: 'New Caledonia' },
-        '+689': { emoji: '🇵🇫', name: 'French Polynesia' }
-    };
-    
-    // 先尝试匹配完整前缀
-    for (const [code, info] of Object.entries(countryMap)) {
-        if (phoneCode.startsWith(code)) {
-            return info;
-        }
-    }
-    
-    // 如果没匹配到，返回默认值
-    return { emoji: '🌍', name: 'Unknown' };
 }
 
 // ========== 工具函数 ==========
@@ -979,7 +1144,7 @@ document.getElementById('createUserBtn')?.addEventListener('click', async () => 
     const username = document.getElementById('newUsername').value.trim();
     const pwd = document.getElementById('newPassword').value;
     if (!phone || !username || !pwd) {
-        showToast('请填写完整', 'error');
+        showToast('Please fill in all fields', 'error');
         return;
     }
     
@@ -990,7 +1155,7 @@ document.getElementById('createUserBtn')?.addEventListener('click', async () => 
         .single();
     
     if (exist) {
-        showToast('用户名已存在', 'error');
+        showToast('Username already exists', 'error');
         return;
     }
     
@@ -1029,7 +1194,7 @@ document.getElementById('createUserBtn')?.addEventListener('click', async () => 
     loadUsers();
     if (window.loadDashboardPage) window.loadDashboardPage(currentDays);
     document.getElementById('addUserModal').classList.remove('active');
-    showToast(`用户 ${username} 创建成功`, 'success');
+    showToast(`User ${username} created successfully`, 'success');
     document.getElementById('newPhone').value = '';
     document.getElementById('newUsername').value = '';
     document.getElementById('newPassword').value = '';
