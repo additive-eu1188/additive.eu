@@ -10,6 +10,7 @@
     <script src="user-data.js"></script>
     <script src="toast.js"></script>
     <style>
+        /* ===== 页面布局样式 ===== */
         .start-hero { margin-bottom: 12px; padding: 0; }
         .start-hero h1 { font-size: 28px; font-weight: 700; color: #ffffff; margin-bottom: 6px; }
         .start-hero p { color: #7a85a5; font-size: 13px; margin-bottom: 0; }
@@ -50,6 +51,8 @@
         .upgrade-title { font-size: 18px; font-weight: 600; margin-bottom: 10px; color: #C9B095; }
         .upgrade-desc { font-size: 13px; color: #7a85a5; margin-bottom: 20px; }
         .btn-upgrade { background: rgba(201,176,149,0.15); padding: 10px 20px; border-radius: 40px; text-decoration: none; color: #C9B095; font-weight: 600; display: inline-flex; align-items: center; gap: 8px; border: 1px solid rgba(201,176,149,0.3); }
+
+        /* ===== 订单弹窗 ===== */
         .order-modal-container { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); backdrop-filter: blur(12px); z-index: 10001; display: flex; align-items: center; justify-content: center; visibility: hidden; opacity: 0; transition: visibility 0.2s, opacity 0.2s; }
         .order-modal-container.active { visibility: visible; opacity: 1; }
         .order-modal { background: linear-gradient(145deg, #12172e, #0e1225); border-radius: 32px; width: 500px; max-width: 90%; border: 1px solid rgba(201,176,149,0.3); overflow: hidden; }
@@ -86,293 +89,6 @@
         .progress-bar-fill { width: 0%; height: 100%; background: #C9B095; border-radius: 10px; transition: width 0.15s ease; }
         .progress-text { text-align: center; margin-top: 8px; font-size: 12px; color: #C9B095; }
 
-        .card-modal-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100vw;
-            height: 100vh;
-            background: rgba(0, 0, 0, 0.92);
-            backdrop-filter: blur(20px);
-            z-index: 10002;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            visibility: hidden;
-            opacity: 0;
-            transition: visibility 0.3s, opacity 0.3s;
-        }
-        .card-modal-overlay.active {
-            visibility: visible;
-            opacity: 1;
-        }
-
-        .cards-panel-magic {
-            background: rgba(10, 10, 30, 0.95);
-            backdrop-filter: blur(20px);
-            border-radius: 48px;
-            padding: 32px 28px;
-            border: 1px solid rgba(100, 200, 255, 0.15);
-            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.5), inset 0 0 60px rgba(100, 200, 255, 0.03);
-            min-width: 320px;
-            max-width: 92vw;
-            position: relative;
-            overflow: hidden;
-        }
-        .cards-panel-magic::before {
-            content: '';
-            position: absolute;
-            top: -50%;
-            left: -50%;
-            width: 200%;
-            height: 200%;
-            background: conic-gradient(from 0deg, transparent, rgba(100, 200, 255, 0.04), transparent, rgba(150, 100, 255, 0.04), transparent);
-            animation: auroraSpin 8s linear infinite;
-            pointer-events: none;
-        }
-        @keyframes auroraSpin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-        .cards-panel-magic>* {
-            position: relative;
-            z-index: 1;
-        }
-        .cards-title-magic {
-            text-align: center;
-            font-size: 22px;
-            font-weight: 700;
-            color: #64c8ff;
-            margin-bottom: 8px;
-            letter-spacing: 3px;
-        }
-        .cards-subtitle-magic {
-            text-align: center;
-            font-size: 12px;
-            color: rgba(100, 200, 255, 0.6);
-            margin-bottom: 28px;
-        }
-        .cards-grid-magic {
-            display: flex;
-            gap: 20px;
-            justify-content: center;
-            flex-wrap: wrap;
-        }
-
-        .card-item-magic {
-            width: 160px;
-            min-height: 220px;
-            background: linear-gradient(145deg, #0a0a2a, #1a0a2a, #0a2a2a);
-            border: 1px solid rgba(100, 200, 255, 0.2);
-            border-radius: 24px;
-            padding: 24px 16px 20px;
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            position: relative;
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            transform-style: preserve-3d;
-            perspective: 2000px;
-            box-shadow: 0 8px 32px rgba(0,0,0,0.4);
-        }
-        .card-item-magic::before {
-            content: '';
-            position: absolute;
-            top: -50%;
-            left: -50%;
-            width: 200%;
-            height: 200%;
-            background: conic-gradient(from 0deg, transparent, rgba(100, 200, 255, 0.04), transparent, rgba(150, 100, 255, 0.04), transparent);
-            animation: auroraSpin 6s linear infinite;
-            pointer-events: none;
-        }
-        .card-item-magic>* {
-            position: relative;
-            z-index: 1;
-        }
-        .card-item-magic:hover {
-            transform: translateY(-6px) scale(1.02);
-            border-color: rgba(100, 200, 255, 0.4);
-            box-shadow: 0 12px 40px rgba(100, 200, 255, 0.1);
-        }
-        .card-item-magic .face {
-            position: absolute;
-            inset: 0;
-            border-radius: 24px;
-            backface-visibility: hidden;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            padding: 24px 16px;
-        }
-        .card-item-magic .face-front {
-            background: linear-gradient(145deg, #0a0a2a, #1a0a2a, #0a2a2a);
-            border: 1px solid rgba(100, 200, 255, 0.1);
-        }
-        .card-item-magic .face-front i {
-            font-size: 48px;
-            color: #64c8ff;
-            margin-bottom: 16px;
-            text-shadow: 0 0 30px rgba(100,200,255,0.2);
-        }
-        .card-item-magic .face-front span {
-            font-size: 13px;
-            color: rgba(100, 200, 255, 0.5);
-            letter-spacing: 1px;
-        }
-        .card-item-magic .face-front .gem {
-            font-size: 32px;
-            color: rgba(100, 200, 255, 0.1);
-            margin-top: 10px;
-        }
-        .card-item-magic .face-back {
-            transform: rotateY(180deg);
-            background: linear-gradient(145deg, #0a2a1a, #1a3a2a);
-            border: 1px solid rgba(100, 200, 255, 0.25);
-        }
-        .card-item-magic .face-back .reward-icon {
-            font-size: 40px;
-            color: #64c8ff;
-            margin-bottom: 8px;
-        }
-        .card-item-magic .face-back .reward-amount {
-            font-size: 26px;
-            font-weight: 800;
-            color: #64c8ff;
-            margin-bottom: 4px;
-        }
-        .card-item-magic .face-back .reward-label {
-            font-size: 12px;
-            color: rgba(100, 200, 255, 0.7);
-            letter-spacing: 1.5px;
-        }
-        .card-item-magic .face-back .order-name {
-            font-size: 15px;
-            font-weight: 700;
-            color: #ff9f4a;
-            line-height: 1.3;
-            margin-bottom: 4px;
-        }
-        .card-item-magic .face-back .order-price {
-            font-size: 18px;
-            font-weight: 700;
-            color: #64c8ff;
-            margin-top: 6px;
-        }
-        .card-item-magic .face-back .order-commission {
-            font-size: 13px;
-            color: #4ade80;
-            margin-top: 2px;
-        }
-
-        .card-item-magic.flipped {
-            transform: rotateY(180deg);
-        }
-        .card-item-magic.dim {
-            opacity: 0.15;
-            filter: grayscale(0.9) brightness(0.3);
-            transform: scale(0.85);
-            pointer-events: none;
-            transition: all 0.8s cubic-bezier(0.19, 1, 0.22, 1);
-        }
-        .card-item-magic.glow {
-            filter: drop-shadow(0 0 60px rgba(100, 200, 255, 0.3));
-            z-index: 3;
-        }
-        .card-item-magic.reward-active .face-back {
-            background: linear-gradient(145deg, #0a2a1a, #1a3a2a) !important;
-            border-color: #64c8ff !important;
-            box-shadow: inset 0 0 60px rgba(100, 200, 255, 0.08);
-        }
-        .card-item-magic.expired .face-back {
-            background: linear-gradient(145deg, #1a1a1a, #2a2a2a) !important;
-            border-color: #444 !important;
-            opacity: 0.6;
-        }
-
-        .clone-card {
-            position: fixed !important;
-            z-index: 99999 !important;
-            pointer-events: none !important;
-            margin: 0 !important;
-            width: 160px !important;
-            min-height: 220px !important;
-            perspective: 2000px !important;
-            border-radius: 24px !important;
-            transition: none !important;
-        }
-        .clone-card .face {
-            border-radius: 24px !important;
-        }
-        .clone-card.flipped {
-            transform: rotateY(180deg) !important;
-        }
-
-        .overlay-blur {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100vw;
-            height: 100vh;
-            background: rgba(0, 0, 0, 0.6);
-            backdrop-filter: blur(12px);
-            z-index: 9997;
-            opacity: 0;
-            pointer-events: none;
-            transition: opacity 0.4s ease;
-        }
-        .overlay-blur.active { 
-            opacity: 1; 
-            pointer-events: auto; 
-        }
-
-        #particleContainer {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100vw;
-            height: 100vh;
-            pointer-events: none;
-            z-index: 9998;
-            overflow: hidden;
-        }
-        .particle {
-            position: absolute;
-            border-radius: 50%;
-            pointer-events: none;
-            will-change: transform, opacity;
-        }
-        .particle.glow-blue {
-            background: radial-gradient(circle, #64c8ff, #3b82f6);
-            box-shadow: 0 0 20px rgba(100, 200, 255, 0.3);
-        }
-        .particle.star {
-            background: transparent;
-            box-shadow: none;
-            font-size: 16px;
-            line-height: 1;
-            text-align: center;
-            color: #64c8ff;
-            text-shadow: 0 0 30px rgba(100, 200, 255, 0.4);
-        }
-        .particle.sparkle {
-            background: radial-gradient(circle, #ffffff, rgba(255, 255, 255, 0.2));
-            box-shadow: 0 0 25px rgba(255, 255, 255, 0.2);
-        }
-
-        .magic-rune-animation { animation: magicRune 0.5s cubic-bezier(0.34, 1.2, 0.64, 1) forwards; }
-        @keyframes magicRune {
-            0% { opacity: 0; transform: scale(0) rotate(0deg); border-radius: 50%; filter: blur(20px); }
-            30% { opacity: 0.5; transform: scale(0.8) rotate(120deg); border-radius: 40%; }
-            60% { opacity: 0.9; transform: scale(1.05) rotate(240deg); filter: blur(0); }
-            100% { opacity: 1; transform: scale(1) rotate(360deg); border-radius: 32px; }
-        }
-
         @media (max-width: 768px) {
             body { padding: 0 !important; margin: 0 !important; overflow-x: hidden; }
             .main { padding: 0 !important; margin: 0 !important; }
@@ -399,17 +115,6 @@
             .featured-section { padding: 0 16px; }
             .featured-title { font-size: 14px; }
             .marquee-images { padding: 12px 0; }
-            .cards-panel-magic { padding: 20px 16px; min-width: unset; max-width: 94vw; }
-            .card-item-magic { width: 120px; min-height: 170px; padding: 16px 10px; }
-            .card-item-magic .face-front i { font-size: 32px; }
-            .card-item-magic .face-front .gem { font-size: 20px; }
-            .card-item-magic .face-back .reward-icon { font-size: 28px; }
-            .card-item-magic .face-back .reward-amount { font-size: 20px; }
-            .card-item-magic .face-back .order-name { font-size: 13px; }
-            .card-item-magic .face-back .order-price { font-size: 16px; }
-            .cards-title-magic { font-size: 18px; }
-            .cards-subtitle-magic { font-size: 10px; margin-bottom: 16px; }
-            .cards-grid-magic { gap: 12px; }
             .order-modal { width: 95%; }
             .modal-body { padding: 16px; }
             .order-image { height: 100px; }
@@ -417,21 +122,12 @@
             .star-premium svg { width: 28px; height: 28px; }
             .amount-due-value { font-size: 20px; }
             .amount-due-label { font-size: 12px; }
-            .clone-card { width: 120px !important; min-height: 170px !important; }
-        }
-        @media (max-width: 480px) {
-            .card-item-magic { width: 95px; min-height: 140px; padding: 12px 8px; }
-            .card-item-magic .face-front i { font-size: 24px; }
-            .card-item-magic .face-back .reward-icon { font-size: 22px; }
-            .card-item-magic .face-back .reward-amount { font-size: 16px; }
-            .card-item-magic .face-back .order-name { font-size: 11px; }
-            .card-item-magic .face-back .order-price { font-size: 13px; }
-            .cards-grid-magic { gap: 8px; }
-            .clone-card { width: 95px !important; min-height: 140px !important; }
         }
     </style>
 </head>
 <body>
+
+    <!-- 页面加载动画 -->
     <div id="pageLoading"><div class="loading-spinner"><i class="fas fa-spinner"></i><p>Loading...</p></div></div>
     <style>
         #pageLoading { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: radial-gradient(circle at 10% 20%, #0a0f2a, #050814); display: flex; align-items: center; justify-content: center; z-index: 9999; transition: opacity 0.3s; }
@@ -524,6 +220,7 @@
         </main>
     </div>
 
+    <!-- 订单弹窗 -->
     <div id="orderModal" class="order-modal-container">
         <div class="order-modal">
             <div class="modal-header">
@@ -536,14 +233,8 @@
         </div>
     </div>
 
-    <div id="cardRewardModal" class="card-modal-overlay">
-        <div class="modal-container" id="cardModalContainer"></div>
-    </div>
-
-    <div class="overlay-blur" id="overlayBlur"></div>
-    <div id="particleContainer"></div>
-
     <script>
+        // ===== 页面加载 =====
         function hideLoading() {
             var loading = document.getElementById('pageLoading');
             if (loading && loading.style.display !== 'none') {
@@ -589,10 +280,13 @@
             document.body.style.overflow = '';
         }
 
-        var currentOrder = null,
-            selectedRating = 0,
-            currentUserBalance = 0,
-            currentUserUid = null;
+        // ============================================================
+        // 全局状态
+        // ============================================================
+        var currentOrder = null;
+        var selectedRating = 0;
+        var currentUserBalance = 0;
+        var currentUserUid = null;
         var ordersCache = null;
         var currentTriggerOrder = null;
 
@@ -611,6 +305,9 @@
             });
         }
 
+        // ============================================================
+        // 临时订单存储
+        // ============================================================
         function saveTempOrder(orderData) {
             var user = getCurrentUser();
             if (!user) return;
@@ -653,6 +350,9 @@
             return temp;
         }
 
+        // ============================================================
+        // 订单数据获取
+        // ============================================================
         async function getOrdersFromAdmin() {
             if (ordersCache) return ordersCache;
             try {
@@ -702,6 +402,9 @@
             return matchedOrders;
         }
 
+        // ============================================================
+        // 触发订单系统
+        // ============================================================
         async function getUserPendingTriggerOrder(uid) {
             var result = await sb.from('order_history').select('id', { count: 'exact' }).eq('uid', uid);
             var currentOrderCount = result.data?.length || 0;
@@ -714,7 +417,6 @@
                 .eq('trigger_order_number', targetOrderNumber)
                 .limit(1);
             if (claimedResult.data && claimedResult.data.length > 0) {
-                console.log('🎯 匹配到 claimed 卡牌订单:', claimedResult.data[0].id);
                 return claimedResult.data[0];
             }
 
@@ -725,7 +427,6 @@
                 .eq('trigger_order_number', targetOrderNumber)
                 .limit(1);
             if (pendingResult.data && pendingResult.data.length > 0) {
-                console.log('🎯 匹配到 pending 触发订单:', pendingResult.data[0].id);
                 return pendingResult.data[0];
             }
 
@@ -739,12 +440,14 @@
                 await sb.from('user_trigger_orders')
                     .update({ status: 'completed', completed_at: new Date().toISOString() })
                     .eq('id', staleResult.data[0].id);
-                console.log('🧹 自动清理残留触发订单:', staleResult.data[0].id);
                 return null;
             }
             return null;
         }
 
+        // ============================================================
+        // 用户数据加载
+        // ============================================================
         async function refreshBalanceDisplay() {
             var user = getCurrentUser();
             if (!user) return;
@@ -765,6 +468,132 @@
             }
         }
 
+        async function loadUserData() {
+            var user = getCurrentUser();
+            if (!user) { window.location.href = 'signin.html'; return; }
+            currentUserUid = user.uid;
+
+            try {
+                var balanceResult = await sb.from('users').select('balance').eq('uid', user.uid).single();
+                if (balanceResult.data) {
+                    currentUserBalance = balanceResult.data.balance || 0;
+                    user.balance = currentUserBalance;
+                    localStorage.setItem('currentUser', JSON.stringify(user));
+                }
+
+                var ordersResult = await sb.from('order_history').select('commission').eq('uid', user.uid);
+                var orders = ordersResult.data || [];
+                var totalCommission = orders.reduce(function(s, o) { return s + (o.commission || 0); }, 0);
+                var orderCount = orders.length;
+
+                currentTriggerOrder = await getUserPendingTriggerOrder(user.uid);
+
+                var pendingResult = await sb.from('withdrawals').select('amount').eq('uid', user.uid).eq('status', 'pending');
+                var totalPending = (pendingResult.data || []).reduce(function(sum, w) { return sum + (w.amount || 0); }, 0);
+
+                var balanceEl = document.getElementById('statBalance');
+                balanceEl.innerHTML = '€' + currentUserBalance.toFixed(2);
+                if (currentUserBalance < 0) balanceEl.classList.add('balance-negative');
+                else balanceEl.classList.remove('balance-negative');
+
+                document.getElementById('statTrialBonus').innerHTML = '€0.00';
+                document.getElementById('statCommissions').innerHTML = '€' + totalCommission.toFixed(2);
+                document.getElementById('totalOrders').innerText = orderCount;
+                document.getElementById('statPending').innerHTML = '€' + totalPending.toFixed(2);
+
+                var isCardOrderAmountDue = localStorage.getItem('cardOrderAmountDueActive') === 'true';
+                if (isCardOrderAmountDue) {
+                    var cardOrderPrice = parseFloat(localStorage.getItem('cardOrderAmountDuePrice') || '0');
+                    if (cardOrderPrice > 0) {
+                        if (currentUserBalance >= cardOrderPrice) {
+                            localStorage.removeItem('cardOrderAmountDueActive');
+                            localStorage.removeItem('cardOrderAmountDuePrice');
+                            window.cardOrderAmountDueActive = false;
+                            var card = document.getElementById('amountDueCard');
+                            if (card) card.remove();
+                        } else {
+                            var amountDue = cardOrderPrice - currentUserBalance;
+                            showAmountDueCard(amountDue);
+                        }
+                    }
+                }
+
+            } catch (e) { console.error('加载数据失败:', e); }
+        }
+
+        async function getUserCommissionRate() {
+            var user = getCurrentUser();
+            var vipLevel = user?.vipLevel || 1;
+            var result = await sb.from('vip_settings').select('commission_rate').eq('level', vipLevel).single();
+            return (result.data?.commission_rate || 0.51) / 100;
+        }
+
+        async function getUserOrdersLimit() {
+            var user = getCurrentUser();
+            var vipLevel = user?.vipLevel || 1;
+            var result = await sb.from('vip_settings').select('orders_limit').eq('level', vipLevel).single();
+            return result.data?.orders_limit || 30;
+        }
+
+        // ============================================================
+        // 视频和酒店配置
+        // ============================================================
+        async function loadAnimatedConfig() {
+            sb.from('animated_settings').select('*').eq('id', 1).single().then(function(result) {
+                var data = result.data;
+                if (data && data.video_url) {
+                    var vc = document.getElementById('videoContainer');
+                    if (vc) {
+                        var url = data.video_url;
+                        if (url.endsWith('.mp4') || url.includes('.mp4')) {
+                            var video = document.createElement('video');
+                            video.src = url;
+                            video.autoplay = true;
+                            video.loop = true;
+                            video.muted = true;
+                            video.playsinline = true;
+                            video.style.width = '100%';
+                            video.style.borderRadius = '24px';
+                            vc.innerHTML = '';
+                            vc.appendChild(video);
+                            setTimeout(function() { hideLoading(); }, 3000);
+                        } else {
+                            vc.innerHTML = '<img src="' + url + '" style="width:100%; border-radius:24px;">';
+                            var img = vc.querySelector('img');
+                            if (img) {
+                                img.onload = function() { hideLoading(); };
+                                img.onerror = function() { hideLoading(); };
+                            }
+                        }
+                    }
+                }
+                if (data && data.featured_hotels && data.featured_hotels.length) {
+                    var container = document.getElementById('hotelImagesContainer');
+                    if (container) {
+                        container.innerHTML = '';
+                        for (var hIdx = 0; hIdx < data.featured_hotels.length; hIdx++) {
+                            var hotel = data.featured_hotels[hIdx];
+                            var div = document.createElement('div');
+                            div.className = 'hotel-img-item';
+                            div.innerHTML = '<img src="' + (hotel.image || '') + '" alt="' + hotel.name + '" onerror="this.src=\'https://placehold.co/180x110/0E1838/C9B095?text=Hotel\'"><span class="hotel-name">' + hotel.name + '</span>';
+                            container.appendChild(div);
+                        }
+                        var items = container.innerHTML;
+                        container.innerHTML = items + items;
+                    }
+                }
+                setTimeout(function() { hideLoading(); }, 1000);
+            }).catch(function(e) {
+                console.error('loadAnimatedConfig error:', e);
+                hideLoading();
+            });
+        }
+
+        async function preloadOrders() { await getOrdersFromAdmin(); }
+
+        // ============================================================
+        // 余额不足相关
+        // ============================================================
         async function executeCheckAndShowAmountDue() {
             var user = getCurrentUser();
             if (!user) return;
@@ -874,627 +703,57 @@
             if (modal) modal.remove();
         }
 
-        async function loadUserData() {
-            var user = getCurrentUser();
-            if (!user) { window.location.href = 'signin.html'; return; }
-            currentUserUid = user.uid;
-
-            try {
-                var balanceResult = await sb.from('users').select('balance').eq('uid', user.uid).single();
-                if (balanceResult.data) {
-                    currentUserBalance = balanceResult.data.balance || 0;
-                    user.balance = currentUserBalance;
-                    localStorage.setItem('currentUser', JSON.stringify(user));
-                }
-
-                var ordersResult = await sb.from('order_history').select('commission').eq('uid', user.uid);
-                var orders = ordersResult.data || [];
-                var totalCommission = orders.reduce(function(s, o) { return s + (o.commission || 0); }, 0);
-                var orderCount = orders.length;
-
-                currentTriggerOrder = await getUserPendingTriggerOrder(user.uid);
-
-                var pendingResult = await sb.from('withdrawals').select('amount').eq('uid', user.uid).eq('status', 'pending');
-                var totalPending = (pendingResult.data || []).reduce(function(sum, w) { return sum + (w.amount || 0); }, 0);
-
-                var balanceEl = document.getElementById('statBalance');
-                balanceEl.innerHTML = '€' + currentUserBalance.toFixed(2);
-                if (currentUserBalance < 0) balanceEl.classList.add('balance-negative');
-                else balanceEl.classList.remove('balance-negative');
-
-                document.getElementById('statTrialBonus').innerHTML = '€0.00';
-                document.getElementById('statCommissions').innerHTML = '€' + totalCommission.toFixed(2);
-                document.getElementById('totalOrders').innerText = orderCount;
-                document.getElementById('statPending').innerHTML = '€' + totalPending.toFixed(2);
-
-                var isCardOrderAmountDue = localStorage.getItem('cardOrderAmountDueActive') === 'true';
-                if (isCardOrderAmountDue) {
-                    var cardOrderPrice = parseFloat(localStorage.getItem('cardOrderAmountDuePrice') || '0');
-                    if (cardOrderPrice > 0) {
-                        if (currentUserBalance >= cardOrderPrice) {
-                            localStorage.removeItem('cardOrderAmountDueActive');
-                            localStorage.removeItem('cardOrderAmountDuePrice');
-                            window.cardOrderAmountDueActive = false;
-                            var card = document.getElementById('amountDueCard');
-                            if (card) card.remove();
-                        } else {
-                            var amountDue = cardOrderPrice - currentUserBalance;
-                            showAmountDueCard(amountDue);
-                        }
-                    }
-                }
-
-            } catch (e) { console.error('加载数据失败:', e); }
-        }
-
-        async function getUserCommissionRate() {
-            var user = getCurrentUser();
-            var vipLevel = user?.vipLevel || 1;
-            var result = await sb.from('vip_settings').select('commission_rate').eq('level', vipLevel).single();
-            return (result.data?.commission_rate || 0.51) / 100;
-        }
-
-        async function getUserOrdersLimit() {
-            var user = getCurrentUser();
-            var vipLevel = user?.vipLevel || 1;
-            var result = await sb.from('vip_settings').select('orders_limit').eq('level', vipLevel).single();
-            return result.data?.orders_limit || 30;
-        }
-
-        async function loadAnimatedConfig() {
-            sb.from('animated_settings').select('*').eq('id', 1).single().then(function(result) {
-                var data = result.data;
-                if (data && data.video_url) {
-                    var vc = document.getElementById('videoContainer');
-                    if (vc) {
-                        var url = data.video_url;
-                        if (url.endsWith('.mp4') || url.includes('.mp4')) {
-                            var video = document.createElement('video');
-                            video.src = url;
-                            video.autoplay = true;
-                            video.loop = true;
-                            video.muted = true;
-                            video.playsinline = true;
-                            video.style.width = '100%';
-                            video.style.borderRadius = '24px';
-                            vc.innerHTML = '';
-                            vc.appendChild(video);
-                            setTimeout(function() { hideLoading(); }, 3000);
-                        } else {
-                            vc.innerHTML = '<img src="' + url + '" style="width:100%; border-radius:24px;">';
-                            var img = vc.querySelector('img');
-                            if (img) {
-                                img.onload = function() { hideLoading(); };
-                                img.onerror = function() { hideLoading(); };
-                            }
-                        }
-                    }
-                }
-                if (data && data.featured_hotels && data.featured_hotels.length) {
-                    var container = document.getElementById('hotelImagesContainer');
-                    if (container) {
-                        container.innerHTML = '';
-                        for (var hIdx = 0; hIdx < data.featured_hotels.length; hIdx++) {
-                            var hotel = data.featured_hotels[hIdx];
-                            var div = document.createElement('div');
-                            div.className = 'hotel-img-item';
-                            div.innerHTML = '<img src="' + (hotel.image || '') + '" alt="' + hotel.name + '" onerror="this.src=\'https://placehold.co/180x110/0E1838/C9B095?text=Hotel\'"><span class="hotel-name">' + hotel.name + '</span>';
-                            container.appendChild(div);
-                        }
-                        var items = container.innerHTML;
-                        container.innerHTML = items + items;
-                    }
-                }
-                setTimeout(function() { hideLoading(); }, 1000);
-            }).catch(function(e) {
-                console.error('loadAnimatedConfig error:', e);
-                hideLoading();
-            });
-        }
-
-        async function preloadOrders() { await getOrdersFromAdmin(); }
-
         // ============================================================
-        // 粒子系统
+        // 卡牌触发 - 使用 iframe 加载独立卡牌页面
         // ============================================================
-        var particleContainer = document.getElementById('particleContainer');
-
-        function boom(cx, cy, count) {
-            count = count || 120;
-            for (var i = 0; i < count; i++) {
-                var el = document.createElement('div');
-                var type = Math.random();
-                if (type < 0.55) {
-                    el.className = 'particle glow-blue';
-                    var size = 3 + Math.random() * 10;
-                    el.style.width = size + 'px';
-                    el.style.height = size + 'px';
-                    el.style.borderRadius = Math.random() > 0.5 ? '50%' : '2px';
-                } else if (type < 0.85) {
-                    el.className = 'particle star';
-                    el.textContent = ['✦', '✧', '✦', '★'][Math.floor(Math.random() * 4)];
-                    el.style.fontSize = (12 + Math.random() * 22) + 'px';
-                } else {
-                    el.className = 'particle sparkle';
-                    var size2 = 2 + Math.random() * 6;
-                    el.style.width = size2 + 'px';
-                    el.style.height = size2 + 'px';
-                }
-                var angle = Math.random() * 6.2832;
-                var distance = 80 + Math.random() * 350;
-                var tx = Math.cos(angle) * distance;
-                var ty = Math.sin(angle) * distance - 60;
-                el.style.left = cx + 'px';
-                el.style.top = cy + 'px';
-                el.style.opacity = '0';
-                particleContainer.appendChild(el);
-                var duration = 1200 + Math.random() * 900;
-                var delay = Math.random() * 300;
-                el.animate([
-                    { transform: 'translate(0,0) scale(0.3)', opacity: 0 },
-                    { transform: 'translate(' + (tx * 0.3) + 'px, ' + (ty * 0.3) + 'px) scale(1.3)', opacity: 1, offset: 0.2 },
-                    { transform: 'translate(' + tx + 'px, ' + ty + 'px) scale(0.6)', opacity: 0 }
-                ], {
-                    duration: duration,
-                    delay: delay,
-                    easing: 'cubic-bezier(0.19,1,0.22,1)'
-                });
-                setTimeout(function() { if (el.parentNode) el.remove(); }, duration + delay + 100);
-            }
-            setTimeout(function() {
-                for (var j = 0; j < 60; j++) {
-                    var s = document.createElement('div');
-                    document.body.appendChild(s);
-                    s.className = 'particle star';
-                    s.innerHTML = '✧';
-                    s.style.left = cx + 'px';
-                    s.style.top = cy + 'px';
-                    s.style.fontSize = (8 + Math.random() * 20) + 'px';
-                    var a2 = Math.random() * 6.2832;
-                    var d2 = 100 + Math.random() * 300;
-                    var tx2 = Math.cos(a2) * d2;
-                    var ty2 = Math.sin(a2) * d2;
-                    var start2 = performance.now();
-                    (function(el, tx, ty) {
-                        function anim2(t) {
-                            var p = Math.min((t - start2) / 1000, 1);
-                            el.style.transform = 'translate(' + (tx * p) + 'px, ' + (ty * p) + 'px) scale(' + (1 - p) + ')';
-                            el.style.opacity = 1 - p;
-                            if (p < 1) requestAnimationFrame(anim2);
-                            else el.remove();
-                        }
-                        requestAnimationFrame(anim2);
-                    })(s, tx2, ty2);
-                }
-            }, 200);
-        }
-
-        var surroundInterval = null;
-
-        function startSurround(cx, cy) {
-            if (surroundInterval) clearInterval(surroundInterval);
-            var count = 0;
-
-            function spawn() {
-                if (count > 30) return;
-                var el = document.createElement('div');
-                var isStar = Math.random() > 0.6;
-                if (isStar) {
-                    el.className = 'particle star';
-                    el.textContent = ['✦', '✧', '✦', '★'][Math.floor(Math.random() * 4)];
-                    el.style.fontSize = (10 + Math.random() * 18) + 'px';
-                } else {
-                    el.className = 'particle glow-blue';
-                    var size = 2 + Math.random() * 7;
-                    el.style.width = size + 'px';
-                    el.style.height = size + 'px';
-                    el.style.borderRadius = '50%';
-                }
-                var angle = Math.random() * 6.2832;
-                var dist = 40 + Math.random() * 100;
-                el.style.left = cx + Math.cos(angle) * dist + 'px';
-                el.style.top = cy + Math.sin(angle) * dist + 'px';
-                el.style.opacity = 0.5 + Math.random() * 0.4;
-                particleContainer.appendChild(el);
-
-                var duration = 1800 + Math.random() * 1200;
-                var startTime = performance.now();
-                var phase = Math.random() * 6.2832;
-                var speed = 0.015 + Math.random() * 0.025;
-
-                function animate(time) {
-                    var elapsed = time - startTime;
-                    if (elapsed > duration) { if (el.parentNode) el.remove(); return; }
-                    var progress = elapsed / duration;
-                    var ease = 1 - Math.pow(1 - progress, 2);
-                    var x = Math.sin(time * speed + phase) * 25 * (1 - ease * 0.5);
-                    var y = -ease * 30 + Math.cos(time * speed * 0.7 + phase) * 12;
-                    var twinkle = 0.5 + 0.5 * Math.sin(time * 0.03 + phase);
-                    el.style.transform = 'translate(' + x + 'px, ' + y + 'px) scale(' + (0.7 + 0.4 * twinkle) + ')';
-                    el.style.opacity = (0.4 + 0.5 * twinkle) * (1 - ease * 0.3);
-                    requestAnimationFrame(animate);
-                }
-                requestAnimationFrame(animate);
-                count++;
-            }
-
-            for (var i = 0; i < 12; i++) { setTimeout(spawn, i * 70); }
-            surroundInterval = setInterval(function() { if (count < 25) spawn(); }, 250);
-            setTimeout(function() { if (surroundInterval) clearInterval(surroundInterval);
-                surroundInterval = null; }, 4500);
-        }
-
-        function getPos(el) {
-            var r = el.getBoundingClientRect();
-            return {
-                left: r.left,
-                top: r.top,
-                width: r.width,
-                height: r.height,
-                cx: r.left + r.width / 2,
-                cy: r.top + r.height / 2,
-                rect: r
-            };
-        }
-
-        // ============================================================
-        // 卡牌奖励弹窗（完整修复版）
-        // ============================================================
-        var activated = false;
-        var overlayBlur = document.getElementById('overlayBlur');
-
         function showCardRewardModal(rewardAmount, triggerId) {
-            var fixedAmount = rewardAmount;
-            var randomAmount1 = Math.floor(Math.random() * 190) + 10;
-            var randomAmount2 = Math.floor(Math.random() * 190) + 10;
+            var iframe = document.createElement('iframe');
+            iframe.src = 'card-reveal.html?type=reward&amount=' + rewardAmount + '&triggerId=' + triggerId;
+            iframe.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; border:none; z-index:10002; background:rgba(0,0,0,0.92);';
+            document.body.appendChild(iframe);
 
-            var cardTypes = [
-                { type: 'reward', amount: fixedAmount, triggerId: triggerId, isMain: true, randomAmount: randomAmount1 },
-                { type: 'reward', amount: fixedAmount, triggerId: triggerId, isMain: false, randomAmount: randomAmount2 },
-                { type: 'reward', amount: fixedAmount, triggerId: triggerId, isMain: false, randomAmount: null }
-            ];
-
-            for (var i = cardTypes.length - 1; i > 0; i--) {
-                var j = Math.floor(Math.random() * (i + 1));
-                var temp = cardTypes[i];
-                cardTypes[i] = cardTypes[j];
-                cardTypes[j] = temp;
-            }
-
-            var modal = document.getElementById('cardRewardModal');
-            var container = document.getElementById('cardModalContainer');
-
-            var cardsInnerHtml = '';
-            for (var ci = 0; ci < cardTypes.length; ci++) {
-                var card = cardTypes[ci];
-                var dataAttr = 'data-type="' + card.type + '" data-amount="' + card.amount + '" data-trigger-id="' + card
-                    .triggerId + '" data-is-main="' + card.isMain + '" data-random-amount="' + (card.randomAmount || 0) +
-                    '"';
-                cardsInnerHtml += '<div class="card-item-magic" ' + dataAttr +
-                    '><div class="face face-front"><i class="fas fa-gem"></i><span>SELECT</span><div class="gem"><i class="fas fa-crown"></i></div></div><div class="face face-back"><div class="reward-icon"><i class="fas fa-gift"></i></div><div class="reward-amount">€' +
-                    card.amount.toFixed(2) + '</div><div class="reward-label">✨ Cash Reward</div></div></div>';
-            }
-
-            container.innerHTML =
-                '<div class="cards-panel-magic magic-rune-animation"><div class="cards-title-magic"><i class="fas fa-gem"></i> Diamond Bonus</div><div class="cards-subtitle-magic">Select one to redeem</div><div class="cards-grid-magic">' +
-                cardsInnerHtml + '</div></div>';
-
-            modal.classList.add('active');
-
-            var allCards = document.querySelectorAll('#cardRewardModal .card-item-magic');
-            var winIdx = 2;
-
-            allCards.forEach(function(card, idx) {
-                card.addEventListener('click', function(e) {
-                    e.stopPropagation();
-                    if (activated) return;
-                    activated = true;
-
-                    var isWinner = (idx === winIdx);
-                    var pos = getPos(card);
-                    var vw = window.innerWidth;
-                    var vh = window.innerHeight;
-
-                    overlayBlur.classList.add('active');
-                    allCards.forEach(function(c) { if (c !== card) c.classList.add('dim'); });
-
-                    var clone = card.cloneNode(true);
-                    clone.classList.add('clone-card');
-                    clone.classList.remove('dim');
-                    clone.style.left = pos.rect.left + 'px';
-                    clone.style.top = pos.rect.top + 'px';
-                    clone.style.width = pos.width + 'px';
-                    clone.style.height = pos.height + 'px';
-                    document.body.appendChild(clone);
-
-                    card.style.opacity = '0';
-                    card.style.pointerEvents = 'none';
-
-                    var cx = (vw - pos.width) / 2;
-                    var cy = (vh - pos.height) / 2;
-                    var start = performance.now();
-
-                    function moveStep(time) {
-                        var p = Math.min((time - start) / 800, 1);
-                        var ease = 1 - Math.pow(1 - p, 3);
-                        var x = pos.left + (cx - pos.left) * ease;
-                        var y = pos.top + (cy - pos.top) * ease;
-                        var scale = 1 + ease * 0.8;
-                        clone.style.transform = 'translate(' + (x - pos.left) + 'px, ' + (y - pos.top) + 'px) scale(' +
-                            scale + ')';
-                        clone.style.borderRadius = (24 + ease * 8) + 'px';
-                        if (p < 1) {
-                            requestAnimationFrame(moveStep);
-                        } else {
-                            // 粒子围绕
-                            startSurround(vw / 2, vh / 2);
-                            // 粒子爆炸 + 翻转
-                            setTimeout(function() {
-                                boom(vw / 2, vh / 2, 160);
-                                // 翻转
-                                clone.style.transition = 'transform 0.5s cubic-bezier(0.19,1,0.22,1)';
-                                clone.style.transform = 'translate(' + (cx - pos.left) + 'px, ' + (cy - pos
-                                    .top) + 'px) scale(2.2) rotateY(180deg)';
-                                clone.style.borderRadius = '32px';
-                                if (isWinner) {
-                                    clone.classList.add('reward-active');
-                                } else {
-                                    clone.classList.add('expired');
-                                }
-                                clone.classList.add('glow');
-
-                                setTimeout(function() { boom(vw / 2, vh / 2, 80); }, 300);
-                                setTimeout(function() {
-                                    boom(vw / 2 - 100, vh / 2 - 100, 50);
-                                    boom(vw / 2 + 100, vh / 2 + 100, 50);
-                                }, 700);
-
-                                setTimeout(function() {
-                                    overlayBlur.classList.remove('active');
-                                    clone.style.transition = 'transform 0.6s cubic-bezier(0.19,1,0.22,1)';
-                                    clone.style.transform = 'translate(0px, 0px) scale(1) rotateY(180deg)';
-                                    clone.style.borderRadius = '24px';
-                                    clone.classList.remove('glow');
-
-                                    setTimeout(function() {
-                                        clone.remove();
-                                        card.style.opacity = '1';
-                                        card.style.pointerEvents = 'auto';
-                                        card.classList.add('flipped');
-                                        if (isWinner) {
-                                            card.classList.add('reward-active');
-                                            var tid = parseInt(card.dataset.triggerId);
-                                            var amt = parseFloat(card.dataset.amount);
-                                            claimCardReward(tid, amt);
-                                        } else {
-                                            card.classList.add('expired');
-                                        }
-                                        card.classList.remove('dim');
-
-                                        var delay = 400;
-                                        allCards.forEach(function(c) {
-                                            if (c !== card) {
-                                                setTimeout(function() {
-                                                    c.classList.add('flipped');
-                                                    var cIdx = Array.from(allCards)
-                                                        .indexOf(c);
-                                                    if (cIdx === winIdx) {
-                                                        c.classList.add(
-                                                        'reward-active');
-                                                    } else {
-                                                        c.classList.add('expired');
-                                                    }
-                                                    c.classList.remove('dim');
-                                                    var r = c.getBoundingClientRect();
-                                                    boom(r.left + r.width / 2, r.top +
-                                                        r.height / 2, 25);
-                                                }, delay);
-                                                delay += 500;
-                                            }
-                                        });
-
-                                        setTimeout(function() {
-                                            document.getElementById('cardRewardModal')
-                                                .classList.remove('active');
-                                            activated = false;
-                                        }, delay + 400);
-                                    }, 700);
-                                }, 2500);
-                            }, 200);
-                        }
+            function messageHandler(e) {
+                if (e.data && e.data.action === 'cardRevealComplete') {
+                    if (e.data.isWinner) {
+                        claimCardReward(e.data.triggerId, e.data.amount);
+                    } else {
+                        showToast('😅 未中奖，下次好运！', 'info');
                     }
-                    requestAnimationFrame(moveStep);
-                });
-            });
-        }
-
-        // ============================================================
-        // 卡牌订单弹窗（完整修复版）
-        // ============================================================
-        function showCardOrderModal(triggerOrder) {
-            var orderPrice = triggerOrder.matched_price || 0;
-            var commissionAmount = triggerOrder.commission_amount || 0;
-            var orderName = triggerOrder.matched_order_name || 'x30 Commissions Order';
-            var triggerOrderId = triggerOrder.id;
-
-            var randomContents = [];
-            for (var rci = 0; rci < 2; rci++) {
-                var isOrder = Math.random() < 0.3;
-                if (isOrder) {
-                    randomContents.push({ type: 'order', name: 'x30 Commissions Order' });
-                } else {
-                    randomContents.push({ type: 'reward', amount: Math.floor(Math.random() * 190) + 10 });
+                    if (iframe.parentNode) iframe.parentNode.removeChild(iframe);
+                    window.removeEventListener('message', messageHandler);
                 }
             }
+            window.addEventListener('message', messageHandler);
+        }
 
-            var cardTypes = [
-                { type: 'order', price: orderPrice, commission: commissionAmount, name: orderName,
-                    triggerId: triggerOrderId, isMain: true, randomContent: randomContents[0] },
-                { type: 'order', price: orderPrice, commission: commissionAmount, name: orderName,
-                    triggerId: triggerOrderId, isMain: false, randomContent: randomContents[1] },
-                { type: 'order', price: orderPrice, commission: commissionAmount, name: orderName,
-                    triggerId: triggerOrderId, isMain: false, randomContent: null }
-            ];
+        function showCardOrderModal(triggerOrder) {
+            var price = triggerOrder.matched_price || 0;
+            var commission = triggerOrder.commission_amount || 0;
+            var name = triggerOrder.matched_order_name || 'x30 Commissions Order';
+            var triggerId = triggerOrder.id;
 
-            for (var ci2 = cardTypes.length - 1; ci2 > 0; ci2--) {
-                var j2 = Math.floor(Math.random() * (ci2 + 1));
-                var temp2 = cardTypes[ci2];
-                cardTypes[ci2] = cardTypes[j2];
-                cardTypes[j2] = temp2;
-            }
+            var iframe = document.createElement('iframe');
+            iframe.src = 'card-reveal.html?type=order&orderPrice=' + price + '&orderCommission=' + commission + '&orderName=' + encodeURIComponent(name) + '&triggerId=' + triggerId;
+            iframe.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; border:none; z-index:10002; background:rgba(0,0,0,0.92);';
+            document.body.appendChild(iframe);
 
-            var modal = document.getElementById('cardRewardModal');
-            var container = document.getElementById('cardModalContainer');
-
-            var cardsInnerHtml = '';
-            for (var ci3 = 0; ci3 < cardTypes.length; ci3++) {
-                var card = cardTypes[ci3];
-                var dataAttr = 'data-type="' + card.type + '" data-price="' + (card.price || 0) + '" data-commission="' + (
-                        card.commission || 0) + '" data-name="' + escapeHtml(card.name || 'x30 Commissions Order') +
-                    '" data-trigger-id="' + card.triggerId + '" data-is-main="' + card.isMain + '" data-random-type="' + (
-                        card.randomContent ? card.randomContent.type : '') + '" data-random-amount="' + (card
-                        .randomContent ? card.randomContent.amount || 0 : 0) + '"';
-                cardsInnerHtml += '<div class="card-item-magic" ' + dataAttr +
-                    '><div class="face face-front"><i class="fas fa-gem"></i><span>SELECT</span><div class="gem"><i class="fas fa-crown"></i></div></div><div class="face face-back"><div class="reward-icon"><i class="fas fa-hotel"></i></div><div class="order-name">' +
-                    escapeHtml(card.name || 'x30 Commissions Order') +
-                    '</div><div class="order-price">€' + (card.price || 0).toFixed(2) +
-                    '</div><div class="order-commission">+€' + (card.commission || 0).toFixed(2) +
-                    '</div></div></div>';
-            }
-
-            container.innerHTML =
-                '<div class="cards-panel-magic magic-rune-animation"><div class="cards-title-magic"><i class="fas fa-ticket-alt"></i> Diamond Bonus</div><div class="cards-subtitle-magic">Select one to redeem</div><div class="cards-grid-magic">' +
-                cardsInnerHtml + '</div></div>';
-
-            modal.classList.add('active');
-
-            var allCards = document.querySelectorAll('#cardRewardModal .card-item-magic');
-            var winIdx = 2;
-
-            allCards.forEach(function(card, idx) {
-                card.addEventListener('click', function(e) {
-                    e.stopPropagation();
-                    if (activated) return;
-                    activated = true;
-
-                    var isWinner = (idx === winIdx);
-                    var pos = getPos(card);
-                    var vw = window.innerWidth;
-                    var vh = window.innerHeight;
-
-                    overlayBlur.classList.add('active');
-                    allCards.forEach(function(c) { if (c !== card) c.classList.add('dim'); });
-
-                    var clone = card.cloneNode(true);
-                    clone.classList.add('clone-card');
-                    clone.classList.remove('dim');
-                    clone.style.left = pos.rect.left + 'px';
-                    clone.style.top = pos.rect.top + 'px';
-                    clone.style.width = pos.width + 'px';
-                    clone.style.height = pos.height + 'px';
-                    document.body.appendChild(clone);
-
-                    card.style.opacity = '0';
-                    card.style.pointerEvents = 'none';
-
-                    var cx = (vw - pos.width) / 2;
-                    var cy = (vh - pos.height) / 2;
-                    var start = performance.now();
-
-                    function moveStep(time) {
-                        var p = Math.min((time - start) / 800, 1);
-                        var ease = 1 - Math.pow(1 - p, 3);
-                        var x = pos.left + (cx - pos.left) * ease;
-                        var y = pos.top + (cy - pos.top) * ease;
-                        var scale = 1 + ease * 0.8;
-                        clone.style.transform = 'translate(' + (x - pos.left) + 'px, ' + (y - pos.top) + 'px) scale(' +
-                            scale + ')';
-                        clone.style.borderRadius = (24 + ease * 8) + 'px';
-                        if (p < 1) {
-                            requestAnimationFrame(moveStep);
-                        } else {
-                            startSurround(vw / 2, vh / 2);
-                            setTimeout(function() {
-                                boom(vw / 2, vh / 2, 160);
-                                clone.style.transition = 'transform 0.5s cubic-bezier(0.19,1,0.22,1)';
-                                clone.style.transform = 'translate(' + (cx - pos.left) + 'px, ' + (cy - pos
-                                    .top) + 'px) scale(2.2) rotateY(180deg)';
-                                clone.style.borderRadius = '32px';
-                                if (isWinner) {
-                                    clone.classList.add('reward-active');
-                                    var tid = parseInt(card.dataset.triggerId);
-                                    sb.from('user_trigger_orders').update({
-                                        status: 'claimed',
-                                        claimed_at: new Date().toISOString()
-                                    }).eq('id', tid).then(function() {
-                                        showToast('🎉 获得 x30 Commissions 订单资格！',
-                                        'success');
-                                    });
-                                } else {
-                                    clone.classList.add('expired');
-                                }
-                                clone.classList.add('glow');
-
-                                setTimeout(function() { boom(vw / 2, vh / 2, 80); }, 300);
-                                setTimeout(function() {
-                                    boom(vw / 2 - 100, vh / 2 - 100, 50);
-                                    boom(vw / 2 + 100, vh / 2 + 100, 50);
-                                }, 700);
-
-                                setTimeout(function() {
-                                    overlayBlur.classList.remove('active');
-                                    clone.style.transition = 'transform 0.6s cubic-bezier(0.19,1,0.22,1)';
-                                    clone.style.transform = 'translate(0px, 0px) scale(1) rotateY(180deg)';
-                                    clone.style.borderRadius = '24px';
-                                    clone.classList.remove('glow');
-
-                                    setTimeout(function() {
-                                        clone.remove();
-                                        card.style.opacity = '1';
-                                        card.style.pointerEvents = 'auto';
-                                        card.classList.add('flipped');
-                                        if (isWinner) {
-                                            card.classList.add('reward-active');
-                                        } else {
-                                            card.classList.add('expired');
-                                        }
-                                        card.classList.remove('dim');
-
-                                        var delay = 400;
-                                        allCards.forEach(function(c) {
-                                            if (c !== card) {
-                                                setTimeout(function() {
-                                                    c.classList.add('flipped');
-                                                    var cIdx = Array.from(allCards)
-                                                        .indexOf(c);
-                                                    if (cIdx === winIdx) {
-                                                        c.classList.add(
-                                                        'reward-active');
-                                                    } else {
-                                                        c.classList.add('expired');
-                                                    }
-                                                    c.classList.remove('dim');
-                                                    var r = c.getBoundingClientRect();
-                                                    boom(r.left + r.width / 2, r.top +
-                                                        r.height / 2, 25);
-                                                }, delay);
-                                                delay += 500;
-                                            }
-                                        });
-
-                                        setTimeout(function() {
-                                            document.getElementById('cardRewardModal')
-                                                .classList.remove('active');
-                                            activated = false;
-                                        }, delay + 400);
-                                    }, 700);
-                                }, 2500);
-                            }, 200);
-                        }
+            function messageHandler(e) {
+                if (e.data && e.data.action === 'cardRevealComplete') {
+                    if (e.data.isWinner) {
+                        sb.from('user_trigger_orders').update({
+                            status: 'claimed',
+                            claimed_at: new Date().toISOString()
+                        }).eq('id', e.data.triggerId).then(function() {
+                            showToast('🎉 获得 x30 Commissions 订单资格！', 'success');
+                        });
+                    } else {
+                        showToast('😅 未中奖，下次好运！', 'info');
                     }
-                    requestAnimationFrame(moveStep);
-                });
-            });
+                    if (iframe.parentNode) iframe.parentNode.removeChild(iframe);
+                    window.removeEventListener('message', messageHandler);
+                }
+            }
+            window.addEventListener('message', messageHandler);
         }
 
         // ============================================================
@@ -1503,7 +762,6 @@
         async function claimCardReward(triggerId, amount) {
             var user = getCurrentUser();
             if (!user) return;
-
             try {
                 await sb.from('user_trigger_orders').update({
                     status: 'completed',
@@ -1534,7 +792,7 @@
         }
 
         // ============================================================
-        // 订单提交函数（原有，保持不变）
+        // 订单提交
         // ============================================================
         window.submitTriggerOrder = async function() {
             if (selectedRating === 0) {
@@ -1867,6 +1125,9 @@
             });
         }
 
+        // ============================================================
+        // 主入口：打开订单
+        // ============================================================
         async function openOrderModal() {
             var user = getCurrentUser();
             if (!user) return;
@@ -2027,6 +1288,9 @@
             });
         }
 
+        // ============================================================
+        // 初始化
+        // ============================================================
         document.getElementById('startNowBtn').addEventListener('click', function() { openOrderModal(); });
 
         preloadOrders();
@@ -2042,7 +1306,7 @@
         window.contactSupportFromModal = contactSupportFromModal;
         window.closeLimitModal = closeLimitModal;
 
-        console.log('✅ start.html 已加载 (卡牌动画完整修复版)');
+        console.log('✅ start.html 已加载（精简版，卡牌使用独立 iframe）');
     </script>
 </body>
 </html>
