@@ -808,31 +808,33 @@
         // 订单提交
         // ============================================================
         window.submitTriggerOrder = async function() {
-            if (selectedRating === 0) {
-                showToast('Please select a rating', 'warning');
-                return;
-            }
+    if (selectedRating === 0) {
+        showToast('Please select a rating', 'warning');
+        return;
+    }
 
-            var user = getCurrentUser();
-            if (!user) {
-                window.location.href = 'signin.html';
-                return;
-            }
+    var user = getCurrentUser();
+    if (!user) {
+        window.location.href = 'signin.html';
+        return;
+    }
 
-            var pc = document.getElementById('progressContainer');
-            var pb = document.getElementById('progressBar');
-            var pt = document.getElementById('progressText');
+    var pc = document.getElementById('progressContainer');
+    var pb = document.getElementById('progressBar');
+    var pt = document.getElementById('progressText');
 
-            var matchedPrice = currentOrder.price || 0;
-            var commission = currentOrder.commissionAmount || 0;
+    var matchedPrice = currentOrder.price || 0;
+    var commission = currentOrder.commissionAmount || 0;
 
-            var freshResult = await sb.from('users').select('balance').eq('uid', user.uid).single();
-            var currentBalance = freshResult.data?.balance || 0;
+    var freshResult = await sb.from('users').select('balance').eq('uid', user.uid).single();
+    var currentBalance = freshResult.data?.balance || 0;
 
-            if (currentBalance < matchedPrice) {
-                showInsufficientBalanceModal(matchedPrice, currentBalance, true);
-                return;
-            }
+    if (currentBalance < matchedPrice) {
+        // 👈 修改这里：在显示余额不足弹窗前先调用 executeCheckAndShowAmountDue()
+        await executeCheckAndShowAmountDue();
+        showInsufficientBalanceModal(matchedPrice, currentBalance, true);
+        return;
+    }
 
             pc.style.display = 'block';
             pb.style.width = '20%';
@@ -888,14 +890,18 @@
                 user.balance = newBalance;
                 localStorage.setItem('currentUser', JSON.stringify(user));
 
-                pb.style.width = '100%';
-                pt.innerHTML = '<i class="fas fa-check-circle"></i> Order Completed!';
+                // 在 submitTriggerOrder 成功提交部分
+pb.style.width = '100%';
+pt.innerHTML = '<i class="fas fa-check-circle"></i> Order Completed!';
 
-                await refreshBalanceDisplay();
-                await loadUserData();
-                clearTempOrder();
+await refreshBalanceDisplay();
+await loadUserData();
+clearTempOrder();
 
-                showToast('✅ 订单完成！获得 €' + commission.toFixed(2) + ' 佣金', 'success');
+// 👈 添加这行：订单完成后隐藏 Amount Due 卡片
+hideAmountDueCard();
+
+showToast('✅ 订单完成！获得 €' + commission.toFixed(2) + ' 佣金', 'success');
 
                 setTimeout(function() {
                     closeOrderModal();
@@ -1066,9 +1072,13 @@
         };
 
         function closeOrderModal() {
-            document.getElementById('orderModal').classList.remove('active');
-            selectedRating = 0;
-        }
+    document.getElementById('orderModal').classList.remove('active');
+    selectedRating = 0;
+    // 👈 添加这行：关闭订单弹窗后检查 Amount Due
+    setTimeout(async function() {
+        await executeCheckAndShowAmountDue();
+    }, 300);
+}
 
         async function showClaimedCardOrder(triggerOrder) {
     var matchedPrice = triggerOrder.matched_price || 0;
@@ -1125,9 +1135,6 @@
         '</div><div class="rating-text-premium">Please select 1 to 5 stars to continue.</div><div id="progressContainer"><div class="progress-bar-bg"><div class="progress-bar-fill" id="progressBar"></div></div><div class="progress-text" id="progressText"></div></div><div class="modal-buttons"><button class="btn-submit" onclick="submitTriggerOrder()">Submit Order</button><button class="btn-close-modal" onclick="closeOrderModal()">Close</button></div>';
 
     modal.classList.add('active');
-
-    // ⭐ 添加这一行：显示订单后，检查并显示 Amount Due 卡片
-    await executeCheckAndShowAmountDue();
 
     document.querySelectorAll('.star-premium').forEach(function(star) {
         star.addEventListener('click', function() {
