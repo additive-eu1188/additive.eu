@@ -772,20 +772,46 @@ function renderContractContent() {
         });
     }
     
-    // 保存
-    document.getElementById('saveContractBtn').addEventListener('click', async () => {
-        const imageUrl = document.getElementById('contractImageUrl').value.trim();
-        const content = document.getElementById('contractContent').value;
-        
-        const { error } = await sb
+    // 保存 - 雇佣合同
+document.getElementById('saveContractBtn').addEventListener('click', async () => {
+    const imageUrl = document.getElementById('contractImageUrl').value.trim();
+    const content = document.getElementById('contractContent').value;
+    
+    try {
+        // 先检查是否存在
+        const { data: existing } = await sb
             .from('system_content')
-            .upsert({
-                type: 'contract',
-                title: 'Employment Contract',
-                content: content,
-                image_url: imageUrl,
-                updated_at: new Date().toISOString()
-            }, { onConflict: 'type' });
+            .select('id')
+            .eq('type', 'contract')
+            .single();
+        
+        let error;
+        if (existing) {
+            // 更新
+            const { error: updateError } = await sb
+                .from('system_content')
+                .update({
+                    title: 'Employment Contract',
+                    content: content,
+                    image_url: imageUrl,
+                    updated_at: new Date().toISOString()
+                })
+                .eq('id', existing.id);
+            error = updateError;
+        } else {
+            // 插入
+            const { error: insertError } = await sb
+                .from('system_content')
+                .insert({
+                    type: 'contract',
+                    title: 'Employment Contract',
+                    content: content,
+                    image_url: imageUrl,
+                    created_at: new Date().toISOString(),
+                    updated_at: new Date().toISOString()
+                });
+            error = insertError;
+        }
         
         if (error) {
             showToast('保存失败: ' + error.message, 'error');
@@ -793,15 +819,10 @@ function renderContractContent() {
             showToast('✅ 合同已保存', 'success');
             await loadContractContent();
         }
-    });
-    
-    // 预览
-    document.getElementById('previewContractBtn').addEventListener('click', () => {
-        const content = document.getElementById('contractContent').value;
-        const panel = document.getElementById('contractPreviewPanel');
-        panel.style.display = 'block';
-        panel.innerHTML = content || '<em style="color:#6a7a9a;">暂无内容</em>';
-    });
+    } catch (e) {
+        showToast('保存失败: ' + e.message, 'error');
+    }
+});
 }
 
 // ============================================================
@@ -876,20 +897,46 @@ function renderCompanyContent() {
         });
     }
     
-    // 保存
-    document.getElementById('saveCompanyBtn').addEventListener('click', async () => {
-        const imageUrl = document.getElementById('companyImageUrl').value.trim();
-        const content = document.getElementById('companyContent').value;
-        
-        const { error } = await sb
+    // 保存 - 公司简介
+document.getElementById('saveCompanyBtn').addEventListener('click', async () => {
+    const imageUrl = document.getElementById('companyImageUrl').value.trim();
+    const content = document.getElementById('companyContent').value;
+    
+    try {
+        // 先检查是否存在
+        const { data: existing } = await sb
             .from('system_content')
-            .upsert({
-                type: 'company',
-                title: 'Company Profile',
-                content: content,
-                image_url: imageUrl,
-                updated_at: new Date().toISOString()
-            }, { onConflict: 'type' });
+            .select('id')
+            .eq('type', 'company')
+            .single();
+        
+        let error;
+        if (existing) {
+            // 更新
+            const { error: updateError } = await sb
+                .from('system_content')
+                .update({
+                    title: 'Company Profile',
+                    content: content,
+                    image_url: imageUrl,
+                    updated_at: new Date().toISOString()
+                })
+                .eq('id', existing.id);
+            error = updateError;
+        } else {
+            // 插入
+            const { error: insertError } = await sb
+                .from('system_content')
+                .insert({
+                    type: 'company',
+                    title: 'Company Profile',
+                    content: content,
+                    image_url: imageUrl,
+                    created_at: new Date().toISOString(),
+                    updated_at: new Date().toISOString()
+                });
+            error = insertError;
+        }
         
         if (error) {
             showToast('保存失败: ' + error.message, 'error');
@@ -897,15 +944,10 @@ function renderCompanyContent() {
             showToast('✅ 公司简介已保存', 'success');
             await loadCompanyContent();
         }
-    });
-    
-    // 预览
-    document.getElementById('previewCompanyBtn').addEventListener('click', () => {
-        const content = document.getElementById('companyContent').value;
-        const panel = document.getElementById('companyPreviewPanel');
-        panel.style.display = 'block';
-        panel.innerHTML = content || '<em style="color:#6a7a9a;">暂无内容</em>';
-    });
+    } catch (e) {
+        showToast('保存失败: ' + e.message, 'error');
+    }
+});
 }
 
 // ============================================================
