@@ -474,63 +474,63 @@ function loadDashboardPage(days = 1) {
     
     container.innerHTML = `
         <div style="display: flex; justify-content: flex-end; gap: 12px; margin-bottom: 24px;">
-            <button class="date-filter-btn active" data-days="1">今日</button>
-            <button class="date-filter-btn" data-days="7">7天</button>
-            <button class="date-filter-btn" data-days="30">30天</button>
+            <button class="date-filter-btn active" data-days="1">Today</button>
+            <button class="date-filter-btn" data-days="7">7 Days</button>
+            <button class="date-filter-btn" data-days="30">30 Days</button>
         </div>
         <div class="quick-actions-grid">
             <div class="quick-card" onclick="showPage('kyc')">
                 <i class="fas fa-id-card"></i>
                 <div class="count" id="kycPendingCount">0</div>
-                <div class="label">待审核KYC</div>
+                <div class="label">Pending KYC</div>
             </div>
             <div class="quick-card" onclick="showPage('withdrawals')">
                 <i class="fas fa-money-bill-wave"></i>
                 <div class="count" id="withdrawalPendingCount">0</div>
-                <div class="label">待处理提现</div>
+                <div class="label">Pending Withdrawals</div>
             </div>
             <div class="quick-card" onclick="showPage('emailverify')">
                 <i class="fas fa-envelope"></i>
                 <div class="count" id="emailPendingCount">0</div>
-                <div class="label">待发送Email验证</div>
+                <div class="label">Pending Email</div>
             </div>
             <div class="quick-card" onclick="showPage('orderpool')">
                 <i class="fas fa-hotel"></i>
                 <div class="count" id="orderPoolCount">0</div>
-                <div class="label">订单池总数</div>
+                <div class="label">Hotel Orders Count</div>
             </div>
         </div>
         <div class="stats-grid">
-            <div class="stat-card"><i class="fas fa-user-plus"></i><div class="stat-number" id="newUsersCount">0</div><div class="stat-label">今日新增用户</div><div class="stat-trend" id="newUsersTrend"></div></div>
-            <div class="stat-card"><i class="fas fa-users"></i><div class="stat-number" id="totalUsersCount">0</div><div class="stat-label">总用户</div><div class="stat-trend" id="totalUsersTrend"></div></div>
-            <div class="stat-card"><i class="fas fa-arrow-down"></i><div class="stat-number" id="totalDepositCount">€0</div><div class="stat-label">总入金</div><div class="stat-trend" id="totalDepositTrend"></div></div>
-            <div class="stat-card"><i class="fas fa-arrow-up"></i><div class="stat-number" id="totalWithdrawCount">€0</div><div class="stat-label">总出金</div><div class="stat-trend" id="totalWithdrawTrend"></div></div>
+            <div class="stat-card"><i class="fas fa-user-plus"></i><div class="stat-number" id="newUsersCount">0</div><div class="stat-label">New Registered Today</div><div class="stat-trend" id="newUsersTrend"></div></div>
+            <div class="stat-card"><i class="fas fa-users"></i><div class="stat-number" id="totalUsersCount">0</div><div class="stat-label">Total Users</div><div class="stat-trend" id="totalUsersTrend"></div></div>
+            <div class="stat-card"><i class="fas fa-arrow-down"></i><div class="stat-number" id="totalDepositCount">€0</div><div class="stat-label">Total Deposits</div><div class="stat-trend" id="totalDepositTrend"></div></div>
+            <div class="stat-card"><i class="fas fa-arrow-up"></i><div class="stat-number" id="totalWithdrawCount">€0</div><div class="stat-label">Total Withdrawals</div><div class="stat-trend" id="totalWithdrawTrend"></div></div>
         </div>
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 28px;">
             <div class="card" style="padding: 20px;">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
-                    <div style="font-size: 16px; font-weight: 600; color: #4a7cff;">💰 入金 & 出金趋势</div>
-                    <div style="display: flex; gap: 16px;"><span><span style="display: inline-block; width: 12px; height: 12px; background: #2ed15a; border-radius: 2px; margin-right: 6px;"></span>入金</span><span><span style="display: inline-block; width: 12px; height: 12px; background: #ff5a5a; border-radius: 2px; margin-right: 6px;"></span>出金</span></div>
+                    <div style="font-size: 16px; font-weight: 600; color: #4a7cff;">D&W Trend</div>
+                    <div style="display: flex; gap: 16px;"><span><span style="display: inline-block; width: 12px; height: 12px; background: #2ed15a; border-radius: 2px; margin-right: 6px;"></span>Deposits</span><span><span style="display: inline-block; width: 12px; height: 12px; background: #ff5a5a; border-radius: 2px; margin-right: 6px;"></span>Withdrawals</span></div>
                 </div>
                 <div id="trendChart" style="height: 320px; width: 100%;"></div>
             </div>
             <div class="card" style="padding: 20px; text-align: center;">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
-                    <div style="font-size: 16px; font-weight: 600; color: #4a7cff;">📊 用户行为分析</div>
-                    <div style="display: flex; gap: 16px;"><span><span style="display: inline-block; width: 12px; height: 12px; background: #4a7cff; border-radius: 2px; margin-right: 6px;"></span>做单率</span></div>
+                    <div style="font-size: 16px; font-weight: 600; color: #4a7cff;">📊 Users Analytics</div>
+                    <div style="display: flex; gap: 16px;"><span><span style="display: inline-block; width: 12px; height: 12px; background: #4a7cff; border-radius: 2px; margin-right: 6px;"></span>Complete Tasks</span></div>
                 </div>
                 <div id="ringChart" style="height: 220px; width: 100%;"></div>
                 <div id="ringPercent" style="font-size: 24px; font-weight: 700; color: #fff; margin-top: 8px;">0%</div>
-                <div style="font-size: 11px; color: #6a7a9a;">完成30单以上用户占比</div>
+                <div style="font-size: 11px; color: #6a7a9a;">Percentage Completed Tasks</div>
             </div>
         </div>
         <div class="card">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
-                <div style="font-size: 16px; font-weight: 600; color: #4a7cff;"><i class="fas fa-history"></i> 实时活动</div>
-                <div style="font-size: 11px; color: #2ed15a;"><i class="fas fa-circle" style="font-size: 8px;"></i> 实时更新</div>
+                <div style="font-size: 16px; font-weight: 600; color: #4a7cff;"><i class="fas fa-history"></i> Real-Time Event</div>
+                <div style="font-size: 11px; color: #2ed15a;"><i class="fas fa-circle" style="font-size: 8px;"></i> Real-Time Updates</div>
             </div>
             <div id="activityList" style="max-height: 350px; overflow-y: auto;">
-                <div style="text-align: center; padding: 20px; color: #6a7a9a;">加载中...</div>
+                <div style="text-align: center; padding: 20px; color: #6a7a9a;">Loading...</div>
             </div>
         </div>
     `;
