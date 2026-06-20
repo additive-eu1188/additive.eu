@@ -10,479 +10,83 @@
     <script src="user-data.js"></script>
     <script src="toast.js"></script>
     <style>
-        .start-hero {
-            margin-bottom: 12px;
-            padding: 0;
-        }
-        .start-hero h1 {
-            font-size: 28px;
-            font-weight: 700;
-            color: #ffffff;
-            margin-bottom: 6px;
-        }
-        .start-hero p {
-            color: #7a85a5;
-            font-size: 13px;
-            margin-bottom: 0;
-        }
-        .menu-toggle {
-            display: none;
-            width: fit-content;
-            margin-bottom: 16px;
-            background: rgba(201, 176, 149, 0.2);
-            border: 1px solid rgba(201, 176, 149, 0.4);
-            border-radius: 12px;
-            padding: 8px 12px;
-            cursor: pointer;
-            color: #C9B095;
-            font-size: 18px;
-        }
-        .two-columns {
-            display: flex;
-            gap: 24px;
-            margin-bottom: 40px;
-            flex-wrap: wrap;
-        }
-        .left-col {
-            flex: 8;
-            background: #0E1838;
-            border-radius: 24px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            min-height: 400px;
-            border: 1px solid rgba(201, 176, 149, 0.2);
-            overflow: hidden;
-        }
-        .right-col {
-            flex: 2;
-        }
-        #videoContainer {
-            width: 100%;
-            height: 100%;
-            min-height: 400px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        .video-placeholder {
-            text-align: center;
-            color: #5a6388;
-        }
-        .video-placeholder i {
-            font-size: 56px;
-            margin-bottom: 12px;
-            display: block;
-            color: #C9B095;
-        }
-        .big-card {
-            background: linear-gradient(145deg, rgba(20, 30, 55, 0.8), rgba(10, 18, 43, 0.9));
-            border: 1px solid rgba(201, 176, 149, 0.35);
-            border-radius: 28px;
-            padding: 24px;
-        }
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 14px;
-            margin-bottom: 24px;
-        }
-        .stat-card {
-            background: rgba(10, 18, 43, 0.6);
-            border-radius: 20px;
-            padding: 18px 12px;
-            text-align: center;
-            border: 1px solid rgba(201, 176, 149, 0.15);
-        }
-        .stat-label {
-            font-size: 11px;
-            color: #a0a8c0;
-            margin-bottom: 8px;
-        }
-        .stat-value {
-            font-size: 26px;
-            font-weight: 700;
-            color: #C9B095;
-        }
-        .balance-value {
-            color: #ffffff;
-        }
-        .balance-negative {
-            color: #ff8888 !important;
-        }
-        .orders-row {
-            background: rgba(10, 18, 43, 0.6);
-            border-radius: 20px;
-            padding: 16px 20px;
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 24px;
-        }
-        .orders-label {
-            font-size: 14px;
-            color: #a0a8c0;
-        }
-        .orders-value {
-            font-size: 26px;
-            font-weight: 700;
-            color: #C9B095;
-        }
-        .start-btn {
-            width: 100%;
-            background: linear-gradient(135deg, #C9B095, #b8944a);
-            border: none;
-            padding: 14px;
-            border-radius: 40px;
-            color: #0A122B;
-            font-weight: 700;
-            font-size: 16px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            transition: 0.2s;
-        }
-        .start-btn:hover {
-            transform: scale(1.01);
-            box-shadow: 0 5px 15px rgba(201, 176, 149, 0.3);
-        }
-        .start-btn:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-            transform: none;
-        }
-        .amount-due-card {
-            background: linear-gradient(135deg, rgba(255, 90, 90, 0.15), rgba(255, 90, 90, 0.05));
-            border: 1px solid rgba(255, 90, 90, 0.4);
-            border-radius: 20px;
-            padding: 16px 20px;
-            margin-bottom: 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            animation: slideIn 0.3s ease;
-        }
-        .amount-due-label {
-            font-size: 14px;
-            color: #ff8888;
-            font-weight: 500;
-        }
-        .amount-due-value {
-            font-size: 24px;
-            font-weight: 700;
-            color: #ff8888;
-        }
-        @keyframes slideIn {
-            from {
-                opacity: 0;
-                transform: translateY(-10px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
+        .start-hero { margin-bottom: 12px; padding: 0; }
+        .start-hero h1 { font-size: 28px; font-weight: 700; color: #ffffff; margin-bottom: 6px; }
+        .start-hero p { color: #7a85a5; font-size: 13px; margin-bottom: 0; }
+        .menu-toggle { display: none; width: fit-content; margin-bottom: 16px; background: rgba(201,176,149,0.2); border: 1px solid rgba(201,176,149,0.4); border-radius: 12px; padding: 8px 12px; cursor: pointer; color: #C9B095; font-size: 18px; }
+        .two-columns { display: flex; gap: 24px; margin-bottom: 40px; flex-wrap: wrap; }
+        .left-col { flex: 8; background: #0E1838; border-radius: 24px; display: flex; align-items: center; justify-content: center; min-height: 400px; border: 1px solid rgba(201,176,149,0.2); overflow: hidden; }
+        .right-col { flex: 2; }
+        #videoContainer { width: 100%; height: 100%; min-height: 400px; display: flex; align-items: center; justify-content: center; }
+        .video-placeholder { text-align: center; color: #5a6388; }
+        .video-placeholder i { font-size: 56px; margin-bottom: 12px; display: block; color: #C9B095; }
+        .big-card { background: linear-gradient(145deg, rgba(20,30,55,0.8), rgba(10,18,43,0.9)); border: 1px solid rgba(201,176,149,0.35); border-radius: 28px; padding: 24px; }
+        .stats-grid { display: grid; grid-template-columns: repeat(2,1fr); gap: 14px; margin-bottom: 24px; }
+        .stat-card { background: rgba(10,18,43,0.6); border-radius: 20px; padding: 18px 12px; text-align: center; border: 1px solid rgba(201,176,149,0.15); }
+        .stat-label { font-size: 11px; color: #a0a8c0; margin-bottom: 8px; }
+        .stat-value { font-size: 26px; font-weight: 700; color: #C9B095; }
+        .balance-value { color: #ffffff; }
+        .balance-negative { color: #ff8888 !important; }
+        .orders-row { background: rgba(10,18,43,0.6); border-radius: 20px; padding: 16px 20px; display: flex; justify-content: space-between; margin-bottom: 24px; }
+        .orders-label { font-size: 14px; color: #a0a8c0; }
+        .orders-value { font-size: 26px; font-weight: 700; color: #C9B095; }
+        .start-btn { width: 100%; background: linear-gradient(135deg, #C9B095, #b8944a); border: none; padding: 14px; border-radius: 40px; color: #0A122B; font-weight: 700; font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: 0.2s; }
+        .start-btn:hover { transform: scale(1.01); box-shadow: 0 5px 15px rgba(201,176,149,0.3); }
+        .start-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+        .amount-due-card { background: linear-gradient(135deg, rgba(255,90,90,0.15), rgba(255,90,90,0.05)); border: 1px solid rgba(255,90,90,0.4); border-radius: 20px; padding: 16px 20px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; animation: slideIn 0.3s ease; }
+        .amount-due-label { font-size: 14px; color: #ff8888; font-weight: 500; }
+        .amount-due-value { font-size: 24px; font-weight: 700; color: #ff8888; }
+        @keyframes slideIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+        .featured-section { margin-top: 20px; }
+        .featured-title { font-size: 16px; font-weight: 500; color: #C9B095; margin-bottom: 14px; }
+        .marquee-images { overflow: hidden; white-space: nowrap; background: #0E1838; border-radius: 20px; padding: 20px 0; }
+        .marquee-images-content { display: inline-block; animation: scrollImages 35s linear infinite; }
+        .hotel-img-item { display: inline-block; margin: 0 12px; text-align: center; vertical-align: middle; }
+        .hotel-img-item img { width: 180px; height: 110px; border-radius: 16px; object-fit: cover; border: 1px solid rgba(201,176,149,0.3); }
+        .hotel-img-item .hotel-name { display: block; font-size: 13px; color: #C9B095; margin-top: 10px; }
+        @keyframes scrollImages { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
+        .upgrade-card-pulse { background: rgba(20,30,55,0.6); backdrop-filter: blur(12px); border-radius: 28px; padding: 24px; animation: pulseGlow 2.5s ease-in-out infinite; border: 1px solid rgba(201,176,149,0.3); margin-top: 32px; }
+        @keyframes pulseGlow { 0% { box-shadow: inset 0 0 10px rgba(201,176,149,0.08),0 0 5px rgba(201,176,149,0.05); border-color: rgba(201,176,149,0.2); } 50% { box-shadow: inset 0 0 25px rgba(201,176,149,0.25),0 0 15px rgba(201,176,149,0.12); border-color: rgba(201,176,149,0.5); } 100% { box-shadow: inset 0 0 10px rgba(201,176,149,0.08),0 0 5px rgba(201,176,149,0.05); border-color: rgba(201,176,149,0.2); } }
+        .upgrade-title { font-size: 18px; font-weight: 600; margin-bottom: 10px; color: #C9B095; }
+        .upgrade-desc { font-size: 13px; color: #7a85a5; margin-bottom: 20px; }
+        .btn-upgrade { background: rgba(201,176,149,0.15); padding: 10px 20px; border-radius: 40px; text-decoration: none; color: #C9B095; font-weight: 600; display: inline-flex; align-items: center; gap: 8px; border: 1px solid rgba(201,176,149,0.3); }
+        .order-modal-container { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); backdrop-filter: blur(12px); z-index: 10001; display: flex; align-items: center; justify-content: center; visibility: hidden; opacity: 0; transition: visibility 0.2s, opacity 0.2s; }
+        .order-modal-container.active { visibility: visible; opacity: 1; }
+        .order-modal { background: linear-gradient(145deg, #12172e, #0e1225); border-radius: 32px; width: 500px; max-width: 90%; border: 1px solid rgba(201,176,149,0.3); overflow: hidden; }
+        .modal-header { background: linear-gradient(135deg, #1a1f3a, #12172e); padding: 20px 24px; border-bottom: 1px solid rgba(255,255,255,0.1); display: flex; justify-content: space-between; }
+        .modal-header h2 { font-size: 20px; font-weight: 700; color: #C9B095; margin: 0; }
+        .modal-close { background: none; border: none; color: #aaa; font-size: 24px; cursor: pointer; }
+        .modal-body { padding: 24px; max-height: 80vh; overflow-y: auto; }
+        .order-image { width: 100%; height: 160px; background: #0a0e1a; border-radius: 20px; display: flex; align-items: center; justify-content: center; overflow: hidden; margin-bottom: 20px; }
+        .order-image img { width: 100%; height: 100%; object-fit: cover; }
+        .order-image i { font-size: 56px; color: #C9B095; }
+        .order-name { font-size: 22px; font-weight: 700; color: #fff; text-align: center; margin-bottom: 8px; }
+        .order-code { text-align: center; font-size: 14px; color: #C9B095; margin-bottom: 20px; }
+        .order-details { background: rgba(0,0,0,0.3); border-radius: 20px; padding: 16px; margin-bottom: 20px; }
+        .detail-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
+        .detail-label { color: #aaa; font-size: 14px; }
+        .detail-value { color: #fff; font-weight: 600; }
+        .detail-value.price { color: #ff8888; }
+        .detail-value.commission { color: #4ade80; }
+        .detail-value.total { color: #C9B095; }
+        .how-it-works { background: rgba(74,222,128,0.1); border-radius: 12px; padding: 12px; margin-bottom: 20px; text-align: center; }
+        .how-it-works span { font-size: 12px; color: #4ade80; }
+        .star-rating-premium { display: flex; justify-content: center; gap: 12px; margin: 24px 0; }
+        .star-premium { cursor: pointer; transition: all 0.2s; }
+        .star-premium svg { width: 36px; height: 36px; }
+        .star-premium svg polygon { fill: #4a5578; }
+        .star-premium.active svg polygon { fill: #C9B095; filter: drop-shadow(0 0 4px rgba(201,176,149,0.5)); }
+        .star-premium:hover { transform: translateY(-3px); }
+        .rating-text-premium { text-align: center; font-size: 13px; color: #c0c0d0; margin-bottom: 20px; }
+        .modal-buttons { display: flex; gap: 12px; margin-top: 20px; }
+        .btn-submit { flex: 1; background: #C9B095; border: none; padding: 14px; border-radius: 40px; color: #0A122B; font-weight: 600; cursor: pointer; }
+        .btn-close-modal { flex: 1; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); padding: 14px; border-radius: 40px; color: white; font-weight: 600; cursor: pointer; }
+        #progressContainer { margin-top: 20px; display: none; }
+        .progress-bar-bg { background: rgba(255,255,255,0.1); border-radius: 10px; height: 6px; overflow: hidden; }
+        .progress-bar-fill { width: 0%; height: 100%; background: #C9B095; border-radius: 10px; transition: width 0.15s ease; }
+        .progress-text { text-align: center; margin-top: 8px; font-size: 12px; color: #C9B095; }
 
-        .featured-section {
-            margin-top: 20px;
-        }
-        .featured-title {
-            font-size: 16px;
-            font-weight: 500;
-            color: #C9B095;
-            margin-bottom: 14px;
-        }
-        .marquee-images {
-            overflow: hidden;
-            white-space: nowrap;
-            background: #0E1838;
-            border-radius: 20px;
-            padding: 20px 0;
-        }
-        .marquee-images-content {
-            display: inline-block;
-            animation: scrollImages 35s linear infinite;
-        }
-        .hotel-img-item {
-            display: inline-block;
-            margin: 0 12px;
-            text-align: center;
-            vertical-align: middle;
-        }
-        .hotel-img-item img {
-            width: 180px;
-            height: 110px;
-            border-radius: 16px;
-            object-fit: cover;
-            border: 1px solid rgba(201, 176, 149, 0.3);
-        }
-        .hotel-img-item .hotel-name {
-            display: block;
-            font-size: 13px;
-            color: #C9B095;
-            margin-top: 10px;
-        }
-        @keyframes scrollImages {
-            0% {
-                transform: translateX(0);
-            }
-            100% {
-                transform: translateX(-50%);
-            }
-        }
-        .upgrade-card-pulse {
-            background: rgba(20, 30, 55, 0.6);
-            backdrop-filter: blur(12px);
-            border-radius: 28px;
-            padding: 24px;
-            animation: pulseGlow 2.5s ease-in-out infinite;
-            border: 1px solid rgba(201, 176, 149, 0.3);
-            margin-top: 32px;
-        }
-        @keyframes pulseGlow {
-            0% {
-                box-shadow: inset 0 0 10px rgba(201, 176, 149, 0.08), 0 0 5px rgba(201, 176, 149, 0.05);
-                border-color: rgba(201, 176, 149, 0.2);
-            }
-            50% {
-                box-shadow: inset 0 0 25px rgba(201, 176, 149, 0.25), 0 0 15px rgba(201, 176, 149, 0.12);
-                border-color: rgba(201, 176, 149, 0.5);
-            }
-            100% {
-                box-shadow: inset 0 0 10px rgba(201, 176, 149, 0.08), 0 0 5px rgba(201, 176, 149, 0.05);
-                border-color: rgba(201, 176, 149, 0.2);
-            }
-        }
-        .upgrade-title {
-            font-size: 18px;
-            font-weight: 600;
-            margin-bottom: 10px;
-            color: #C9B095;
-        }
-        .upgrade-desc {
-            font-size: 13px;
-            color: #7a85a5;
-            margin-bottom: 20px;
-        }
-        .btn-upgrade {
-            background: rgba(201, 176, 149, 0.15);
-            padding: 10px 20px;
-            border-radius: 40px;
-            text-decoration: none;
-            color: #C9B095;
-            font-weight: 600;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            border: 1px solid rgba(201, 176, 149, 0.3);
-        }
-
-        .order-modal-container {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.85);
-            backdrop-filter: blur(12px);
-            z-index: 10001;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            visibility: hidden;
-            opacity: 0;
-            transition: visibility 0.2s, opacity 0.2s;
-        }
-        .order-modal-container.active {
-            visibility: visible;
-            opacity: 1;
-        }
-        .order-modal {
-            background: linear-gradient(145deg, #12172e, #0e1225);
-            border-radius: 32px;
-            width: 500px;
-            max-width: 90%;
-            border: 1px solid rgba(201, 176, 149, 0.3);
-            overflow: hidden;
-        }
-        .modal-header {
-            background: linear-gradient(135deg, #1a1f3a, #12172e);
-            padding: 20px 24px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-            display: flex;
-            justify-content: space-between;
-        }
-        .modal-header h2 {
-            font-size: 20px;
-            font-weight: 700;
-            color: #C9B095;
-            margin: 0;
-        }
-        .modal-close {
-            background: none;
-            border: none;
-            color: #aaa;
-            font-size: 24px;
-            cursor: pointer;
-        }
-        .modal-body {
-            padding: 24px;
-            max-height: 80vh;
-            overflow-y: auto;
-        }
-        .order-image {
-            width: 100%;
-            height: 160px;
-            background: #0a0e1a;
-            border-radius: 20px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            overflow: hidden;
-            margin-bottom: 20px;
-        }
-        .order-image img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-        .order-image i {
-            font-size: 56px;
-            color: #C9B095;
-        }
-        .order-name {
-            font-size: 22px;
-            font-weight: 700;
-            color: #fff;
-            text-align: center;
-            margin-bottom: 8px;
-        }
-        .order-code {
-            text-align: center;
-            font-size: 14px;
-            color: #C9B095;
-            margin-bottom: 20px;
-        }
-        .order-details {
-            background: rgba(0, 0, 0, 0.3);
-            border-radius: 20px;
-            padding: 16px;
-            margin-bottom: 20px;
-        }
-        .detail-row {
-            display: flex;
-            justify-content: space-between;
-            padding: 10px 0;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-        }
-        .detail-label {
-            color: #aaa;
-            font-size: 14px;
-        }
-        .detail-value {
-            color: #fff;
-            font-weight: 600;
-        }
-        .detail-value.price {
-            color: #ff8888;
-        }
-        .detail-value.commission {
-            color: #4ade80;
-        }
-        .detail-value.total {
-            color: #C9B095;
-        }
-        .how-it-works {
-            background: rgba(74, 222, 128, 0.1);
-            border-radius: 12px;
-            padding: 12px;
-            margin-bottom: 20px;
-            text-align: center;
-        }
-        .how-it-works span {
-            font-size: 12px;
-            color: #4ade80;
-        }
-        .star-rating-premium {
-            display: flex;
-            justify-content: center;
-            gap: 12px;
-            margin: 24px 0;
-        }
-        .star-premium {
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-        .star-premium svg {
-            width: 36px;
-            height: 36px;
-        }
-        .star-premium svg polygon {
-            fill: #4a5578;
-        }
-        .star-premium.active svg polygon {
-            fill: #C9B095;
-            filter: drop-shadow(0 0 4px rgba(201, 176, 149, 0.5));
-        }
-        .star-premium:hover {
-            transform: translateY(-3px);
-        }
-        .rating-text-premium {
-            text-align: center;
-            font-size: 13px;
-            color: #c0c0d0;
-            margin-bottom: 20px;
-        }
-        .modal-buttons {
-            display: flex;
-            gap: 12px;
-            margin-top: 20px;
-        }
-        .btn-submit {
-            flex: 1;
-            background: #C9B095;
-            border: none;
-            padding: 14px;
-            border-radius: 40px;
-            color: #0A122B;
-            font-weight: 600;
-            cursor: pointer;
-        }
-        .btn-close-modal {
-            flex: 1;
-            background: rgba(255, 255, 255, 0.08);
-            border: 1px solid rgba(255, 255, 255, 0.15);
-            padding: 14px;
-            border-radius: 40px;
-            color: white;
-            font-weight: 600;
-            cursor: pointer;
-        }
-        #progressContainer {
-            margin-top: 20px;
-            display: none;
-        }
-        .progress-bar-bg {
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 10px;
-            height: 6px;
-            overflow: hidden;
-        }
-        .progress-bar-fill {
-            width: 0%;
-            height: 100%;
-            background: #C9B095;
-            border-radius: 10px;
-            transition: width 0.15s ease;
-        }
-        .progress-text {
-            text-align: center;
-            margin-top: 8px;
-            font-size: 12px;
-            color: #C9B095;
-        }
-
+        /* ===== 卡牌模态框 ===== */
         .card-modal-overlay {
             position: fixed;
             top: 0;
@@ -504,34 +108,6 @@
             opacity: 1;
         }
 
-        @keyframes magicRune {
-            0% {
-                opacity: 0;
-                transform: scale(0) rotate(0deg);
-                border-radius: 50%;
-                filter: blur(20px);
-            }
-            30% {
-                opacity: 0.5;
-                transform: scale(0.8) rotate(120deg);
-                border-radius: 40%;
-            }
-            60% {
-                opacity: 0.9;
-                transform: scale(1.05) rotate(240deg);
-                filter: blur(0);
-            }
-            100% {
-                opacity: 1;
-                transform: scale(1) rotate(360deg);
-                border-radius: 32px;
-            }
-        }
-        .magic-rune-animation {
-            animation: magicRune 0.5s cubic-bezier(0.34, 1.2, 0.64, 1) forwards;
-        }
-
-        /* ===== 极光渐变卡牌样式 (STYLE 06) ===== */
         .cards-panel-magic {
             background: rgba(10, 10, 30, 0.92);
             backdrop-filter: blur(20px);
@@ -542,9 +118,7 @@
             min-width: 360px;
             position: relative;
             overflow: hidden;
-            margin-top: 20px;
         }
-
         .cards-panel-magic::before {
             content: '';
             position: absolute;
@@ -556,21 +130,14 @@
             animation: auroraSpin 8s linear infinite;
             pointer-events: none;
         }
-
         @keyframes auroraSpin {
-            0% {
-                transform: rotate(0deg);
-            }
-            100% {
-                transform: rotate(360deg);
-            }
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
-
         .cards-panel-magic>* {
             position: relative;
             z-index: 1;
         }
-
         .cards-title-magic {
             text-align: center;
             font-size: 22px;
@@ -579,14 +146,12 @@
             margin-bottom: 8px;
             letter-spacing: 3px;
         }
-
         .cards-subtitle-magic {
             text-align: center;
             font-size: 12px;
             color: rgba(100, 200, 255, 0.6);
             margin-bottom: 28px;
         }
-
         .cards-grid-magic {
             display: flex;
             gap: 20px;
@@ -594,7 +159,7 @@
             flex-wrap: wrap;
         }
 
-        /* ===== 卡牌样式 ===== */
+        /* 卡牌样式 */
         .card-item-magic {
             width: 140px;
             min-height: 190px;
@@ -614,7 +179,6 @@
             transform-style: preserve-3d;
             perspective: 2000px;
         }
-
         .card-item-magic::before {
             content: '';
             position: absolute;
@@ -626,18 +190,15 @@
             animation: auroraSpin 6s linear infinite;
             pointer-events: none;
         }
-
         .card-item-magic>* {
             position: relative;
             z-index: 1;
         }
-
         .card-item-magic:hover {
             transform: translateY(-6px);
             border-color: rgba(100, 200, 255, 0.5);
             box-shadow: 0 8px 30px rgba(100, 200, 255, 0.15);
         }
-
         .card-item-magic .face {
             position: absolute;
             inset: 0;
@@ -649,7 +210,6 @@
             justify-content: center;
             padding: 20px 12px;
         }
-
         .card-item-magic .face-front {
             background: linear-gradient(145deg, #0a0a2a, #1a0a2a, #0a2a2a);
             border: 1px solid rgba(100, 200, 255, 0.15);
@@ -669,7 +229,6 @@
             color: rgba(100, 200, 255, 0.15);
             margin-top: 8px;
         }
-
         .card-item-magic .face-back {
             transform: rotateY(180deg);
             background: linear-gradient(145deg, #0a2a1a, #1a3a2a);
@@ -707,7 +266,6 @@
         .card-item-magic.flipped {
             transform: rotateY(180deg);
         }
-
         .card-item-magic.dim {
             opacity: 0.15;
             filter: grayscale(0.9) brightness(0.4);
@@ -715,12 +273,10 @@
             pointer-events: none;
             transition: all 0.8s cubic-bezier(0.19, 1, 0.22, 1);
         }
-
         .card-item-magic.glow {
             filter: drop-shadow(0 0 40px rgba(100, 200, 255, 0.3));
             z-index: 3;
         }
-
         .card-item-magic.reward-active .face-back {
             background: linear-gradient(145deg, #0a2a1a, #1a3a2a) !important;
             border-color: #64c8ff !important;
@@ -742,30 +298,13 @@
             width: 140px !important;
             min-height: 190px !important;
         }
-
         @keyframes shakeMove {
-            0% {
-                transform: translate(0, 0) scale(1) rotate(0deg);
-                opacity: 1;
-            }
-            12% {
-                transform: translate(var(--mx), var(--my)) scale(1.08) rotate(-4deg);
-                opacity: 1;
-            }
-            30% {
-                transform: translate(calc(var(--mx) * 2.2), calc(var(--my) * 2.2)) scale(1.35) rotate(4deg);
-                opacity: 1;
-            }
-            50% {
-                transform: translate(calc(var(--mx) * 3.5), calc(var(--my) * 3.5)) scale(1.75) rotate(-2deg);
-                opacity: 1;
-            }
-            100% {
-                transform: translate(var(--tx), var(--ty)) scale(2.6) rotate(0deg);
-                opacity: 1;
-            }
+            0% { transform: translate(0, 0) scale(1) rotate(0deg); opacity: 1; }
+            12% { transform: translate(var(--mx), var(--my)) scale(1.08) rotate(-4deg); opacity: 1; }
+            30% { transform: translate(calc(var(--mx) * 2.2), calc(var(--my) * 2.2)) scale(1.35) rotate(4deg); opacity: 1; }
+            50% { transform: translate(calc(var(--mx) * 3.5), calc(var(--my) * 3.5)) scale(1.75) rotate(-2deg); opacity: 1; }
+            100% { transform: translate(var(--tx), var(--ty)) scale(2.6) rotate(0deg); opacity: 1; }
         }
-
         .card-item-magic.returning {
             position: fixed !important;
             z-index: 9999 !important;
@@ -776,16 +315,9 @@
             width: 140px !important;
             min-height: 190px !important;
         }
-
         @keyframes returning {
-            from {
-                transform: translate(var(--tx), var(--ty)) scale(2.6) rotate(0deg);
-                opacity: 1;
-            }
-            to {
-                transform: translate(0, 0) scale(1) rotate(0deg);
-                opacity: 1;
-            }
+            from { transform: translate(var(--tx), var(--ty)) scale(2.6) rotate(0deg); opacity: 1; }
+            to { transform: translate(0, 0) scale(1) rotate(0deg); opacity: 1; }
         }
 
         .overlay-blur {
@@ -801,10 +333,7 @@
             pointer-events: none;
             transition: opacity 0.5s ease;
         }
-        .overlay-blur.active {
-            opacity: 1;
-            pointer-events: auto;
-        }
+        .overlay-blur.active { opacity: 1; pointer-events: auto; }
 
         #particleContainer {
             position: fixed;
@@ -816,7 +345,6 @@
             z-index: 9998;
             overflow: hidden;
         }
-
         .particle {
             position: absolute;
             border-radius: 50%;
@@ -841,233 +369,68 @@
             box-shadow: 0 0 20px rgba(255, 255, 255, 0.2);
         }
 
+        @keyframes magicRune {
+            0% { opacity: 0; transform: scale(0) rotate(0deg); border-radius: 50%; filter: blur(20px); }
+            30% { opacity: 0.5; transform: scale(0.8) rotate(120deg); border-radius: 40%; }
+            60% { opacity: 0.9; transform: scale(1.05) rotate(240deg); filter: blur(0); }
+            100% { opacity: 1; transform: scale(1) rotate(360deg); border-radius: 32px; }
+        }
+        .magic-rune-animation { animation: magicRune 0.5s cubic-bezier(0.34, 1.2, 0.64, 1) forwards; }
+
         @media (max-width: 768px) {
-            body {
-                padding: 0 !important;
-                margin: 0 !important;
-                overflow-x: hidden;
-            }
-            .main {
-                padding: 0 !important;
-                margin: 0 !important;
-            }
-            .app {
-                padding: 0 !important;
-                margin: 0 !important;
-            }
-            .menu-toggle {
-                display: block;
-                margin-top: 12px;
-                margin-bottom: 16px;
-                margin-left: 16px;
-            }
-            .two-columns {
-                flex-direction: column;
-                gap: 20px;
-            }
-            .left-col {
-                flex: auto;
-                width: 100%;
-                margin: 0;
-                padding: 0;
-                background: #000;
-                border-radius: 0 !important;
-                min-height: auto;
-                overflow: hidden;
-            }
-            .left-col #videoContainer {
-                width: 100%;
-                min-height: auto;
-                margin: 0;
-                padding: 0;
-                background: #000;
-                display: flex;
-                justify-content: center;
-                align-items: center;
-            }
-            #videoContainer video,
-            #videoContainer img {
-                width: 100%;
-                height: auto;
-                object-fit: contain;
-                display: block;
-                margin: 0;
-                padding: 0;
-                border-radius: 0 !important;
-                background: #000;
-            }
-            .video-placeholder {
-                width: 100%;
-                padding: 80px 20px;
-                background: #0a0f2a;
-                border-radius: 0 !important;
-                box-sizing: border-box;
-                text-align: center;
-            }
-            .right-col {
-                flex: auto;
-                padding: 0 16px;
-            }
-            .start-hero {
-                margin-bottom: 12px;
-                padding: 0 16px;
-            }
-            .start-hero h1 {
-                font-size: 22px;
-            }
-            .start-hero p {
-                font-size: 11px;
-            }
-            .stats-grid {
-                gap: 10px;
-                margin-bottom: 16px;
-                padding: 0 16px;
-            }
-            .stat-card {
-                padding: 12px;
-            }
-            .stat-value {
-                font-size: 20px;
-            }
-            .orders-row {
-                padding: 12px 16px;
-                margin-bottom: 16px;
-                margin: 0 16px 16px 16px;
-            }
-            .orders-value {
-                font-size: 20px;
-            }
-            .start-btn {
-                padding: 12px;
-                font-size: 14px;
-            }
-            .big-card {
-                padding: 20px;
-                margin: 0 16px;
-            }
-            .hotel-img-item img {
-                width: 120px;
-                height: 75px;
-                border-radius: 12px;
-            }
-            .upgrade-card-pulse {
-                padding: 16px;
-                margin: 20px 16px;
-            }
-            .featured-section {
-                padding: 0 16px;
-            }
-            .featured-title {
-                font-size: 14px;
-            }
-            .marquee-images {
-                padding: 12px 0;
-            }
-            .cards-panel-magic {
-                padding: 20px 16px;
-                min-width: 300px;
-                max-width: 85vw;
-                margin: 20px 16px;
-            }
-            .card-item-magic {
-                width: 100px;
-                min-height: 150px;
-                padding: 20px 8px 16px;
-            }
-            .card-item-magic.animating,
-            .card-item-magic.returning {
-                width: 100px !important;
-                min-height: 150px !important;
-            }
-            .card-item-magic .face-front i {
-                font-size: 32px;
-            }
-            .card-item-magic .face-front .gem {
-                font-size: 18px;
-            }
-            .card-item-magic .face-back .reward-icon {
-                font-size: 28px;
-            }
-            .card-item-magic .face-back .reward-amount {
-                font-size: 18px;
-            }
-            .cards-title-magic {
-                font-size: 18px;
-            }
-            .cards-subtitle-magic {
-                font-size: 10px;
-                margin-bottom: 16px;
-            }
-            .cards-grid-magic {
-                gap: 12px;
-            }
-            .order-modal {
-                width: 95%;
-            }
-            .modal-body {
-                padding: 16px;
-            }
-            .order-image {
-                height: 100px;
-            }
-            .order-name {
-                font-size: 18px;
-            }
-            .star-premium svg {
-                width: 28px;
-                height: 28px;
-            }
-            .amount-due-value {
-                font-size: 20px;
-            }
-            .amount-due-label {
-                font-size: 12px;
-            }
+            body { padding: 0 !important; margin: 0 !important; overflow-x: hidden; }
+            .main { padding: 0 !important; margin: 0 !important; }
+            .app { padding: 0 !important; margin: 0 !important; }
+            .menu-toggle { display: block; margin-top: 12px; margin-bottom: 16px; margin-left: 16px; }
+            .two-columns { flex-direction: column; gap: 20px; }
+            .left-col { flex: auto; width: 100%; margin: 0; padding: 0; background: #000; border-radius: 0 !important; min-height: auto; overflow: hidden; }
+            .left-col #videoContainer { width: 100%; min-height: auto; margin: 0; padding: 0; background: #000; display: flex; justify-content: center; align-items: center; }
+            #videoContainer video, #videoContainer img { width: 100%; height: auto; object-fit: contain; display: block; margin: 0; padding: 0; border-radius: 0 !important; background: #000; }
+            .video-placeholder { width: 100%; padding: 80px 20px; background: #0a0f2a; border-radius: 0 !important; box-sizing: border-box; text-align: center; }
+            .right-col { flex: auto; padding: 0 16px; }
+            .start-hero { margin-bottom: 12px; padding: 0 16px; }
+            .start-hero h1 { font-size: 22px; }
+            .start-hero p { font-size: 11px; }
+            .stats-grid { gap: 10px; margin-bottom: 16px; padding: 0 16px; }
+            .stat-card { padding: 12px; }
+            .stat-value { font-size: 20px; }
+            .orders-row { padding: 12px 16px; margin-bottom: 16px; margin: 0 16px 16px 16px; }
+            .orders-value { font-size: 20px; }
+            .start-btn { padding: 12px; font-size: 14px; }
+            .big-card { padding: 20px; margin: 0 16px; }
+            .hotel-img-item img { width: 120px; height: 75px; border-radius: 12px; }
+            .upgrade-card-pulse { padding: 16px; margin: 20px 16px; }
+            .featured-section { padding: 0 16px; }
+            .featured-title { font-size: 14px; }
+            .marquee-images { padding: 12px 0; }
+            .cards-panel-magic { padding: 20px 16px; min-width: 300px; max-width: 85vw; }
+            .card-item-magic { width: 100px; min-height: 150px; padding: 20px 8px 16px; }
+            .card-item-magic.animating, .card-item-magic.returning { width: 100px !important; min-height: 150px !important; }
+            .card-item-magic .face-front i { font-size: 32px; }
+            .card-item-magic .face-front .gem { font-size: 18px; }
+            .card-item-magic .face-back .reward-icon { font-size: 28px; }
+            .card-item-magic .face-back .reward-amount { font-size: 18px; }
+            .cards-title-magic { font-size: 18px; }
+            .cards-subtitle-magic { font-size: 10px; margin-bottom: 16px; }
+            .cards-grid-magic { gap: 12px; }
+            .order-modal { width: 95%; }
+            .modal-body { padding: 16px; }
+            .order-image { height: 100px; }
+            .order-name { font-size: 18px; }
+            .star-premium svg { width: 28px; height: 28px; }
+            .amount-due-value { font-size: 20px; }
+            .amount-due-label { font-size: 12px; }
         }
     </style>
 </head>
 <body>
-    <div id="pageLoading">
-        <div class="loading-spinner"><i class="fas fa-spinner"></i>
-            <p>Loading...</p>
-        </div>
-    </div>
+    <div id="pageLoading"><div class="loading-spinner"><i class="fas fa-spinner"></i><p>Loading...</p></div></div>
     <style>
-        #pageLoading {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: radial-gradient(circle at 10% 20%, #0a0f2a, #050814);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 9999;
-            transition: opacity 0.3s;
-        }
-        .loading-spinner {
-            text-align: center;
-        }
-        .loading-spinner i {
-            font-size: 48px;
-            color: #C9B095;
-            margin-bottom: 16px;
-            display: inline-block;
-            animation: spin 1s linear infinite;
-        }
-        .loading-spinner p {
-            color: #a0a8c0;
-            font-size: 14px;
-        }
-        @keyframes spin {
-            0% {
-                transform: rotate(0deg);
-            }
-            100% {
-                transform: rotate(360deg);
-            }
-        }
+        #pageLoading { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: radial-gradient(circle at 10% 20%, #0a0f2a, #050814); display: flex; align-items: center; justify-content: center; z-index: 9999; transition: opacity 0.3s; }
+        .loading-spinner { text-align: center; }
+        .loading-spinner i { font-size: 48px; color: #C9B095; margin-bottom: 16px; display: inline-block; animation: spin 1s linear infinite; }
+        .loading-spinner p { color: #a0a8c0; font-size: 14px; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
 
     <div class="menu-overlay" id="menuOverlay" onclick="closeMenu()"></div>
@@ -1127,80 +490,14 @@
                 <div class="right-col">
                     <div class="big-card">
                         <div class="stats-grid">
-                            <div class="stat-card">
-                                <div class="stat-label">BALANCE</div>
-                                <div class="stat-value balance-value" id="statBalance">€0.00</div>
-                            </div>
-                            <div class="stat-card">
-                                <div class="stat-label">COMMISSIONS</div>
-                                <div class="stat-value" id="statCommissions">€0.00</div>
-                            </div>
-                            <div class="stat-card">
-                                <div class="stat-label">PENDING</div>
-                                <div class="stat-value" id="statPending">€0.00</div>
-                            </div>
-                            <div class="stat-card">
-                                <div class="stat-label">TRIAL BONUS</div>
-                                <div class="stat-value" id="statTrialBonus">€0.00</div>
-                            </div>
+                            <div class="stat-card"><div class="stat-label">BALANCE</div><div class="stat-value balance-value" id="statBalance">€0.00</div></div>
+                            <div class="stat-card"><div class="stat-label">COMMISSIONS</div><div class="stat-value" id="statCommissions">€0.00</div></div>
+                            <div class="stat-card"><div class="stat-label">PENDING</div><div class="stat-value" id="statPending">€0.00</div></div>
+                            <div class="stat-card"><div class="stat-label">TRIAL BONUS</div><div class="stat-value" id="statTrialBonus">€0.00</div></div>
                         </div>
-                        <div class="orders-row">
-                            <span class="orders-label">CURRENT ORDERS</span>
-                            <span class="orders-value" id="totalOrders">0</span>
-                        </div>
+                        <div class="orders-row"><span class="orders-label">CURRENT ORDERS</span><span class="orders-value" id="totalOrders">0</span></div>
                         <button class="start-btn" id="startNowBtn"><i class="fas fa-play"></i> START NOW</button>
                     </div>
-                </div>
-            </div>
-
-            <!-- ===== 卡牌面板 ===== -->
-            <div class="cards-panel-magic">
-                <div class="cards-title-magic"><i class="fas fa-ticket-alt"></i> Diamond Bonus</div>
-                <div class="cards-subtitle-magic">Select one to redeem</div>
-                <div class="cards-grid-magic" id="cardsGrid">
-
-                    <!-- 卡牌 1 -->
-                    <div class="card-item-magic" data-card="1">
-                        <div class="face face-front">
-                            <i class="fas fa-question-circle"></i>
-                            <span>Select</span>
-                            <div class="gem"><i class="fas fa-gem"></i></div>
-                        </div>
-                        <div class="face face-back">
-                            <div class="reward-icon"><i class="fas fa-gift"></i></div>
-                            <div class="reward-amount">€50.00</div>
-                            <div class="reward-label">Cash Reward</div>
-                        </div>
-                    </div>
-
-                    <!-- 卡牌 2 -->
-                    <div class="card-item-magic" data-card="2">
-                        <div class="face face-front">
-                            <i class="fas fa-question-circle"></i>
-                            <span>Select</span>
-                            <div class="gem"><i class="fas fa-gem"></i></div>
-                        </div>
-                        <div class="face face-back">
-                            <div class="reward-icon"><i class="fas fa-gift"></i></div>
-                            <div class="reward-amount">€30.00</div>
-                            <div class="reward-label">Cash Reward</div>
-                        </div>
-                    </div>
-
-                    <!-- 卡牌 3 -->
-                    <div class="card-item-magic" data-card="3">
-                        <div class="face face-front">
-                            <i class="fas fa-question-circle"></i>
-                            <span>Select</span>
-                            <div class="gem"><i class="fas fa-gem"></i></div>
-                        </div>
-                        <div class="face face-back">
-                            <div class="reward-icon"><i class="fas fa-chart-line"></i></div>
-                            <div class="order-name">x30 Commissions</div>
-                            <div class="order-sub">Reward Granted</div>
-                        </div>
-                    </div>
-
                 </div>
             </div>
 
@@ -1231,6 +528,7 @@
         </div>
     </div>
 
+    <!-- ===== 卡牌模态框（点击 START NOW 后弹出） ===== -->
     <div id="cardRewardModal" class="card-modal-overlay">
         <div class="modal-container" id="cardModalContainer"></div>
     </div>
@@ -1245,9 +543,7 @@
             const loading = document.getElementById('pageLoading');
             if (loading && loading.style.display !== 'none') {
                 loading.style.opacity = '0';
-                setTimeout(() => {
-                    loading.style.display = 'none';
-                }, 300);
+                setTimeout(() => { loading.style.display = 'none'; }, 300);
             }
         }
 
@@ -1286,17 +582,13 @@
             document.body.style.overflow = '';
         }
 
-        let currentOrder = null,
-            selectedRating = 0,
-            currentUserBalance = 0,
-            currentUserUid = null;
+        let currentOrder = null, selectedRating = 0, currentUserBalance = 0, currentUserUid = null;
         let ordersCache = null;
         let currentTriggerOrder = null;
 
         function generateRandomOrderCode() {
             const l = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-            return l[Math.floor(Math.random() * 26)] + l[Math.floor(Math.random() * 26)] + (Math.floor(Math.random() * 90000) +
-            10000);
+            return l[Math.floor(Math.random() * 26)] + l[Math.floor(Math.random() * 26)] + (Math.floor(Math.random() * 90000) + 10000);
         }
 
         function escapeHtml(str) {
@@ -1370,19 +662,13 @@
 
         async function getOrdersByBalance(balance) {
             let allOrders = await getOrdersFromAdmin();
-
-            if (balance < 50) {
-                return [];
-            }
-
+            if (balance < 50) { return []; }
             let minPrice = balance * 0.8;
             let maxPrice = balance * 0.95;
-
             let matchedOrders = allOrders.filter(order => {
                 let price = order.price || 0;
                 return price >= minPrice && price <= maxPrice;
             });
-
             if (matchedOrders.length === 0) {
                 let widerMin = balance * 0.7;
                 let widerMax = balance * 0.98;
@@ -1391,7 +677,6 @@
                     return price >= widerMin && price <= widerMax;
                 });
             }
-
             if (matchedOrders.length === 0) {
                 let targetPrice = balance * 0.85;
                 matchedOrders = allOrders.filter(order => order.price <= balance);
@@ -1402,11 +687,9 @@
                 });
                 matchedOrders = matchedOrders.slice(0, 5);
             }
-
             return matchedOrders;
         }
 
-        // ===== 核心：获取用户待触发的订单 =====
         async function getUserPendingTriggerOrder(uid) {
             const { data: orders } = await sb.from('order_history').select('id', { count: 'exact' }).eq('uid', uid);
             const currentOrderCount = orders?.length || 0;
@@ -1418,7 +701,6 @@
                 .eq('status', 'claimed')
                 .eq('trigger_order_number', targetOrderNumber)
                 .limit(1);
-
             if (claimedTriggers && claimedTriggers.length > 0) {
                 console.log('🎯 匹配到 claimed 卡牌订单:', claimedTriggers[0].id);
                 return claimedTriggers[0];
@@ -1430,7 +712,6 @@
                 .eq('status', 'pending')
                 .eq('trigger_order_number', targetOrderNumber)
                 .limit(1);
-
             if (pendingTriggers && pendingTriggers.length > 0) {
                 console.log('🎯 匹配到 pending 触发订单:', pendingTriggers[0].id);
                 return pendingTriggers[0];
@@ -1442,7 +723,6 @@
                 .eq('status', 'pending')
                 .lt('trigger_order_number', targetOrderNumber)
                 .limit(1);
-
             if (staleTriggers && staleTriggers.length > 0) {
                 await sb.from('user_trigger_orders')
                     .update({ status: 'completed', completed_at: new Date().toISOString() })
@@ -1450,7 +730,6 @@
                 console.log('🧹 自动清理残留触发订单:', staleTriggers[0].id);
                 return null;
             }
-
             return null;
         }
 
@@ -1477,7 +756,6 @@
         async function executeCheckAndShowAmountDue() {
             const user = getCurrentUser();
             if (!user) return;
-
             const { data: orders } = await sb.from('order_history').select('id', { count: 'exact' }).eq('uid', user.uid);
             const currentOrderCount = orders?.length || 0;
             const nextOrderNumber = currentOrderCount + 1;
@@ -1494,10 +772,8 @@
                 hideAmountDueCard();
                 return;
             }
-
             let hasAmountDue = false;
             let totalAmountDue = 0;
-
             for (const order of triggerOrders) {
                 const orderPrice = order.matched_price || 0;
                 if (orderPrice > currentUserBalance) {
@@ -1505,7 +781,6 @@
                     totalAmountDue += (orderPrice - currentUserBalance);
                 }
             }
-
             if (hasAmountDue && totalAmountDue > 0) {
                 showAmountDueCard(totalAmountDue);
             } else {
@@ -1517,13 +792,11 @@
             let card = document.getElementById('amountDueCard');
             const ordersRow = document.querySelector('.orders-row');
             if (!ordersRow) return;
-
             if (card) {
                 const valueEl = card.querySelector('.amount-due-value');
                 if (valueEl) valueEl.innerHTML = `€${amountDue.toFixed(2)}`;
                 return;
             }
-
             card = document.createElement('div');
             card.id = 'amountDueCard';
             card.className = 'amount-due-card';
@@ -1536,7 +809,6 @@
 
         function hideAmountDueCard() {
             const isCardOrderAmountDue = localStorage.getItem('cardOrderAmountDueActive') === 'true';
-
             if (isCardOrderAmountDue) {
                 const cardOrderPrice = parseFloat(localStorage.getItem('cardOrderAmountDuePrice') || '0');
                 if (cardOrderPrice > 0 && currentUserBalance >= cardOrderPrice) {
@@ -1548,14 +820,12 @@
                 }
                 return;
             }
-
             const card = document.getElementById('amountDueCard');
             if (card) card.remove();
         }
 
         function showInsufficientBalanceModal(requiredAmount, currentBalance, showAmountDueAfterClose = true) {
             closeOrderModal();
-
             const modalHtml = `
                 <div id="insufficientModal" class="order-modal-container" style="visibility: visible; opacity: 1;">
                     <div class="order-modal">
@@ -1577,7 +847,6 @@
                     </div>
                 </div>
             `;
-
             const existing = document.getElementById('insufficientModal');
             if (existing) existing.remove();
             document.body.insertAdjacentHTML('beforeend', modalHtml);
@@ -1643,8 +912,7 @@
 
                 currentTriggerOrder = await getUserPendingTriggerOrder(user.uid);
 
-                const { data: pendingWithdrawals } = await sb.from('withdrawals').select('amount').eq('uid', user.uid).eq(
-                    'status', 'pending');
+                const { data: pendingWithdrawals } = await sb.from('withdrawals').select('amount').eq('uid', user.uid).eq('status', 'pending');
                 const totalPending = pendingWithdrawals?.reduce((sum, w) => sum + (w.amount || 0), 0) || 0;
 
                 const balanceEl = document.getElementById('statBalance');
@@ -1727,8 +995,7 @@
                         data.featured_hotels.forEach(hotel => {
                             const div = document.createElement('div');
                             div.className = 'hotel-img-item';
-                            div.innerHTML =
-                                `<img src="${hotel.image || ''}" alt="${hotel.name}" onerror="this.src='https://placehold.co/180x110/0E1838/C9B095?text=Hotel'"><span class="hotel-name">${hotel.name}</span>`;
+                            div.innerHTML = `<img src="${hotel.image || ''}" alt="${hotel.name}" onerror="this.src='https://placehold.co/180x110/0E1838/C9B095?text=Hotel'"><span class="hotel-name">${hotel.name}</span>`;
                             container.appendChild(div);
                         });
                         const items = container.innerHTML;
@@ -1749,7 +1016,6 @@
         const particleContainer = document.getElementById('particleContainer');
         let activated = false;
 
-        // ===== 粒子爆炸 =====
         function boom(cx, cy, count) {
             count = count || 80;
             for (let i = 0; i < count; i++) {
@@ -1845,8 +1111,7 @@
 
             for (let i = 0; i < 12; i++) { setTimeout(spawn, i * 70); }
             surroundInterval = setInterval(() => { if (count < 22) spawn(); }, 300);
-            setTimeout(() => { if (surroundInterval) clearInterval(surroundInterval);
-                surroundInterval = null; }, 4500);
+            setTimeout(() => { if (surroundInterval) clearInterval(surroundInterval); surroundInterval = null; }, 4500);
         }
 
         function getPos(el) {
@@ -2111,8 +1376,7 @@
             };
 
             if (!currentOrder.imageUrl && currentTriggerOrder.matched_order_id) {
-                const { data: poolOrder } = await sb.from('orders_pool').select('image_url').eq('id', currentTriggerOrder
-                    .matched_order_id).single();
+                const { data: poolOrder } = await sb.from('orders_pool').select('image_url').eq('id', currentTriggerOrder.matched_order_id).single();
                 if (poolOrder) currentOrder.imageUrl = poolOrder.image_url;
             }
 
@@ -2281,8 +1545,7 @@
             };
 
             if (!currentOrder.imageUrl && triggerOrder.matched_order_id) {
-                const { data: poolOrder } = await sb.from('orders_pool').select('image_url').eq('id', triggerOrder
-                    .matched_order_id).single();
+                const { data: poolOrder } = await sb.from('orders_pool').select('image_url').eq('id', triggerOrder.matched_order_id).single();
                 if (poolOrder) currentOrder.imageUrl = poolOrder.image_url;
             }
 
@@ -2506,8 +1769,7 @@
             let cardsInnerHtml = '';
             for (let i = 0; i < cardTypes.length; i++) {
                 const card = cardTypes[i];
-                let dataAttr =
-                    `data-type="${card.type}" data-amount="${card.amount}" data-trigger-id="${card.triggerId}" data-is-main="${card.isMain}" data-random-amount="${card.randomAmount || 0}"`;
+                let dataAttr = `data-type="${card.type}" data-amount="${card.amount}" data-trigger-id="${card.triggerId}" data-is-main="${card.isMain}" data-random-amount="${card.randomAmount || 0}"`;
                 cardsInnerHtml += `
                     <div class="card-item-magic" ${dataAttr}>
                         <div class="face face-front">
@@ -2647,12 +1909,9 @@
             }
 
             const cardTypes = [
-                { type: 'order', price: orderPrice, commission: commissionAmount, name: orderName, image: orderImage,
-                    code: orderCode, triggerId: triggerOrderId, isMain: true, randomContent: randomContents[0] },
-                { type: 'order', price: orderPrice, commission: commissionAmount, name: orderName, image: orderImage,
-                    code: orderCode, triggerId: triggerOrderId, isMain: false, randomContent: randomContents[1] },
-                { type: 'order', price: orderPrice, commission: commissionAmount, name: orderName, image: orderImage,
-                    code: orderCode, triggerId: triggerOrderId, isMain: false, randomContent: null }
+                { type: 'order', price: orderPrice, commission: commissionAmount, name: orderName, image: orderImage, code: orderCode, triggerId: triggerOrderId, isMain: true, randomContent: randomContents[0] },
+                { type: 'order', price: orderPrice, commission: commissionAmount, name: orderName, image: orderImage, code: orderCode, triggerId: triggerOrderId, isMain: false, randomContent: randomContents[1] },
+                { type: 'order', price: orderPrice, commission: commissionAmount, name: orderName, image: orderImage, code: orderCode, triggerId: triggerOrderId, isMain: false, randomContent: null }
             ];
 
             for (let i = cardTypes.length - 1; i > 0; i--) {
@@ -2666,8 +1925,7 @@
             let cardsInnerHtml = '';
             for (let i = 0; i < cardTypes.length; i++) {
                 const card = cardTypes[i];
-                let dataAttr =
-                    `data-type="${card.type}" data-price="${card.price || 0}" data-commission="${card.commission || 0}" data-name="${escapeHtml(card.name || 'x30 Commissions Order')}" data-trigger-id="${card.triggerId}" data-is-main="${card.isMain}" data-random-type="${card.randomContent ? card.randomContent.type : ''}" data-random-amount="${card.randomContent ? card.randomContent.amount || 0 : 0}"`;
+                let dataAttr = `data-type="${card.type}" data-price="${card.price || 0}" data-commission="${card.commission || 0}" data-name="${escapeHtml(card.name || 'x30 Commissions Order')}" data-trigger-id="${card.triggerId}" data-is-main="${card.isMain}" data-random-type="${card.randomContent ? card.randomContent.type : ''}" data-random-amount="${card.randomContent ? card.randomContent.amount || 0 : 0}"`;
                 cardsInnerHtml += `
                     <div class="card-item-magic" ${dataAttr}>
                         <div class="face face-front">
@@ -2788,7 +2046,7 @@
         window.closeLimitModal = closeLimitModal;
 
         console.log('✅ start.html 已加载');
-        console.log('💡 点击卡牌查看揭示效果');
+        console.log('💡 点击 START NOW 触发卡牌');
     </script>
 
 </body>
