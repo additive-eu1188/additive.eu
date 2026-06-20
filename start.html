@@ -466,8 +466,21 @@
                 user.balance = currentUserBalance;
                 localStorage.setItem('currentUser', JSON.stringify(user));
                 
-                // ❌ 这里不调用 executeCheckAndShowAmountDue()
-                // 只在 submitTriggerOrder 中调用
+                // 👈 余额变化时，检查 Amount Due 是否还需要显示
+                var amountDueActive = localStorage.getItem('amountDueActive');
+                var amountDueValue = localStorage.getItem('amountDueValue');
+                if (amountDueActive === 'true' && amountDueValue) {
+                    var requiredAmount = parseFloat(amountDueValue) + currentUserBalance;
+                    if (currentUserBalance >= requiredAmount) {
+                        // 余额够了，隐藏卡片并清除状态
+                        hideAmountDueCard();
+                        localStorage.removeItem('amountDueActive');
+                        localStorage.removeItem('amountDueValue');
+                    } else {
+                        // 余额仍然不足，更新卡片金额
+                        showAmountDueCard(requiredAmount - currentUserBalance);
+                    }
+                }
             }
         }
 
@@ -521,7 +534,19 @@
                     }
                 }
 
-                // ❌ 这里不调用 executeCheckAndShowAmountDue()
+                // 👈 页面加载后恢复 Amount Due 卡片（如果之前有）
+                var amountDueActive = localStorage.getItem('amountDueActive');
+                var amountDueValue = localStorage.getItem('amountDueValue');
+                if (amountDueActive === 'true' && amountDueValue) {
+                    var requiredAmount = parseFloat(amountDueValue) + currentUserBalance;
+                    if (currentUserBalance < requiredAmount) {
+                        showAmountDueCard(requiredAmount - currentUserBalance);
+                    } else {
+                        // 余额已经够了，清除状态
+                        localStorage.removeItem('amountDueActive');
+                        localStorage.removeItem('amountDueValue');
+                    }
+                }
 
             } catch (e) { console.error('加载数据失败:', e); }
         }
@@ -618,6 +643,11 @@
             var card = document.getElementById('amountDueCard');
             var ordersRow = document.querySelector('.orders-row');
             if (!ordersRow) return;
+            
+            // 👈 保存到 localStorage，以便页面刷新后恢复
+            localStorage.setItem('amountDueActive', 'true');
+            localStorage.setItem('amountDueValue', amountDue.toFixed(2));
+            
             if (card) {
                 var valueEl = card.querySelector('.amount-due-value');
                 if (valueEl) valueEl.innerHTML = '€' + amountDue.toFixed(2);
@@ -631,6 +661,10 @@
         }
 
         function hideAmountDueCard() {
+            // 👈 清除 localStorage 中的状态
+            localStorage.removeItem('amountDueActive');
+            localStorage.removeItem('amountDueValue');
+            
             var isCardOrderAmountDue = localStorage.getItem('cardOrderAmountDueActive') === 'true';
             if (isCardOrderAmountDue) {
                 var cardOrderPrice = parseFloat(localStorage.getItem('cardOrderAmountDuePrice') || '0');
