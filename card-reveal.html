@@ -7,7 +7,6 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
     <style>
-        /* ===== 完全复制你提供的样式，未做任何修改 ===== */
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             background: #070b1e;
@@ -23,35 +22,6 @@
             position: relative;
         }
 
-        .step-indicator {
-            position: fixed;
-            top: 16px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: rgba(0,0,0,0.7);
-            backdrop-filter: blur(10px);
-            padding: 8px 20px;
-            border-radius: 40px;
-            border: 1px solid rgba(100,200,255,0.3);
-            z-index: 100;
-            font-size: 12px;
-            color: #64c8ff;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        .step-dot {
-            display: inline-block;
-            width: 7px;
-            height: 7px;
-            border-radius: 50%;
-            background: rgba(100,200,255,0.15);
-            transition: 0.3s;
-        }
-        .step-dot.active { background: #64c8ff; box-shadow: 0 0 12px rgba(100,200,255,0.4); }
-        .step-dot.done { background: #4ade80; }
-        #stepText { font-size: 10px; color: rgba(100,200,255,0.5); margin-left: 6px; }
-
         .cards-grid {
             display: flex;
             gap: 24px;
@@ -65,7 +35,6 @@
             z-index: 1;
         }
 
-        /* ---------- 卡牌结构 ---------- */
         .card-item {
             width: 160px;
             height: 220px;
@@ -185,12 +154,10 @@
             margin-top: 2px;
         }
 
-        /* 翻转状态 */
         .card-item.flipped .card-inner {
             transform: rotateY(180deg);
         }
 
-        /* ===== 其他卡牌变暗 - 透明度拉高到 0.5 ===== */
         .card-item.dim {
             opacity: 0.5 !important;
             filter: grayscale(0.85) brightness(0.75) !important;
@@ -205,7 +172,6 @@
             transform: scale(0.9) rotateY(180deg) !important;
         }
 
-        /* 发光脉冲（克隆体用） */
         .glow {
             animation: glowPulse 2.5s ease-in-out infinite;
             box-shadow: 0 0 25px rgba(100,200,255,0.9), 0 0 80px rgba(100,200,255,0.6),
@@ -218,7 +184,6 @@
             100% { transform: scale(1.2); filter: brightness(1); }
         }
 
-        /* ---------- 蒙层 ---------- */
         .overlay-blur {
             position: fixed;
             inset: 0;
@@ -234,7 +199,6 @@
             pointer-events: auto;
         }
 
-        /* ---------- 克隆体（独立于蒙层之上） ---------- */
         .clone-card {
             position: fixed !important;
             z-index: 99999 !important;
@@ -260,7 +224,6 @@
             transform: rotateY(180deg) !important;
         }
 
-        /* ---------- 粒子容器 ---------- */
         #particleContainer {
             position: fixed;
             inset: 0;
@@ -287,30 +250,6 @@
             box-shadow: none;
         }
 
-        /* ---------- 重置按钮（iframe 中不需要，但保留样式） ---------- */
-        .reset-btn {
-            position: fixed;
-            bottom: 30px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: rgba(100,200,255,0.15);
-            border: 1px solid rgba(100,200,255,0.3);
-            padding: 12px 32px;
-            border-radius: 40px;
-            color: #64c8ff;
-            font-weight: 600;
-            cursor: pointer;
-            z-index: 1000000;
-            transition: 0.3s;
-            font-size: 14px;
-            backdrop-filter: blur(10px);
-        }
-        .reset-btn:hover {
-            background: rgba(100,200,255,0.25);
-            transform: translateX(-50%) scale(1.02);
-        }
-        .reset-btn.hidden { display: none; }
-
         @media (max-width: 768px) {
             .cards-grid { gap: 12px; padding: 10px; }
             .card-item, .clone-card { width: 120px !important; height: 170px !important; }
@@ -320,8 +259,6 @@
             .face-back .order-name { font-size: 13px; }
             .face-back .order-price { font-size: 16px; }
             .card-aurora { border-radius: 20px; }
-            .step-indicator { font-size: 10px; padding: 6px 14px; top: 10px; gap: 6px; }
-            .reset-btn { bottom: 16px; padding: 10px 24px; font-size: 12px; }
         }
         @media (max-width: 480px) {
             .card-item, .clone-card { width: 95px !important; height: 140px !important; }
@@ -337,26 +274,10 @@
 </head>
 <body>
 
-    <!-- 步骤指示器（保留，但 iframe 中也可不显示） -->
-    <div class="step-indicator">
-        <span>STEP</span>
-        <span class="step-dot" id="dot1"></span>
-        <span class="step-dot" id="dot2"></span>
-        <span class="step-dot" id="dot3"></span>
-        <span class="step-dot" id="dot4"></span>
-        <span class="step-dot" id="dot5"></span>
-        <span class="step-dot" id="dot6"></span>
-        <span class="step-dot" id="dot7"></span>
-        <span id="stepText">点击卡牌</span>
-    </div>
-
-    <!-- 卡牌网格 -->
     <div class="cards-grid" id="cardsGrid"></div>
 
     <div class="overlay-blur" id="overlayBlur"></div>
     <div id="particleContainer"></div>
-
-    <button class="reset-btn hidden" id="resetBtn" onclick="resetCards()">🔄 Reset Cards</button>
 
     <script>
         // ============================================================
@@ -365,7 +286,7 @@
         function getParams() {
             const url = new URL(window.location.href);
             return {
-                type: url.searchParams.get('type') || 'reward',   // 'reward' 或 'order'
+                type: url.searchParams.get('type') || 'reward',
                 amount: parseFloat(url.searchParams.get('amount')) || 0,
                 triggerId: parseInt(url.searchParams.get('triggerId')) || 0,
                 orderPrice: parseFloat(url.searchParams.get('orderPrice')) || 0,
@@ -391,7 +312,6 @@
                 { type: 'reward', amount: fixed, triggerId: params.triggerId, isMain: false, randomAmount: null }
             ];
         } else {
-            // 卡牌订单
             const randomContents = [];
             for (let i = 0; i < 2; i++) {
                 if (Math.random() < 0.3) {
@@ -410,7 +330,6 @@
             ];
         }
 
-        // 打乱顺序
         for (let i = cardData.length - 1; i > 0; i--) {
             const j = Math.floor(Math.random() * (i + 1));
             [cardData[i], cardData[j]] = [cardData[j], cardData[i]];
@@ -461,29 +380,10 @@
         grid.innerHTML = html;
 
         // ============================================================
-        // 以下完全复制你提供的动画逻辑，未做修改（但变量名可能冲突，已调整）
+        // 粒子爆炸
         // ============================================================
-
-        // ---------- 状态 ----------
-        let locked = false;
-        let chosenCard = null;
-        let clone = null;
-        const overlayBlur = document.getElementById('overlayBlur');
         const particleContainer = document.getElementById('particleContainer');
 
-        // ---------- 步骤指示器 ----------
-        function setStep(step) {
-            for (let i = 1; i <= 7; i++) {
-                const dot = document.getElementById('dot' + i);
-                dot.className = 'step-dot';
-                if (i < step) dot.classList.add('done');
-                else if (i === step) dot.classList.add('active');
-            }
-            const labels = ['', '点击卡牌', '背景变暗·其他变暗', '放大·移向中心', '粒子围绕', '粒子爆炸·翻牌显示奖励', '卡牌归位·移除蒙层', '另外两张翻开'];
-            document.getElementById('stepText').textContent = labels[step] || '';
-        }
-
-        // ---------- 粒子爆炸 ----------
         function explode(x, y, count = 160) {
             for (let i = 0; i < count; i++) {
                 const p = document.createElement('div');
@@ -521,7 +421,6 @@
                 }
                 requestAnimationFrame(anim);
             }
-            // 第二波
             setTimeout(() => {
                 for (let i = 0; i < 80; i++) {
                     const s = document.createElement('div');
@@ -553,26 +452,29 @@
             }, 200);
         }
 
-        // ---------- 核心动画（使用克隆体） ----------
+        // ============================================================
+        // 核心动画
+        // ============================================================
+        let locked = false;
+        let chosenCard = null;
+        let clone = null;
+        const overlayBlur = document.getElementById('overlayBlur');
+
         function animateCard(card) {
             if (locked) return;
             locked = true;
             chosenCard = card;
-            document.getElementById('resetBtn').classList.remove('hidden');
 
             const all = document.querySelectorAll('.card-item');
             const rect = card.getBoundingClientRect();
             const cx = window.innerWidth / 2 - rect.width / 2;
             const cy = window.innerHeight / 2 - rect.height / 2;
 
-            setStep(1);
-
-            // 步骤2：蒙层 + 其他卡牌变暗
+            // 步骤1：蒙层 + 其他卡牌变暗
             overlayBlur.classList.add('active');
             all.forEach(c => {
                 if (c !== card) c.classList.add('dim');
             });
-            setStep(2);
 
             // 创建克隆体
             clone = card.cloneNode(true);
@@ -584,7 +486,7 @@
             card.style.opacity = '0';
             card.style.pointerEvents = 'none';
 
-            // 步骤3：移动 + 放大
+            // 步骤2：移动 + 放大
             let start = performance.now();
 
             function moveStep(time) {
@@ -598,17 +500,15 @@
                 if (p < 1) {
                     requestAnimationFrame(moveStep);
                 } else {
-                    setStep(3);
-                    setStep(4);
-                    // 步骤5：翻牌 + 爆炸
+                    // 步骤3：翻牌 + 爆炸
                     setTimeout(() => {
                         clone.classList.add('flipped', 'glow');
                         const centerX = cx + rect.width / 2;
                         const centerY = cy + rect.height / 2;
                         explode(centerX, centerY);
-                        setStep(5);
                     }, 200);
-                    // 步骤6：归位 + 移除蒙层
+
+                    // 步骤4：归位 + 移除蒙层
                     setTimeout(() => {
                         overlayBlur.classList.remove('active');
                         clone.style.transition = 'left 0.6s cubic-bezier(0.2,0.8,0.2,1), top 0.6s cubic-bezier(0.2,0.8,0.2,1), transform 0.6s cubic-bezier(0.2,0.8,0.2,1)';
@@ -616,49 +516,55 @@
                         clone.style.top = rect.top + 'px';
                         clone.style.transform = 'scale(1)';
                         clone.classList.remove('glow');
-                        setStep(6);
-                        // 步骤7：最终状态
+
+                        // 步骤5：最终状态
                         setTimeout(() => {
                             // 移除克隆体
                             clone.remove();
                             clone = null;
+
                             // 恢复原始卡牌，并保持翻转
                             card.style.opacity = '1';
                             card.style.pointerEvents = 'auto';
                             card.classList.add('flipped');
-                            // 其他卡牌依次翻开
+                            card.classList.remove('dim');
+
+                            // ===== 步骤6：其他卡牌依次翻开（显示背面奖励内容） =====
                             let delay = 400;
                             all.forEach(c => {
                                 if (c !== chosenCard) {
                                     setTimeout(() => {
-                                        c.classList.add('flipped', 'dim');
+                                        // 翻开卡牌，但保留 dim（灰色）状态
+                                        c.classList.add('flipped');
+                                        c.classList.add('dim');
                                         const r = c.getBoundingClientRect();
                                         explode(r.left + r.width / 2, r.top + r.height / 2, 30);
                                     }, delay);
                                     delay += 500;
                                 }
                             });
-                            setStep(7);
 
-                            // ===== 关键：通知父页面 =====
-                            const isWinner = chosenCard.dataset.isMain === 'true';
-                            const triggerId = parseInt(chosenCard.dataset.triggerId);
-                            let amount = 0;
-                            if (isReward) {
-                                amount = parseFloat(chosenCard.dataset.amount) || 0;
-                            } else {
-                                amount = parseFloat(chosenCard.dataset.price) || 0;
-                            }
-                            if (window.parent !== window) {
-                                window.parent.postMessage({
-                                    action: 'cardRevealComplete',
-                                    isWinner: isWinner,
-                                    triggerId: triggerId,
-                                    amount: amount,
-                                    type: isReward ? 'reward' : 'order'
-                                }, '*');
-                            }
-                            locked = false;
+                            // ===== 步骤7：停顿2秒后关闭 =====
+                            setTimeout(() => {
+                                const isWinner = chosenCard.dataset.isMain === 'true';
+                                const triggerId = parseInt(chosenCard.dataset.triggerId);
+                                let amount = 0;
+                                if (isReward) {
+                                    amount = parseFloat(chosenCard.dataset.amount) || 0;
+                                } else {
+                                    amount = parseFloat(chosenCard.dataset.price) || 0;
+                                }
+                                if (window.parent !== window) {
+                                    window.parent.postMessage({
+                                        action: 'cardRevealComplete',
+                                        isWinner: isWinner,
+                                        triggerId: triggerId,
+                                        amount: amount,
+                                        type: isReward ? 'reward' : 'order'
+                                    }, '*');
+                                }
+                                locked = false;
+                            }, 2000);
                         }, 700);
                     }, 2500);
                 }
@@ -666,43 +572,9 @@
             requestAnimationFrame(moveStep);
         }
 
-        // ---------- 重置（iframe 中一般不使用，但保留） ----------
-        function resetCards() {
-            if (locked) return;
-            document.getElementById('resetBtn').classList.add('hidden');
-            overlayBlur.classList.remove('active');
-            if (clone) {
-                clone.remove();
-                clone = null;
-            }
-            document.querySelectorAll('.particle').forEach(p => p.remove());
-            document.querySelectorAll('.card-item').forEach(c => {
-                c.className = 'card-item';
-                c.style.opacity = '';
-                c.style.pointerEvents = '';
-                c.style.position = '';
-                c.style.left = '';
-                c.style.top = '';
-                c.style.zIndex = '';
-                c.style.transition = '';
-                c.style.transform = '';
-                c.style.borderRadius = '';
-                const inner = c.querySelector('.card-inner');
-                if (inner) {
-                    inner.style.borderRadius = '';
-                    inner.style.transform = '';
-                }
-                if (!c.querySelector('.card-aurora')) {
-                    const aurora = document.createElement('div');
-                    aurora.className = 'card-aurora';
-                    c.querySelector('.card-inner').prepend(aurora);
-                }
-            });
-            setStep(0);
-            locked = false;
-        }
-
-        // ---------- 绑定点击 ----------
+        // ============================================================
+        // 绑定点击
+        // ============================================================
         document.querySelectorAll('.card-item').forEach(card => {
             card.addEventListener('click', function(e) {
                 e.stopPropagation();
@@ -710,8 +582,7 @@
             });
         });
 
-        setStep(0);
-        console.log('✅ card-reveal 独立页面已加载，类型:', params.type);
+        console.log('✅ card-reveal 已加载，类型:', params.type);
     </script>
 </body>
 </html>
