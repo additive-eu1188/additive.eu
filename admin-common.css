@@ -68,3 +68,14 @@ button.success { background: linear-gradient(95deg, #2f6b3a, #1f552c); }
     .menu-toggle { display: block; }
     .main { padding-top: 70px; }
 }
+
+/* ========== 琥珀通知动画 ========== */
+@keyframes slideInRight {
+    0% { transform: translateX(calc(100% + 20px)); opacity: 0; }
+    100% { transform: translateX(0); opacity: 1; }
+}
+
+@keyframes slideOutRight {
+    0% { transform: translateX(0); opacity: 1; }
+    100% { transform: translateX(calc(100% + 20px)); opacity: 0; }
+}
