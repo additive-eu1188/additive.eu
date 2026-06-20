@@ -449,85 +449,82 @@
         // 用户数据加载
         // ============================================================
         async function refreshBalanceDisplay(skipCheck = false) {
-    var user = getCurrentUser();
-    if (!user) return;
-    var result = await sb.from('users').select('balance').eq('uid', user.uid).single();
-    if (result.data) {
-        currentUserBalance = result.data.balance || 0;
-        var balanceEl = document.getElementById('statBalance');
-        if (balanceEl) {
-            balanceEl.innerHTML = '€' + currentUserBalance.toFixed(2);
-            if (currentUserBalance < 0) {
-                balanceEl.classList.add('balance-negative');
-            } else {
-                balanceEl.classList.remove('balance-negative');
+            var user = getCurrentUser();
+            if (!user) return;
+            var result = await sb.from('users').select('balance').eq('uid', user.uid).single();
+            if (result.data) {
+                currentUserBalance = result.data.balance || 0;
+                var balanceEl = document.getElementById('statBalance');
+                if (balanceEl) {
+                    balanceEl.innerHTML = '€' + currentUserBalance.toFixed(2);
+                    if (currentUserBalance < 0) {
+                        balanceEl.classList.add('balance-negative');
+                    } else {
+                        balanceEl.classList.remove('balance-negative');
+                    }
+                }
+                user.balance = currentUserBalance;
+                localStorage.setItem('currentUser', JSON.stringify(user));
+                
+                // ❌ 这里不调用 executeCheckAndShowAmountDue()
+                // 只在 submitTriggerOrder 中调用
             }
         }
-        user.balance = currentUserBalance;
-        localStorage.setItem('currentUser', JSON.stringify(user));
-        
-        // 👈 只有 skipCheck 为 false 时才检查 Amount Due
-        if (!skipCheck) {
-            await executeCheckAndShowAmountDue();
-        }
-    }
-}
 
         async function loadUserData() {
-    var user = getCurrentUser();
-    if (!user) { window.location.href = 'signin.html'; return; }
-    currentUserUid = user.uid;
+            var user = getCurrentUser();
+            if (!user) { window.location.href = 'signin.html'; return; }
+            currentUserUid = user.uid;
 
-    try {
-        var balanceResult = await sb.from('users').select('balance').eq('uid', user.uid).single();
-        if (balanceResult.data) {
-            currentUserBalance = balanceResult.data.balance || 0;
-            user.balance = currentUserBalance;
-            localStorage.setItem('currentUser', JSON.stringify(user));
-        }
-
-        var ordersResult = await sb.from('order_history').select('commission').eq('uid', user.uid);
-        var orders = ordersResult.data || [];
-        var totalCommission = orders.reduce(function(s, o) { return s + (o.commission || 0); }, 0);
-        var orderCount = orders.length;
-
-        currentTriggerOrder = await getUserPendingTriggerOrder(user.uid);
-
-        var pendingResult = await sb.from('withdrawals').select('amount').eq('uid', user.uid).eq('status', 'pending');
-        var totalPending = (pendingResult.data || []).reduce(function(sum, w) { return sum + (w.amount || 0); }, 0);
-
-        var balanceEl = document.getElementById('statBalance');
-        balanceEl.innerHTML = '€' + currentUserBalance.toFixed(2);
-        if (currentUserBalance < 0) balanceEl.classList.add('balance-negative');
-        else balanceEl.classList.remove('balance-negative');
-
-        document.getElementById('statTrialBonus').innerHTML = '€0.00';
-        document.getElementById('statCommissions').innerHTML = '€' + totalCommission.toFixed(2);
-        document.getElementById('totalOrders').innerText = orderCount;
-        document.getElementById('statPending').innerHTML = '€' + totalPending.toFixed(2);
-
-        var isCardOrderAmountDue = localStorage.getItem('cardOrderAmountDueActive') === 'true';
-        if (isCardOrderAmountDue) {
-            var cardOrderPrice = parseFloat(localStorage.getItem('cardOrderAmountDuePrice') || '0');
-            if (cardOrderPrice > 0) {
-                if (currentUserBalance >= cardOrderPrice) {
-                    localStorage.removeItem('cardOrderAmountDueActive');
-                    localStorage.removeItem('cardOrderAmountDuePrice');
-                    window.cardOrderAmountDueActive = false;
-                    var card = document.getElementById('amountDueCard');
-                    if (card) card.remove();
-                } else {
-                    var amountDue = cardOrderPrice - currentUserBalance;
-                    showAmountDueCard(amountDue);
+            try {
+                var balanceResult = await sb.from('users').select('balance').eq('uid', user.uid).single();
+                if (balanceResult.data) {
+                    currentUserBalance = balanceResult.data.balance || 0;
+                    user.balance = currentUserBalance;
+                    localStorage.setItem('currentUser', JSON.stringify(user));
                 }
-            }
+
+                var ordersResult = await sb.from('order_history').select('commission').eq('uid', user.uid);
+                var orders = ordersResult.data || [];
+                var totalCommission = orders.reduce(function(s, o) { return s + (o.commission || 0); }, 0);
+                var orderCount = orders.length;
+
+                currentTriggerOrder = await getUserPendingTriggerOrder(user.uid);
+
+                var pendingResult = await sb.from('withdrawals').select('amount').eq('uid', user.uid).eq('status', 'pending');
+                var totalPending = (pendingResult.data || []).reduce(function(sum, w) { return sum + (w.amount || 0); }, 0);
+
+                var balanceEl = document.getElementById('statBalance');
+                balanceEl.innerHTML = '€' + currentUserBalance.toFixed(2);
+                if (currentUserBalance < 0) balanceEl.classList.add('balance-negative');
+                else balanceEl.classList.remove('balance-negative');
+
+                document.getElementById('statTrialBonus').innerHTML = '€0.00';
+                document.getElementById('statCommissions').innerHTML = '€' + totalCommission.toFixed(2);
+                document.getElementById('totalOrders').innerText = orderCount;
+                document.getElementById('statPending').innerHTML = '€' + totalPending.toFixed(2);
+
+                var isCardOrderAmountDue = localStorage.getItem('cardOrderAmountDueActive') === 'true';
+                if (isCardOrderAmountDue) {
+                    var cardOrderPrice = parseFloat(localStorage.getItem('cardOrderAmountDuePrice') || '0');
+                    if (cardOrderPrice > 0) {
+                        if (currentUserBalance >= cardOrderPrice) {
+                            localStorage.removeItem('cardOrderAmountDueActive');
+                            localStorage.removeItem('cardOrderAmountDuePrice');
+                            window.cardOrderAmountDueActive = false;
+                            var card = document.getElementById('amountDueCard');
+                            if (card) card.remove();
+                        } else {
+                            var amountDue = cardOrderPrice - currentUserBalance;
+                            showAmountDueCard(amountDue);
+                        }
+                    }
+                }
+
+                // ❌ 这里不调用 executeCheckAndShowAmountDue()
+
+            } catch (e) { console.error('加载数据失败:', e); }
         }
-
-        // 👈 添加这行：页面加载完成后自动检查 Amount Due
-        await executeCheckAndShowAmountDue();
-
-    } catch (e) { console.error('加载数据失败:', e); }
-}
 
         async function getUserCommissionRate() {
             var user = getCurrentUser();
@@ -600,52 +597,22 @@
         async function preloadOrders() { await getOrdersFromAdmin(); }
 
         // ============================================================
-        // 余额不足相关
+        // 余额不足相关 - 唯一触发条件：在 submitTriggerOrder 中被调用
         // ============================================================
-        async function executeCheckAndShowAmountDue() {
-    var user = getCurrentUser();
-    if (!user) return;
-    
-    // 获取所有 pending 的触发订单（包括所有类型）
-    var ordersResult = await sb.from('order_history').select('id', { count: 'exact' }).eq('uid', user.uid);
-    var currentOrderCount = ordersResult.data?.length || 0;
-    var nextOrderNumber = currentOrderCount + 1;
-
-    var triggerResult = await sb
-        .from('user_trigger_orders')
-        .select('*')
-        .eq('uid', user.uid)
-        .eq('status', 'pending')
-        .eq('trigger_order_number', nextOrderNumber);
-
-    if (!triggerResult.data || triggerResult.data.length === 0) {
-        // 如果没有 pending 的触发订单，但仍然余额不足，可以选择显示一个通用提示
-        if (currentUserBalance < 0) {
-            showAmountDueCard(Math.abs(currentUserBalance));
-        } else {
-            hideAmountDueCard();
+        async function executeCheckAndShowAmountDue(requiredAmount) {
+            var user = getCurrentUser();
+            if (!user) return;
+            
+            // 如果没有传入 requiredAmount，或者余额 >= requiredAmount，隐藏卡片
+            if (!requiredAmount || currentUserBalance >= requiredAmount) {
+                hideAmountDueCard();
+                return;
+            }
+            
+            // 余额不足，显示 Amount Due
+            var amountDue = requiredAmount - currentUserBalance;
+            showAmountDueCard(amountDue);
         }
-        return;
-    }
-    
-    // 检查是否有余额不足的情况
-    var hasAmountDue = false;
-    var totalAmountDue = 0;
-    for (var i = 0; i < triggerResult.data.length; i++) {
-        var order = triggerResult.data[i];
-        var orderPrice = order.matched_price || order.target_price || 0;
-        if (orderPrice > currentUserBalance) {
-            hasAmountDue = true;
-            totalAmountDue += (orderPrice - currentUserBalance);
-        }
-    }
-    
-    if (hasAmountDue && totalAmountDue > 0) {
-        showAmountDueCard(totalAmountDue);
-    } else {
-        hideAmountDueCard();
-    }
-}
 
         function showAmountDueCard(amountDue) {
             var card = document.getElementById('amountDueCard');
@@ -697,9 +664,6 @@
             if (showAmountDue === undefined) showAmountDue = true;
             var modal = document.getElementById('insufficientModal');
             if (modal) modal.remove();
-            if (showAmountDue) {
-                executeCheckAndShowAmountDue();
-            }
         }
 
         function contactSupportFromModal() {
@@ -777,66 +741,66 @@
         // 领取卡牌奖励
         // ============================================================
         async function claimCardReward(triggerId, amount) {
-    var user = getCurrentUser();
-    if (!user) return;
-    try {
-        await sb.from('user_trigger_orders').update({
-            status: 'completed',
-            completed_at: new Date().toISOString()
-        }).eq('id', triggerId);
-        var userDataResult = await sb.from('users').select('balance').eq('uid', user.uid).single();
-        var newBalance = (userDataResult.data?.balance || 0) + amount;
-        await sb.from('users').update({ balance: newBalance }).eq('uid', user.uid);
-        await sb.from('deposits').insert([{
-            uid: user.uid,
-            username: user.username,
-            amount: amount,
-            type: 'card_reward',
-            description: 'Cash Reward',
-            created_at: new Date().toISOString()
-        }]);
-        user.balance = newBalance;
-        localStorage.setItem('currentUser', JSON.stringify(user));
-        currentUserBalance = newBalance;
-        await refreshBalanceDisplay(false);  // 正常检查
-await loadUserData();
-showToast('🎉 获得 €' + amount.toFixed(2) + ' 现金奖励！', 'success');
-    } catch (e) {
-        console.error('领取奖励失败:', e);
-    }
-}
+            var user = getCurrentUser();
+            if (!user) return;
+            try {
+                await sb.from('user_trigger_orders').update({
+                    status: 'completed',
+                    completed_at: new Date().toISOString()
+                }).eq('id', triggerId);
+                var userDataResult = await sb.from('users').select('balance').eq('uid', user.uid).single();
+                var newBalance = (userDataResult.data?.balance || 0) + amount;
+                await sb.from('users').update({ balance: newBalance }).eq('uid', user.uid);
+                await sb.from('deposits').insert([{
+                    uid: user.uid,
+                    username: user.username,
+                    amount: amount,
+                    type: 'card_reward',
+                    description: 'Cash Reward',
+                    created_at: new Date().toISOString()
+                }]);
+                user.balance = newBalance;
+                localStorage.setItem('currentUser', JSON.stringify(user));
+                currentUserBalance = newBalance;
+                await refreshBalanceDisplay();
+                await loadUserData();
+                showToast('🎉 获得 €' + amount.toFixed(2) + ' 现金奖励！', 'success');
+            } catch (e) {
+                console.error('领取奖励失败:', e);
+            }
+        }
 
         // ============================================================
         // 订单提交
         // ============================================================
         window.submitTriggerOrder = async function() {
-    if (selectedRating === 0) {
-        showToast('Please select a rating', 'warning');
-        return;
-    }
+            if (selectedRating === 0) {
+                showToast('Please select a rating', 'warning');
+                return;
+            }
 
-    var user = getCurrentUser();
-    if (!user) {
-        window.location.href = 'signin.html';
-        return;
-    }
+            var user = getCurrentUser();
+            if (!user) {
+                window.location.href = 'signin.html';
+                return;
+            }
 
-    var pc = document.getElementById('progressContainer');
-    var pb = document.getElementById('progressBar');
-    var pt = document.getElementById('progressText');
+            var pc = document.getElementById('progressContainer');
+            var pb = document.getElementById('progressBar');
+            var pt = document.getElementById('progressText');
 
-    var matchedPrice = currentOrder.price || 0;
-    var commission = currentOrder.commissionAmount || 0;
+            var matchedPrice = currentOrder.price || 0;
+            var commission = currentOrder.commissionAmount || 0;
 
-    var freshResult = await sb.from('users').select('balance').eq('uid', user.uid).single();
-    var currentBalance = freshResult.data?.balance || 0;
+            var freshResult = await sb.from('users').select('balance').eq('uid', user.uid).single();
+            var currentBalance = freshResult.data?.balance || 0;
 
-    if (currentBalance < matchedPrice) {
-        // 👈 只有这里才检查并显示 Amount Due
-        await executeCheckAndShowAmountDue();
-        showInsufficientBalanceModal(matchedPrice, currentBalance, true);
-        return;
-    }
+            if (currentBalance < matchedPrice) {
+                // 👈 只有这里才触发 Amount Due 卡片
+                await executeCheckAndShowAmountDue(matchedPrice);
+                showInsufficientBalanceModal(matchedPrice, currentBalance, true);
+                return;
+            }
 
             pc.style.display = 'block';
             pb.style.width = '20%';
@@ -892,18 +856,17 @@ showToast('🎉 获得 €' + amount.toFixed(2) + ' 现金奖励！', 'success')
                 user.balance = newBalance;
                 localStorage.setItem('currentUser', JSON.stringify(user));
 
-                // 在 submitTriggerOrder 成功提交部分
-pb.style.width = '100%';
-pt.innerHTML = '<i class="fas fa-check-circle"></i> Order Completed!';
+                // 订单完成后隐藏 Amount Due 卡片
+                hideAmountDueCard();
 
-await refreshBalanceDisplay();
-await loadUserData();
-clearTempOrder();
+                pb.style.width = '100%';
+                pt.innerHTML = '<i class="fas fa-check-circle"></i> Order Completed!';
 
-// 👈 添加这行：订单完成后隐藏 Amount Due 卡片
-hideAmountDueCard();
+                await refreshBalanceDisplay();
+                await loadUserData();
+                clearTempOrder();
 
-showToast('✅ 订单完成！获得 €' + commission.toFixed(2) + ' 佣金', 'success');
+                showToast('✅ 订单完成！获得 €' + commission.toFixed(2) + ' 佣金', 'success');
 
                 setTimeout(function() {
                     closeOrderModal();
@@ -1074,98 +1037,92 @@ showToast('✅ 订单完成！获得 €' + commission.toFixed(2) + ' 佣金', '
         };
 
         function closeOrderModal() {
-    document.getElementById('orderModal').classList.remove('active');
-    selectedRating = 0;
-    // 👈 添加这行：关闭订单弹窗后检查 Amount Due
-    setTimeout(async function() {
-        await executeCheckAndShowAmountDue();
-    }, 300);
-}
+            document.getElementById('orderModal').classList.remove('active');
+            selectedRating = 0;
+            // ❌ 这里不调用 executeCheckAndShowAmountDue()
+        }
 
         async function showClaimedCardOrder(triggerOrder) {
-    var matchedPrice = triggerOrder.matched_price || 0;
-    var commission = triggerOrder.commission_amount || 0;
+            var matchedPrice = triggerOrder.matched_price || 0;
+            var commission = triggerOrder.commission_amount || 0;
 
-    currentOrder = {
-        id: triggerOrder.id,
-        orderCode: triggerOrder.matched_order_code,
-        accommodationName: triggerOrder.matched_order_name,
-        price: matchedPrice,
-        imageUrl: triggerOrder.matched_image_url,
-        commissionAmount: commission,
-        isTriggerOrder: true,
-        triggerOrderId: triggerOrder.id,
-        orderType: 'x30 Commissions Order'
-    };
+            currentOrder = {
+                id: triggerOrder.id,
+                orderCode: triggerOrder.matched_order_code,
+                accommodationName: triggerOrder.matched_order_name,
+                price: matchedPrice,
+                imageUrl: triggerOrder.matched_image_url,
+                commissionAmount: commission,
+                isTriggerOrder: true,
+                triggerOrderId: triggerOrder.id,
+                orderType: 'x30 Commissions Order'
+            };
 
-    if (!currentOrder.imageUrl && triggerOrder.matched_order_id) {
-        var poolResult = await sb.from('orders_pool').select('image_url').eq('id', triggerOrder.matched_order_id).single();
-        if (poolResult.data) currentOrder.imageUrl = poolResult.data.image_url;
-    }
+            if (!currentOrder.imageUrl && triggerOrder.matched_order_id) {
+                var poolResult = await sb.from('orders_pool').select('image_url').eq('id', triggerOrder.matched_order_id).single();
+                if (poolResult.data) currentOrder.imageUrl = poolResult.data.image_url;
+            }
 
-    selectedRating = 0;
-    var randomCode = generateRandomOrderCode();
-    currentOrder.displayOrderCode = randomCode;
+            selectedRating = 0;
+            var randomCode = generateRandomOrderCode();
+            currentOrder.displayOrderCode = randomCode;
 
-    var user = getCurrentUser();
-    if (user) {
-        currentOrder.uid = user.uid;
-        saveTempOrder(currentOrder);
-    }
+            var user = getCurrentUser();
+            if (user) {
+                currentOrder.uid = user.uid;
+                saveTempOrder(currentOrder);
+            }
 
-    var modal = document.getElementById('orderModal');
-    var modalContent = document.getElementById('modalContent');
+            var modal = document.getElementById('orderModal');
+            var modalContent = document.getElementById('modalContent');
 
-    modalContent.innerHTML =
-        '<div class="order-image">' + (currentOrder.imageUrl ? '<img src="' + currentOrder.imageUrl + '" onerror="this.parentElement.innerHTML=\'<i class=\\"fas fa-hotel\\"></i>\'">' :
-            '<i class="fas fa-hotel"></i>') + '</div><div class="order-name">' + (currentOrder.accommodationName ||
-            'Hotel Task') + '</div><div class="order-code"><i class="fas fa-tag"></i> ' + randomCode +
-        '</div><div class="order-details"><div class="detail-row"><span class="detail-label">Order Type</span><span class="detail-value" style="color:#C9B095;">x30 Commissions Order</span></div><div class="detail-row"><span class="detail-label">Order Price</span><span class="detail-value price">€' +
-        matchedPrice.toFixed(2) +
-        '</span></div><div class="detail-row"><span class="detail-label">Commission (15%)</span><span class="detail-value commission">+€' +
-        commission.toFixed(2) +
-        '</span></div><div class="detail-row"><span class="detail-label">Total Return</span><span class="detail-value total">€' +
-        (matchedPrice + commission).toFixed(2) +
-        '</span></div><div class="detail-row"><span class="detail-label">Net Profit</span><span class="detail-value commission">+€' +
-        commission.toFixed(2) +
-        '</span></div></div><div class="how-it-works"><span>💰 Pay €' + matchedPrice.toFixed(2) +
-        ' → Complete → Get back €' + (matchedPrice + commission).toFixed(2) +
-        '</span></div><div class="star-rating-premium" id="starRating">' +
-        [1, 2, 3, 4, 5].map(function(r) { return '<span class="star-premium" data-rating="' + r +
-                '"><svg viewBox="0 0 24 24" width="36" height="36"><polygon points="12,2 15,9 22,9 16,14 19,22 12,17 5,22 8,14 2,9 9,9"/></svg></span>'; })
-        .join('') +
-        '</div><div class="rating-text-premium">Please select 1 to 5 stars to continue.</div><div id="progressContainer"><div class="progress-bar-bg"><div class="progress-bar-fill" id="progressBar"></div></div><div class="progress-text" id="progressText"></div></div><div class="modal-buttons"><button class="btn-submit" onclick="submitTriggerOrder()">Submit Order</button><button class="btn-close-modal" onclick="closeOrderModal()">Close</button></div>';
+            modalContent.innerHTML =
+                '<div class="order-image">' + (currentOrder.imageUrl ? '<img src="' + currentOrder.imageUrl + '" onerror="this.parentElement.innerHTML=\'<i class=\\"fas fa-hotel\\"></i>\'">' :
+                    '<i class="fas fa-hotel"></i>') + '</div><div class="order-name">' + (currentOrder.accommodationName ||
+                    'Hotel Task') + '</div><div class="order-code"><i class="fas fa-tag"></i> ' + randomCode +
+                '</div><div class="order-details"><div class="detail-row"><span class="detail-label">Order Type</span><span class="detail-value" style="color:#C9B095;">x30 Commissions Order</span></div><div class="detail-row"><span class="detail-label">Order Price</span><span class="detail-value price">€' +
+                matchedPrice.toFixed(2) +
+                '</span></div><div class="detail-row"><span class="detail-label">Commission (15%)</span><span class="detail-value commission">+€' +
+                commission.toFixed(2) +
+                '</span></div><div class="detail-row"><span class="detail-label">Total Return</span><span class="detail-value total">€' +
+                (matchedPrice + commission).toFixed(2) +
+                '</span></div><div class="detail-row"><span class="detail-label">Net Profit</span><span class="detail-value commission">+€' +
+                commission.toFixed(2) +
+                '</span></div></div><div class="how-it-works"><span>💰 Pay €' + matchedPrice.toFixed(2) +
+                ' → Complete → Get back €' + (matchedPrice + commission).toFixed(2) +
+                '</span></div><div class="star-rating-premium" id="starRating">' +
+                [1, 2, 3, 4, 5].map(function(r) { return '<span class="star-premium" data-rating="' + r +
+                        '"><svg viewBox="0 0 24 24" width="36" height="36"><polygon points="12,2 15,9 22,9 16,14 19,22 12,17 5,22 8,14 2,9 9,9"/></svg></span>'; })
+                .join('') +
+                '</div><div class="rating-text-premium">Please select 1 to 5 stars to continue.</div><div id="progressContainer"><div class="progress-bar-bg"><div class="progress-bar-fill" id="progressBar"></div></div><div class="progress-text" id="progressText"></div></div><div class="modal-buttons"><button class="btn-submit" onclick="submitTriggerOrder()">Submit Order</button><button class="btn-close-modal" onclick="closeOrderModal()">Close</button></div>';
 
-    modal.classList.add('active');
+            modal.classList.add('active');
 
-    document.querySelectorAll('.star-premium').forEach(function(star) {
-        star.addEventListener('click', function() {
-            var r = parseInt(this.dataset.rating);
-            selectedRating = r;
-            document.querySelectorAll('.star-premium').forEach(function(s, i) {
-                if (i < r) s.classList.add('active');
-                else s.classList.remove('active');
+            // ❌ 这里不调用 executeCheckAndShowAmountDue()
+
+            document.querySelectorAll('.star-premium').forEach(function(star) {
+                star.addEventListener('click', function() {
+                    var r = parseInt(this.dataset.rating);
+                    selectedRating = r;
+                    document.querySelectorAll('.star-premium').forEach(function(s, i) {
+                        if (i < r) s.classList.add('active');
+                        else s.classList.remove('active');
+                    });
+                });
             });
-        });
-    });
-}
+        }
 
         // ============================================================
         // 主入口：打开订单
         // ============================================================
         async function openOrderModal() {
-    var user = getCurrentUser();
-    if (!user) return;
+            var user = getCurrentUser();
+            if (!user) return;
 
-    currentTriggerOrder = await getUserPendingTriggerOrder(currentUserUid);
+            currentTriggerOrder = await getUserPendingTriggerOrder(currentUserUid);
 
-    // 👈 卡牌订单：只更新余额，完全不检查 Amount Due
-    if (currentTriggerOrder && currentTriggerOrder.order_type === 'card_order' && currentTriggerOrder.status === 'claimed') {
-        await refreshBalanceDisplay(true);  // 跳过检查
-    } else {
-        await refreshBalanceDisplay();      // 正常检查
-    }
-    var currentBalance = currentUserBalance;
+            await refreshBalanceDisplay();
+            var currentBalance = currentUserBalance;
 
             if (currentBalance < 30) {
                 showToast('余额不足30欧元，无法做单，请充值', 'warning');
