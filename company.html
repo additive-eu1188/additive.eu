@@ -3,60 +3,70 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>ADDITIVE - <span id="pageTitle">Content</span></title>
+    <title>ADDITIVE - Company Profile</title>
     <link rel="stylesheet" href="common.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="user-data.js"></script>
     <style>
-        .content-header {
-            margin-bottom: 24px;
-            padding-bottom: 20px;
-            border-bottom: 1px solid rgba(201, 176, 149, 0.2);
+        .page-content {
+            max-width: 900px;
+            margin: 0 auto;
         }
-        .content-header h1 {
+        .page-header {
+            margin-bottom: 24px;
+        }
+        .page-header h1 {
             font-size: 28px;
             font-weight: 700;
             color: #C9B095;
-            margin-bottom: 8px;
+            margin-bottom: 6px;
         }
-        .content-header .last-updated {
-            font-size: 12px;
+        .page-header p {
             color: #7a85a5;
+            font-size: 13px;
         }
-        .content-body {
+        .content-card {
             background: rgba(20, 30, 55, 0.4);
             backdrop-filter: blur(8px);
             border-radius: 24px;
             padding: 32px;
             border: 1px solid rgba(201, 176, 149, 0.1);
+        }
+        .content-card .content-image {
+            width: 100%;
+            max-height: 400px;
+            object-fit: cover;
+            border-radius: 16px;
+            margin-bottom: 24px;
+            border: 1px solid rgba(201, 176, 149, 0.1);
+        }
+        .content-card .content-text {
             color: #c0c8e0;
             line-height: 1.8;
+            font-size: 14px;
         }
-        .content-body h2 {
+        .content-card .content-text h2 {
             color: #C9B095;
             font-size: 22px;
-            margin-top: 28px;
+            margin-top: 24px;
             margin-bottom: 16px;
         }
-        .content-body h2:first-of-type {
-            margin-top: 0;
-        }
-        .content-body h3 {
+        .content-card .content-text h3 {
             color: #ffffff;
             font-size: 18px;
             margin-top: 20px;
             margin-bottom: 12px;
         }
-        .content-body p {
+        .content-card .content-text p {
             margin-bottom: 16px;
-            font-size: 14px;
         }
-        .content-body ul, .content-body ol {
+        .content-card .content-text ul,
+        .content-card .content-text ol {
             margin-left: 24px;
             margin-bottom: 16px;
         }
-        .content-body li {
+        .content-card .content-text li {
             margin-bottom: 8px;
         }
         .content-loading {
@@ -86,30 +96,21 @@
         .upgrade-title { font-size: 18px; font-weight: 600; margin-bottom: 10px; color: #C9B095; }
         .upgrade-desc { font-size: 13px; color: #7a85a5; line-height: 1.5; margin-bottom: 20px; }
         .btn-upgrade { background: rgba(201,176,149,0.15); padding: 10px 20px; border-radius: 40px; text-decoration: none; color: #C9B095; font-weight: 600; font-size: 14px; display: inline-flex; align-items: center; gap: 8px; border: 1px solid rgba(201,176,149,0.3); }
-        
         @media (max-width: 768px) {
-            .content-body {
-                padding: 20px;
-            }
-            .content-body h2 {
-                font-size: 18px;
-            }
-            .content-body h3 {
-                font-size: 16px;
-            }
+            .content-card { padding: 20px; }
         }
     </style>
 </head>
 <body>
-<div class="menu-overlay" id="menuOverlay" onclick="closeMenu()"></div>
-
-
-
+    <div class="menu-overlay" id="menuOverlay" onclick="closeMenu()"></div>
 
     <div class="app">
         <aside class="sidebar" id="sidebar">
             <div class="sidebar-top">
-                <div class="logo">ADDITIVE<span>®</span></div>
+                <div class="logo">
+                    <img src="https://qgmbzdfnwsdosdqphlxk.supabase.co/storage/v1/object/public/logos/additivelogo1.png" alt="ADDITIVE" style="height: 35px; width: auto;">
+                    <span>®</span>
+                </div>
                 <nav class="nav">
                     <a href="dashboard.html" class="nav-item"><i class="fas fa-th-large"></i><span>Dashboard</span></a>
                     <a href="start.html" class="nav-item"><i class="fas fa-play"></i><span>Start</span></a>
@@ -117,6 +118,8 @@
                     <a href="checkin.html" class="nav-item"><i class="fas fa-calendar-check"></i><span>Sign in</span></a>
                     <a href="event.html" class="nav-item"><i class="fas fa-calendar-alt"></i><span>Event</span></a>
                     <a href="withdrawal.html" class="nav-item"><i class="fas fa-arrow-right-to-bracket"></i><span>Withdrawal</span></a>
+                    <a href="employment.html" class="nav-item"><i class="fas fa-file-contract"></i><span>Employment Contract</span></a>
+                    <a href="company.html" class="nav-item active"><i class="fas fa-building"></i><span>Company Profile</span></a>
                     <a href="chat.html" class="nav-item"><i class="fas fa-comment-dots"></i><span>Chat with us</span></a>
                     <a href="employment.html" class="nav-item"><i class="fas fa-file-contract"></i><span>Employment Contract</span></a>
                     <a href="company.html" class="nav-item"><i class="fas fa-building"></i><span>Company Profile</span></a>
@@ -133,125 +136,117 @@
         </aside>
 
         <main class="main">
-<div class="mobile-top-bar">
-    <div class="menu-toggle" id="menuToggleBtn" onclick="toggleMenu()">
-        <i class="fas fa-bars"></i>
-    </div>
-    <div class="mobile-logo">
-        <img src="https://qgmbzdfnwsdosdqphlxk.supabase.co/storage/v1/object/public/logos/additivelogo1.png" alt="ADDITIVE">
-    </div>
-</div>
-            <div id="contentContainer">
-                <div class="content-loading">
-                    <i class="fas fa-spinner fa-spin"></i>
-                    <p>Loading content...</p>
+            <div class="mobile-top-bar">
+                <div class="menu-toggle" id="menuToggleBtn" onclick="toggleMenu()">
+                    <i class="fas fa-bars"></i>
+                </div>
+                <div class="mobile-logo">
+                    <img src="https://qgmbzdfnwsdosdqphlxk.supabase.co/storage/v1/object/public/logos/additivelogo1.png" alt="ADDITIVE">
                 </div>
             </div>
 
-            <div class="upgrade-card-pulse">
-                <div class="upgrade-title">✨ Upgrade your membership</div>
-                <div class="upgrade-desc">Unlock higher rewards, priority support, and premium hotel discovery benefits.</div>
-                <a href="membership.html" class="btn-upgrade">Upgrade Now <i class="fas fa-arrow-right"></i></a>
+            <div class="page-content">
+                <div class="page-header">
+                    <h1>🏢 Company Profile</h1>
+                    <p>Learn more about ADDITIVE and our mission</p>
+                </div>
+
+                <div id="contentContainer">
+                    <div class="content-loading">
+                        <i class="fas fa-spinner fa-spin"></i>
+                        <p>Loading...</p>
+                    </div>
+                </div>
+
+                <div class="upgrade-card-pulse">
+                    <div class="upgrade-title">✨ Upgrade your membership</div>
+                    <div class="upgrade-desc">Unlock higher rewards, priority support, and premium hotel discovery benefits.</div>
+                    <a href="membership.html" class="btn-upgrade">Upgrade Now <i class="fas fa-arrow-right"></i></a>
+                </div>
             </div>
         </main>
     </div>
 
     <script>
-        function toggleMenu() { 
-            const sidebar = document.getElementById('sidebar'); 
-            const overlay = document.querySelector('.menu-overlay'); 
-            const menuBtn = document.getElementById('menuToggleBtn'); 
-            if (sidebar) sidebar.classList.toggle('open'); 
-            if (overlay) overlay.classList.toggle('active'); 
-            if (menuBtn) menuBtn.classList.toggle('hidden'); 
-        }
-        function closeMenu() { 
-            const sidebar = document.getElementById('sidebar'); 
-            const overlay = document.querySelector('.menu-overlay'); 
-            const menuBtn = document.getElementById('menuToggleBtn'); 
-            if (sidebar) sidebar.classList.remove('open'); 
-            if (overlay) overlay.classList.remove('active'); 
-            if (menuBtn) menuBtn.classList.remove('hidden'); 
+        const SUPABASE_URL = 'https://qgmbzdfnwsdosdqphlxk.supabase.co';
+        const SUPABASE_KEY = 'sb_publishable_zsJFjfNUO7NKp8ZH5KrXFQ_WZ8Q2Kym';
+        const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        function toggleMenu() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('menuOverlay');
+            const menuBtn = document.getElementById('menuToggleBtn');
+            if (sidebar) sidebar.classList.toggle('open');
+            if (overlay) overlay.classList.toggle('active');
+            if (menuBtn) menuBtn.classList.toggle('hidden');
         }
 
-        // 根据 URL 参数获取内容类型
-        function getContentType() {
-            const urlParams = new URLSearchParams(window.location.search);
-            const type = urlParams.get('type');
-            return type || 'tc'; // 默认 tc
+        function closeMenu() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('menuOverlay');
+            const menuBtn = document.getElementById('menuToggleBtn');
+            if (sidebar) sidebar.classList.remove('open');
+            if (overlay) overlay.classList.remove('active');
+            if (menuBtn) menuBtn.classList.remove('hidden');
         }
 
-        // 获取内容标题
-        function getContentTitle(type) {
-    const titles = {
-        'tc': 'Über uns',
-        'privacy': 'Datenschutz & Sicherheit',
-        'rules': 'Plattformregeln'
-    };
-    return titles[type] || 'Content';
-}
+        function escapeHtml(str) {
+            if (!str) return '';
+            return str.replace(/[&<>]/g, function(m) {
+                if (m === '&') return '&amp;';
+                if (m === '<') return '&lt;';
+                if (m === '>') return '&gt;';
+                return m;
+            });
+        }
 
         async function loadContent() {
             const container = document.getElementById('contentContainer');
-            const contentType = getContentType();
-            const pageTitle = getContentTitle(contentType);
-            
-            // 更新页面标题
-            document.title = `ADDITIVE - ${pageTitle}`;
-            
-            // 根据类型获取数据库中的标题
-            let dbTitle = '';
-            if (contentType === 'tc') dbTitle = 'T&C';
-            else if (contentType === 'privacy') dbTitle = 'Privacy & Security';
-            else if (contentType === 'rules') dbTitle = 'Platform Rules';
-            
+
             try {
                 const { data, error } = await sb
                     .from('system_content')
                     .select('*')
-                    .eq('title', dbTitle)
+                    .eq('title', 'Company Profile')
                     .single();
-                
+
                 if (error) throw error;
-                
+
                 if (data) {
                     container.innerHTML = `
-                        <div class="content-header">
-                            <h1>${data.title}</h1>
-                            <div class="last-updated"><i class="fas fa-clock"></i> Last updated: ${new Date(data.updated_at || data.created_at).toLocaleDateString()}</div>
-                        </div>
-                        <div class="content-body">
-                            ${data.content || '<p>Content coming soon...</p>'}
+                        <div class="content-card">
+                            ${data.image_url ? `<img src="${data.image_url}" class="content-image" alt="Company Profile" onerror="this.style.display='none'">` : ''}
+                            <div class="content-text">
+                                ${data.content || '<p>Content coming soon...</p>'}
+                            </div>
+                            <div style="margin-top: 20px; padding-top: 16px; border-top: 1px solid rgba(201,176,149,0.1); font-size: 11px; color: #6a7a9a;">
+                                <i class="fas fa-clock"></i> Last updated: ${new Date(data.updated_at || data.created_at).toLocaleString()}
+                            </div>
                         </div>
                     `;
                 } else {
                     container.innerHTML = `
-                        <div class="content-header">
-                            <h1>${pageTitle}</h1>
-                        </div>
-                        <div class="content-body">
-                            <p>Content not found. Please check back later.</p>
+                        <div class="content-card">
+                            <div class="content-text">
+                                <p>Content not found. Please check back later.</p>
+                            </div>
                         </div>
                     `;
                 }
             } catch (error) {
                 console.error('加载内容失败:', error);
                 container.innerHTML = `
-                    <div class="content-header">
-                        <h1>${pageTitle}</h1>
-                    </div>
-                    <div class="content-body">
-                        <p>Unable to load content. Please try again later.</p>
-                        <p style="font-size: 12px; color: #ff8888;">Error: ${error.message}</p>
+                    <div class="content-card">
+                        <div class="content-text">
+                            <p>Unable to load content. Please try again later.</p>
+                            <p style="font-size: 12px; color: #ff8888;">Error: ${escapeHtml(error.message)}</p>
+                        </div>
                     </div>
                 `;
             }
         }
 
-        // 检查登录状态
         checkLogin();
-        
-        // 加载内容
         loadContent();
     </script>
 </body>
