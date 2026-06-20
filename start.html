@@ -936,7 +936,7 @@
             return result.data?.orders_limit || 30;
         }
 
-        function loadAnimatedConfig() {
+        async function loadAnimatedConfig() {
             sb.from('animated_settings').select('*').eq('id', 1).single().then(function(result) {
                 var data = result.data;
                 if (data && data.video_url) {
