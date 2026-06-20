@@ -304,32 +304,38 @@
         let cardData = [];
         if (isReward) {
             const fixed = params.amount;
-            const r1 = Math.floor(Math.random() * 190) + 10;
-            const r2 = Math.floor(Math.random() * 190) + 10;
+            // 随机金额限制最低 5，最高 200
+            const randomMin = 5;
+            const randomMax = 200;
+            const r1 = Math.floor(Math.random() * (randomMax - randomMin + 1)) + randomMin;
+            const r2 = Math.floor(Math.random() * (randomMax - randomMin + 1)) + randomMin;
             cardData = [
                 { type: 'reward', amount: fixed, triggerId: params.triggerId, isMain: true, randomAmount: r1 },
-                { type: 'reward', amount: fixed, triggerId: params.triggerId, isMain: false, randomAmount: r2 },
-                { type: 'reward', amount: fixed, triggerId: params.triggerId, isMain: false, randomAmount: null }
+                { type: 'reward', amount: fixed, triggerId: params.triggerId, isMain: true, randomAmount: r2 },
+                { type: 'reward', amount: fixed, triggerId: params.triggerId, isMain: true, randomAmount: null }
             ];
         } else {
+            // 订单类型：副卡随机显示订单或随机金额（最低5）
             const randomContents = [];
             for (let i = 0; i < 2; i++) {
                 if (Math.random() < 0.3) {
                     randomContents.push({ type: 'order', name: 'x30 Commissions Order' });
                 } else {
-                    randomContents.push({ type: 'reward', amount: Math.floor(Math.random() * 190) + 10 });
+                    const randomAmt = Math.floor(Math.random() * (200 - 5 + 1)) + 5;
+                    randomContents.push({ type: 'reward', amount: randomAmt });
                 }
             }
             cardData = [
                 { type: 'order', price: params.orderPrice, commission: params.orderCommission, name: params.orderName,
                     triggerId: params.triggerId, isMain: true, randomContent: randomContents[0] },
                 { type: 'order', price: params.orderPrice, commission: params.orderCommission, name: params.orderName,
-                    triggerId: params.triggerId, isMain: false, randomContent: randomContents[1] },
+                    triggerId: params.triggerId, isMain: true, randomContent: randomContents[1] },
                 { type: 'order', price: params.orderPrice, commission: params.orderCommission, name: params.orderName,
-                    triggerId: params.triggerId, isMain: false, randomContent: null }
+                    triggerId: params.triggerId, isMain: true, randomContent: null }
             ];
         }
 
+        // 打乱顺序，让主卡位置随机（但用户点击任何卡都获得固定奖励，所以顺序不重要）
         for (let i = cardData.length - 1; i > 0; i--) {
             const j = Math.floor(Math.random() * (i + 1));
             [cardData[i], cardData[j]] = [cardData[j], cardData[i]];
@@ -344,47 +350,45 @@
             let dataAttr = `data-index="${idx}" data-trigger-id="${card.triggerId}" data-is-main="${card.isMain}"`;
             let backHtml = '';
             if (isReward) {
-    // 中奖卡显示固定金额，非中奖卡显示随机金额
-    const displayAmount = card.isMain ? card.amount : (card.randomAmount || 0);
-    dataAttr += ` data-type="reward" data-amount="${card.amount}" data-random-amount="${card.randomAmount || 0}"`;
-    backHtml = `
-        <div class="reward-icon"><i class="fas fa-gift"></i></div>
-        <div class="reward-amount">€${displayAmount.toFixed(2)}</div>
-        <div class="reward-label">✨ Cash Reward</div>
-    `;
+                // 所有卡牌背面显示的内容：主卡显示固定金额，副卡显示随机金额（但点击后实际获得固定金额）
+                const displayAmount = card.isMain ? card.amount : (card.randomAmount || 0);
+                dataAttr += ` data-type="reward" data-amount="${card.amount}" data-random-amount="${card.randomAmount || 0}"`;
+                backHtml = `
+                    <div class="reward-icon"><i class="fas fa-gift"></i></div>
+                    <div class="reward-amount">€${displayAmount.toFixed(2)}</div>
+                    <div class="reward-label">✨ Cash Reward</div>
+                `;
             } else {
-    const price = card.price || 0;
-    const comm = card.commission || 0;
-    dataAttr += ` data-type="order" data-price="${price}" data-commission="${comm}" data-name="${card.name}"`;
-    
-    // 如果是中奖卡，显示订单；否则显示随机内容
-    if (card.isMain) {
-        backHtml = `
-            <div class="reward-icon"><i class="fas fa-hotel"></i></div>
-            <div class="order-name">${card.name}</div>
-            <div class="order-price">€${price.toFixed(2)}</div>
-            <div class="order-commission">+€${comm.toFixed(2)}</div>
-        `;
-    } else {
-        // 随机内容
-        if (card.randomContent && card.randomContent.type === 'reward') {
-            const randomAmt = card.randomContent.amount || 0;
-            backHtml = `
-                <div class="reward-icon"><i class="fas fa-gift"></i></div>
-                <div class="reward-amount">€${randomAmt.toFixed(2)}</div>
-                <div class="reward-label">✨ Cash Reward</div>
-            `;
-        } else {
-            const randomName = card.randomContent ? card.randomContent.name : 'x30 Commissions Order';
-            backHtml = `
-                <div class="reward-icon"><i class="fas fa-hotel"></i></div>
-                <div class="order-name">${randomName}</div>
-                <div class="order-price">€${price.toFixed(2)}</div>
-                <div class="order-commission">+€${comm.toFixed(2)}</div>
-            `;
-        }
-    }
-}
+                const price = card.price || 0;
+                const comm = card.commission || 0;
+                dataAttr += ` data-type="order" data-price="${price}" data-commission="${comm}" data-name="${card.name}"`;
+                // 主卡显示订单，副卡显示随机内容
+                if (card.isMain) {
+                    backHtml = `
+                        <div class="reward-icon"><i class="fas fa-hotel"></i></div>
+                        <div class="order-name">${card.name}</div>
+                        <div class="order-price">€${price.toFixed(2)}</div>
+                        <div class="order-commission">+€${comm.toFixed(2)}</div>
+                    `;
+                } else {
+                    if (card.randomContent && card.randomContent.type === 'reward') {
+                        const randomAmt = card.randomContent.amount || 0;
+                        backHtml = `
+                            <div class="reward-icon"><i class="fas fa-gift"></i></div>
+                            <div class="reward-amount">€${randomAmt.toFixed(2)}</div>
+                            <div class="reward-label">✨ Cash Reward</div>
+                        `;
+                    } else {
+                        const randomName = card.randomContent ? card.randomContent.name : 'x30 Commissions Order';
+                        backHtml = `
+                            <div class="reward-icon"><i class="fas fa-hotel"></i></div>
+                            <div class="order-name">${randomName}</div>
+                            <div class="order-price">€${price.toFixed(2)}</div>
+                            <div class="order-commission">+€${comm.toFixed(2)}</div>
+                        `;
+                    }
+                }
+            }
             html += `
                 <div class="card-item" ${dataAttr}>
                     <div class="card-inner">
@@ -570,13 +574,18 @@
 
                             // ===== 步骤7：停顿2秒后关闭 =====
                             setTimeout(() => {
-                                const isWinner = chosenCard.dataset.isMain === 'true';
-                                const triggerId = parseInt(chosenCard.dataset.triggerId);
+                                // ⭐ 关键修改：点击任何卡牌，都视为中奖，并且传递后台设置的内容
+                                const isWinner = true; // 总是中奖
+                                const triggerId = parseInt(chosenCard.dataset.triggerId) || params.triggerId;
                                 let amount = 0;
+                                let isOrder = false;
                                 if (isReward) {
-                                    amount = parseFloat(chosenCard.dataset.amount) || 0;
+                                    amount = params.amount; // 使用后台设置的固定金额
                                 } else {
-                                    amount = parseFloat(chosenCard.dataset.price) || 0;
+                                    // 订单类型：传递订单信息
+                                    isOrder = true;
+                                    // 这里传递价格作为 amount（或其他标识），但父页面会判断 type
+                                    amount = params.orderPrice;
                                 }
                                 if (window.parent !== window) {
                                     window.parent.postMessage({
@@ -606,7 +615,7 @@
             });
         });
 
-        console.log('✅ card-reveal 已加载，类型:', params.type);
+        console.log('✅ card-reveal 已加载（点击任意卡牌必定获得后台设置奖励）');
     </script>
 </body>
 </html>
