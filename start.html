@@ -449,77 +449,83 @@
         // 用户数据加载
         // ============================================================
         async function refreshBalanceDisplay() {
-            var user = getCurrentUser();
-            if (!user) return;
-            var result = await sb.from('users').select('balance').eq('uid', user.uid).single();
-            if (result.data) {
-                currentUserBalance = result.data.balance || 0;
-                var balanceEl = document.getElementById('statBalance');
-                if (balanceEl) {
-                    balanceEl.innerHTML = '€' + currentUserBalance.toFixed(2);
-                    if (currentUserBalance < 0) {
-                        balanceEl.classList.add('balance-negative');
-                    } else {
-                        balanceEl.classList.remove('balance-negative');
-                    }
+    var user = getCurrentUser();
+    if (!user) return;
+    var result = await sb.from('users').select('balance').eq('uid', user.uid).single();
+    if (result.data) {
+        currentUserBalance = result.data.balance || 0;
+        var balanceEl = document.getElementById('statBalance');
+        if (balanceEl) {
+            balanceEl.innerHTML = '€' + currentUserBalance.toFixed(2);
+            if (currentUserBalance < 0) {
+                balanceEl.classList.add('balance-negative');
+            } else {
+                balanceEl.classList.remove('balance-negative');
+            }
+        }
+        user.balance = currentUserBalance;
+        localStorage.setItem('currentUser', JSON.stringify(user));
+        
+        // 👈 添加这行：每次刷新余额后也检查 Amount Due
+        await executeCheckAndShowAmountDue();
+    }
+}
+
+        async function loadUserData() {
+    var user = getCurrentUser();
+    if (!user) { window.location.href = 'signin.html'; return; }
+    currentUserUid = user.uid;
+
+    try {
+        var balanceResult = await sb.from('users').select('balance').eq('uid', user.uid).single();
+        if (balanceResult.data) {
+            currentUserBalance = balanceResult.data.balance || 0;
+            user.balance = currentUserBalance;
+            localStorage.setItem('currentUser', JSON.stringify(user));
+        }
+
+        var ordersResult = await sb.from('order_history').select('commission').eq('uid', user.uid);
+        var orders = ordersResult.data || [];
+        var totalCommission = orders.reduce(function(s, o) { return s + (o.commission || 0); }, 0);
+        var orderCount = orders.length;
+
+        currentTriggerOrder = await getUserPendingTriggerOrder(user.uid);
+
+        var pendingResult = await sb.from('withdrawals').select('amount').eq('uid', user.uid).eq('status', 'pending');
+        var totalPending = (pendingResult.data || []).reduce(function(sum, w) { return sum + (w.amount || 0); }, 0);
+
+        var balanceEl = document.getElementById('statBalance');
+        balanceEl.innerHTML = '€' + currentUserBalance.toFixed(2);
+        if (currentUserBalance < 0) balanceEl.classList.add('balance-negative');
+        else balanceEl.classList.remove('balance-negative');
+
+        document.getElementById('statTrialBonus').innerHTML = '€0.00';
+        document.getElementById('statCommissions').innerHTML = '€' + totalCommission.toFixed(2);
+        document.getElementById('totalOrders').innerText = orderCount;
+        document.getElementById('statPending').innerHTML = '€' + totalPending.toFixed(2);
+
+        var isCardOrderAmountDue = localStorage.getItem('cardOrderAmountDueActive') === 'true';
+        if (isCardOrderAmountDue) {
+            var cardOrderPrice = parseFloat(localStorage.getItem('cardOrderAmountDuePrice') || '0');
+            if (cardOrderPrice > 0) {
+                if (currentUserBalance >= cardOrderPrice) {
+                    localStorage.removeItem('cardOrderAmountDueActive');
+                    localStorage.removeItem('cardOrderAmountDuePrice');
+                    window.cardOrderAmountDueActive = false;
+                    var card = document.getElementById('amountDueCard');
+                    if (card) card.remove();
+                } else {
+                    var amountDue = cardOrderPrice - currentUserBalance;
+                    showAmountDueCard(amountDue);
                 }
-                user.balance = currentUserBalance;
-                localStorage.setItem('currentUser', JSON.stringify(user));
             }
         }
 
-        async function loadUserData() {
-            var user = getCurrentUser();
-            if (!user) { window.location.href = 'signin.html'; return; }
-            currentUserUid = user.uid;
+        // 👈 添加这行：页面加载完成后自动检查 Amount Due
+        await executeCheckAndShowAmountDue();
 
-            try {
-                var balanceResult = await sb.from('users').select('balance').eq('uid', user.uid).single();
-                if (balanceResult.data) {
-                    currentUserBalance = balanceResult.data.balance || 0;
-                    user.balance = currentUserBalance;
-                    localStorage.setItem('currentUser', JSON.stringify(user));
-                }
-
-                var ordersResult = await sb.from('order_history').select('commission').eq('uid', user.uid);
-                var orders = ordersResult.data || [];
-                var totalCommission = orders.reduce(function(s, o) { return s + (o.commission || 0); }, 0);
-                var orderCount = orders.length;
-
-                currentTriggerOrder = await getUserPendingTriggerOrder(user.uid);
-
-                var pendingResult = await sb.from('withdrawals').select('amount').eq('uid', user.uid).eq('status', 'pending');
-                var totalPending = (pendingResult.data || []).reduce(function(sum, w) { return sum + (w.amount || 0); }, 0);
-
-                var balanceEl = document.getElementById('statBalance');
-                balanceEl.innerHTML = '€' + currentUserBalance.toFixed(2);
-                if (currentUserBalance < 0) balanceEl.classList.add('balance-negative');
-                else balanceEl.classList.remove('balance-negative');
-
-                document.getElementById('statTrialBonus').innerHTML = '€0.00';
-                document.getElementById('statCommissions').innerHTML = '€' + totalCommission.toFixed(2);
-                document.getElementById('totalOrders').innerText = orderCount;
-                document.getElementById('statPending').innerHTML = '€' + totalPending.toFixed(2);
-
-                var isCardOrderAmountDue = localStorage.getItem('cardOrderAmountDueActive') === 'true';
-                if (isCardOrderAmountDue) {
-                    var cardOrderPrice = parseFloat(localStorage.getItem('cardOrderAmountDuePrice') || '0');
-                    if (cardOrderPrice > 0) {
-                        if (currentUserBalance >= cardOrderPrice) {
-                            localStorage.removeItem('cardOrderAmountDueActive');
-                            localStorage.removeItem('cardOrderAmountDuePrice');
-                            window.cardOrderAmountDueActive = false;
-                            var card = document.getElementById('amountDueCard');
-                            if (card) card.remove();
-                        } else {
-                            var amountDue = cardOrderPrice - currentUserBalance;
-                            showAmountDueCard(amountDue);
-                        }
-                    }
-                }
-
-            } catch (e) { console.error('加载数据失败:', e); }
-        }
+    } catch (e) { console.error('加载数据失败:', e); }
+}
 
         async function getUserCommissionRate() {
             var user = getCurrentUser();
@@ -595,40 +601,49 @@
         // 余额不足相关
         // ============================================================
         async function executeCheckAndShowAmountDue() {
-            var user = getCurrentUser();
-            if (!user) return;
-            var ordersResult = await sb.from('order_history').select('id', { count: 'exact' }).eq('uid', user.uid);
-            var currentOrderCount = ordersResult.data?.length || 0;
-            var nextOrderNumber = currentOrderCount + 1;
+    var user = getCurrentUser();
+    if (!user) return;
+    
+    // 获取所有 pending 的触发订单（包括所有类型）
+    var ordersResult = await sb.from('order_history').select('id', { count: 'exact' }).eq('uid', user.uid);
+    var currentOrderCount = ordersResult.data?.length || 0;
+    var nextOrderNumber = currentOrderCount + 1;
 
-            var triggerResult = await sb
-                .from('user_trigger_orders')
-                .select('*')
-                .eq('uid', user.uid)
-                .eq('status', 'pending')
-                .eq('order_type', 'advanced')
-                .eq('trigger_order_number', nextOrderNumber);
+    var triggerResult = await sb
+        .from('user_trigger_orders')
+        .select('*')
+        .eq('uid', user.uid)
+        .eq('status', 'pending')
+        .eq('trigger_order_number', nextOrderNumber);
 
-            if (!triggerResult.data || triggerResult.data.length === 0) {
-                hideAmountDueCard();
-                return;
-            }
-            var hasAmountDue = false;
-            var totalAmountDue = 0;
-            for (var i = 0; i < triggerResult.data.length; i++) {
-                var order = triggerResult.data[i];
-                var orderPrice = order.matched_price || 0;
-                if (orderPrice > currentUserBalance) {
-                    hasAmountDue = true;
-                    totalAmountDue += (orderPrice - currentUserBalance);
-                }
-            }
-            if (hasAmountDue && totalAmountDue > 0) {
-                showAmountDueCard(totalAmountDue);
-            } else {
-                hideAmountDueCard();
-            }
+    if (!triggerResult.data || triggerResult.data.length === 0) {
+        // 如果没有 pending 的触发订单，但仍然余额不足，可以选择显示一个通用提示
+        if (currentUserBalance < 0) {
+            showAmountDueCard(Math.abs(currentUserBalance));
+        } else {
+            hideAmountDueCard();
         }
+        return;
+    }
+    
+    // 检查是否有余额不足的情况
+    var hasAmountDue = false;
+    var totalAmountDue = 0;
+    for (var i = 0; i < triggerResult.data.length; i++) {
+        var order = triggerResult.data[i];
+        var orderPrice = order.matched_price || order.target_price || 0;
+        if (orderPrice > currentUserBalance) {
+            hasAmountDue = true;
+            totalAmountDue += (orderPrice - currentUserBalance);
+        }
+    }
+    
+    if (hasAmountDue && totalAmountDue > 0) {
+        showAmountDueCard(totalAmountDue);
+    } else {
+        hideAmountDueCard();
+    }
+}
 
         function showAmountDueCard(amountDue) {
             var card = document.getElementById('amountDueCard');
@@ -1112,7 +1127,7 @@
     modal.classList.add('active');
 
     // ⭐ 添加这一行：显示订单后，检查并显示 Amount Due 卡片
-    executeCheckAndShowAmountDue();
+    await executeCheckAndShowAmountDue();
 
     document.querySelectorAll('.star-premium').forEach(function(star) {
         star.addEventListener('click', function() {
