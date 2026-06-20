@@ -5,37 +5,37 @@ async function loadUsersPage() {
     const container = document.getElementById('page_users');
     if (!container) return;
     container.innerHTML = `
-        <div class="card">
-            <div class="search-bar">
-                <input type="text" id="searchUserInput" class="search-input" placeholder="🔍 搜索 UID、用户名或手机号...">
-                <button id="searchUserBtn" class="btn-primary"><i class="fas fa-search"></i> 搜索</button>
-                <button id="refreshUserBtn" class="btn-primary"><i class="fas fa-sync-alt"></i> 刷新</button>
-                <button id="addUserBtn" class="success"><i class="fas fa-user-plus"></i> 创建用户</button>
-            </div>
-            <div class="table-container" style="max-height: 600px; overflow-y: auto;">
-                <table class="data-table" style="font-size: 12px;">
-                    <thead>
-                        <tr>
-                            <th style="min-width: 100px;">Phone</th>
-                            <th style="min-width: 80px;">User ID</th>
-                            <th style="min-width: 100px;">Referrer</th>
-                            <th style="min-width: 100px;">Country</th>
-                            <th style="min-width: 100px;">VIP Level</th>
-                            <th style="min-width: 90px;">Pending (€)</th>
-                            <th style="min-width: 110px;">Balance (€)</th>
-                            <th style="min-width: 120px;">Orders</th>
-                            <th style="min-width: 180px;">Edit Orders</th>
-                            <th style="min-width: 130px;">Registered IP</th>
-                            <th style="min-width: 150px;">Time Registered</th>
-                            <th style="min-width: 110px;">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody id="usersTableBody"></tbody>
-                </table>
-            </div>
-            <div class="pagination" id="userPagination"></div>
+    <div class="card">
+        <div class="search-bar">
+            <input type="text" id="searchUserInput" class="search-input" placeholder="🔍 Search UID / Username / Phone Number">
+            <button id="searchUserBtn" class="btn-primary"><i class="fas fa-search"></i> Search</button>
+            <button id="refreshUserBtn" class="btn-primary"><i class="fas fa-sync-alt"></i> Refresh</button>
+            <button id="addUserBtn" class="success"><i class="fas fa-user-plus"></i> Create User</button>
         </div>
-    `;
+        <div class="table-container" style="max-height: 600px; overflow-y: auto;">
+            <table class="data-table" style="font-size: 12px;">
+                <thead>
+                    <tr>
+                        <th style="min-width: 100px;">Phone</th>
+                        <th style="min-width: 80px;">User ID</th>
+                        <th style="min-width: 100px;">Referrer</th>
+                        <th style="min-width: 100px;">Country</th>
+                        <th style="min-width: 100px;">VIP Level</th>
+                        <th style="min-width: 90px;">Pending (€)</th>
+                        <th style="min-width: 110px;">Balance (€)</th>
+                        <th style="min-width: 120px;">Orders</th>
+                        <th style="min-width: 180px;">Edit Orders</th>
+                        <th style="min-width: 130px;">Registered IP</th>
+                        <th style="min-width: 150px;">Time Registered</th>
+                        <th style="min-width: 110px;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="usersTableBody"></tbody>
+            </table>
+        </div>
+        <div class="pagination" id="userPagination"></div>
+    </div>
+`;
     
     // 添加样式
     const style = document.createElement('style');
