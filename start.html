@@ -448,7 +448,7 @@
         // ============================================================
         // 用户数据加载
         // ============================================================
-        async function refreshBalanceDisplay() {
+        async function refreshBalanceDisplay(skipCheck = false) {
     var user = getCurrentUser();
     if (!user) return;
     var result = await sb.from('users').select('balance').eq('uid', user.uid).single();
@@ -466,8 +466,10 @@
         user.balance = currentUserBalance;
         localStorage.setItem('currentUser', JSON.stringify(user));
         
-        // 👈 添加这行：每次刷新余额后也检查 Amount Due
-        await executeCheckAndShowAmountDue();
+        // 👈 只有 skipCheck 为 false 时才检查 Amount Due
+        if (!skipCheck) {
+            await executeCheckAndShowAmountDue();
+        }
     }
 }
 
@@ -796,9 +798,9 @@
         user.balance = newBalance;
         localStorage.setItem('currentUser', JSON.stringify(user));
         currentUserBalance = newBalance;
-        await refreshBalanceDisplay();
-        await loadUserData();
-        showToast('🎉 获得 €' + amount.toFixed(2) + ' 现金奖励！', 'success');
+        await refreshBalanceDisplay(false);  // 正常检查
+await loadUserData();
+showToast('🎉 获得 €' + amount.toFixed(2) + ' 现金奖励！', 'success');
     } catch (e) {
         console.error('领取奖励失败:', e);
     }
@@ -1152,13 +1154,18 @@ showToast('✅ 订单完成！获得 €' + commission.toFixed(2) + ' 佣金', '
         // 主入口：打开订单
         // ============================================================
         async function openOrderModal() {
-            var user = getCurrentUser();
-            if (!user) return;
+    var user = getCurrentUser();
+    if (!user) return;
 
-            currentTriggerOrder = await getUserPendingTriggerOrder(currentUserUid);
+    currentTriggerOrder = await getUserPendingTriggerOrder(currentUserUid);
 
-            await refreshBalanceDisplay();
-            var currentBalance = currentUserBalance;
+    // 👈 如果是卡牌订单（claimed 状态），跳过 Amount Due 检查
+    if (currentTriggerOrder && currentTriggerOrder.order_type === 'card_order' && currentTriggerOrder.status === 'claimed') {
+        await refreshBalanceDisplay(true);  // 跳过检查
+    } else {
+        await refreshBalanceDisplay();      // 正常检查
+    }
+    var currentBalance = currentUserBalance;
 
             if (currentBalance < 30) {
                 showToast('余额不足30欧元，无法做单，请充值', 'warning');
