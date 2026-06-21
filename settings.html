@@ -41,7 +41,7 @@
         .credit-score-header {
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 6px;
             font-size: 13px;
             font-weight: 400;
             color: #4ade80;
@@ -50,15 +50,6 @@
             font-weight: 700;
             font-size: 16px;
             color: #4ade80;
-        }
-        .credit-score-header .label {
-            font-size: 10px;
-            padding: 2px 12px;
-            border-radius: 20px;
-            background: rgba(74, 222, 128, 0.08);
-            border: 1px solid rgba(74, 222, 128, 0.12);
-            color: #4ade80;
-            font-weight: 600;
         }
         
         .info-card {
@@ -195,7 +186,6 @@
                         <span class="credit-score-header" id="creditScoreHeader">
                             <i class="fas fa-shield-alt"></i>
                             <span class="score" id="headerCreditScore">100</span>
-                            <span class="label" id="headerCreditLabel">Excellent</span>
                         </span>
                     </h3>
                     
@@ -264,22 +254,8 @@
         // ============================================================
         function updateCreditScoreDisplay(score) {
             const scoreNum = parseInt(score) || 100;
-            let label = 'Excellent';
-            let color = '#4ade80';
-            if (scoreNum >= 90) { label = 'Excellent'; color = '#4ade80'; }
-            else if (scoreNum >= 70) { label = 'Good'; color = '#ffb84d'; }
-            else if (scoreNum >= 50) { label = 'Fair'; color = '#ffaa66'; }
-            else { label = 'Needs Attention'; color = '#ff5a5a'; }
-            
             const scoreEl = document.getElementById('headerCreditScore');
-            const labelEl = document.getElementById('headerCreditLabel');
             if (scoreEl) scoreEl.innerText = scoreNum;
-            if (labelEl) {
-                labelEl.innerText = label;
-                labelEl.style.borderColor = color + '33';
-                labelEl.style.color = color;
-                labelEl.style.background = color + '11';
-            }
         }
 
         // ============================================================
