@@ -735,19 +735,32 @@
 
         // ====== 设置功能 ======
         async function loadSettings() {
-            const user = checkLogin();
-            if (!user) return;
+    const user = checkLogin();
+    if (!user) return;
+    const freshUser = await syncUserData();
+    if (freshUser) {
+        document.getElementById('displayUid').innerText = freshUser.uid;
+        document.getElementById('displayInviteCode').innerText = freshUser.inviteCode || '------';
+        const creditScore = freshUser.creditScore || 100;
+        currentScore = creditScore;
 
-            const freshUser = await syncUserData();
-            if (freshUser) {
-                document.getElementById('displayUid').innerText = freshUser.uid;
-                document.getElementById('displayInviteCode').innerText = freshUser.inviteCode || '------';
-                const creditScore = freshUser.creditScore || 100;
-                currentScore = creditScore;
-                // 盾牌显示真实分数（并恢复动画）
-                updateShield(creditScore);
-            }
-        }
+        // ---- 直接设置盾牌进度（绕过 updateShield 的复杂逻辑） ----
+        const color = getColor(creditScore);
+        const offset = CIRCUMFERENCE - (creditScore / 100) * CIRCUMFERENCE;
+        shieldRing.style.transition = 'none';
+        shieldRing.setAttribute('stroke-dashoffset', offset);
+        shieldRing.setAttribute('stroke', color);
+        shieldRing.style.stroke = color;
+        shieldIcon.style.color = color;
+        // 恢复过渡（以后点击盾牌时才有动画）
+        requestAnimationFrame(() => {
+            shieldRing.style.transition = 'stroke-dashoffset 0.8s ease, stroke 0.6s ease';
+        });
+
+        // 添加日志确认
+        console.log('盾牌进度已设置: 分数=' + creditScore + ', offset=' + offset + ', 颜色=' + color);
+    }
+}
 
         function logout() {
             showConfirm('Logout', 'Are you sure you want to logout?', () => {
