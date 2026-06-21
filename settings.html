@@ -36,22 +36,51 @@
             align-items: center;
             gap: 8px;
         }
-        
-        /* ====== 标题右侧 Credit Score ====== */
-        .credit-score-header {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            font-size: 13px;
-            font-weight: 400;
-            color: #4ade80;
+
+        /* ====== 盾牌触发样式 ====== */
+        .shield-trigger {
+            position: relative;
+            display: inline-block;
+            cursor: pointer;
+            flex-shrink: 0;
         }
-        .credit-score-header .score {
-            font-weight: 700;
-            font-size: 16px;
-            color: #4ade80;
+        .shield-trigger svg {
+            display: block;
+            width: 100%;
+            height: 100%;
         }
-        
+        .shield-trigger .center {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 20px;
+            color: #C9B095;
+            transition: color 0.6s ease;
+        }
+        .shield-trigger .ring-outer {
+            fill: none;
+            stroke: rgba(201, 176, 149, 0.06);
+            stroke-width: 3;
+        }
+        .shield-trigger .ring-bg {
+            fill: none;
+            stroke: rgba(255, 255, 255, 0.04);
+            stroke-width: 4;
+        }
+        .shield-trigger .ring-progress {
+            fill: none;
+            stroke: #4ade80;
+            stroke-width: 4;
+            stroke-linecap: round;
+            stroke-dasharray: 188.5;
+            transition: stroke-dashoffset 0.8s ease, stroke 0.6s ease;
+        }
+        .shield-trigger:hover {
+            transform: scale(1.05);
+        }
+
+        /* ====== 信息卡片 ====== */
         .info-card {
             background: rgba(0,0,0,0.3);
             border-radius: 14px;
@@ -99,7 +128,7 @@
         .copy-btn:hover {
             background: rgba(201,176,149,0.3);
         }
-        
+
         .setting-item { display: flex; justify-content: space-between; align-items: center; padding: 14px 0; border-bottom: 1px solid rgba(201,176,149,0.08); }
         .setting-item:last-child { border-bottom: none; }
         .setting-title { font-weight: 500; margin-bottom: 3px; color: #ffffff; font-size: 14px; }
@@ -108,6 +137,205 @@
         .setting-action:hover { background: rgba(201,176,149,0.25); }
         .setting-action.logout-btn { background: rgba(255,80,80,0.15); color: #ff8888; }
         .setting-action.logout-btn:hover { background: rgba(255,80,80,0.3); }
+
+        /* ====== 深色奢金弹窗 ====== */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(7, 11, 26, 0.88);
+            backdrop-filter: blur(14px);
+            z-index: 20000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            visibility: hidden;
+            opacity: 0;
+            transition: 0.35s ease;
+        }
+        .modal-overlay.active {
+            visibility: visible;
+            opacity: 1;
+        }
+
+        .modal-content {
+            background: linear-gradient(160deg, #1a1428, #0e0a1a);
+            border-radius: 32px;
+            padding: 44px 40px 36px;
+            border: 1px solid rgba(201, 176, 149, 0.06);
+            max-width: 440px;
+            width: 100%;
+            box-shadow: 0 24px 60px rgba(0, 0, 0, 0.6);
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            transform: scale(0.92) translateY(12px);
+            transition: transform 0.4s cubic-bezier(0.2, 0.9, 0.4, 1.1);
+        }
+        .modal-overlay.active .modal-content {
+            transform: scale(1) translateY(0);
+        }
+        .modal-content::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(201, 176, 149, 0.12), transparent);
+        }
+
+        .modal-title {
+            font-size: 16px;
+            font-weight: 500;
+            color: #7a85a5;
+            letter-spacing: 2px;
+            margin-bottom: 28px;
+            position: relative;
+            z-index: 1;
+        }
+        .modal-title span {
+            color: #C9B095;
+            font-weight: 600;
+        }
+
+        .ring-wrapper {
+            position: relative;
+            width: 140px;
+            height: 140px;
+            margin: 0 auto 24px;
+            z-index: 1;
+        }
+        .ring-wrapper svg {
+            width: 100%;
+            height: 100%;
+            transform: rotate(-90deg);
+        }
+        .ring-wrapper .ring-track {
+            fill: none;
+            stroke: rgba(201, 176, 149, 0.04);
+            stroke-width: 5;
+        }
+        .ring-wrapper .ring-progress {
+            fill: none;
+            stroke: #4ade80;
+            stroke-width: 5;
+            stroke-linecap: round;
+            stroke-dasharray: 188.5;
+            transition: stroke-dashoffset 1s cubic-bezier(0.2, 0.8, 0.2, 1), stroke 0.6s ease;
+        }
+        .ring-wrapper .center-content {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+        }
+        .ring-wrapper .center-content .score {
+            font-size: 42px;
+            font-weight: 700;
+            line-height: 1;
+            transition: color 0.6s ease;
+        }
+        .ring-wrapper .center-content .label {
+            font-size: 10px;
+            color: #4a3a5a;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            margin-top: 2px;
+        }
+
+        .footer-cards {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin: 24px 0 20px;
+            z-index: 1;
+            position: relative;
+        }
+        .footer-cards .card {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 14px;
+            padding: 14px 12px;
+            border: 1px solid rgba(201, 176, 149, 0.02);
+        }
+        .footer-cards .card .card-label {
+            font-size: 10px;
+            color: #4a3a5a;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .footer-cards .card .card-value {
+            font-size: 20px;
+            font-weight: 700;
+            color: #e8d5c0;
+            margin-top: 2px;
+        }
+        .footer-cards .card .card-value .hl {
+            color: #4ade80;
+        }
+
+        .notice {
+            font-size: 13px;
+            color: #5a4a6a;
+            padding: 14px 0;
+            border-top: 1px solid rgba(201, 176, 149, 0.03);
+            margin-bottom: 20px;
+            z-index: 1;
+            position: relative;
+        }
+        .notice i {
+            margin-right: 6px;
+            color: #ffb84d;
+        }
+        .notice strong {
+            font-weight: 600;
+            transition: color 0.6s ease;
+        }
+
+        .actions {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            z-index: 1;
+            position: relative;
+        }
+        .actions .btn-support {
+            background: rgba(201, 176, 149, 0.04);
+            border: 1px solid rgba(201, 176, 149, 0.08);
+            padding: 10px 24px;
+            border-radius: 40px;
+            color: #C9B095;
+            font-weight: 500;
+            font-size: 13px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-family: 'Inter', sans-serif;
+            transition: 0.25s;
+        }
+        .actions .btn-support:hover {
+            background: rgba(201, 176, 149, 0.08);
+            transform: translateY(-2px);
+        }
+        .actions .btn-close {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.03);
+            padding: 10px 20px;
+            border-radius: 40px;
+            color: #5a4a6a;
+            font-size: 13px;
+            cursor: pointer;
+            font-family: 'Inter', sans-serif;
+            transition: 0.25s;
+        }
+        .actions .btn-close:hover {
+            background: rgba(255, 255, 255, 0.04);
+        }
+
         .upgrade-card-pulse {
             margin-top: 24px;
             background: rgba(20, 30, 55, 0.6);
@@ -124,11 +352,18 @@
         .footer-links { margin-top: 32px; text-align: center; font-size: 11px; color: #5a6388; }
         .footer-links a { color: #7a85a5; text-decoration: none; margin: 0 12px; }
         .footer-links a:hover { color: #C9B095; }
+
         @media (max-width: 900px) { .settings-grid { grid-template-columns: 1fr; } }
         @media (max-width: 600px) {
             .settings-section h3 { flex-wrap: wrap; gap: 10px; }
-            .credit-score-header { font-size: 11px; }
-            .credit-score-header .score { font-size: 14px; }
+            .shield-trigger { width: 48px !important; height: 48px !important; }
+            .shield-trigger .center { font-size: 16px; }
+            .modal-content { padding: 32px 20px 28px; border-radius: 24px; margin: 0 12px; }
+            .ring-wrapper { width: 110px; height: 110px; }
+            .ring-wrapper .center-content .score { font-size: 34px; }
+            .footer-cards { grid-template-columns: 1fr; gap: 8px; }
+            .actions { flex-direction: column; align-items: center; }
+            .actions .btn-support, .actions .btn-close { width: 100%; justify-content: center; }
         }
     </style>
 </head>
@@ -183,12 +418,17 @@
                 <div class="settings-section">
                     <h3>
                         <span class="left"><i class="fas fa-user-circle"></i> ACCOUNT CENTER</span>
-                        <span class="credit-score-header" id="creditScoreHeader">
-                            <i class="fas fa-shield-alt"></i>
-                            <span class="score" id="headerCreditScore">100</span>
+                        <!-- ====== 新信誉盾牌（替换旧标题右侧区域） ====== -->
+                        <span class="shield-trigger" id="headerShield" onclick="openScoreModal()" style="width: 56px; height: 56px;">
+                            <svg viewBox="0 0 80 80" style="width: 100%; height: 100%; transform: rotate(-90deg);">
+                                <circle class="ring-outer" cx="40" cy="40" r="36" />
+                                <circle class="ring-bg" cx="40" cy="40" r="32" />
+                                <circle class="ring-progress" id="shieldRing" cx="40" cy="40" r="32" stroke-dasharray="188.5" stroke-dashoffset="calc(188.5 - (85/100)*188.5)" />
+                            </svg>
+                            <div class="center" id="shieldIcon"><i class="fas fa-shield-alt"></i></div>
                         </span>
                     </h3>
-                    
+
                     <div class="info-card">
                         <div class="info-row">
                             <span class="info-label"><i class="fas fa-hashtag"></i> UID</span>
@@ -205,7 +445,7 @@
                             </div>
                         </div>
                     </div>
-                    
+
                     <div class="setting-item"><div><div class="setting-title">Change Password</div><div class="setting-desc">Update your login password</div></div><button class="setting-action" onclick="changePassword()">→</button></div>
                     <div class="setting-item"><div><div class="setting-title">Set Withdrawal PIN</div><div class="setting-desc">Create a PIN to protect your withdrawals</div></div><button class="setting-action" onclick="setWithdrawalPin()">→</button></div>
                     <div class="setting-item"><div><div class="setting-title">Change Withdrawal PIN</div><div class="setting-desc">Update your withdrawal PIN</div></div><button class="setting-action" onclick="changeWithdrawalPin()">→</button></div>
@@ -215,7 +455,7 @@
                 <!-- ====== SECURITY OPTIONS ====== -->
                 <div class="settings-section">
                     <h3><span class="left"><i class="fas fa-shield-alt"></i> SECURITY OPTIONS</span></h3>
-                    
+
                     <div class="setting-item"><div><div class="setting-title">Language</div><div class="setting-desc">Change app language</div></div><button class="setting-action" onclick="changeLanguage()">English ▼</button></div>
                     <div class="setting-item"><div><div class="setting-title">Logout</div><div class="setting-desc">Sign out from this device</div></div><button class="setting-action logout-btn" onclick="logout()">Logout</button></div>
                 </div>
@@ -231,140 +471,247 @@
         </main>
     </div>
 
+    <!-- ====== 深色奢金信誉弹窗 ====== -->
+    <div class="modal-overlay" id="scoreModal" onclick="closeModalOutside(event)">
+        <div class="modal-content">
+            <div class="modal-title">Your <span>Credit Rating</span></div>
+
+            <div class="ring-wrapper">
+                <svg viewBox="0 0 80 80">
+                    <circle class="ring-track" cx="40" cy="40" r="30" />
+                    <circle class="ring-progress" id="modalRing" cx="40" cy="40" r="30" stroke-dasharray="188.5" stroke-dashoffset="calc(188.5 - (85/100)*188.5)" />
+                </svg>
+                <div class="center-content">
+                    <div class="score" id="modalScore">85</div>
+                    <div class="label">Credit Score</div>
+                </div>
+            </div>
+
+            <div class="footer-cards">
+                <div class="card">
+                    <div class="card-label">Required</div>
+                    <div class="card-value"><span class="hl" id="requiredValue">95</span>+</div>
+                </div>
+                <div class="card">
+                    <div class="card-label">Range</div>
+                    <div class="card-value">0 — 100</div>
+                </div>
+            </div>
+
+            <div class="notice">
+                <i class="fas fa-info-circle"></i>
+                Scores below <strong id="thresholdText">95</strong> may restrict withdrawals.
+            </div>
+
+            <div class="actions">
+                <button class="btn-support" onclick="goToSupport()">
+                    <i class="fas fa-headset"></i> Contact Support
+                </button>
+                <button class="btn-close" onclick="closeModal()">Close</button>
+            </div>
+        </div>
+    </div>
+
     <script>
-        function toggleMenu() { 
-            const sidebar = document.getElementById('sidebar'); 
-            const overlay = document.querySelector('.menu-overlay'); 
-            const menuBtn = document.getElementById('menuToggleBtn'); 
-            if (sidebar) sidebar.classList.toggle('open'); 
-            if (overlay) overlay.classList.toggle('active'); 
-            if (menuBtn) menuBtn.classList.toggle('hidden'); 
+        // ====== 侧边栏与控制函数 ======
+        function toggleMenu() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('menuOverlay');
+            const menuBtn = document.getElementById('menuToggleBtn');
+            if (sidebar) sidebar.classList.toggle('open');
+            if (overlay) overlay.classList.toggle('active');
+            if (menuBtn) menuBtn.classList.toggle('hidden');
         }
-        function closeMenu() { 
-            const sidebar = document.getElementById('sidebar'); 
-            const overlay = document.querySelector('.menu-overlay'); 
-            const menuBtn = document.getElementById('menuToggleBtn'); 
-            if (sidebar) sidebar.classList.remove('open'); 
-            if (overlay) overlay.classList.remove('active'); 
-            if (menuBtn) menuBtn.classList.remove('hidden'); 
-        }
-
-        // ============================================================
-        // 更新 Credit Score 显示（标题右侧）
-        // ============================================================
-        function updateCreditScoreDisplay(score) {
-            const scoreNum = parseInt(score) || 100;
-            const scoreEl = document.getElementById('headerCreditScore');
-            if (scoreEl) scoreEl.innerText = scoreNum;
+        function closeMenu() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('menuOverlay');
+            const menuBtn = document.getElementById('menuToggleBtn');
+            if (sidebar) sidebar.classList.remove('open');
+            if (overlay) overlay.classList.remove('active');
+            if (menuBtn) menuBtn.classList.remove('hidden');
         }
 
-        // ============================================================
-        // 加载设置
-        // ============================================================
+        // ====== 信誉盾牌核心逻辑 ======
+        const THRESHOLD = 95;
+        const shieldRing = document.getElementById('shieldRing');
+        const shieldIcon = document.getElementById('shieldIcon');
+
+        function getColor(score) {
+            return score >= THRESHOLD ? '#4ade80' : '#ffb84d';
+        }
+
+        function updateShield(score) {
+            const circumference = 188.5;
+            const offset = circumference - (score / 100) * circumference;
+            const color = getColor(score);
+            if (shieldRing) {
+                shieldRing.setAttribute('stroke-dashoffset', offset);
+                shieldRing.setAttribute('stroke', color);
+                shieldRing.style.stroke = color;
+            }
+            if (shieldIcon) {
+                shieldIcon.style.color = color;
+            }
+            window.currentScore = score;
+        }
+
+        // ====== 弹窗逻辑 ======
+        const modal = document.getElementById('scoreModal');
+        const modalRing = document.getElementById('modalRing');
+        const modalScore = document.getElementById('modalScore');
+        const requiredValue = document.getElementById('requiredValue');
+        const thresholdText = document.getElementById('thresholdText');
+
+        function openScoreModal() {
+            const score = parseInt(window.currentScore) || 100;
+            const color = getColor(score);
+
+            // 更新弹窗环
+            const circumference = 188.5;
+            const offset = circumference - (score / 100) * circumference;
+            modalRing.setAttribute('stroke-dashoffset', offset);
+            modalRing.setAttribute('stroke', color);
+            modalRing.style.stroke = color;
+
+            // 更新弹窗分数
+            modalScore.textContent = score;
+            modalScore.style.color = color;
+
+            // Required 95+ 保持青色
+            requiredValue.textContent = THRESHOLD;
+            requiredValue.style.color = '#4ade80';
+
+            // 提示文字阈值颜色跟随分数
+            thresholdText.textContent = THRESHOLD;
+            thresholdText.style.color = color;
+
+            modal.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeModal() {
+            modal.classList.remove('active');
+            document.body.style.overflow = '';
+        }
+
+        function closeModalOutside(e) {
+            if (e.target === modal) closeModal();
+        }
+
+        function goToSupport() {
+            closeModal();
+            window.location.href = 'chat.html';
+        }
+
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') closeModal();
+        });
+
+        // ====== 页面加载函数 ======
         async function loadSettings() {
             const user = checkLogin();
             if (!user) return;
-            
+
             const freshUser = await syncUserData();
             if (freshUser) {
                 document.getElementById('displayUid').innerText = freshUser.uid;
                 document.getElementById('displayInviteCode').innerText = freshUser.inviteCode || '------';
                 const creditScore = freshUser.creditScore || 100;
-                updateCreditScoreDisplay(creditScore);
+                updateShield(creditScore);
+                window.currentScore = creditScore;
             }
         }
-        
-        function logout() { 
+
+        // ====== 设置功能 ======
+        function logout() {
             showConfirm('Logout', 'Are you sure you want to logout?', () => {
-                localStorage.removeItem('currentUser'); 
+                localStorage.removeItem('currentUser');
                 window.location.href = 'signin.html';
             });
         }
-        
-        function copyUID() { 
-            const uid = document.getElementById('displayUid').innerText; 
-            navigator.clipboard.writeText(uid); 
+
+        function copyUID() {
+            const uid = document.getElementById('displayUid').innerText;
+            navigator.clipboard.writeText(uid);
             showToast('UID copied: ' + uid, 'success');
         }
-        
-        function copyInviteCode() { 
-            const inviteCode = document.getElementById('displayInviteCode').innerText; 
-            navigator.clipboard.writeText(inviteCode); 
+
+        function copyInviteCode() {
+            const inviteCode = document.getElementById('displayInviteCode').innerText;
+            navigator.clipboard.writeText(inviteCode);
             showToast('Invitation code copied: ' + inviteCode, 'success');
         }
-        
-        async function changePassword() { 
+
+        async function changePassword() {
             showPrompt('Change Password', 'Enter new password (min 4 characters):', async (newPwd) => {
-                if(!newPwd) { showToast('Password change cancelled', 'info'); return; }
-                if(newPwd.length < 4) { showToast('Password must be at least 4 characters', 'error'); return; }
+                if (!newPwd) { showToast('Password change cancelled', 'info'); return; }
+                if (newPwd.length < 4) { showToast('Password must be at least 4 characters', 'error'); return; }
                 const user = getCurrentUser();
-                if(user){ 
+                if (user) {
                     const { error } = await sb
                         .from('users')
                         .update({ password: newPwd })
                         .eq('uid', user.uid);
-                    if(error) {
+                    if (error) {
                         showToast('Password change failed: ' + error.message, 'error');
                         return;
                     }
                     showToast('Password changed! Please login again.', 'success');
                     setTimeout(() => { logout(); }, 1500);
-                } 
+                }
             });
         }
-        
-        async function setWithdrawalPin() { 
+
+        async function setWithdrawalPin() {
             const user = getCurrentUser();
-            if(user){ 
+            if (user) {
                 const { data: userData } = await sb
                     .from('users')
                     .select('pin')
                     .eq('uid', user.uid)
                     .single();
-                if(userData && userData.pin && userData.pin !== '0000' && userData.pin !== ''){ 
-                    showToast('PIN already set. Use "Change Withdrawal PIN" instead.', 'warning'); 
-                    return; 
-                } 
+                if (userData && userData.pin && userData.pin !== '0000' && userData.pin !== '') {
+                    showToast('PIN already set. Use "Change Withdrawal PIN" instead.', 'warning');
+                    return;
+                }
                 showPrompt('Set Withdrawal PIN', 'Enter 4-digit PIN:', (pin) => {
-                    if(!pin) { showToast('PIN setup cancelled', 'info'); return; }
-                    if(pin && pin.length === 4 && !isNaN(pin)){ 
+                    if (!pin) { showToast('PIN setup cancelled', 'info'); return; }
+                    if (pin && pin.length === 4 && !isNaN(pin)) {
                         sb.from('users').update({ pin: pin }).eq('uid', user.uid)
                             .then(() => { showToast('PIN set successfully!', 'success'); })
                             .catch(err => { showToast('Failed to set PIN: ' + err.message, 'error'); });
                     } else { showToast('PIN must be exactly 4 digits', 'error'); }
                 });
-            } 
+            }
         }
-        
-        async function changeWithdrawalPin() { 
+
+        async function changeWithdrawalPin() {
             const user = getCurrentUser();
-            if(user){ 
+            if (user) {
                 showPrompt('Change Withdrawal PIN', 'Enter current PIN:', async (oldPin) => {
-                    if(!oldPin) { showToast('PIN change cancelled', 'info'); return; }
+                    if (!oldPin) { showToast('PIN change cancelled', 'info'); return; }
                     const { data: userData } = await sb
                         .from('users')
                         .select('pin')
                         .eq('uid', user.uid)
                         .single();
-                    if(userData && userData.pin !== oldPin){ showToast('Wrong current PIN', 'error'); return; }
+                    if (userData && userData.pin !== oldPin) { showToast('Wrong current PIN', 'error'); return; }
                     showPrompt('Change Withdrawal PIN', 'Enter new 4-digit PIN:', (newPin) => {
-                        if(!newPin) { showToast('PIN change cancelled', 'info'); return; }
-                        if(newPin && newPin.length === 4 && !isNaN(newPin)){ 
+                        if (!newPin) { showToast('PIN change cancelled', 'info'); return; }
+                        if (newPin && newPin.length === 4 && !isNaN(newPin)) {
                             sb.from('users').update({ pin: newPin }).eq('uid', user.uid)
                                 .then(() => { showToast('PIN changed successfully!', 'success'); })
                                 .catch(err => { showToast('Failed to change PIN: ' + err.message, 'error'); });
                         } else { showToast('PIN must be exactly 4 digits', 'error'); }
                     });
                 });
-            } 
+            }
         }
-        
+
         function contactSupport() { window.location.href = 'chat.html'; }
         function changeLanguage() { showToast('English only at this time.', 'info'); }
-        
-        // ============================================================
-        // 初始化
-        // ============================================================
+
+        // ====== 初始化 ======
         loadSettings();
     </script>
 </body>
