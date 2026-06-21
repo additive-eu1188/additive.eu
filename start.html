@@ -10,7 +10,7 @@
     <script src="user-data.js"></script>
     <script src="toast.js"></script>
     <style>
-        /* ===== 页面布局样式 ===== */
+        /* ===== 全部样式保持不变，省略重复（与之前一致） ===== */
         .start-hero { margin-bottom: 12px; padding: 0; }
         .start-hero h1 { font-size: 28px; font-weight: 700; color: #ffffff; margin-bottom: 6px; }
         .start-hero p { color: #7a85a5; font-size: 13px; margin-bottom: 0; }
@@ -51,8 +51,6 @@
         .upgrade-title { font-size: 18px; font-weight: 600; margin-bottom: 10px; color: #C9B095; }
         .upgrade-desc { font-size: 13px; color: #7a85a5; margin-bottom: 20px; }
         .btn-upgrade { background: rgba(201,176,149,0.15); padding: 10px 20px; border-radius: 40px; text-decoration: none; color: #C9B095; font-weight: 600; display: inline-flex; align-items: center; gap: 8px; border: 1px solid rgba(201,176,149,0.3); }
-
-        /* ===== 订单弹窗 ===== */
         .order-modal-container { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); backdrop-filter: blur(12px); z-index: 10001; display: flex; align-items: center; justify-content: center; visibility: hidden; opacity: 0; transition: visibility 0.2s, opacity 0.2s; }
         .order-modal-container.active { visibility: visible; opacity: 1; }
         .order-modal { background: linear-gradient(145deg, #12172e, #0e1225); border-radius: 32px; width: 500px; max-width: 90%; border: 1px solid rgba(201,176,149,0.3); overflow: hidden; }
@@ -88,7 +86,6 @@
         .progress-bar-bg { background: rgba(255,255,255,0.1); border-radius: 10px; height: 6px; overflow: hidden; }
         .progress-bar-fill { width: 0%; height: 100%; background: #C9B095; border-radius: 10px; transition: width 0.15s ease; }
         .progress-text { text-align: center; margin-top: 8px; font-size: 12px; color: #C9B095; }
-
         @media (max-width: 768px) {
             body { padding: 0 !important; margin: 0 !important; overflow-x: hidden; }
             .main { padding: 0 !important; margin: 0 !important; }
@@ -126,7 +123,6 @@
     </style>
 </head>
 <body>
-
     <!-- 页面加载动画 -->
     <div id="pageLoading"><div class="loading-spinner"><i class="fas fa-spinner"></i><p>Loading...</p></div></div>
     <style>
@@ -306,7 +302,7 @@
         }
 
         // ============================================================
-        // Amount Due 持久化管理
+        // Amount Due 持久化管理（最终修复版）
         // ============================================================
         function setAmountDue(uid, amount) {
             if (amount > 0) {
@@ -314,8 +310,10 @@
                     amount: amount,
                     timestamp: Date.now()
                 }));
+                console.log('💾 Amount Due 已存储: amountDue_' + uid, amount);
             } else {
                 localStorage.removeItem('amountDue_' + uid);
+                console.log('🗑️ Amount Due 已移除');
             }
         }
 
@@ -357,15 +355,19 @@
                     bigCard.insertBefore(card, bigCard.firstChild);
                 }
             }
+            console.log('📋 Amount Due 卡片已显示: €' + amountDue.toFixed(2));
         }
 
         function hideAmountDueCard() {
             var existing = document.getElementById('amountDueCard');
-            if (existing) existing.remove();
+            if (existing) {
+                existing.remove();
+                console.log('🗑️ Amount Due 卡片已移除');
+            }
         }
 
-        // ⭐ 核心修复：异步从数据库获取最新余额，同时立即显示卡片
-        async function checkAndShowAmountDue() {
+        // ⭐ 核心函数：立即从 localStorage 读取并显示卡片，然后异步核实余额
+        function checkAndShowAmountDue() {
             var user = getCurrentUser();
             if (!user) {
                 console.log('⚠️ checkAndShowAmountDue: 用户未登录');
@@ -373,14 +375,13 @@
             }
 
             var amountDue = getAmountDue(user.uid);
-            console.log('🔍 checkAndShowAmountDue: amountDue =', amountDue);
+            console.log('🔍 checkAndShowAmountDue: amountDue =', amountDue, '用户UID:', user.uid);
 
             if (amountDue && amountDue > 0) {
-                // 立即显示卡片（如有）
+                // 立即显示卡片
                 showAmountDueCard(amountDue);
-                // 异步查询数据库核对余额，若足够则移除
-                try {
-                    var result = await sb.from('users').select('balance').eq('uid', user.uid).single();
+                // 异步查询数据库核对余额
+                sb.from('users').select('balance').eq('uid', user.uid).single().then(function(result) {
                     if (result.data) {
                         var balance = result.data.balance || 0;
                         if (balance >= amountDue) {
@@ -391,9 +392,9 @@
                             console.log('❌ 余额不足，保持 Amount Due 卡片显示');
                         }
                     }
-                } catch (e) {
-                    console.error('核对余额失败:', e);
-                }
+                }).catch(function(err) {
+                    console.error('核对余额失败:', err);
+                });
             } else {
                 hideAmountDueCard();
             }
@@ -595,7 +596,7 @@
                 document.getElementById('totalOrders').innerText = orderCount;
                 document.getElementById('statPending').innerHTML = '€' + totalPending.toFixed(2);
 
-                // ⭐ 快速检查 Amount Due（与视频加载并行）
+                // ⭐ 页面加载时立即检查 Amount Due（100ms 内执行）
                 setTimeout(function() {
                     checkAndShowAmountDue();
                 }, 100);
@@ -684,7 +685,7 @@
                 setAmountDue(user.uid, amountDue);
             }
 
-            // 显示卡片
+            // 立即显示卡片
             var amountDue = requiredAmount - currentBalance;
             showAmountDueCard(amountDue);
 
@@ -720,7 +721,7 @@
         }
 
         // ============================================================
-        // 卡牌触发 - 使用 iframe 加载独立卡牌页面
+        // 卡牌触发
         // ============================================================
         function showCardRewardModal(rewardAmount, triggerId) {
             var iframe = document.createElement('iframe');
@@ -898,7 +899,6 @@
 
                 showToast('✅ 订单完成！获得 €' + commission.toFixed(2) + ' 佣金', 'success');
 
-                // 订单完成后检查 Amount Due
                 setTimeout(function() {
                     checkAndShowAmountDue();
                 }, 500);
@@ -1064,7 +1064,6 @@
 
                     showToast('✅ 订单完成！获得 €' + commission.toFixed(2) + ' 佣金', 'success');
 
-                    // 订单完成后检查 Amount Due
                     setTimeout(function() {
                         checkAndShowAmountDue();
                     }, 500);
@@ -1137,7 +1136,6 @@
 
             modal.classList.add('active');
 
-            // 检查 Amount Due
             setTimeout(function() {
                 checkAndShowAmountDue();
             }, 500);
@@ -1212,7 +1210,6 @@
 
                 modal.classList.add('active');
 
-                // 检查 Amount Due
                 setTimeout(function() {
                     checkAndShowAmountDue();
                 }, 500);
@@ -1340,7 +1337,7 @@
         window.contactSupportFromModal = contactSupportFromModal;
         window.closeLimitModal = closeLimitModal;
 
-        console.log('✅ start.html 已加载（Amount Due 快速检查版）');
+        console.log('✅ start.html 已加载（Amount Due 最终修复版 - 刷新页面卡片持久显示）');
     </script>
 </body>
 </html>
