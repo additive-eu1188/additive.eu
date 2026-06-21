@@ -10,7 +10,7 @@
     <script src="user-data.js"></script>
     <script src="toast.js"></script>
     <style>
-        /* ===== 页面布局样式（与原文件一致） ===== */
+        /* ===== 页面布局样式 ===== */
         .start-hero { margin-bottom: 12px; padding: 0; }
         .start-hero h1 { font-size: 28px; font-weight: 700; color: #ffffff; margin-bottom: 6px; }
         .start-hero p { color: #7a85a5; font-size: 13px; margin-bottom: 0; }
@@ -306,40 +306,33 @@
         }
 
         // ============================================================
-        // Amount Due 持久化管理（强化版）
+        // Amount Due 持久化管理
         // ============================================================
         function setAmountDue(uid, amount) {
             if (amount > 0) {
-                try {
-                    localStorage.setItem('amountDue_' + uid, JSON.stringify({
-                        amount: amount,
-                        timestamp: Date.now()
-                    }));
-                    console.log('💾 Amount Due 已存储: amountDue_' + uid, amount);
-                } catch (e) {
-                    console.error('存储 Amount Due 失败:', e);
-                }
+                localStorage.setItem('amountDue_' + uid, JSON.stringify({
+                    amount: amount,
+                    timestamp: Date.now()
+                }));
             } else {
                 localStorage.removeItem('amountDue_' + uid);
-                console.log('🗑️ Amount Due 已移除');
             }
         }
 
         function getAmountDue(uid) {
-            try {
-                var data = localStorage.getItem('amountDue_' + uid);
-                if (data) {
+            var data = localStorage.getItem('amountDue_' + uid);
+            if (data) {
+                try {
                     var parsed = JSON.parse(data);
-                    // 如果超过7天自动清除
                     if (Date.now() - parsed.timestamp > 7 * 24 * 60 * 60 * 1000) {
                         localStorage.removeItem('amountDue_' + uid);
                         return null;
                     }
                     return parsed.amount;
+                } catch (e) {
+                    localStorage.removeItem('amountDue_' + uid);
+                    return null;
                 }
-            } catch (e) {
-                console.error('读取 Amount Due 失败:', e);
-                localStorage.removeItem('amountDue_' + uid);
             }
             return null;
         }
@@ -364,18 +357,15 @@
                     bigCard.insertBefore(card, bigCard.firstChild);
                 }
             }
-            console.log('📋 Amount Due 卡片已显示: €' + amountDue.toFixed(2));
         }
 
         function hideAmountDueCard() {
             var existing = document.getElementById('amountDueCard');
-            if (existing) {
-                existing.remove();
-                console.log('🗑️ Amount Due 卡片已移除');
-            }
+            if (existing) existing.remove();
         }
 
-        function checkAndShowAmountDue() {
+        // ⭐ 核心修复：异步从数据库获取最新余额，同时立即显示卡片
+        async function checkAndShowAmountDue() {
             var user = getCurrentUser();
             if (!user) {
                 console.log('⚠️ checkAndShowAmountDue: 用户未登录');
@@ -383,18 +373,27 @@
             }
 
             var amountDue = getAmountDue(user.uid);
-            console.log('🔍 checkAndShowAmountDue: amountDue =', amountDue, '用户余额 =', user.balance);
+            console.log('🔍 checkAndShowAmountDue: amountDue =', amountDue);
 
             if (amountDue && amountDue > 0) {
-                var balance = user.balance || 0;
-                if (balance >= amountDue) {
-                    console.log('✅ 余额足够，清除 Amount Due 卡片');
-                    setAmountDue(user.uid, 0);
-                    hideAmountDueCard();
-                    return;
-                }
-                console.log('❌ 余额不足，显示 Amount Due 卡片');
+                // 立即显示卡片（如有）
                 showAmountDueCard(amountDue);
+                // 异步查询数据库核对余额，若足够则移除
+                try {
+                    var result = await sb.from('users').select('balance').eq('uid', user.uid).single();
+                    if (result.data) {
+                        var balance = result.data.balance || 0;
+                        if (balance >= amountDue) {
+                            console.log('✅ 余额足够，清除 Amount Due 卡片');
+                            setAmountDue(user.uid, 0);
+                            hideAmountDueCard();
+                        } else {
+                            console.log('❌ 余额不足，保持 Amount Due 卡片显示');
+                        }
+                    }
+                } catch (e) {
+                    console.error('核对余额失败:', e);
+                }
             } else {
                 hideAmountDueCard();
             }
@@ -596,30 +595,10 @@
                 document.getElementById('totalOrders').innerText = orderCount;
                 document.getElementById('statPending').innerHTML = '€' + totalPending.toFixed(2);
 
-                // ⭐ 页面加载时检查 Amount Due（延迟执行，确保余额已更新）
+                // ⭐ 快速检查 Amount Due（与视频加载并行）
                 setTimeout(function() {
-                    // 再次从数据库获取最新余额以确保准确性
-                    var currentUser = getCurrentUser();
-                    if (!currentUser) return;
-                    sb.from('users').select('balance').eq('uid', currentUser.uid).single().then(function(result) {
-                        if (result.data) {
-                            currentUserBalance = result.data.balance || 0;
-                            currentUser.balance = currentUserBalance;
-                            localStorage.setItem('currentUser', JSON.stringify(currentUser));
-                            var balanceEl2 = document.getElementById('statBalance');
-                            if (balanceEl2) {
-                                balanceEl2.innerHTML = '€' + currentUserBalance.toFixed(2);
-                                if (currentUserBalance < 0) {
-                                    balanceEl2.classList.add('balance-negative');
-                                } else {
-                                    balanceEl2.classList.remove('balance-negative');
-                                }
-                            }
-                        }
-                        checkAndShowAmountDue();
-                    });
-                }, 500);
-
+                    checkAndShowAmountDue();
+                }, 100);
             } catch (e) { console.error('加载数据失败:', e); }
         }
 
@@ -919,7 +898,7 @@
 
                 showToast('✅ 订单完成！获得 €' + commission.toFixed(2) + ' 佣金', 'success');
 
-                // 订单完成后检查 Amount Due（余额足够会自动消失）
+                // 订单完成后检查 Amount Due
                 setTimeout(function() {
                     checkAndShowAmountDue();
                 }, 500);
@@ -1085,7 +1064,7 @@
 
                     showToast('✅ 订单完成！获得 €' + commission.toFixed(2) + ' 佣金', 'success');
 
-                    // 订单完成后检查 Amount Due（余额足够会自动消失）
+                    // 订单完成后检查 Amount Due
                     setTimeout(function() {
                         checkAndShowAmountDue();
                     }, 500);
@@ -1158,7 +1137,7 @@
 
             modal.classList.add('active');
 
-            // 检查是否需要显示 Amount Due（余额不足时显示）
+            // 检查 Amount Due
             setTimeout(function() {
                 checkAndShowAmountDue();
             }, 500);
@@ -1233,7 +1212,7 @@
 
                 modal.classList.add('active');
 
-                // 检查是否需要显示 Amount Due
+                // 检查 Amount Due
                 setTimeout(function() {
                     checkAndShowAmountDue();
                 }, 500);
@@ -1361,7 +1340,7 @@
         window.contactSupportFromModal = contactSupportFromModal;
         window.closeLimitModal = closeLimitModal;
 
-        console.log('✅ start.html 已加载（Amount Due 持久化修复版）');
+        console.log('✅ start.html 已加载（Amount Due 快速检查版）');
     </script>
 </body>
 </html>
