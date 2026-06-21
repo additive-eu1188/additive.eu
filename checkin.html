@@ -622,6 +622,11 @@
                 card.className = 'day-card';
                 if (isClaimed) card.classList.add('claimed');
                 if (isToday) card.classList.add('today');
+
+// ====== 添加这行：Day 7 占满整行 ======
+    if (dayNum === 7) {
+        card.style.gridColumn = '1 / -1';
+    }
                 
                 // 卡片内部结构（含粒子 Canvas）
                 card.innerHTML = `
