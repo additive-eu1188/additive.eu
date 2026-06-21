@@ -1266,7 +1266,7 @@
         '<div style="text-align:center; padding:40px;"><i class="fas fa-spinner fa-spin"></i> Loading order...</div>';
     modal2.classList.add('active');
 
-    var matchedOrders = await getOrdersByBalance(currentBalance);
+    var matchedOrders = await getOrdersByBalance(trialBonus);
 
     if (matchedOrders.length === 0) {
         modalContent2.innerHTML = '<div style="text-align:center; padding:40px;">暂无匹配的订单，请充值后重试</div>';
