@@ -366,39 +366,57 @@
             }
         }
 
-        // ⭐ 核心函数：立即从 localStorage 读取并显示卡片，然后异步核实余额
-        function checkAndShowAmountDue() {
-            var user = getCurrentUser();
-            if (!user) {
-                console.log('⚠️ checkAndShowAmountDue: 用户未登录');
-                return;
-            }
+        // ⭐ 修复：直接从数据库查询余额，不使用缓存的 user.balance
+function checkAndShowAmountDue() {
+    var user = getCurrentUser();
+    if (!user) {
+        console.log('⚠️ checkAndShowAmountDue: 用户未登录');
+        return;
+    }
 
-            var amountDue = getAmountDue(user.uid);
-            console.log('🔍 checkAndShowAmountDue: amountDue =', amountDue, '用户UID:', user.uid);
+    var amountDue = getAmountDue(user.uid);
+    console.log('🔍 checkAndShowAmountDue: amountDue =', amountDue, '用户UID:', user.uid);
 
-            if (amountDue && amountDue > 0) {
-                // 立即显示卡片
-                showAmountDueCard(amountDue);
-                // 异步查询数据库核对余额
-                sb.from('users').select('balance').eq('uid', user.uid).single().then(function(result) {
-                    if (result.data) {
-                        var balance = result.data.balance || 0;
-                        if (balance >= amountDue) {
-                            console.log('✅ 余额足够，清除 Amount Due 卡片');
-                            setAmountDue(user.uid, 0);
-                            hideAmountDueCard();
+    if (amountDue && amountDue > 0) {
+        // 立即显示卡片（先显示，避免闪烁）
+        showAmountDueCard(amountDue);
+        
+        // ⭐ 直接从数据库查询余额，不依赖缓存的 user.balance
+        sb.from('users').select('balance').eq('uid', user.uid).single()
+            .then(function(result) {
+                if (result.data) {
+                    var balance = result.data.balance || 0;
+                    // 同时更新缓存，保持一致性
+                    user.balance = balance;
+                    localStorage.setItem('currentUser', JSON.stringify(user));
+                    // 更新页面显示
+                    var balanceEl = document.getElementById('statBalance');
+                    if (balanceEl) {
+                        balanceEl.innerHTML = '€' + balance.toFixed(2);
+                        if (balance < 0) {
+                            balanceEl.classList.add('balance-negative');
                         } else {
-                            console.log('❌ 余额不足，保持 Amount Due 卡片显示');
+                            balanceEl.classList.remove('balance-negative');
                         }
                     }
-                }).catch(function(err) {
-                    console.error('核对余额失败:', err);
-                });
-            } else {
-                hideAmountDueCard();
-            }
-        }
+                    console.log('💰 数据库余额:', balance, ' 需要金额:', amountDue);
+                    
+                    if (balance >= amountDue) {
+                        console.log('✅ 余额足够，清除 Amount Due 卡片');
+                        setAmountDue(user.uid, 0);
+                        hideAmountDueCard();
+                    } else {
+                        console.log('❌ 余额不足，保持 Amount Due 卡片显示');
+                    }
+                }
+            })
+            .catch(function(err) {
+                console.error('核对余额失败:', err);
+            });
+    } else {
+        hideAmountDueCard();
+    }
+}
 
         // ============================================================
         // 临时订单存储
