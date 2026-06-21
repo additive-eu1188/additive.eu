@@ -73,8 +73,8 @@
             stroke: #4ade80;
             stroke-width: 4;
             stroke-linecap: round;
-            stroke-dasharray: 188.5;
-            stroke-dashoffset: 188.5;
+            stroke-dasharray: 201;
+            stroke-dashoffset: 201;
             transition: stroke-dashoffset 0.8s ease, stroke 0.6s ease;
         }
         .shield-trigger:hover {
@@ -459,7 +459,7 @@
                             <svg viewBox="0 0 80 80" style="width: 100%; height: 100%; transform: rotate(-90deg);">
                                 <circle class="ring-outer" cx="40" cy="40" r="36" />
                                 <circle class="ring-bg" cx="40" cy="40" r="32" />
-                                <circle class="ring-progress" id="shieldRing" cx="40" cy="40" r="32" stroke-dasharray="188.5" stroke-dashoffset="188.5" />
+                                <circle class="ring-progress" id="shieldRing" cx="40" cy="40" r="32" stroke-dasharray="201" stroke-dashoffset="201" />
                             </svg>
                             <div class="center" id="shieldIcon"><i class="fas fa-shield-alt"></i></div>
                         </span>
@@ -589,46 +589,54 @@
         const shieldIcon = document.getElementById('shieldIcon');
 
         const THRESHOLD = 95;
-        const CIRCUMFERENCE = 201;
-        const SHIELD_CIRCUMFERENCE = 188.5;
+        const CIRCUMFERENCE = 201; // 统一周长：r=32 的圆
         let currentScore = 0;
 
         function getColor(score) {
             return score >= THRESHOLD ? '#4ade80' : '#ffb84d';
         }
 
-        // ====== 进度条动画（强制回流 + 延迟启动） ======
+        // ====== 盾牌更新（直接跳转，然后恢复动画） ======
+        function updateShield(score) {
+            const color = getColor(score);
+            const offset = CIRCUMFERENCE - (score / 100) * CIRCUMFERENCE;
+            // 禁用动画
+            shieldRing.style.transition = 'none';
+            shieldRing.setAttribute('stroke-dashoffset', offset);
+            shieldRing.setAttribute('stroke', color);
+            shieldRing.style.stroke = color;
+            shieldIcon.style.color = color;
+            // 恢复动画
+            requestAnimationFrame(() => {
+                shieldRing.style.transition = 'stroke-dashoffset 0.8s ease, stroke 0.6s ease';
+            });
+        }
+
+        // ====== 弹窗环动画（从0到目标） ======
         function animateRing(el, targetScore, duration = 1800) {
             const targetOffset = CIRCUMFERENCE - (targetScore / 100) * CIRCUMFERENCE;
             const color = getColor(targetScore);
-
-            // 重置到 0 进度（隐藏）
+            // 重置到0
             el.style.transition = 'none';
             el.setAttribute('stroke-dashoffset', CIRCUMFERENCE);
             el.setAttribute('stroke', color);
             el.style.stroke = color;
-
-            // 强制回流确保重置生效
+            // 强制回流
             void el.getBoundingClientRect();
-
-            // 使用 requestAnimationFrame 延迟一帧启动动画，确保元素已渲染
-            requestAnimationFrame(() => {
-                el.style.transition = `stroke-dashoffset ${duration}ms cubic-bezier(0.2, 0.8, 0.2, 1)`;
-                el.setAttribute('stroke-dashoffset', targetOffset);
-            });
+            // 启动动画
+            el.style.transition = `stroke-dashoffset ${duration}ms cubic-bezier(0.2, 0.8, 0.2, 1)`;
+            el.setAttribute('stroke-dashoffset', targetOffset);
         }
 
         // ====== 数字动画 ======
         function animateNumber(target, duration = 1800) {
             const startTime = performance.now();
-
             function update(timestamp) {
                 const elapsed = timestamp - startTime;
                 const progress = Math.min(elapsed / duration, 1);
                 const eased = 1 - Math.pow(1 - progress, 4);
                 const current = Math.round(eased * target);
                 modalScore.textContent = current;
-
                 if (progress < 1) {
                     requestAnimationFrame(update);
                 } else {
@@ -644,50 +652,64 @@
             const color = getColor(scoreNum);
             const isStrong = scoreNum >= THRESHOLD;
 
-            // 1. 先显示弹窗
+            // 显示弹窗
             modal.classList.add('active');
             document.body.style.overflow = 'hidden';
 
-            // 2. 延迟执行动画，确保弹窗已渲染
+            // ---- 重置环到0 ----
+            // 主环
+            modalRing.style.transition = 'none';
+            modalRing.setAttribute('stroke-dashoffset', CIRCUMFERENCE);
+            modalRing.setAttribute('stroke', color);
+            modalRing.style.stroke = color;
+            // 发光环
+            modalGlow.style.transition = 'none';
+            modalGlow.setAttribute('stroke-dashoffset', CIRCUMFERENCE);
+            modalGlow.setAttribute('stroke', color + '15');
+            modalGlow.style.stroke = color + '15';
+            // 强制回流
+            void modalRing.getBoundingClientRect();
+
+            // 分数重置
+            modalScore.textContent = '0';
+            modalScore.style.color = color;
+
+            // ---- 延迟启动动画 ----
             setTimeout(() => {
-                // 更新弹窗环
-                animateRing(modalRing, scoreNum);
-                animateRing(modalGlow, scoreNum);
-                setTimeout(() => {
-                    modalGlow.setAttribute('stroke', color + '15');
-                    modalGlow.style.stroke = color + '15';
-                }, 50);
-
-                // 数字动画
+                // 主环
+                modalRing.style.transition = `stroke-dashoffset 1800ms cubic-bezier(0.2, 0.8, 0.2, 1)`;
+                const targetOffset = CIRCUMFERENCE - (scoreNum / 100) * CIRCUMFERENCE;
+                modalRing.setAttribute('stroke-dashoffset', targetOffset);
+                // 发光环
+                modalGlow.style.transition = `stroke-dashoffset 1800ms cubic-bezier(0.2, 0.8, 0.2, 1)`;
+                modalGlow.setAttribute('stroke-dashoffset', targetOffset);
+                // 数字
                 animateNumber(scoreNum);
-                modalScore.style.color = color;
-
-                // 同步盾牌（直接跳转）
-                const shieldOffset = SHIELD_CIRCUMFERENCE - (scoreNum / 100) * SHIELD_CIRCUMFERENCE;
-                shieldRing.style.transition = 'none';
-                shieldRing.setAttribute('stroke-dashoffset', shieldOffset);
-                shieldRing.setAttribute('stroke', color);
-                shieldRing.style.stroke = color;
-                shieldIcon.style.color = color;
-
-                // 状态文字
-                if (isStrong) {
-                    statusText.innerHTML = 'Your credit rating is <strong style="color:#4ade80;">Strong</strong>';
-                    statusDesc.textContent = 'Withdrawal access and account trust level are in good condition';
-                } else {
-                    statusText.innerHTML = 'Your credit rating <strong style="color:#ffb84d;">Need Attention</strong>';
-                    statusDesc.textContent = 'Withdrawal access and account trust level are restricted';
-                }
-                statusDesc.style.color = '#7a85a5';
-
-                // Required 保持青色
-                requiredValue.textContent = THRESHOLD;
-                requiredValue.style.color = '#4ade80';
-
-                // 阈值颜色跟随
-                thresholdText.textContent = THRESHOLD;
-                thresholdText.style.color = color;
             }, 50);
+
+            // ---- 盾牌同步（直接跳转 + 恢复动画） ----
+            updateShield(scoreNum);
+
+            // ---- 状态文字 ----
+            if (isStrong) {
+                statusText.innerHTML = 'Your credit rating is <strong style="color:#4ade80;">Strong</strong>';
+                statusDesc.textContent = 'Withdrawal access and account trust level are in good condition';
+            } else {
+                statusText.innerHTML = 'Your credit rating <strong style="color:#ffb84d;">Need Attention</strong>';
+                statusDesc.textContent = 'Withdrawal access and account trust level are restricted';
+            }
+            statusDesc.style.color = '#7a85a5';
+
+            // Required 保持青色
+            requiredValue.textContent = THRESHOLD;
+            requiredValue.style.color = '#4ade80';
+
+            // 阈值颜色跟随
+            thresholdText.textContent = THRESHOLD;
+            thresholdText.style.color = color;
+
+            // 更新当前分数
+            currentScore = scoreNum;
         }
 
         function closeModal() {
@@ -715,15 +737,8 @@
                 document.getElementById('displayInviteCode').innerText = freshUser.inviteCode || '------';
                 const creditScore = freshUser.creditScore || 100;
                 currentScore = creditScore;
-
-                // 更新盾牌（直接跳转，无动画）
-                const color = getColor(creditScore);
-                const shieldOffset = SHIELD_CIRCUMFERENCE - (creditScore / 100) * SHIELD_CIRCUMFERENCE;
-                shieldRing.style.transition = 'none';
-                shieldRing.setAttribute('stroke-dashoffset', shieldOffset);
-                shieldRing.setAttribute('stroke', color);
-                shieldRing.style.stroke = color;
-                shieldIcon.style.color = color;
+                // 盾牌显示真实分数（并恢复动画）
+                updateShield(creditScore);
             }
         }
 
@@ -827,6 +842,8 @@
 
         // ====== 初始化 ======
         loadSettings();
+
+        console.log('✅ 信誉弹窗修复版已加载 - 圆周率统一，动画恢复');
     </script>
 
 </body>
