@@ -668,11 +668,13 @@
             // ⭐ 保存 Amount Due 到 localStorage
             var user = getCurrentUser();
             if (user) {
-                setAmountDue(user.uid, requiredAmount);
+                // ⭐ 计算 Amount Due = 订单价格 - 用户余额
+var amountDue = requiredAmount - currentBalance;
+setAmountDue(user.uid, amountDue);
             }
             
             // ⭐ 显示 Amount Due 卡片
-            showAmountDueCard(requiredAmount);
+            showAmountDueCard(amountDue);
             
             var modalHtml = '<div id="insufficientModal" class="order-modal-container" style="visibility: visible; opacity: 1;"><div class="order-modal"><div class="modal-header"><h2><i class="fas fa-exclamation-triangle"></i> Insufficient Balance</h2><button class="modal-close" onclick="closeInsufficientModal()">&times;</button></div><div class="modal-body" style="text-align: center; padding: 30px;"><i class="fas fa-ban" style="font-size: 64px; color: #ff8888; margin-bottom: 20px; display: block;"></i><h3 style="color: #ff8888; margin-bottom: 16px;">Order Failed</h3><p style="margin-bottom: 16px;">Required: <strong style="color: #ffdd99;">€' +
                 requiredAmount.toFixed(2) + '</strong></p><p style="margin-bottom: 24px;">Your Balance: <strong style="color: #ff8888;">€' + currentBalance.toFixed(2) +
