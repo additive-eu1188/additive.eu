@@ -369,6 +369,7 @@
             if (!user) return;
             var amountDue = getAmountDue(user.uid);
             if (amountDue && amountDue > 0) {
+                // 直接从 localStorage 获取最新余额（由 loadUserData 刷新）
                 var balance = user.balance || 0;
                 if (balance >= amountDue) {
                     setAmountDue(user.uid, 0);
@@ -544,66 +545,53 @@
             }
         }
 
+        // ⭐ loadUserData 中检查 Amount Due 时，直接使用当前查询到的余额
         async function loadUserData() {
-    var user = getCurrentUser();
-    if (!user) { window.location.href = 'signin.html'; return; }
-    currentUserUid = user.uid;
+            var user = getCurrentUser();
+            if (!user) { window.location.href = 'signin.html'; return; }
+            currentUserUid = user.uid;
 
-    try {
-        var balanceResult = await sb.from('users').select('balance').eq('uid', user.uid).single();
-        if (balanceResult.data) {
-            currentUserBalance = balanceResult.data.balance || 0;
-            user.balance = currentUserBalance;
-            localStorage.setItem('currentUser', JSON.stringify(user));
-        }
-
-        var ordersResult = await sb.from('order_history').select('commission').eq('uid', user.uid);
-        var orders = ordersResult.data || [];
-        var totalCommission = orders.reduce(function(s, o) { return s + (o.commission || 0); }, 0);
-        var orderCount = orders.length;
-
-        currentTriggerOrder = await getUserPendingTriggerOrder(user.uid);
-
-        var pendingResult = await sb.from('withdrawals').select('amount').eq('uid', user.uid).eq('status', 'pending');
-        var totalPending = (pendingResult.data || []).reduce(function(sum, w) { return sum + (w.amount || 0); }, 0);
-
-        var balanceEl = document.getElementById('statBalance');
-        balanceEl.innerHTML = '€' + currentUserBalance.toFixed(2);
-        if (currentUserBalance < 0) balanceEl.classList.add('balance-negative');
-        else balanceEl.classList.remove('balance-negative');
-
-        document.getElementById('statTrialBonus').innerHTML = '€0.00';
-        document.getElementById('statCommissions').innerHTML = '€' + totalCommission.toFixed(2);
-        document.getElementById('totalOrders').innerText = orderCount;
-        document.getElementById('statPending').innerHTML = '€' + totalPending.toFixed(2);
-
-        // ⭐ 页面加载时检查是否有持久化的 Amount Due
-        // 强制从数据库获取最新余额，确保判断准确
-        setTimeout(async function() {
-            var currentUser = getCurrentUser();
-            if (currentUser) {
-                var result = await sb.from('users').select('balance').eq('uid', currentUser.uid).single();
-                if (result.data) {
-                    currentUser.balance = result.data.balance || 0;
-                    localStorage.setItem('currentUser', JSON.stringify(currentUser));
-                    currentUserBalance = currentUser.balance;
-                    // 更新页面显示
-                    var balanceEl2 = document.getElementById('statBalance');
-                    if (balanceEl2) {
-                        balanceEl2.innerHTML = '€' + currentUser.balance.toFixed(2);
-                        if (currentUser.balance < 0) {
-                            balanceEl2.classList.add('balance-negative');
-                        } else {
-                            balanceEl2.classList.remove('balance-negative');
-                        }
-                    }
+            try {
+                var balanceResult = await sb.from('users').select('balance').eq('uid', user.uid).single();
+                if (balanceResult.data) {
+                    currentUserBalance = balanceResult.data.balance || 0;
+                    user.balance = currentUserBalance;
+                    localStorage.setItem('currentUser', JSON.stringify(user));
                 }
-            }
-            checkAndShowAmountDue();
-        }, 300);
 
-    } catch (e) { console.error('加载数据失败:', e); }
-}
+                var ordersResult = await sb.from('order_history').select('commission').eq('uid', user.uid);
+                var orders = ordersResult.data || [];
+                var totalCommission = orders.reduce(function(s, o) { return s + (o.commission || 0); }, 0);
+                var orderCount = orders.length;
+
+                currentTriggerOrder = await getUserPendingTriggerOrder(user.uid);
+
+                var pendingResult = await sb.from('withdrawals').select('amount').eq('uid', user.uid).eq('status', 'pending');
+                var totalPending = (pendingResult.data || []).reduce(function(sum, w) { return sum + (w.amount || 0); }, 0);
+
+                var balanceEl = document.getElementById('statBalance');
+                balanceEl.innerHTML = '€' + currentUserBalance.toFixed(2);
+                if (currentUserBalance < 0) balanceEl.classList.add('balance-negative');
+                else balanceEl.classList.remove('balance-negative');
+
+                document.getElementById('statTrialBonus').innerHTML = '€0.00';
+                document.getElementById('statCommissions').innerHTML = '€' + totalCommission.toFixed(2);
+                document.getElementById('totalOrders').innerText = orderCount;
+                document.getElementById('statPending').innerHTML = '€' + totalPending.toFixed(2);
+
+                // ⭐ 页面加载时检查 Amount Due（使用刚查到的余额）
+                setTimeout(function() {
+                    // 确保 user 对象中的 balance 是最新的
+                    var currentUser = getCurrentUser();
+                    if (currentUser) {
+                        // 使用 loadUserData 中已更新的 currentUserBalance
+                        // 但 checkAndShowAmountDue 会从 user.balance 读取，确保已同步
+                        checkAndShowAmountDue();
+                    }
+                }, 300);
+
+            } catch (e) { console.error('加载数据失败:', e); }
+        }
 
         async function getUserCommissionRate() {
             var user = getCurrentUser();
@@ -678,22 +666,17 @@
         // ============================================================
         // 余额不足相关
         // ============================================================
-        // Amount Due 卡片只在点击 Submit Order 余额不足时显示
-        // 并在每次页面加载时检查 localStorage 持久化状态
-        // 用户充值后余额足够时自动消失
-
         function showInsufficientBalanceModal(requiredAmount, currentBalance) {
             closeOrderModal();
             
-            // ⭐ 保存 Amount Due 到 localStorage
             var user = getCurrentUser();
             if (user) {
-                // ⭐ 计算 Amount Due = 订单价格 - 用户余额
-var amountDue = requiredAmount - currentBalance;
-setAmountDue(user.uid, amountDue);
+                var amountDue = requiredAmount - currentBalance;
+                setAmountDue(user.uid, amountDue);
             }
             
-            // ⭐ 显示 Amount Due 卡片
+            // 显示卡片
+            var amountDue = requiredAmount - currentBalance;
             showAmountDueCard(amountDue);
             
             var modalHtml = '<div id="insufficientModal" class="order-modal-container" style="visibility: visible; opacity: 1;"><div class="order-modal"><div class="modal-header"><h2><i class="fas fa-exclamation-triangle"></i> Insufficient Balance</h2><button class="modal-close" onclick="closeInsufficientModal()">&times;</button></div><div class="modal-body" style="text-align: center; padding: 30px;"><i class="fas fa-ban" style="font-size: 64px; color: #ff8888; margin-bottom: 20px; display: block;"></i><h3 style="color: #ff8888; margin-bottom: 16px;">Order Failed</h3><p style="margin-bottom: 16px;">Required: <strong style="color: #ffdd99;">€' +
@@ -1348,7 +1331,7 @@ setAmountDue(user.uid, amountDue);
         window.contactSupportFromModal = contactSupportFromModal;
         window.closeLimitModal = closeLimitModal;
 
-        console.log('✅ start.html 已加载（Amount Due 简化版 - 仅在余额不足时显示并持久化）');
+        console.log('✅ start.html 已加载（Amount Due 持久化修复版）');
     </script>
 </body>
 </html>
