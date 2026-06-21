@@ -22,7 +22,44 @@
             padding: 20px;
             border: 1px solid rgba(201, 176, 149, 0.15);
         }
-        .settings-section h3 { font-size: 15px; margin-bottom: 20px; display: flex; align-items: center; gap: 8px; color: #C9B095; }
+        .settings-section h3 {
+            font-size: 15px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: #C9B095;
+            width: 100%;
+        }
+        .settings-section h3 .left {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        /* ====== 标题右侧 Credit Score ====== */
+        .credit-score-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            font-weight: 400;
+            color: #4ade80;
+        }
+        .credit-score-header .score {
+            font-weight: 700;
+            font-size: 16px;
+            color: #4ade80;
+        }
+        .credit-score-header .label {
+            font-size: 10px;
+            padding: 2px 12px;
+            border-radius: 20px;
+            background: rgba(74, 222, 128, 0.08);
+            border: 1px solid rgba(74, 222, 128, 0.12);
+            color: #4ade80;
+            font-weight: 600;
+        }
         
         .info-card {
             background: rgba(0,0,0,0.3);
@@ -72,25 +109,6 @@
             background: rgba(201,176,149,0.3);
         }
         
-        .credit-score-display {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        .credit-score-display .score {
-            font-weight: 700;
-            font-size: 16px;
-            color: #4ade80;
-        }
-        .credit-score-display .label {
-            font-size: 11px;
-            padding: 2px 14px;
-            border-radius: 20px;
-            background: rgba(74, 222, 128, 0.06);
-            border: 1px solid rgba(74, 222, 128, 0.06);
-            color: #4ade80;
-        }
-        
         .setting-item { display: flex; justify-content: space-between; align-items: center; padding: 14px 0; border-bottom: 1px solid rgba(201,176,149,0.08); }
         .setting-item:last-child { border-bottom: none; }
         .setting-title { font-weight: 500; margin-bottom: 3px; color: #ffffff; font-size: 14px; }
@@ -116,56 +134,10 @@
         .footer-links a { color: #7a85a5; text-decoration: none; margin: 0 12px; }
         .footer-links a:hover { color: #C9B095; }
         @media (max-width: 900px) { .settings-grid { grid-template-columns: 1fr; } }
-        
-        /* 右侧 Credit Score 卡片独立样式 */
-        .credit-score-card {
-            background: rgba(0,0,0,0.3);
-            border-radius: 14px;
-            padding: 16px 18px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-            border: 1px solid rgba(74, 222, 128, 0.06);
-        }
-        .credit-score-card .left {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-        .credit-score-card .icon-box {
-            width: 40px;
-            height: 40px;
-            border-radius: 10px;
-            background: rgba(74, 222, 128, 0.06);
-            border: 1px solid rgba(74, 222, 128, 0.06);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #4ade80;
-            font-size: 16px;
-            flex-shrink: 0;
-        }
-        .credit-score-card .info {
-            display: flex;
-            flex-direction: column;
-        }
-        .credit-score-card .info .label {
-            font-size: 11px;
-            color: #6a7a9a;
-        }
-        .credit-score-card .info .score {
-            font-size: 20px;
-            font-weight: 700;
-            color: #fff;
-        }
-        .credit-score-card .right .badge {
-            font-size: 11px;
-            padding: 4px 14px;
-            border-radius: 20px;
-            background: rgba(74, 222, 128, 0.06);
-            border: 1px solid rgba(74, 222, 128, 0.06);
-            color: #4ade80;
+        @media (max-width: 600px) {
+            .settings-section h3 { flex-wrap: wrap; gap: 10px; }
+            .credit-score-header { font-size: 11px; }
+            .credit-score-header .score { font-size: 14px; }
         }
     </style>
 </head>
@@ -218,7 +190,14 @@
             <div class="settings-grid">
                 <!-- ====== ACCOUNT CENTER ====== -->
                 <div class="settings-section">
-                    <h3><i class="fas fa-user-circle"></i> ACCOUNT CENTER</h3>
+                    <h3>
+                        <span class="left"><i class="fas fa-user-circle"></i> ACCOUNT CENTER</span>
+                        <span class="credit-score-header" id="creditScoreHeader">
+                            <i class="fas fa-shield-alt"></i>
+                            <span class="score" id="headerCreditScore">100</span>
+                            <span class="label" id="headerCreditLabel">Excellent</span>
+                        </span>
+                    </h3>
                     
                     <div class="info-card">
                         <div class="info-row">
@@ -235,14 +214,6 @@
                                 <button class="copy-btn" onclick="copyInviteCode()"><i class="fas fa-copy"></i> Copy</button>
                             </div>
                         </div>
-                        <!-- ====== Credit Score 行 ====== -->
-                        <div class="info-row">
-                            <span class="info-label"><i class="fas fa-shield-alt" style="color:#4ade80;"></i> Credit Score</span>
-                            <div class="info-value credit-score-display">
-                                <span class="score" id="displayCreditScore">100</span>
-                                <span class="label" id="creditScoreLabel">Excellent</span>
-                            </div>
-                        </div>
                     </div>
                     
                     <div class="setting-item"><div><div class="setting-title">Change Password</div><div class="setting-desc">Update your login password</div></div><button class="setting-action" onclick="changePassword()">→</button></div>
@@ -253,21 +224,7 @@
 
                 <!-- ====== SECURITY OPTIONS ====== -->
                 <div class="settings-section">
-                    <h3><i class="fas fa-shield-alt"></i> SECURITY OPTIONS</h3>
-                    
-                    <!-- ====== Credit Score 卡片（独立显示在右侧顶部） ====== -->
-                    <div class="credit-score-card">
-                        <div class="left">
-                            <div class="icon-box"><i class="fas fa-shield-alt"></i></div>
-                            <div class="info">
-                                <span class="label">Credit Score</span>
-                                <span class="score" id="displayCreditScore2">100</span>
-                            </div>
-                        </div>
-                        <div class="right">
-                            <span class="badge" id="creditScoreLabel2">Excellent</span>
-                        </div>
-                    </div>
+                    <h3><span class="left"><i class="fas fa-shield-alt"></i> SECURITY OPTIONS</span></h3>
                     
                     <div class="setting-item"><div><div class="setting-title">Language</div><div class="setting-desc">Change app language</div></div><button class="setting-action" onclick="changeLanguage()">English ▼</button></div>
                     <div class="setting-item"><div><div class="setting-title">Logout</div><div class="setting-desc">Sign out from this device</div></div><button class="setting-action logout-btn" onclick="logout()">Logout</button></div>
@@ -303,7 +260,7 @@
         }
 
         // ============================================================
-        // 更新 Credit Score 显示
+        // 更新 Credit Score 显示（标题右侧）
         // ============================================================
         function updateCreditScoreDisplay(score) {
             const scoreNum = parseInt(score) || 100;
@@ -314,19 +271,15 @@
             else if (scoreNum >= 50) { label = 'Fair'; color = '#ffaa66'; }
             else { label = 'Needs Attention'; color = '#ff5a5a'; }
             
-            // 更新所有显示位置
-            const scoreEls = document.querySelectorAll('#displayCreditScore, #displayCreditScore2');
-            const labelEls = document.querySelectorAll('#creditScoreLabel, #creditScoreLabel2');
-            
-            scoreEls.forEach(el => { if (el) el.innerText = scoreNum; });
-            labelEls.forEach(el => {
-                if (el) {
-                    el.innerText = label;
-                    el.style.borderColor = color + '33';
-                    el.style.color = color;
-                    el.style.background = color + '11';
-                }
-            });
+            const scoreEl = document.getElementById('headerCreditScore');
+            const labelEl = document.getElementById('headerCreditLabel');
+            if (scoreEl) scoreEl.innerText = scoreNum;
+            if (labelEl) {
+                labelEl.innerText = label;
+                labelEl.style.borderColor = color + '33';
+                labelEl.style.color = color;
+                labelEl.style.background = color + '11';
+            }
         }
 
         // ============================================================
@@ -340,7 +293,6 @@
             if (freshUser) {
                 document.getElementById('displayUid').innerText = freshUser.uid;
                 document.getElementById('displayInviteCode').innerText = freshUser.inviteCode || '------';
-                // 显示 Credit Score
                 const creditScore = freshUser.creditScore || 100;
                 updateCreditScoreDisplay(creditScore);
             }
