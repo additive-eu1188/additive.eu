@@ -9,7 +9,10 @@ function getCurrentUser() {
     const userStr = localStorage.getItem('currentUser');
     if (!userStr) return null;
     try {
-        return JSON.parse(userStr);
+        const user = JSON.parse(userStr);
+        // 确保 creditScore 存在
+        if (user.creditScore === undefined) user.creditScore = 100;
+        return user;
     } catch(e) { return null; }
 }
 
@@ -65,8 +68,9 @@ async function syncUserData() {
         user.vipLevel = freshData.vip_level || 1;
         user.username = freshData.username;
         user.uid = freshData.uid;
-        user.pin = freshData.pin || '';  // 👈 添加这行：同步 PIN
-        user.inviteCode = freshData.invite_code || '';  // 👈 添加这行：同步邀请码
+        user.pin = freshData.pin || '';
+        user.inviteCode = freshData.invite_code || '';
+        user.creditScore = freshData.credit_score || 100;
         localStorage.setItem('currentUser', JSON.stringify(user));
     }
     return user;
@@ -127,7 +131,6 @@ async function fetchUserStats(uid) {
 
 // 获取用户待完成的触发订单（pending 且 trigger_order_number <= 当前订单数 + 1）
 async function getUserPendingTriggerOrder(uid) {
-    // 先获取用户当前订单总数
     const { data: orders } = await sb
         .from('order_history')
         .select('id', { count: 'exact' })
@@ -136,7 +139,6 @@ async function getUserPendingTriggerOrder(uid) {
     const currentOrderCount = orders?.length || 0;
     const nextOrderNumber = currentOrderCount + 1;
     
-    // 查找触发订单数 <= 下一个订单数的 pending 订单
     const { data: triggers, error } = await sb
         .from('user_trigger_orders')
         .select('*')
@@ -154,58 +156,43 @@ async function getUserPendingTriggerOrder(uid) {
     return triggers?.[0] || null;
 }
 
-// 检查用户是否有待完成的触发订单（用于判断负数状态）
+// 检查用户是否有待完成的触发订单
 async function hasPendingTriggerOrder(uid) {
     const trigger = await getUserPendingTriggerOrder(uid);
     return trigger !== null;
 }
 
-// 获取触发订单的 Pending 金额（完成后的预期总余额）
+// 获取触发订单的 Pending 金额
 async function getTriggerOrderPendingAmount(uid, currentBalance, triggerOrder) {
     if (!triggerOrder) {
         triggerOrder = await getUserPendingTriggerOrder(uid);
     }
-    
     if (!triggerOrder) return 0;
-    
     const matchedPrice = triggerOrder.matched_price || 0;
     const commission = triggerOrder.commission_amount || 0;
-    
-    // Pending = 当前余额 + 订单价格 + 佣金
     return currentBalance + matchedPrice + commission;
 }
 
-// 完成触发订单（用户提交订单后调用）
+// 完成触发订单
 async function completeTriggerOrder(uid, triggerOrder) {
     if (!triggerOrder) return false;
-    
     const matchedPrice = triggerOrder.matched_price || 0;
     const commission = triggerOrder.commission_amount || 0;
-    
-    // 获取用户当前余额
     const { data: userData } = await sb
         .from('users')
         .select('balance')
         .eq('uid', uid)
         .single();
-    
     const currentBalance = userData?.balance || 0;
-    
-    // 新余额 = 当前余额 + 订单价格 + 佣金
     const newBalance = currentBalance + matchedPrice + commission;
-    
-    // 更新余额
     const { error: balanceError } = await sb
         .from('users')
         .update({ balance: newBalance })
         .eq('uid', uid);
-    
     if (balanceError) {
         console.error('更新余额失败:', balanceError);
         return false;
     }
-    
-    // 标记触发订单为已完成
     const { error: updateError } = await sb
         .from('user_trigger_orders')
         .update({
@@ -213,33 +200,28 @@ async function completeTriggerOrder(uid, triggerOrder) {
             completed_at: new Date().toISOString()
         })
         .eq('id', triggerOrder.id);
-    
     if (updateError) {
         console.error('更新触发订单状态失败:', updateError);
         return false;
     }
-    
-    // 更新本地用户数据
     const localUser = getCurrentUser();
     if (localUser && localUser.uid === uid) {
         localUser.balance = newBalance;
         localStorage.setItem('currentUser', JSON.stringify(localUser));
     }
-    
     return true;
 }
 
-// 取消触发订单（后台用）
+// 取消触发订单
 async function cancelTriggerOrder(triggerId) {
     const { error } = await sb
         .from('user_trigger_orders')
         .update({ status: 'cancelled' })
         .eq('id', triggerId);
-    
     return !error;
 }
 
-// ========== 统一菜单控制函数（所有页面共用） ==========
+// ========== 统一菜单控制函数 ==========
 window.toggleMenu = function() { 
     var sidebar = document.getElementById('sidebar'); 
     var overlay = document.getElementById('menuOverlay'); 
@@ -260,7 +242,6 @@ window.closeMenu = function() {
     document.body.style.overflow = '';
 };
 
-// 点击导航链接自动关闭菜单（移动端）
 function initNavClickClose() {
     var navItems = document.querySelectorAll('.nav-item');
     navItems.forEach(function(item) {
@@ -272,7 +253,6 @@ function initNavClickClose() {
     });
 }
 
-// 页面加载时初始化
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', initNavClickClose);
 } else {

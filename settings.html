@@ -24,7 +24,6 @@
         }
         .settings-section h3 { font-size: 15px; margin-bottom: 20px; display: flex; align-items: center; gap: 8px; color: #C9B095; }
         
-        /* UID 和邀请码卡片样式 */
         .info-card {
             background: rgba(0,0,0,0.3);
             border-radius: 14px;
@@ -43,6 +42,13 @@
         .info-label {
             font-size: 12px;
             color: #a0a8c0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .info-label i {
+            width: 18px;
+            font-size: 14px;
         }
         .info-value {
             font-weight: 700;
@@ -64,6 +70,25 @@
         }
         .copy-btn:hover {
             background: rgba(201,176,149,0.3);
+        }
+        
+        .credit-score-display {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .credit-score-display .score {
+            font-weight: 700;
+            font-size: 16px;
+            color: #4ade80;
+        }
+        .credit-score-display .label {
+            font-size: 11px;
+            padding: 2px 14px;
+            border-radius: 20px;
+            background: rgba(74, 222, 128, 0.06);
+            border: 1px solid rgba(74, 222, 128, 0.06);
+            color: #4ade80;
         }
         
         .setting-item { display: flex; justify-content: space-between; align-items: center; padding: 14px 0; border-bottom: 1px solid rgba(201,176,149,0.08); }
@@ -91,6 +116,57 @@
         .footer-links a { color: #7a85a5; text-decoration: none; margin: 0 12px; }
         .footer-links a:hover { color: #C9B095; }
         @media (max-width: 900px) { .settings-grid { grid-template-columns: 1fr; } }
+        
+        /* 右侧 Credit Score 卡片独立样式 */
+        .credit-score-card {
+            background: rgba(0,0,0,0.3);
+            border-radius: 14px;
+            padding: 16px 18px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            border: 1px solid rgba(74, 222, 128, 0.06);
+        }
+        .credit-score-card .left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .credit-score-card .icon-box {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            background: rgba(74, 222, 128, 0.06);
+            border: 1px solid rgba(74, 222, 128, 0.06);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #4ade80;
+            font-size: 16px;
+            flex-shrink: 0;
+        }
+        .credit-score-card .info {
+            display: flex;
+            flex-direction: column;
+        }
+        .credit-score-card .info .label {
+            font-size: 11px;
+            color: #6a7a9a;
+        }
+        .credit-score-card .info .score {
+            font-size: 20px;
+            font-weight: 700;
+            color: #fff;
+        }
+        .credit-score-card .right .badge {
+            font-size: 11px;
+            padding: 4px 14px;
+            border-radius: 20px;
+            background: rgba(74, 222, 128, 0.06);
+            border: 1px solid rgba(74, 222, 128, 0.06);
+            color: #4ade80;
+        }
     </style>
 </head>
 <body>
@@ -99,20 +175,21 @@
         <aside class="sidebar" id="sidebar">
             <div class="sidebar-top">
                 <div class="logo">
-    <img src="https://qgmbzdfnwsdosdqphlxk.supabase.co/storage/v1/object/public/logos/additivelogo1.png" alt="ADDITIVE" style="height: 35px; width: auto;">
-    <span>®</span>
-</div>
+                    <img src="https://qgmbzdfnwsdosdqphlxk.supabase.co/storage/v1/object/public/logos/additivelogo1.png" alt="ADDITIVE" style="height: 35px; width: auto;">
+                    <span>®</span>
+                </div>
                 <nav class="nav">
                     <a href="dashboard.html" class="nav-item"><i class="fas fa-th-large"></i><span>Dashboard</span></a>
                     <a href="start.html" class="nav-item"><i class="fas fa-play"></i><span>Start</span></a>
                     <a href="history.html" class="nav-item"><i class="fas fa-clock"></i><span>History</span></a>
                     <a href="checkin.html" class="nav-item"><i class="fas fa-calendar-check"></i><span>Sign in</span></a>
-<a href="event.html" class="nav-item"><i class="fas fa-calendar-alt"></i><span>Event</span></a>
+                    <a href="event.html" class="nav-item"><i class="fas fa-calendar-alt"></i><span>Event</span></a>
                     <a href="withdrawal.html" class="nav-item"><i class="fas fa-arrow-right-to-bracket"></i><span>Withdrawal</span></a>
                     <a href="chat.html" class="nav-item"><i class="fas fa-comment-dots"></i><span>Chat with us</span></a>
                     <a href="employment.html" class="nav-item"><i class="fas fa-file-contract"></i><span>Employment Contract</span></a>
                     <a href="company.html" class="nav-item"><i class="fas fa-building"></i><span>Company Profile</span></a>
                     <a href="settings.html" class="nav-item active"><i class="fas fa-sliders-h"></i><span>Settings</span></a>
+                    <a href="membership.html" class="nav-item"><i class="fas fa-crown"></i><span>Membership</span></a>
                 </nav>
             </div>
             <div class="sidebar-upgrade-card">
@@ -124,49 +201,74 @@
         </aside>
 
         <main class="main">
-<div class="mobile-top-bar">
-    <div class="menu-toggle" id="menuToggleBtn" onclick="toggleMenu()">
-        <i class="fas fa-bars"></i>
-    </div>
-    <div class="mobile-logo">
-        <img src="https://qgmbzdfnwsdosdqphlxk.supabase.co/storage/v1/object/public/logos/additivelogo1.png" alt="ADDITIVE">
-    </div>
-</div>
+            <div class="mobile-top-bar">
+                <div class="menu-toggle" id="menuToggleBtn" onclick="toggleMenu()">
+                    <i class="fas fa-bars"></i>
+                </div>
+                <div class="mobile-logo">
+                    <img src="https://qgmbzdfnwsdosdqphlxk.supabase.co/storage/v1/object/public/logos/additivelogo1.png" alt="ADDITIVE">
+                </div>
+            </div>
+
             <div class="settings-header">
                 <h1>SETTINGS</h1>
                 <p>Manage account security, language preferences, withdrawal PIN, and support access.</p>
             </div>
 
             <div class="settings-grid">
+                <!-- ====== ACCOUNT CENTER ====== -->
                 <div class="settings-section">
-    <h3><i class="fas fa-user-circle"></i> ACCOUNT CENTER</h3>
-    
-    <!-- UID 和邀请码卡片 -->
-    <div class="info-card">
-        <div class="info-row">
-            <span class="info-label">UID</span>
-            <div class="info-value">
-                <span id="displayUid">---</span>
-                <button class="copy-btn" onclick="copyUID()"><i class="fas fa-copy"></i> Copy</button>
-            </div>
-        </div>
-        <div class="info-row-divider"></div>
-        <div class="info-row">
-            <span class="info-label">Invitation Code</span>
-            <div class="info-value">
-                <span id="displayInviteCode">---</span>
-                <button class="copy-btn" onclick="copyInviteCode()"><i class="fas fa-copy"></i> Copy</button>
-            </div>
-        </div>
-    </div>
-    
-    <div class="setting-item"><div><div class="setting-title">Change Password</div><div class="setting-desc">Update your login password</div></div><button class="setting-action" onclick="changePassword()">→</button></div>
-    <div class="setting-item"><div><div class="setting-title">Set Withdrawal PIN</div><div class="setting-desc">Create a PIN to protect your withdrawals</div></div><button class="setting-action" onclick="setWithdrawalPin()">→</button></div>
-    <div class="setting-item"><div><div class="setting-title">Change Withdrawal PIN</div><div class="setting-desc">Update your withdrawal PIN</div></div><button class="setting-action" onclick="changeWithdrawalPin()">→</button></div>
-    <div class="setting-item"><div><div class="setting-title">Contact Support</div><div class="setting-desc">Chat with customer service</div></div><button class="setting-action" onclick="contactSupport()">→</button></div>
-</div>
+                    <h3><i class="fas fa-user-circle"></i> ACCOUNT CENTER</h3>
+                    
+                    <div class="info-card">
+                        <div class="info-row">
+                            <span class="info-label"><i class="fas fa-hashtag"></i> UID</span>
+                            <div class="info-value">
+                                <span id="displayUid">---</span>
+                                <button class="copy-btn" onclick="copyUID()"><i class="fas fa-copy"></i> Copy</button>
+                            </div>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label"><i class="fas fa-qrcode"></i> Invitation Code</span>
+                            <div class="info-value">
+                                <span id="displayInviteCode">---</span>
+                                <button class="copy-btn" onclick="copyInviteCode()"><i class="fas fa-copy"></i> Copy</button>
+                            </div>
+                        </div>
+                        <!-- ====== Credit Score 行 ====== -->
+                        <div class="info-row">
+                            <span class="info-label"><i class="fas fa-shield-alt" style="color:#4ade80;"></i> Credit Score</span>
+                            <div class="info-value credit-score-display">
+                                <span class="score" id="displayCreditScore">100</span>
+                                <span class="label" id="creditScoreLabel">Excellent</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="setting-item"><div><div class="setting-title">Change Password</div><div class="setting-desc">Update your login password</div></div><button class="setting-action" onclick="changePassword()">→</button></div>
+                    <div class="setting-item"><div><div class="setting-title">Set Withdrawal PIN</div><div class="setting-desc">Create a PIN to protect your withdrawals</div></div><button class="setting-action" onclick="setWithdrawalPin()">→</button></div>
+                    <div class="setting-item"><div><div class="setting-title">Change Withdrawal PIN</div><div class="setting-desc">Update your withdrawal PIN</div></div><button class="setting-action" onclick="changeWithdrawalPin()">→</button></div>
+                    <div class="setting-item"><div><div class="setting-title">Contact Support</div><div class="setting-desc">Chat with customer service</div></div><button class="setting-action" onclick="contactSupport()">→</button></div>
+                </div>
+
+                <!-- ====== SECURITY OPTIONS ====== -->
                 <div class="settings-section">
                     <h3><i class="fas fa-shield-alt"></i> SECURITY OPTIONS</h3>
+                    
+                    <!-- ====== Credit Score 卡片（独立显示在右侧顶部） ====== -->
+                    <div class="credit-score-card">
+                        <div class="left">
+                            <div class="icon-box"><i class="fas fa-shield-alt"></i></div>
+                            <div class="info">
+                                <span class="label">Credit Score</span>
+                                <span class="score" id="displayCreditScore2">100</span>
+                            </div>
+                        </div>
+                        <div class="right">
+                            <span class="badge" id="creditScoreLabel2">Excellent</span>
+                        </div>
+                    </div>
+                    
                     <div class="setting-item"><div><div class="setting-title">Language</div><div class="setting-desc">Change app language</div></div><button class="setting-action" onclick="changeLanguage()">English ▼</button></div>
                     <div class="setting-item"><div><div class="setting-title">Logout</div><div class="setting-desc">Sign out from this device</div></div><button class="setting-action logout-btn" onclick="logout()">Logout</button></div>
                 </div>
@@ -200,6 +302,36 @@
             if (menuBtn) menuBtn.classList.remove('hidden'); 
         }
 
+        // ============================================================
+        // 更新 Credit Score 显示
+        // ============================================================
+        function updateCreditScoreDisplay(score) {
+            const scoreNum = parseInt(score) || 100;
+            let label = 'Excellent';
+            let color = '#4ade80';
+            if (scoreNum >= 90) { label = 'Excellent'; color = '#4ade80'; }
+            else if (scoreNum >= 70) { label = 'Good'; color = '#ffb84d'; }
+            else if (scoreNum >= 50) { label = 'Fair'; color = '#ffaa66'; }
+            else { label = 'Needs Attention'; color = '#ff5a5a'; }
+            
+            // 更新所有显示位置
+            const scoreEls = document.querySelectorAll('#displayCreditScore, #displayCreditScore2');
+            const labelEls = document.querySelectorAll('#creditScoreLabel, #creditScoreLabel2');
+            
+            scoreEls.forEach(el => { if (el) el.innerText = scoreNum; });
+            labelEls.forEach(el => {
+                if (el) {
+                    el.innerText = label;
+                    el.style.borderColor = color + '33';
+                    el.style.color = color;
+                    el.style.background = color + '11';
+                }
+            });
+        }
+
+        // ============================================================
+        // 加载设置
+        // ============================================================
         async function loadSettings() {
             const user = checkLogin();
             if (!user) return;
@@ -208,6 +340,9 @@
             if (freshUser) {
                 document.getElementById('displayUid').innerText = freshUser.uid;
                 document.getElementById('displayInviteCode').innerText = freshUser.inviteCode || '------';
+                // 显示 Credit Score
+                const creditScore = freshUser.creditScore || 100;
+                updateCreditScoreDisplay(creditScore);
             }
         }
         
@@ -232,22 +367,14 @@
         
         async function changePassword() { 
             showPrompt('Change Password', 'Enter new password (min 4 characters):', async (newPwd) => {
-                if(!newPwd) {
-                    showToast('Password change cancelled', 'info');
-                    return;
-                }
-                if(newPwd.length < 4) { 
-                    showToast('Password must be at least 4 characters', 'error');
-                    return; 
-                }
-                
+                if(!newPwd) { showToast('Password change cancelled', 'info'); return; }
+                if(newPwd.length < 4) { showToast('Password must be at least 4 characters', 'error'); return; }
                 const user = getCurrentUser();
                 if(user){ 
                     const { error } = await sb
                         .from('users')
                         .update({ password: newPwd })
                         .eq('uid', user.uid);
-                    
                     if(error) {
                         showToast('Password change failed: ' + error.message, 'error');
                         return;
@@ -266,24 +393,17 @@
                     .select('pin')
                     .eq('uid', user.uid)
                     .single();
-                
                 if(userData && userData.pin && userData.pin !== '0000' && userData.pin !== ''){ 
                     showToast('PIN already set. Use "Change Withdrawal PIN" instead.', 'warning'); 
                     return; 
                 } 
-                
                 showPrompt('Set Withdrawal PIN', 'Enter 4-digit PIN:', (pin) => {
-                    if(!pin) {
-                        showToast('PIN setup cancelled', 'info');
-                        return;
-                    }
+                    if(!pin) { showToast('PIN setup cancelled', 'info'); return; }
                     if(pin && pin.length === 4 && !isNaN(pin)){ 
                         sb.from('users').update({ pin: pin }).eq('uid', user.uid)
                             .then(() => { showToast('PIN set successfully!', 'success'); })
                             .catch(err => { showToast('Failed to set PIN: ' + err.message, 'error'); });
-                    } else { 
-                        showToast('PIN must be exactly 4 digits', 'error'); 
-                    }
+                    } else { showToast('PIN must be exactly 4 digits', 'error'); }
                 });
             } 
         }
@@ -292,47 +412,31 @@
             const user = getCurrentUser();
             if(user){ 
                 showPrompt('Change Withdrawal PIN', 'Enter current PIN:', async (oldPin) => {
-                    if(!oldPin) {
-                        showToast('PIN change cancelled', 'info');
-                        return;
-                    }
-                    
+                    if(!oldPin) { showToast('PIN change cancelled', 'info'); return; }
                     const { data: userData } = await sb
                         .from('users')
                         .select('pin')
                         .eq('uid', user.uid)
                         .single();
-                    
-                    if(userData && userData.pin !== oldPin){ 
-                        showToast('Wrong current PIN', 'error');
-                        return; 
-                    }
-                    
+                    if(userData && userData.pin !== oldPin){ showToast('Wrong current PIN', 'error'); return; }
                     showPrompt('Change Withdrawal PIN', 'Enter new 4-digit PIN:', (newPin) => {
-                        if(!newPin) {
-                            showToast('PIN change cancelled', 'info');
-                            return;
-                        }
+                        if(!newPin) { showToast('PIN change cancelled', 'info'); return; }
                         if(newPin && newPin.length === 4 && !isNaN(newPin)){ 
                             sb.from('users').update({ pin: newPin }).eq('uid', user.uid)
                                 .then(() => { showToast('PIN changed successfully!', 'success'); })
                                 .catch(err => { showToast('Failed to change PIN: ' + err.message, 'error'); });
-                        } else { 
-                            showToast('PIN must be exactly 4 digits', 'error'); 
-                        }
+                        } else { showToast('PIN must be exactly 4 digits', 'error'); }
                     });
                 });
             } 
         }
         
-        function contactSupport() { 
-            window.location.href = 'chat.html'; 
-        }
+        function contactSupport() { window.location.href = 'chat.html'; }
+        function changeLanguage() { showToast('English only at this time.', 'info'); }
         
-        function changeLanguage() { 
-            showToast('English only at this time.', 'info');
-        }
-        
+        // ============================================================
+        // 初始化
+        // ============================================================
         loadSettings();
     </script>
 </body>

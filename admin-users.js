@@ -1,4 +1,4 @@
-// admin-users.js - 完整版（用户管理表格重新设计）
+// admin-users.js - 完整版（用户管理表格重新设计 + Credit Score）
 let searchKeyword = '';
 
 // ========== 国家代码到国旗图片 URL 映射 ==========
@@ -153,7 +153,6 @@ function getCountryFlagUrl(phoneCode) {
         '+299': 'gl'
     };
     
-    // 先尝试匹配完整前缀
     for (const [code, country] of Object.entries(flagMap)) {
         if (phoneCode.startsWith(code)) {
             return `https://flagcdn.com/w40/${country}.png`;
@@ -162,7 +161,6 @@ function getCountryFlagUrl(phoneCode) {
     return null;
 }
 
-// ========== 获取国家名称 ==========
 function getCountryName(phoneCode) {
     const countryMap = {
         '+1': 'United States',
@@ -254,7 +252,7 @@ async function loadUsersPage() {
                             <th style="min-width: 180px;">Edit Orders</th>
                             <th style="min-width: 130px;">Registered IP</th>
                             <th style="min-width: 150px;">Time Registered</th>
-                            <th style="min-width: 110px;">Actions</th>
+                            <th style="min-width: 220px;">Actions</th>
                         </tr>
                     </thead>
                     <tbody id="usersTableBody"></tbody>
@@ -264,7 +262,6 @@ async function loadUsersPage() {
         </div>
     `;
     
-    // 添加样式
     const style = document.createElement('style');
     style.textContent = `
         .users-table-cell {
@@ -282,34 +279,51 @@ async function loadUsersPage() {
             color: #4a7cff;
         }
         .orders-input {
-            width: 60px;
+            width: 55px;
             background: #0f172a;
             border: 1px solid #1e2a3a;
-            border-radius: 6px;
-            padding: 4px 6px;
+            border-radius: 4px;
+            padding: 2px 4px;
             color: #fff;
-            font-size: 12px;
+            font-size: 11px;
             text-align: center;
         }
         .orders-input:focus {
             border-color: #4a7cff;
             outline: none;
         }
+        .credit-score-input {
+            width: 50px;
+            background: #0f172a;
+            border: 1px solid #1e2a3a;
+            border-radius: 4px;
+            padding: 2px 4px;
+            color: #fff;
+            font-size: 11px;
+            text-align: center;
+            flex-shrink: 0;
+        }
+        .credit-score-input:focus {
+            border-color: #4a7cff;
+            outline: none;
+        }
         .btn-sm {
-            padding: 3px 10px;
+            padding: 3px 8px;
             font-size: 10px;
             border: none;
             border-radius: 4px;
             color: #fff;
             cursor: pointer;
             transition: 0.2s;
-            margin: 0 2px;
+            margin: 0 1px;
+            white-space: nowrap;
         }
         .btn-sm:hover {
             opacity: 0.85;
         }
         .btn-reset { background: #7a5f2f; }
         .btn-save { background: #2f6b3a; }
+        .btn-save-score { background: #2f6b3a; padding: 2px 6px; font-size: 9px; }
         .btn-deposit { background: #2f6b3a; }
         .btn-edit-user { background: #2f5f7a; }
         .btn-edit-user:hover { background: #3f7f9a; }
@@ -318,26 +332,20 @@ async function loadUsersPage() {
         .vip-select {
             background: #0f172a;
             border: 1px solid #1e2a3a;
-            border-radius: 6px;
-            padding: 2px 6px;
+            border-radius: 4px;
+            padding: 2px 4px;
             color: #fff;
-            font-size: 11px;
+            font-size: 10px;
             cursor: pointer;
-            width: 75px;
+            width: 65px;
         }
-        .vip-select:focus {
-            border-color: #4a7cff;
-            outline: none;
-        }
-        .vip-select option {
-            background: #0f172a;
-            color: #fff;
-        }
+        .vip-select:focus { border-color: #4a7cff; outline: none; }
+        .vip-select option { background: #0f172a; color: #fff; }
         .vip-badge {
             display: inline-block;
             padding: 2px 10px;
             border-radius: 12px;
-            font-size: 11px;
+            font-size: 10px;
             font-weight: 600;
         }
         .vip-badge.level1 { background: rgba(74,124,255,0.15); color: #4a7cff; }
@@ -351,53 +359,36 @@ async function loadUsersPage() {
             margin-right: 6px;
             object-fit: cover;
         }
-        .country-name {
-            font-size: 12px;
-            color: #c0c8e0;
-            vertical-align: middle;
+        .country-name { font-size: 12px; color: #c0c8e0; vertical-align: middle; }
+        .pending-negative { color: #ff5a5a !important; }
+        .pending-positive { color: #ffb84d !important; }
+        .user-row:hover { background: rgba(74,124,255,0.03); }
+        .actions-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 3px;
+            flex-wrap: nowrap;
         }
-        .pending-negative {
-            color: #ff5a5a !important;
-        }
-        .pending-positive {
-            color: #ffb84d !important;
-        }
-        .user-row:hover {
-            background: rgba(74,124,255,0.03);
-        }
+        .actions-wrapper .btn-sm { font-size: 9px; padding: 2px 6px; }
+        .score-label { font-size: 9px; color: #6a7a9a; white-space: nowrap; }
         .edit-orders-wrapper {
             display: flex;
             align-items: center;
-            gap: 6px;
-            flex-wrap: nowrap;
-        }
-        .edit-orders-wrapper .orders-input {
-            width: 55px;
-            flex-shrink: 0;
-        }
-        .edit-orders-wrapper .btn-sm {
-            flex-shrink: 0;
-            white-space: nowrap;
-        }
-        .edit-orders-wrapper .current-orders-display {
-            font-size: 12px;
-            color: #8a9abb;
-            margin-right: 4px;
-            white-space: nowrap;
-        }
-        .actions-wrapper {
-            display: flex;
             gap: 4px;
             flex-wrap: nowrap;
         }
-        .actions-wrapper .btn-sm {
-            font-size: 10px;
-            padding: 3px 8px;
+        .edit-orders-wrapper .orders-input { width: 50px; flex-shrink: 0; }
+        .edit-orders-wrapper .btn-sm { flex-shrink: 0; }
+        .edit-orders-wrapper .current-orders-display {
+            font-size: 12px;
+            color: #8a9abb;
+            margin-right: 2px;
+            white-space: nowrap;
         }
         .balance-wrapper {
             display: flex;
             align-items: center;
-            gap: 6px;
+            gap: 4px;
             flex-wrap: nowrap;
         }
         .balance-wrapper .balance-amount {
@@ -405,30 +396,15 @@ async function loadUsersPage() {
             font-size: 13px;
             color: #2ed15a;
         }
-        .vip-wrapper {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            flex-wrap: nowrap;
-        }
-        .orders-wrapper {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            flex-wrap: nowrap;
-        }
+        .vip-wrapper { display: flex; align-items: center; gap: 4px; flex-wrap: nowrap; }
+        .orders-wrapper { display: flex; align-items: center; gap: 4px; flex-wrap: nowrap; }
         @media (max-width: 1400px) {
-            .table-container {
-                overflow-x: auto;
-            }
-            .data-table {
-                min-width: 1400px;
-            }
+            .table-container { overflow-x: auto; }
+            .data-table { min-width: 1600px; }
         }
     `;
     document.head.appendChild(style);
     
-    // 分页变量
     window.userCurrentPage = 1;
     window.userPageSize = 30;
     window.userTotalCount = 0;
@@ -449,8 +425,6 @@ async function loadUsersPage() {
     document.getElementById('addUserBtn')?.addEventListener('click', () => {
         document.getElementById('addUserModal').classList.add('active');
     });
-    
-    // 回车搜索
     document.getElementById('searchUserInput')?.addEventListener('keypress', (e) => {
         if (e.key === 'Enter') {
             searchKeyword = document.getElementById('searchUserInput').value.trim();
@@ -468,7 +442,6 @@ async function loadUsers() {
     tbody.innerHTML = '<tr><td colspan="12" style="text-align:center; padding:40px;"><i class="fas fa-spinner fa-spin"></i> 加载中...</td></tr>';
     
     try {
-        // 获取 VIP 设置用于订单限制
         const { data: vipSettings } = await sb.from('vip_settings').select('*');
         const vipLimitMap = {};
         const vipNameMap = {};
@@ -479,7 +452,6 @@ async function loadUsers() {
             });
         }
         
-        // 构建查询
         let query = sb.from('users').select('*', { count: 'exact' });
         
         if (searchKeyword) {
@@ -500,7 +472,6 @@ async function loadUsers() {
             return;
         }
         
-        // 获取所有用户的订单数（批量查询）
         const uids = users.map(u => u.uid);
         const { data: allOrders } = await sb
             .from('order_history')
@@ -514,7 +485,6 @@ async function loadUsers() {
             });
         }
         
-        // 获取用户 pending 金额（提现中）
         const { data: pendingWithdrawals } = await sb
             .from('withdrawals')
             .select('uid, amount')
@@ -545,10 +515,10 @@ async function loadUsers() {
             // 2. User ID (UID)
             row.insertCell(1).innerHTML = `<span class="badge" style="font-size: 11px;">${escapeHtml(u.uid)}</span>`;
             
-            // 3. Referrer (推荐人)
+            // 3. Referrer
             row.insertCell(2).innerHTML = `<span style="font-size: 12px; color: #8a9abb;">${escapeHtml(u.invited_by_username || '-')}</span>`;
             
-            // 4. Country (图片国旗 + 国家名称)
+            // 4. Country
             const countryCode = u.phone ? u.phone.replace(/[^0-9+]/g, '').substring(0, 6) : '';
             const flagUrl = getCountryFlagUrl(countryCode);
             const countryName = getCountryName(countryCode);
@@ -561,7 +531,7 @@ async function loadUsers() {
             }
             row.insertCell(3).innerHTML = countryHtml;
             
-            // 5. VIP Level (带下拉升级选项)
+            // 5. VIP Level
             const vipCell = row.insertCell(4);
             const vipLevels = [
                 { level: 1, name: 'Normal' },
@@ -582,11 +552,11 @@ async function loadUsers() {
                 </div>
             `;
             
-            // 6. Pending (€)
+            // 6. Pending
             const pendingCell = row.insertCell(5);
             pendingCell.innerHTML = `<span class="${pendingAmount > 0 ? 'pending-positive' : 'pending-negative'}" style="font-weight: 600;">€${pendingAmount.toFixed(2)}</span>`;
             
-            // 7. Balance (€) + Deposit 按钮
+            // 7. Balance + Deposit
             const balanceCell = row.insertCell(6);
             balanceCell.innerHTML = `
                 <div class="balance-wrapper">
@@ -595,7 +565,7 @@ async function loadUsers() {
                 </div>
             `;
             
-            // 8. Orders (带 reset 按钮)
+            // 8. Orders
             const ordersCell = row.insertCell(7);
             ordersCell.innerHTML = `
                 <div class="orders-wrapper">
@@ -604,13 +574,13 @@ async function loadUsers() {
                 </div>
             `;
             
-            // 9. Edit Orders (可输入调整 + 实时显示 + Save)
+            // 9. Edit Orders
             const editCell = row.insertCell(8);
             editCell.innerHTML = `
                 <div class="edit-orders-wrapper">
                     <span class="current-orders-display" id="currentOrders_${u.uid}">${orderCount}</span>
-                    <span style="color: #4a7cff; font-size: 11px;">→</span>
-                    <input type="number" id="editOrders_${u.uid}" class="orders-input" value="${orderCount}" min="0" step="1" style="width: 55px;">
+                    <span style="color: #4a7cff; font-size: 10px;">→</span>
+                    <input type="number" id="editOrders_${u.uid}" class="orders-input" value="${orderCount}" min="0" step="1">
                     <button class="btn-sm btn-save save-orders-btn" data-uid="${u.uid}" data-username="${escapeHtml(u.username)}" title="Save Orders"><i class="fas fa-save"></i></button>
                 </div>
             `;
@@ -622,10 +592,14 @@ async function loadUsers() {
             const registerTime = u.created_at ? new Date(u.created_at) : null;
             row.insertCell(10).innerHTML = `<span style="font-size: 11px; color: #8a9abb;">${registerTime ? registerTime.toLocaleString() : '-'}</span>`;
             
-            // 12. Actions (Edit Users + Delete User 按钮)
+            // 12. Actions (Credit Score + Edit + Delete)
             const actionsCell = row.insertCell(11);
+            const creditScore = u.credit_score !== undefined && u.credit_score !== null ? u.credit_score : 100;
             actionsCell.innerHTML = `
                 <div class="actions-wrapper">
+                    <span class="score-label">Score:</span>
+                    <input type="number" class="credit-score-input" data-uid="${u.uid}" value="${creditScore}" min="0" max="999">
+                    <button class="btn-sm btn-save-score save-score-btn" data-uid="${u.uid}" title="Save Score"><i class="fas fa-save"></i></button>
                     <button class="btn-sm btn-edit-user edit-user-btn" 
                         data-uid="${u.uid}" 
                         data-username="${escapeHtml(u.username)}"
@@ -647,7 +621,7 @@ async function loadUsers() {
             `;
         }
         
-        // ========== 绑定事件 - VIP 下拉变化 ==========
+        // ========== 绑定事件 - VIP 下拉 ==========
         document.querySelectorAll('.vip-change-select').forEach(sel => {
             sel.addEventListener('change', () => {
                 const uid = sel.dataset.uid;
@@ -666,7 +640,7 @@ async function loadUsers() {
             });
         });
         
-        // ========== 绑定事件 - Reset 按钮 ==========
+        // ========== 绑定事件 - Reset Orders 按钮 ==========
         document.querySelectorAll('.reset-orders-btn').forEach(btn => {
             btn.addEventListener('click', () => {
                 const uid = btn.dataset.uid;
@@ -675,7 +649,7 @@ async function loadUsers() {
             });
         });
         
-        // ========== 绑定事件 - Save 按钮 ==========
+        // ========== 绑定事件 - Save Orders 按钮 ==========
         document.querySelectorAll('.save-orders-btn').forEach(btn => {
             btn.addEventListener('click', () => {
                 const uid = btn.dataset.uid;
@@ -692,7 +666,7 @@ async function loadUsers() {
             });
         });
         
-        // ========== 绑定事件 - 输入框实时显示 ==========
+        // ========== 绑定事件 - Orders Input 实时更新 ==========
         document.querySelectorAll('.orders-input').forEach(input => {
             input.addEventListener('input', function() {
                 const uid = this.id.replace('editOrders_', '');
@@ -704,7 +678,44 @@ async function loadUsers() {
             });
         });
         
-        // ========== 绑定事件 - Edit Users 按钮 ==========
+        // ========== 绑定事件 - Save Credit Score ==========
+        document.querySelectorAll('.save-score-btn').forEach(btn => {
+            btn.addEventListener('click', async function(e) {
+                e.stopPropagation();
+                const uid = this.dataset.uid;
+                const input = document.querySelector(`.credit-score-input[data-uid="${uid}"]`);
+                if (!input) return;
+                const newScore = parseInt(input.value);
+                if (isNaN(newScore) || newScore < 0 || newScore > 999) {
+                    showToast('Please enter a valid score (0-999)', 'error');
+                    return;
+                }
+                try {
+                    const { error } = await sb
+                        .from('users')
+                        .update({ credit_score: newScore })
+                        .eq('uid', uid);
+                    if (error) throw error;
+                    showToast(`✅ Credit Score updated to ${newScore}`, 'success');
+                    loadUsers();
+                } catch (e) {
+                    showToast('Update failed: ' + e.message, 'error');
+                }
+            });
+        });
+        
+        // ========== 绑定事件 - Credit Score Input Enter ==========
+        document.querySelectorAll('.credit-score-input').forEach(input => {
+            input.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    const uid = this.dataset.uid;
+                    const saveBtn = document.querySelector(`.save-score-btn[data-uid="${uid}"]`);
+                    if (saveBtn) saveBtn.click();
+                }
+            });
+        });
+        
+        // ========== 绑定事件 - Edit Users ==========
         document.querySelectorAll('.edit-user-btn').forEach(btn => {
             btn.addEventListener('click', () => {
                 const uid = btn.dataset.uid;
@@ -717,7 +728,7 @@ async function loadUsers() {
             });
         });
         
-        // ========== 绑定事件 - Delete User 按钮 ==========
+        // ========== 绑定事件 - Delete User ==========
         document.querySelectorAll('.delete-user-btn').forEach(btn => {
             btn.addEventListener('click', () => {
                 const uid = btn.dataset.uid;
@@ -741,9 +752,7 @@ async function updateUserVip(uid, username, newLevel) {
             .from('users')
             .update({ vip_level: newLevel })
             .eq('uid', uid);
-        
         if (error) throw error;
-        
         const levelNames = { 1: 'Normal', 2: 'VIP', 3: 'SVIP' };
         showToast(`✅ ${username}'s VIP level updated to ${levelNames[newLevel] || newLevel}`, 'success');
         loadUsers();
@@ -753,17 +762,12 @@ async function updateUserVip(uid, username, newLevel) {
     }
 }
 
-// ========== Deposit 功能（三次弹窗） ==========
+// ========== Deposit 功能 ==========
 async function depositBalance(uid, username) {
-    // 第一次弹窗：充值金额
     showPrompt('💰 Deposit Amount', 'Enter deposit amount (€) - can be 0', async (amount) => {
         const depositAmount = parseFloat(amount) || 0;
-        
-        // 第二次弹窗：奖励金额
         showPrompt('🎁 Reward Amount', 'Enter reward amount (€) - can be 0', async (bonusAmount) => {
             const rewardAmount = parseFloat(bonusAmount) || 0;
-            
-            // 第三次弹窗：奖励名称（仅在奖励金额 > 0 时显示）
             if (rewardAmount > 0) {
                 showPrompt('🏷️ Reward Name', 'Enter reward name (default: Deposit Bonus)', async (bonusName) => {
                     const rewardName = bonusName && bonusName.trim() ? bonusName.trim() : 'Deposit Bonus';
@@ -781,20 +785,15 @@ async function processDeposit(uid, username, depositAmount, rewardAmount, reward
         showToast('Deposit amount and reward amount at least one is required', 'error');
         return;
     }
-    
     try {
         const { data: user, error } = await sb
             .from('users')
             .select('balance')
             .eq('uid', uid)
             .single();
-        
         if (error) throw error;
-        
         let newBalance = user.balance || 0;
         let message = '';
-        
-        // 处理充值
         if (depositAmount > 0) {
             newBalance += depositAmount;
             await sb.from('deposits').insert([{ 
@@ -807,8 +806,6 @@ async function processDeposit(uid, username, depositAmount, rewardAmount, reward
             }]);
             message += `Deposit €${depositAmount.toFixed(2)}; `;
         }
-        
-        // 处理奖励
         if (rewardAmount > 0) {
             newBalance += rewardAmount;
             await sb.from('deposits').insert([{ 
@@ -821,19 +818,14 @@ async function processDeposit(uid, username, depositAmount, rewardAmount, reward
             }]);
             message += `${rewardName} €${rewardAmount.toFixed(2)}; `;
         }
-        
-        // 更新余额
         const { error: updateError } = await sb
             .from('users')
             .update({ balance: newBalance })
             .eq('uid', uid);
-        
         if (updateError) throw updateError;
-        
         showToast(`✅ Success! ${message} Current balance: €${newBalance.toFixed(2)}`, 'success');
         loadUsers();
         if (window.loadDashboardPage) window.loadDashboardPage(currentDays);
-        
     } catch (e) {
         showToast('Operation failed: ' + e.message, 'error');
     }
@@ -847,9 +839,7 @@ async function resetUserOrders(uid, username) {
                 .from('order_history')
                 .delete()
                 .eq('uid', uid);
-            
             if (error) throw error;
-            
             showToast(`✅ User ${username}'s orders have been reset`, 'success');
             loadUsers();
             if (window.loadDashboardPage) window.loadDashboardPage(currentDays);
@@ -866,14 +856,11 @@ async function saveUserOrders(uid, username, newOrderCount) {
             .from('order_history')
             .select('id')
             .eq('uid', uid);
-        
         const currentCount = currentOrders?.length || 0;
-        
         if (newOrderCount === currentCount) {
             showToast(`Order count is already ${newOrderCount}, no change needed`, 'info');
             return;
         }
-        
         if (newOrderCount > currentCount) {
             const diff = newOrderCount - currentCount;
             showConfirm('📝 Add Orders', `Add ${diff} virtual order(s) for user ${username}?`, async () => {
@@ -892,13 +879,10 @@ async function saveUserOrders(uid, username, newOrderCount) {
                             date: new Date().toISOString()
                         });
                     }
-                    
                     const { error } = await sb
                         .from('order_history')
                         .insert(inserts);
-                    
                     if (error) throw error;
-                    
                     showToast(`✅ Added ${diff} order(s) for ${username}`, 'success');
                     loadUsers();
                 } catch (e) {
@@ -915,20 +899,16 @@ async function saveUserOrders(uid, username, newOrderCount) {
                         .eq('uid', uid)
                         .order('date', { ascending: true })
                         .limit(diff);
-                    
                     if (!ordersToDelete || ordersToDelete.length === 0) {
                         showToast('No orders to delete', 'warning');
                         return;
                     }
-                    
                     const ids = ordersToDelete.map(o => o.id);
                     const { error } = await sb
                         .from('order_history')
                         .delete()
                         .in('id', ids);
-                    
                     if (error) throw error;
-                    
                     showToast(`✅ Deleted ${ids.length} order(s) for ${username}`, 'success');
                     loadUsers();
                 } catch (e) {
@@ -949,37 +929,20 @@ async function deleteUser(uid, username) {
         async () => {
             try {
                 showToast('Deleting user data...', 'info');
-                
-                // 1. 删除订单历史
                 await sb.from('order_history').delete().eq('uid', uid);
-                
-                // 2. 删除充值记录
                 await sb.from('deposits').delete().eq('uid', uid);
-                
-                // 3. 删除提现记录
                 await sb.from('withdrawals').delete().eq('uid', uid);
-                
-                // 4. 删除 KYC 记录
                 await sb.from('kyc_verifications').delete().eq('uid', uid);
-                
-                // 5. 删除用户 KYC 状态
                 await sb.from('user_kyc_status').delete().eq('uid', uid);
-                
-                // 6. 删除触发订单
                 await sb.from('user_trigger_orders').delete().eq('uid', uid);
-                
-                // 7. 最后删除用户
                 const { error: userError } = await sb
                     .from('users')
                     .delete()
                     .eq('uid', uid);
-                
                 if (userError) throw userError;
-                
                 showToast(`✅ User ${username} has been permanently deleted`, 'success');
                 loadUsers();
                 if (window.loadDashboardPage) window.loadDashboardPage(currentDays);
-                
             } catch (e) {
                 console.error('Delete user failed:', e);
                 showToast('Delete failed: ' + e.message, 'error');
@@ -1034,7 +997,6 @@ function openEditUserModal(uid, username, phone, pin, currency, address) {
             </div>
         </div>
     `;
-    
     const existing = document.getElementById('editUserModal');
     if (existing) existing.remove();
     document.body.insertAdjacentHTML('beforeend', modalHtml);
@@ -1045,28 +1007,23 @@ function openEditUserModal(uid, username, phone, pin, currency, address) {
         const newPin = document.getElementById('editPin').value.trim();
         const newCurrency = document.getElementById('editCurrency').value;
         const newAddress = document.getElementById('editAddress').value.trim();
-        
         const updateData = {};
         if (newPhone) updateData.phone = newPhone;
         if (newPassword && newPassword.length >= 4) updateData.password = newPassword;
         if (newPin && newPin.length === 4 && !isNaN(newPin)) updateData.pin = newPin;
         if (newCurrency) updateData.withdrawal_address_type = newCurrency;
         if (newAddress) updateData.withdrawal_address = newAddress;
-        
         if (Object.keys(updateData).length === 0) {
             showToast('No changes made', 'warning');
             document.getElementById('editUserModal').remove();
             return;
         }
-        
         try {
             const { error } = await sb
                 .from('users')
                 .update(updateData)
                 .eq('uid', uid);
-            
             if (error) throw error;
-            
             showToast('✅ User information updated', 'success');
             document.getElementById('editUserModal').remove();
             loadUsers();
@@ -1074,7 +1031,6 @@ function openEditUserModal(uid, username, phone, pin, currency, address) {
             showToast('Update failed: ' + e.message, 'error');
         }
     };
-    
     document.getElementById('cancelEditBtn').onclick = () => {
         document.getElementById('editUserModal').remove();
     };
@@ -1084,12 +1040,9 @@ function openEditUserModal(uid, username, phone, pin, currency, address) {
 function renderUserPagination() {
     const container = document.getElementById('userPagination');
     if (!container) return;
-    
     const totalPages = Math.ceil(window.userTotalCount / window.userPageSize);
     container.innerHTML = '';
-    
     if (totalPages <= 1) return;
-    
     if (window.userCurrentPage > 1) {
         const prev = document.createElement('button');
         prev.innerHTML = 'Previous';
@@ -1100,10 +1053,8 @@ function renderUserPagination() {
         };
         container.appendChild(prev);
     }
-    
     const startPage = Math.max(1, window.userCurrentPage - 2);
     const endPage = Math.min(totalPages, window.userCurrentPage + 2);
-    
     for (let i = startPage; i <= endPage; i++) {
         const btn = document.createElement('button');
         btn.innerText = i;
@@ -1114,7 +1065,6 @@ function renderUserPagination() {
         };
         container.appendChild(btn);
     }
-    
     if (window.userCurrentPage < totalPages) {
         const next = document.createElement('button');
         next.innerHTML = 'Next';
@@ -1127,7 +1077,6 @@ function renderUserPagination() {
     }
 }
 
-// ========== 工具函数 ==========
 function escapeHtml(str) {
     if (!str) return '';
     return String(str).replace(/[&<>]/g, function(m) {
@@ -1138,7 +1087,7 @@ function escapeHtml(str) {
     });
 }
 
-// ========== 创建用户 Modal 事件 ==========
+// ========== 创建用户 ==========
 document.getElementById('createUserBtn')?.addEventListener('click', async () => {
     const phone = document.getElementById('newPhone').value.trim();
     const username = document.getElementById('newUsername').value.trim();
@@ -1147,31 +1096,25 @@ document.getElementById('createUserBtn')?.addEventListener('click', async () => 
         showToast('Please fill in all fields', 'error');
         return;
     }
-    
     const { data: exist } = await sb
         .from('users')
         .select('username')
         .eq('username', username)
         .single();
-    
     if (exist) {
         showToast('Username already exists', 'error');
         return;
     }
-    
     const { data: max } = await sb
         .from('users')
         .select('uid')
         .order('uid', { ascending: false })
         .limit(1);
-    
     let newUid = '100001';
     if (max && max.length) newUid = (parseInt(max[0].uid) + 1).toString();
-    
     const inviteCode = Array(6).fill().map(() => 
         'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'[Math.floor(Math.random() * 36)]
     ).join('');
-    
     const { error } = await sb
         .from('users')
         .insert([{ 
@@ -1183,14 +1126,13 @@ document.getElementById('createUserBtn')?.addEventListener('click', async () => 
             balance: 0, 
             vip_level: 1, 
             trial_bonus_amount: 0,
+            credit_score: 100,
             created_at: new Date().toISOString()
         }]);
-    
     if (error) {
         showToast(error.message, 'error');
         return;
     }
-    
     loadUsers();
     if (window.loadDashboardPage) window.loadDashboardPage(currentDays);
     document.getElementById('addUserModal').classList.remove('active');
