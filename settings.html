@@ -597,19 +597,25 @@
             return score >= THRESHOLD ? '#4ade80' : '#ffb84d';
         }
 
-        // ====== 进度条动画 ======
+        // ====== 进度条动画（强制回流 + 延迟启动） ======
         function animateRing(el, targetScore, duration = 1800) {
             const targetOffset = CIRCUMFERENCE - (targetScore / 100) * CIRCUMFERENCE;
             const color = getColor(targetScore);
 
+            // 重置到 0 进度（隐藏）
             el.style.transition = 'none';
             el.setAttribute('stroke-dashoffset', CIRCUMFERENCE);
             el.setAttribute('stroke', color);
             el.style.stroke = color;
+
+            // 强制回流确保重置生效
             void el.getBoundingClientRect();
 
-            el.style.transition = `stroke-dashoffset ${duration}ms cubic-bezier(0.2, 0.8, 0.2, 1)`;
-            el.setAttribute('stroke-dashoffset', targetOffset);
+            // 使用 requestAnimationFrame 延迟一帧启动动画，确保元素已渲染
+            requestAnimationFrame(() => {
+                el.style.transition = `stroke-dashoffset ${duration}ms cubic-bezier(0.2, 0.8, 0.2, 1)`;
+                el.setAttribute('stroke-dashoffset', targetOffset);
+            });
         }
 
         // ====== 数字动画 ======
@@ -638,47 +644,50 @@
             const color = getColor(scoreNum);
             const isStrong = scoreNum >= THRESHOLD;
 
-            // 1. 更新弹窗环
-            animateRing(modalRing, scoreNum);
-            animateRing(modalGlow, scoreNum);
-            setTimeout(() => {
-                modalGlow.setAttribute('stroke', color + '15');
-                modalGlow.style.stroke = color + '15';
-            }, 50);
-
-            // 2. 数字动画
-            animateNumber(scoreNum);
-            modalScore.style.color = color;
-
-            // 3. 同步盾牌
-            const shieldOffset = SHIELD_CIRCUMFERENCE - (scoreNum / 100) * SHIELD_CIRCUMFERENCE;
-            shieldRing.style.transition = 'none';
-            shieldRing.setAttribute('stroke-dashoffset', shieldOffset);
-            shieldRing.setAttribute('stroke', color);
-            shieldRing.style.stroke = color;
-            shieldIcon.style.color = color;
-
-            // 4. 状态文字
-            if (isStrong) {
-                statusText.innerHTML = 'Your credit rating is <strong style="color:#4ade80;">Strong</strong>';
-                statusDesc.textContent = 'Withdrawal access and account trust level are in good condition';
-            } else {
-                statusText.innerHTML = 'Your credit rating <strong style="color:#ffb84d;">Need Attention</strong>';
-                statusDesc.textContent = 'Withdrawal access and account trust level are restricted';
-            }
-            statusDesc.style.color = '#7a85a5';
-
-            // 5. Required 保持青色
-            requiredValue.textContent = THRESHOLD;
-            requiredValue.style.color = '#4ade80';
-
-            // 6. 阈值颜色跟随
-            thresholdText.textContent = THRESHOLD;
-            thresholdText.style.color = color;
-
-            // 7. 显示弹窗
+            // 1. 先显示弹窗
             modal.classList.add('active');
             document.body.style.overflow = 'hidden';
+
+            // 2. 延迟执行动画，确保弹窗已渲染
+            setTimeout(() => {
+                // 更新弹窗环
+                animateRing(modalRing, scoreNum);
+                animateRing(modalGlow, scoreNum);
+                setTimeout(() => {
+                    modalGlow.setAttribute('stroke', color + '15');
+                    modalGlow.style.stroke = color + '15';
+                }, 50);
+
+                // 数字动画
+                animateNumber(scoreNum);
+                modalScore.style.color = color;
+
+                // 同步盾牌（直接跳转）
+                const shieldOffset = SHIELD_CIRCUMFERENCE - (scoreNum / 100) * SHIELD_CIRCUMFERENCE;
+                shieldRing.style.transition = 'none';
+                shieldRing.setAttribute('stroke-dashoffset', shieldOffset);
+                shieldRing.setAttribute('stroke', color);
+                shieldRing.style.stroke = color;
+                shieldIcon.style.color = color;
+
+                // 状态文字
+                if (isStrong) {
+                    statusText.innerHTML = 'Your credit rating is <strong style="color:#4ade80;">Strong</strong>';
+                    statusDesc.textContent = 'Withdrawal access and account trust level are in good condition';
+                } else {
+                    statusText.innerHTML = 'Your credit rating <strong style="color:#ffb84d;">Need Attention</strong>';
+                    statusDesc.textContent = 'Withdrawal access and account trust level are restricted';
+                }
+                statusDesc.style.color = '#7a85a5';
+
+                // Required 保持青色
+                requiredValue.textContent = THRESHOLD;
+                requiredValue.style.color = '#4ade80';
+
+                // 阈值颜色跟随
+                thresholdText.textContent = THRESHOLD;
+                thresholdText.style.color = color;
+            }, 50);
         }
 
         function closeModal() {
@@ -707,7 +716,7 @@
                 const creditScore = freshUser.creditScore || 100;
                 currentScore = creditScore;
 
-                // 更新盾牌
+                // 更新盾牌（直接跳转，无动画）
                 const color = getColor(creditScore);
                 const shieldOffset = SHIELD_CIRCUMFERENCE - (creditScore / 100) * SHIELD_CIRCUMFERENCE;
                 shieldRing.style.transition = 'none';
