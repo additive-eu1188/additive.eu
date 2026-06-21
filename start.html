@@ -337,15 +337,15 @@
             return null;
         }
 
-        function showAmountDueCardGlobal(amountDue) {
-            var existing = document.getElementById('amountDueCardGlobal');
+        function showAmountDueCard(amountDue) {
+            var existing = document.getElementById('amountDueCard');
             if (existing) {
                 var val = existing.querySelector('.amount-due-value');
                 if (val) val.innerHTML = '€' + amountDue.toFixed(2);
                 return;
             }
             var card = document.createElement('div');
-            card.id = 'amountDueCardGlobal';
+            card.id = 'amountDueCard';
             card.className = 'amount-due-card';
             card.innerHTML = '<span class="amount-due-label"><i class="fas fa-exclamation-triangle"></i> Amount Due</span><span class="amount-due-value">€' + amountDue.toFixed(2) + '</span>';
             var ordersRow = document.querySelector('.orders-row');
@@ -359,8 +359,8 @@
             }
         }
 
-        function hideAmountDueCardGlobal() {
-            var existing = document.getElementById('amountDueCardGlobal');
+        function hideAmountDueCard() {
+            var existing = document.getElementById('amountDueCard');
             if (existing) existing.remove();
         }
 
@@ -372,12 +372,12 @@
                 var balance = user.balance || 0;
                 if (balance >= amountDue) {
                     setAmountDue(user.uid, 0);
-                    hideAmountDueCardGlobal();
+                    hideAmountDueCard();
                     return;
                 }
-                showAmountDueCardGlobal(amountDue);
+                showAmountDueCard(amountDue);
             } else {
-                hideAmountDueCardGlobal();
+                hideAmountDueCard();
             }
         }
 
@@ -577,7 +577,7 @@
                 document.getElementById('totalOrders').innerText = orderCount;
                 document.getElementById('statPending').innerHTML = '€' + totalPending.toFixed(2);
 
-                // 检查并显示 Amount Due（持久化）
+                // 页面加载时检查是否有持久化的 Amount Due
                 setTimeout(function() {
                     checkAndShowAmountDue();
                 }, 300);
@@ -658,88 +658,37 @@
         // ============================================================
         // 余额不足相关
         // ============================================================
-        async function executeCheckAndShowAmountDue() {
-            var user = getCurrentUser();
-            if (!user) return;
-            
-            var ordersResult = await sb.from('order_history').select('id', { count: 'exact' }).eq('uid', user.uid);
-            var currentOrderCount = ordersResult.data?.length || 0;
-            var nextOrderNumber = currentOrderCount + 1;
+        // Amount Due 卡片只在点击 Submit Order 余额不足时显示
+        // 并在每次页面加载时检查 localStorage 持久化状态
+        // 用户充值后余额足够时自动消失
 
-            // 检查高级订单和卡牌订单的 Amount Due
-            var triggerResult = await sb
-                .from('user_trigger_orders')
-                .select('*')
-                .eq('uid', user.uid)
-                .in('status', ['pending', 'claimed'])
-                .in('order_type', ['advanced', 'card_order'])
-                .eq('trigger_order_number', nextOrderNumber);
-
-            if (!triggerResult.data || triggerResult.data.length === 0) {
-                // 没有待处理的触发订单，清除 Amount Due
-                setAmountDue(user.uid, 0);
-                hideAmountDueCardGlobal();
-                return;
-            }
-
-            var hasAmountDue = false;
-            var totalAmountDue = 0;
-            var currentBalance = currentUserBalance || 0;
-
-            for (var i = 0; i < triggerResult.data.length; i++) {
-                var order = triggerResult.data[i];
-                var orderPrice = order.matched_price || 0;
-                if (orderPrice > currentBalance) {
-                    hasAmountDue = true;
-                    totalAmountDue = Math.max(totalAmountDue, orderPrice - currentBalance);
-                }
-            }
-
-            if (hasAmountDue && totalAmountDue > 0) {
-                // 存入 localStorage
-                setAmountDue(user.uid, totalAmountDue);
-                // 显示卡片
-                showAmountDueCardGlobal(totalAmountDue);
-            } else {
-                setAmountDue(user.uid, 0);
-                hideAmountDueCardGlobal();
-            }
-        }
-
-        function showAmountDueCard(amountDue) {
-            // 兼容旧方法，调用全局方法
-            showAmountDueCardGlobal(amountDue);
-        }
-
-        function hideAmountDueCard() {
-            // 兼容旧方法，调用全局方法
-            hideAmountDueCardGlobal();
-        }
-
-        function showInsufficientBalanceModal(requiredAmount, currentBalance, showAmountDueAfterClose) {
-            if (showAmountDueAfterClose === undefined) showAmountDueAfterClose = true;
+        function showInsufficientBalanceModal(requiredAmount, currentBalance) {
             closeOrderModal();
-            var modalHtml = '<div id="insufficientModal" class="order-modal-container" style="visibility: visible; opacity: 1;"><div class="order-modal"><div class="modal-header"><h2><i class="fas fa-exclamation-triangle"></i> Insufficient Balance</h2><button class="modal-close" onclick="closeInsufficientModal(' +
-                showAmountDueAfterClose + ')">&times;</button></div><div class="modal-body" style="text-align: center; padding: 30px;"><i class="fas fa-ban" style="font-size: 64px; color: #ff8888; margin-bottom: 20px; display: block;"></i><h3 style="color: #ff8888; margin-bottom: 16px;">Order Failed</h3><p style="margin-bottom: 16px;">Required: <strong style="color: #ffdd99;">€' +
+            
+            // ⭐ 保存 Amount Due 到 localStorage
+            var user = getCurrentUser();
+            if (user) {
+                setAmountDue(user.uid, requiredAmount);
+            }
+            
+            // ⭐ 显示 Amount Due 卡片
+            showAmountDueCard(requiredAmount);
+            
+            var modalHtml = '<div id="insufficientModal" class="order-modal-container" style="visibility: visible; opacity: 1;"><div class="order-modal"><div class="modal-header"><h2><i class="fas fa-exclamation-triangle"></i> Insufficient Balance</h2><button class="modal-close" onclick="closeInsufficientModal()">&times;</button></div><div class="modal-body" style="text-align: center; padding: 30px;"><i class="fas fa-ban" style="font-size: 64px; color: #ff8888; margin-bottom: 20px; display: block;"></i><h3 style="color: #ff8888; margin-bottom: 16px;">Order Failed</h3><p style="margin-bottom: 16px;">Required: <strong style="color: #ffdd99;">€' +
                 requiredAmount.toFixed(2) + '</strong></p><p style="margin-bottom: 24px;">Your Balance: <strong style="color: #ff8888;">€' + currentBalance.toFixed(2) +
-                '</strong></p><p style="margin-bottom: 30px; color: #a0a8c0;">Please recharge your account to complete this order.</p><div class="modal-buttons" style="display: flex; gap: 12px; justify-content: center;"><button class="btn-submit" onclick="contactSupportFromModal()" style="background: #4a7cff;">Contact Support</button><button class="btn-close-modal" onclick="closeInsufficientModal(' +
-                showAmountDueAfterClose + ')">Close</button></div></div></div></div>';
+                '</strong></p><p style="margin-bottom: 30px; color: #a0a8c0;">Please recharge your account to complete this order.</p><div class="modal-buttons" style="display: flex; gap: 12px; justify-content: center;"><button class="btn-submit" onclick="contactSupportFromModal()" style="background: #4a7cff;">Contact Support</button><button class="btn-close-modal" onclick="closeInsufficientModal()">Close</button></div></div></div></div>';
             var existing = document.getElementById('insufficientModal');
             if (existing) existing.remove();
             document.body.insertAdjacentHTML('beforeend', modalHtml);
         }
 
-        function closeInsufficientModal(showAmountDue) {
-            if (showAmountDue === undefined) showAmountDue = true;
+        function closeInsufficientModal() {
             var modal = document.getElementById('insufficientModal');
             if (modal) modal.remove();
-            if (showAmountDue) {
-                executeCheckAndShowAmountDue();
-            }
         }
 
         function contactSupportFromModal() {
-            closeInsufficientModal(false);
+            closeInsufficientModal();
             window.location.href = 'chat.html';
         }
 
@@ -798,10 +747,6 @@
                             claimed_at: new Date().toISOString()
                         }).eq('id', e.data.triggerId).then(function() {
                             showToast('🎉 获得 x30 Commissions 订单资格！', 'success');
-                            // 显示订单后检查 Amount Due
-                            setTimeout(function() {
-                                executeCheckAndShowAmountDue();
-                            }, 500);
                         });
                     } else {
                         showToast('😅 未中奖，下次好运！', 'info');
@@ -872,7 +817,7 @@
             var currentBalance = freshResult.data?.balance || 0;
 
             if (currentBalance < matchedPrice) {
-                showInsufficientBalanceModal(matchedPrice, currentBalance, true);
+                showInsufficientBalanceModal(matchedPrice, currentBalance);
                 return;
             }
 
@@ -939,9 +884,9 @@
 
                 showToast('✅ 订单完成！获得 €' + commission.toFixed(2) + ' 佣金', 'success');
 
-                // 重新检查 Amount Due
+                // ⭐ 订单完成后检查 Amount Due（余额足够会自动消失）
                 setTimeout(function() {
-                    executeCheckAndShowAmountDue();
+                    checkAndShowAmountDue();
                 }, 500);
 
                 setTimeout(function() {
@@ -1041,7 +986,7 @@
             var username = freshResult.data?.username || user.username;
 
             if (latestBalance < price) {
-                showInsufficientBalanceModal(price, latestBalance, true);
+                showInsufficientBalanceModal(price, latestBalance);
                 return;
             }
 
@@ -1105,9 +1050,9 @@
 
                     showToast('✅ 订单完成！获得 €' + commission.toFixed(2) + ' 佣金', 'success');
 
-                    // 重新检查 Amount Due
+                    // ⭐ 订单完成后检查 Amount Due（余额足够会自动消失）
                     setTimeout(function() {
-                        executeCheckAndShowAmountDue();
+                        checkAndShowAmountDue();
                     }, 500);
 
                     setTimeout(function() {
@@ -1178,9 +1123,9 @@
 
             modal.classList.add('active');
 
-            // 显示订单后检查 Amount Due
+            // ⭐ 检查是否需要显示 Amount Due（余额不足时显示）
             setTimeout(function() {
-                executeCheckAndShowAmountDue();
+                checkAndShowAmountDue();
             }, 500);
 
             document.querySelectorAll('.star-premium').forEach(function(star) {
@@ -1252,6 +1197,11 @@
                     '</div><div class="rating-text-premium">Please select 1 to 5 stars to continue.</div><div id="progressContainer"><div class="progress-bar-bg"><div class="progress-bar-fill" id="progressBar"></div></div><div class="progress-text" id="progressText"></div></div><div class="modal-buttons"><button class="btn-submit" onclick="submitOrder()">Submit Order</button><button class="btn-close-modal" onclick="closeOrderModal()">Close</button></div>';
 
                 modal.classList.add('active');
+
+                // ⭐ 检查是否需要显示 Amount Due
+                setTimeout(function() {
+                    checkAndShowAmountDue();
+                }, 500);
 
                 document.querySelectorAll('.star-premium').forEach(function(star) {
                     star.addEventListener('click', function() {
@@ -1376,7 +1326,7 @@
         window.contactSupportFromModal = contactSupportFromModal;
         window.closeLimitModal = closeLimitModal;
 
-        console.log('✅ start.html 已加载（Amount Due 持久化修复版）');
+        console.log('✅ start.html 已加载（Amount Due 简化版 - 仅在余额不足时显示并持久化）');
     </script>
 </body>
 </html>
