@@ -11,6 +11,7 @@
     <script src="user-data.js"></script>
     <script src="toast.js"></script>
     <style>
+        /* ===== 样式与之前相同，但确保 .ring-progress 的 transition 被正确定义 ===== */
         .settings-header { margin-bottom: 24px; }
         .settings-header h1 { font-size: 28px; font-weight: 700; color: #ffffff; margin-bottom: 6px; }
         .settings-header p { color: #7a85a5; font-size: 13px; max-width: 550px; }
@@ -589,7 +590,7 @@
         const shieldIcon = document.getElementById('shieldIcon');
 
         const THRESHOLD = 95;
-        const CIRCUMFERENCE = 201; // 统一周长：r=32 的圆
+        const CIRCUMFERENCE = 201; // 统一周长：r=32
         let currentScore = 0;
 
         function getColor(score) {
@@ -612,20 +613,29 @@
             });
         }
 
-        // ====== 弹窗环动画（从0到目标） ======
-        function animateRing(el, targetScore, duration = 1800) {
+        // ====== 弹窗环动画（彻底修复版） ======
+        function animateRing(el, targetScore) {
             const targetOffset = CIRCUMFERENCE - (targetScore / 100) * CIRCUMFERENCE;
             const color = getColor(targetScore);
-            // 重置到0
+
+            // 1. 重置到0（无过渡）
             el.style.transition = 'none';
             el.setAttribute('stroke-dashoffset', CIRCUMFERENCE);
             el.setAttribute('stroke', color);
             el.style.stroke = color;
-            // 强制回流
+
+            // 2. 强制回流（确保重置被应用）
             void el.getBoundingClientRect();
-            // 启动动画
-            el.style.transition = `stroke-dashoffset ${duration}ms cubic-bezier(0.2, 0.8, 0.2, 1)`;
-            el.setAttribute('stroke-dashoffset', targetOffset);
+
+            // 3. 使用双重 requestAnimationFrame 确保重置已经绘制
+            requestAnimationFrame(() => {
+                requestAnimationFrame(() => {
+                    // 4. 设置过渡并设置目标偏移
+                    el.style.transition = 'stroke-dashoffset 1.8s cubic-bezier(0.2, 0.8, 0.2, 1)';
+                    el.setAttribute('stroke-dashoffset', targetOffset);
+                    console.log('动画触发: 目标偏移 =', targetOffset);
+                });
+            });
         }
 
         // ====== 数字动画 ======
@@ -674,16 +684,13 @@
             modalScore.textContent = '0';
             modalScore.style.color = color;
 
-            // ---- 延迟启动动画 ----
+            // ---- 延迟启动动画，确保重置已渲染 ----
             setTimeout(() => {
-                // 主环
-                modalRing.style.transition = `stroke-dashoffset 1800ms cubic-bezier(0.2, 0.8, 0.2, 1)`;
-                const targetOffset = CIRCUMFERENCE - (scoreNum / 100) * CIRCUMFERENCE;
-                modalRing.setAttribute('stroke-dashoffset', targetOffset);
-                // 发光环
-                modalGlow.style.transition = `stroke-dashoffset 1800ms cubic-bezier(0.2, 0.8, 0.2, 1)`;
-                modalGlow.setAttribute('stroke-dashoffset', targetOffset);
-                // 数字
+                // 主环动画
+                animateRing(modalRing, scoreNum);
+                // 发光环动画
+                animateRing(modalGlow, scoreNum);
+                // 数字动画
                 animateNumber(scoreNum);
             }, 50);
 
