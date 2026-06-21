@@ -11,7 +11,6 @@
     <script src="user-data.js"></script>
     <script src="toast.js"></script>
     <style>
-        /* 样式与之前一致，但确保 .ring-progress 的 transition 被正确定义 */
         .settings-header { margin-bottom: 24px; }
         .settings-header h1 { font-size: 28px; font-weight: 700; color: #ffffff; margin-bottom: 6px; }
         .settings-header p { color: #7a85a5; font-size: 13px; max-width: 550px; }
@@ -590,7 +589,7 @@
         const shieldIcon = document.getElementById('shieldIcon');
 
         const THRESHOLD = 95;
-        const CIRCUMFERENCE = 201; // 统一周长：r=32
+        const CIRCUMFERENCE = 201; // 统一周长：r=32 的圆
         let currentScore = 0;
 
         function getColor(score) {
@@ -613,7 +612,7 @@
             });
         }
 
-        // ====== 弹窗环动画（彻底修复版） ======
+        // ====== 弹窗环动画（从0到目标） ======
         function animateRing(el, targetScore) {
             const targetOffset = CIRCUMFERENCE - (targetScore / 100) * CIRCUMFERENCE;
             const color = getColor(targetScore);
@@ -624,7 +623,7 @@
             el.setAttribute('stroke', color);
             el.style.stroke = color;
 
-            // 2. 强制回流（确保重置被应用）
+            // 2. 强制回流
             void el.getBoundingClientRect();
 
             // 3. 使用双重 requestAnimationFrame 确保重置已经绘制
@@ -633,7 +632,6 @@
                     // 4. 设置过渡并设置目标偏移
                     el.style.transition = 'stroke-dashoffset 1.8s cubic-bezier(0.2, 0.8, 0.2, 1)';
                     el.setAttribute('stroke-dashoffset', targetOffset);
-                    console.log('动画触发: 目标偏移 =', targetOffset);
                 });
             });
         }
@@ -735,32 +733,19 @@
 
         // ====== 设置功能 ======
         async function loadSettings() {
-    const user = checkLogin();
-    if (!user) return;
-    const freshUser = await syncUserData();
-    if (freshUser) {
-        document.getElementById('displayUid').innerText = freshUser.uid;
-        document.getElementById('displayInviteCode').innerText = freshUser.inviteCode || '------';
-        const creditScore = freshUser.creditScore || 100;
-        currentScore = creditScore;
+            const user = checkLogin();
+            if (!user) return;
 
-        // ---- 直接设置盾牌进度（绕过 updateShield 的复杂逻辑） ----
-        const color = getColor(creditScore);
-        const offset = CIRCUMFERENCE - (creditScore / 100) * CIRCUMFERENCE;
-        shieldRing.style.transition = 'none';
-        shieldRing.setAttribute('stroke-dashoffset', offset);
-        shieldRing.setAttribute('stroke', color);
-        shieldRing.style.stroke = color;
-        shieldIcon.style.color = color;
-        // 恢复过渡（以后点击盾牌时才有动画）
-        requestAnimationFrame(() => {
-            shieldRing.style.transition = 'stroke-dashoffset 0.8s ease, stroke 0.6s ease';
-        });
-
-        // 添加日志确认
-        console.log('盾牌进度已设置: 分数=' + creditScore + ', offset=' + offset + ', 颜色=' + color);
-    }
-}
+            const freshUser = await syncUserData();
+            if (freshUser) {
+                document.getElementById('displayUid').innerText = freshUser.uid;
+                document.getElementById('displayInviteCode').innerText = freshUser.inviteCode || '------';
+                const creditScore = freshUser.creditScore || 100;
+                currentScore = creditScore;
+                // 盾牌显示真实分数（并恢复动画）
+                updateShield(creditScore);
+            }
+        }
 
         function logout() {
             showConfirm('Logout', 'Are you sure you want to logout?', () => {
