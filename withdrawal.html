@@ -11,10 +11,11 @@
     <script src="user-data.js"></script>
     <script src="toast.js"></script>
     <style>
+        /* 原有样式保持不变，仅增加信用分阻止弹窗样式 */
         .page-header { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 24px; flex-wrap: wrap; gap: 12px; }
         .page-header h1 { font-size: 28px; font-weight: 700; color: #ffffff; }
         .step-indicator { font-size: 12px; color: #C9B095; background: rgba(201,176,149,0.15); padding: 4px 12px; border-radius: 30px; }
-        
+
         .step-container {
             background: rgba(20, 30, 55, 0.6);
             backdrop-filter: blur(10px);
@@ -33,7 +34,7 @@
             gap: 10px;
         }
         .step-title i { font-size: 22px; }
-        
+
         .docs-grid {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
@@ -49,15 +50,11 @@
             cursor: pointer;
             transition: all 0.2s;
         }
-        .doc-card.selected {
-            border-color: #C9B095;
-            background: rgba(201, 176, 149, 0.1);
-            box-shadow: 0 0 15px rgba(201,176,149,0.2);
-        }
+        .doc-card.selected { border-color: #C9B095; background: rgba(201,176,149,0.1); box-shadow: 0 0 15px rgba(201,176,149,0.2); }
         .doc-card i { font-size: 40px; color: #C9B095; margin-bottom: 12px; display: block; }
         .doc-card h4 { font-size: 14px; margin-bottom: 6px; }
         .doc-card p { font-size: 10px; color: #a0a8c0; }
-        
+
         .upload-area {
             background: rgba(0, 0, 0, 0.3);
             border: 2px dashed rgba(201, 176, 149, 0.3);
@@ -71,7 +68,7 @@
         .upload-area:hover { border-color: #C9B095; background: rgba(201,176,149,0.05); }
         .upload-area i { font-size: 36px; color: #C9B095; margin-bottom: 10px; display: block; }
         .upload-area .hint { font-size: 11px; color: #7a85a5; margin-top: 8px; }
-        
+
         .upload-row {
             display: flex;
             gap: 16px;
@@ -91,7 +88,7 @@
         .upload-item i { font-size: 28px; color: #C9B095; margin-bottom: 8px; display: block; }
         .upload-item .label { font-size: 12px; margin-bottom: 6px; }
         .upload-item .status { font-size: 10px; color: #4ade80; }
-        
+
         .step-btn {
             width: 100%;
             background: linear-gradient(135deg, #C9B095, #b8944a);
@@ -105,7 +102,7 @@
             margin-top: 16px;
         }
         .step-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-        
+
         .payment-grid {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
@@ -122,16 +119,13 @@
             transition: all 0.2s;
             position: relative;
         }
-        .payment-card.disabled {
-            opacity: 0.5;
-            cursor: pointer;
-        }
+        .payment-card.disabled { opacity: 0.5; cursor: pointer; }
         .payment-card.disabled:hover { border-color: rgba(201,176,149,0.2); transform: none; }
         .payment-card i { font-size: 32px; color: #C9B095; margin-bottom: 10px; display: block; }
         .payment-card h4 { font-size: 14px; margin-bottom: 4px; }
         .payment-card p { font-size: 10px; color: #a0a8c0; }
         .payment-card .disabled-tag { font-size: 9px; color: #ff8888; margin-top: 6px; display: block; }
-        
+
         .address-cards {
             display: flex;
             gap: 16px;
@@ -148,12 +142,9 @@
             cursor: pointer;
             transition: all 0.2s;
         }
-        .address-card.selected {
-            border-color: #C9B095;
-            background: rgba(201, 176, 149, 0.1);
-        }
+        .address-card.selected { border-color: #C9B095; background: rgba(201,176,149,0.1); }
         .address-card i { font-size: 28px; color: #C9B095; margin-bottom: 8px; display: block; }
-        
+
         .address-input {
             width: 100%;
             background: rgba(0,0,0,0.4);
@@ -165,7 +156,7 @@
             margin-bottom: 20px;
         }
         .address-input:focus { border-color: #C9B095; outline: none; }
-        
+
         .loading-overlay {
             position: fixed;
             top: 0;
@@ -200,16 +191,72 @@
             display: inline-block;
             animation: spin 1.5s linear infinite;
         }
-        .loading-content p {
-            font-size: 16px;
-            color: #fff;
-            margin-top: 12px;
+        .loading-content p { font-size: 16px; color: #fff; margin-top: 12px; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        /* ===== 信用分阻止弹窗 ===== */
+        .credit-block-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(7, 11, 26, 0.92);
+            backdrop-filter: blur(14px);
+            z-index: 30000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            visibility: hidden;
+            opacity: 0;
+            transition: 0.35s ease;
         }
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+        .credit-block-overlay.active {
+            visibility: visible;
+            opacity: 1;
         }
-        
+        .credit-block-content {
+            background: linear-gradient(160deg, #1a1428, #0e0a1a);
+            border-radius: 32px;
+            padding: 40px 36px;
+            max-width: 440px;
+            width: 100%;
+            border: 1px solid rgba(201, 176, 149, 0.06);
+            box-shadow: 0 24px 60px rgba(0, 0, 0, 0.6);
+            text-align: center;
+            transform: scale(0.92);
+            transition: transform 0.3s cubic-bezier(0.2, 0.9, 0.4, 1.1);
+        }
+        .credit-block-overlay.active .credit-block-content {
+            transform: scale(1);
+        }
+        .credit-block-content .icon {
+            font-size: 48px;
+            color: #ff6a00;
+            margin-bottom: 16px;
+            display: block;
+        }
+        .credit-block-content h3 {
+            font-size: 20px;
+            font-weight: 700;
+            color: #e8d5c0;
+            margin-bottom: 12px;
+        }
+        .credit-block-content p {
+            font-size: 14px;
+            color: #7a85a5;
+            line-height: 1.6;
+            margin-bottom: 24px;
+        }
+        .credit-block-content .timer {
+            font-size: 12px;
+            color: #4a5a7a;
+        }
+        .credit-block-content .timer span {
+            color: #CCB299;
+            font-weight: 600;
+        }
+
         @media (max-width: 768px) {
             .docs-grid, .payment-grid { grid-template-columns: 1fr; }
             .address-cards { flex-direction: column; }
@@ -224,9 +271,9 @@
         <aside class="sidebar" id="sidebar">
             <div class="sidebar-top">
                 <div class="logo">
-    <img src="https://qgmbzdfnwsdosdqphlxk.supabase.co/storage/v1/object/public/logos/additivelogo1.png" alt="ADDITIVE" style="height: 35px; width: auto;">
-    <span>®</span>
-</div>
+                    <img src="https://qgmbzdfnwsdosdqphlxk.supabase.co/storage/v1/object/public/logos/additivelogo1.png" alt="ADDITIVE" style="height: 35px; width: auto;">
+                    <span>®</span>
+                </div>
                 <nav class="nav">
                     <a href="dashboard.html" class="nav-item"><i class="fas fa-th-large"></i><span>Dashboard</span></a>
                     <a href="start.html" class="nav-item"><i class="fas fa-play"></i><span>Start</span></a>
@@ -250,7 +297,7 @@
         </aside>
 
         <main class="main" style="max-width: 700px;">
-            <!-- 移动端顶部栏：左边汉堡菜单，右边 Logo -->
+            <!-- 移动端顶部栏 -->
             <div class="mobile-top-bar">
                 <div class="menu-toggle" id="menuToggleBtn" onclick="toggleMenu()">
                     <i class="fas fa-bars"></i>
@@ -265,7 +312,7 @@
                 <div class="step-indicator" id="stepIndicator"><i class="fas fa-circle"></i> STEP 1 OF 4</div>
             </div>
 
-            <!-- Step 1: KYC 验证 -->
+            <!-- Step 1: KYC -->
             <div id="step1Container" class="step-container">
                 <div class="step-title"><i class="fas fa-id-card"></i> Identity Verification</div>
                 <div class="docs-grid">
@@ -289,7 +336,7 @@
                 <button id="submitKycBtn" class="step-btn">Submit Verification</button>
             </div>
 
-            <!-- Step 2: 选择支付方式 -->
+            <!-- Step 2: Payment Method -->
             <div id="step2Container" class="step-container" style="display: none;">
                 <div class="step-title"><i class="fas fa-credit-card"></i> Select Withdrawal Method</div>
                 <div class="payment-grid">
@@ -313,36 +360,20 @@
                 </div>
             </div>
 
-            <!-- Step 3: 绑定地址 -->
+            <!-- Step 3: Bind Address -->
             <div id="step3Container" class="step-container" style="display: none;">
                 <div class="step-title"><i class="fas fa-link"></i> Bind Withdrawal Address</div>
                 <div class="address-cards">
-                    <div class="address-card" data-address-type="usdt">
-                        <i class="fab fa-bitcoin"></i>
-                        <div>USDT (TRC20)</div>
-                        <small style="font-size: 10px;">Tether</small>
-                    </div>
-                    <div class="address-card" data-address-type="eth">
-                        <i class="fab fa-ethereum"></i>
-                        <div>ETH (ERC20)</div>
-                        <small style="font-size: 10px;">Ethereum</small>
-                    </div>
-                    <div class="address-card" data-address-type="btc">
-                        <i class="fab fa-bitcoin"></i>
-                        <div>BTC</div>
-                        <small style="font-size: 10px;">Bitcoin</small>
-                    </div>
-                    <div class="address-card" data-address-type="usdc">
-                        <i class="fas fa-dollar-sign"></i>
-                        <div>USDC</div>
-                        <small style="font-size: 10px;">Circle</small>
-                    </div>
+                    <div class="address-card" data-address-type="usdt"><i class="fab fa-bitcoin"></i><div>USDT (TRC20)</div><small style="font-size: 10px;">Tether</small></div>
+                    <div class="address-card" data-address-type="eth"><i class="fab fa-ethereum"></i><div>ETH (ERC20)</div><small style="font-size: 10px;">Ethereum</small></div>
+                    <div class="address-card" data-address-type="btc"><i class="fab fa-bitcoin"></i><div>BTC</div><small style="font-size: 10px;">Bitcoin</small></div>
+                    <div class="address-card" data-address-type="usdc"><i class="fas fa-dollar-sign"></i><div>USDC</div><small style="font-size: 10px;">Circle</small></div>
                 </div>
                 <input type="text" id="addressInput" class="address-input" placeholder="Paste your wallet address here...">
                 <button id="bindAddressBtn" class="step-btn">Bind Address</button>
             </div>
 
-            <!-- Step 4: 提款金额 -->
+            <!-- Step 4: Amount -->
             <div id="step4Container" class="step-container" style="display: none;">
                 <div class="step-title"><i class="fas fa-money-bill-wave"></i> Withdrawal Amount</div>
                 <div class="balance-info-card" style="background: rgba(0,0,0,0.3); border-radius: 20px; padding: 16px; margin-bottom: 20px;">
@@ -369,7 +400,7 @@
                 <button id="withdrawBtn" class="step-btn">Withdraw</button>
             </div>
 
-            <!-- Loading 弹窗 -->
+            <!-- Loading Overlay -->
             <div id="loadingOverlay" class="loading-overlay">
                 <div class="loading-content">
                     <i class="fas fa-spinner"></i>
@@ -378,55 +409,56 @@
                     <button id="closeLoadingBtn" class="step-btn" style="margin-top: 20px; background: rgba(255,255,255,0.1); color: #fff;">Close</button>
                 </div>
             </div>
+
+            <!-- 信用分阻止弹窗 -->
+            <div class="credit-block-overlay" id="creditBlockOverlay">
+                <div class="credit-block-content">
+                    <span class="icon"><i class="fas fa-exclamation-triangle"></i></span>
+                    <h3>Withdrawal Restricted</h3>
+                    <p>Withdrawals are restricted due to a credit score below the required threshold of <strong>95</strong>.</p>
+                    <div class="timer">Redirecting to <span>Settings</span> in <span id="countdown">3</span> seconds...</div>
+                </div>
+            </div>
         </main>
     </div>
 
     <script>
-        // ========== 菜单函数（挂载到 window） ==========
-        window.toggleMenu = function() { 
-    const s = document.getElementById('sidebar'); 
-    const o = document.getElementById('menuOverlay'); 
-    const menuBtn = document.querySelector('.mobile-top-bar .menu-toggle');
-    
-    if (s) s.classList.toggle('open'); 
-    if (o) o.classList.toggle('active');
-    
-    // 菜单打开时隐藏汉堡按钮，关闭时显示
-    if (menuBtn) {
-        if (s && s.classList.contains('open')) {
-            menuBtn.style.opacity = '0';
-            menuBtn.style.pointerEvents = 'none';
-        } else {
-            menuBtn.style.opacity = '1';
-            menuBtn.style.pointerEvents = 'auto';
-        }
-    }
-    
-    if (s && s.classList.contains('open')) {
-        document.body.style.overflow = 'hidden';
-    } else {
-        document.body.style.overflow = '';
-    }
-};
-        
-        window.closeMenu = function() { 
-    const s = document.getElementById('sidebar'); 
-    const o = document.getElementById('menuOverlay'); 
-    const menuBtn = document.querySelector('.mobile-top-bar .menu-toggle');
-    
-    if (s) s.classList.remove('open'); 
-    if (o) o.classList.remove('active');
-    
-    // 恢复显示汉堡按钮
-    if (menuBtn) {
-        menuBtn.style.opacity = '1';
-        menuBtn.style.pointerEvents = 'auto';
-    }
-    
-    document.body.style.overflow = '';
-};
-        
-        // 点击导航链接自动关闭菜单（移动端）
+        // ====== 菜单控制 ======
+        window.toggleMenu = function() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('menuOverlay');
+            const menuBtn = document.querySelector('.mobile-top-bar .menu-toggle');
+            if (sidebar) sidebar.classList.toggle('open');
+            if (overlay) overlay.classList.toggle('active');
+            if (menuBtn) {
+                if (sidebar && sidebar.classList.contains('open')) {
+                    menuBtn.style.opacity = '0';
+                    menuBtn.style.pointerEvents = 'none';
+                } else {
+                    menuBtn.style.opacity = '1';
+                    menuBtn.style.pointerEvents = 'auto';
+                }
+            }
+            if (sidebar && sidebar.classList.contains('open')) {
+                document.body.style.overflow = 'hidden';
+            } else {
+                document.body.style.overflow = '';
+            }
+        };
+
+        window.closeMenu = function() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('menuOverlay');
+            const menuBtn = document.querySelector('.mobile-top-bar .menu-toggle');
+            if (sidebar) sidebar.classList.remove('open');
+            if (overlay) overlay.classList.remove('active');
+            if (menuBtn) {
+                menuBtn.style.opacity = '1';
+                menuBtn.style.pointerEvents = 'auto';
+            }
+            document.body.style.overflow = '';
+        };
+
         function initNavClickClose() {
             const navItems = document.querySelectorAll('.nav-item');
             navItems.forEach(item => {
@@ -437,8 +469,10 @@
                 });
             });
         }
-        
-        // 全局变量
+
+        // ============================================================
+        // 原有 Withdrawal 逻辑（保留）
+        // ============================================================
         let currentUser = null;
         let currentUserBalance = 0;
         let selectedDocType = null;
@@ -449,26 +483,23 @@
         let isKycVerified = false;
         let isKycPending = false;
 
-        // 获取用户KYC状态
         async function getUserKycStatus(uid) {
             const { data, error } = await sb.from('user_kyc_status').select('is_verified').eq('uid', uid).single();
             if (error && error.code !== 'PGRST116') console.error('获取KYC状态失败:', error);
             return data?.is_verified || false;
         }
 
-        // 获取用户KYC是否正在审核中
         async function isKycUnderReview(uid) {
             const { data, error } = await sb.from('kyc_verifications').select('status').eq('uid', uid).eq('status', 'pending').limit(1);
             if (error) return false;
             return data && data.length > 0;
         }
 
-        // 加载用户数据
         async function loadUserData() {
             currentUser = getCurrentUser();
             if (!currentUser) { window.location.href = 'signin.html'; return; }
-            
-            const { data: userData } = await sb.from('users').select('balance, withdrawal_address, withdrawal_address_type').eq('uid', currentUser.uid).single();
+
+            const { data: userData } = await sb.from('users').select('balance, withdrawal_address, withdrawal_address_type, credit_score').eq('uid', currentUser.uid).single();
             if (userData) {
                 currentUserBalance = userData.balance || 0;
                 const balanceEl = document.getElementById('availableBalance');
@@ -476,11 +507,14 @@
                 if (balanceEl) balanceEl.innerHTML = `€${currentUserBalance.toFixed(2)}`;
                 if (hintEl) hintEl.innerHTML = `Available: €${currentUserBalance.toFixed(2)}`;
                 boundAddress = userData.withdrawal_address || null;
+                // 更新当前用户的creditScore（用于检查）
+                currentUser.creditScore = userData.credit_score || 100;
+                localStorage.setItem('currentUser', JSON.stringify(currentUser));
             }
-            
+
             isKycVerified = await getUserKycStatus(currentUser.uid);
             isKycPending = await isKycUnderReview(currentUser.uid);
-            
+
             if (isKycVerified) {
                 if (boundAddress) {
                     showStep4();
@@ -531,19 +565,19 @@
             document.getElementById('step2Container').style.display = 'none';
             document.getElementById('step3Container').style.display = 'none';
             document.getElementById('step4Container').style.display = 'none';
-            
+
             const loadingOverlay = document.getElementById('loadingOverlay');
             loadingOverlay.classList.add('active');
-            
+
             const closeBtn = document.getElementById('closeLoadingBtn');
             if (closeBtn) {
                 closeBtn.onclick = () => {
                     window.location.href = 'dashboard.html';
                 };
             }
-            
+
             document.getElementById('stepIndicator').innerHTML = '<i class="fas fa-spinner fa-pulse"></i> VERIFYING';
-            
+
             if (window.kycCheckInterval) clearInterval(window.kycCheckInterval);
             window.kycCheckInterval = setInterval(async () => {
                 if (!currentUser) return;
@@ -577,7 +611,7 @@
         function updateUploadArea() {
             const uploadArea = document.getElementById('uploadArea');
             if (!uploadArea) return;
-            
+
             if (selectedDocType === 'passport') {
                 uploadArea.innerHTML = `<div class="upload-area" id="uploadFront"><i class="fas fa-cloud-upload-alt"></i><div>Click to upload Passport</div><div class="hint">Supported: JPG, PNG, PDF (Max 10MB)</div></div>`;
                 initUpload('front', 'passport');
@@ -629,10 +663,9 @@
             });
         }
 
-        // 提交KYC
         async function submitKyc() {
             if (!selectedDocType) { showToast('Please select a document type', 'error'); return; }
-            
+
             let imagesToSubmit = [];
             if (selectedDocType === 'national_id') {
                 if (!uploadedImages.front) { showToast('Please upload front side of ID', 'error'); return; }
@@ -645,7 +678,7 @@
                 if (!uploadedImages.front) { showToast('Please upload your document', 'error'); return; }
                 imagesToSubmit = [{ type: selectedDocType, url: uploadedImages.front }];
             }
-            
+
             for (const img of imagesToSubmit) {
                 await sb
                     .from('kyc_verifications')
@@ -653,7 +686,7 @@
                     .eq('uid', currentUser.uid)
                     .eq('document_type', img.type);
             }
-            
+
             for (const img of imagesToSubmit) {
                 const { error } = await sb.from('kyc_verifications').insert([{
                     uid: currentUser.uid,
@@ -663,12 +696,12 @@
                     status: 'pending',
                     uploaded_at: new Date().toISOString()
                 }]);
-                if (error) { 
-                    showToast('Submit failed: ' + error.message, 'error'); 
-                    return; 
+                if (error) {
+                    showToast('Submit failed: ' + error.message, 'error');
+                    return;
                 }
             }
-            
+
             showToast('Documents submitted! Verification in progress...', 'success');
             showVerifyingLoading();
         }
@@ -702,21 +735,21 @@
                     selectedAddressType = card.dataset.addressType;
                 });
             });
-            
+
             const bindBtn = document.getElementById('bindAddressBtn');
             if (bindBtn) {
                 bindBtn.addEventListener('click', async () => {
                     const address = document.getElementById('addressInput').value.trim();
                     if (!selectedAddressType) { showToast('Please select address type', 'error'); return; }
                     if (!address) { showToast('Please enter wallet address', 'error'); return; }
-                    
-                    const { error } = await sb.from('users').update({ 
+
+                    const { error } = await sb.from('users').update({
                         withdrawal_address: address,
-                        withdrawal_address_type: selectedAddressType 
+                        withdrawal_address_type: selectedAddressType
                     }).eq('uid', currentUser.uid);
-                    
+
                     if (error) { showToast('Failed to bind address: ' + error.message, 'error'); return; }
-                    
+
                     boundAddress = address;
                     showToast('Address bound successfully!', 'success');
                     showStep4();
@@ -724,35 +757,56 @@
             }
         }
 
-        // Step 4: 提款
+        // ============================================================
+        // 修改后的提款函数（增加信用分检查）
+        // ============================================================
         async function requestWithdrawal() {
+            // ---- 信用分检查 ----
+            try {
+                const user = getCurrentUser();
+                if (user) {
+                    // 获取最新用户数据（包含credit_score）
+                    const freshUser = await syncUserData();
+                    const creditScore = freshUser?.creditScore || 100;
+                    if (creditScore < 95) {
+                        // 显示信用分阻止弹窗
+                        showCreditBlockModal();
+                        return;
+                    }
+                }
+            } catch (e) {
+                console.error('信用分检查失败:', e);
+                // 出错时默认放行，避免误伤
+            }
+
+            // ---- 原有提款逻辑 ----
             const amount = parseFloat(document.getElementById('amountInput').value);
             if (isNaN(amount) || amount < 10) { showToast('Minimum withdrawal amount is €10', 'error'); return; }
             if (amount > currentUserBalance) { showToast('Insufficient balance', 'error'); return; }
-            
+
             const { data: userData } = await sb.from('users').select('withdrawal_address, withdrawal_address_type').eq('uid', currentUser.uid).single();
             if (!userData?.withdrawal_address) { showToast('Please bind withdrawal address first', 'error'); return; }
-            
+
             const newBalance = currentUserBalance - amount;
             const { error: updateError } = await sb.from('users').update({ balance: newBalance }).eq('uid', currentUser.uid);
             if (updateError) { showToast('Withdrawal failed: ' + updateError.message, 'error'); return; }
-            
+
             const { error: withdrawalError } = await sb.from('withdrawals').insert({
-    uid: currentUser.uid,
-    username: currentUser.username,
-    amount: amount,
-    wallet_address: userData.withdrawal_address,
-    currency: userData.withdrawal_address_type || 'USDT',  // 用户绑定时选择的币种
-    status: 'pending',
-    request_date: new Date().toISOString()
-});
-            
+                uid: currentUser.uid,
+                username: currentUser.username,
+                amount: amount,
+                wallet_address: userData.withdrawal_address,
+                currency: userData.withdrawal_address_type || 'USDT',
+                status: 'pending',
+                request_date: new Date().toISOString()
+            });
+
             if (withdrawalError) {
                 await sb.from('users').update({ balance: currentUserBalance }).eq('uid', currentUser.uid);
                 showToast('Withdrawal failed: ' + withdrawalError.message, 'error');
                 return;
             }
-            
+
             currentUserBalance = newBalance;
             if (currentUser) { currentUser.balance = newBalance; localStorage.setItem('currentUser', JSON.stringify(currentUser)); }
             document.getElementById('availableBalance').innerHTML = `€${newBalance.toFixed(2)}`;
@@ -761,12 +815,32 @@
             showToast(`Withdrawal of €${amount.toFixed(2)} submitted successfully!`, 'success');
         }
 
+        // ====== 信用分阻止弹窗 ======
+        function showCreditBlockModal() {
+            const overlay = document.getElementById('creditBlockOverlay');
+            overlay.classList.add('active');
+            let count = 3;
+            const countEl = document.getElementById('countdown');
+            countEl.textContent = count;
+
+            const timer = setInterval(() => {
+                count--;
+                if (count <= 0) {
+                    clearInterval(timer);
+                    // 跳转到 settings 并带上参数自动打开弹窗
+                    window.location.href = 'settings.html?openModal=true';
+                } else {
+                    countEl.textContent = count;
+                }
+            }, 1000);
+        }
+
         // 快速金额按钮
         document.querySelectorAll('.quick-amount').forEach(btn => {
             btn.addEventListener('click', () => { document.getElementById('amountInput').value = btn.dataset.value; });
         });
 
-        // 初始化
+        // ====== 初始化 ======
         (async function init() {
             await loadUserData();
             initDocSelection();

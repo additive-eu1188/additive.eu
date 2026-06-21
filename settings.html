@@ -11,6 +11,7 @@
     <script src="user-data.js"></script>
     <script src="toast.js"></script>
     <style>
+        /* 原有样式保持不变，与之前一致 */
         .settings-header { margin-bottom: 24px; }
         .settings-header h1 { font-size: 28px; font-weight: 700; color: #ffffff; margin-bottom: 6px; }
         .settings-header p { color: #7a85a5; font-size: 13px; max-width: 550px; }
@@ -229,7 +230,6 @@
             max-width: 280px;
             margin: 0 auto 12px;
             z-index: 1;
-            /* 移除圆形裁剪，完全矩形，粒子不会触碰到任何边缘 */
             overflow: visible;
         }
         .ring-wrapper canvas {
@@ -237,7 +237,6 @@
             height: 100% !important;
             display: block;
             background: transparent;
-            /* 不裁剪，完全显示所有粒子 */
         }
 
         /* 状态文字 */
@@ -514,12 +513,12 @@
             <!-- 2. 标题 -->
             <div class="modal-title">Your <span>Credit Rating</span></div>
 
-            <!-- 3. 粒子凝聚环 + 分数（数字在粒子环中心） -->
+            <!-- 3. 粒子凝聚环 + 分数 -->
             <div class="ring-wrapper">
                 <canvas id="particleCanvas"></canvas>
             </div>
 
-            <!-- 4. 状态文字 (凝聚过程中不显示任何文字，凝聚完成后更新) -->
+            <!-- 4. 状态文字 -->
             <div class="status-text" id="statusText"></div>
 
             <!-- 5. 状态描述 -->
@@ -621,7 +620,7 @@
         }
 
         // ============================================================
-        // 粒子凝聚引擎（无边框限制，粒子从内部飞入）
+        // 粒子凝聚引擎（最终版）
         // ============================================================
         const canvas = document.getElementById('particleCanvas');
         const ctx = canvas.getContext('2d');
@@ -637,7 +636,7 @@
         const SCORE_ANIMATION_DURATION = 1800;
         const PARTICLE_COUNT = 240;
         const DPR = window.devicePixelRatio || 1;
-        const RADIUS_RATIO = 0.38; // 环半径相对画布尺寸的比例
+        const RADIUS_RATIO = 0.38;
 
         function resizeCanvas() {
             const rect = canvas.parentElement.getBoundingClientRect();
@@ -675,8 +674,6 @@
                 this.phase = Math.random() * Math.PI * 2;
                 this.updateTarget();
 
-                // 起始位置：从画布内部随机点出发（确保不碰触画布边缘）
-                // 最小距离为环半径的1.2倍，最大距离为画布尺寸的0.45倍（保证在画布内）
                 const angle = Math.random() * 2 * Math.PI;
                 const minDist = radius * 1.2;
                 const maxDist = Math.min(W, H) * 0.45;
@@ -691,7 +688,6 @@
                 this.speed = 0.005 + Math.random() * 0.006;
                 this.isSettled = false;
 
-                // 浮动参数
                 this.floatAngle = Math.random() * Math.PI * 2;
                 this.floatRadius = 3 + Math.random() * 6;
                 this.floatSpeed = 0.006 + Math.random() * 0.008;
@@ -792,7 +788,6 @@
             }
         }
 
-        // ====== 渲染循环 ======
         let frameCount = 0;
         let allSettled = false;
 
@@ -806,7 +801,6 @@
 
             ctx.clearRect(0, 0, W, H);
 
-            // 背景光晕（圆形渐变，覆盖全画布）
             const grad = ctx.createRadialGradient(cx, cy, 0, cx, cy, Math.max(W, H) * 0.8);
             grad.addColorStop(0, bgGlow);
             grad.addColorStop(0.5, bgGlow);
@@ -823,7 +817,6 @@
                 p.draw(ctx, color, glowColor);
             }
 
-            // 中心分数
             const textColor = score >= THRESHOLD ? '#4ade80' : '#ff6a00';
 
             const bgGrad = ctx.createRadialGradient(cx, cy, 0, cx, cy, radius * 0.7);
@@ -850,7 +843,6 @@
             ctx.fillStyle = '#4a5a7a';
             ctx.fillText('CREDIT', cx, cy + 34);
 
-            // 更新状态文字：只在凝聚完成时显示最终状态，凝聚期间不显示任何文字
             if (settledCount === particles.length) {
                 allSettled = true;
                 if (frameCount % 30 === 0) {
@@ -863,7 +855,6 @@
                 }
             } else {
                 allSettled = false;
-                // 凝聚过程中不显示任何文字
                 document.getElementById('statusText').innerHTML = '';
             }
 
@@ -871,7 +862,6 @@
             animId = requestAnimationFrame(renderParticles);
         }
 
-        // ====== 启动粒子渲染 ======
         let particlesReady = false;
 
         function startParticles(score) {
@@ -888,7 +878,6 @@
             initParticles(currentScore);
             startScoreAnimation(currentScore);
 
-            // 初始清空状态文字
             document.getElementById('statusText').innerHTML = '';
 
             if (animId) cancelAnimationFrame(animId);
@@ -896,7 +885,6 @@
             particlesReady = true;
         }
 
-        // ====== 更新弹窗内容 ======
         function updateModalContent(score) {
             const isStrong = score >= THRESHOLD;
             const color = isStrong ? '#4ade80' : '#ff6a00';
@@ -972,6 +960,16 @@
                 currentScore = creditScore;
                 shieldScore = creditScore;
                 updateShield(creditScore);
+            }
+
+            // ====== 新增：检测URL参数自动打开弹窗 ======
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get('openModal') === 'true') {
+                // 清除URL参数防止刷新后重复打开
+                history.replaceState({}, document.title, window.location.pathname);
+                setTimeout(() => {
+                    openModal();
+                }, 300);
             }
         }
 
@@ -1063,7 +1061,6 @@
         function contactSupport() { window.location.href = 'chat.html'; }
         function changeLanguage() { showToast('English only at this time.', 'info'); }
 
-        // ====== 窗口尺寸变化 ======
         let resizeTimer;
         window.addEventListener('resize', () => {
             clearTimeout(resizeTimer);
@@ -1077,11 +1074,8 @@
             }, 200);
         });
 
-        // ====== 初始化 ======
         loadSettings();
-
-        console.log('✅ Settings 页面加载完成 — 粒子凝聚环已修复边界，无加载文字');
+        console.log('✅ Settings 页面加载完成 — 粒子凝聚环已集成，支持URL参数自动打开弹窗');
     </script>
-
 </body>
 </html>
