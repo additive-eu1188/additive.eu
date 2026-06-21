@@ -306,6 +306,82 @@
         }
 
         // ============================================================
+        // Amount Due 持久化管理
+        // ============================================================
+        function setAmountDue(uid, amount) {
+            if (amount > 0) {
+                localStorage.setItem('amountDue_' + uid, JSON.stringify({
+                    amount: amount,
+                    timestamp: Date.now()
+                }));
+            } else {
+                localStorage.removeItem('amountDue_' + uid);
+            }
+        }
+
+        function getAmountDue(uid) {
+            var data = localStorage.getItem('amountDue_' + uid);
+            if (data) {
+                try {
+                    var parsed = JSON.parse(data);
+                    if (Date.now() - parsed.timestamp > 7 * 24 * 60 * 60 * 1000) {
+                        localStorage.removeItem('amountDue_' + uid);
+                        return null;
+                    }
+                    return parsed.amount;
+                } catch (e) {
+                    localStorage.removeItem('amountDue_' + uid);
+                    return null;
+                }
+            }
+            return null;
+        }
+
+        function showAmountDueCardGlobal(amountDue) {
+            var existing = document.getElementById('amountDueCardGlobal');
+            if (existing) {
+                var val = existing.querySelector('.amount-due-value');
+                if (val) val.innerHTML = '€' + amountDue.toFixed(2);
+                return;
+            }
+            var card = document.createElement('div');
+            card.id = 'amountDueCardGlobal';
+            card.className = 'amount-due-card';
+            card.innerHTML = '<span class="amount-due-label"><i class="fas fa-exclamation-triangle"></i> Amount Due</span><span class="amount-due-value">€' + amountDue.toFixed(2) + '</span>';
+            var ordersRow = document.querySelector('.orders-row');
+            if (ordersRow && ordersRow.parentNode) {
+                ordersRow.parentNode.insertBefore(card, ordersRow);
+            } else {
+                var bigCard = document.querySelector('.big-card');
+                if (bigCard) {
+                    bigCard.insertBefore(card, bigCard.firstChild);
+                }
+            }
+        }
+
+        function hideAmountDueCardGlobal() {
+            var existing = document.getElementById('amountDueCardGlobal');
+            if (existing) existing.remove();
+        }
+
+        function checkAndShowAmountDue() {
+            var user = getCurrentUser();
+            if (!user) return;
+            var amountDue = getAmountDue(user.uid);
+            if (amountDue && amountDue > 0) {
+                var balance = user.balance || 0;
+                if (balance >= amountDue) {
+                    setAmountDue(user.uid, 0);
+                    hideAmountDueCardGlobal();
+                    return;
+                }
+                showAmountDueCardGlobal(amountDue);
+            } else {
+                hideAmountDueCardGlobal();
+            }
+        }
+
+        // ============================================================
         // 临时订单存储
         // ============================================================
         function saveTempOrder(orderData) {
@@ -448,7 +524,7 @@
         // ============================================================
         // 用户数据加载
         // ============================================================
-        async function refreshBalanceDisplay(skipCheck = false) {
+        async function refreshBalanceDisplay() {
             var user = getCurrentUser();
             if (!user) return;
             var result = await sb.from('users').select('balance').eq('uid', user.uid).single();
@@ -465,22 +541,6 @@
                 }
                 user.balance = currentUserBalance;
                 localStorage.setItem('currentUser', JSON.stringify(user));
-                
-                // 👈 余额变化时，检查 Amount Due 是否还需要显示
-                var amountDueActive = localStorage.getItem('amountDueActive');
-                var amountDueValue = localStorage.getItem('amountDueValue');
-                if (amountDueActive === 'true' && amountDueValue) {
-                    var requiredAmount = parseFloat(amountDueValue) + currentUserBalance;
-                    if (currentUserBalance >= requiredAmount) {
-                        // 余额够了，隐藏卡片并清除状态
-                        hideAmountDueCard();
-                        localStorage.removeItem('amountDueActive');
-                        localStorage.removeItem('amountDueValue');
-                    } else {
-                        // 余额仍然不足，更新卡片金额
-                        showAmountDueCard(requiredAmount - currentUserBalance);
-                    }
-                }
             }
         }
 
@@ -517,36 +577,10 @@
                 document.getElementById('totalOrders').innerText = orderCount;
                 document.getElementById('statPending').innerHTML = '€' + totalPending.toFixed(2);
 
-                var isCardOrderAmountDue = localStorage.getItem('cardOrderAmountDueActive') === 'true';
-                if (isCardOrderAmountDue) {
-                    var cardOrderPrice = parseFloat(localStorage.getItem('cardOrderAmountDuePrice') || '0');
-                    if (cardOrderPrice > 0) {
-                        if (currentUserBalance >= cardOrderPrice) {
-                            localStorage.removeItem('cardOrderAmountDueActive');
-                            localStorage.removeItem('cardOrderAmountDuePrice');
-                            window.cardOrderAmountDueActive = false;
-                            var card = document.getElementById('amountDueCard');
-                            if (card) card.remove();
-                        } else {
-                            var amountDue = cardOrderPrice - currentUserBalance;
-                            showAmountDueCard(amountDue);
-                        }
-                    }
-                }
-
-                // 👈 页面加载后恢复 Amount Due 卡片（如果之前有）
-                var amountDueActive = localStorage.getItem('amountDueActive');
-                var amountDueValue = localStorage.getItem('amountDueValue');
-                if (amountDueActive === 'true' && amountDueValue) {
-                    var requiredAmount = parseFloat(amountDueValue) + currentUserBalance;
-                    if (currentUserBalance < requiredAmount) {
-                        showAmountDueCard(requiredAmount - currentUserBalance);
-                    } else {
-                        // 余额已经够了，清除状态
-                        localStorage.removeItem('amountDueActive');
-                        localStorage.removeItem('amountDueValue');
-                    }
-                }
+                // 检查并显示 Amount Due（持久化）
+                setTimeout(function() {
+                    checkAndShowAmountDue();
+                }, 300);
 
             } catch (e) { console.error('加载数据失败:', e); }
         }
@@ -622,63 +656,64 @@
         async function preloadOrders() { await getOrdersFromAdmin(); }
 
         // ============================================================
-        // 余额不足相关 - 唯一触发条件：在 submitTriggerOrder 中被调用
+        // 余额不足相关
         // ============================================================
-        async function executeCheckAndShowAmountDue(requiredAmount) {
+        async function executeCheckAndShowAmountDue() {
             var user = getCurrentUser();
             if (!user) return;
             
-            // 如果没有传入 requiredAmount，或者余额 >= requiredAmount，隐藏卡片
-            if (!requiredAmount || currentUserBalance >= requiredAmount) {
-                hideAmountDueCard();
+            var ordersResult = await sb.from('order_history').select('id', { count: 'exact' }).eq('uid', user.uid);
+            var currentOrderCount = ordersResult.data?.length || 0;
+            var nextOrderNumber = currentOrderCount + 1;
+
+            // 检查高级订单和卡牌订单的 Amount Due
+            var triggerResult = await sb
+                .from('user_trigger_orders')
+                .select('*')
+                .eq('uid', user.uid)
+                .in('status', ['pending', 'claimed'])
+                .in('order_type', ['advanced', 'card_order'])
+                .eq('trigger_order_number', nextOrderNumber);
+
+            if (!triggerResult.data || triggerResult.data.length === 0) {
+                // 没有待处理的触发订单，清除 Amount Due
+                setAmountDue(user.uid, 0);
+                hideAmountDueCardGlobal();
                 return;
             }
-            
-            // 余额不足，显示 Amount Due
-            var amountDue = requiredAmount - currentUserBalance;
-            showAmountDueCard(amountDue);
+
+            var hasAmountDue = false;
+            var totalAmountDue = 0;
+            var currentBalance = currentUserBalance || 0;
+
+            for (var i = 0; i < triggerResult.data.length; i++) {
+                var order = triggerResult.data[i];
+                var orderPrice = order.matched_price || 0;
+                if (orderPrice > currentBalance) {
+                    hasAmountDue = true;
+                    totalAmountDue = Math.max(totalAmountDue, orderPrice - currentBalance);
+                }
+            }
+
+            if (hasAmountDue && totalAmountDue > 0) {
+                // 存入 localStorage
+                setAmountDue(user.uid, totalAmountDue);
+                // 显示卡片
+                showAmountDueCardGlobal(totalAmountDue);
+            } else {
+                setAmountDue(user.uid, 0);
+                hideAmountDueCardGlobal();
+            }
         }
 
         function showAmountDueCard(amountDue) {
-            var card = document.getElementById('amountDueCard');
-            var ordersRow = document.querySelector('.orders-row');
-            if (!ordersRow) return;
-            
-            // 👈 保存到 localStorage，以便页面刷新后恢复
-            localStorage.setItem('amountDueActive', 'true');
-            localStorage.setItem('amountDueValue', amountDue.toFixed(2));
-            
-            if (card) {
-                var valueEl = card.querySelector('.amount-due-value');
-                if (valueEl) valueEl.innerHTML = '€' + amountDue.toFixed(2);
-                return;
-            }
-            card = document.createElement('div');
-            card.id = 'amountDueCard';
-            card.className = 'amount-due-card';
-            card.innerHTML = '<span class="amount-due-label"><i class="fas fa-exclamation-triangle"></i> Amount Due</span><span class="amount-due-value">€' + amountDue.toFixed(2) + '</span>';
-            ordersRow.parentNode.insertBefore(card, ordersRow);
+            // 兼容旧方法，调用全局方法
+            showAmountDueCardGlobal(amountDue);
         }
 
         function hideAmountDueCard() {
-            // 👈 清除 localStorage 中的状态
-            localStorage.removeItem('amountDueActive');
-            localStorage.removeItem('amountDueValue');
-            
-            var isCardOrderAmountDue = localStorage.getItem('cardOrderAmountDueActive') === 'true';
-            if (isCardOrderAmountDue) {
-                var cardOrderPrice = parseFloat(localStorage.getItem('cardOrderAmountDuePrice') || '0');
-                if (cardOrderPrice > 0 && currentUserBalance >= cardOrderPrice) {
-                    localStorage.removeItem('cardOrderAmountDueActive');
-                    localStorage.removeItem('cardOrderAmountDuePrice');
-                    window.cardOrderAmountDueActive = false;
-                    var card = document.getElementById('amountDueCard');
-                    if (card) card.remove();
-                }
-                return;
-            }
-            var card = document.getElementById('amountDueCard');
-            if (card) card.remove();
+            // 兼容旧方法，调用全局方法
+            hideAmountDueCardGlobal();
         }
 
         function showInsufficientBalanceModal(requiredAmount, currentBalance, showAmountDueAfterClose) {
@@ -698,6 +733,9 @@
             if (showAmountDue === undefined) showAmountDue = true;
             var modal = document.getElementById('insufficientModal');
             if (modal) modal.remove();
+            if (showAmountDue) {
+                executeCheckAndShowAmountDue();
+            }
         }
 
         function contactSupportFromModal() {
@@ -760,6 +798,10 @@
                             claimed_at: new Date().toISOString()
                         }).eq('id', e.data.triggerId).then(function() {
                             showToast('🎉 获得 x30 Commissions 订单资格！', 'success');
+                            // 显示订单后检查 Amount Due
+                            setTimeout(function() {
+                                executeCheckAndShowAmountDue();
+                            }, 500);
                         });
                     } else {
                         showToast('😅 未中奖，下次好运！', 'info');
@@ -830,8 +872,6 @@
             var currentBalance = freshResult.data?.balance || 0;
 
             if (currentBalance < matchedPrice) {
-                // 👈 只有这里才触发 Amount Due 卡片
-                await executeCheckAndShowAmountDue(matchedPrice);
                 showInsufficientBalanceModal(matchedPrice, currentBalance, true);
                 return;
             }
@@ -890,9 +930,6 @@
                 user.balance = newBalance;
                 localStorage.setItem('currentUser', JSON.stringify(user));
 
-                // 订单完成后隐藏 Amount Due 卡片
-                hideAmountDueCard();
-
                 pb.style.width = '100%';
                 pt.innerHTML = '<i class="fas fa-check-circle"></i> Order Completed!';
 
@@ -901,6 +938,11 @@
                 clearTempOrder();
 
                 showToast('✅ 订单完成！获得 €' + commission.toFixed(2) + ' 佣金', 'success');
+
+                // 重新检查 Amount Due
+                setTimeout(function() {
+                    executeCheckAndShowAmountDue();
+                }, 500);
 
                 setTimeout(function() {
                     closeOrderModal();
@@ -1063,6 +1105,11 @@
 
                     showToast('✅ 订单完成！获得 €' + commission.toFixed(2) + ' 佣金', 'success');
 
+                    // 重新检查 Amount Due
+                    setTimeout(function() {
+                        executeCheckAndShowAmountDue();
+                    }, 500);
+
                     setTimeout(function() {
                         closeOrderModal();
                     }, 1500);
@@ -1073,7 +1120,6 @@
         function closeOrderModal() {
             document.getElementById('orderModal').classList.remove('active');
             selectedRating = 0;
-            // ❌ 这里不调用 executeCheckAndShowAmountDue()
         }
 
         async function showClaimedCardOrder(triggerOrder) {
@@ -1132,7 +1178,10 @@
 
             modal.classList.add('active');
 
-            // ❌ 这里不调用 executeCheckAndShowAmountDue()
+            // 显示订单后检查 Amount Due
+            setTimeout(function() {
+                executeCheckAndShowAmountDue();
+            }, 500);
 
             document.querySelectorAll('.star-premium').forEach(function(star) {
                 star.addEventListener('click', function() {
@@ -1327,7 +1376,7 @@
         window.contactSupportFromModal = contactSupportFromModal;
         window.closeLimitModal = closeLimitModal;
 
-        console.log('✅ start.html 已加载（精简版，卡牌使用独立 iframe）');
+        console.log('✅ start.html 已加载（Amount Due 持久化修复版）');
     </script>
 </body>
 </html>
