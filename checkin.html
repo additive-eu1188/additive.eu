@@ -22,13 +22,13 @@
             margin-bottom: 24px;
         }
 
-        /* ====== 卡片样式（替换原有 .day-card） ====== */
+        /* ====== 卡片样式（深色奢金 · 粒子风格） ====== */
         .day-card {
             border-radius: 16px;
             padding: 14px 6px;
             text-align: center;
             position: relative;
-            cursor: pointer;
+            cursor: default; /* 改为 default，不可点击 */
             transition: all 0.4s cubic-bezier(0.2, 0.9, 0.4, 1.1);
             min-height: 100px;
             overflow: hidden;
@@ -39,18 +39,16 @@
             transform: scale(0.96);
             will-change: transform, opacity, filter;
             
-            /* 渐变背景（深邃） */
+            /* 渐变背景 */
             background: linear-gradient(165deg, #181f3a, #0f1428);
             border: none;
             
-            /* 布局不变 */
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
         }
 
-        /* 微渐变边框 */
         .day-card::before {
             content: '';
             position: absolute;
@@ -66,7 +64,6 @@
             z-index: 5;
         }
 
-        /* 内部光晕 */
         .day-card .glow {
             position: absolute;
             inset: 0;
@@ -78,21 +75,6 @@
             z-index: 0;
         }
 
-        /* 粒子 Canvas */
-        .day-card .particle-canvas {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            border-radius: 16px;
-            pointer-events: none;
-            z-index: 1;
-            opacity: 0;
-            transition: opacity 1s ease;
-        }
-
-        /* 半透明遮罩（增强文字可读性） */
         .day-card .text-mask {
             position: absolute;
             inset: 0;
@@ -108,7 +90,6 @@
             background: rgba(11, 11, 33, 0.06);
         }
 
-        /* 顶部装饰线 */
         .day-card .top-accent {
             position: absolute;
             top: 0;
@@ -121,7 +102,6 @@
             z-index: 4;
         }
 
-        /* ====== 卡片内容（z-index 提升） ====== */
         .day-card .card-content {
             position: relative;
             z-index: 4;
@@ -133,7 +113,6 @@
             width: 100%;
         }
 
-        /* ====== 文字样式（加强可读性） ====== */
         .day-card .day-num {
             font-size: 11px;
             font-weight: 700;
@@ -169,7 +148,6 @@
             margin-right: 1px;
         }
 
-        /* 状态标签 */
         .day-card .status-badge {
             font-size: 9px;
             font-weight: 700;
@@ -201,9 +179,6 @@
         .day-card.claimed .glow {
             opacity: 1;
         }
-        .day-card.claimed .particle-canvas {
-            opacity: 1;
-        }
         .day-card.claimed .top-accent {
             background: linear-gradient(90deg, transparent, #4ade80, transparent);
             left: 10%;
@@ -228,18 +203,7 @@
             box-shadow: inset 0 0 20px rgba(74, 222, 128, 0.04);
         }
 
-        /* ====== 点击动效 ====== */
-        @keyframes claimPulse {
-            0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(74, 222, 128, 0.15); }
-            30% { transform: scale(1.08); box-shadow: 0 0 40px 12px rgba(74, 222, 128, 0.25); }
-            65% { transform: scale(0.98); box-shadow: 0 0 20px 6px rgba(74, 222, 128, 0.10); }
-            100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(74, 222, 128, 0); }
-        }
-        .day-card.click-effect {
-            animation: claimPulse 0.6s cubic-bezier(0.2, 0.9, 0.4, 1.1) forwards;
-        }
-
-        /* 悬停 */
+        /* 悬停效果（只有视觉反馈，不改变状态） */
         .day-card:hover {
             transform: scale(1.03) translateY(-2px);
         }
@@ -248,19 +212,7 @@
             box-shadow: 0 8px 30px rgba(74, 222, 128, 0.08);
         }
 
-        /* 兼容原有 .completed 和 .today 类（保留原有逻辑） */
-        .day-card.completed {
-            /* 由 claimed 控制，保留类名但不覆盖样式 */
-        }
-        .day-card.today {
-            /* 由 claimed 控制，保留类名但不覆盖样式 */
-            border: none;
-        }
-        .day-card.today::before {
-            background: linear-gradient(135deg, rgba(204, 178, 153, 0.3), rgba(204, 178, 153, 0.05));
-        }
-
-        /* ====== 其他原有样式保持不变 ====== */
+        /* ====== 其他原有样式 ====== */
         .claim-btn {
             background: rgba(201, 176, 149, 0.15);
             border: 1px solid rgba(201, 176, 149, 0.3);
@@ -273,9 +225,21 @@
             display: inline-flex;
             align-items: center;
             gap: 10px;
+            transition: 0.2s;
         }
-        .claim-btn.disabled { opacity: 0.5; cursor: not-allowed; }
-        .claim-warning { font-size: 11px; color: #ffaa66; line-height: 1.4; }
+        .claim-btn.disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .claim-btn:not(.disabled):hover {
+            background: rgba(201,176,149,0.25);
+            transform: scale(1.02);
+        }
+        .claim-warning {
+            font-size: 11px;
+            color: #ffaa66;
+            line-height: 1.4;
+        }
         .total-rewards-card {
             background: rgba(20, 30, 55, 0.7);
             border-radius: 20px;
@@ -367,6 +331,7 @@
                     <img src="https://qgmbzdfnwsdosdqphlxk.supabase.co/storage/v1/object/public/logos/additivelogo1.png" alt="ADDITIVE">
                 </div>
             </div>
+
             <div class="checkin-header">
                 <h1>SIGN IN</h1>
                 <p>Build your daily reward streak and unlock exclusive member bonuses.</p>
@@ -415,119 +380,6 @@
 
         let signInRewards = [];
         let userOrderCount = 0;
-
-        // ====== 粒子引擎 ======
-        class ParticleEngine {
-            constructor(canvas) {
-                this.canvas = canvas;
-                this.ctx = canvas.getContext('2d');
-                this.particles = [];
-                this.running = false;
-                this.frameId = null;
-                this.resize();
-            }
-
-            resize() {
-                const rect = this.canvas.parentElement.getBoundingClientRect();
-                const dpr = window.devicePixelRatio || 1;
-                this.canvas.width = rect.width * dpr;
-                this.canvas.height = rect.height * dpr;
-                this.canvas.style.width = rect.width + 'px';
-                this.canvas.style.height = rect.height + 'px';
-                this.ctx.scale(dpr, dpr);
-                this.width = rect.width;
-                this.height = rect.height;
-            }
-
-            start() {
-                if (this.running) return;
-                this.running = true;
-                const count = Math.floor((this.width * this.height) / 1800) + 12;
-                this.particles = [];
-                const colors = [
-                    'rgba(74, 222, 128, ',
-                    'rgba(100, 200, 255, ',
-                    'rgba(200, 180, 255, ',
-                    'rgba(255, 215, 150, ',
-                    'rgba(150, 255, 220, '
-                ];
-                for (let i = 0; i < count; i++) {
-                    this.particles.push({
-                        x: Math.random() * this.width,
-                        y: Math.random() * this.height,
-                        radius: 1.5 + Math.random() * 3.5,
-                        speedX: (Math.random() - 0.5) * 0.5,
-                        speedY: (Math.random() - 0.5) * 0.5 - 0.2,
-                        alpha: 0.2 + Math.random() * 0.6,
-                        alphaSpeed: 0.005 + Math.random() * 0.015,
-                        phase: Math.random() * Math.PI * 2,
-                        color: colors[Math.floor(Math.random() * colors.length)],
-                        wobble: Math.random() * Math.PI * 2,
-                        wobbleSpeed: 0.01 + Math.random() * 0.02
-                    });
-                }
-                this.animate();
-            }
-
-            stop() {
-                this.running = false;
-                if (this.frameId) {
-                    cancelAnimationFrame(this.frameId);
-                    this.frameId = null;
-                }
-                this.ctx.clearRect(0, 0, this.width, this.height);
-            }
-
-            animate() {
-                if (!this.running) return;
-                const ctx = this.ctx;
-                ctx.clearRect(0, 0, this.width, this.height);
-
-                for (const p of this.particles) {
-                    p.x += p.speedX + Math.sin(p.wobble) * 0.15;
-                    p.y += p.speedY + Math.cos(p.wobble * 0.7) * 0.08;
-                    p.wobble += p.wobbleSpeed;
-                    p.alpha += p.alphaSpeed * Math.sin(p.phase + Date.now() * 0.001);
-                    p.alpha = Math.max(0.1, Math.min(0.9, p.alpha));
-
-                    if (p.x < 0) { p.x = this.width; }
-                    if (p.x > this.width) { p.x = 0; }
-                    if (p.y < -10) { p.y = this.height + 10; }
-                    if (p.y > this.height + 10) { p.y = -10; }
-
-                    const gradient = ctx.createRadialGradient(
-                        p.x, p.y, 0,
-                        p.x, p.y, p.radius * 3
-                    );
-                    const baseAlpha = p.alpha * 0.6;
-                    gradient.addColorStop(0, p.color + (baseAlpha + 0.2) + ')');
-                    gradient.addColorStop(0.4, p.color + (baseAlpha * 0.5) + ')');
-                    gradient.addColorStop(1, p.color + '0)');
-
-                    ctx.beginPath();
-                    ctx.arc(p.x, p.y, p.radius * 3, 0, Math.PI * 2);
-                    ctx.fillStyle = gradient;
-                    ctx.fill();
-
-                    ctx.beginPath();
-                    ctx.arc(p.x, p.y, p.radius * 0.6, 0, Math.PI * 2);
-                    ctx.fillStyle = p.color + (p.alpha * 0.7 + 0.3) + ')';
-                    ctx.fill();
-
-                    const sparkle = Math.sin(Date.now() * 0.003 + p.phase + p.x) * 0.5 + 0.5;
-                    if (sparkle > 0.7) {
-                        ctx.beginPath();
-                        ctx.arc(p.x, p.y, p.radius * 0.3, 0, Math.PI * 2);
-                        ctx.fillStyle = 'rgba(255,255,255,' + (sparkle * 0.4) + ')';
-                        ctx.fill();
-                    }
-                }
-
-                this.frameId = requestAnimationFrame(() => this.animate());
-            }
-        }
-
-        const particleEngines = new Map();
 
         async function loadRewards() {
             const { data, error } = await sb
@@ -593,8 +445,8 @@
             const newBalance = (userData?.balance || 0) + amount;
             await updateUserBalance(user.uid, newBalance);
         }
-
-        // 渲染卡片
+        
+        // ====== 渲染卡片（无点击事件） ======
         async function render() {
             const {streak, lastClaimDate, claimedDays} = loadData();
             const hasClaimed = hasClaimedToday(lastClaimDate);
@@ -606,32 +458,19 @@
             const grid = document.getElementById('daysGrid');
             grid.innerHTML = '';
             
-            // 清理旧的粒子引擎
-            for (const [card, engine] of particleEngines) {
-                engine.stop();
-            }
-            particleEngines.clear();
-            
             signInRewards.forEach((r) => {
                 const dayNum = r.day;
                 const isClaimed = claimedDays.includes(dayNum);
-                // 计算今天是第几天可领（streak + 1）
                 const isToday = (streak + 1) === dayNum && !hasClaimed;
                 
                 const card = document.createElement('div');
                 card.className = 'day-card';
                 if (isClaimed) card.classList.add('claimed');
                 if (isToday) card.classList.add('today');
-
-// ====== 添加这行：Day 7 占满整行 ======
-    if (dayNum === 7) {
-        card.style.gridColumn = '1 / -1';
-    }
                 
-                // 卡片内部结构（含粒子 Canvas）
+                // 无点击事件！
                 card.innerHTML = `
                     <div class="glow"></div>
-                    <canvas class="particle-canvas"></canvas>
                     <div class="text-mask"></div>
                     <div class="top-accent"></div>
                     <div class="card-content">
@@ -641,45 +480,6 @@
                     </div>
                 `;
                 grid.appendChild(card);
-                
-                // 初始化粒子引擎
-                const canvas = card.querySelector('.particle-canvas');
-                if (canvas) {
-                    const engine = new ParticleEngine(canvas);
-                    particleEngines.set(card, engine);
-                    if (isClaimed) {
-                        setTimeout(() => engine.start(), 300);
-                    }
-                }
-                
-                // 点击卡片切换 Claimed 状态（仅视觉预览，不修改后端）
-                card.addEventListener('click', function(e) {
-                    e.stopPropagation();
-                    const currentlyClaimed = this.classList.contains('claimed');
-                    const engine = particleEngines.get(this);
-                    const badge = this.querySelector('.status-badge');
-                    
-                    if (currentlyClaimed) {
-                        this.classList.remove('claimed', 'click-effect');
-                        if (badge) badge.textContent = 'Pending';
-                        if (engine) engine.stop();
-                    } else {
-                        this.classList.add('claimed');
-                        if (badge) badge.textContent = 'Claimed';
-                        if (engine) {
-                            engine.resize();
-                            engine.start();
-                        }
-                        // 点击动效
-                        this.classList.remove('click-effect');
-                        void this.offsetWidth;
-                        this.classList.add('click-effect');
-                        this.addEventListener('animationend', function onEnd() {
-                            this.classList.remove('click-effect');
-                            this.removeEventListener('animationend', onEnd);
-                        });
-                    }
-                });
             });
             
             // 更新 streak
@@ -711,6 +511,7 @@
             }
         }
         
+        // ====== 领取 ======
         async function handleClaim() {
             const {streak, lastClaimDate, claimedDays} = loadData();
             const hasClaimed = hasClaimedToday(lastClaimDate);
@@ -720,6 +521,7 @@
             if(nextDay > signInRewards.length) { alert('Completed all days!'); return; }
             if(userOrderCount < 30) { alert(`Need 30 orders to claim rewards. You have ${userOrderCount}/30.`); return; }
             
+            // 检查连续性（如果断签则重置到第1天）
             if(streak > 0 && !isConsecutive(lastClaimDate)) {
                 const amount = signInRewards[0].amount;
                 await addReward(amount);
@@ -736,24 +538,11 @@
             alert(`Day ${nextDay} claimed! +€${amount}`);
         }
         
-        // ========== 初始化 ==========
+        // ====== 初始化 ======
         checkLogin();
         (async function init() {
             await loadRewards();
             await render();
-            
-            // 窗口变化时调整粒子尺寸
-            let resizeTimer;
-            window.addEventListener('resize', () => {
-                clearTimeout(resizeTimer);
-                resizeTimer = setTimeout(() => {
-                    for (const [card, engine] of particleEngines) {
-                        if (card.classList.contains('claimed')) {
-                            engine.resize();
-                        }
-                    }
-                }, 200);
-            });
         })();
     </script>
 </body>
