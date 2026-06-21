@@ -139,7 +139,7 @@
         .setting-action.logout-btn { background: rgba(255,80,80,0.15); color: #ff8888; }
         .setting-action.logout-btn:hover { background: rgba(255,80,80,0.3); }
 
-        /* ====== 弹窗（深色奢金风格 · 完整版） ====== */
+        /* ====== 弹窗 ====== */
         .modal-overlay {
             position: fixed;
             top: 0;
@@ -152,13 +152,13 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            visibility: hidden;
             opacity: 0;
+            visibility: hidden;
             transition: 0.35s ease;
         }
         .modal-overlay.active {
-            visibility: visible;
             opacity: 1;
+            visibility: visible;
         }
 
         .modal-content {
@@ -189,7 +189,7 @@
             background: linear-gradient(90deg, transparent, rgba(201, 176, 149, 0.12), transparent);
         }
 
-        /* 1. 金属框架标签 */
+        /* 金属框架标签 */
         .modal-top-label {
             display: inline-block;
             font-size: 10px;
@@ -206,13 +206,13 @@
             z-index: 1;
         }
 
-        /* 2. 标题 */
+        /* 标题 */
         .modal-title {
             font-size: 16px;
             font-weight: 500;
             color: #7a85a5;
             letter-spacing: 2px;
-            margin-bottom: 20px;
+            margin-bottom: 16px;
             position: relative;
             z-index: 1;
         }
@@ -221,55 +221,26 @@
             font-weight: 600;
         }
 
-        /* 3. 圆环 + 分数（大号） */
+        /* ====== 粒子环容器 ====== */
         .ring-wrapper {
             position: relative;
-            width: 150px;
-            height: 150px;
-            margin: 0 auto 20px;
-            z-index: 1;
-        }
-        .ring-wrapper svg {
             width: 100%;
-            height: 100%;
-            transform: rotate(-90deg);
+            aspect-ratio: 1/1;
+            max-width: 280px;
+            margin: 0 auto 12px;
+            z-index: 1;
+            /* 移除圆形裁剪，完全矩形，粒子不会触碰到任何边缘 */
+            overflow: visible;
         }
-        .ring-wrapper .ring-track {
-            fill: none;
-            stroke: rgba(204, 178, 153, 0.04);
-            stroke-width: 5;
-        }
-        .ring-wrapper .ring-progress {
-            fill: none;
-            stroke: #4ade80;
-            stroke-width: 5;
-            stroke-linecap: round;
-            stroke-dasharray: 188.5;
-            transition: stroke-dashoffset 1.8s cubic-bezier(0.2, 0.8, 0.2, 1), stroke 0.6s ease;
-        }
-        .ring-wrapper .center-content {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            text-align: center;
-        }
-        .ring-wrapper .center-content .score {
-            font-size: 48px;
-            font-weight: 800;
-            line-height: 1;
-            transition: color 0.6s ease;
-            font-family: 'Inter', sans-serif;
-        }
-        .ring-wrapper .center-content .label {
-            font-size: 10px;
-            color: #4a3a5a;
-            letter-spacing: 1.5px;
-            text-transform: uppercase;
-            margin-top: 2px;
+        .ring-wrapper canvas {
+            width: 100% !important;
+            height: 100% !important;
+            display: block;
+            background: transparent;
+            /* 不裁剪，完全显示所有粒子 */
         }
 
-        /* 4. 状态文字 */
+        /* 状态文字 */
         .status-text {
             font-size: 16px;
             font-weight: 600;
@@ -277,27 +248,29 @@
             margin-bottom: 4px;
             position: relative;
             z-index: 1;
+            min-height: 28px;
         }
         .status-text strong {
             font-weight: 700;
         }
 
-        /* 5. 状态描述 */
+        /* 状态描述 */
         .status-desc {
             font-size: 13px;
             color: #7a85a5;
             line-height: 1.5;
-            margin-bottom: 24px;
+            margin-bottom: 20px;
             position: relative;
             z-index: 1;
+            min-height: 20px;
         }
 
-        /* 6. REQUIRED 和 RANGE 卡片 */
+        /* REQUIRED 和 RANGE 卡片 */
         .footer-cards {
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 12px;
-            margin: 0 0 20px;
+            margin: 0 0 18px;
             z-index: 1;
             position: relative;
         }
@@ -323,13 +296,13 @@
             color: #4ade80;
         }
 
-        /* 7. 提示文字 */
+        /* 提示文字 */
         .notice {
             font-size: 13px;
             color: #5a4a6a;
-            padding: 14px 0 4px;
+            padding: 12px 0 2px;
             border-top: 1px solid rgba(204, 178, 153, 0.03);
-            margin-bottom: 6px;
+            margin-bottom: 4px;
             z-index: 1;
             position: relative;
         }
@@ -342,11 +315,11 @@
             transition: color 0.6s ease;
         }
 
-        /* 8. 联系支持 */
+        /* 联系支持 */
         .notice-support {
             font-size: 13px;
             color: #5a4a6a;
-            margin-bottom: 20px;
+            margin-bottom: 18px;
             z-index: 1;
             position: relative;
         }
@@ -355,7 +328,7 @@
             color: #CCB299;
         }
 
-        /* 9. 按钮 */
+        /* 按钮 */
         .actions {
             display: flex;
             gap: 12px;
@@ -420,8 +393,7 @@
             .shield-trigger { width: 48px !important; height: 48px !important; }
             .shield-trigger .center { font-size: 16px; }
             .modal-content { padding: 32px 20px 28px; border-radius: 24px; margin: 0 12px; }
-            .ring-wrapper { width: 120px; height: 120px; }
-            .ring-wrapper .center-content .score { font-size: 38px; }
+            .ring-wrapper { max-width: 200px; }
             .footer-cards { grid-template-columns: 1fr; gap: 8px; }
             .actions { flex-direction: column; align-items: center; }
             .actions .btn-support, .actions .btn-close { width: 100%; justify-content: center; }
@@ -532,7 +504,7 @@
         </main>
     </div>
 
-    <!-- ====== 信誉弹窗（完整版） ====== -->
+    <!-- ====== 信誉弹窗 ====== -->
     <div class="modal-overlay" id="scoreModal" onclick="closeModalOutside(event)">
         <div class="modal-content">
 
@@ -542,20 +514,13 @@
             <!-- 2. 标题 -->
             <div class="modal-title">Your <span>Credit Rating</span></div>
 
-            <!-- 3. 圆环 + 分数（大号） -->
+            <!-- 3. 粒子凝聚环 + 分数（数字在粒子环中心） -->
             <div class="ring-wrapper">
-                <svg viewBox="0 0 80 80">
-                    <circle class="ring-track" cx="40" cy="40" r="30" />
-                    <circle class="ring-progress" id="modalRing" cx="40" cy="40" r="30" stroke-dasharray="188.5" stroke-dashoffset="188.5" />
-                </svg>
-                <div class="center-content">
-                    <div class="score" id="modalScore">0</div>
-                    <div class="label">Credit Score</div>
-                </div>
+                <canvas id="particleCanvas"></canvas>
             </div>
 
-            <!-- 4. 状态文字 -->
-            <div class="status-text" id="statusText">Your credit rating is <strong style="color:#4ade80;">Strong</strong></div>
+            <!-- 4. 状态文字 (凝聚过程中不显示任何文字，凝聚完成后更新) -->
+            <div class="status-text" id="statusText"></div>
 
             <!-- 5. 状态描述 -->
             <div class="status-desc" id="statusDesc">Withdrawal access and account trust level are in good condition</div>
@@ -615,8 +580,6 @@
 
         // ====== 弹窗元素 ======
         const modal = document.getElementById('scoreModal');
-        const modalRing = document.getElementById('modalRing');
-        const modalScore = document.getElementById('modalScore');
         const statusText = document.getElementById('statusText');
         const statusDesc = document.getElementById('statusDesc');
         const requiredValue = document.getElementById('requiredValue');
@@ -627,82 +590,317 @@
         const THRESHOLD = 95;
         const CIRCUMFERENCE = 188.5;
         let currentScore = 0;
+        let shieldScore = 85;
 
         function getColor(score) {
-            return score >= THRESHOLD ? '#4ade80' : '#ffb84d';
+            return score >= THRESHOLD ? '#4ade80' : '#ff6a00';
         }
 
-        // ====== 盾牌更新（直接跳转，无动画） ======
-        function updateShieldDirect(ring, score) {
-            const offset = CIRCUMFERENCE - (score / 100) * CIRCUMFERENCE;
+        function getStatusText(score) {
+            return score >= THRESHOLD ? 'Strong' : 'Need Attention';
+        }
+
+        function getStatusDesc(score) {
+            return score >= THRESHOLD
+                ? 'Withdrawal access and account trust level are in good condition'
+                : 'Withdrawal access and account trust level are restricted';
+        }
+
+        // ====== 盾牌更新 ======
+        function updateShield(score) {
             const color = getColor(score);
-            ring.style.transition = 'none';
-            ring.setAttribute('stroke-dashoffset', offset);
-            ring.setAttribute('stroke', color);
-            ring.style.stroke = color;
-            requestAnimationFrame(() => {
-                ring.style.transition = 'stroke-dashoffset 0.8s ease, stroke 0.6s ease';
-            });
+            const offset = CIRCUMFERENCE - (score / 100) * CIRCUMFERENCE;
+            shieldRing.style.transition = 'none';
+            shieldRing.setAttribute('stroke-dashoffset', offset);
+            shieldRing.setAttribute('stroke', color);
+            shieldRing.style.stroke = color;
             shieldIcon.style.color = color;
+            requestAnimationFrame(() => {
+                shieldRing.style.transition = 'stroke-dashoffset 0.8s ease, stroke 0.6s ease';
+            });
         }
 
-        // ====== 弹窗环动画：从 0 滚动到目标 ======
-        function animateModalRing(ring, targetScore) {
-            const targetOffset = CIRCUMFERENCE - (targetScore / 100) * CIRCUMFERENCE;
-            const color = getColor(targetScore);
+        // ============================================================
+        // 粒子凝聚引擎（无边框限制，粒子从内部飞入）
+        // ============================================================
+        const canvas = document.getElementById('particleCanvas');
+        const ctx = canvas.getContext('2d');
 
-            ring.style.transition = 'none';
-            ring.setAttribute('stroke-dashoffset', CIRCUMFERENCE);
-            ring.setAttribute('stroke', color);
-            ring.style.stroke = color;
-            void ring.getBoundingClientRect();
+        let W, H, cx, cy, radius;
+        let particles = [];
+        let animId = null;
+        let displayScore = 0;
+        let scoreAnimating = false;
+        let scoreStartTime = 0;
+        let scoreStartValue = 0;
+        let scoreTargetValue = 0;
+        const SCORE_ANIMATION_DURATION = 1800;
+        const PARTICLE_COUNT = 240;
+        const DPR = window.devicePixelRatio || 1;
+        const RADIUS_RATIO = 0.38; // 环半径相对画布尺寸的比例
 
-            ring.style.transition = 'stroke-dashoffset 1.8s cubic-bezier(0.2, 0.8, 0.2, 1), stroke 0.6s ease';
-            ring.setAttribute('stroke-dashoffset', targetOffset);
+        function resizeCanvas() {
+            const rect = canvas.parentElement.getBoundingClientRect();
+            const w = rect.width || 280;
+            const h = rect.height || 280;
+            W = w;
+            H = h;
+            canvas.width = w * DPR;
+            canvas.height = h * DPR;
+            canvas.style.width = w + 'px';
+            canvas.style.height = h + 'px';
+            ctx.scale(DPR, DPR);
+            cx = w / 2;
+            cy = h / 2;
+            radius = Math.min(w, h) * RADIUS_RATIO;
         }
 
-        // ====== 数字动画 ======
-        function animateNumber(element, target, duration = 1800) {
-            const startTime = performance.now();
-            function update(timestamp) {
-                const elapsed = timestamp - startTime;
-                const progress = Math.min(elapsed / duration, 1);
-                const eased = 1 - Math.pow(1 - progress, 4);
-                const current = Math.round(eased * target);
-                element.textContent = current;
-                if (progress < 1) {
-                    requestAnimationFrame(update);
+        function getParticleColor(score) {
+            return score >= THRESHOLD ? '#4ade80' : '#ff6a00';
+        }
+
+        function getParticleGlow(score) {
+            return score >= THRESHOLD ? 'rgba(74,222,128,0.12)' : 'rgba(255,106,0,0.12)';
+        }
+
+        function getParticleBg(score) {
+            return score >= THRESHOLD ? 'rgba(74,222,128,0.02)' : 'rgba(255,106,0,0.02)';
+        }
+
+        class Particle {
+            constructor(index, total, score) {
+                this.index = index;
+                this.total = total;
+                this.score = score;
+                this.phase = Math.random() * Math.PI * 2;
+                this.updateTarget();
+
+                // 起始位置：从画布内部随机点出发（确保不碰触画布边缘）
+                // 最小距离为环半径的1.2倍，最大距离为画布尺寸的0.45倍（保证在画布内）
+                const angle = Math.random() * 2 * Math.PI;
+                const minDist = radius * 1.2;
+                const maxDist = Math.min(W, H) * 0.45;
+                const dist = minDist + Math.random() * (maxDist - minDist);
+                this.startX = cx + dist * Math.cos(angle);
+                this.startY = cy + dist * Math.sin(angle);
+
+                this.x = this.startX;
+                this.y = this.startY;
+                this.progress = 0;
+                this.delay = Math.random() * 0.4;
+                this.speed = 0.005 + Math.random() * 0.006;
+                this.isSettled = false;
+
+                // 浮动参数
+                this.floatAngle = Math.random() * Math.PI * 2;
+                this.floatRadius = 3 + Math.random() * 6;
+                this.floatSpeed = 0.006 + Math.random() * 0.008;
+                this.floatPhase = Math.random() * Math.PI * 2;
+
+                this.size = 2.5 + Math.random() * 3.5;
+                this.opacity = 0.6 + Math.random() * 0.4;
+                this.breathPhase = Math.random() * Math.PI * 2;
+            }
+
+            updateTarget() {
+                const angle = (this.index / this.total) * 2 * Math.PI * (this.score / 100);
+                this.targetX = cx + radius * Math.cos(angle);
+                this.targetY = cy + radius * Math.sin(angle);
+            }
+
+            update(globalBreath) {
+                if (!this.isSettled) {
+                    this.progress += this.speed;
+                    if (this.progress >= 1 + this.delay) {
+                        this.progress = 1 + this.delay;
+                        this.isSettled = true;
+                        this.x = this.targetX;
+                        this.y = this.targetY;
+                        return;
+                    }
+
+                    const p = Math.max(0, Math.min(1, (this.progress - this.delay) / (1 - this.delay)));
+                    const eased = 1 - Math.pow(1 - p, 3);
+                    this.x = this.startX + (this.targetX - this.startX) * eased;
+                    this.y = this.startY + (this.targetY - this.startY) * eased;
                 } else {
-                    element.textContent = target;
+                    this.floatPhase += this.floatSpeed;
+                    const dx = Math.cos(this.floatPhase + this.floatAngle) * this.floatRadius;
+                    const dy = Math.sin(this.floatPhase * 0.7 + this.floatAngle) * this.floatRadius * 0.8;
+                    this.x = this.targetX + dx;
+                    this.y = this.targetY + dy;
                 }
+
+                this.phase += 0.02;
+                this.breathPhase += 0.025;
+                let baseAlpha = this.opacity * (0.7 + 0.3 * Math.sin(this.phase));
+                baseAlpha *= (0.75 + 0.25 * globalBreath);
+                const breathFactor = 0.8 + 0.4 * Math.sin(this.breathPhase);
+                this.currentOpacity = Math.min(1, Math.max(0.1, baseAlpha * breathFactor));
             }
-            requestAnimationFrame(update);
+
+            draw(ctx, color, glowColor) {
+                const r = this.size * (0.8 + 0.2 * Math.sin(this.phase * 0.5));
+                const alpha = this.currentOpacity * (this.isSettled ? 1 : (0.5 + 0.5 * (1 - Math.abs(this.progress - 0.5) * 0.4)));
+
+                const grad = ctx.createRadialGradient(this.x, this.y, 0, this.x, this.y, r * 4);
+                grad.addColorStop(0, color + Math.floor(alpha * 200).toString(16).padStart(2, '0'));
+                grad.addColorStop(0.3, color + Math.floor(alpha * 80).toString(16).padStart(2, '0'));
+                grad.addColorStop(1, 'transparent');
+
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, r * 4, 0, Math.PI * 2);
+                ctx.fillStyle = grad;
+                ctx.fill();
+
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, r * 0.6, 0, Math.PI * 2);
+                ctx.fillStyle = color + Math.floor(alpha * 220).toString(16).padStart(2, '0');
+                ctx.fill();
+
+                ctx.beginPath();
+                ctx.arc(this.x - r * 0.2, this.y - r * 0.2, r * 0.25, 0, Math.PI * 2);
+                ctx.fillStyle = 'rgba(255,255,255,' + (alpha * 0.3) + ')';
+                ctx.fill();
+            }
         }
 
-        // ====== 打开弹窗 ======
-        function openModal(score) {
-            const scoreNum = parseInt(score) || currentScore || 85;
-            const color = getColor(scoreNum);
-            const isStrong = scoreNum >= THRESHOLD;
+        function initParticles(score) {
+            particles = [];
+            for (let i = 0; i < PARTICLE_COUNT; i++) {
+                particles.push(new Particle(i, PARTICLE_COUNT, score));
+            }
+        }
 
-            // 1. 更新盾牌
-            updateShieldDirect(shieldRing, scoreNum);
+        function startScoreAnimation(target) {
+            scoreTargetValue = target;
+            scoreStartValue = displayScore;
+            scoreStartTime = performance.now();
+            scoreAnimating = true;
+        }
 
-            // 2. 弹窗环动画
-            animateModalRing(modalRing, scoreNum);
+        function updateScoreAnimation() {
+            if (!scoreAnimating) return;
+            const elapsed = performance.now() - scoreStartTime;
+            const progress = Math.min(elapsed / SCORE_ANIMATION_DURATION, 1);
+            const eased = 1 - Math.pow(1 - progress, 4);
+            const current = Math.round(scoreStartValue + (scoreTargetValue - scoreStartValue) * eased);
+            displayScore = current;
+            if (progress >= 1) {
+                displayScore = scoreTargetValue;
+                scoreAnimating = false;
+            }
+        }
 
-            // 3. 数字动画
-            animateNumber(modalScore, scoreNum);
-            modalScore.style.color = color;
+        // ====== 渲染循环 ======
+        let frameCount = 0;
+        let allSettled = false;
 
-            // 4. 状态文字
-            if (isStrong) {
-                statusText.innerHTML = 'Your credit rating is <strong style="color:#4ade80;">Strong</strong>';
-            } else {
-                statusText.innerHTML = 'Your credit rating <strong style="color:#ffb84d;">Need Attention</strong>';
+        function renderParticles() {
+            const score = currentScore;
+            const color = getParticleColor(score);
+            const glowColor = getParticleGlow(score);
+            const bgGlow = getParticleBg(score);
+
+            updateScoreAnimation();
+
+            ctx.clearRect(0, 0, W, H);
+
+            // 背景光晕（圆形渐变，覆盖全画布）
+            const grad = ctx.createRadialGradient(cx, cy, 0, cx, cy, Math.max(W, H) * 0.8);
+            grad.addColorStop(0, bgGlow);
+            grad.addColorStop(0.5, bgGlow);
+            grad.addColorStop(1, 'transparent');
+            ctx.fillStyle = grad;
+            ctx.fillRect(0, 0, W, H);
+
+            const globalBreath = 0.7 + 0.3 * Math.sin(performance.now() / 1500);
+
+            let settledCount = 0;
+            for (const p of particles) {
+                p.update(globalBreath);
+                if (p.isSettled) settledCount++;
+                p.draw(ctx, color, glowColor);
             }
 
-            // 5. 状态描述
+            // 中心分数
+            const textColor = score >= THRESHOLD ? '#4ade80' : '#ff6a00';
+
+            const bgGrad = ctx.createRadialGradient(cx, cy, 0, cx, cy, radius * 0.7);
+            bgGrad.addColorStop(0, 'rgba(0,0,0,0.15)');
+            bgGrad.addColorStop(1, 'transparent');
+            ctx.fillStyle = bgGrad;
+            ctx.beginPath();
+            ctx.arc(cx, cy, radius * 0.7, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+
+            ctx.shadowColor = textColor + '30';
+            ctx.shadowBlur = 25;
+
+            ctx.font = '600 46px Inter, sans-serif';
+            ctx.fillStyle = textColor;
+            ctx.fillText(displayScore, cx, cy - 4);
+
+            ctx.shadowBlur = 0;
+
+            ctx.font = '400 11px Inter, sans-serif';
+            ctx.fillStyle = '#4a5a7a';
+            ctx.fillText('CREDIT', cx, cy + 34);
+
+            // 更新状态文字：只在凝聚完成时显示最终状态，凝聚期间不显示任何文字
+            if (settledCount === particles.length) {
+                allSettled = true;
+                if (frameCount % 30 === 0) {
+                    const statusTextEl = document.getElementById('statusText');
+                    if (score >= THRESHOLD) {
+                        statusTextEl.innerHTML = 'Your credit rating is <strong style="color:#4ade80;">Strong</strong>';
+                    } else {
+                        statusTextEl.innerHTML = 'Your credit rating <strong style="color:#ff6a00;">Need Attention</strong>';
+                    }
+                }
+            } else {
+                allSettled = false;
+                // 凝聚过程中不显示任何文字
+                document.getElementById('statusText').innerHTML = '';
+            }
+
+            frameCount++;
+            animId = requestAnimationFrame(renderParticles);
+        }
+
+        // ====== 启动粒子渲染 ======
+        let particlesReady = false;
+
+        function startParticles(score) {
+            if (animId) {
+                cancelAnimationFrame(animId);
+                animId = null;
+            }
+            currentScore = Math.min(100, Math.max(0, Math.round(score)));
+            displayScore = 0;
+            frameCount = 0;
+            allSettled = false;
+
+            resizeCanvas();
+            initParticles(currentScore);
+            startScoreAnimation(currentScore);
+
+            // 初始清空状态文字
+            document.getElementById('statusText').innerHTML = '';
+
+            if (animId) cancelAnimationFrame(animId);
+            renderParticles();
+            particlesReady = true;
+        }
+
+        // ====== 更新弹窗内容 ======
+        function updateModalContent(score) {
+            const isStrong = score >= THRESHOLD;
+            const color = isStrong ? '#4ade80' : '#ff6a00';
+
             if (isStrong) {
                 statusDesc.textContent = 'Withdrawal access and account trust level are in good condition';
             } else {
@@ -710,22 +908,37 @@
             }
             statusDesc.style.color = '#7a85a5';
 
-            // 6. Required 保持青色
             requiredValue.textContent = THRESHOLD;
             requiredValue.style.color = '#4ade80';
 
-            // 7. 阈值颜色跟随
             thresholdText.textContent = THRESHOLD;
             thresholdText.style.color = color;
+        }
 
-            // 8. 显示弹窗
+        // ====== 打开弹窗 ======
+        function openModal() {
+            const score = currentScore || shieldScore || 85;
+            const scoreNum = parseInt(score) || 85;
+
             modal.classList.add('active');
             document.body.style.overflow = 'hidden';
+
+            updateShield(scoreNum);
+            updateModalContent(scoreNum);
+
+            setTimeout(() => {
+                startParticles(scoreNum);
+            }, 100);
         }
 
         function closeModal() {
             modal.classList.remove('active');
             document.body.style.overflow = '';
+            if (animId) {
+                cancelAnimationFrame(animId);
+                animId = null;
+            }
+            particlesReady = false;
         }
 
         function closeModalOutside(e) {
@@ -737,15 +950,13 @@
             window.location.href = 'chat.html';
         }
 
-        // ESC 关闭
         document.addEventListener('keydown', function(e) {
             if (e.key === 'Escape') closeModal();
         });
 
-        // 点击盾牌触发
         document.getElementById('headerShield').addEventListener('click', function(e) {
             e.stopPropagation();
-            openModal(currentScore);
+            openModal();
         });
 
         // ====== Settings 功能 ======
@@ -759,7 +970,8 @@
                 document.getElementById('displayInviteCode').innerText = freshUser.inviteCode || '------';
                 const creditScore = freshUser.creditScore || 100;
                 currentScore = creditScore;
-                updateShieldDirect(shieldRing, creditScore);
+                shieldScore = creditScore;
+                updateShield(creditScore);
             }
         }
 
@@ -851,9 +1063,25 @@
         function contactSupport() { window.location.href = 'chat.html'; }
         function changeLanguage() { showToast('English only at this time.', 'info'); }
 
+        // ====== 窗口尺寸变化 ======
+        let resizeTimer;
+        window.addEventListener('resize', () => {
+            clearTimeout(resizeTimer);
+            resizeTimer = setTimeout(() => {
+                if (modal.classList.contains('active') && particlesReady) {
+                    resizeCanvas();
+                    for (const p of particles) {
+                        p.updateTarget();
+                    }
+                }
+            }, 200);
+        });
+
         // ====== 初始化 ======
         loadSettings();
-        console.log('✅ Settings 页面加载完成，完整信誉弹窗已集成');
+
+        console.log('✅ Settings 页面加载完成 — 粒子凝聚环已修复边界，无加载文字');
     </script>
+
 </body>
 </html>
