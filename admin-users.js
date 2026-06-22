@@ -580,35 +580,36 @@ balanceCell.innerHTML = `
             const ordersCell = row.insertCell(7);
             
             // 🔥 计算 Round 显示
-            const isPremium = u.is_premium || false;
-            const currentRound = u.current_round || 0;
-            const roundOrdersCount = u.round_orders_count || 0;
-            const amountDueRound = u.amount_due_round || 0;
-            const amountDueOrdersCount = u.amount_due_orders_count || 0;
-            
-            // 判断是否有 amount due
-            const hasAmountDue = (amountDueRound > 0 || amountDueOrdersCount > 0);
-            
-            let roundDisplay = 0;
-            let displayCount = 0;
-            let isRoundComplete = false;
-            let isRound2Complete = false;
-            
-            if (!isPremium) {
-                roundDisplay = 0;
-                displayCount = orderCount;
-                isRoundComplete = orderCount >= 30;
-            } else if (hasAmountDue) {
-                roundDisplay = amountDueRound > 0 ? amountDueRound : currentRound;
-                displayCount = amountDueOrdersCount > 0 ? amountDueOrdersCount : roundOrdersCount;
-                isRoundComplete = displayCount >= 30;
-                isRound2Complete = (roundDisplay === 2 && displayCount >= 30);
-            } else {
-                roundDisplay = currentRound > 0 ? currentRound : 1;
-                displayCount = roundOrdersCount;
-                isRoundComplete = roundOrdersCount >= 30;
-                isRound2Complete = (currentRound === 2 && roundOrdersCount >= 30);
-            }
+const isPremium = u.is_premium || false;
+const currentRound = u.current_round || 0;
+const roundOrdersCount = u.round_orders_count || 0;
+const amountDueRound = u.amount_due_round || 0;
+const amountDueOrdersCount = u.amount_due_orders_count || 0;
+
+// 判断是否有 amount due
+const hasAmountDue = (amountDueRound > 0 || amountDueOrdersCount > 0);
+
+let roundDisplay = 0;
+let displayCount = 0;
+let isRoundComplete = false;
+let isRound2Complete = false;
+
+if (!isPremium) {
+    roundDisplay = 0;
+    displayCount = orderCount;
+    isRoundComplete = orderCount >= 30;
+} else if (hasAmountDue) {
+    roundDisplay = amountDueRound > 0 ? amountDueRound : currentRound;
+    displayCount = amountDueOrdersCount > 0 ? amountDueOrdersCount : roundOrdersCount;
+    isRoundComplete = displayCount >= 30;
+    isRound2Complete = (roundDisplay === 2 && displayCount >= 30);
+} else {
+    // 🔥 修复：显示实际的 current_round，不要自动把 0 变成 1
+    roundDisplay = currentRound;
+    displayCount = roundOrdersCount;
+    isRoundComplete = roundOrdersCount >= 30;
+    isRound2Complete = (currentRound === 2 && roundOrdersCount >= 30);
+}
             
             const isCompleted = isPremium && isRound2Complete;
             
