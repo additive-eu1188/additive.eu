@@ -358,13 +358,17 @@
                     icon = 'fas fa-minus-circle'; 
                 }
                 else if (d.type === 'withdrawal') { 
-                    typeName = 'Withdrawal'; 
-                    icon = 'fas fa-arrow-right-to-bracket'; 
-                }
-                else { 
-                    typeName = d.type || 'Transaction'; 
-                    icon = 'fas fa-exchange-alt'; 
-                }
+    typeName = 'Withdrawal'; 
+    icon = 'fas fa-arrow-right-to-bracket'; 
+}
+else if (d.type === 'trial_bonus_deducted') { 
+    typeName = 'Trial Bonus Deducted'; 
+    icon = 'fas fa-minus-circle'; 
+}
+else { 
+    typeName = d.type || 'Transaction'; 
+    icon = 'fas fa-exchange-alt'; 
+}
                 
                 records.push({ 
                     id: d.id, 
