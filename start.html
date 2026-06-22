@@ -1036,63 +1036,63 @@ if (isTrialOrder) {
     finalCommission = price * commissionRate;
 }
 
-                pb.style.width = '60%';
-                pt.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Placing order...';
+pb.style.width = '60%';
+pt.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Placing order...';
 
-                // 更新用户余额和试用金（体验金保持不变）
-                var updateData = { 
-                    balance: newBalance,
-                    trial_bonus_amount: newTrialBonus  // 体验金不变
-                };
+// 🔥 修复：更新余额时加上佣金
+var updateData = { 
+    balance: newBalance + finalCommission,  // 扣除订单价格后 + 佣金
+    trial_bonus_amount: newTrialBonus  // 体验金保持不变
+};
 
-                var balanceError = await sb.from('users').update(updateData).eq('uid', user.uid);
-                if (balanceError.error) {
-                    showToast('订单失败: ' + balanceError.error.message, 'error');
-                    return;
-                }
+var balanceError = await sb.from('users').update(updateData).eq('uid', user.uid);
+if (balanceError.error) {
+    showToast('订单失败: ' + balanceError.error.message, 'error');
+    return;
+}
 
-                pb.style.width = '80%';
-                pt.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Completing order...';
+pb.style.width = '80%';
+pt.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Completing order...';
 
-                // 保存订单历史
-                await sb.from('order_history').insert([{
-                    uid: user.uid,
-                    username: username,
-                    order_code: currentOrder.displayOrderCode,
-                    accommodation_name: currentOrder.accommodationName || 'Hotel Task',
-                    price: price,
-                    commission: finalCommission,
-                    rating: selectedRating,
-                    status: 'completed',
-                    date: new Date().toISOString()
-                }]);
+// 保存订单历史
+await sb.from('order_history').insert([{
+    uid: user.uid,
+    username: username,
+    order_code: currentOrder.displayOrderCode,
+    accommodation_name: currentOrder.accommodationName || 'Hotel Task',
+    price: price,
+    commission: finalCommission,
+    rating: selectedRating,
+    status: 'completed',
+    date: new Date().toISOString()
+}]);
 
-                // 记录佣金收入
-                await sb.from('deposits').insert([{
-                    uid: user.uid,
-                    username: username,
-                    amount: finalCommission,
-                    type: 'order_commission',
-                    created_at: new Date().toISOString()
-                }]);
+// 记录佣金收入
+await sb.from('deposits').insert([{
+    uid: user.uid,
+    username: username,
+    amount: finalCommission,
+    type: 'order_commission',
+    created_at: new Date().toISOString()
+}]);
 
-                // 如果有关联的触发订单，更新状态
-                if (currentOrder.triggerOrderId) {
-                    await sb.from('user_trigger_orders').update({
-                        status: 'completed',
-                        completed_at: new Date().toISOString()
-                    }).eq('id', currentOrder.triggerOrderId);
-                }
+// 如果有关联的触发订单，更新状态
+if (currentOrder.triggerOrderId) {
+    await sb.from('user_trigger_orders').update({
+        status: 'completed',
+        completed_at: new Date().toISOString()
+    }).eq('id', currentOrder.triggerOrderId);
+}
 
-                // 更新全局余额（加上佣金）
+// 更新全局余额（加上佣金）
 var finalBalance = newBalance + finalCommission;
 currentUserBalance = finalBalance;
 user.balance = finalBalance;
 user.trialBonusAmount = newTrialBonus;
 localStorage.setItem('currentUser', JSON.stringify(user));
 
-                pb.style.width = '100%';
-                pt.innerHTML = '<i class="fas fa-check-circle"></i> Order Completed!';
+pb.style.width = '100%';
+pt.innerHTML = '<i class="fas fa-check-circle"></i> Order Completed!';
 
                 await refreshBalanceDisplay();
                 await loadUserData();
