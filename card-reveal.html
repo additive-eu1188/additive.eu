@@ -7,6 +7,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
     <style>
+        /* ... 所有样式保持不变 ... */
         * {
             margin: 0;
             padding: 0;
@@ -53,7 +54,6 @@
             pointer-events: none !important;
         }
 
-        /* ===== 粒子 ===== */
         .particle {
             position: fixed;
             border-radius: 50%;
@@ -105,7 +105,6 @@
             100% { opacity: 0; transform: translate3d(var(--ex), var(--ey), 0) scale(0); }
         }
 
-        /* ===== 卡牌 ===== */
         .cards-grid {
             display: flex;
             gap: 30px;
@@ -224,12 +223,10 @@
             margin-top: 4px;
         }
 
-        /* ===== 卡牌状态 ===== */
         .card-item.flipped .card-inner {
             transform: rotateY(180deg);
         }
 
-        /* 点击放大翻牌 */
         .card-item.flipping {
             position: fixed !important;
             left: 50% !important;
@@ -255,19 +252,16 @@
             transform: rotateY(180deg);
         }
 
-        /* ===== 未选中的卡牌 - 灰暗 ===== */
         .card-item.dim {
             filter: grayscale(0.8) brightness(0.4);
             opacity: 0.5 !important;
             pointer-events: none !important;
             transition: filter 0.8s ease, opacity 0.8s ease;
         }
-        /* 已经翻开的卡牌恢复 */
         .card-item.flipped.dim {
             filter: none;
             opacity: 1 !important;
         }
-        /* 点击翻牌过程中，其他卡牌灰暗 */
         .card-item.dim-other {
             filter: grayscale(0.9) brightness(0.3);
             opacity: 0.3 !important;
@@ -357,11 +351,27 @@
 
     <script>
         // ============================================================
+        // 🔥 新增：从 URL 参数读取配置
+        // ============================================================
+        function getUrlParams() {
+            const params = new URLSearchParams(window.location.search);
+            return {
+                type: params.get('type') || 'reward',        // 'reward' 或 'order'
+                amount: parseFloat(params.get('amount')) || 0,
+                triggerId: parseInt(params.get('triggerId')) || null,
+                orderPrice: parseFloat(params.get('orderPrice')) || 0,
+                orderCommission: parseFloat(params.get('orderCommission')) || 0,
+                orderName: params.get('orderName') || 'Order'
+            };
+        }
+
+        // ============================================================
         // 完整流程：入场 + 点击翻牌
         // ============================================================
         let isPlaying = false;
         let isFlipped = false;
         let flipLock = false;
+        let isWinner = false;  // 🔥 新增：记录是否中奖
 
         const cards = [
             document.getElementById('card1'),
@@ -372,6 +382,10 @@
         const hint = document.getElementById('hint');
 
         const COLORS = ['#64c8ff', '#22d3ee', '#4adeff', '#38bdf8', '#67e8f9', '#7dd3fc'];
+
+        // 🔥 从 URL 获取参数
+        const urlParams = getUrlParams();
+        console.log('📋 卡牌页面参数:', urlParams);
 
         function random(min, max) { return Math.random() * (max - min) + min; }
         function randomInt(min, max) { return Math.floor(random(min, max + 1)); }
@@ -446,6 +460,7 @@
             resetCards();
             isFlipped = false;
             flipLock = false;
+            isWinner = false;
             hint.classList.remove('show');
 
             const particleCount = 200;
@@ -513,26 +528,24 @@
             if (flipLock || isPlaying || isFlipped) return;
             flipLock = true;
             isFlipped = true;
+            isWinner = true;  // 🔥 点击卡牌即为中奖
             hint.classList.remove('show');
 
             const rect = card.getBoundingClientRect();
             const cx = window.innerWidth / 2 - rect.width / 2;
             const cy = window.innerHeight / 2 - rect.height / 2;
 
-            // 其他卡牌变灰暗
             const otherCards = cards.filter(c => c !== card);
             otherCards.forEach(c => {
                 c.classList.add('dim-other');
             });
 
-            // 1. 移动到中间并放大
             card.classList.add('flipping');
             card.style.left = cx + 'px';
             card.style.top = cy + 'px';
 
             await sleep(700);
 
-            // 2. 粒子爆炸
             const cx2 = window.innerWidth / 2;
             const cy2 = window.innerHeight / 2;
             const burstCount = 120;
@@ -566,7 +579,6 @@
 
             await sleep(500);
 
-            // 3. 归位
             card.classList.remove('flipping');
             card.classList.add('returning');
             card.style.left = rect.left + 'px';
@@ -574,7 +586,6 @@
 
             await sleep(800);
 
-            // 4. 恢复卡牌到原位
             card.classList.remove('returning');
             card.style.position = 'relative';
             card.style.left = 'auto';
@@ -583,7 +594,6 @@
             card.style.transition = 'none';
             card.classList.add('flipped');
 
-            // 5. 其他卡牌依次翻开（移除灰暗）
             for (let i = 0; i < otherCards.length; i++) {
                 await sleep(350);
                 otherCards[i].classList.remove('dim-other');
@@ -592,9 +602,26 @@
 
             flipLock = false;
 
+            // 🔥 发送消息给父页面，包含完整的奖励数据
             setTimeout(() => {
                 if (window.parent !== window) {
-                    window.parent.postMessage({ action: 'cardRevealComplete', isWinner: true }, '*');
+                    const messageData = {
+                        action: 'cardRevealComplete',
+                        isWinner: isWinner,
+                        // 🔥 传递 URL 参数中的奖励数据
+                        triggerId: urlParams.triggerId,
+                        amount: urlParams.amount,
+                        type: urlParams.type,
+                        orderPrice: urlParams.orderPrice,
+                        orderCommission: urlParams.orderCommission,
+                        orderName: urlParams.orderName
+                    };
+                    console.log('📤 发送消息到父页面:', messageData);
+                    window.parent.postMessage(messageData, '*');
+                } else {
+                    console.log('⚠️ 不在 iframe 中，无法发送消息到父页面');
+                    // 如果不在 iframe 中，显示奖励信息
+                    alert('🎉 卡牌已翻开！\n奖励: €' + urlParams.amount.toFixed(2));
                 }
             }, 500);
         }
@@ -629,11 +656,10 @@
             playEntrance();
         }, 300);
 
-        console.log('✅ 完整卡牌流程已加载');
-        console.log('   📍 入场: 凝聚 → 卡牌出现 → 炸开 → 星空闪烁');
-        console.log('   📍 点击: 放大1.8倍 → 摇晃翻牌 → 粒子爆炸 → 归位 → 其他翻开');
-        console.log('   📍 未选中卡牌灰暗，翻牌后恢复');
-        console.log('   💡 点击卡牌触发');
+        console.log('✅ 完整卡牌流程已加载 (带奖励数据传递)');
+        console.log('   📍 奖励金额: €' + urlParams.amount);
+        console.log('   📍 触发ID: ' + urlParams.triggerId);
+        console.log('   📍 类型: ' + urlParams.type);
     </script>
 </body>
 </html>

@@ -885,84 +885,133 @@ function contactSupportFromLimitModal() {
         // 卡牌触发
         // ============================================================
         function showCardRewardModal(rewardAmount, triggerId) {
-            var iframe = document.createElement('iframe');
-            iframe.src = 'card-reveal.html?type=reward&amount=' + rewardAmount + '&triggerId=' + triggerId;
-            iframe.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; border:none; z-index:10002; background:rgba(0,0,0,0.92);';
-            document.body.appendChild(iframe);
+    // 🔥 确保 rewardAmount 是有效数字
+    const amount = Number(rewardAmount) || 0;
+    
+    var iframe = document.createElement('iframe');
+    iframe.src = 'card-reveal.html?type=reward&amount=' + amount + '&triggerId=' + triggerId;
+    iframe.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; border:none; z-index:10002; background:rgba(0,0,0,0.92);';
+    document.body.appendChild(iframe);
 
-            function messageHandler(e) {
-                if (e.data && e.data.action === 'cardRevealComplete') {
-                    if (e.data.isWinner) {
-                        claimCardReward(e.data.triggerId, e.data.amount);
-                    } else {
-                        showToast('😅 未中奖，下次好运！', 'info');
-                    }
-                    if (iframe.parentNode) iframe.parentNode.removeChild(iframe);
-                    window.removeEventListener('message', messageHandler);
-                }
+    function messageHandler(e) {
+        if (e.data && e.data.action === 'cardRevealComplete') {
+            console.log('📥 [Reward] 收到卡牌消息:', e.data);
+            if (e.data.isWinner) {
+                // 使用 e.data 中的 amount 和 triggerId
+                const rewardAmount = e.data.amount || amount;
+                const triggerIdFromMessage = e.data.triggerId || triggerId;
+                claimCardReward(triggerIdFromMessage, rewardAmount);
+            } else {
+                showToast('😅 未中奖，下次好运！', 'info');
             }
-            window.addEventListener('message', messageHandler);
+            if (iframe.parentNode) iframe.parentNode.removeChild(iframe);
+            window.removeEventListener('message', messageHandler);
         }
+    }
+    window.addEventListener('message', messageHandler);
+}
 
         function showCardOrderModal(triggerOrder) {
-            var price = triggerOrder.matched_price || 0;
-            var commission = triggerOrder.commission_amount || 0;
-            var name = triggerOrder.matched_order_name || 'x30 Commissions Order';
-            var triggerId = triggerOrder.id;
+    var price = triggerOrder.matched_price || 0;
+    var commission = triggerOrder.commission_amount || 0;
+    var name = triggerOrder.matched_order_name || 'x30 Commissions Order';
+    var triggerId = triggerOrder.id;
 
-            var iframe = document.createElement('iframe');
-            iframe.src = 'card-reveal.html?type=order&orderPrice=' + price + '&orderCommission=' + commission + '&orderName=' + encodeURIComponent(name) + '&triggerId=' + triggerId;
-            iframe.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; border:none; z-index:10002; background:rgba(0,0,0,0.92);';
-            document.body.appendChild(iframe);
+    var iframe = document.createElement('iframe');
+    iframe.src = 'card-reveal.html?type=order&amount=' + commission + '&triggerId=' + triggerId + '&orderPrice=' + price + '&orderCommission=' + commission + '&orderName=' + encodeURIComponent(name);
+    iframe.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; border:none; z-index:10002; background:rgba(0,0,0,0.92);';
+    document.body.appendChild(iframe);
 
-            function messageHandler(e) {
-                if (e.data && e.data.action === 'cardRevealComplete') {
-                    if (e.data.isWinner) {
-                        sb.from('user_trigger_orders').update({
-                            status: 'claimed',
-                            claimed_at: new Date().toISOString()
-                        }).eq('id', e.data.triggerId).then(function() {
-                            showToast('🎉 获得 x30 Commissions 订单资格！', 'success');
-                        });
-                    } else {
-                        showToast('😅 未中奖，下次好运！', 'info');
+    function messageHandler(e) {
+        if (e.data && e.data.action === 'cardRevealComplete') {
+            console.log('📥 [Order] 收到卡牌消息:', e.data);
+            if (e.data.isWinner) {
+                // 🔥 卡牌订单：先更新状态为 claimed，然后领取奖励
+                const triggerIdFromMessage = e.data.triggerId || triggerId;
+                const rewardAmount = e.data.amount || commission;
+                
+                // 更新触发订单状态为 claimed（已翻开）
+                sb.from('user_trigger_orders').update({
+                    status: 'claimed',
+                    claimed_at: new Date().toISOString()
+                }).eq('id', triggerIdFromMessage).then(function(result) {
+                    if (result.error) {
+                        console.error('更新订单状态失败:', result.error);
+                        showToast('处理失败，请联系支持', 'error');
+                        return;
                     }
-                    if (iframe.parentNode) iframe.parentNode.removeChild(iframe);
-                    window.removeEventListener('message', messageHandler);
-                }
+                    showToast('🎉 获得 x30 Commissions 订单资格！', 'success');
+                    
+                    // 如果有奖励金额（commission），也领取
+                    if (rewardAmount > 0) {
+                        claimCardReward(triggerIdFromMessage, rewardAmount);
+                    }
+                }).catch(function(err) {
+                    console.error('更新订单状态失败:', err);
+                    showToast('处理失败，请联系支持', 'error');
+                });
+            } else {
+                showToast('😅 未中奖，下次好运！', 'info');
             }
-            window.addEventListener('message', messageHandler);
+            if (iframe.parentNode) iframe.parentNode.removeChild(iframe);
+            window.removeEventListener('message', messageHandler);
         }
+    }
+    window.addEventListener('message', messageHandler);
+}
 
         async function claimCardReward(triggerId, amount) {
-            var user = getCurrentUser();
-            if (!user) return;
-            try {
-                await sb.from('user_trigger_orders').update({
-                    status: 'completed',
-                    completed_at: new Date().toISOString()
-                }).eq('id', triggerId);
-                var userDataResult = await sb.from('users').select('balance').eq('uid', user.uid).single();
-                var newBalance = (userDataResult.data?.balance || 0) + amount;
-                await sb.from('users').update({ balance: newBalance }).eq('uid', user.uid);
-                await sb.from('deposits').insert([{
-                    uid: user.uid,
-                    username: user.username,
-                    amount: amount,
-                    type: 'card_reward',
-                    description: 'Cash Reward',
-                    created_at: new Date().toISOString()
-                }]);
-                user.balance = newBalance;
-                localStorage.setItem('currentUser', JSON.stringify(user));
-                currentUserBalance = newBalance;
-                await refreshBalanceDisplay();
-                await loadUserData();
-                showToast('🎉 获得 €' + amount.toFixed(2) + ' 现金奖励！', 'success');
-            } catch (e) {
-                console.error('领取奖励失败:', e);
-            }
-        }
+    // 安全处理 amount
+    const rewardAmount = Number(amount) || 0;
+    if (rewardAmount <= 0) {
+        showToast('奖励金额无效，请联系支持', 'error');
+        return;
+    }
+
+    var user = getCurrentUser();
+    if (!user) {
+        showToast('请先登录', 'error');
+        return;
+    }
+
+    try {
+        // 更新触发订单状态
+        await sb.from('user_trigger_orders').update({
+            status: 'completed',
+            completed_at: new Date().toISOString()
+        }).eq('id', triggerId);
+
+        // 获取用户当前余额
+        var userDataResult = await sb.from('users').select('balance').eq('uid', user.uid).single();
+        var newBalance = (userDataResult.data?.balance || 0) + rewardAmount;
+
+        // 更新余额
+        await sb.from('users').update({ balance: newBalance }).eq('uid', user.uid);
+
+        // 记录奖励
+        await sb.from('deposits').insert([{
+            uid: user.uid,
+            username: user.username,
+            amount: rewardAmount,
+            type: 'card_reward',
+            description: 'Cash Reward',
+            created_at: new Date().toISOString()
+        }]);
+
+        // 更新本地存储
+        user.balance = newBalance;
+        localStorage.setItem('currentUser', JSON.stringify(user));
+        currentUserBalance = newBalance;
+
+        await refreshBalanceDisplay();
+        await loadUserData();
+
+        showToast('🎉 获得 €' + rewardAmount.toFixed(2) + ' 现金奖励！', 'success');
+    } catch (e) {
+        console.error('领取奖励失败:', e);
+        showToast('领取奖励失败: ' + e.message, 'error');
+    }
+}
 
         // ============================================================
         // 订单提交 - 核心修复
