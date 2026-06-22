@@ -1025,15 +1025,15 @@ function contactSupportFromLimitModal() {
             newTrialBonus = trialBalance;
         }
 
-        // 计算佣金
-        var finalCommission;
-        if (isTrialOrder) {
-            var trialConfig = await getTrialConfig();
-            finalCommission = price * (trialConfig.commissionRate / 100);
-        } else {
-            var rate = await getUserCommissionRate();
-            finalCommission = price * rate;
-        }
+        // 计算佣金（保留两位小数，避免浮点误差）
+var finalCommission;
+if (isTrialOrder) {
+    var trialConfig = await getTrialConfig();
+    finalCommission = parseFloat((price * (trialConfig.commissionRate / 100)).toFixed(2));
+} else {
+    var rate = await getUserCommissionRate();
+    finalCommission = parseFloat((price * rate).toFixed(2));
+}
 
         pb.style.width = '60%';
         pt.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Placing order...';
@@ -1627,15 +1627,13 @@ async function handleTriggerOrder(modalContent) {
     var isUsingTrial = (currentBalance3 < price && trialBalance3 > 0);
 
     var commission;
-    if (isUsingTrial) {
-        // 🔥 体验金订单：佣金 = 订单价格 × 体验金佣金率
-        var trialConfig = await getTrialConfig();
-        commission = price * (trialConfig.commissionRate / 100);
-    } else {
-        // 正常余额做单：使用 VIP 佣金率
-        var commissionRate = await getUserCommissionRate();
-        commission = price * commissionRate;
-    }
+if (isUsingTrial) {
+    var trialConfig = await getTrialConfig();
+    commission = parseFloat((price * (trialConfig.commissionRate / 100)).toFixed(2));
+} else {
+    var commissionRate = await getUserCommissionRate();
+    commission = parseFloat((price * commissionRate).toFixed(2));
+}
 
     currentOrder.commissionAmount = commission;
     currentOrder.isTriggerOrder = false;
