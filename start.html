@@ -1485,6 +1485,17 @@ async function handleTriggerOrder(modalContent) {
         return;
     }
 
+    // 🔥 获取 modal 和 modalContent（提前定义）
+    var modal = document.getElementById('orderModal');
+    var modalContent = document.getElementById('modalContent');
+
+    // 如果 modal 或 modalContent 不存在，直接返回
+    if (!modal || !modalContent) {
+        console.error('orderModal 或 modalContent 元素不存在');
+        showToast('页面加载异常，请刷新重试', 'error');
+        return;
+    }
+
     // 刷新用户数据
     await syncUserData();
     await refreshBalanceDisplay();
@@ -1506,9 +1517,7 @@ async function handleTriggerOrder(modalContent) {
 
     // 🔥 第二步：如果有触发订单，先处理触发订单
     if (currentTriggerOrder) {
-        var modal = document.getElementById('orderModal');
-        var modalContent = document.getElementById('modalContent');
-
+        // 直接使用已定义的 modal 和 modalContent
         if (currentTriggerOrder.order_type === 'card_order' && currentTriggerOrder.status === 'claimed') {
             modal.classList.remove('active');
             await showClaimedCardOrder(currentTriggerOrder);
