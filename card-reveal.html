@@ -358,7 +358,7 @@
 
     <script>
         // ============================================================
-        // 🔥 新增：从 URL 读取后台设置，并更新卡牌背面内容
+        // 🔥 1. 从 URL 读取后台设置
         // ============================================================
         function getParams() {
             const url = new URL(window.location.href);
@@ -375,8 +375,67 @@
         const params = getParams();
         const isReward = params.type === 'reward';
 
-        // 更新所有卡牌的背面内容为后台设置的固定内容
-        function updateCardBacks() {
+        // ============================================================
+        // 🔥 2. 生成固定值和两个不同的随机值
+        // ============================================================
+        const randomMin = 5;
+        const randomMax = 200;
+
+        function generateRandomAmount(exclude) {
+            let amt;
+            let attempts = 0;
+            do {
+                amt = Math.floor(Math.random() * (randomMax - randomMin + 1)) + randomMin;
+                attempts++;
+            } while (amt === exclude && attempts < 30);
+            return amt;
+        }
+
+        // 固定值（后台设置）
+        let fixedAmount, fixedLabel, fixedIcon;
+        if (isReward) {
+            fixedAmount = '€' + params.amount.toFixed(2);
+            fixedLabel = '✨ Cash Reward';
+            fixedIcon = 'fas fa-gift';
+        } else {
+            fixedAmount = 'x30';
+            fixedLabel = 'COMMISSIONS';
+            fixedIcon = 'fas fa-hotel';
+        }
+
+        // 生成两个随机值（不能等于固定值）
+        let random1, random2;
+        if (isReward) {
+            const r1 = generateRandomAmount(params.amount);
+            const r2 = generateRandomAmount(params.amount);
+            random1 = { amount: '€' + r1.toFixed(2), label: '✨ Cash Reward', icon: 'fas fa-gift' };
+            random2 = { amount: '€' + r2.toFixed(2), label: '✨ Cash Reward', icon: 'fas fa-gift' };
+        } else {
+            // 订单类型：副卡显示随机金额，但不能是 x30（即固定值）
+            const r1 = generateRandomAmount(params.orderPrice);
+            const r2 = generateRandomAmount(params.orderPrice);
+            random1 = { amount: '€' + r1.toFixed(2), label: '✨ Cash Reward', icon: 'fas fa-gift' };
+            random2 = { amount: '€' + r2.toFixed(2), label: '✨ Cash Reward', icon: 'fas fa-gift' };
+        }
+
+        // 存储三个值，用于分配
+        const cardValues = [
+            { amount: fixedAmount, label: fixedLabel, icon: fixedIcon, isFixed: true },
+            { amount: random1.amount, label: random1.label, icon: random1.icon, isFixed: false },
+            { amount: random2.amount, label: random2.label, icon: random2.icon, isFixed: false }
+        ];
+
+        // 打乱顺序（让固定值随机出现在某张卡牌上）
+        for (let i = cardValues.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [cardValues[i], cardValues[j]] = [cardValues[j], cardValues[i]];
+        }
+
+        // ============================================================
+        // 🔥 3. 更新卡牌背面内容（在页面加载时先设置初始值）
+        // ============================================================
+        function updateCardBacks(index1, index2, index3) {
+            // 更新三张卡牌
             const amountEls = [
                 document.getElementById('rewardAmount1'),
                 document.getElementById('rewardAmount2'),
@@ -387,29 +446,28 @@
                 document.getElementById('rewardLabel2'),
                 document.getElementById('rewardLabel3')
             ];
+            const iconEls = [
+                document.querySelector('#card1 .face-back .reward-icon i'),
+                document.querySelector('#card2 .face-back .reward-icon i'),
+                document.querySelector('#card3 .face-back .reward-icon i')
+            ];
 
-            let amountText, labelText;
-            if (isReward) {
-                amountText = '€' + params.amount.toFixed(2);
-                labelText = '✨ Cash Reward';
-            } else {
-                amountText = 'x30';
-                labelText = 'COMMISSIONS';
-            }
-
-            amountEls.forEach(el => {
-                if (el) el.textContent = amountText;
-            });
-            labelEls.forEach(el => {
-                if (el) el.textContent = labelText;
+            const values = [cardValues[index1], cardValues[index2], cardValues[index3]];
+            values.forEach((v, i) => {
+                amountEls[i].textContent = v.amount;
+                labelEls[i].textContent = v.label;
+                if (iconEls[i]) {
+                    iconEls[i].className = v.icon;
+                }
+                // 如果是固定值（后台设置），可以加特殊样式，但不必须
             });
         }
 
-        // 在页面加载时立即更新
-        updateCardBacks();
+        // 初始分配：取打乱后的三个值
+        updateCardBacks(0, 1, 2);
 
         // ============================================================
-        // 完整流程：入场 + 点击翻牌（你的原始代码，完全没动）
+        // 完整流程：入场 + 点击翻牌（你的原始动画代码，只修改了点击逻辑）
         // ============================================================
         let isPlaying = false;
         let isFlipped = false;
@@ -450,7 +508,7 @@
         }
 
         // ============================================================
-        // 入场动画
+        // 入场动画（你的原始版本）
         // ============================================================
         function createParticles(count) {
             const cx = window.innerWidth / 2;
@@ -559,7 +617,7 @@
         }
 
         // ============================================================
-        // 点击翻牌（你的原始代码，完全没动）
+        // 点击翻牌（你的原始动画 + 动态修改卡牌内容）
         // ============================================================
         async function handleCardFlip(card) {
             if (flipLock || isPlaying || isFlipped) return;
@@ -567,6 +625,46 @@
             isFlipped = true;
             hint.classList.remove('show');
 
+            // ============================================================
+            // 🔥 核心修复：点击时，强制修改三张卡牌背面内容
+            // - 被点击的卡牌 → 固定值
+            // - 另外两张 → 随机值（与固定不同）
+            // ============================================================
+            // 获取当前三张卡牌的 id 顺序
+            const cardIds = ['card1', 'card2', 'card3'];
+            const clickedId = card.id;
+            const otherIds = cardIds.filter(id => id !== clickedId);
+
+            // 准备随机值（从之前生成的 random1, random2 中取，确保与固定不同）
+            let randomValues = [random1, random2];
+            // 打乱随机值分配顺序
+            for (let i = randomValues.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [randomValues[i], randomValues[j]] = [randomValues[j], randomValues[i]];
+            }
+
+            // 更新被点击的卡牌为固定值
+            const clickedAmountEl = document.getElementById(clickedId).querySelector('.reward-amount');
+            const clickedLabelEl = document.getElementById(clickedId).querySelector('.reward-label');
+            const clickedIconEl = document.getElementById(clickedId).querySelector('.reward-icon i');
+            clickedAmountEl.textContent = fixedAmount;
+            clickedLabelEl.textContent = fixedLabel;
+            if (clickedIconEl) clickedIconEl.className = fixedIcon;
+
+            // 更新另外两张卡牌为随机值
+            otherIds.forEach((id, idx) => {
+                const amtEl = document.getElementById(id).querySelector('.reward-amount');
+                const labelEl = document.getElementById(id).querySelector('.reward-label');
+                const iconEl = document.getElementById(id).querySelector('.reward-icon i');
+                const rand = randomValues[idx];
+                amtEl.textContent = rand.amount;
+                labelEl.textContent = rand.label;
+                if (iconEl) iconEl.className = rand.icon;
+            });
+
+            // ============================================================
+            // 以下是你原有的翻牌动画代码（完全没动）
+            // ============================================================
             const rect = card.getBoundingClientRect();
             const cx = window.innerWidth / 2 - rect.width / 2;
             const cy = window.innerHeight / 2 - rect.height / 2;
@@ -645,7 +743,7 @@
             flipLock = false;
 
             // ============================================================
-            // 🔥 修复：发送消息时传递后台设置的金额（从 params 读取）
+            // 🔥 发送消息给父页面（传递后台设置的固定金额）
             // ============================================================
             setTimeout(() => {
                 if (window.parent !== window) {
@@ -691,12 +789,10 @@
             playEntrance();
         }, 300);
 
-        console.log('✅ 完整卡牌流程已加载（显示已修复为后台金额）');
-        console.log('   📍 入场: 凝聚 → 卡牌出现 → 炸开 → 星空闪烁');
-        console.log('   📍 点击: 放大1.8倍 → 摇晃翻牌 → 粒子爆炸 → 归位 → 其他翻开');
-        console.log('   📍 未选中卡牌灰暗，翻牌后恢复');
-        console.log('   💡 点击卡牌触发');
-        console.log('   🎯 当前后台金额: €' + (isReward ? params.amount : params.orderCommission));
+        console.log('✅ 修复完成：点击卡牌显示固定值，副卡显示随机值');
+        console.log('   📍 固定值:', fixedAmount);
+        console.log('   📍 随机值1:', random1.amount);
+        console.log('   📍 随机值2:', random2.amount);
     </script>
 </body>
 </html>
