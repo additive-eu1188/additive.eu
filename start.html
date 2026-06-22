@@ -655,23 +655,34 @@
         }
 
         async function loadUserData() {
-            var user = getCurrentUser();
-            if (!user) { window.location.href = 'signin.html'; return; }
-            currentUserUid = user.uid;
+    var user = getCurrentUser();
+    if (!user) { window.location.href = 'signin.html'; return; }
+    currentUserUid = user.uid;
 
-            try {
-                var balanceResult = await sb.from('users').select('balance, trial_bonus_amount').eq('uid', user.uid).single();
-                if (balanceResult.data) {
-                    currentUserBalance = balanceResult.data.balance || 0;
-                    user.balance = currentUserBalance;
-                    user.trialBonusAmount = balanceResult.data.trial_bonus_amount || 0;
-                    localStorage.setItem('currentUser', JSON.stringify(user));
-                }
+    try {
+        // 🔥 从数据库获取最新的 Round 状态
+        const { data: freshUser, error } = await sb
+            .from('users')
+            .select('balance, trial_bonus_amount, current_round, round_orders_count, is_premium')
+            .eq('uid', user.uid)
+            .single();
+        
+        if (freshUser) {
+            currentUserBalance = freshUser.balance || 0;
+            user.balance = currentUserBalance;
+            user.trialBonusAmount = freshUser.trial_bonus_amount || 0;
+            user.currentRound = freshUser.current_round || 0;
+            user.roundOrdersCount = freshUser.round_orders_count || 0;  // ✅ 当前轮订单数
+            user.isPremium = freshUser.is_premium || false;
+            localStorage.setItem('currentUser', JSON.stringify(user));
+        }
+
+        // 🔥 显示 CURRENT ORDERS - 使用 round_orders_count
+        document.getElementById('totalOrders').innerText = user.roundOrdersCount || 0;
 
                 var ordersResult = await sb.from('order_history').select('commission').eq('uid', user.uid);
                 var orders = ordersResult.data || [];
                 var totalCommission = orders.reduce(function(s, o) { return s + (o.commission || 0); }, 0);
-                var orderCount = orders.length;
 
                 currentTriggerOrder = await getUserPendingTriggerOrder(user.uid);
 
@@ -689,7 +700,6 @@
                 }
 
                 document.getElementById('statCommissions').innerHTML = '€' + totalCommission.toFixed(2);
-                document.getElementById('totalOrders').innerText = orderCount;
                 document.getElementById('statPending').innerHTML = '€' + totalPending.toFixed(2);
 
                 setTimeout(function() {
