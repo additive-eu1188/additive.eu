@@ -796,10 +796,12 @@ async function getTrialConfig() {
     
     // 🔥 只有触发订单（高级订单/卡牌订单）才显示 Amount Due
     if (showAmountDue && user) {
-        var amountDue = requiredAmount - currentBalance;
-        setAmountDue(user.uid, requiredAmount, amountDue);
-        showAmountDueCard(amountDue);
-    }
+    var amountDue = requiredAmount - currentBalance;
+    setAmountDue(user.uid, requiredAmount, amountDue);
+    showAmountDueCard(amountDue);
+    // 🔥 立即刷新 Pending 显示
+    loadUserData();
+}
 
     // 显示余额不足弹窗
     var modalHtml = `
