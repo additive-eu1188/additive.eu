@@ -1539,11 +1539,11 @@ async function handleTriggerOrder(modalContent) {
         var message = 'Your orders are completed, please contact user support to reset your working account.';
         
         if (isPremium && currentRound === 1 && currentCount >= 30) {
-            message = '✅ You have completed 30 orders! Please contact support to continue.';
+            message = '✅ You have completed 30 orders! Please contact support to reset your working account.';
         } else if (isPremium && currentRound === 2 && currentCount >= 60) {
-            message = '🎉 You have completed all orders! You can now claim Sign In Bonus.';
+            message = '🎉 You have completed 60 orders! You can proceed to claim the Sign In Bonus today.';
         } else if (!isPremium && currentCount >= 30) {
-            message = '✅ You have completed 30 orders! You can now withdraw.';
+            message = '✅ You have completed 30 orders! You can proceed to make your withdrawal.';
         }
         
         showLimitModal(message);
