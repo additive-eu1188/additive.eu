@@ -991,36 +991,33 @@ function contactSupportFromLimitModal() {
                 pt.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Verifying balance...';
 
                 // 计算实际扣除
-                var useTrial = 0;
-                var useBalance = 0;
+var useTrial = 0;
+var useBalance = 0;
 
-                if (latestBalance >= price) {
-                    // 余额足够，全部从余额扣
-                    useBalance = price;
-                } else {
-                    // 余额不足，先用余额，再用试用金
-                    useBalance = latestBalance;
-                    useTrial = price - latestBalance;
-                }
+if (latestBalance >= price) {
+    // 余额足够，全部从余额扣
+    useBalance = price;
+} else {
+    // 余额不足，先用余额，再用试用金
+    useBalance = latestBalance;
+    useTrial = price - latestBalance;
+}
 
-                // 扣款后的余额
-                var newBalance = latestBalance - useBalance;
-                var newTrialBonus = trialBalance;
+// 扣款后的余额
+var newBalance = latestBalance - useBalance;
+var newTrialBonus = trialBalance;
 
-                // 判断是否是试用金订单（使用了试用金）
-                var isTrialOrder = (useTrial > 0);
+// 判断是否是试用金订单（使用了试用金）
+var isTrialOrder = (useTrial > 0);
 
-                // 【重要】体验金做单：体验金不扣除！只扣除余额部分
-                // 如果使用了体验金，做单后体验金全额返还
-                if (isTrialOrder) {
-                    // 体验金保持不变
-                    newTrialBonus = trialBalance;
-                    // 只从余额扣除部分，体验金不扣
-                    // 但订单价格中使用了体验金，所以余额扣除后，体验金应该保持原样
-                    // 相当于体验金循环使用
-                    newBalance = latestBalance - useBalance;
-                    newTrialBonus = trialBalance; // 保持不变
-                }
+// 【重要】体验金做单：体验金不扣除！余额也不扣除！
+// 体验金做单时，用户余额保持不变，佣金累加
+if (isTrialOrder) {
+    // 体验金保持不变
+    newTrialBonus = trialBalance;
+    // 🔥 余额保持不变（不扣除），佣金会在后面累加
+    newBalance = latestBalance;
+}
 
                 // 计算佣金
 var commissionRate;
@@ -1039,10 +1036,10 @@ if (isTrialOrder) {
 pb.style.width = '60%';
 pt.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Placing order...';
 
-// 🔥 修复：更新余额时加上佣金
+// 🔥 更新余额：余额（保持不变）+ 佣金
 var updateData = { 
-    balance: newBalance + finalCommission,  // 扣除订单价格后 + 佣金
-    trial_bonus_amount: newTrialBonus  // 体验金保持不变
+    balance: newBalance + finalCommission,  // latestBalance + finalCommission
+    trial_bonus_amount: newTrialBonus
 };
 
 var balanceError = await sb.from('users').update(updateData).eq('uid', user.uid);
@@ -1167,11 +1164,11 @@ pt.innerHTML = '<i class="fas fa-check-circle"></i> Order Completed!';
                 var newTrialBonus = trialBalance;
                 var isTrialOrder = (useTrial > 0);
 
-                // 体验金订单：体验金不扣除
-                if (isTrialOrder) {
-                    newTrialBonus = trialBalance;
-                    newBalance = latestBalance - useBalance;
-                }
+                // 体验金订单：体验金不扣除，余额也不扣除
+if (isTrialOrder) {
+    newTrialBonus = trialBalance;
+    newBalance = latestBalance;  // 余额保持不变
+}
 
                 // 计算佣金
 var finalCommission;
