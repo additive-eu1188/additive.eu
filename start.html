@@ -1535,20 +1535,41 @@ async function handleTriggerOrder(modalContent) {
     console.log('🔍 调试信息: currentCount=' + currentCount + ', maxOrders=' + maxOrders + ', currentRound=' + currentRound + ', isPremium=' + isPremium);
 
     // 检查是否达到订单上限
-    if (currentCount >= maxOrders) {
-        var message = 'Your orders are completed, please contact user support to reset your working account.';
+if (currentCount >= maxOrders) {
+    // 🔥 先扣除体验金（如果是 Trial 用户完成30单）
+    if (isUsingTrial && trialBalance2 > 0) {
+        await sb.from('users').update({ 
+            trial_bonus_amount: 0
+        }).eq('uid', user.uid);
         
-        if (isPremium && currentRound === 1 && currentCount >= 30) {
-            message = '✅ You have completed 30 orders! Please contact support to reset your working account.';
-        } else if (isPremium && currentRound === 2 && currentCount >= 60) {
-            message = '🎉 You have completed 60 orders! You can proceed to claim the Sign In Bonus today.';
-        } else if (!isPremium && currentCount >= 30) {
-            message = '✅ You have completed 30 orders! You can proceed to make your withdrawal.';
-        }
+        await sb.from('deposits').insert([{
+            uid: user.uid,
+            username: user.username || user.uid,
+            amount: trialBalance2,
+            type: 'trial_bonus_deducted',
+            description: 'Trial Bonus Deducted (30 orders completed)',
+            created_at: new Date().toISOString()
+        }]);
         
-        showLimitModal(message);
-        return;
+        user.trialBonusAmount = 0;
+        localStorage.setItem('currentUser', JSON.stringify(user));
+        
+        console.log('✅ Trial Bonus Deducted，余额保持不变: €' + currentBalance2.toFixed(2));
     }
+    
+    var message = 'Your orders are completed, please contact user support to reset your working account.';
+    
+    if (isPremium && currentRound === 1 && currentCount >= 30) {
+        message = 'You have completed 30 orders! Please contact support to reset your working account.';
+    } else if (isPremium && currentRound === 2 && currentCount >= 60) {
+        message = 'You have completed 60 orders! You can proceed to claim the Sign In Bonus today.';
+    } else if (!isPremium && currentCount >= 30) {
+        message = 'You have completed 30 orders! You can proceed to make your withdrawal.';
+    }
+    
+    showLimitModal(message);
+    return;
+}
 
     // 检查是否有待完成的触发订单
     currentTriggerOrder = await getUserPendingTriggerOrder(user.uid);
