@@ -385,6 +385,17 @@
         }
 
         // ============================================================
+        // 图片加载失败处理
+        // ============================================================
+        function handleImageError(img) {
+            img.style.display = 'none';
+            var parent = img.parentElement;
+            if (parent) {
+                parent.innerHTML = '<i class="fas fa-hotel" style="font-size:56px;color:#C9B095;"></i>';
+            }
+        }
+
+        // ============================================================
         // Amount Due 持久化管理
         // ============================================================
         function setAmountDue(uid, orderPrice, amountDue) {
@@ -1291,7 +1302,7 @@ async function showClaimedCardOrder(triggerOrder) {
     var commissionPercent = currentOrder.commissionPercent || '15';
 
     modalContent.innerHTML =
-        '<div class="order-image">' + (currentOrder.imageUrl ? '<img src="' + currentOrder.imageUrl + '" onerror="this.onerror=null;this.style.display=\'none\';this.parentElement.innerHTML=\'<i class=\\"fas fa-hotel\\" style=\\"font-size:56px;color:#C9B095;\\"></i>\'">' :
+        '<div class="order-image">' + (currentOrder.imageUrl ? '<img src="' + currentOrder.imageUrl + '" onerror="handleImageError(this)">' :
             '<i class="fas fa-hotel" style="font-size:56px;color:#C9B095;"></i>') + '</div>' +
         '<div class="order-name">' + (currentOrder.accommodationName || 'Hotel Task') + '</div>' +
         '<div class="order-code"><i class="fas fa-tag"></i> ' + randomCode + '</div>' +
@@ -1386,7 +1397,7 @@ async function handleTriggerOrder(modalContent) {
     }
 
     modalContent.innerHTML =
-        '<div class="order-image">' + (currentOrder.imageUrl ? '<img src="' + currentOrder.imageUrl + '" onerror="this.onerror=null;this.style.display=\'none\';this.parentElement.innerHTML=\'<i class=\\"fas fa-hotel\\" style=\\"font-size:56px;color:#C9B095;\\"></i>\'">' :
+        '<div class="order-image">' + (currentOrder.imageUrl ? '<img src="' + currentOrder.imageUrl + '" onerror="handleImageError(this)">' :
             '<i class="fas fa-hotel" style="font-size:56px;color:#C9B095;"></i>') + '</div>' +
         '<div class="order-name">' + (currentOrder.accommodationName || 'Hotel Task') + '</div>' +
         '<div class="order-code"><i class="fas fa-tag"></i> ' + randomCode + '</div>' +
@@ -1421,9 +1432,9 @@ async function handleTriggerOrder(modalContent) {
 }
 
         // ============================================================
-// 主入口：打开订单
-// ============================================================
-async function openOrderModal() {
+        // 主入口：打开订单
+        // ============================================================
+        async function openOrderModal() {
     var user = getCurrentUser();
     if (!user) {
         window.location.href = 'signin.html';
@@ -1519,7 +1530,7 @@ async function openOrderModal() {
 
         modalContent.innerHTML =
             '<div class="order-image">' + (currentOrder.imageUrl ? '<img src="' + currentOrder.imageUrl +
-                '" onerror="this.onerror=null;this.style.display=\'none\';this.parentElement.innerHTML=\'<i class=\\"fas fa-hotel\\" style=\\"font-size:56px;color:#C9B095;\\"></i>\'">' :
+                '" onerror="handleImageError(this)">' :
                 '<i class="fas fa-hotel" style="font-size:56px;color:#C9B095;"></i>') + '</div>' +
             '<div class="order-name">' + (currentOrder.accommodationName || 'Hotel Task') + '</div>' +
             '<div class="order-code"><i class="fas fa-tag"></i> ' +
@@ -1646,7 +1657,7 @@ async function openOrderModal() {
 
     modalContent.innerHTML =
         '<div class="order-image">' + (order.imageUrl ? '<img src="' + order.imageUrl +
-            '" onerror="this.onerror=null;this.style.display=\'none\';this.parentElement.innerHTML=\'<i class=\\"fas fa-hotel\\" style=\\"font-size:56px;color:#C9B095;\\"></i>\'">' :
+            '" onerror="handleImageError(this)">' :
             '<i class="fas fa-hotel" style="font-size:56px;color:#C9B095;"></i>') + '</div>' +
         '<div class="order-name">' + (order.accommodationName || 'Hotel Task') + '</div>' +
         '<div class="order-code"><i class="fas fa-tag"></i> ' + randomCode + '</div>' +
