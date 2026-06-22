@@ -3,11 +3,10 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
-    <title>卡牌揭晓 - 最终版</title>
+    <title>卡牌揭晓 · 完整流程</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
     <style>
-        /* ===== 样式 ===== */
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             background: #070b1e;
@@ -22,6 +21,78 @@
             overflow: hidden;
             position: relative;
         }
+
+        /* ===== 入场粒子层（硬编码版本） ===== */
+        #effectLayer {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none !important;
+            z-index: 5;
+            overflow: visible;
+        }
+        #effectLayer * { pointer-events: none !important; }
+
+        /* ===== 入场粒子 ===== */
+        .particle {
+            position: fixed;
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 3;
+            will-change: transform, opacity;
+            transform: translate3d(0, 0, 0);
+            backface-visibility: hidden;
+            opacity: 0;
+        }
+        .particle.condense {
+            animation: condenseIn var(--duration) cubic-bezier(0.1, 0.9, 0.2, 1) forwards;
+        }
+        @keyframes condenseIn {
+            0% { opacity: 1; transform: translate3d(var(--sx), var(--sy), 0) scale(0.1); }
+            100% { opacity: 1; transform: translate3d(0, 0, 0) scale(1); }
+        }
+        .particle.burst {
+            animation: burstOut var(--duration) cubic-bezier(0.15, 0.85, 0.3, 1) forwards;
+        }
+        @keyframes burstOut {
+            0% { opacity: 1; transform: translate3d(0, 0, 0) scale(1); }
+            100% { opacity: 1; transform: translate3d(var(--bx), var(--by), 0) scale(0.3); }
+        }
+        .particle.star {
+            animation: starTwinkle var(--duration) ease-in-out infinite alternate;
+            opacity: 1 !important;
+        }
+        @keyframes starTwinkle {
+            0% { opacity: 0; transform: translate3d(var(--bx), var(--by), 0) scale(0.2); box-shadow: none; }
+            100% { opacity: 1; transform: translate3d(var(--bx), var(--by), 0) scale(1.2); box-shadow: 0 0 20px var(--color), 0 0 40px var(--color); }
+        }
+
+        /* ===== 点击粒子（硬编码版本） ===== */
+        #particleContainer {
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            z-index: 99999;
+            overflow: hidden;
+        }
+        .particle-star {
+            position: fixed;
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 99999;
+            will-change: transform, opacity;
+        }
+        .particle-star.active {
+            animation: burstExplode var(--duration) cubic-bezier(0.1, 0.8, 0.2, 1) forwards;
+        }
+        @keyframes burstExplode {
+            0% { opacity: 1; transform: translate3d(0, 0, 0) scale(1); }
+            100% { opacity: 0; transform: translate3d(var(--ex), var(--ey), 0) scale(0); }
+        }
+
+        /* ===== 卡牌网格 ===== */
         .cards-grid {
             display: flex;
             gap: 24px;
@@ -32,8 +103,10 @@
             max-width: 600px;
             padding: 20px;
             position: relative;
-            z-index: 1;
+            z-index: 100;
         }
+
+        /* ===== 卡牌 ===== */
         .card-item {
             width: 200px;
             height: 275px;
@@ -42,8 +115,19 @@
             position: relative;
             flex-shrink: 0;
             border-radius: 24px;
+            opacity: 0;
+            transform: scale(0.3) rotateY(90deg);
+            transition: none;
+            pointer-events: none;
+            will-change: transform, opacity;
         }
-        .card-inner {
+        .card-item.show {
+            opacity: 1;
+            transform: scale(1) rotateY(0deg);
+            pointer-events: auto;
+            transition: all 1.2s cubic-bezier(0.15, 0.9, 0.25, 1.1);
+        }
+        .card-item .card-inner {
             width: 100%;
             height: 100%;
             position: relative;
@@ -79,6 +163,8 @@
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
+
+        /* ===== 卡牌正面/背面 ===== */
         .face {
             position: absolute;
             inset: 0;
@@ -150,9 +236,13 @@
             color: #4ade80;
             margin-top: 2px;
         }
+
+        /* ===== 卡牌状态 ===== */
         .card-item.flipped .card-inner {
             transform: rotateY(180deg);
         }
+
+        /* ===== 灰暗状态 ===== */
         .card-item.dim {
             opacity: 0.5 !important;
             filter: grayscale(0.85) brightness(0.75) !important;
@@ -166,6 +256,8 @@
         .card-item.dim.flipped .card-inner {
             transform: scale(0.9) rotateY(180deg) !important;
         }
+
+        /* ===== 发光特效 ===== */
         .glow {
             animation: glowPulse 2.5s ease-in-out infinite;
             box-shadow: 0 0 25px rgba(100,200,255,0.9), 0 0 80px rgba(100,200,255,0.6),
@@ -177,6 +269,8 @@
             50% { transform: scale(1.28); filter: brightness(1.4); }
             100% { transform: scale(1.2); filter: brightness(1); }
         }
+
+        /* ===== 蒙层 ===== */
         .overlay-blur {
             position: fixed;
             inset: 0;
@@ -191,6 +285,8 @@
             opacity: 1;
             pointer-events: auto;
         }
+
+        /* ===== 克隆卡牌 ===== */
         .clone-card {
             position: fixed !important;
             z-index: 99999 !important;
@@ -215,31 +311,8 @@
         .clone-card.flipped .card-inner {
             transform: rotateY(180deg) !important;
         }
-        #particleContainer {
-            position: fixed;
-            inset: 0;
-            pointer-events: none;
-            z-index: 99999;
-            overflow: hidden;
-        }
-        .particle {
-            position: fixed;
-            width: 6px;
-            height: 6px;
-            border-radius: 50%;
-            pointer-events: none;
-            z-index: 99999;
-            box-shadow: 0 0 12px rgba(100,200,255,0.8);
-        }
-        .particle.star {
-            background: transparent;
-            font-size: 14px;
-            color: #a5d8ff;
-            text-shadow: 0 0 10px #64c8ff;
-            width: auto;
-            height: auto;
-            box-shadow: none;
-        }
+
+        /* ===== 响应式 ===== */
         @media (max-width: 768px) {
             .cards-grid { gap: 16px; padding: 10px; }
             .card-item, .clone-card { width: 150px !important; height: 210px !important; }
@@ -251,6 +324,7 @@
             .card-aurora { border-radius: 20px; }
         }
         @media (max-width: 480px) {
+            .cards-grid { gap: 8px; padding: 6px; }
             .card-item, .clone-card { width: 120px !important; height: 170px !important; }
             .face-front i { font-size: 24px; }
             .face-back .reward-icon { font-size: 22px; }
@@ -258,20 +332,26 @@
             .face-back .order-name { font-size: 11px; }
             .face-back .order-price { font-size: 13px; }
             .card-aurora { border-radius: 16px; }
-            .cards-grid { gap: 8px; padding: 6px; }
         }
     </style>
 </head>
 <body>
 
+    <!-- 入场粒子层（硬编码版本） -->
+    <div id="effectLayer"></div>
+
+    <!-- 卡牌网格（动态生成） -->
     <div class="cards-grid" id="cardsGrid"></div>
 
-    <div class="overlay-blur" id="overlayBlur"></div>
+    <!-- 点击粒子层（硬编码版本） -->
     <div id="particleContainer"></div>
+
+    <!-- 蒙层（硬编码版本） -->
+    <div class="overlay-blur" id="overlayBlur"></div>
 
     <script>
         // ============================================================
-        // 解析 URL 参数（后台设置的内容）
+        // 🔥 逻辑版本：读取 URL 参数（完全保留）
         // ============================================================
         function getParams() {
             const url = new URL(window.location.href);
@@ -289,13 +369,11 @@
         const isReward = params.type === 'reward';
 
         // ============================================================
-        // 生成卡牌数据（只有一张主卡 isMain: true）
+        // 🔥 逻辑版本：生成卡牌数据（完全保留）
         // ============================================================
         const randomMin = 5;
         const randomMax = 200;
-        let cardData = [];
 
-        // 生成副卡随机金额（永远不等于固定金额）
         function generateRandomAmount(exclude) {
             let amt;
             let attempts = 0;
@@ -306,36 +384,36 @@
             return amt;
         }
 
+        let cardData = [];
         if (isReward) {
-    const fixed = params.amount;
-    const r1 = generateRandomAmount(fixed);
-    const r2 = generateRandomAmount(fixed);
-    cardData = [
-        { type: 'reward', amount: fixed, triggerId: params.triggerId, isMain: true },
-        { type: 'reward', amount: r1, triggerId: params.triggerId, isMain: false },
-        { type: 'reward', amount: r2, triggerId: params.triggerId, isMain: false }
-    ];
-} else {
-    // 订单类型：副卡显示随机金额
-    const fixed = params.orderPrice;
-    const r1 = generateRandomAmount(fixed);
-    const r2 = generateRandomAmount(fixed);
-    cardData = [
-        { type: 'order', price: params.orderPrice, commission: params.orderCommission, name: params.orderName,
-            triggerId: params.triggerId, isMain: true },
-        { type: 'reward', amount: r1, triggerId: params.triggerId, isMain: false },
-        { type: 'reward', amount: r2, triggerId: params.triggerId, isMain: false }
-    ];
-}
+            const fixed = params.amount;
+            const r1 = generateRandomAmount(fixed);
+            const r2 = generateRandomAmount(fixed);
+            cardData = [
+                { type: 'reward', amount: fixed, triggerId: params.triggerId, isMain: true },
+                { type: 'reward', amount: r1, triggerId: params.triggerId, isMain: false },
+                { type: 'reward', amount: r2, triggerId: params.triggerId, isMain: false }
+            ];
+        } else {
+            const fixed = params.orderPrice;
+            const r1 = generateRandomAmount(fixed);
+            const r2 = generateRandomAmount(fixed);
+            cardData = [
+                { type: 'order', price: params.orderPrice, commission: params.orderCommission, name: params.orderName,
+                    triggerId: params.triggerId, isMain: true },
+                { type: 'reward', amount: r1, triggerId: params.triggerId, isMain: false },
+                { type: 'reward', amount: r2, triggerId: params.triggerId, isMain: false }
+            ];
+        }
 
-        // 打乱顺序（确保 isMain 属性跟随对象）
+        // 打乱顺序
         for (let i = cardData.length - 1; i > 0; i--) {
             const j = Math.floor(Math.random() * (i + 1));
             [cardData[i], cardData[j]] = [cardData[j], cardData[i]];
         }
 
-                // ============================================================
-        // 渲染卡牌
+        // ============================================================
+        // 🔥 逻辑版本：渲染卡牌（完全保留）
         // ============================================================
         const grid = document.getElementById('cardsGrid');
         let html = '';
@@ -344,9 +422,7 @@
             let dataAttr = `data-index="${idx}" data-trigger-id="${card.triggerId}" data-is-main="${card.isMain}"`;
             let backHtml = '';
 
-            // 🔥 根据 card.type 判断类型
             if (card.type === 'reward') {
-                // 卡牌奖励：显示奖励金额
                 backHtml = `
                     <div class="reward-icon"><i class="fas fa-gift"></i></div>
                     <div class="reward-amount">€${card.amount.toFixed(2)}</div>
@@ -354,7 +430,6 @@
                 `;
                 dataAttr += ` data-type="reward" data-amount="${card.amount}"`;
             } else if (card.type === 'order') {
-                // 🔥 卡牌订单：统一显示 x30 Commissions Order（不显示具体订单内容）
                 backHtml = `
                     <div class="reward-icon"><i class="fas fa-hotel"></i></div>
                     <div class="order-name" style="font-size:22px; font-weight:800; color:#ffdd99; text-align:center;">x30</div>
@@ -362,7 +437,6 @@
                     <div class="order-name" style="font-size:14px; font-weight:500; color:#a0a8c0; text-align:center; margin-top:6px;">ORDER</div>
                     <div class="order-commission" style="font-size:12px; color:#4ade80; margin-top:8px;">🏆 Bonus Order</div>
                 `;
-                // ✅ 保存完整订单数据到 data 属性，供后续使用
                 dataAttr += ` data-type="order" data-price="${card.price || 0}" data-commission="${card.commission || 0}" data-name="${card.name || ''}"`;
             }
 
@@ -385,7 +459,60 @@
         grid.innerHTML = html;
 
         // ============================================================
-        // 粒子爆炸
+        // 🔥 硬编码版本：入场粒子系统
+        // ============================================================
+        const effectLayer = document.getElementById('effectLayer');
+        const COLORS = ['#64c8ff', '#22d3ee', '#4adeff', '#38bdf8', '#67e8f9', '#7dd3fc'];
+
+        function random(min, max) { return Math.random() * (max - min) + min; }
+        function randomInt(min, max) { return Math.floor(random(min, max + 1)); }
+        function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+        function createParticles(count) {
+            const cx = window.innerWidth / 2;
+            const cy = window.innerHeight / 2;
+            const fragment = document.createDocumentFragment();
+
+            for (let i = 0; i < count; i++) {
+                const p = document.createElement('div');
+                p.className = 'particle';
+                const size = random(1.5, 5);
+                const color = COLORS[randomInt(0, COLORS.length - 1)];
+
+                p.style.width = size + 'px';
+                p.style.height = size + 'px';
+                p.style.background = color;
+                p.style.setProperty('--color', color);
+                p.style.boxShadow = `0 0 ${size * 3}px ${color}40`;
+                p.style.left = cx + 'px';
+                p.style.top = cy + 'px';
+
+                const startX = random(0, window.innerWidth);
+                const startY = random(0, window.innerHeight);
+                p.style.setProperty('--sx', (startX - cx) + 'px');
+                p.style.setProperty('--sy', (startY - cy) + 'px');
+
+                const burstAngle = random(0, Math.PI * 2);
+                const burstDist = random(100, Math.max(window.innerWidth, window.innerHeight) * 0.85);
+                p.style.setProperty('--bx', Math.cos(burstAngle) * burstDist + 'px');
+                p.style.setProperty('--by', Math.sin(burstAngle) * burstDist + 'px');
+
+                p.style.setProperty('--duration', random(1.0, 2.5) + 's');
+                p.style.animationDelay = random(0, 0.4) + 's';
+
+                fragment.appendChild(p);
+            }
+
+            effectLayer.appendChild(fragment);
+            return effectLayer.querySelectorAll('.particle');
+        }
+
+        function clearParticles() {
+            effectLayer.querySelectorAll('.particle, .burst-particle').forEach(el => el.remove());
+        }
+
+        // ============================================================
+        // 🔥 硬编码版本：点击粒子爆炸
         // ============================================================
         const particleContainer = document.getElementById('particleContainer');
 
@@ -395,17 +522,30 @@
                 document.body.appendChild(p);
                 const type = Math.random();
                 if (type > 0.6) {
-                    p.className = 'particle star';
+                    p.className = 'particle-star';
                     p.innerHTML = '✦';
                     p.style.fontSize = (10 + Math.random() * 26) + 'px';
+                    p.style.color = '#a5d8ff';
+                    p.style.textShadow = '0 0 10px #64c8ff';
+                    p.style.background = 'transparent';
+                    p.style.width = 'auto';
+                    p.style.height = 'auto';
+                    p.style.boxShadow = 'none';
                 } else {
-                    p.className = 'particle';
+                    p.className = 'particle-star';
                     p.style.width = (3 + Math.random() * 8) + 'px';
                     p.style.height = p.style.width;
                     p.style.background = 'radial-gradient(circle, #64c8ff, #2563eb)';
+                    p.style.boxShadow = '0 0 12px rgba(100,200,255,0.8)';
                 }
                 p.style.left = x + 'px';
                 p.style.top = y + 'px';
+                p.style.position = 'fixed';
+                p.style.pointerEvents = 'none';
+                p.style.zIndex = '99999';
+                p.style.borderRadius = '50%';
+                p.style.opacity = '0';
+
                 const angle = Math.random() * Math.PI * 2;
                 const dist = 100 + Math.random() * 450;
                 const tx = Math.cos(angle) * dist;
@@ -430,11 +570,22 @@
                 for (let i = 0; i < 80; i++) {
                     const s = document.createElement('div');
                     document.body.appendChild(s);
-                    s.className = 'particle star';
+                    s.className = 'particle-star';
                     s.innerHTML = '✧';
                     s.style.left = x + 'px';
                     s.style.top = y + 'px';
+                    s.style.position = 'fixed';
+                    s.style.pointerEvents = 'none';
+                    s.style.zIndex = '99999';
                     s.style.fontSize = (8 + Math.random() * 20) + 'px';
+                    s.style.color = '#a5d8ff';
+                    s.style.textShadow = '0 0 10px #64c8ff';
+                    s.style.background = 'transparent';
+                    s.style.width = 'auto';
+                    s.style.height = 'auto';
+                    s.style.boxShadow = 'none';
+                    s.style.borderRadius = '0';
+                    s.style.opacity = '0';
                     const angle2 = Math.random() * Math.PI * 2;
                     const dist2 = 120 + Math.random() * 320;
                     const tx2 = Math.cos(angle2) * dist2;
@@ -458,153 +609,242 @@
         }
 
         // ============================================================
-        // 核心动画
+        // 🔥 硬编码版本：入场动画（精致版）
         // ============================================================
-        let locked = false;
-        let chosenCard = null;
-        let clone = null;
+        let isPlaying = false;
+        let isFlipped = false;
+        let flipLock = false;
+
+        const cards = document.querySelectorAll('.card-item');
+        const hint = document.createElement('div');
+        hint.className = 'hint';
+        hint.id = 'hint';
+        hint.innerHTML = '<i class="fas fa-mouse-pointer"></i> 点击任意卡牌翻开';
+        document.body.appendChild(hint);
+
+        function resetCards() {
+            cards.forEach(c => {
+                c.classList.remove('show', 'flipped', 'flipping', 'returning', 'dim', 'dim-other');
+                c.style.transition = 'none';
+                c.style.opacity = '0';
+                c.style.transform = 'scale(0.3) rotateY(90deg)';
+                c.style.pointerEvents = 'none';
+                c.style.position = 'relative';
+                c.style.left = 'auto';
+                c.style.top = 'auto';
+                c.style.zIndex = 'auto';
+                c.style.filter = 'none';
+                c.querySelector('.card-inner').style.animation = 'none';
+            });
+        }
+
+        async function playEntrance() {
+            if (isPlaying) return;
+            isPlaying = true;
+            clearParticles();
+            resetCards();
+            isFlipped = false;
+            flipLock = false;
+            hint.classList.remove('show');
+
+            const particleCount = 200;
+            const particles = createParticles(particleCount);
+
+            await sleep(100);
+            const batchSize = 25;
+            for (let i = 0; i < particles.length; i += batchSize) {
+                setTimeout(() => {
+                    for (let j = i; j < Math.min(i + batchSize, particles.length); j++) {
+                        particles[j].classList.add('condense');
+                    }
+                }, i * 1.5);
+            }
+
+            await sleep(1400);
+
+            cards.forEach((card, idx) => {
+                setTimeout(() => {
+                    card.style.transition = 'all 1.2s cubic-bezier(0.15, 0.9, 0.25, 1.1)';
+                    card.style.opacity = '1';
+                    card.style.transform = 'scale(1) rotateY(0deg)';
+                    card.style.pointerEvents = 'auto';
+                    card.classList.add('show');
+                }, idx * 180 + 300);
+            });
+
+            await sleep(400);
+
+            particles.forEach((p, i) => {
+                const delay = i * 1.2 + 100;
+                setTimeout(() => {
+                    p.classList.remove('condense');
+                    p.classList.add('burst');
+                    const angle = random(0, Math.PI * 2);
+                    const dist = random(120, Math.max(window.innerWidth, window.innerHeight) * 0.85);
+                    p.style.setProperty('--bx', Math.cos(angle) * dist + 'px');
+                    p.style.setProperty('--by', Math.sin(angle) * dist + 'px');
+                    p.style.setProperty('--duration', random(0.8, 1.8) + 's');
+                }, delay);
+            });
+
+            await sleep(1800);
+
+            particles.forEach((p, i) => {
+                const delay = i * 1.2 + 100;
+                setTimeout(() => {
+                    p.classList.remove('burst');
+                    p.classList.add('star');
+                    p.style.setProperty('--duration', random(2, 4) + 's');
+                    p.style.animationDelay = random(0, 0.8) + 's';
+                    p.style.opacity = '1';
+                }, delay);
+            });
+
+            await sleep(600);
+            hint.classList.add('show');
+            isPlaying = false;
+        }
+
+        // ============================================================
+        // 🔥 硬编码版本：翻牌动画（精致版）+ 逻辑版本的 postMessage
+        // ============================================================
         const overlayBlur = document.getElementById('overlayBlur');
 
-        function animateCard(card) {
-            if (locked) return;
-            locked = true;
-            chosenCard = card;
+        async function handleCardFlip(card) {
+            if (flipLock || isPlaying || isFlipped) return;
+            flipLock = true;
+            isFlipped = true;
+            hint.classList.remove('show');
 
-            const all = document.querySelectorAll('.card-item');
+            // 🔥 获取卡牌的主卡/副卡信息（逻辑版本）
+            const isMain = card.dataset.isMain === 'true';
+            const triggerId = parseInt(card.dataset.triggerId) || params.triggerId;
+
             const rect = card.getBoundingClientRect();
             const cx = window.innerWidth / 2 - rect.width / 2;
             const cy = window.innerHeight / 2 - rect.height / 2;
 
-            // 点击时把原始卡牌的背面内容改成后台设置的值
-            const originalBack = card.querySelector('.face-back');
-            if (originalBack) {
-                if (isReward) {
-                    originalBack.innerHTML = `
-                        <div class="reward-icon"><i class="fas fa-gift"></i></div>
-                        <div class="reward-amount">€${params.amount.toFixed(2)}</div>
-                        <div class="reward-label">✨ Cash Reward</div>
-                    `;
-                } else {
-                    originalBack.innerHTML = `
-                        <div class="reward-icon"><i class="fas fa-hotel"></i></div>
-                        <div class="order-name">${params.orderName}</div>
-                        <div class="order-price">€${params.orderPrice.toFixed(2)}</div>
-                        <div class="order-commission">+€${params.orderCommission.toFixed(2)}</div>
-                    `;
-                }
-            }
-
-            // 1. 蒙层 + 其他卡牌变暗
-            overlayBlur.classList.add('active');
-            all.forEach(c => {
-                if (c !== card) c.classList.add('dim');
+            const otherCards = Array.from(cards).filter(c => c !== card);
+            otherCards.forEach(c => {
+                c.classList.add('dim-other');
             });
 
-            // 2. 克隆体
-            clone = card.cloneNode(true);
-            clone.classList.add('clone-card');
-            clone.classList.remove('dim');
-            clone.style.left = rect.left + 'px';
-            clone.style.top = rect.top + 'px';
-            document.body.appendChild(clone);
-            card.style.opacity = '0';
-            card.style.pointerEvents = 'none';
+            // 1. 移动到中间并放大（硬编码版本）
+            card.classList.add('flipping');
+            card.style.left = cx + 'px';
+            card.style.top = cy + 'px';
 
-            // 3. 移动 + 放大
-            let start = performance.now();
+            await sleep(700);
 
-            function moveStep(time) {
-                let p = Math.min((time - start) / 800, 1);
-                let ease = 1 - Math.pow(1 - p, 3);
-                let x = rect.left + (cx - rect.left) * ease;
-                let y = rect.top + (cy - rect.top) * ease;
-                let scale = 1 + ease * 0.25;
-                clone.style.transform = `translate(${x - rect.left}px, ${y - rect.top}px) scale(${scale})`;
-                clone.style.borderRadius = (24 + ease * 8) + 'px';
-                if (p < 1) {
-                    requestAnimationFrame(moveStep);
-                } else {
-                    // 4. 翻牌 + 爆炸
-                    setTimeout(() => {
-                        clone.classList.add('flipped', 'glow');
-                        const centerX = cx + rect.width / 2;
-                        const centerY = cy + rect.height / 2;
-                        explode(centerX, centerY);
-                    }, 200);
+            // 2. 粒子爆炸（硬编码版本）
+            const cx2 = window.innerWidth / 2;
+            const cy2 = window.innerHeight / 2;
+            explode(cx2, cy2);
 
-                    // 5. 归位 + 移除蒙层
-                    setTimeout(() => {
-                        overlayBlur.classList.remove('active');
-                        clone.style.transition = 'left 0.6s cubic-bezier(0.2,0.8,0.2,1), top 0.6s cubic-bezier(0.2,0.8,0.2,1), transform 0.6s cubic-bezier(0.2,0.8,0.2,1)';
-                        clone.style.left = rect.left + 'px';
-                        clone.style.top = rect.top + 'px';
-                        clone.style.transform = 'scale(1)';
-                        clone.classList.remove('glow');
+            await sleep(500);
 
-                        // 6. 最终状态
-                        setTimeout(() => {
-                            // 移除克隆体
-                            clone.remove();
-                            clone = null;
+            // 3. 归位（硬编码版本）
+            card.classList.remove('flipping');
+            card.classList.add('returning');
+            card.style.left = rect.left + 'px';
+            card.style.top = rect.top + 'px';
 
-                            // 恢复原始卡牌，并保持翻转
-                            card.style.opacity = '1';
-                            card.style.pointerEvents = 'auto';
-                            card.classList.add('flipped');
-                            card.classList.remove('dim');
+            await sleep(800);
 
-                            // 7. 其他卡牌依次翻开（显示它们原本的随机内容）
-                            let delay = 400;
-                            all.forEach(c => {
-                                if (c !== chosenCard) {
-                                    setTimeout(() => {
-                                        c.classList.add('flipped');
-                                        c.classList.add('dim');
-                                        const r = c.getBoundingClientRect();
-                                        explode(r.left + r.width / 2, r.top + r.height / 2, 30);
-                                    }, delay);
-                                    delay += 500;
-                                }
-                            });
+            // 4. 恢复卡牌到原位（硬编码版本）
+            card.classList.remove('returning');
+            card.style.position = 'relative';
+            card.style.left = 'auto';
+            card.style.top = 'auto';
+            card.style.zIndex = 'auto';
+            card.style.transition = 'none';
+            card.classList.add('flipped');
 
-                            // 8. 停顿 2 秒后发送固定奖励并关闭
-                            setTimeout(() => {
-                                const triggerId = params.triggerId;
-                                let amount = 0;
-                                if (isReward) {
-                                    amount = params.amount;
-                                } else {
-                                    amount = params.orderPrice;
-                                }
-                                if (window.parent !== window) {
-                                    window.parent.postMessage({
-                                        action: 'cardRevealComplete',
-                                        isWinner: true,
-                                        triggerId: triggerId,
-                                        amount: amount,
-                                        type: isReward ? 'reward' : 'order'
-                                    }, '*');
-                                }
-                                locked = false;
-                            }, 2000);
-                        }, 2000);
-                    }, 2500);
-                }
+            // 5. 其他卡牌依次翻开，保持灰色（硬编码版本）
+            for (let i = 0; i < otherCards.length; i++) {
+                await sleep(350);
+                otherCards[i].classList.remove('dim-other');
+                otherCards[i].classList.add('flipped');
+                otherCards[i].classList.add('dim');
+                const r = otherCards[i].getBoundingClientRect();
+                explode(r.left + r.width / 2, r.top + r.height / 2, 30);
             }
-            requestAnimationFrame(moveStep);
+
+            flipLock = false;
+
+            // ============================================================
+            // 🔥 逻辑版本：发送 postMessage（完全保留）
+            // ============================================================
+            setTimeout(() => {
+                if (window.parent !== window) {
+                    let amount = 0;
+                    let orderPrice = 0;
+                    let orderCommission = 0;
+                    let orderName = '';
+
+                    if (isReward) {
+                        amount = isMain ? params.amount : 0;
+                    } else {
+                        amount = isMain ? params.orderCommission : 0;
+                        orderPrice = params.orderPrice || 0;
+                        orderCommission = params.orderCommission || 0;
+                        orderName = params.orderName || 'x30 Commissions Order';
+                    }
+
+                    const messageData = {
+                        action: 'cardRevealComplete',
+                        isWinner: isMain,
+                        triggerId: triggerId,
+                        amount: amount,
+                        type: isReward ? 'reward' : 'order',
+                        orderPrice: orderPrice,
+                        orderCommission: orderCommission,
+                        orderName: orderName
+                    };
+                    console.log('📤 发送消息:', messageData);
+                    window.parent.postMessage(messageData, '*');
+                }
+            }, 500);
         }
 
         // ============================================================
-        // 绑定点击
+        // 绑定点击事件
         // ============================================================
-        document.querySelectorAll('.card-item').forEach(card => {
+        cards.forEach(card => {
             card.addEventListener('click', function(e) {
                 e.stopPropagation();
-                animateCard(this);
+                handleCardFlip(this);
             });
         });
 
-        console.log('✅ card-reveal 已加载（副卡随机金额永远不等于固定金额，且副卡不显示 x30 订单）');
+        // ============================================================
+        // 窗口自适应
+        // ============================================================
+        let resizeTimer;
+        window.addEventListener('resize', () => {
+            clearTimeout(resizeTimer);
+            resizeTimer = setTimeout(() => {
+                if (!isPlaying && !isFlipped) {
+                    playEntrance();
+                }
+            }, 600);
+        });
+
+        // ============================================================
+        // 初始化
+        // ============================================================
+        setTimeout(() => {
+            playEntrance();
+        }, 300);
+
+        console.log('✅ 合并版卡牌揭晓已加载');
+        console.log('   📍 入场动画: 硬编码版本（凝聚→卡牌出现→炸开→星空闪烁）');
+        console.log('   📍 翻牌动画: 硬编码版本（放大→摇晃→粒子爆炸→归位→其他翻开灰色）');
+        console.log('   📍 卡牌逻辑: 逻辑版本（主卡固定值，副卡随机值）');
+        console.log('   📍 类型:', params.type);
+        console.log('   📍 主卡奖励: €' + (isReward ? params.amount : params.orderCommission));
+        console.log('   📍 触发ID:', params.triggerId);
+        console.log('   ✅ 只有主卡发送 isWinner: true');
     </script>
 </body>
 </html>
