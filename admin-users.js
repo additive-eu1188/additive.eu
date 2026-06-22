@@ -1,4 +1,4 @@
-// admin-users.js - 完整版（用户管理表格重新设计 + Credit Score）
+// admin-users.js - 完整版（用户管理表格重新设计 + Credit Score + Round / Orders）
 let searchKeyword = '';
 
 // ========== 国家代码到国旗图片 URL 映射 ==========
@@ -248,7 +248,7 @@ async function loadUsersPage() {
                             <th style="min-width: 100px;">VIP Level</th>
                             <th style="min-width: 90px;">Pending (€)</th>
                             <th style="min-width: 110px;">Balance (€)</th>
-                            <th style="min-width: 120px;">Orders</th>
+                            <th style="min-width: 140px;">Round / Orders</th>
                             <th style="min-width: 180px;">Edit Orders</th>
                             <th style="min-width: 130px;">Registered IP</th>
                             <th style="min-width: 150px;">Time Registered</th>
@@ -277,6 +277,12 @@ async function loadUsersPage() {
             font-size: 12px;
             font-weight: 600;
             color: #4a7cff;
+            min-width: 50px;
+            text-align: center;
+        }
+        .orders-badge.completed {
+            background: rgba(46,209,90,0.15);
+            color: #2ed15a;
         }
         .orders-input {
             width: 55px;
@@ -320,6 +326,10 @@ async function loadUsersPage() {
         }
         .btn-sm:hover {
             opacity: 0.85;
+        }
+        .btn-sm:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
         }
         .btn-reset { background: #7a5f2f; }
         .btn-save { background: #2f6b3a; }
@@ -397,7 +407,17 @@ async function loadUsersPage() {
             color: #2ed15a;
         }
         .vip-wrapper { display: flex; align-items: center; gap: 4px; flex-wrap: nowrap; }
-        .orders-wrapper { display: flex; align-items: center; gap: 4px; flex-wrap: nowrap; }
+        .orders-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex-wrap: nowrap;
+        }
+        .orders-wrapper .round-number {
+            font-size: 11px;
+            color: #8a9abb;
+            min-width: 28px;
+        }
         @media (max-width: 1400px) {
             .table-container { overflow-x: auto; }
             .data-table { min-width: 1600px; }
@@ -565,12 +585,52 @@ async function loadUsers() {
                 </div>
             `;
             
-            // 8. Orders
+            // 8. Round / Orders
             const ordersCell = row.insertCell(7);
+            
+            // 🔥 计算 Round 显示
+            const isPremium = u.is_premium || false;
+            const currentRound = u.current_round || 0;
+            const roundOrdersCount = u.round_orders_count || 0;
+            const amountDueRound = u.amount_due_round || 0;
+            const amountDueOrdersCount = u.amount_due_orders_count || 0;
+            
+            // 判断是否有 amount due
+            const hasAmountDue = (amountDueRound > 0 || amountDueOrdersCount > 0);
+            
+            let roundDisplay = 0;
+            let ordersDisplay = '0/30';
+            let isRoundComplete = false;
+            let isRound2Complete = false;
+            
+            if (!isPremium) {
+                // Trial 用户：显示 Round 0
+                roundDisplay = 0;
+                ordersDisplay = `${orderCount}/30`;
+                isRoundComplete = orderCount >= 30;
+            } else if (hasAmountDue) {
+                // 有 amount due：显示 amount due 的 round 和订单数
+                roundDisplay = amountDueRound > 0 ? amountDueRound : currentRound;
+                const displayCount = amountDueOrdersCount > 0 ? amountDueOrdersCount : roundOrdersCount;
+                ordersDisplay = `${displayCount}/30`;
+                isRoundComplete = displayCount >= 30;
+                isRound2Complete = (roundDisplay === 2 && displayCount >= 30);
+            } else {
+                // 正常正式用户
+                roundDisplay = currentRound > 0 ? currentRound : 1;
+                ordersDisplay = `${roundOrdersCount}/30`;
+                isRoundComplete = roundOrdersCount >= 30;
+                isRound2Complete = (currentRound === 2 && roundOrdersCount >= 30);
+            }
+            
+            // 如果是正式用户且已完成 Round 2，显示绿色完成状态
+            const isCompleted = isPremium && isRound2Complete;
+            
             ordersCell.innerHTML = `
                 <div class="orders-wrapper">
-                    <span class="orders-badge">${orderCount}/${ordersLimit}</span>
-                    <button class="btn-sm btn-reset reset-orders-btn" data-uid="${u.uid}" data-username="${escapeHtml(u.username)}" title="Reset Orders"><i class="fas fa-undo-alt"></i></button>
+                    <span class="round-number">(${roundDisplay})</span>
+                    <span class="orders-badge ${isCompleted ? 'completed' : ''}" style="${isCompleted ? 'background:rgba(46,209,90,0.15);color:#2ed15a;' : ''}">${ordersDisplay}</span>
+                    <button class="btn-sm btn-reset reset-orders-btn" data-uid="${u.uid}" data-username="${escapeHtml(u.username)}" title="Reset Orders" ${!isPremium ? 'disabled' : ''}><i class="fas fa-undo-alt"></i></button>
                 </div>
             `;
             
@@ -640,7 +700,7 @@ async function loadUsers() {
             });
         });
         
-        // ========== 绑定事件 - Reset Orders 按钮 ==========
+        // ========== 绑定事件 - Reset Orders 按钮（保留原有功能，增加 Round 递进） ==========
         document.querySelectorAll('.reset-orders-btn').forEach(btn => {
             btn.addEventListener('click', () => {
                 const uid = btn.dataset.uid;
@@ -788,12 +848,26 @@ async function processDeposit(uid, username, depositAmount, rewardAmount, reward
     try {
         const { data: user, error } = await sb
             .from('users')
-            .select('balance')
+            .select('balance, is_premium')
             .eq('uid', uid)
             .single();
         if (error) throw error;
         let newBalance = user.balance || 0;
         let message = '';
+        let isFirstDeposit = false;
+        
+        // 🔥 检查是否首次充值（加入会员）
+        if (!user.is_premium && depositAmount > 0) {
+            isFirstDeposit = true;
+            // 标记为正式用户（会员）
+            await sb.from('users').update({ 
+                is_premium: true,
+                current_round: 1,
+                round_orders_count: 0
+            }).eq('uid', uid);
+            message += '🎉 用户已加入会员！; ';
+        }
+        
         if (depositAmount > 0) {
             newBalance += depositAmount;
             await sb.from('deposits').insert([{ 
@@ -801,7 +875,7 @@ async function processDeposit(uid, username, depositAmount, rewardAmount, reward
                 username: username, 
                 amount: depositAmount, 
                 type: 'manual',
-                description: 'Manual Deposit',
+                description: 'Manual Deposit' + (isFirstDeposit ? ' (First Deposit - Premium Activated)' : ''),
                 created_at: new Date().toISOString()
             }]);
             message += `Deposit €${depositAmount.toFixed(2)}; `;
@@ -831,16 +905,67 @@ async function processDeposit(uid, username, depositAmount, rewardAmount, reward
     }
 }
 
-// ========== 重置用户订单 ==========
+// ========== 重置用户订单（Reset Round） ==========
 async function resetUserOrders(uid, username) {
-    showConfirm('⚠️ Confirm Reset', `Are you sure you want to reset all orders for user ${username} (UID: ${uid})?\nThis will delete all order history and cannot be undone!`, async () => {
+    // 检查用户是否是正式会员
+    const { data: user } = await sb
+        .from('users')
+        .select('is_premium, current_round, round_orders_count')
+        .eq('uid', uid)
+        .single();
+    
+    if (!user) {
+        showToast('用户不存在', 'error');
+        return;
+    }
+    
+    if (!user.is_premium) {
+        showToast('Trial 用户不需要递进 Round', 'warning');
+        return;
+    }
+    
+    // 检查是否完成当前 Round（需要30单）
+    const currentRound = user.current_round || 0;
+    const roundOrdersCount = user.round_orders_count || 0;
+    
+    if (roundOrdersCount < 30) {
+        showToast(`需要完成 30 单才能进入下一轮 (当前 ${roundOrdersCount}/30)`, 'warning');
+        return;
+    }
+    
+    // 如果已经是 Round 2 且已完成，提示已完成
+    if (currentRound === 2 && roundOrdersCount >= 30) {
+        showToast(`✅ ${username} 已完成 Round 2，可以领取签到奖励`, 'success');
+        return;
+    }
+    
+    showConfirm('⚠️ Confirm Reset', `Are you sure you want to reset orders for user ${username} (UID: ${uid})?\nThis will delete all order history and cannot be undone!\n\nCurrent Round: ${currentRound}\nOrders in current round: ${roundOrdersCount}/30`, async () => {
         try {
+            // 删除订单历史
             const { error } = await sb
                 .from('order_history')
                 .delete()
                 .eq('uid', uid);
+            
             if (error) throw error;
-            showToast(`✅ User ${username}'s orders have been reset`, 'success');
+            
+            // 🔥 递进 Round
+            const nextRound = currentRound === 0 ? 1 : currentRound + 1;
+            if (nextRound <= 2) {
+                await sb
+                    .from('users')
+                    .update({
+                        current_round: nextRound,
+                        round_orders_count: 0,
+                        last_round_reset_date: new Date().toISOString().split('T')[0]
+                    })
+                    .eq('uid', uid);
+                
+                showToast(`✅ ${username} 已进入 Round ${nextRound}`, 'success');
+            } else {
+                showToast(`✅ ${username} 已完成所有 Round！可以领取签到奖励`, 'success');
+            }
+            
             loadUsers();
             if (window.loadDashboardPage) window.loadDashboardPage(currentDays);
         } catch (e) {
@@ -883,6 +1008,22 @@ async function saveUserOrders(uid, username, newOrderCount) {
                         .from('order_history')
                         .insert(inserts);
                     if (error) throw error;
+                    
+                    // 🔥 更新 round_orders_count
+                    const { data: user } = await sb
+                        .from('users')
+                        .select('round_orders_count, current_round, is_premium')
+                        .eq('uid', uid)
+                        .single();
+                    
+                    if (user && user.is_premium) {
+                        const newRoundCount = (user.round_orders_count || 0) + diff;
+                        await sb
+                            .from('users')
+                            .update({ round_orders_count: newRoundCount })
+                            .eq('uid', uid);
+                    }
+                    
                     showToast(`✅ Added ${diff} order(s) for ${username}`, 'success');
                     loadUsers();
                 } catch (e) {
@@ -909,6 +1050,22 @@ async function saveUserOrders(uid, username, newOrderCount) {
                         .delete()
                         .in('id', ids);
                     if (error) throw error;
+                    
+                    // 🔥 更新 round_orders_count
+                    const { data: user } = await sb
+                        .from('users')
+                        .select('round_orders_count, current_round, is_premium')
+                        .eq('uid', uid)
+                        .single();
+                    
+                    if (user && user.is_premium) {
+                        const newRoundCount = Math.max(0, (user.round_orders_count || 0) - diff);
+                        await sb
+                            .from('users')
+                            .update({ round_orders_count: newRoundCount })
+                            .eq('uid', uid);
+                    }
+                    
                     showToast(`✅ Deleted ${ids.length} order(s) for ${username}`, 'success');
                     loadUsers();
                 } catch (e) {
@@ -1127,6 +1284,9 @@ document.getElementById('createUserBtn')?.addEventListener('click', async () => 
             vip_level: 1, 
             trial_bonus_amount: 0,
             credit_score: 100,
+            is_premium: false,
+            current_round: 0,
+            round_orders_count: 0,
             created_at: new Date().toISOString()
         }]);
     if (error) {

@@ -761,28 +761,58 @@
         // 修改后的提款函数（增加信用分检查）
         // ============================================================
         async function requestWithdrawal() {
-            // ---- 信用分检查 ----
-            try {
-                const user = getCurrentUser();
-                if (user) {
-                    // 获取最新用户数据（包含credit_score）
-                    const freshUser = await syncUserData();
-                    const creditScore = freshUser?.creditScore || 100;
-                    if (creditScore < 95) {
-                        // 显示信用分阻止弹窗
-                        showCreditBlockModal();
-                        return;
-                    }
-                }
-            } catch (e) {
-                console.error('信用分检查失败:', e);
-                // 出错时默认放行，避免误伤
+    // ---- 信用分检查 ----
+    try {
+        const user = getCurrentUser();
+        if (user) {
+            const freshUser = await syncUserData();
+            const creditScore = freshUser?.creditScore || 100;
+            if (creditScore < 95) {
+                showCreditBlockModal();
+                return;
             }
+        }
+    } catch (e) {
+        console.error('信用分检查失败:', e);
+    }
 
-            // ---- 原有提款逻辑 ----
-            const amount = parseFloat(document.getElementById('amountInput').value);
-            if (isNaN(amount) || amount < 10) { showToast('Minimum withdrawal amount is €10', 'error'); return; }
-            if (amount > currentUserBalance) { showToast('Insufficient balance', 'error'); return; }
+    // ---- Round 提款条件检查 ----
+    const user = getCurrentUser();
+    if (!user) {
+        window.location.href = 'signin.html';
+        return;
+    }
+    
+    await syncUserData();
+    const freshUser = getCurrentUser();
+    const isPremium = freshUser?.isPremium || false;
+    const currentRound = freshUser?.currentRound || 0;
+    const roundOrdersCount = freshUser?.roundOrdersCount || 0;
+    const totalOrders = (await sb.from('order_history').select('id', { count: 'exact' }).eq('uid', user.uid)).count || 0;
+    
+    // 🔥 提款条件判断
+    let canWithdraw = false;
+    if (!isPremium) {
+        // Trial 用户：完成30单即可提款
+        canWithdraw = totalOrders >= 30;
+    } else {
+        // 正式用户：必须完成 Round 2（60单）
+        canWithdraw = currentRound === 2 && roundOrdersCount >= 30;
+    }
+    
+    if (!canWithdraw) {
+        if (!isPremium) {
+            showToast('请完成 30 单后再提款', 'warning');
+        } else {
+            showToast('请完成 2 Rounds (60单) 后再提款', 'warning');
+        }
+        return;
+    }
+
+    // ---- 原有提款逻辑 ----
+    const amount = parseFloat(document.getElementById('amountInput').value);
+    if (isNaN(amount) || amount < 10) { showToast('Minimum withdrawal amount is €10', 'error'); return; }
+    if (amount > currentUserBalance) { showToast('Insufficient balance', 'error'); return; }
 
             const { data: userData } = await sb.from('users').select('withdrawal_address, withdrawal_address_type').eq('uid', currentUser.uid).single();
             if (!userData?.withdrawal_address) { showToast('Please bind withdrawal address first', 'error'); return; }

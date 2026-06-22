@@ -446,70 +446,89 @@
             await updateUserBalance(user.uid, newBalance);
         }
         
-        // ====== 渲染卡片（无点击事件） ======
-        async function render() {
-            const {streak, lastClaimDate, claimedDays} = loadData();
-            const hasClaimed = hasClaimedToday(lastClaimDate);
-            userOrderCount = await getUserOrderCountFromDB();
-            
-            const total = signInRewards.reduce((s, r) => s + r.amount, 0);
-            document.getElementById('totalRewards').innerText = '€' + total;
-            
-            const grid = document.getElementById('daysGrid');
-            grid.innerHTML = '';
-            
-            signInRewards.forEach((r) => {
-                const dayNum = r.day;
-                const isClaimed = claimedDays.includes(dayNum);
-                const isToday = (streak + 1) === dayNum && !hasClaimed;
-                
-                const card = document.createElement('div');
-                card.className = 'day-card';
-                if (isClaimed) card.classList.add('claimed');
-                if (isToday) card.classList.add('today');
-                
-                // 无点击事件！
-                card.innerHTML = `
-                    <div class="glow"></div>
-                    <div class="text-mask"></div>
-                    <div class="top-accent"></div>
-                    <div class="card-content">
-                        <span class="day-num">Day ${String(dayNum).padStart(2, '0')}</span>
-                        <span class="day-reward"><span class="currency">€</span>${r.amount}</span>
-                        <span class="status-badge">${isClaimed ? 'Claimed' : 'Pending'}</span>
-                    </div>
-                `;
-                grid.appendChild(card);
-            });
-            
-            // 更新 streak
-            const percent = (streak / signInRewards.length) * 100;
-            document.getElementById('streakBar').style.width = percent + '%';
-            document.getElementById('streakText').innerHTML = `${streak}/${signInRewards.length} Days`;
-            
-            // 更新 Claim 按钮状态
-            const claimBtn = document.getElementById('claimBtn');
-            const nextDay = streak + 1;
-            const canClaim = !hasClaimed && nextDay <= signInRewards.length && userOrderCount >= 30;
-            
-            if(canClaim) {
-                claimBtn.classList.remove('disabled');
-                claimBtn.disabled = false;
-                document.getElementById('claimWarning').innerHTML = `Complete <strong>30 orders</strong> to unlock reward claims. You have ${userOrderCount}/30.`;
-            } else if(hasClaimed) {
-                claimBtn.classList.add('disabled');
-                claimBtn.disabled = true;
-                document.getElementById('claimWarning').innerHTML = `Already claimed today. Come back tomorrow.`;
-            } else if(userOrderCount < 30) {
-                claimBtn.classList.add('disabled');
-                claimBtn.disabled = true;
-                document.getElementById('claimWarning').innerHTML = `Complete ${30 - userOrderCount} more orders to unlock rewards.`;
-            } else {
-                claimBtn.classList.add('disabled');
-                claimBtn.disabled = true;
-                document.getElementById('claimWarning').innerHTML = `Complete Day ${streak + 1} to continue.`;
-            }
-        }
+        // ====== 渲染卡片 ======
+async function render() {
+    const {streak, lastClaimDate, claimedDays} = loadData();
+    const hasClaimed = hasClaimedToday(lastClaimDate);
+    userOrderCount = await getUserOrderCountFromDB();
+    
+    // 🔥 获取用户 Round 状态
+    const user = getCurrentUser();
+    await syncUserData();
+    const freshUser = getCurrentUser();
+    const isPremium = freshUser?.isPremium || false;
+    const currentRound = freshUser?.currentRound || 0;
+    const roundOrdersCount = freshUser?.roundOrdersCount || 0;
+    
+    // 🔥 判断是否可以 Claim Sign In Bonus
+    // 条件：正式用户 + 完成 Round 2（30单）
+    const canClaimBonus = isPremium && currentRound === 2 && roundOrdersCount >= 30;
+    
+    const total = signInRewards.reduce((s, r) => s + r.amount, 0);
+    document.getElementById('totalRewards').innerText = '€' + total;
+    
+    const grid = document.getElementById('daysGrid');
+    grid.innerHTML = '';
+    
+    signInRewards.forEach((r) => {
+        const dayNum = r.day;
+        const isClaimed = claimedDays.includes(dayNum);
+        const isToday = (streak + 1) === dayNum && !hasClaimed;
+        
+        const card = document.createElement('div');
+        card.className = 'day-card';
+        if (isClaimed) card.classList.add('claimed');
+        if (isToday) card.classList.add('today');
+        
+        card.innerHTML = `
+            <div class="glow"></div>
+            <div class="text-mask"></div>
+            <div class="top-accent"></div>
+            <div class="card-content">
+                <span class="day-num">Day ${String(dayNum).padStart(2, '0')}</span>
+                <span class="day-reward"><span class="currency">€</span>${r.amount}</span>
+                <span class="status-badge">${isClaimed ? 'Claimed' : 'Pending'}</span>
+            </div>
+        `;
+        grid.appendChild(card);
+    });
+    
+    // 更新 streak
+    const percent = (streak / signInRewards.length) * 100;
+    document.getElementById('streakBar').style.width = percent + '%';
+    document.getElementById('streakText').innerHTML = `${streak}/${signInRewards.length} Days`;
+    
+    // 🔥 更新 Claim 按钮状态
+    const claimBtn = document.getElementById('claimBtn');
+    const nextDay = streak + 1;
+    
+    // 🔥 判断是否可以 Claim
+    // 1. 必须是正式用户
+    // 2. 必须完成 Round 2（60单）
+    // 3. 未 Claim 过今天
+    const canClaim = !hasClaimed && nextDay <= signInRewards.length && canClaimBonus;
+    
+    let warningMessage = '';
+    if (!isPremium) {
+        warningMessage = '💎 请充值成为会员后，完成 2 Rounds (60单) 即可领取签到奖励';
+    } else if (currentRound < 2) {
+        warningMessage = `📊 当前 Round ${currentRound}/2，完成 ${30 - roundOrdersCount} 单进入下一轮`;
+    } else if (currentRound === 2 && roundOrdersCount < 30) {
+        warningMessage = `📊 完成 ${30 - roundOrdersCount} 单即可领取签到奖励`;
+    } else if (canClaimBonus) {
+        warningMessage = '✅ 已完成 2 Rounds，可以领取签到奖励！';
+    }
+    
+    if(canClaim) {
+        claimBtn.classList.remove('disabled');
+        claimBtn.disabled = false;
+        document.getElementById('claimWarning').innerHTML = warningMessage || '点击领取签到奖励';
+    } else {
+        claimBtn.classList.add('disabled');
+        claimBtn.disabled = true;
+        document.getElementById('claimWarning').innerHTML = warningMessage || '请完成 2 Rounds (60单) 后领取';
+    }
+}
         
         // ====== 领取 ======
         async function handleClaim() {

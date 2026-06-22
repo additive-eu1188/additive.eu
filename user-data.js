@@ -10,8 +10,12 @@ function getCurrentUser() {
     if (!userStr) return null;
     try {
         const user = JSON.parse(userStr);
-        // 确保 creditScore 存在
+        // 确保所有字段存在
         if (user.creditScore === undefined) user.creditScore = 100;
+        if (user.currentRound === undefined) user.currentRound = 0;
+        if (user.roundOrdersCount === undefined) user.roundOrdersCount = 0;
+        if (user.isPremium === undefined) user.isPremium = false;
+        if (user.totalRoundsCompleted === undefined) user.totalRoundsCompleted = 0;
         return user;
     } catch(e) { return null; }
 }
@@ -71,6 +75,14 @@ async function syncUserData() {
         user.pin = freshData.pin || '';
         user.inviteCode = freshData.invite_code || '';
         user.creditScore = freshData.credit_score || 100;
+        // Round 相关字段
+        user.currentRound = freshData.current_round || 0;
+        user.roundOrdersCount = freshData.round_orders_count || 0;
+        user.isPremium = freshData.is_premium || false;
+        user.totalRoundsCompleted = freshData.total_rounds_completed || 0;
+        user.lastRoundResetDate = freshData.last_round_reset_date || null;
+        user.amountDueRound = freshData.amount_due_round || 0;
+        user.amountDueOrdersCount = freshData.amount_due_orders_count || 0;
         localStorage.setItem('currentUser', JSON.stringify(user));
     }
     return user;
@@ -104,6 +116,50 @@ async function updateUserBalance(uid, newBalance, newTrialBonus = null) {
     return true;
 }
 
+// 更新用户 Round 数据
+async function updateUserRound(uid, currentRound, roundOrdersCount, totalRoundsCompleted = null) {
+    const updateData = {
+        current_round: currentRound,
+        round_orders_count: roundOrdersCount
+    };
+    if (totalRoundsCompleted !== null) {
+        updateData.total_rounds_completed = totalRoundsCompleted;
+    }
+    
+    const { error } = await sb
+        .from('users')
+        .update(updateData)
+        .eq('uid', uid);
+    
+    if (error) {
+        console.error('更新 Round 数据失败:', error);
+        return false;
+    }
+    
+    const user = getCurrentUser();
+    if (user && user.uid === uid) {
+        user.currentRound = currentRound;
+        user.roundOrdersCount = roundOrdersCount;
+        if (totalRoundsCompleted !== null) {
+            user.totalRoundsCompleted = totalRoundsCompleted;
+        }
+        localStorage.setItem('currentUser', JSON.stringify(user));
+    }
+    return true;
+}
+
+// 检查用户是否有 Amount Due
+async function checkUserHasAmountDue(uid) {
+    const { data, error } = await sb
+        .from('users')
+        .select('amount_due_round, amount_due_orders_count')
+        .eq('uid', uid)
+        .single();
+    
+    if (error || !data) return false;
+    return data.amount_due_round > 0 || data.amount_due_orders_count > 0;
+}
+
 // 检查登录状态
 function checkLogin() {
     const user = getCurrentUser();
@@ -125,6 +181,84 @@ async function fetchUserStats(uid) {
     const orderCount = orders?.length || 0;
     
     return { totalCommission, orderCount };
+}
+
+// ========== Round 相关函数 ==========
+
+// 获取用户当前 Round 显示信息
+function getUserRoundDisplay(user) {
+    if (!user) user = getCurrentUser();
+    if (!user) return { round: 0, orders: '0/30', isComplete: false };
+    
+    const isTrialUser = !user.isPremium;
+    const round = user.currentRound || 0;
+    const count = user.roundOrdersCount || 0;
+    const ordersPerRound = 30;
+    
+    // Trial 用户：显示 Round 0
+    if (isTrialUser && round === 0) {
+        return {
+            round: 0,
+            orders: `${count}/${ordersPerRound}`,
+            isComplete: count >= ordersPerRound,
+            isTrial: true
+        };
+    }
+    
+    // 正式用户
+    if (round === 1) {
+        return {
+            round: 1,
+            orders: `${count}/${ordersPerRound}`,
+            isComplete: count >= ordersPerRound,
+            isTrial: false
+        };
+    } else if (round === 2) {
+        return {
+            round: 2,
+            orders: `${count}/${ordersPerRound}`,
+            isComplete: count >= ordersPerRound,
+            isTrial: false
+        };
+    }
+    
+    return {
+        round: 0,
+        orders: `${count}/${ordersPerRound}`,
+        isComplete: false,
+        isTrial: true
+    };
+}
+
+// 检查用户是否已完成 Round 2（可以领取签到奖励）
+function canClaimSignInBonus(user) {
+    if (!user) user = getCurrentUser();
+    if (!user) return false;
+    
+    // Trial 用户不能领取
+    if (!user.isPremium) return false;
+    
+    // 正式用户必须完成 Round 2
+    const round = user.currentRound || 0;
+    const count = user.roundOrdersCount || 0;
+    
+    return round === 2 && count >= 30;
+}
+
+// 检查用户是否可以提款
+function canWithdraw(user) {
+    if (!user) user = getCurrentUser();
+    if (!user) return false;
+    
+    // Trial 用户（未充值）：完成30单即可提款
+    if (!user.isPremium) {
+        return (user.roundOrdersCount || 0) >= 30;
+    }
+    
+    // 正式用户：必须完成 Round 2
+    const round = user.currentRound || 0;
+    const count = user.roundOrdersCount || 0;
+    return round === 2 && count >= 30;
 }
 
 // ========== 触发订单相关函数 ==========
