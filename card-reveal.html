@@ -7,6 +7,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
     <style>
+        /* ===== 你的原始样式（完全保留） ===== */
         * {
             margin: 0;
             padding: 0;
@@ -324,8 +325,8 @@
                 <div class="face face-front"><i class="fas fa-gem"></i><span>SELECT</span></div>
                 <div class="face face-back">
                     <div class="reward-icon"><i class="fas fa-gift"></i></div>
-                    <div class="reward-amount" style="font-size:20px;color:#ffdd99;">x30</div>
-                    <div class="reward-label" style="font-size:12px;color:#C9B095;">COMMISSIONS</div>
+                    <div class="reward-amount" id="rewardAmount1" style="font-size:20px;color:#ffdd99;">x30</div>
+                    <div class="reward-label" id="rewardLabel1" style="font-size:12px;color:#C9B095;">COMMISSIONS</div>
                 </div>
             </div>
         </div>
@@ -335,8 +336,8 @@
                 <div class="face face-front"><i class="fas fa-gem"></i><span>SELECT</span></div>
                 <div class="face face-back">
                     <div class="reward-icon"><i class="fas fa-gift"></i></div>
-                    <div class="reward-amount">€250</div>
-                    <div class="reward-label">✨ Cash Reward</div>
+                    <div class="reward-amount" id="rewardAmount2">€250</div>
+                    <div class="reward-label" id="rewardLabel2">✨ Cash Reward</div>
                 </div>
             </div>
         </div>
@@ -346,8 +347,8 @@
                 <div class="face face-front"><i class="fas fa-gem"></i><span>SELECT</span></div>
                 <div class="face face-back">
                     <div class="reward-icon"><i class="fas fa-gift"></i></div>
-                    <div class="reward-amount">€85</div>
-                    <div class="reward-label">✨ Cash Reward</div>
+                    <div class="reward-amount" id="rewardAmount3">€85</div>
+                    <div class="reward-label" id="rewardLabel3">✨ Cash Reward</div>
                 </div>
             </div>
         </div>
@@ -357,7 +358,7 @@
 
     <script>
         // ============================================================
-        // 🔥 新增：从 URL 参数读取后台设置
+        // 🔥 新增：从 URL 读取后台设置，并更新卡牌背面内容
         // ============================================================
         function getParams() {
             const url = new URL(window.location.href);
@@ -374,8 +375,41 @@
         const params = getParams();
         const isReward = params.type === 'reward';
 
+        // 更新所有卡牌的背面内容为后台设置的固定内容
+        function updateCardBacks() {
+            const amountEls = [
+                document.getElementById('rewardAmount1'),
+                document.getElementById('rewardAmount2'),
+                document.getElementById('rewardAmount3')
+            ];
+            const labelEls = [
+                document.getElementById('rewardLabel1'),
+                document.getElementById('rewardLabel2'),
+                document.getElementById('rewardLabel3')
+            ];
+
+            let amountText, labelText;
+            if (isReward) {
+                amountText = '€' + params.amount.toFixed(2);
+                labelText = '✨ Cash Reward';
+            } else {
+                amountText = 'x30';
+                labelText = 'COMMISSIONS';
+            }
+
+            amountEls.forEach(el => {
+                if (el) el.textContent = amountText;
+            });
+            labelEls.forEach(el => {
+                if (el) el.textContent = labelText;
+            });
+        }
+
+        // 在页面加载时立即更新
+        updateCardBacks();
+
         // ============================================================
-        // 完整流程：入场 + 点击翻牌（保留所有原有逻辑）
+        // 完整流程：入场 + 点击翻牌（你的原始代码，完全没动）
         // ============================================================
         let isPlaying = false;
         let isFlipped = false;
@@ -416,7 +450,7 @@
         }
 
         // ============================================================
-        // 入场动画（完全保留）
+        // 入场动画
         // ============================================================
         function createParticles(count) {
             const cx = window.innerWidth / 2;
@@ -525,7 +559,7 @@
         }
 
         // ============================================================
-        // 点击翻牌（完全保留原有动画，只修改消息发送）
+        // 点击翻牌（你的原始代码，完全没动）
         // ============================================================
         async function handleCardFlip(card) {
             if (flipLock || isPlaying || isFlipped) return;
@@ -611,22 +645,15 @@
             flipLock = false;
 
             // ============================================================
-            // 🔥 修复：发送消息时包含 amount 和 triggerId
+            // 🔥 修复：发送消息时传递后台设置的金额（从 params 读取）
             // ============================================================
             setTimeout(() => {
                 if (window.parent !== window) {
-                    // 根据类型确定发送的金额
-                    let amount = 0;
-                    if (isReward) {
-                        amount = params.amount;
-                    } else {
-                        amount = params.orderCommission; // 订单类型发送佣金
-                    }
-                    const triggerId = params.triggerId;
+                    const amount = isReward ? params.amount : params.orderCommission;
                     window.parent.postMessage({
                         action: 'cardRevealComplete',
                         isWinner: true,
-                        triggerId: triggerId,
+                        triggerId: params.triggerId,
                         amount: amount,
                         type: isReward ? 'reward' : 'order'
                     }, '*');
@@ -664,12 +691,12 @@
             playEntrance();
         }, 300);
 
-        console.log('✅ 完整卡牌流程已加载（已修复消息传递）');
-        console.log('   📍 类型:', params.type);
-        console.log('   📍 奖励金额: €' + (isReward ? params.amount : params.orderCommission));
-        console.log('   📍 触发ID:', params.triggerId);
+        console.log('✅ 完整卡牌流程已加载（显示已修复为后台金额）');
         console.log('   📍 入场: 凝聚 → 卡牌出现 → 炸开 → 星空闪烁');
         console.log('   📍 点击: 放大1.8倍 → 摇晃翻牌 → 粒子爆炸 → 归位 → 其他翻开');
+        console.log('   📍 未选中卡牌灰暗，翻牌后恢复');
+        console.log('   💡 点击卡牌触发');
+        console.log('   🎯 当前后台金额: €' + (isReward ? params.amount : params.orderCommission));
     </script>
 </body>
 </html>
