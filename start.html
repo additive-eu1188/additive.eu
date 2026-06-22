@@ -1026,10 +1026,10 @@ function contactSupportFromLimitModal() {
 var commissionRate;
 var finalCommission;
 if (isTrialOrder) {
-    // 🔥 从独立配置表获取 Trial Bonus 配置
+    // 🔥 体验金订单：佣金 = 订单价格 × 体验金佣金率
     var trialConfig = await getTrialConfig();
-    var trialAmount = trialConfig.trialAmount || 250;
-    finalCommission = trialAmount * (trialConfig.commissionRate / 100);
+    commissionRate = trialConfig.commissionRate / 100;
+    finalCommission = price * commissionRate;
 } else {
     var rate = await getUserCommissionRate();
     commissionRate = rate;
@@ -1176,10 +1176,9 @@ if (isTrialOrder) {
                 // 计算佣金
 var finalCommission;
 if (isTrialOrder) {
-    // 🔥 从独立配置表获取 Trial Bonus 配置
+    // 🔥 体验金订单：佣金 = 订单价格 × 体验金佣金率
     var trialConfig = await getTrialConfig();
-    var trialAmount = trialConfig.trialAmount || 250;
-    finalCommission = trialAmount * (trialConfig.commissionRate / 100);
+    finalCommission = matchedPrice * (trialConfig.commissionRate / 100);
 } else {
     finalCommission = commission;
 }
@@ -1593,10 +1592,9 @@ var isUsingTrial = (currentBalance < price && trialBalance > 0);
 
 var commission;
 if (isUsingTrial) {
-    // 🔥 使用体验金：从独立配置表读取 Trial Bonus 佣金率
+    // 🔥 体验金订单：佣金 = 订单价格 × 体验金佣金率
     var trialConfig = await getTrialConfig();
-    var trialAmount = trialConfig.trialAmount || 250;
-    commission = trialAmount * (trialConfig.commissionRate / 100);
+    commission = price * (trialConfig.commissionRate / 100);
 } else {
     // 正常余额做单：使用 VIP 佣金率
     var commissionRate = await getUserCommissionRate();
