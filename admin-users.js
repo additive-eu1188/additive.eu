@@ -1005,15 +1005,9 @@ async function resetUserOrders(uid, username) {
         return;
     }
     
-    showConfirm('⚠️ Confirm Reset', `Are you sure you want to reset orders for user ${username} (UID: ${uid})?\nThis will delete all order history and cannot be undone!\n\nCurrent Round: ${currentRound}\nOrders in current round: ${roundOrdersCount}/30`, async () => {
+    showConfirm('⚠️ Confirm Reset', `Are you sure you want to reset user ${username} (UID: ${uid}) to next round?\n\nCurrent Round: ${currentRound}\nOrders in current round: ${roundOrdersCount}/30`, async () => {
         try {
-            const { error } = await sb
-                .from('order_history')
-                .delete()
-                .eq('uid', uid);
-            
-            if (error) throw error;
-            
+            // 🔥 只递进 Round，不删除 order_history
             const nextRound = currentRound === 0 ? 1 : currentRound + 1;
             if (nextRound <= 2) {
                 await sb
