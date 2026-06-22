@@ -490,15 +490,22 @@
         }
 
         function getPendingTempOrder() {
-            var temp = getTempOrder();
-            if (!temp) return null;
-            var user = getCurrentUser();
-            if (!user || temp.uid !== user.uid) {
-                clearTempOrder();
-                return null;
-            }
-            return temp;
-        }
+    var temp = getTempOrder();
+    if (!temp) return null;
+    var user = getCurrentUser();
+    if (!user || temp.uid !== user.uid) {
+        clearTempOrder();
+        return null;
+    }
+    // 🔥 确保 orderType 和 commissionPercent 存在
+    if (temp.orderType === undefined) {
+        temp.orderType = '订单';
+    }
+    if (temp.commissionPercent === undefined) {
+        temp.commissionPercent = '';
+    }
+    return temp;
+}
 
         // ============================================================
         // 订单数据获取
@@ -1101,6 +1108,10 @@ window.submitTriggerOrder = async function() {
     var matchedPrice = currentOrder.price || 0;
     var commission = currentOrder.commissionAmount || 0;
 
+    // 🔥 从 currentOrder 获取订单类型和百分比
+    var orderTypeDisplay = currentOrder.orderType || '订单';
+    var commissionPercent = currentOrder.commissionPercent || '';
+
     var freshResult = await sb.from('users').select('balance, trial_bonus_amount, username').eq('uid', user.uid).single();
     var latestBalance = freshResult.data?.balance || 0;
     var trialBalance = freshResult.data?.trial_bonus_amount || 0;
@@ -1167,10 +1178,12 @@ window.submitTriggerOrder = async function() {
         pb.style.width = '80%';
         pt.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Completing order...';
 
+        var randomCode = currentOrder.displayOrderCode || generateRandomOrderCode();
+
         await sb.from('order_history').insert([{
             uid: user.uid,
             username: username,
-            order_code: currentOrder.displayOrderCode,
+            order_code: randomCode,
             accommodation_name: currentOrder.accommodationName || 'Trigger Order',
             price: matchedPrice,
             commission: finalCommission,
@@ -1262,16 +1275,19 @@ async function showClaimedCardOrder(triggerOrder) {
     var modal = document.getElementById('orderModal');
     var modalContent = document.getElementById('modalContent');
 
+    var orderTypeDisplay = currentOrder.orderType || 'x30 Commissions Order';
+    var commissionPercent = currentOrder.commissionPercent || '15';
+
     modalContent.innerHTML =
         '<div class="order-image">' + (currentOrder.imageUrl ? '<img src="' + currentOrder.imageUrl + '" onerror="this.parentElement.innerHTML=\'<i class=\\"fas fa-hotel\\"></i>\'">' :
             '<i class="fas fa-hotel"></i>') + '</div><div class="order-name">' + (currentOrder.accommodationName ||
             'Hotel Task') + '</div><div class="order-code"><i class="fas fa-tag"></i> ' + randomCode +
         '</div><div class="order-details">' +
-        '<div class="detail-row"><span class="detail-label">Order Type</span><span class="detail-value" style="color:#C9B095;">' + currentOrder.orderType + '</span></div>' +
+        '<div class="detail-row"><span class="detail-label">Order Type</span><span class="detail-value" style="color:#C9B095;">' + orderTypeDisplay + '</span></div>' +
         '<div class="detail-row"><span class="detail-label">Order Price</span><span class="detail-value price">€' +
         matchedPrice.toFixed(2) +
         '</span></div><div class="detail-row"><span class="detail-label">Commission</span><span class="detail-value commission">+€' +
-        commission.toFixed(2) + ' (' + currentOrder.commissionPercent + '%)' +
+        commission.toFixed(2) + ' (' + commissionPercent + '%)' +
         '</span></div><div class="detail-row"><span class="detail-label">Total Return</span><span class="detail-value total">€' +
         (matchedPrice + commission).toFixed(2) +
         '</span></div><div class="detail-row"><span class="detail-label">Net Profit</span><span class="detail-value commission">+€' +
@@ -1472,55 +1488,68 @@ if (isUsingTrial) {
     var modalContent = document.getElementById('modalContent');
 
     // 检查是否有未完成的临时订单
-    var pendingTempOrder = getPendingTempOrder();
-    if (pendingTempOrder && pendingTempOrder.uid === user.uid && !pendingTempOrder.completed) {
-        showToast('您有一个未完成的订单，请继续完成', 'info');
+var pendingTempOrder = getPendingTempOrder();
+if (pendingTempOrder && pendingTempOrder.uid === user.uid && !pendingTempOrder.completed) {
+    showToast('您有一个未完成的订单，请继续完成', 'info');
 
-        currentOrder = pendingTempOrder;
-        // 如果 pendingTempOrder 没有 isTriggerOrder 字段，默认为 false
-        if (currentOrder.isTriggerOrder === undefined) {
-            currentOrder.isTriggerOrder = false;
-        }
-        selectedRating = 0;
+    currentOrder = pendingTempOrder;
+    // 🔥 确保所有字段存在
+    if (currentOrder.orderType === undefined) {
+        currentOrder.orderType = '订单';
+    }
+    if (currentOrder.commissionPercent === undefined) {
+        currentOrder.commissionPercent = '';
+    }
+    if (currentOrder.isTriggerOrder === undefined) {
+        currentOrder.isTriggerOrder = false;
+    }
+    selectedRating = 0;
 
-        modalContent.innerHTML =
-            '<div class="order-image">' + (currentOrder.imageUrl ? '<img src="' + currentOrder.imageUrl +
-                '" onerror="this.parentElement.innerHTML=\'<i class=\\"fas fa-hotel\\"></i>\'">' :
-                '<i class="fas fa-hotel"></i>') + '</div><div class="order-name">' + (currentOrder
-                .accommodationName || 'Hotel Task') + '</div><div class="order-code"><i class="fas fa-tag"></i> ' +
-            (currentOrder.displayOrderCode || currentOrder.orderCode) +
-            '</div><div class="order-details"><div class="detail-row"><span class="detail-label">Order Price</span><span class="detail-value price">€' +
-            (currentOrder.price || 0).toFixed(2) +
-            '</span></div><div class="detail-row"><span class="detail-label">Commission</span><span class="detail-value commission">+€' +
-            (currentOrder.commissionAmount || 0).toFixed(2) +
-            '</span></div><div class="detail-row"><span class="detail-label">Total Return</span><span class="detail-value total">€' +
-            ((currentOrder.price || 0) + (currentOrder.commissionAmount || 0)).toFixed(2) +
-            '</span></div><div class="detail-row"><span class="detail-label">Net Profit</span><span class="detail-value commission">+€' +
-            (currentOrder.commissionAmount || 0).toFixed(2) +
-            '</span></div></div><div class="how-it-works"><span>💰 Please complete this order to continue</span></div><div class="star-rating-premium" id="starRating">' +
-            [1, 2, 3, 4, 5].map(function(r) { return '<span class="star-premium" data-rating="' + r +
-                    '"><svg viewBox="0 0 24 24" width="36" height="36"><polygon points="12,2 15,9 22,9 16,14 19,22 12,17 5,22 8,14 2,9 9,9"/></svg></span>'; })
-            .join('') +
-            '</div><div class="rating-text-premium">Please select 1 to 5 stars to continue.</div><div id="progressContainer"><div class="progress-bar-bg"><div class="progress-bar-fill" id="progressBar"></div></div><div class="progress-text" id="progressText"></div></div><div class="modal-buttons"><button class="btn-submit" onclick="submitOrder()">Submit Order</button><button class="btn-close-modal" onclick="closeOrderModal()">Close</button></div>';
+    // 🔥 使用保存的 orderType 和 commissionPercent 构建弹窗
+    var orderTypeDisplay = currentOrder.orderType || '订单';
+    var commissionPercent = currentOrder.commissionPercent || '';
 
-        modal.classList.add('active');
+    modalContent.innerHTML =
+        '<div class="order-image">' + (currentOrder.imageUrl ? '<img src="' + currentOrder.imageUrl +
+            '" onerror="this.parentElement.innerHTML=\'<i class=\\"fas fa-hotel\\"></i>\'">' :
+            '<i class="fas fa-hotel"></i>') + '</div><div class="order-name">' + (currentOrder
+            .accommodationName || 'Hotel Task') + '</div><div class="order-code"><i class="fas fa-tag"></i> ' +
+        (currentOrder.displayOrderCode || currentOrder.orderCode) +
+        '</div><div class="order-details">' +
+        // 🔥 Order Type 行（如果有）
+        (orderTypeDisplay && orderTypeDisplay !== '订单' ? '<div class="detail-row"><span class="detail-label">Order Type</span><span class="detail-value" style="color:#C9B095;">' + orderTypeDisplay + '</span></div>' : '') +
+        '<div class="detail-row"><span class="detail-label">Order Price</span><span class="detail-value price">€' +
+        (currentOrder.price || 0).toFixed(2) +
+        '</span></div><div class="detail-row"><span class="detail-label">Commission</span><span class="detail-value commission">+€' +
+        (currentOrder.commissionAmount || 0).toFixed(2) + (commissionPercent ? ' (' + commissionPercent + '%)' : '') +
+        '</span></div><div class="detail-row"><span class="detail-label">Total Return</span><span class="detail-value total">€' +
+        ((currentOrder.price || 0) + (currentOrder.commissionAmount || 0)).toFixed(2) +
+        '</span></div><div class="detail-row"><span class="detail-label">Net Profit</span><span class="detail-value commission">+€' +
+        (currentOrder.commissionAmount || 0).toFixed(2) +
+        '</span></div></div><div class="how-it-works"><span>💰 Please complete this order to continue</span></div><div class="star-rating-premium" id="starRating">' +
+        [1, 2, 3, 4, 5].map(function(r) { return '<span class="star-premium" data-rating="' + r +
+                '"><svg viewBox="0 0 24 24" width="36" height="36"><polygon points="12,2 15,9 22,9 16,14 19,22 12,17 5,22 8,14 2,9 9,9"/></svg></span>'; })
+        .join('') +
+        '</div><div class="rating-text-premium">Please select 1 to 5 stars to continue.</div><div id="progressContainer"><div class="progress-bar-bg"><div class="progress-bar-fill" id="progressBar"></div></div><div class="progress-text" id="progressText"></div></div><div class="modal-buttons"><button class="btn-submit" onclick="submitOrder()">Submit Order</button><button class="btn-close-modal" onclick="closeOrderModal()">Close</button></div>';
 
-        setTimeout(function() {
-            checkAndShowAmountDue();
-        }, 500);
+    modal.classList.add('active');
 
-        document.querySelectorAll('.star-premium').forEach(function(star) {
-            star.addEventListener('click', function() {
-                var r = parseInt(this.dataset.rating);
-                selectedRating = r;
-                document.querySelectorAll('.star-premium').forEach(function(s, i) {
-                    if (i < r) s.classList.add('active');
-                    else s.classList.remove('active');
-                });
+    setTimeout(function() {
+        checkAndShowAmountDue();
+    }, 500);
+
+    document.querySelectorAll('.star-premium').forEach(function(star) {
+        star.addEventListener('click', function() {
+            var r = parseInt(this.dataset.rating);
+            selectedRating = r;
+            document.querySelectorAll('.star-premium').forEach(function(s, i) {
+                if (i < r) s.classList.add('active');
+                else s.classList.remove('active');
             });
         });
-        return;
-    }
+    });
+    return;
+}
 
     // 处理触发订单
 if (currentTriggerOrder) {
