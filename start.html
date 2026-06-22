@@ -1533,17 +1533,27 @@ var currentCount = roundOrdersCount;
     var trialBalance2 = freshUserResult2.data?.trial_bonus_amount || 0;
     var isUsingTrial = (currentBalance2 < 50 && trialBalance2 > 0);
 
-    // 🔥 计算订单上限（基于 Round，用户看不到 Round 字样）
-    var maxOrders = 30; // 默认 Trial 用户最多30单
-    if (isPremium) {
-        if (currentRound === 1) {
-            maxOrders = 30;   // Round 1：总订单最多30
-        } else if (currentRound === 2) {
-            maxOrders = 30;   // Round 2：总订单最多60
-        } else {
-            maxOrders = 30;
-        }
-    }
+    // 🔥 获取用户的 VIP 等级和订单上限（从数据库读取）
+const { data: userVipData } = await sb
+    .from('users')
+    .select('vip_level')
+    .eq('uid', user.uid)
+    .single();
+
+const userVipLevel = userVipData?.vip_level || 1;
+
+const { data: vipSetting } = await sb
+    .from('vip_settings')
+    .select('orders_limit')
+    .eq('level', userVipLevel)
+    .single();
+
+const ordersPerRound = vipSetting?.orders_limit || 30;  // 默认30
+
+// 🔥 每个 Round 的订单上限
+var maxOrders = ordersPerRound;
+
+console.log('📊 用户 VIP 等级:', userVipLevel, '每轮订单上限:', ordersPerRound);
 
     console.log('🔍 调试信息: currentCount=' + currentCount + ', maxOrders=' + maxOrders + ', currentRound=' + currentRound + ', isPremium=' + isPremium);
 
@@ -1570,15 +1580,19 @@ if (currentCount >= maxOrders) {
         console.log('✅ Trial Bonus Deducted，余额保持不变: €' + currentBalance2.toFixed(2));
     }
     
-    var message = 'Your orders are completed, please contact user support to reset your working account.';
-    
-    if (isPremium && currentRound === 1 && currentCount >= 30) {
-        message = 'You have completed 30 orders! Please contact support to reset your working account.';
-    } else if (isPremium && currentRound === 2 && currentCount >= 60) {
-        message = 'You have completed 60 orders! You can proceed to claim the Sign In Bonus today.';
-    } else if (!isPremium && currentCount >= 30) {
-        message = 'You have completed 30 orders! You can proceed to make your withdrawal.';
-    }
+    var message = '';
+
+// 🔥 使用 maxOrders（从 VIP 设置读取）判断
+if (!isPremium && currentCount >= maxOrders) {
+    // Round 0 (Trial) 完成
+    message = 'Your trial is completed, please contact user support to reset your working account.';
+} else if (isPremium && currentRound === 1 && currentCount >= maxOrders) {
+    // Round 1 完成
+    message = 'Your orders are completed, please contact user support to reset your working account.';
+} else if (isPremium && currentRound === 2 && currentCount >= maxOrders) {
+    // Round 2 完成 - 可领取签到奖励
+    message = 'Your orders are completed, please proceed to claim your sign in reward.';
+}
     
     showLimitModal(message);
     return;
