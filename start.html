@@ -87,95 +87,99 @@
         .progress-text { text-align: center; margin-top: 8px; font-size: 12px; color: #C9B095; }
 
         /* ===== 统一弹窗样式 ===== */
-        .credit-block-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(7, 11, 26, 0.92);
-            backdrop-filter: blur(14px);
-            z-index: 30000;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            visibility: hidden;
-            opacity: 0;
-            transition: 0.35s ease;
-        }
-        .credit-block-overlay.active {
-            visibility: visible;
-            opacity: 1;
-        }
-        .credit-block-content {
-            background: linear-gradient(160deg, #1a1428, #0e0a1a);
-            border-radius: 32px;
-            padding: 40px 36px;
-            max-width: 440px;
-            width: 100%;
-            border: 1px solid rgba(201, 176, 149, 0.06);
-            box-shadow: 0 24px 60px rgba(0, 0, 0, 0.6);
-            text-align: center;
-            transform: scale(0.92);
-            transition: transform 0.3s cubic-bezier(0.2, 0.9, 0.4, 1.1);
-        }
-        .credit-block-overlay.active .credit-block-content {
-            transform: scale(1);
-        }
-        .credit-block-content .icon {
-            font-size: 48px;
-            color: #ff6a00;
-            margin-bottom: 16px;
-            display: block;
-        }
-        .credit-block-content .icon-success {
-            font-size: 48px;
-            color: #4ade80;
-            margin-bottom: 16px;
-            display: block;
-        }
-        .credit-block-content h3 {
-            font-size: 20px;
-            font-weight: 700;
-            color: #e8d5c0;
-            margin-bottom: 12px;
-        }
-        .credit-block-content p {
-            font-size: 14px;
-            color: #7a85a5;
-            line-height: 1.6;
-            margin-bottom: 24px;
-        }
-        .btn-support {
-            background: rgba(204, 178, 153, 0.08);
-            border: 1px solid rgba(204, 178, 153, 0.2);
-            padding: 10px 24px;
-            border-radius: 40px;
-            color: #CCB299;
-            font-weight: 500;
-            font-size: 13px;
-            cursor: pointer;
-            font-family: 'Inter', sans-serif;
-            transition: 0.25s;
-        }
-        .btn-support:hover {
-            background: rgba(204, 178, 153, 0.15);
-            transform: translateY(-2px);
-        }
-        .btn-close-modal-styled {
-            background: rgba(255, 255, 255, 0.04);
-            border: 1px solid rgba(255, 255, 255, 0.06);
-            padding: 10px 24px;
-            border-radius: 40px;
-            color: #5a4a6a;
-            font-size: 13px;
-            cursor: pointer;
-            font-family: 'Inter', sans-serif;
-            transition: 0.25s;
-        }
-        .btn-close-modal-styled:hover {
-            background: rgba(255, 255, 255, 0.08);
-        }
+.credit-block-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(7, 11, 26, 0.92);
+    backdrop-filter: blur(14px);
+    z-index: 30000;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    transition: 0.35s ease;
+}
+
+.credit-block-content {
+    background: linear-gradient(160deg, #1a1428, #0e0a1a);
+    border-radius: 32px;
+    padding: 40px 36px;
+    max-width: 440px;
+    width: 100%;
+    border: 1px solid rgba(201, 176, 149, 0.06);
+    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.6);
+    text-align: center;
+    transform: scale(1);
+    transition: transform 0.3s cubic-bezier(0.2, 0.9, 0.4, 1.1);
+    position: relative;
+    z-index: 30001;
+}
+
+.credit-block-content .icon {
+    font-size: 48px;
+    color: #ff6a00;
+    margin-bottom: 16px;
+    display: block;
+}
+
+.credit-block-content .icon-success {
+    font-size: 48px;
+    color: #4ade80;
+    margin-bottom: 16px;
+    display: block;
+}
+
+.credit-block-content h3 {
+    font-size: 20px;
+    font-weight: 700;
+    color: #e8d5c0;
+    margin-bottom: 12px;
+}
+
+.credit-block-content p {
+    font-size: 14px;
+    color: #7a85a5;
+    line-height: 1.6;
+    margin-bottom: 24px;
+}
+
+.btn-support {
+    background: rgba(204, 178, 153, 0.08);
+    border: 1px solid rgba(204, 178, 153, 0.2);
+    padding: 10px 24px;
+    border-radius: 40px;
+    color: #CCB299;
+    font-weight: 500;
+    font-size: 13px;
+    cursor: pointer;
+    font-family: 'Inter', sans-serif;
+    transition: 0.25s;
+}
+
+.btn-support:hover {
+    background: rgba(204, 178, 153, 0.15);
+    transform: translateY(-2px);
+}
+
+.btn-close-modal-styled {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    padding: 10px 24px;
+    border-radius: 40px;
+    color: #5a4a6a;
+    font-size: 13px;
+    cursor: pointer;
+    font-family: 'Inter', sans-serif;
+    transition: 0.25s;
+}
+
+.btn-close-modal-styled:hover {
+    background: rgba(255, 255, 255, 0.08);
+}
 
         @media (max-width: 768px) {
             body { padding: 0 !important; margin: 0 !important; overflow-x: hidden; }
@@ -747,22 +751,24 @@
         showAmountDueCard(amountDue);
     }
 
-    // 使用与 Orders Completed 完全一致的弹窗样式
+    // 使用与 Orders Completed 完全一致的弹窗
     var modalHtml = `
-        <div id="insufficientModal" class="credit-block-overlay active" style="visibility: visible; opacity: 1; z-index: 30001;">
-            <div class="credit-block-content" style="transform: scale(1);">
-                <span class="icon"><i class="fas fa-exclamation-triangle"></i></span>
-                <h3>Insufficient Balance</h3>
-                <p style="margin-bottom: 16px; color: #c0c8e0; line-height: 1.6;">
-                    Required: <strong style="color: #ffdd99;">€${requiredAmount.toFixed(2)}</strong><br>
-                    Your Balance: <strong style="color: #ff6a00;">€${currentBalance.toFixed(2)}</strong><br><br>
+        <div id="insufficientModal" style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(7,11,26,0.92);backdrop-filter:blur(14px);z-index:30000;display:flex;align-items:center;justify-content:center;visibility:visible;opacity:1;">
+            <div style="background:linear-gradient(160deg,#1a1428,#0e0a1a);border-radius:32px;padding:40px 36px;max-width:440px;width:100%;border:1px solid rgba(201,176,149,0.06);box-shadow:0 24px 60px rgba(0,0,0,0.6);text-align:center;transform:scale(1);">
+                <div style="font-size:48px;color:#ff6a00;margin-bottom:16px;display:block;">
+                    <i class="fas fa-exclamation-triangle"></i>
+                </div>
+                <h3 style="font-size:20px;font-weight:700;color:#e8d5c0;margin-bottom:12px;">Insufficient Balance</h3>
+                <p style="margin-bottom:16px;color:#c0c8e0;line-height:1.6;font-size:14px;">
+                    Required: <strong style="color:#ffdd99;">€${requiredAmount.toFixed(2)}</strong><br>
+                    Your Balance: <strong style="color:#ff6a00;">€${currentBalance.toFixed(2)}</strong><br><br>
                     Please recharge your account to complete this order.
                 </p>
-                <div style="display: flex; gap: 12px; justify-content: center; margin-top: 16px;">
-                    <button class="btn-support" onclick="contactSupportFromModal()">
+                <div style="display:flex;gap:12px;justify-content:center;margin-top:16px;">
+                    <button onclick="contactSupportFromModal()" style="background:rgba(204,178,153,0.08);border:1px solid rgba(204,178,153,0.2);padding:10px 24px;border-radius:40px;color:#CCB299;font-weight:500;font-size:13px;cursor:pointer;font-family:'Inter',sans-serif;transition:0.25s;">
                         <i class="fas fa-headset"></i> Contact Support
                     </button>
-                    <button class="btn-close-modal-styled" onclick="closeInsufficientModal()">
+                    <button onclick="closeInsufficientModal()" style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.06);padding:10px 24px;border-radius:40px;color:#5a4a6a;font-size:13px;cursor:pointer;font-family:'Inter',sans-serif;transition:0.25s;">
                         Close
                     </button>
                 </div>
@@ -773,15 +779,9 @@
     var existing = document.getElementById('insufficientModal');
     if (existing) existing.remove();
     document.body.insertAdjacentHTML('beforeend', modalHtml);
-
-    document.getElementById('insufficientModal').addEventListener('click', function(e) {
-        if (e.target === this) {
-            closeInsufficientModal();
-        }
-    });
 }
 
-        function closeInsufficientModal() {
+function closeInsufficientModal() {
     var modal = document.getElementById('insufficientModal');
     if (modal) modal.remove();
 }
@@ -792,46 +792,42 @@ function contactSupportFromModal() {
 }
 
         function showLimitModal(message) {
-            var modalHtml = `
-                <div id="limitModal" class="credit-block-overlay active" style="visibility: visible; opacity: 1; z-index: 30001;">
-                    <div class="credit-block-content" style="transform: scale(1);">
-                        <span class="icon-success"><i class="fas fa-check-circle"></i></span>
-                        <h3>Orders Completed</h3>
-                        <p style="margin-bottom: 16px; color: #c0c8e0; line-height: 1.6;">
-                            ${message}
-                        </p>
-                        <div style="display: flex; gap: 12px; justify-content: center; margin-top: 16px;">
-                            <button class="btn-support" onclick="contactSupportFromLimitModal()">
-                                <i class="fas fa-headset"></i> Contact Support
-                            </button>
-                            <button class="btn-close-modal-styled" onclick="closeLimitModal()">
-                                Close
-                            </button>
-                        </div>
-                    </div>
+    var modalHtml = `
+        <div id="limitModal" style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(7,11,26,0.92);backdrop-filter:blur(14px);z-index:30001;display:flex;align-items:center;justify-content:center;visibility:visible;opacity:1;">
+            <div style="background:linear-gradient(160deg,#1a1428,#0e0a1a);border-radius:32px;padding:40px 36px;max-width:440px;width:100%;border:1px solid rgba(201,176,149,0.06);box-shadow:0 24px 60px rgba(0,0,0,0.6);text-align:center;transform:scale(1);">
+                <div style="font-size:48px;color:#4ade80;margin-bottom:16px;display:block;">
+                    <i class="fas fa-check-circle"></i>
                 </div>
-            `;
+                <h3 style="font-size:20px;font-weight:700;color:#e8d5c0;margin-bottom:12px;">Orders Completed</h3>
+                <p style="margin-bottom:16px;color:#c0c8e0;line-height:1.6;font-size:14px;">
+                    ${message}
+                </p>
+                <div style="display:flex;gap:12px;justify-content:center;margin-top:16px;">
+                    <button onclick="contactSupportFromLimitModal()" style="background:rgba(204,178,153,0.08);border:1px solid rgba(204,178,153,0.2);padding:10px 24px;border-radius:40px;color:#CCB299;font-weight:500;font-size:13px;cursor:pointer;font-family:'Inter',sans-serif;transition:0.25s;">
+                        <i class="fas fa-headset"></i> Contact Support
+                    </button>
+                    <button onclick="closeLimitModal()" style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.06);padding:10px 24px;border-radius:40px;color:#5a4a6a;font-size:13px;cursor:pointer;font-family:'Inter',sans-serif;transition:0.25s;">
+                        Close
+                    </button>
+                </div>
+            </div>
+        </div>
+    `;
 
-            var existing = document.getElementById('limitModal');
-            if (existing) existing.remove();
-            document.body.insertAdjacentHTML('beforeend', modalHtml);
+    var existing = document.getElementById('limitModal');
+    if (existing) existing.remove();
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
+}
 
-            document.getElementById('limitModal').addEventListener('click', function(e) {
-                if (e.target === this) {
-                    closeLimitModal();
-                }
-            });
-        }
+function closeLimitModal() {
+    var modal = document.getElementById('limitModal');
+    if (modal) modal.remove();
+}
 
-        function closeLimitModal() {
-            var modal = document.getElementById('limitModal');
-            if (modal) modal.remove();
-        }
-
-        function contactSupportFromLimitModal() {
-            closeLimitModal();
-            window.location.href = 'chat.html';
-        }
+function contactSupportFromLimitModal() {
+    closeLimitModal();
+    window.location.href = 'chat.html';
+}
 
         // ============================================================
         // 卡牌触发
