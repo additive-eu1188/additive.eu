@@ -7,6 +7,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
     <style>
+        /* ===== 你的原始样式 ===== */
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             background: #070b1e;
@@ -274,7 +275,41 @@
 
     <div id="effectLayer"></div>
 
-    <div class="cards-grid" id="cardsGrid"></div>
+    <div class="cards-grid" id="cardsGrid">
+        <div class="card-item" id="card1">
+            <div class="card-inner">
+                <div class="card-aurora"></div>
+                <div class="face face-front"><i class="fas fa-gem"></i><span>SELECT</span></div>
+                <div class="face face-back">
+                    <div class="reward-icon"><i class="fas fa-gift"></i></div>
+                    <div class="reward-amount" id="rewardAmount1">-</div>
+                    <div class="reward-label" id="rewardLabel1">Loading...</div>
+                </div>
+            </div>
+        </div>
+        <div class="card-item" id="card2">
+            <div class="card-inner">
+                <div class="card-aurora"></div>
+                <div class="face face-front"><i class="fas fa-gem"></i><span>SELECT</span></div>
+                <div class="face face-back">
+                    <div class="reward-icon"><i class="fas fa-gift"></i></div>
+                    <div class="reward-amount" id="rewardAmount2">-</div>
+                    <div class="reward-label" id="rewardLabel2">Loading...</div>
+                </div>
+            </div>
+        </div>
+        <div class="card-item" id="card3">
+            <div class="card-inner">
+                <div class="card-aurora"></div>
+                <div class="face face-front"><i class="fas fa-gem"></i><span>SELECT</span></div>
+                <div class="face face-back">
+                    <div class="reward-icon"><i class="fas fa-gift"></i></div>
+                    <div class="reward-amount" id="rewardAmount3">-</div>
+                    <div class="reward-label" id="rewardLabel3">Loading...</div>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <div class="hint" id="hint"><i class="fas fa-mouse-pointer"></i> 点击任意卡牌翻开</div>
 
@@ -298,80 +333,36 @@
         const isReward = params.type === 'reward';
 
         // ============================================================
-        // 🔥 生成随机金额（用于正面显示，制造悬念）
+        // 🔥 更新卡牌背面内容（后台设置）
         // ============================================================
-        function generateRandomAmount(exclude) {
-            const min = 5;
-            const max = 200;
-            let amt;
-            let attempts = 0;
-            do {
-                amt = Math.floor(Math.random() * (max - min + 1)) + min;
-                attempts++;
-            } while (amt === exclude && attempts < 30);
-            return amt;
-        }
+        function updateCardBacks() {
+            const amountEls = [
+                document.getElementById('rewardAmount1'),
+                document.getElementById('rewardAmount2'),
+                document.getElementById('rewardAmount3')
+            ];
+            const labelEls = [
+                document.getElementById('rewardLabel1'),
+                document.getElementById('rewardLabel2'),
+                document.getElementById('rewardLabel3')
+            ];
 
-        // ============================================================
-        // 🔥 渲染三张卡牌（正面显示不同金额，背面显示后台设置）
-        // ============================================================
-        function renderCards() {
-            const grid = document.getElementById('cardsGrid');
-            let html = '';
-
-            // 生成三个不同的金额（用于正面显示）
-            const fixedAmount = params.amount;
-            const r1 = generateRandomAmount(fixedAmount);
-            const r2 = generateRandomAmount(fixedAmount);
-            let displayAmounts = [fixedAmount, r1, r2];
-
-            // 打乱顺序
-            for (let i = displayAmounts.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [displayAmounts[i], displayAmounts[j]] = [displayAmounts[j], displayAmounts[i]];
+            let amountText, labelText;
+            if (isReward) {
+                amountText = '€' + params.amount.toFixed(2);
+                labelText = '✨ Cash Reward';
+            } else {
+                amountText = 'x30';
+                labelText = 'COMMISSIONS';
             }
 
-            for (let i = 0; i < 3; i++) {
-                // 🔥 正面显示随机金额（制造悬念）
-                const frontAmount = displayAmounts[i];
-                const isMain = frontAmount === fixedAmount;
-
-                // 🔥 背面显示后台设置的固定内容
-                let backHtml = '';
-                if (isReward) {
-                    backHtml = `
-                        <div class="reward-icon"><i class="fas fa-gift"></i></div>
-                        <div class="reward-amount" style="color:#ffdd99;font-size:28px;">€${fixedAmount.toFixed(2)}</div>
-                        <div class="reward-label">⭐ Grand Prize</div>
-                    `;
-                } else {
-                    backHtml = `
-                        <div class="reward-icon"><i class="fas fa-hotel"></i></div>
-                        <div class="reward-amount" style="font-size:20px;color:#ffdd99;">x30</div>
-                        <div class="reward-label" style="font-size:12px;color:#C9B095;">COMMISSIONS</div>
-                    `;
-                }
-
-                html += `
-                    <div class="card-item" id="card${i + 1}" data-index="${i}" data-trigger-id="${params.triggerId}">
-                        <div class="card-inner">
-                            <div class="card-aurora"></div>
-                            <div class="face face-front">
-                                <i class="fas fa-gem"></i>
-                                <span>€${frontAmount.toFixed(2)}</span>
-                            </div>
-                            <div class="face face-back">
-                                ${backHtml}
-                            </div>
-                        </div>
-                    </div>
-                `;
-            }
-
-            grid.innerHTML = html;
+            amountEls.forEach(el => {
+                if (el) el.textContent = amountText;
+            });
+            labelEls.forEach(el => {
+                if (el) el.textContent = labelText;
+            });
         }
-
-        renderCards();
 
         // ============================================================
         // 完整流程：入场 + 点击翻牌
@@ -380,7 +371,11 @@
         let isFlipped = false;
         let flipLock = false;
 
-        const cards = document.querySelectorAll('.card-item');
+        const cards = [
+            document.getElementById('card1'),
+            document.getElementById('card2'),
+            document.getElementById('card3')
+        ];
         const effectLayer = document.getElementById('effectLayer');
         const hint = document.getElementById('hint');
 
@@ -528,13 +523,11 @@
             isFlipped = true;
             hint.classList.remove('show');
 
-            const triggerId = parseInt(card.dataset.triggerId) || params.triggerId;
-
             const rect = card.getBoundingClientRect();
             const cx = window.innerWidth / 2 - rect.width / 2;
             const cy = window.innerHeight / 2 - rect.height / 2;
 
-            const otherCards = Array.from(cards).filter(c => c !== card);
+            const otherCards = cards.filter(c => c !== card);
             otherCards.forEach(c => {
                 c.classList.add('dim-other');
             });
@@ -610,7 +603,7 @@
                     window.parent.postMessage({
                         action: 'cardRevealComplete',
                         isWinner: true,
-                        triggerId: triggerId,
+                        triggerId: params.triggerId,
                         amount: amount,
                         type: isReward ? 'reward' : 'order'
                     }, '*');
@@ -644,6 +637,9 @@
         // ============================================================
         // 初始化
         // ============================================================
+        // 🔥 先更新卡牌背面内容
+        updateCardBacks();
+
         setTimeout(() => {
             playEntrance();
         }, 300);
@@ -652,7 +648,7 @@
         console.log('   📍 类型:', params.type);
         console.log('   📍 固定奖励: €' + params.amount);
         console.log('   📍 触发ID:', params.triggerId);
-        console.log('   ✅ 正面显示随机金额（制造悬念）');
+        console.log('   ✅ 卡牌正面显示 SELECT');
         console.log('   ✅ 翻开后显示后台设置的固定内容');
         console.log('   ✅ 用户点击任何卡牌都获得固定奖励');
     </script>
