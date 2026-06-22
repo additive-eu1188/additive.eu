@@ -86,7 +86,7 @@
         .progress-bar-fill { width: 0%; height: 100%; background: #C9B095; border-radius: 10px; transition: width 0.15s ease; }
         .progress-text { text-align: center; margin-top: 8px; font-size: 12px; color: #C9B095; }
 
-        /* ===== 统一弹窗样式（与信用分弹窗一致） ===== */
+        /* ===== 统一弹窗样式 ===== */
         .credit-block-overlay {
             position: fixed;
             top: 0;
@@ -735,7 +735,7 @@
         async function preloadOrders() { await getOrdersFromAdmin(); }
 
         // ============================================================
-        // 统一弹窗函数（与信用分弹窗一致）
+        // 统一弹窗函数
         // ============================================================
         function showInsufficientBalanceModal(requiredAmount, currentBalance) {
             closeOrderModal();
@@ -916,7 +916,7 @@
         }
 
         // ============================================================
-        // 订单提交
+        // 订单提交 - 核心修复
         // ============================================================
         var currentOrder = null;
         var selectedRating = 0;
@@ -963,35 +963,50 @@
                 pb.style.width = '40%';
                 pt.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Verifying balance...';
 
-                // 计算实际扣除：先从余额扣，不足的从试用金扣
+                // 计算实际扣除
                 var useTrial = 0;
                 var useBalance = 0;
 
                 if (latestBalance >= price) {
+                    // 余额足够，全部从余额扣
                     useBalance = price;
                 } else {
+                    // 余额不足，先用余额，再用试用金
                     useBalance = latestBalance;
                     useTrial = price - latestBalance;
                 }
 
                 // 扣款后的余额
                 var newBalance = latestBalance - useBalance;
-                var newTrialBonus = trialBalance - useTrial;
+                var newTrialBonus = trialBalance;
 
-                // 计算佣金：根据是否使用试用金，使用不同的佣金率
+                // 判断是否是试用金订单（使用了试用金）
                 var isTrialOrder = (useTrial > 0);
-                // 试用金订单：每单佣金控制在 0.85 欧元（30单 = 25.5）
-                // 余额订单：使用 VIP 佣金率
+
+                // 【重要】体验金做单：体验金不扣除！只扣除余额部分
+                // 如果使用了体验金，做单后体验金全额返还
+                if (isTrialOrder) {
+                    // 体验金保持不变
+                    newTrialBonus = trialBalance;
+                    // 只从余额扣除部分，体验金不扣
+                    // 但订单价格中使用了体验金，所以余额扣除后，体验金应该保持原样
+                    // 相当于体验金循环使用
+                    newBalance = latestBalance - useBalance;
+                    newTrialBonus = trialBalance; // 保持不变
+                }
+
+                // 计算佣金
                 var commissionRate;
                 if (isTrialOrder) {
-                    commissionRate = 0.028; // 2.8%，每单约 0.84 欧元（30单 ≈ 25.2）
+                    // 体验金订单：每单佣金 0.85 欧元（30单 = 25.5）
+                    commissionRate = 0.028;
                 } else {
                     var rate = await getUserCommissionRate();
                     commissionRate = rate;
                 }
                 var finalCommission = price * commissionRate;
 
-                // 试用金订单佣金上限 0.85 欧元
+                // 体验金订单佣金上限 0.85 欧元
                 if (isTrialOrder && finalCommission > 0.85) {
                     finalCommission = 0.85;
                 }
@@ -999,11 +1014,11 @@
                 pb.style.width = '60%';
                 pt.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Placing order...';
 
-                // 更新用户余额和试用金
-                var updateData = { balance: newBalance };
-                if (isTrialOrder) {
-                    updateData.trial_bonus_amount = newTrialBonus;
-                }
+                // 更新用户余额和试用金（体验金保持不变）
+                var updateData = { 
+                    balance: newBalance,
+                    trial_bonus_amount: newTrialBonus  // 体验金不变
+                };
 
                 var balanceError = await sb.from('users').update(updateData).eq('uid', user.uid);
                 if (balanceError.error) {
@@ -1048,9 +1063,7 @@
                 var finalBalance = newBalance + finalCommission;
                 currentUserBalance = finalBalance;
                 user.balance = finalBalance;
-                if (isTrialOrder) {
-                    user.trialBonusAmount = newTrialBonus;
-                }
+                user.trialBonusAmount = newTrialBonus;
                 localStorage.setItem('currentUser', JSON.stringify(user));
 
                 pb.style.width = '100%';
@@ -1060,7 +1073,7 @@
                 await loadUserData();
                 clearTempOrder();
 
-                var orderTypeText = isTrialOrder ? ' (试用金订单)' : '';
+                var orderTypeText = isTrialOrder ? ' (体验金订单)' : '';
                 showToast('✅ 订单完成！获得 €' + finalCommission.toFixed(2) + ' 佣金' + orderTypeText, 'success');
 
                 setTimeout(function() {
@@ -1073,6 +1086,9 @@
             }, 500);
         };
 
+        // ============================================================
+        // 提交触发订单
+        // ============================================================
         window.submitTriggerOrder = async function() {
             if (selectedRating === 0) {
                 showToast('Please select a rating', 'warning');
@@ -1121,8 +1137,14 @@
                 }
 
                 var newBalance = latestBalance - useBalance;
-                var newTrialBonus = trialBalance - useTrial;
+                var newTrialBonus = trialBalance;
                 var isTrialOrder = (useTrial > 0);
+
+                // 体验金订单：体验金不扣除
+                if (isTrialOrder) {
+                    newTrialBonus = trialBalance;
+                    newBalance = latestBalance - useBalance;
+                }
 
                 // 触发订单的佣金已经计算好，直接使用
                 var finalCommission = commission;
@@ -1130,10 +1152,10 @@
                 pb.style.width = '60%';
                 pt.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Placing order...';
 
-                var updateData = { balance: newBalance };
-                if (isTrialOrder) {
-                    updateData.trial_bonus_amount = newTrialBonus;
-                }
+                var updateData = { 
+                    balance: newBalance,
+                    trial_bonus_amount: newTrialBonus
+                };
 
                 var balanceError = await sb.from('users').update(updateData).eq('uid', user.uid);
                 if (balanceError.error) {
@@ -1174,9 +1196,7 @@
                 var finalBalance = newBalance + finalCommission;
                 currentUserBalance = finalBalance;
                 user.balance = finalBalance;
-                if (isTrialOrder) {
-                    user.trialBonusAmount = newTrialBonus;
-                }
+                user.trialBonusAmount = newTrialBonus;
                 localStorage.setItem('currentUser', JSON.stringify(user));
 
                 pb.style.width = '100%';
@@ -1586,11 +1606,12 @@
         loadUserData();
         loadAnimatedConfig();
 
-        console.log('✅ start.html 已加载（完整修复版）');
-        console.log('   - 余额不足时显示统一 Insufficient Balance 弹窗');
-        console.log('   - 试用金订单佣金控制在 25-27 欧元（30单）');
-        console.log('   - 订单完成后显示 Orders Completed 弹窗');
-        console.log('   - 所有弹窗都有 Contact Support 和 Close 按钮');
+        console.log('✅ start.html 已加载（最终修复版）');
+        console.log('   ✅ 余额不足时显示统一 Insufficient Balance 弹窗');
+        console.log('   ✅ 体验金做单不扣除体验金（循环使用）');
+        console.log('   ✅ 体验金订单每单佣金 0.85€，30单 = 25.5€');
+        console.log('   ✅ 订单完成后显示 Orders Completed 弹窗');
+        console.log('   ✅ 所有弹窗都有 Contact Support 和 Close 按钮');
     </script>
 </body>
 </html>
