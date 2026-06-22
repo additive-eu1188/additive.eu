@@ -841,7 +841,7 @@ async function processDeposit(uid, username, depositAmount, rewardAmount, reward
     try {
         const { data: user, error } = await sb
             .from('users')
-            .select('balance, is_premium')
+            .select('balance, is_premium, current_round, round_orders_count')
             .eq('uid', uid)
             .single();
         if (error) throw error;
@@ -850,17 +850,17 @@ async function processDeposit(uid, username, depositAmount, rewardAmount, reward
         let isFirstDeposit = false;
         
         // 🔥 检查是否首次充值（加入会员）
-        // 🔥 检查是否首次充值（加入会员）
-if (!user.is_premium && depositAmount > 0) {
-    isFirstDeposit = true;
-    // 标记为正式用户（会员）
-    await sb.from('users').update({ 
-        is_premium: true,
-        current_round: 1,
-        round_orders_count: 0
-    }).eq('uid', uid);
-    message += '🎉 用户已加入会员！; ';
-}
+        if (!user.is_premium && depositAmount > 0) {
+            isFirstDeposit = true;
+            // ✅ 只标记为正式用户，不改变 Round 状态
+            // Round 由管理员手动 Reset 才递进
+            await sb.from('users').update({ 
+                is_premium: true
+                // current_round 保持不变
+                // round_orders_count 保持不变
+            }).eq('uid', uid);
+            message += '🎉 用户已加入会员！; ';
+        }
         
         if (depositAmount > 0) {
             newBalance += depositAmount;
