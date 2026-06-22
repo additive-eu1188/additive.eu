@@ -347,6 +347,11 @@
 
     <script>
         // ============================================================
+        // 通用工具
+        // ============================================================
+        function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+        // ============================================================
         // 读取 URL 参数
         // ============================================================
         function getParams() {
@@ -460,7 +465,6 @@
 
         function random(min, max) { return Math.random() * (max - min) + min; }
         function randomInt(min, max) { return Math.floor(random(min, max + 1)); }
-        function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
 
         function createParticles(count) {
             const cx = window.innerWidth / 2;
@@ -698,6 +702,7 @@
 
         // ============================================================
         // 🔥 翻牌动画：硬编码版本（卡片移动到中央 + 摇晃翻牌 + 归位）
+        //     然后副卡依次翻开灰暗，全部完成后等待2秒发送消息
         // ============================================================
         async function handleCardFlip(card) {
             if (flipLock || isPlaying || isFlipped) return;
@@ -722,7 +727,7 @@
             const cx = window.innerWidth / 2 - rect.width / 2;
             const cy = window.innerHeight / 2 - rect.height / 2;
 
-            // 其他卡牌变灰暗
+            // 其他卡牌变灰暗（暂时灰暗，稍后翻开）
             otherCards.forEach(c => {
                 c.classList.add('dim-other');
             });
@@ -762,6 +767,7 @@
             // 5. 其他两张卡牌依次翻开，翻开前动态替换内容为随机值
             // ============================================================
             let delay = 400;
+            const flipPromises = [];
             otherCards.forEach((c, index) => {
                 const rand = randomValues[index];
                 // 翻开前替换背面内容
@@ -781,50 +787,59 @@
                         `;
                     }
                 }
-                setTimeout(() => {
-                    c.classList.add('flipped');
-                    c.classList.add('dim');
-                    const r = c.getBoundingClientRect();
-                    explode(r.left + r.width / 2, r.top + r.height / 2, 30);
-                }, delay);
+                const promise = new Promise(resolve => {
+                    setTimeout(() => {
+                        c.classList.add('flipped');
+                        c.classList.add('dim');
+                        const r = c.getBoundingClientRect();
+                        explode(r.left + r.width / 2, r.top + r.height / 2, 30);
+                        resolve();
+                    }, delay);
+                });
+                flipPromises.push(promise);
                 delay += 500;
             });
 
-            flipLock = false;
+            // 等待所有副卡翻开完成
+            await Promise.all(flipPromises);
+
+            // 6. 全部翻开后，静置 2 秒
+            await sleep(2000);
 
             // ============================================================
-            // 6. 发送 postMessage（固定奖励）
+            // 7. 发送 postMessage（固定奖励）
             // ============================================================
-            setTimeout(() => {
-                if (window.parent !== window) {
-                    let amount = 0;
-                    let orderPrice = 0;
-                    let orderCommission = 0;
-                    let orderName = '';
+            if (window.parent !== window) {
+                let amount = 0;
+                let orderPrice = 0;
+                let orderCommission = 0;
+                let orderName = '';
 
-                    if (isReward) {
-                        amount = params.amount;
-                    } else {
-                        amount = params.orderCommission;
-                        orderPrice = params.orderPrice || 0;
-                        orderCommission = params.orderCommission || 0;
-                        orderName = params.orderName || 'x30 Commissions Order';
-                    }
-
-                    const messageData = {
-                        action: 'cardRevealComplete',
-                        isWinner: true,
-                        triggerId: triggerId,
-                        amount: amount,
-                        type: isReward ? 'reward' : 'order',
-                        orderPrice: orderPrice,
-                        orderCommission: orderCommission,
-                        orderName: orderName
-                    };
-                    console.log('📤 发送消息:', messageData);
-                    window.parent.postMessage(messageData, '*');
+                if (isReward) {
+                    amount = params.amount;
+                } else {
+                    amount = params.orderCommission;
+                    orderPrice = params.orderPrice || 0;
+                    orderCommission = params.orderCommission || 0;
+                    orderName = params.orderName || 'x30 Commissions Order';
                 }
-            }, 500);
+
+                const messageData = {
+                    action: 'cardRevealComplete',
+                    isWinner: true,
+                    triggerId: triggerId,
+                    amount: amount,
+                    type: isReward ? 'reward' : 'order',
+                    orderPrice: orderPrice,
+                    orderCommission: orderCommission,
+                    orderName: orderName
+                };
+                console.log('📤 发送消息:', messageData);
+                window.parent.postMessage(messageData, '*');
+            }
+
+            // 解锁，允许再次点击（但页面即将关闭）
+            flipLock = false;
         }
 
         // ============================================================
@@ -857,11 +872,11 @@
             playEntrance();
         }, 300);
 
-        console.log('✅ 最终版：硬编码翻牌动画 + 固定奖励逻辑');
+        console.log('✅ 最终版：硬编码翻牌动画 + 固定奖励逻辑 + 副卡依次翻开灰暗 + 静置2秒');
         console.log('   📍 翻牌前：三张都显示固定内容');
         console.log('   📍 点击后：卡片移动到中央 → 摇晃翻牌 → 粒子爆炸 → 归位');
         console.log('   📍 副卡翻开前：动态替换为随机金额（≠ 固定值）');
-        console.log('   📍 任意卡牌点击都发送 isWinner: true');
+        console.log('   📍 全部翻开后等待2秒再发送消息');
         console.log('   📍 类型:', params.type);
         console.log('   📍 固定奖励: €' + (isReward ? params.amount : params.orderCommission));
     </script>
