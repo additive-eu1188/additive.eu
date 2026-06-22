@@ -963,7 +963,6 @@ function contactSupportFromLimitModal() {
     var pt = document.getElementById('progressText');
 
     var price = currentOrder.price || 0;
-    var commission = currentOrder.commissionAmount || 0;
 
     // 获取用户最新数据
     var freshResult = await sb.from('users').select('balance, trial_bonus_amount, username').eq('uid', user.uid).single();
@@ -971,142 +970,114 @@ function contactSupportFromLimitModal() {
     var trialBalance = freshResult.data?.trial_bonus_amount || 0;
     var username = freshResult.data?.username || user.username;
 
-    // 计算可用总额
     var totalAvailable = latestBalance + trialBalance;
 
-    // 🔥 普通做单：余额不足只显示弹窗，不显示 Amount Due
     if (totalAvailable < price) {
-        // 判断是否是触发订单（高级订单/卡牌订单）
         var isTriggerOrder = currentOrder.isTriggerOrder || false;
         showInsufficientBalanceModal(price, totalAvailable, isTriggerOrder);
         return;
     }
 
-            pc.style.display = 'block';
-            pb.style.width = '20%';
-            pt.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing order...';
+    pc.style.display = 'block';
+    pb.style.width = '20%';
+    pt.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing order...';
 
-            setTimeout(async function() {
-                pb.style.width = '40%';
-                pt.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Verifying balance...';
+    setTimeout(async function() {
+        pb.style.width = '40%';
+        pt.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Verifying balance...';
 
-                // 计算实际扣除
-var useTrial = 0;
-var useBalance = 0;
+        // 判断是否使用体验金（余额不足时使用）
+        var isTrialOrder = (latestBalance < price && trialBalance > 0);
+        var newTrialBonus = trialBalance;
 
-if (latestBalance >= price) {
-    // 余额足够，全部从余额扣
-    useBalance = price;
-} else {
-    // 余额不足，先用余额，再用试用金
-    useBalance = latestBalance;
-    useTrial = price - latestBalance;
-}
+        // 体验金做单：体验金不扣除，余额不变
+        if (isTrialOrder) {
+            newTrialBonus = trialBalance;
+        }
 
-// 扣款后的余额
-var newBalance = latestBalance - useBalance;
-var newTrialBonus = trialBalance;
+        // 计算佣金
+        var finalCommission;
+        if (isTrialOrder) {
+            var trialConfig = await getTrialConfig();
+            finalCommission = price * (trialConfig.commissionRate / 100);
+        } else {
+            var rate = await getUserCommissionRate();
+            finalCommission = price * rate;
+        }
 
-// 判断是否是试用金订单（使用了试用金）
-var isTrialOrder = (useTrial > 0);
+        pb.style.width = '60%';
+        pt.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Placing order...';
 
-// 【重要】体验金做单：体验金不扣除！余额也不扣除！
-// 体验金做单时，用户余额保持不变，佣金累加
-if (isTrialOrder) {
-    // 体验金保持不变
-    newTrialBonus = trialBalance;
-    // 🔥 余额保持不变（不扣除），佣金会在后面累加
-    newBalance = latestBalance;
-}
-
-                // 计算佣金
-var commissionRate;
-var finalCommission;
-if (isTrialOrder) {
-    // 🔥 体验金订单：佣金 = 订单价格 × 体验金佣金率
-    var trialConfig = await getTrialConfig();
-    commissionRate = trialConfig.commissionRate / 100;
-    finalCommission = price * commissionRate;
-} else {
-    var rate = await getUserCommissionRate();
-    commissionRate = rate;
-    finalCommission = price * commissionRate;
-}
-
-pb.style.width = '60%';
-pt.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Placing order...';
-
-// 🔥 更新余额：余额（保持不变）+ 佣金
-var updateData = { 
-    balance: newBalance + finalCommission,  // latestBalance + finalCommission
-    trial_bonus_amount: newTrialBonus
-};
-
-var balanceError = await sb.from('users').update(updateData).eq('uid', user.uid);
-if (balanceError.error) {
-    showToast('订单失败: ' + balanceError.error.message, 'error');
-    return;
-}
-
-pb.style.width = '80%';
-pt.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Completing order...';
-
-// 保存订单历史
-await sb.from('order_history').insert([{
-    uid: user.uid,
-    username: username,
-    order_code: currentOrder.displayOrderCode,
-    accommodation_name: currentOrder.accommodationName || 'Hotel Task',
-    price: price,
-    commission: finalCommission,
-    rating: selectedRating,
-    status: 'completed',
-    date: new Date().toISOString()
-}]);
-
-// 记录佣金收入
-await sb.from('deposits').insert([{
-    uid: user.uid,
-    username: username,
-    amount: finalCommission,
-    type: 'order_commission',
-    created_at: new Date().toISOString()
-}]);
-
-// 如果有关联的触发订单，更新状态
-if (currentOrder.triggerOrderId) {
-    await sb.from('user_trigger_orders').update({
-        status: 'completed',
-        completed_at: new Date().toISOString()
-    }).eq('id', currentOrder.triggerOrderId);
-}
-
-// 更新全局余额（加上佣金）
-var finalBalance = newBalance + finalCommission;
-currentUserBalance = finalBalance;
-user.balance = finalBalance;
-user.trialBonusAmount = newTrialBonus;
-localStorage.setItem('currentUser', JSON.stringify(user));
-
-pb.style.width = '100%';
-pt.innerHTML = '<i class="fas fa-check-circle"></i> Order Completed!';
-
-                await refreshBalanceDisplay();
-                await loadUserData();
-                clearTempOrder();
-
-                var orderTypeText = isTrialOrder ? ' (体验金订单)' : '';
-                showToast('✅ 订单完成！获得 €' + finalCommission.toFixed(2) + ' 佣金' + orderTypeText, 'success');
-
-                setTimeout(function() {
-                    checkAndShowAmountDue();
-                }, 500);
-
-                setTimeout(function() {
-                    closeOrderModal();
-                }, 1500);
-            }, 500);
+        // 🔥 核心：无论普通还是体验金，余额 = 原余额 + 佣金
+        // 普通做单：订单价格 ≤ 余额，做完返还本金 + 佣金 = 原余额 + 佣金
+        // 体验金做单：余额不变 + 佣金
+        var updateData = { 
+            balance: latestBalance + finalCommission,
+            trial_bonus_amount: newTrialBonus
         };
+
+        var balanceError = await sb.from('users').update(updateData).eq('uid', user.uid);
+        if (balanceError.error) {
+            showToast('订单失败: ' + balanceError.error.message, 'error');
+            return;
+        }
+
+        pb.style.width = '80%';
+        pt.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Completing order...';
+
+        await sb.from('order_history').insert([{
+            uid: user.uid,
+            username: username,
+            order_code: currentOrder.displayOrderCode,
+            accommodation_name: currentOrder.accommodationName || 'Hotel Task',
+            price: price,
+            commission: finalCommission,
+            rating: selectedRating,
+            status: 'completed',
+            date: new Date().toISOString()
+        }]);
+
+        await sb.from('deposits').insert([{
+            uid: user.uid,
+            username: username,
+            amount: finalCommission,
+            type: 'order_commission',
+            created_at: new Date().toISOString()
+        }]);
+
+        if (currentOrder.triggerOrderId) {
+            await sb.from('user_trigger_orders').update({
+                status: 'completed',
+                completed_at: new Date().toISOString()
+            }).eq('id', currentOrder.triggerOrderId);
+        }
+
+        // 更新本地
+        var finalBalance = latestBalance + finalCommission;
+        currentUserBalance = finalBalance;
+        user.balance = finalBalance;
+        user.trialBonusAmount = newTrialBonus;
+        localStorage.setItem('currentUser', JSON.stringify(user));
+
+        pb.style.width = '100%';
+        pt.innerHTML = '<i class="fas fa-check-circle"></i> Order Completed!';
+
+        await refreshBalanceDisplay();
+        await loadUserData();
+        clearTempOrder();
+
+        var orderTypeText = isTrialOrder ? ' (体验金订单)' : '';
+        showToast('✅ 订单完成！获得 €' + finalCommission.toFixed(2) + ' 佣金' + orderTypeText, 'success');
+
+        setTimeout(function() {
+            checkAndShowAmountDue();
+        }, 500);
+
+        setTimeout(function() {
+            closeOrderModal();
+        }, 1500);
+    }, 500);
+};
 
         // ============================================================
         // 提交触发订单
