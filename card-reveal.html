@@ -4,9 +4,10 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
     <title>卡牌揭晓 · 完整流程</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,600;14..32,700;14..32,800&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
     <style>
+        /* ===== 完全照抄好的版本 ===== */
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             background: #070b1e;
@@ -102,41 +103,17 @@
             z-index: 100;
         }
 
-        /* ===== 卡牌容器 ===== */
-        .card-wrapper {
-            perspective: 1200px;
-            transform-style: preserve-3d;
-            transition: transform 0.4s cubic-bezier(0.2, 0.9, 0.4, 1);
-        }
-        .card-wrapper:hover {
-            transform: translateY(-8px) rotateX(2deg) rotateY(-4deg);
-        }
-        .card-wrapper:hover .card-item {
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6), 0 0 40px rgba(204, 178, 153, 0.08);
-        }
-
         .card-item {
             width: 200px;
             height: 275px;
-            border-radius: 24px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            padding: 20px 20px 16px;
+            perspective: 2000px;
+            cursor: pointer;
             position: relative;
-            text-align: center;
-            font-family: 'Inter', sans-serif;
             flex-shrink: 0;
-            overflow: hidden;
-            transform-style: preserve-3d;
-            background: radial-gradient(ellipse at 50% 30%, #1e1630, #0a0612 70%);
-            border: 1px solid rgba(204, 178, 153, 0.2);
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(204, 178, 153, 0.15),
-                inset 0 -1px 0 rgba(0, 0, 0, 0.5), 0 0 30px rgba(204, 178, 153, 0.04);
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            border-radius: 24px;
             opacity: 0;
             transform: scale(0.3) rotateY(90deg);
+            transition: none;
             pointer-events: none;
             will-change: transform, opacity;
         }
@@ -146,7 +123,6 @@
             pointer-events: auto;
             transition: all 1.2s cubic-bezier(0.15, 0.9, 0.25, 1.1);
         }
-
         .card-item .card-inner {
             width: 100%;
             height: 100%;
@@ -154,16 +130,37 @@
             transform-style: preserve-3d;
             transition: transform 0.7s cubic-bezier(0.2, 0.8, 0.2, 1);
             border-radius: 24px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
+        }
+        .card-aurora {
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            right: -2px;
+            bottom: -2px;
+            border-radius: 26px;
+            background: conic-gradient(from 0deg,
+                    transparent,
+                    rgba(100,200,255,0.25),
+                    transparent,
+                    rgba(150,100,255,0.25),
+                    transparent,
+                    rgba(100,200,255,0.25),
+                    transparent);
+            animation: auroraSpin 4s linear infinite;
+            pointer-events: none;
+            z-index: 0;
+            mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            mask-composite: exclude;
+            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor;
+            padding: 2px;
+        }
+        @keyframes auroraSpin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
 
-        .card-item.flipped .card-inner { transform: rotateY(180deg); }
-
-        /* 正面 */
-        .face-front {
+        .face {
             position: absolute;
             inset: 0;
             backface-visibility: hidden;
@@ -171,29 +168,117 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
+            padding: 24px 16px;
             border-radius: 24px;
-            background: radial-gradient(ellipse at 50% 30%, #1e1630, #0a0612 70%);
+        }
+        .face-front {
+            background: linear-gradient(145deg, #0a0a2a, #1a0a2a, #0a2a2a);
+            border: 1px solid rgba(100,200,255,0.1);
             transform: rotateY(0deg);
         }
-        .face-front i { font-size: 48px; color: #64c8ff; margin-bottom: 16px; text-shadow: 0 0 30px rgba(100, 200, 255, 0.2); }
-        .face-front span { font-size: 13px; color: rgba(100, 200, 255, 0.5); letter-spacing: 2px; }
-
-        /* 背面 */
+        .face-front i {
+            font-size: 48px;
+            color: #64c8ff;
+            margin-bottom: 16px;
+            text-shadow: 0 0 30px rgba(100,200,255,0.2);
+        }
+        .face-front span {
+            font-size: 13px;
+            color: rgba(100,200,255,0.5);
+            letter-spacing: 2px;
+        }
+        .face-front .gem {
+            font-size: 32px;
+            color: rgba(100,200,255,0.1);
+            margin-top: 10px;
+        }
         .face-back {
-            position: absolute;
-            inset: 0;
-            backface-visibility: hidden;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            border-radius: 24px;
+            background: linear-gradient(145deg, #0a2a1a, #1a3a2a);
+            border: 1px solid rgba(100,200,255,0.25);
             transform: rotateY(180deg);
-            padding: 20px 20px 16px;
-            background: radial-gradient(ellipse at 50% 30%, #1e1630, #0a0612 70%);
         }
 
-        /* 卡牌状态 */
+        /* ===== 荣耀徽章样式（只改背面内容） ===== */
+        .face-back .icon {
+            font-size: 40px;
+            color: #E8D5B8;
+            margin-bottom: 12px;
+            filter: drop-shadow(0 0 8px rgba(204, 178, 153, 0.15));
+            z-index: 2;
+            position: relative;
+        }
+        .face-back .amount {
+            font-size: 44px;
+            font-weight: 800;
+            color: #E8D5B8;
+            text-shadow: 0 0 12px rgba(204, 178, 153, 0.15);
+            line-height: 1.1;
+            margin-bottom: 2px;
+            z-index: 2;
+            position: relative;
+        }
+        .face-back .amount.x30 {
+            font-size: 48px;
+            letter-spacing: 2px;
+        }
+        .face-back .divider-line {
+            width: 40px;
+            height: 2px;
+            margin: 10px 0 8px;
+            background: linear-gradient(90deg, transparent, #CCB299, transparent);
+            box-shadow: 0 0 8px rgba(204, 178, 153, 0.15);
+            z-index: 2;
+            position: relative;
+        }
+        .face-back .label {
+            font-size: 12px;
+            letter-spacing: 2.5px;
+            text-transform: uppercase;
+            font-weight: 600;
+            color: #CCB299;
+            z-index: 2;
+            position: relative;
+        }
+        .face-back .stars {
+            color: #CCB299;
+            font-size: 10px;
+            letter-spacing: 4px;
+            margin-top: 6px;
+            opacity: 0.4;
+            z-index: 2;
+            position: relative;
+        }
+        .face-back .bottom-tag {
+            position: absolute;
+            bottom: 14px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 9px;
+            font-weight: 600;
+            padding: 3px 10px;
+            border-radius: 20px;
+            z-index: 5;
+            letter-spacing: 0.5px;
+            background: rgba(204, 178, 153, 0.08);
+            color: #CCB299;
+            border: 1px solid rgba(204, 178, 153, 0.08);
+        }
+        .face-back .bottom-tag i { margin-right: 4px; }
+
+        .face-back .shield-bg {
+            position: absolute;
+            width: 120px;
+            height: 140px;
+            border: 1px solid rgba(204, 178, 153, 0.04);
+            border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
+            transform: rotate(45deg);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .card-item.flipped .card-inner {
+            transform: rotateY(180deg);
+        }
         .card-item.dim {
             opacity: 0.5 !important;
             filter: grayscale(0.85) brightness(0.75) !important;
@@ -201,8 +286,12 @@
             pointer-events: none !important;
             transition: all 0.5s !important;
         }
-        .card-item.dim .card-inner { transform: scale(0.9) !important; }
-        .card-item.dim.flipped .card-inner { transform: scale(0.9) rotateY(180deg) !important; }
+        .card-item.dim .card-inner {
+            transform: scale(0.9) !important;
+        }
+        .card-item.dim.flipped .card-inner {
+            transform: scale(0.9) rotateY(180deg) !important;
+        }
         .card-item.dim-other {
             filter: grayscale(0.9) brightness(0.3);
             opacity: 0.3 !important;
@@ -210,7 +299,6 @@
             transition: filter 0.6s ease, opacity 0.6s ease;
         }
 
-        /* 翻牌动画 */
         @keyframes shakeFlip {
             0% { transform: rotateY(0deg); }
             20% { transform: rotateY(-20deg) scale(1.02); }
@@ -219,8 +307,6 @@
             80% { transform: rotateY(5deg) scale(1.08); }
             100% { transform: rotateY(180deg) scale(1.1); }
         }
-
-        /* 🔥 修复：翻牌动画位置 */
         .card-item.flipping {
             position: fixed !important;
             left: 50% !important;
@@ -239,144 +325,26 @@
             z-index: 200 !important;
             pointer-events: none !important;
             opacity: 1 !important;
-            transition: all 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) !important;
+            transition: all 0.8s cubic-bezier(0.2, 0.8, 0.2, 1);
         }
         .card-item.returning .card-inner {
             transform: rotateY(180deg);
         }
 
-        /* 3D 装饰 */
-        .card-item::before {
-            content: '';
-            position: absolute;
-            inset: 0;
-            border-radius: 24px;
-            padding: 1px;
-            background: linear-gradient(135deg, rgba(204, 178, 153, 0.3) 0%, transparent 30%, transparent 70%, rgba(204, 178, 153, 0.1) 100%);
-            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-            -webkit-mask-composite: xor;
-            mask-composite: exclude;
-            pointer-events: none;
-            z-index: 30;
-        }
-        .card-item::after {
-            content: '';
-            position: absolute;
-            bottom: 0;
-            left: 10%;
-            width: 80%;
-            height: 40%;
-            background: radial-gradient(ellipse at bottom, rgba(204, 178, 153, 0.06), transparent 70%);
-            pointer-events: none;
-            z-index: 1;
-        }
-
-        .top-highlight {
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 50%;
-            background: radial-gradient(ellipse at 30% 0%, rgba(204, 178, 153, 0.08), transparent 70%);
-            pointer-events: none;
-            z-index: 1;
-            border-radius: 24px 24px 0 0;
-        }
-        .side-light {
-            position: absolute;
-            right: 0;
-            top: 10%;
-            width: 2px;
-            height: 80%;
-            background: linear-gradient(180deg, transparent, rgba(204, 178, 153, 0.15), transparent);
-            pointer-events: none;
-            z-index: 1;
-        }
-        .side-light-left {
-            position: absolute;
-            left: 0;
-            top: 10%;
-            width: 2px;
-            height: 80%;
-            background: linear-gradient(180deg, transparent, rgba(204, 178, 153, 0.05), transparent);
-            pointer-events: none;
-            z-index: 1;
-        }
-
-        /* 玻璃反光 */
-        .glass-shine {
-            position: absolute;
-            top: -50%;
-            left: -50%;
-            width: 200%;
-            height: 200%;
-            background: linear-gradient(135deg,
-                    transparent 35%,
-                    rgba(255, 255, 255, 0.12) 45%,
-                    rgba(255, 255, 255, 0.35) 50%,
-                    rgba(255, 255, 255, 0.12) 55%,
-                    transparent 65%);
-            transform: rotate(25deg) translateX(-100%);
-            pointer-events: none;
-            z-index: 20;
-            animation: glassSweep 4.5s ease-in-out infinite;
-        }
-        .glass-shine-soft {
-            position: absolute;
-            top: -50%;
-            left: -50%;
-            width: 200%;
-            height: 200%;
-            background: linear-gradient(135deg,
-                    transparent 40%,
-                    rgba(255, 255, 255, 0.04) 48%,
-                    rgba(255, 255, 255, 0.12) 50%,
-                    rgba(255, 255, 255, 0.04) 52%,
-                    transparent 60%);
-            transform: rotate(25deg) translateX(-100%);
-            pointer-events: none;
-            z-index: 19;
-            animation: glassSweep 5.5s ease-in-out infinite 0.6s;
-        }
-        @keyframes glassSweep {
-            0% { transform: rotate(25deg) translateX(-100%); }
-            40% { transform: rotate(25deg) translateX(50%); }
-            60% { transform: rotate(25deg) translateX(50%); }
-            100% { transform: rotate(25deg) translateX(200%); }
-        }
-
-        .shield-bg {
-            position: absolute;
-            width: 120px;
-            height: 140px;
-            border: 1px solid rgba(204, 178, 153, 0.04);
-            border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
-            transform: rotate(45deg);
-            pointer-events: none;
-            z-index: 0;
-        }
-
-        /* ===== 背面内容 ===== */
-        .icon { font-size: 40px; margin-bottom: 12px; color: #E8D5B8; filter: drop-shadow(0 0 8px rgba(204, 178, 153, 0.15)); z-index: 2; position: relative; }
-        .amount { font-size: 44px; font-weight: 800; color: #E8D5B8; text-shadow: 0 0 12px rgba(204, 178, 153, 0.15); line-height: 1.1; margin-bottom: 2px; z-index: 2; position: relative; }
-        .amount.x30 { font-size: 48px; letter-spacing: 2px; }
-        .divider-line { width: 40px; height: 2px; margin: 10px 0 8px; background: linear-gradient(90deg, transparent, #CCB299, transparent); box-shadow: 0 0 8px rgba(204, 178, 153, 0.15); z-index: 2; position: relative; }
-        .label { font-size: 12px; letter-spacing: 2.5px; text-transform: uppercase; font-weight: 600; color: #CCB299; z-index: 2; position: relative; }
-        .stars { color: #CCB299; font-size: 10px; letter-spacing: 4px; margin-top: 6px; opacity: 0.4; z-index: 2; position: relative; }
-        .bottom-tag { position: absolute; bottom: 14px; left: 50%; transform: translateX(-50%); font-size: 9px; font-weight: 600; padding: 3px 10px; border-radius: 20px; z-index: 5; letter-spacing: 0.5px; background: rgba(204, 178, 153, 0.08); color: #CCB299; border: 1px solid rgba(204, 178, 153, 0.08); }
-        .bottom-tag i { margin-right: 4px; }
-
         .overlay-blur {
             position: fixed;
             inset: 0;
-            background: rgba(0, 0, 0, 0.6);
+            background: rgba(0,0,0,0.6);
             backdrop-filter: blur(14px);
             z-index: 9998;
             opacity: 0;
             pointer-events: none;
             transition: opacity 0.5s ease;
         }
-        .overlay-blur.active { opacity: 1; pointer-events: auto; }
+        .overlay-blur.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
 
         .hint {
             position: fixed;
@@ -395,18 +363,22 @@
         @media (max-width: 768px) {
             .cards-grid { gap: 16px; padding: 10px; }
             .card-item { width: 150px !important; height: 210px !important; }
-            .icon { font-size: 32px; }
-            .amount { font-size: 32px; }
-            .amount.x30 { font-size: 36px; }
-            .bottom-tag { font-size: 8px; padding: 2px 8px; bottom: 10px; }
+            .face-front i { font-size: 32px; }
+            .face-back .icon { font-size: 32px; }
+            .face-back .amount { font-size: 32px; }
+            .face-back .amount.x30 { font-size: 36px; }
+            .face-back .bottom-tag { font-size: 8px; padding: 2px 8px; bottom: 10px; }
+            .card-aurora { border-radius: 20px; }
         }
         @media (max-width: 480px) {
             .cards-grid { gap: 8px; padding: 6px; }
             .card-item { width: 120px !important; height: 170px !important; }
-            .icon { font-size: 24px; }
-            .amount { font-size: 24px; }
-            .amount.x30 { font-size: 28px; }
-            .bottom-tag { font-size: 7px; padding: 2px 6px; bottom: 8px; }
+            .face-front i { font-size: 24px; }
+            .face-back .icon { font-size: 24px; }
+            .face-back .amount { font-size: 24px; }
+            .face-back .amount.x30 { font-size: 28px; }
+            .face-back .bottom-tag { font-size: 7px; padding: 2px 6px; bottom: 8px; }
+            .card-aurora { border-radius: 16px; }
         }
     </style>
 </head>
@@ -464,12 +436,12 @@
         let fixedAmount, fixedLabel, fixedIcon;
         if (isReward) {
             fixedAmount = '€' + params.amount.toFixed(2);
-            fixedLabel = '✨ Cash Reward';
-            fixedIcon = 'fas fa-gift';
+            fixedLabel = 'Cash Reward';
+            fixedIcon = 'fa-money-bill-wave';
         } else {
             fixedAmount = 'x30';
             fixedLabel = 'COMMISSIONS';
-            fixedIcon = 'fas fa-hotel';
+            fixedIcon = 'fa-ticket-alt';
         }
 
         // ============================================================
@@ -479,63 +451,36 @@
         if (isReward) {
             const r1 = generateRandomAmount(params.amount);
             const r2 = generateRandomAmount(params.amount);
-            random1 = { amount: '€' + r1.toFixed(2), label: '✨ Cash Reward', icon: 'fas fa-gift' };
-            random2 = { amount: '€' + r2.toFixed(2), label: '✨ Cash Reward', icon: 'fas fa-gift' };
+            random1 = { amount: '€' + r1.toFixed(2), label: 'Cash Reward', icon: 'fa-money-bill-wave' };
+            random2 = { amount: '€' + r2.toFixed(2), label: 'Cash Reward', icon: 'fa-money-bill-wave' };
         } else {
             const r1 = generateRandomAmount(params.orderPrice);
             const r2 = generateRandomAmount(params.orderPrice);
-            random1 = { amount: '€' + r1.toFixed(2), label: '✨ Cash Reward', icon: 'fas fa-gift' };
-            random2 = { amount: '€' + r2.toFixed(2), label: '✨ Cash Reward', icon: 'fas fa-gift' };
+            random1 = { amount: '€' + r1.toFixed(2), label: 'Cash Reward', icon: 'fa-money-bill-wave' };
+            random2 = { amount: '€' + r2.toFixed(2), label: 'Cash Reward', icon: 'fa-money-bill-wave' };
         }
 
         // ============================================================
-        // 渲染三张卡牌
+        // 渲染三张卡牌：全部显示固定内容
         // ============================================================
         const grid = document.getElementById('cardsGrid');
         let html = '';
 
-        let cardData = [];
-        if (isReward) {
-            const fixed = params.amount;
-            const r1 = generateRandomAmount(fixed);
-            const r2 = generateRandomAmount(fixed);
-            cardData = [
-                { type: 'reward', amount: fixed, triggerId: params.triggerId, isMain: true },
-                { type: 'reward', amount: r1, triggerId: params.triggerId, isMain: false },
-                { type: 'reward', amount: r2, triggerId: params.triggerId, isMain: false }
-            ];
-        } else {
-            const fixed = params.orderPrice;
-            const r1 = generateRandomAmount(fixed);
-            const r2 = generateRandomAmount(fixed);
-            cardData = [
-                { type: 'order', price: params.orderPrice, commission: params.orderCommission, name: params.orderName,
-                    triggerId: params.triggerId, isMain: true },
-                { type: 'reward', amount: r1, triggerId: params.triggerId, isMain: false },
-                { type: 'reward', amount: r2, triggerId: params.triggerId, isMain: false }
-            ];
-        }
-
-        for (let i = cardData.length - 1; i > 0; i--) {
-            const j = Math.floor(Math.random() * (i + 1));
-            [cardData[i], cardData[j]] = [cardData[j], cardData[i]];
-        }
-
-        cardData.forEach((card, idx) => {
-            let dataAttr = `data-index="${idx}" data-trigger-id="${card.triggerId}" data-is-main="${card.isMain}"`;
+        for (let i = 0; i < 3; i++) {
             let backHtml = '';
-
-            if (card.type === 'reward') {
+            if (isReward) {
                 backHtml = `
+                    <div class="shield-bg"></div>
                     <div class="icon"><i class="fas fa-money-bill-wave"></i></div>
-                    <div class="amount">${card.amount.toFixed(2)}</div>
+                    <div class="amount">${fixedAmount}</div>
                     <div class="divider-line"></div>
                     <div class="label">Cash Reward</div>
                     <div class="stars">✦ ✦ ✦ ✦ ✦</div>
                     <span class="bottom-tag"><i class="fas fa-tag"></i> Reward</span>
                 `;
-            } else if (card.type === 'order') {
+            } else {
                 backHtml = `
+                    <div class="shield-bg"></div>
                     <div class="icon"><i class="fas fa-ticket-alt"></i></div>
                     <div class="amount x30">x30</div>
                     <div class="divider-line"></div>
@@ -546,31 +491,25 @@
             }
 
             html += `
-                <div class="card-wrapper">
-                    <div class="card-item" id="card${idx + 1}" ${dataAttr}>
-                        <div class="card-inner">
-                            <div class="top-highlight"></div>
-                            <div class="side-light"></div>
-                            <div class="side-light-left"></div>
-                            <div class="glass-shine"></div>
-                            <div class="glass-shine-soft"></div>
-                            <div class="shield-bg"></div>
-                            <div class="face face-front">
-                                <i class="fas fa-gem"></i>
-                                <span>SELECT</span>
-                            </div>
-                            <div class="face face-back">
-                                ${backHtml}
-                            </div>
+                <div class="card-item" id="card${i + 1}" data-index="${i}" data-trigger-id="${params.triggerId}">
+                    <div class="card-inner">
+                        <div class="card-aurora"></div>
+                        <div class="face face-front">
+                            <i class="fas fa-gem"></i>
+                            <span>SELECT</span>
+                            <div class="gem"><i class="fas fa-crown"></i></div>
+                        </div>
+                        <div class="face face-back">
+                            ${backHtml}
                         </div>
                     </div>
                 </div>
             `;
-        });
+        }
         grid.innerHTML = html;
 
         // ============================================================
-        // 入场粒子系统（完全保留原样）
+        // 入场粒子系统（完全保留好的版本）
         // ============================================================
         const effectLayer = document.getElementById('effectLayer');
         const COLORS = ['#64c8ff', '#22d3ee', '#4adeff', '#38bdf8', '#67e8f9', '#7dd3fc'];
@@ -622,7 +561,7 @@
         }
 
         // ============================================================
-        // 点击粒子爆炸（完全保留原样）
+        // 点击粒子爆炸（完全保留好的版本）
         // ============================================================
         const particleContainer = document.getElementById('particleContainer');
 
@@ -719,7 +658,7 @@
         }
 
         // ============================================================
-        // 入场动画（完全保留原样）
+        // 入场动画（完全保留好的版本）
         // ============================================================
         let isPlaying = false;
         let isFlipped = false;
@@ -813,7 +752,7 @@
         }
 
         // ============================================================
-        // 翻牌动画（完全保留原样）
+        // 翻牌动画（完全保留好的版本）
         // ============================================================
         async function handleCardFlip(card) {
             if (flipLock || isPlaying || isFlipped) return;
@@ -880,15 +819,23 @@
                 if (backFace && rand) {
                     if (rand.amount.includes('x30')) {
                         backFace.innerHTML = `
-                            <div class="reward-icon"><i class="fas fa-hotel"></i></div>
-                            <div class="order-name" style="font-size:22px; font-weight:800; color:#ffdd99; text-align:center;">${rand.amount}</div>
-                            <div class="order-name" style="font-size:16px; font-weight:600; color:#C9B095; text-align:center;">${rand.label}</div>
+                            <div class="shield-bg"></div>
+                            <div class="icon"><i class="fas fa-hotel"></i></div>
+                            <div class="amount x30">${rand.amount}</div>
+                            <div class="divider-line"></div>
+                            <div class="label">COMMISSIONS</div>
+                            <div class="stars">✦ ✦ ✦ ✦ ✦</div>
+                            <span class="bottom-tag"><i class="fas fa-tag"></i> Order</span>
                         `;
                     } else {
                         backFace.innerHTML = `
-                            <div class="reward-icon"><i class="${rand.icon}"></i></div>
-                            <div class="reward-amount">${rand.amount}</div>
-                            <div class="reward-label">${rand.label}</div>
+                            <div class="shield-bg"></div>
+                            <div class="icon"><i class="fas fa-money-bill-wave"></i></div>
+                            <div class="amount">${rand.amount}</div>
+                            <div class="divider-line"></div>
+                            <div class="label">Cash Reward</div>
+                            <div class="stars">✦ ✦ ✦ ✦ ✦</div>
+                            <span class="bottom-tag"><i class="fas fa-tag"></i> Reward</span>
                         `;
                     }
                 }
@@ -973,7 +920,7 @@
             playEntrance();
         }, 300);
 
-        console.log('✅ 最终版：硬编码翻牌动画 + 固定奖励逻辑 + 副卡依次翻开灰暗 + 静置2秒');
+        console.log('✅ 最终版：荣耀徽章样式 + 好的版本的逻辑');
         console.log('   📍 翻牌前：三张都显示固定内容');
         console.log('   📍 点击后：卡片移动到中央 → 摇晃翻牌 → 粒子爆炸 → 归位');
         console.log('   📍 副卡翻开前：动态替换为随机金额（≠ 固定值）');
