@@ -571,7 +571,7 @@
             const cx = window.innerWidth / 2 - rect.width / 2;
             const cy = window.innerHeight / 2 - rect.height / 2;
 
-            const otherCards = cards.filter(c => c !== card);
+            const otherCards = Array.from(cards).filter(c => c !== card);
             otherCards.forEach(c => {
                 c.classList.add('dim-other');
             });
