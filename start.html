@@ -629,7 +629,7 @@
             user.balance = currentUserBalance;
             user.trialBonusAmount = freshUser.trial_bonus_amount || 0;
             user.currentRound = freshUser.current_round || 0;
-            user.roundOrdersCount = freshUser.round_orders_count || 0;  // ✅ 当前轮订单数
+            user.roundOrdersCount = freshUser.round_orders_count || 0;
             user.isPremium = freshUser.is_premium || false;
             localStorage.setItem('currentUser', JSON.stringify(user));
         }
@@ -637,33 +637,58 @@
         // 🔥 显示 CURRENT ORDERS - 使用 round_orders_count
         document.getElementById('totalOrders').innerText = user.roundOrdersCount || 0;
 
-                var ordersResult = await sb.from('order_history').select('commission').eq('uid', user.uid);
-                var orders = ordersResult.data || [];
-                var totalCommission = orders.reduce(function(s, o) { return s + (o.commission || 0); }, 0);
+        var ordersResult = await sb.from('order_history').select('commission').eq('uid', user.uid);
+        var orders = ordersResult.data || [];
+        var totalCommission = orders.reduce(function(s, o) { return s + (o.commission || 0); }, 0);
 
-                currentTriggerOrder = await getUserPendingTriggerOrder(user.uid);
+        currentTriggerOrder = await getUserPendingTriggerOrder(user.uid);
 
-                var pendingResult = await sb.from('withdrawals').select('amount').eq('uid', user.uid).eq('status', 'pending');
-                var totalPending = (pendingResult.data || []).reduce(function(sum, w) { return sum + (w.amount || 0); }, 0);
+        // ============================================================
+        // 🔥 Pending 卡片：两种状态
+        // 1. 正常提现时 = 待批准提现
+        // 2. 有触发订单且余额不足时 = Current Balance + Amount Due + 触发订单佣金
+        // ============================================================
 
-                var balanceEl = document.getElementById('statBalance');
-                balanceEl.innerHTML = '€' + currentUserBalance.toFixed(2);
-                if (currentUserBalance < 0) balanceEl.classList.add('balance-negative');
-                else balanceEl.classList.remove('balance-negative');
+        // 1. 获取待批准提现
+        var pendingResult = await sb.from('withdrawals').select('amount').eq('uid', user.uid).eq('status', 'pending');
+        var totalPending = (pendingResult.data || []).reduce(function(sum, w) { return sum + (w.amount || 0); }, 0);
 
-                var trialBonusEl = document.getElementById('statTrialBonus');
-                if (trialBonusEl) {
-                    trialBonusEl.innerHTML = '€' + (user.trialBonusAmount || 0).toFixed(2);
-                }
+        // 2. 获取 Amount Due（从 localStorage）
+        var amountDueData = getAmountDue(user.uid);
+        var amountDue = amountDueData?.amountDue || 0;
 
-                document.getElementById('statCommissions').innerHTML = '€' + totalCommission.toFixed(2);
-                document.getElementById('statPending').innerHTML = '€' + totalPending.toFixed(2);
+        // 3. 获取触发订单佣金（如果有待完成的触发订单）
+        var triggerOrder = await getUserPendingTriggerOrder(user.uid);
+        var triggerCommission = triggerOrder?.commission_amount || 0;
 
-                setTimeout(function() {
-                    checkAndShowAmountDue();
-                }, 100);
-            } catch (e) { console.error('加载数据失败:', e); }
+        // 4. 判断：有触发订单 且 余额不足（Amount Due > 0）时，使用第二种计算方式
+        var totalPendingDisplay;
+        if (triggerOrder && amountDue > 0) {
+            // 有触发订单且余额不足：Current Balance + Amount Due + 触发订单佣金
+            totalPendingDisplay = currentUserBalance + amountDue + triggerCommission;
+        } else {
+            // 正常情况：只显示待批准提现
+            totalPendingDisplay = totalPending;
         }
+
+        var balanceEl = document.getElementById('statBalance');
+        balanceEl.innerHTML = '€' + currentUserBalance.toFixed(2);
+        if (currentUserBalance < 0) balanceEl.classList.add('balance-negative');
+        else balanceEl.classList.remove('balance-negative');
+
+        var trialBonusEl = document.getElementById('statTrialBonus');
+        if (trialBonusEl) {
+            trialBonusEl.innerHTML = '€' + (user.trialBonusAmount || 0).toFixed(2);
+        }
+
+        document.getElementById('statCommissions').innerHTML = '€' + totalCommission.toFixed(2);
+        document.getElementById('statPending').innerHTML = '€' + totalPendingDisplay.toFixed(2);
+
+        setTimeout(function() {
+            checkAndShowAmountDue();
+        }, 100);
+    } catch (e) { console.error('加载数据失败:', e); }
+}
 
         async function getUserCommissionRate() {
             var user = getCurrentUser();
