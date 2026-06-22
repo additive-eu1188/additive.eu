@@ -1580,41 +1580,66 @@ if (isUsingTrial) {
     }
 
     // 🔥 正常订单 - isTriggerOrder = false
-    currentOrder = order;
-    selectedRating = 0;
-    var randomCode = generateRandomOrderCode();
-    var price = order.price || 0;
+currentOrder = order;
+selectedRating = 0;
+var randomCode = generateRandomOrderCode();
+var price = order.price || 0;
 
+// 判断是否使用体验金做单
+var freshUserResult = await sb.from('users').select('balance, trial_bonus_amount').eq('uid', user.uid).single();
+var currentBalance = freshUserResult.data?.balance || 0;
+var trialBalance = freshUserResult.data?.trial_bonus_amount || 0;
+var isUsingTrial = (currentBalance < price && trialBalance > 0);
+
+var commission;
+if (isUsingTrial) {
+    // 🔥 使用体验金：从独立配置表读取 Trial Bonus 佣金率
+    var trialConfig = await getTrialConfig();
+    var trialAmount = trialConfig.trialAmount || 250;
+    commission = trialAmount * (trialConfig.commissionRate / 100);
+} else {
+    // 正常余额做单：使用 VIP 佣金率
     var commissionRate = await getUserCommissionRate();
-    var commission = price * commissionRate;
+    commission = price * commissionRate;
+}
 
-    currentOrder.commissionAmount = commission;
-    currentOrder.isTriggerOrder = false;  // 🔥 普通订单
-    currentOrder.displayOrderCode = randomCode;
-    currentOrder.uid = user.uid;
-    currentOrder.completed = false;
+currentOrder.commissionAmount = commission;
+currentOrder.isTriggerOrder = false;
+currentOrder.displayOrderCode = randomCode;
+currentOrder.uid = user.uid;
+currentOrder.completed = false;
 
     saveTempOrder(currentOrder);
 
-    modalContent.innerHTML =
-        '<div class="order-image">' + (order.imageUrl ? '<img src="' + order.imageUrl +
-            '" onerror="this.parentElement.innerHTML=\'<i class=\\"fas fa-hotel\\"></i>\'">' :
-            '<i class="fas fa-hotel"></i>') + '</div><div class="order-name">' + (order.accommodationName ||
-            'Hotel Task') + '</div><div class="order-code"><i class="fas fa-tag"></i> ' + randomCode +
-        '</div><div class="order-details"><div class="detail-row"><span class="detail-label">Order Price</span><span class="detail-value price">€' +
-        price.toFixed(2) + '</span></div><div class="detail-row"><span class="detail-label">Commission</span><span class="detail-value commission">+€' +
-        commission.toFixed(2) + ' (' + (commissionRate * 100).toFixed(2) +
-        '%)</span></div><div class="detail-row"><span class="detail-label">Total Return</span><span class="detail-value total">€' +
-        (price + commission).toFixed(2) +
-        '</span></div><div class="detail-row"><span class="detail-label">Net Profit</span><span class="detail-value commission">+€' +
-        commission.toFixed(2) +
-        '</span></div></div><div class="how-it-works"><span>💰 How it works: Pay €' + price.toFixed(2) +
-        ' → Complete → Get back €' + (price + commission).toFixed(2) +
-        '</span></div><div class="star-rating-premium" id="starRating">' +
-        [1, 2, 3, 4, 5].map(function(r) { return '<span class="star-premium" data-rating="' + r +
-                '"><svg viewBox="0 0 24 24" width="36" height="36"><polygon points="12,2 15,9 22,9 16,14 19,22 12,17 5,22 8,14 2,9 9,9"/></svg></span>'; })
-        .join('') +
-        '</div><div class="rating-text-premium">Please select 1 to 5 stars to continue.</div><div id="progressContainer"><div class="progress-bar-bg"><div class="progress-bar-fill" id="progressBar"></div></div><div class="progress-text" id="progressText"></div></div><div class="modal-buttons"><button class="btn-submit" onclick="submitOrder()">Submit Order</button><button class="btn-close-modal" onclick="closeOrderModal()">Close</button></div>';
+    // 计算佣金百分比显示
+var commissionPercent;
+if (isUsingTrial) {
+    var trialConfig = await getTrialConfig();
+    commissionPercent = trialConfig.commissionRate; // 直接使用配置的百分比值
+} else {
+    var rate = await getUserCommissionRate();
+    commissionPercent = rate * 100;
+}
+
+modalContent.innerHTML =
+    '<div class="order-image">' + (order.imageUrl ? '<img src="' + order.imageUrl +
+        '" onerror="this.parentElement.innerHTML=\'<i class=\\"fas fa-hotel\\"></i>\'">' :
+        '<i class="fas fa-hotel"></i>') + '</div><div class="order-name">' + (order.accommodationName ||
+        'Hotel Task') + '</div><div class="order-code"><i class="fas fa-tag"></i> ' + randomCode +
+    '</div><div class="order-details"><div class="detail-row"><span class="detail-label">Order Price</span><span class="detail-value price">€' +
+    price.toFixed(2) + '</span></div><div class="detail-row"><span class="detail-label">Commission</span><span class="detail-value commission">+€' +
+    commission.toFixed(2) + ' (' + commissionPercent.toFixed(2) +
+    '%)</span></div><div class="detail-row"><span class="detail-label">Total Return</span><span class="detail-value total">€' +
+    (price + commission).toFixed(2) +
+    '</span></div><div class="detail-row"><span class="detail-label">Net Profit</span><span class="detail-value commission">+€' +
+    commission.toFixed(2) +
+    '</span></div></div><div class="how-it-works"><span>💰 How it works: Pay €' + price.toFixed(2) +
+    ' → Complete → Get back €' + (price + commission).toFixed(2) +
+    '</span></div><div class="star-rating-premium" id="starRating">' +
+    [1, 2, 3, 4, 5].map(function(r) { return '<span class="star-premium" data-rating="' + r +
+            '"><svg viewBox="0 0 24 24" width="36" height="36"><polygon points="12,2 15,9 22,9 16,14 19,22 12,17 5,22 8,14 2,9 9,9"/></svg></span>'; })
+    .join('') +
+    '</div><div class="rating-text-premium">Please select 1 to 5 stars to continue.</div><div id="progressContainer"><div class="progress-bar-bg"><div class="progress-bar-fill" id="progressBar"></div></div><div class="progress-text" id="progressText"></div></div><div class="modal-buttons"><button class="btn-submit" onclick="submitOrder()">Submit Order</button><button class="btn-close-modal" onclick="closeOrderModal()">Close</button></div>';
 
     // 🔥 普通订单：不显示 Amount Due 卡片（余额检查在 submitOrder 中处理）
     // 隐藏任何可能存在的 Amount Due
