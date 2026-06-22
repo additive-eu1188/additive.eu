@@ -8,11 +8,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
     <style>
         /* ===== 你的原始样式（完全保留） ===== */
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             background: #070b1e;
             font-family: 'Inter', sans-serif;
@@ -26,7 +22,6 @@
             overflow: hidden;
             position: relative;
         }
-
         @keyframes auroraSpin {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
@@ -39,7 +34,6 @@
             80% { transform: rotateY(5deg) scale(1.08); }
             100% { transform: rotateY(180deg) scale(1.1); }
         }
-
         #effectLayer {
             position: fixed;
             top: 0;
@@ -50,11 +44,7 @@
             z-index: 5;
             overflow: visible;
         }
-        #effectLayer * {
-            pointer-events: none !important;
-        }
-
-        /* ===== 粒子 ===== */
+        #effectLayer * { pointer-events: none !important; }
         .particle {
             position: fixed;
             border-radius: 50%;
@@ -87,7 +77,6 @@
             0% { opacity: 0; transform: translate3d(var(--bx), var(--by), 0) scale(0.2); box-shadow: none; }
             100% { opacity: 1; transform: translate3d(var(--bx), var(--by), 0) scale(1.2); box-shadow: 0 0 20px var(--color), 0 0 40px var(--color); }
         }
-
         .burst-particle {
             position: fixed;
             border-radius: 50%;
@@ -105,8 +94,6 @@
             0% { opacity: 1; transform: translate3d(0, 0, 0) scale(1); }
             100% { opacity: 0; transform: translate3d(var(--ex), var(--ey), 0) scale(0); }
         }
-
-        /* ===== 卡牌 ===== */
         .cards-grid {
             display: flex;
             gap: 30px;
@@ -118,7 +105,6 @@
             position: relative;
             z-index: 100;
         }
-
         .card-item {
             width: 180px;
             height: 250px;
@@ -139,7 +125,6 @@
             pointer-events: auto;
             transition: all 1.2s cubic-bezier(0.15, 0.9, 0.25, 1.1);
         }
-
         .card-item .card-inner {
             width: 100%;
             height: 100%;
@@ -149,7 +134,6 @@
             transition: transform 0.8s cubic-bezier(0.2, 0.8, 0.2, 1);
             will-change: transform;
         }
-
         .card-aurora {
             position: absolute;
             top: -2px;
@@ -174,7 +158,6 @@
             -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
             -webkit-mask-composite: xor;
         }
-
         .face {
             position: absolute;
             inset: 0;
@@ -202,7 +185,6 @@
             color: rgba(34, 211, 238, 0.4);
             letter-spacing: 2px;
         }
-
         .face-back {
             background: linear-gradient(145deg, #0a2a1a, #1a3a2a);
             border: 1px solid rgba(34, 211, 238, 0.2);
@@ -224,13 +206,9 @@
             letter-spacing: 1.5px;
             margin-top: 4px;
         }
-
-        /* ===== 卡牌状态 ===== */
         .card-item.flipped .card-inner {
             transform: rotateY(180deg);
         }
-
-        /* 点击放大翻牌 */
         .card-item.flipping {
             position: fixed !important;
             left: 50% !important;
@@ -244,7 +222,6 @@
         .card-item.flipping .card-inner {
             animation: shakeFlip 0.9s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
         }
-
         .card-item.returning {
             position: fixed !important;
             z-index: 200 !important;
@@ -255,27 +232,22 @@
         .card-item.returning .card-inner {
             transform: rotateY(180deg);
         }
-
-        /* ===== 未选中的卡牌 - 灰暗 ===== */
         .card-item.dim {
             filter: grayscale(0.8) brightness(0.4);
             opacity: 0.5 !important;
             pointer-events: none !important;
             transition: filter 0.8s ease, opacity 0.8s ease;
         }
-        /* 已经翻开的卡牌恢复 */
         .card-item.flipped.dim {
             filter: none;
             opacity: 1 !important;
         }
-        /* 点击翻牌过程中，其他卡牌灰暗 */
         .card-item.dim-other {
             filter: grayscale(0.9) brightness(0.3);
             opacity: 0.3 !important;
             pointer-events: none !important;
             transition: filter 0.6s ease, opacity 0.6s ease;
         }
-
         .hint {
             position: fixed;
             bottom: 30px;
@@ -288,29 +260,14 @@
             opacity: 0;
             transition: opacity 0.6s;
         }
-        .hint.show {
-            opacity: 1;
-        }
-
+        .hint.show { opacity: 1; }
         @media (max-width: 600px) {
-            .cards-grid {
-                gap: 12px;
-                padding: 10px;
-            }
-            .card-item {
-                width: 130px;
-                height: 180px;
-            }
+            .cards-grid { gap: 12px; padding: 10px; }
+            .card-item { width: 130px; height: 180px; }
         }
         @media (max-width: 400px) {
-            .card-item {
-                width: 100px;
-                height: 140px;
-            }
-            .cards-grid {
-                gap: 8px;
-                padding: 6px;
-            }
+            .card-item { width: 100px; height: 140px; }
+            .cards-grid { gap: 8px; padding: 6px; }
         }
     </style>
 </head>
@@ -318,47 +275,13 @@
 
     <div id="effectLayer"></div>
 
-    <div class="cards-grid" id="cardsGrid">
-        <div class="card-item" id="card1">
-            <div class="card-inner">
-                <div class="card-aurora"></div>
-                <div class="face face-front"><i class="fas fa-gem"></i><span>SELECT</span></div>
-                <div class="face face-back">
-                    <div class="reward-icon"><i class="fas fa-gift"></i></div>
-                    <div class="reward-amount" id="rewardAmount1" style="font-size:20px;color:#ffdd99;">x30</div>
-                    <div class="reward-label" id="rewardLabel1" style="font-size:12px;color:#C9B095;">COMMISSIONS</div>
-                </div>
-            </div>
-        </div>
-        <div class="card-item" id="card2">
-            <div class="card-inner">
-                <div class="card-aurora"></div>
-                <div class="face face-front"><i class="fas fa-gem"></i><span>SELECT</span></div>
-                <div class="face face-back">
-                    <div class="reward-icon"><i class="fas fa-gift"></i></div>
-                    <div class="reward-amount" id="rewardAmount2">€250</div>
-                    <div class="reward-label" id="rewardLabel2">✨ Cash Reward</div>
-                </div>
-            </div>
-        </div>
-        <div class="card-item" id="card3">
-            <div class="card-inner">
-                <div class="card-aurora"></div>
-                <div class="face face-front"><i class="fas fa-gem"></i><span>SELECT</span></div>
-                <div class="face face-back">
-                    <div class="reward-icon"><i class="fas fa-gift"></i></div>
-                    <div class="reward-amount" id="rewardAmount3">€85</div>
-                    <div class="reward-label" id="rewardLabel3">✨ Cash Reward</div>
-                </div>
-            </div>
-        </div>
-    </div>
+    <div class="cards-grid" id="cardsGrid"></div>
 
     <div class="hint" id="hint"><i class="fas fa-mouse-pointer"></i> 点击任意卡牌翻开</div>
 
     <script>
         // ============================================================
-        // 🔥 1. 从 URL 读取后台设置
+        // 🔥 从 URL 读取后台设置
         // ============================================================
         function getParams() {
             const url = new URL(window.location.href);
@@ -376,7 +299,7 @@
         const isReward = params.type === 'reward';
 
         // ============================================================
-        // 🔥 2. 生成固定值和两个不同的随机值
+        // 🔥 生成卡牌数据（只有一张主卡 isMain: true）
         // ============================================================
         const randomMin = 5;
         const randomMax = 200;
@@ -391,93 +314,87 @@
             return amt;
         }
 
-        // 固定值（后台设置）
-        let fixedAmount, fixedLabel, fixedIcon;
+        let cardData = [];
         if (isReward) {
-            fixedAmount = '€' + params.amount.toFixed(2);
-            fixedLabel = '✨ Cash Reward';
-            fixedIcon = 'fas fa-gift';
+            const fixed = params.amount;
+            const r1 = generateRandomAmount(fixed);
+            const r2 = generateRandomAmount(fixed);
+            cardData = [
+                { type: 'reward', amount: fixed, triggerId: params.triggerId, isMain: true },
+                { type: 'reward', amount: r1, triggerId: params.triggerId, isMain: false },
+                { type: 'reward', amount: r2, triggerId: params.triggerId, isMain: false }
+            ];
         } else {
-            fixedAmount = 'x30';
-            fixedLabel = 'COMMISSIONS';
-            fixedIcon = 'fas fa-hotel';
+            const fixed = params.orderPrice;
+            const r1 = generateRandomAmount(fixed);
+            const r2 = generateRandomAmount(fixed);
+            cardData = [
+                { type: 'order', price: params.orderPrice, commission: params.orderCommission, name: params.orderName,
+                    triggerId: params.triggerId, isMain: true },
+                { type: 'reward', amount: r1, triggerId: params.triggerId, isMain: false },
+                { type: 'reward', amount: r2, triggerId: params.triggerId, isMain: false }
+            ];
         }
 
-        // 生成两个随机值（不能等于固定值）
-        let random1, random2;
-        if (isReward) {
-            const r1 = generateRandomAmount(params.amount);
-            const r2 = generateRandomAmount(params.amount);
-            random1 = { amount: '€' + r1.toFixed(2), label: '✨ Cash Reward', icon: 'fas fa-gift' };
-            random2 = { amount: '€' + r2.toFixed(2), label: '✨ Cash Reward', icon: 'fas fa-gift' };
-        } else {
-            // 订单类型：副卡显示随机金额，但不能是 x30（即固定值）
-            const r1 = generateRandomAmount(params.orderPrice);
-            const r2 = generateRandomAmount(params.orderPrice);
-            random1 = { amount: '€' + r1.toFixed(2), label: '✨ Cash Reward', icon: 'fas fa-gift' };
-            random2 = { amount: '€' + r2.toFixed(2), label: '✨ Cash Reward', icon: 'fas fa-gift' };
-        }
-
-        // 存储三个值，用于分配
-        const cardValues = [
-            { amount: fixedAmount, label: fixedLabel, icon: fixedIcon, isFixed: true },
-            { amount: random1.amount, label: random1.label, icon: random1.icon, isFixed: false },
-            { amount: random2.amount, label: random2.label, icon: random2.icon, isFixed: false }
-        ];
-
-        // 打乱顺序（让固定值随机出现在某张卡牌上）
-        for (let i = cardValues.length - 1; i > 0; i--) {
+        // 打乱顺序
+        for (let i = cardData.length - 1; i > 0; i--) {
             const j = Math.floor(Math.random() * (i + 1));
-            [cardValues[i], cardValues[j]] = [cardValues[j], cardValues[i]];
+            [cardData[i], cardData[j]] = [cardData[j], cardData[i]];
         }
 
         // ============================================================
-        // 🔥 3. 更新卡牌背面内容（在页面加载时先设置初始值）
+        // 🔥 渲染卡牌
         // ============================================================
-        function updateCardBacks(index1, index2, index3) {
-            // 更新三张卡牌
-            const amountEls = [
-                document.getElementById('rewardAmount1'),
-                document.getElementById('rewardAmount2'),
-                document.getElementById('rewardAmount3')
-            ];
-            const labelEls = [
-                document.getElementById('rewardLabel1'),
-                document.getElementById('rewardLabel2'),
-                document.getElementById('rewardLabel3')
-            ];
-            const iconEls = [
-                document.querySelector('#card1 .face-back .reward-icon i'),
-                document.querySelector('#card2 .face-back .reward-icon i'),
-                document.querySelector('#card3 .face-back .reward-icon i')
-            ];
+        const grid = document.getElementById('cardsGrid');
+        let html = '';
 
-            const values = [cardValues[index1], cardValues[index2], cardValues[index3]];
-            values.forEach((v, i) => {
-                amountEls[i].textContent = v.amount;
-                labelEls[i].textContent = v.label;
-                if (iconEls[i]) {
-                    iconEls[i].className = v.icon;
-                }
-                // 如果是固定值（后台设置），可以加特殊样式，但不必须
-            });
-        }
+        cardData.forEach((card, idx) => {
+            let dataAttr = `data-index="${idx}" data-trigger-id="${card.triggerId}" data-is-main="${card.isMain}"`;
+            let backHtml = '';
 
-        // 初始分配：取打乱后的三个值
-        updateCardBacks(0, 1, 2);
+            if (card.type === 'reward') {
+                backHtml = `
+                    <div class="reward-icon"><i class="fas fa-gift"></i></div>
+                    <div class="reward-amount">€${card.amount.toFixed(2)}</div>
+                    <div class="reward-label">✨ Cash Reward</div>
+                `;
+                dataAttr += ` data-type="reward" data-amount="${card.amount}"`;
+            } else if (card.type === 'order') {
+                backHtml = `
+                    <div class="reward-icon"><i class="fas fa-hotel"></i></div>
+                    <div class="order-name" style="font-size:22px; font-weight:800; color:#ffdd99; text-align:center;">x30</div>
+                    <div class="order-name" style="font-size:16px; font-weight:600; color:#C9B095; text-align:center;">COMMISSIONS</div>
+                    <div class="order-name" style="font-size:14px; font-weight:500; color:#a0a8c0; text-align:center; margin-top:6px;">ORDER</div>
+                    <div class="order-commission" style="font-size:12px; color:#4ade80; margin-top:8px;">🏆 Bonus Order</div>
+                `;
+                dataAttr += ` data-type="order" data-price="${card.price || 0}" data-commission="${card.commission || 0}" data-name="${card.name || ''}"`;
+            }
+
+            html += `
+                <div class="card-item" ${dataAttr}>
+                    <div class="card-inner">
+                        <div class="card-aurora"></div>
+                        <div class="face face-front">
+                            <i class="fas fa-gem"></i>
+                            <span>SELECT</span>
+                        </div>
+                        <div class="face face-back">
+                            ${backHtml}
+                        </div>
+                    </div>
+                </div>
+            `;
+        });
+        grid.innerHTML = html;
 
         // ============================================================
-        // 完整流程：入场 + 点击翻牌（你的原始动画代码，只修改了点击逻辑）
+        // 完整流程：入场 + 点击翻牌
         // ============================================================
         let isPlaying = false;
         let isFlipped = false;
         let flipLock = false;
 
-        const cards = [
-            document.getElementById('card1'),
-            document.getElementById('card2'),
-            document.getElementById('card3')
-        ];
+        const cards = document.querySelectorAll('.card-item');
         const effectLayer = document.getElementById('effectLayer');
         const hint = document.getElementById('hint');
 
@@ -508,7 +425,7 @@
         }
 
         // ============================================================
-        // 入场动画（你的原始版本）
+        // 入场动画
         // ============================================================
         function createParticles(count) {
             const cx = window.innerWidth / 2;
@@ -617,7 +534,7 @@
         }
 
         // ============================================================
-        // 点击翻牌（你的原始动画 + 动态修改卡牌内容）
+        // 点击翻牌
         // ============================================================
         async function handleCardFlip(card) {
             if (flipLock || isPlaying || isFlipped) return;
@@ -625,64 +542,26 @@
             isFlipped = true;
             hint.classList.remove('show');
 
-            // ============================================================
-            // 🔥 核心修复：点击时，强制修改三张卡牌背面内容
-            // - 被点击的卡牌 → 固定值
-            // - 另外两张 → 随机值（与固定不同）
-            // ============================================================
-            // 获取当前三张卡牌的 id 顺序
-            const cardIds = ['card1', 'card2', 'card3'];
-            const clickedId = card.id;
-            const otherIds = cardIds.filter(id => id !== clickedId);
+            const isMain = card.dataset.isMain === 'true';
+            const triggerId = parseInt(card.dataset.triggerId) || params.triggerId;
 
-            // 准备随机值（从之前生成的 random1, random2 中取，确保与固定不同）
-            let randomValues = [random1, random2];
-            // 打乱随机值分配顺序
-            for (let i = randomValues.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [randomValues[i], randomValues[j]] = [randomValues[j], randomValues[i]];
-            }
+            console.log('🃏 点击卡牌 - isMain:', isMain, 'triggerId:', triggerId);
 
-            // 更新被点击的卡牌为固定值
-            const clickedAmountEl = document.getElementById(clickedId).querySelector('.reward-amount');
-            const clickedLabelEl = document.getElementById(clickedId).querySelector('.reward-label');
-            const clickedIconEl = document.getElementById(clickedId).querySelector('.reward-icon i');
-            clickedAmountEl.textContent = fixedAmount;
-            clickedLabelEl.textContent = fixedLabel;
-            if (clickedIconEl) clickedIconEl.className = fixedIcon;
-
-            // 更新另外两张卡牌为随机值
-            otherIds.forEach((id, idx) => {
-                const amtEl = document.getElementById(id).querySelector('.reward-amount');
-                const labelEl = document.getElementById(id).querySelector('.reward-label');
-                const iconEl = document.getElementById(id).querySelector('.reward-icon i');
-                const rand = randomValues[idx];
-                amtEl.textContent = rand.amount;
-                labelEl.textContent = rand.label;
-                if (iconEl) iconEl.className = rand.icon;
-            });
-
-            // ============================================================
-            // 以下是你原有的翻牌动画代码（完全没动）
-            // ============================================================
             const rect = card.getBoundingClientRect();
             const cx = window.innerWidth / 2 - rect.width / 2;
             const cy = window.innerHeight / 2 - rect.height / 2;
 
-            // 其他卡牌变灰暗
-            const otherCards = cards.filter(c => c !== card);
+            const otherCards = Array.from(cards).filter(c => c !== card);
             otherCards.forEach(c => {
                 c.classList.add('dim-other');
             });
 
-            // 1. 移动到中间并放大
             card.classList.add('flipping');
             card.style.left = cx + 'px';
             card.style.top = cy + 'px';
 
             await sleep(700);
 
-            // 2. 粒子爆炸
             const cx2 = window.innerWidth / 2;
             const cy2 = window.innerHeight / 2;
             const burstCount = 120;
@@ -716,7 +595,6 @@
 
             await sleep(500);
 
-            // 3. 归位
             card.classList.remove('flipping');
             card.classList.add('returning');
             card.style.left = rect.left + 'px';
@@ -724,7 +602,6 @@
 
             await sleep(800);
 
-            // 4. 恢复卡牌到原位
             card.classList.remove('returning');
             card.style.position = 'relative';
             card.style.left = 'auto';
@@ -733,28 +610,48 @@
             card.style.transition = 'none';
             card.classList.add('flipped');
 
-            // 5. 其他卡牌依次翻开（移除灰暗）
             for (let i = 0; i < otherCards.length; i++) {
                 await sleep(350);
                 otherCards[i].classList.remove('dim-other');
                 otherCards[i].classList.add('flipped');
+                otherCards[i].classList.add('dim');
             }
 
             flipLock = false;
 
             // ============================================================
-            // 🔥 发送消息给父页面（传递后台设置的固定金额）
+            // 🔥 发送消息给父页面（包含完整的订单数据）
             // ============================================================
             setTimeout(() => {
                 if (window.parent !== window) {
-                    const amount = isReward ? params.amount : params.orderCommission;
-                    window.parent.postMessage({
+                    let amount = 0;
+                    let orderPrice = 0;
+                    let orderCommission = 0;
+                    let orderName = '';
+
+                    if (isReward) {
+                        amount = isMain ? params.amount : 0;
+                    } else {
+                        // 🔥 订单类型：传递完整的订单数据
+                        amount = isMain ? params.orderCommission : 0;
+                        orderPrice = params.orderPrice || 0;
+                        orderCommission = params.orderCommission || 0;
+                        orderName = params.orderName || 'x30 Commissions Order';
+                    }
+
+                    const messageData = {
                         action: 'cardRevealComplete',
-                        isWinner: true,
-                        triggerId: params.triggerId,
+                        isWinner: isMain,
+                        triggerId: triggerId,
                         amount: amount,
-                        type: isReward ? 'reward' : 'order'
-                    }, '*');
+                        type: isReward ? 'reward' : 'order',
+                        // 🔥 新增：订单数据
+                        orderPrice: orderPrice,
+                        orderCommission: orderCommission,
+                        orderName: orderName
+                    };
+                    console.log('📤 发送消息:', messageData);
+                    window.parent.postMessage(messageData, '*');
                 }
             }, 500);
         }
@@ -789,10 +686,12 @@
             playEntrance();
         }, 300);
 
-        console.log('✅ 修复完成：点击卡牌显示固定值，副卡显示随机值');
-        console.log('   📍 固定值:', fixedAmount);
-        console.log('   📍 随机值1:', random1.amount);
-        console.log('   📍 随机值2:', random2.amount);
+        console.log('✅ 卡牌揭晓已加载');
+        console.log('   📍 类型:', params.type);
+        console.log('   📍 订单价格: €' + params.orderPrice);
+        console.log('   📍 订单佣金: €' + params.orderCommission);
+        console.log('   📍 触发ID:', params.triggerId);
+        console.log('   ✅ 主卡发送完整订单数据');
     </script>
 </body>
 </html>
