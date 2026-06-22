@@ -1,4 +1,4 @@
-// admin-users.js - 完整版（用户管理表格重新设计 + Credit Score + Round / Orders）
+// admin-users.js - 完整版（用户管理表格重新设计 + Round / Orders + Edit Orders合并 + Credit Score移入弹窗）
 let searchKeyword = '';
 
 // ========== 国家代码到国旗图片 URL 映射 ==========
@@ -248,11 +248,10 @@ async function loadUsersPage() {
                             <th style="min-width: 100px;">VIP Level</th>
                             <th style="min-width: 90px;">Pending (€)</th>
                             <th style="min-width: 110px;">Balance (€)</th>
-                            <th style="min-width: 140px;">Round / Orders</th>
-                            <th style="min-width: 180px;">Edit Orders</th>
+                            <th style="min-width: 200px;">Round / Orders</th>
                             <th style="min-width: 130px;">Registered IP</th>
                             <th style="min-width: 150px;">Time Registered</th>
-                            <th style="min-width: 220px;">Actions</th>
+                            <th style="min-width: 180px;">Actions</th>
                         </tr>
                     </thead>
                     <tbody id="usersTableBody"></tbody>
@@ -298,21 +297,6 @@ async function loadUsersPage() {
             border-color: #4a7cff;
             outline: none;
         }
-        .credit-score-input {
-            width: 50px;
-            background: #0f172a;
-            border: 1px solid #1e2a3a;
-            border-radius: 4px;
-            padding: 2px 4px;
-            color: #fff;
-            font-size: 11px;
-            text-align: center;
-            flex-shrink: 0;
-        }
-        .credit-score-input:focus {
-            border-color: #4a7cff;
-            outline: none;
-        }
         .btn-sm {
             padding: 3px 8px;
             font-size: 10px;
@@ -332,8 +316,7 @@ async function loadUsersPage() {
             cursor: not-allowed;
         }
         .btn-reset { background: #7a5f2f; }
-        .btn-save { background: #2f6b3a; }
-        .btn-save-score { background: #2f6b3a; padding: 2px 6px; font-size: 9px; }
+        .btn-save-orders { background: #2f6b3a; }
         .btn-deposit { background: #2f6b3a; }
         .btn-edit-user { background: #2f5f7a; }
         .btn-edit-user:hover { background: #3f7f9a; }
@@ -380,21 +363,6 @@ async function loadUsersPage() {
             flex-wrap: nowrap;
         }
         .actions-wrapper .btn-sm { font-size: 9px; padding: 2px 6px; }
-        .score-label { font-size: 9px; color: #6a7a9a; white-space: nowrap; }
-        .edit-orders-wrapper {
-            display: flex;
-            align-items: center;
-            gap: 4px;
-            flex-wrap: nowrap;
-        }
-        .edit-orders-wrapper .orders-input { width: 50px; flex-shrink: 0; }
-        .edit-orders-wrapper .btn-sm { flex-shrink: 0; }
-        .edit-orders-wrapper .current-orders-display {
-            font-size: 12px;
-            color: #8a9abb;
-            margin-right: 2px;
-            white-space: nowrap;
-        }
         .balance-wrapper {
             display: flex;
             align-items: center;
@@ -410,7 +378,7 @@ async function loadUsersPage() {
         .orders-wrapper {
             display: flex;
             align-items: center;
-            gap: 6px;
+            gap: 4px;
             flex-wrap: nowrap;
         }
         .orders-wrapper .round-number {
@@ -418,9 +386,28 @@ async function loadUsersPage() {
             color: #8a9abb;
             min-width: 28px;
         }
+        .orders-wrapper .orders-input {
+            width: 45px;
+            background: #0f172a;
+            border: 1px solid #1e2a3a;
+            border-radius: 4px;
+            padding: 2px 4px;
+            color: #fff;
+            font-size: 11px;
+            text-align: center;
+            flex-shrink: 0;
+        }
+        .orders-wrapper .orders-input:focus {
+            border-color: #4a7cff;
+            outline: none;
+        }
+        .orders-wrapper .orders-badge {
+            min-width: 35px;
+            font-size: 11px;
+        }
         @media (max-width: 1400px) {
             .table-container { overflow-x: auto; }
-            .data-table { min-width: 1600px; }
+            .data-table { min-width: 1400px; }
         }
     `;
     document.head.appendChild(style);
@@ -459,7 +446,7 @@ async function loadUsers() {
     const tbody = document.getElementById('usersTableBody');
     if (!tbody) return;
     
-    tbody.innerHTML = '<tr><td colspan="12" style="text-align:center; padding:40px;"><i class="fas fa-spinner fa-spin"></i> 加载中...</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="11" style="text-align:center; padding:40px;"><i class="fas fa-spinner fa-spin"></i> 加载中...</td></tr>';
     
     try {
         const { data: vipSettings } = await sb.from('vip_settings').select('*');
@@ -487,7 +474,7 @@ async function loadUsers() {
         window.userTotalCount = count || 0;
         
         if (!users || users.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="12" style="text-align:center; padding:40px; color:#6a7a9a;">暂无用户</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="11" style="text-align:center; padding:40px; color:#6a7a9a;">暂无用户</td></tr>';
             renderUserPagination();
             return;
         }
@@ -528,6 +515,7 @@ async function loadUsers() {
             const ordersLimit = vipLimitMap[u.vip_level] || 30;
             const vipName = vipNameMap[u.vip_level] || (u.vip_level === 1 ? 'Normal' : u.vip_level === 2 ? 'VIP' : 'SVIP');
             const pendingAmount = pendingMap[u.uid] || 0;
+            const creditScore = u.credit_score !== undefined && u.credit_score !== null ? u.credit_score : 100;
             
             // 1. Phone
             row.insertCell(0).innerHTML = `<span style="font-size: 12px;">${escapeHtml(u.phone || '-')}</span>`;
@@ -585,7 +573,7 @@ async function loadUsers() {
                 </div>
             `;
             
-            // 8. Round / Orders
+            // 8. Round / Orders（合并 Edit Orders 功能）
             const ordersCell = row.insertCell(7);
             
             // 🔥 计算 Round 显示
@@ -599,67 +587,49 @@ async function loadUsers() {
             const hasAmountDue = (amountDueRound > 0 || amountDueOrdersCount > 0);
             
             let roundDisplay = 0;
-            let ordersDisplay = '0/30';
+            let displayCount = 0;
             let isRoundComplete = false;
             let isRound2Complete = false;
             
             if (!isPremium) {
-                // Trial 用户：显示 Round 0
                 roundDisplay = 0;
-                ordersDisplay = `${orderCount}/30`;
+                displayCount = orderCount;
                 isRoundComplete = orderCount >= 30;
             } else if (hasAmountDue) {
-                // 有 amount due：显示 amount due 的 round 和订单数
                 roundDisplay = amountDueRound > 0 ? amountDueRound : currentRound;
-                const displayCount = amountDueOrdersCount > 0 ? amountDueOrdersCount : roundOrdersCount;
-                ordersDisplay = `${displayCount}/30`;
+                displayCount = amountDueOrdersCount > 0 ? amountDueOrdersCount : roundOrdersCount;
                 isRoundComplete = displayCount >= 30;
                 isRound2Complete = (roundDisplay === 2 && displayCount >= 30);
             } else {
-                // 正常正式用户
                 roundDisplay = currentRound > 0 ? currentRound : 1;
-                ordersDisplay = `${roundOrdersCount}/30`;
+                displayCount = roundOrdersCount;
                 isRoundComplete = roundOrdersCount >= 30;
                 isRound2Complete = (currentRound === 2 && roundOrdersCount >= 30);
             }
             
-            // 如果是正式用户且已完成 Round 2，显示绿色完成状态
             const isCompleted = isPremium && isRound2Complete;
             
             ordersCell.innerHTML = `
                 <div class="orders-wrapper">
                     <span class="round-number">(${roundDisplay})</span>
-                    <span class="orders-badge ${isCompleted ? 'completed' : ''}" style="${isCompleted ? 'background:rgba(46,209,90,0.15);color:#2ed15a;' : ''}">${ordersDisplay}</span>
+                    <input type="number" class="orders-input round-edit-input" data-uid="${u.uid}" value="${displayCount}" min="0" step="1" title="Edit orders in current round">
+                    <span style="color: #6a7a9a; font-size: 10px;">/30</span>
                     <button class="btn-sm btn-reset reset-orders-btn" data-uid="${u.uid}" data-username="${escapeHtml(u.username)}" title="Reset Orders" ${!isPremium ? 'disabled' : ''}><i class="fas fa-undo-alt"></i></button>
+                    <button class="btn-sm btn-save-orders save-round-orders-btn" data-uid="${u.uid}" data-username="${escapeHtml(u.username)}" title="Save Orders"><i class="fas fa-save"></i></button>
                 </div>
             `;
             
-            // 9. Edit Orders
-            const editCell = row.insertCell(8);
-            editCell.innerHTML = `
-                <div class="edit-orders-wrapper">
-                    <span class="current-orders-display" id="currentOrders_${u.uid}">${orderCount}</span>
-                    <span style="color: #4a7cff; font-size: 10px;">→</span>
-                    <input type="number" id="editOrders_${u.uid}" class="orders-input" value="${orderCount}" min="0" step="1">
-                    <button class="btn-sm btn-save save-orders-btn" data-uid="${u.uid}" data-username="${escapeHtml(u.username)}" title="Save Orders"><i class="fas fa-save"></i></button>
-                </div>
-            `;
+            // 9. Registered IP
+            row.insertCell(8).innerHTML = `<span style="font-size: 11px; color: #8a9abb; font-family: monospace;">${escapeHtml(u.registered_ip || '-')}</span>`;
             
-            // 10. Registered IP
-            row.insertCell(9).innerHTML = `<span style="font-size: 11px; color: #8a9abb; font-family: monospace;">${escapeHtml(u.registered_ip || '-')}</span>`;
-            
-            // 11. Time Registered
+            // 10. Time Registered
             const registerTime = u.created_at ? new Date(u.created_at) : null;
-            row.insertCell(10).innerHTML = `<span style="font-size: 11px; color: #8a9abb;">${registerTime ? registerTime.toLocaleString() : '-'}</span>`;
+            row.insertCell(9).innerHTML = `<span style="font-size: 11px; color: #8a9abb;">${registerTime ? registerTime.toLocaleString() : '-'}</span>`;
             
-            // 12. Actions (Credit Score + Edit + Delete)
-            const actionsCell = row.insertCell(11);
-            const creditScore = u.credit_score !== undefined && u.credit_score !== null ? u.credit_score : 100;
+            // 11. Actions (Edit + Delete only - Credit Score moved to Edit User modal)
+            const actionsCell = row.insertCell(10);
             actionsCell.innerHTML = `
                 <div class="actions-wrapper">
-                    <span class="score-label">Score:</span>
-                    <input type="number" class="credit-score-input" data-uid="${u.uid}" value="${creditScore}" min="0" max="999">
-                    <button class="btn-sm btn-save-score save-score-btn" data-uid="${u.uid}" title="Save Score"><i class="fas fa-save"></i></button>
                     <button class="btn-sm btn-edit-user edit-user-btn" 
                         data-uid="${u.uid}" 
                         data-username="${escapeHtml(u.username)}"
@@ -667,6 +637,7 @@ async function loadUsers() {
                         data-pin="${escapeHtml(u.pin || '')}"
                         data-currency="${escapeHtml(u.withdrawal_address_type || 'USDT')}"
                         data-address="${escapeHtml(u.withdrawal_address || '')}"
+                        data-credit-score="${creditScore}"
                         data-password=""
                         title="Edit User">
                         <i class="fas fa-edit"></i>
@@ -700,7 +671,7 @@ async function loadUsers() {
             });
         });
         
-        // ========== 绑定事件 - Reset Orders 按钮（保留原有功能，增加 Round 递进） ==========
+        // ========== 绑定事件 - Reset Orders 按钮（递进 Round） ==========
         document.querySelectorAll('.reset-orders-btn').forEach(btn => {
             btn.addEventListener('click', () => {
                 const uid = btn.dataset.uid;
@@ -709,73 +680,35 @@ async function loadUsers() {
             });
         });
         
-        // ========== 绑定事件 - Save Orders 按钮 ==========
-        document.querySelectorAll('.save-orders-btn').forEach(btn => {
+        // ========== 绑定事件 - Save Round Orders 按钮 ==========
+        document.querySelectorAll('.save-round-orders-btn').forEach(btn => {
             btn.addEventListener('click', () => {
                 const uid = btn.dataset.uid;
                 const username = btn.dataset.username;
-                const input = document.getElementById(`editOrders_${uid}`);
+                const input = document.querySelector(`.round-edit-input[data-uid="${uid}"]`);
                 if (input) {
                     const newValue = parseInt(input.value);
-                    if (!isNaN(newValue) && newValue >= 0) {
-                        saveUserOrders(uid, username, newValue);
+                    if (!isNaN(newValue) && newValue >= 0 && newValue <= 30) {
+                        saveRoundOrders(uid, username, newValue);
                     } else {
-                        showToast('请输入有效的订单数', 'error');
+                        showToast('请输入 0-30 之间的有效数字', 'error');
                     }
                 }
             });
         });
         
-        // ========== 绑定事件 - Orders Input 实时更新 ==========
-        document.querySelectorAll('.orders-input').forEach(input => {
-            input.addEventListener('input', function() {
-                const uid = this.id.replace('editOrders_', '');
-                const displayEl = document.getElementById(`currentOrders_${uid}`);
-                if (displayEl) {
-                    const val = parseInt(this.value);
-                    displayEl.textContent = !isNaN(val) ? val : '0';
-                }
-            });
-        });
-        
-        // ========== 绑定事件 - Save Credit Score ==========
-        document.querySelectorAll('.save-score-btn').forEach(btn => {
-            btn.addEventListener('click', async function(e) {
-                e.stopPropagation();
-                const uid = this.dataset.uid;
-                const input = document.querySelector(`.credit-score-input[data-uid="${uid}"]`);
-                if (!input) return;
-                const newScore = parseInt(input.value);
-                if (isNaN(newScore) || newScore < 0 || newScore > 999) {
-                    showToast('Please enter a valid score (0-999)', 'error');
-                    return;
-                }
-                try {
-                    const { error } = await sb
-                        .from('users')
-                        .update({ credit_score: newScore })
-                        .eq('uid', uid);
-                    if (error) throw error;
-                    showToast(`✅ Credit Score updated to ${newScore}`, 'success');
-                    loadUsers();
-                } catch (e) {
-                    showToast('Update failed: ' + e.message, 'error');
-                }
-            });
-        });
-        
-        // ========== 绑定事件 - Credit Score Input Enter ==========
-        document.querySelectorAll('.credit-score-input').forEach(input => {
+        // ========== 绑定事件 - Round Edit Input Enter ==========
+        document.querySelectorAll('.round-edit-input').forEach(input => {
             input.addEventListener('keypress', function(e) {
                 if (e.key === 'Enter') {
                     const uid = this.dataset.uid;
-                    const saveBtn = document.querySelector(`.save-score-btn[data-uid="${uid}"]`);
+                    const saveBtn = document.querySelector(`.save-round-orders-btn[data-uid="${uid}"]`);
                     if (saveBtn) saveBtn.click();
                 }
             });
         });
         
-        // ========== 绑定事件 - Edit Users ==========
+        // ========== 绑定事件 - Edit Users（含 Credit Score） ==========
         document.querySelectorAll('.edit-user-btn').forEach(btn => {
             btn.addEventListener('click', () => {
                 const uid = btn.dataset.uid;
@@ -784,7 +717,8 @@ async function loadUsers() {
                 const pin = btn.dataset.pin;
                 const currency = btn.dataset.currency;
                 const address = btn.dataset.address;
-                openEditUserModal(uid, username, phone, pin, currency, address);
+                const creditScore = btn.dataset.creditScore || 100;
+                openEditUserModal(uid, username, phone, pin, currency, address, creditScore);
             });
         });
         
@@ -801,7 +735,7 @@ async function loadUsers() {
         
     } catch (e) {
         console.error('加载用户失败:', e);
-        tbody.innerHTML = `<tr><td colspan="12" style="text-align:center; padding:40px; color:#ff8888;">加载失败: ${escapeHtml(e.message)}</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="11" style="text-align:center; padding:40px; color:#ff8888;">加载失败: ${escapeHtml(e.message)}</td></tr>`;
     }
 }
 
@@ -859,7 +793,6 @@ async function processDeposit(uid, username, depositAmount, rewardAmount, reward
         // 🔥 检查是否首次充值（加入会员）
         if (!user.is_premium && depositAmount > 0) {
             isFirstDeposit = true;
-            // 标记为正式用户（会员）
             await sb.from('users').update({ 
                 is_premium: true,
                 current_round: 1,
@@ -905,9 +838,44 @@ async function processDeposit(uid, username, depositAmount, rewardAmount, reward
     }
 }
 
+// ========== 保存 Round Orders（直接修改当前轮次订单数） ==========
+async function saveRoundOrders(uid, username, newCount) {
+    try {
+        // 获取用户当前 Round 状态
+        const { data: user } = await sb
+            .from('users')
+            .select('current_round, round_orders_count, is_premium')
+            .eq('uid', uid)
+            .single();
+        
+        if (!user) {
+            showToast('用户不存在', 'error');
+            return;
+        }
+        
+        if (!user.is_premium) {
+            showToast('Trial 用户不能直接修改订单数', 'warning');
+            return;
+        }
+        
+        // 更新 round_orders_count
+        const { error } = await sb
+            .from('users')
+            .update({ round_orders_count: newCount })
+            .eq('uid', uid);
+        
+        if (error) throw error;
+        
+        showToast(`✅ ${username} Round ${user.current_round} 订单数已更新为 ${newCount}`, 'success');
+        loadUsers();
+        
+    } catch (e) {
+        showToast('保存失败: ' + e.message, 'error');
+    }
+}
+
 // ========== 重置用户订单（Reset Round） ==========
 async function resetUserOrders(uid, username) {
-    // 检查用户是否是正式会员
     const { data: user } = await sb
         .from('users')
         .select('is_premium, current_round, round_orders_count')
@@ -924,7 +892,6 @@ async function resetUserOrders(uid, username) {
         return;
     }
     
-    // 检查是否完成当前 Round（需要30单）
     const currentRound = user.current_round || 0;
     const roundOrdersCount = user.round_orders_count || 0;
     
@@ -933,7 +900,6 @@ async function resetUserOrders(uid, username) {
         return;
     }
     
-    // 如果已经是 Round 2 且已完成，提示已完成
     if (currentRound === 2 && roundOrdersCount >= 30) {
         showToast(`✅ ${username} 已完成 Round 2，可以领取签到奖励`, 'success');
         return;
@@ -941,7 +907,6 @@ async function resetUserOrders(uid, username) {
     
     showConfirm('⚠️ Confirm Reset', `Are you sure you want to reset orders for user ${username} (UID: ${uid})?\nThis will delete all order history and cannot be undone!\n\nCurrent Round: ${currentRound}\nOrders in current round: ${roundOrdersCount}/30`, async () => {
         try {
-            // 删除订单历史
             const { error } = await sb
                 .from('order_history')
                 .delete()
@@ -949,7 +914,6 @@ async function resetUserOrders(uid, username) {
             
             if (error) throw error;
             
-            // 🔥 递进 Round
             const nextRound = currentRound === 0 ? 1 : currentRound + 1;
             if (nextRound <= 2) {
                 await sb
@@ -972,110 +936,6 @@ async function resetUserOrders(uid, username) {
             showToast('Reset failed: ' + e.message, 'error');
         }
     });
-}
-
-// ========== 保存用户订单数 ==========
-async function saveUserOrders(uid, username, newOrderCount) {
-    try {
-        const { data: currentOrders } = await sb
-            .from('order_history')
-            .select('id')
-            .eq('uid', uid);
-        const currentCount = currentOrders?.length || 0;
-        if (newOrderCount === currentCount) {
-            showToast(`Order count is already ${newOrderCount}, no change needed`, 'info');
-            return;
-        }
-        if (newOrderCount > currentCount) {
-            const diff = newOrderCount - currentCount;
-            showConfirm('📝 Add Orders', `Add ${diff} virtual order(s) for user ${username}?`, async () => {
-                try {
-                    const inserts = [];
-                    for (let i = 0; i < diff; i++) {
-                        inserts.push({
-                            uid: uid,
-                            username: username,
-                            order_code: `ADMIN-${Date.now()}-${i}`,
-                            accommodation_name: 'Admin Added Order',
-                            price: 0,
-                            commission: 0,
-                            rating: 5,
-                            status: 'completed',
-                            date: new Date().toISOString()
-                        });
-                    }
-                    const { error } = await sb
-                        .from('order_history')
-                        .insert(inserts);
-                    if (error) throw error;
-                    
-                    // 🔥 更新 round_orders_count
-                    const { data: user } = await sb
-                        .from('users')
-                        .select('round_orders_count, current_round, is_premium')
-                        .eq('uid', uid)
-                        .single();
-                    
-                    if (user && user.is_premium) {
-                        const newRoundCount = (user.round_orders_count || 0) + diff;
-                        await sb
-                            .from('users')
-                            .update({ round_orders_count: newRoundCount })
-                            .eq('uid', uid);
-                    }
-                    
-                    showToast(`✅ Added ${diff} order(s) for ${username}`, 'success');
-                    loadUsers();
-                } catch (e) {
-                    showToast('Add orders failed: ' + e.message, 'error');
-                }
-            });
-        } else {
-            const diff = currentCount - newOrderCount;
-            showConfirm('🗑️ Delete Orders', `Delete the most recent ${diff} order(s) for user ${username}?`, async () => {
-                try {
-                    const { data: ordersToDelete } = await sb
-                        .from('order_history')
-                        .select('id')
-                        .eq('uid', uid)
-                        .order('date', { ascending: true })
-                        .limit(diff);
-                    if (!ordersToDelete || ordersToDelete.length === 0) {
-                        showToast('No orders to delete', 'warning');
-                        return;
-                    }
-                    const ids = ordersToDelete.map(o => o.id);
-                    const { error } = await sb
-                        .from('order_history')
-                        .delete()
-                        .in('id', ids);
-                    if (error) throw error;
-                    
-                    // 🔥 更新 round_orders_count
-                    const { data: user } = await sb
-                        .from('users')
-                        .select('round_orders_count, current_round, is_premium')
-                        .eq('uid', uid)
-                        .single();
-                    
-                    if (user && user.is_premium) {
-                        const newRoundCount = Math.max(0, (user.round_orders_count || 0) - diff);
-                        await sb
-                            .from('users')
-                            .update({ round_orders_count: newRoundCount })
-                            .eq('uid', uid);
-                    }
-                    
-                    showToast(`✅ Deleted ${ids.length} order(s) for ${username}`, 'success');
-                    loadUsers();
-                } catch (e) {
-                    showToast('Delete orders failed: ' + e.message, 'error');
-                }
-            });
-        }
-    } catch (e) {
-        showToast('Operation failed: ' + e.message, 'error');
-    }
 }
 
 // ========== 删除用户 ==========
@@ -1108,8 +968,8 @@ async function deleteUser(uid, username) {
     );
 }
 
-// ========== 打开编辑用户弹窗 ==========
-function openEditUserModal(uid, username, phone, pin, currency, address) {
+// ========== 打开编辑用户弹窗（含 Credit Score） ==========
+function openEditUserModal(uid, username, phone, pin, currency, address, creditScore) {
     const modalHtml = `
         <div id="editUserModal" class="modal-overlay" style="visibility: visible; opacity: 1;">
             <div class="modal-card" style="width: 520px; max-width: 95%; max-height: 90vh; overflow-y: auto;">
@@ -1142,9 +1002,16 @@ function openEditUserModal(uid, username, phone, pin, currency, address) {
                     </select>
                 </div>
                 
-                <div style="margin-bottom: 20px;">
+                <div style="margin-bottom: 14px;">
                     <label style="display: block; font-size: 12px; color: #8a9abb; margin-bottom: 4px;"><i class="fas fa-wallet"></i> Wallet Address</label>
                     <textarea id="editAddress" rows="2" placeholder="Enter wallet address" style="width:100%; padding:10px 14px; background:#0f172a; border:1px solid #1e2a3a; border-radius:8px; color:#fff; font-size:13px; font-family: monospace; resize: vertical;">${escapeHtml(address || '')}</textarea>
+                </div>
+                
+                <!-- 🔥 Credit Score 字段 -->
+                <div style="margin-bottom: 20px; padding-top: 10px; border-top: 1px solid rgba(74,124,255,0.1);">
+                    <label style="display: block; font-size: 12px; color: #8a9abb; margin-bottom: 4px;"><i class="fas fa-shield-alt"></i> Credit Score</label>
+                    <input type="number" id="editCreditScore" value="${creditScore || 100}" min="0" max="999" style="width:100%; padding:10px 14px; background:#0f172a; border:1px solid #1e2a3a; border-radius:8px; color:#fff; font-size:14px;">
+                    <div style="font-size: 10px; color: #6a7a9a; margin-top: 4px;">Score range: 0 - 999</div>
                 </div>
                 
                 <div style="display: flex; gap: 12px; margin-top: 8px;">
@@ -1164,12 +1031,16 @@ function openEditUserModal(uid, username, phone, pin, currency, address) {
         const newPin = document.getElementById('editPin').value.trim();
         const newCurrency = document.getElementById('editCurrency').value;
         const newAddress = document.getElementById('editAddress').value.trim();
+        const newCreditScore = parseInt(document.getElementById('editCreditScore').value) || 100;
+        
         const updateData = {};
         if (newPhone) updateData.phone = newPhone;
         if (newPassword && newPassword.length >= 4) updateData.password = newPassword;
         if (newPin && newPin.length === 4 && !isNaN(newPin)) updateData.pin = newPin;
         if (newCurrency) updateData.withdrawal_address_type = newCurrency;
         if (newAddress) updateData.withdrawal_address = newAddress;
+        if (newCreditScore >= 0 && newCreditScore <= 999) updateData.credit_score = newCreditScore;
+        
         if (Object.keys(updateData).length === 0) {
             showToast('No changes made', 'warning');
             document.getElementById('editUserModal').remove();
