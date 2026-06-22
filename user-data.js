@@ -263,9 +263,10 @@ function canWithdraw(user) {
 
 // ========== 触发订单相关函数 ==========
 
-// 获取用户待完成的触发订单（pending 且 trigger_order_number <= 当前订单数 + 1）
+// 获取用户待完成的触发订单
+// 优先级：claimed（卡牌已翻开）> pending（等待触发）
 async function getUserPendingTriggerOrder(uid) {
-    // 🔥 使用 round_orders_count（当前轮订单数）而不是 order_history 总数
+    // 获取用户当前轮订单数
     const { data: userData, error } = await sb
         .from('users')
         .select('round_orders_count')
@@ -277,23 +278,53 @@ async function getUserPendingTriggerOrder(uid) {
         return null;
     }
     
-    const currentOrderCount = userData.round_orders_count || 0;  // ✅ 使用当前轮订单数
+    const currentOrderCount = userData.round_orders_count || 0;
     const nextOrderNumber = currentOrderCount + 1;
+
+    // ============================================================
+    // 🔥 第一步：优先查找 claimed 状态的订单（卡牌已翻开，等待用户做单）
+    // 不限制 trigger_order_number，只要有 claimed 就返回
+    // ============================================================
+    const { data: claimedTriggers, error: claimedError } = await sb
+        .from('user_trigger_orders')
+        .select('*')
+        .eq('uid', uid)
+        .eq('status', 'claimed')
+        .order('trigger_order_number', { ascending: true })
+        .limit(1);
     
-    const { data: triggers, error: triggerError } = await sb
+    if (claimedError) {
+        console.error('获取 claimed 触发订单失败:', claimedError);
+    }
+    
+    if (claimedTriggers && claimedTriggers.length > 0) {
+        console.log('✅ 找到 claimed 卡牌订单:', claimedTriggers[0].id, 'trigger_order_number:', claimedTriggers[0].trigger_order_number);
+        return claimedTriggers[0];
+    }
+
+    // ============================================================
+    // 🔥 第二步：查找 pending 状态的订单（等待触发的订单）
+    // 精确匹配 trigger_order_number = nextOrderNumber
+    // ============================================================
+    const { data: pendingTriggers, error: pendingError } = await sb
         .from('user_trigger_orders')
         .select('*')
         .eq('uid', uid)
         .eq('status', 'pending')
-        .eq('trigger_order_number', nextOrderNumber)  // 精确匹配
+        .eq('trigger_order_number', nextOrderNumber)
         .limit(1);
     
-    if (triggerError) {
-        console.error('获取触发订单失败:', triggerError);
+    if (pendingError) {
+        console.error('获取 pending 触发订单失败:', pendingError);
         return null;
     }
     
-    return triggers?.[0] || null;
+    if (pendingTriggers && pendingTriggers.length > 0) {
+        console.log('✅ 找到 pending 触发订单:', pendingTriggers[0].id, 'trigger_order_number:', pendingTriggers[0].trigger_order_number);
+        return pendingTriggers[0];
+    }
+    
+    return null;
 }
 
 // 检查用户是否有待完成的触发订单
