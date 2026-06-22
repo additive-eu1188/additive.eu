@@ -1497,26 +1497,25 @@ async function handleTriggerOrder(modalContent) {
         return;
     }
 
-    // 检查订单数量限制 - 基于 Round
-    var ordersDataResult = await sb.from('order_history').select('id', { count: 'exact' }).eq('uid', user.uid);
-    var currentCount = ordersDataResult.data?.length || 0;
-
     // 🔥 强制从数据库获取最新的 Round 状态
-    const { data: freshUserData, error: freshError } = await sb
-        .from('users')
-        .select('is_premium, current_round, round_orders_count')
-        .eq('uid', user.uid)
-        .single();
+const { data: freshUserData, error: freshError } = await sb
+    .from('users')
+    .select('is_premium, current_round, round_orders_count')
+    .eq('uid', user.uid)
+    .single();
 
-    if (freshError) {
-        console.error('获取用户状态失败:', freshError);
-        showToast('获取用户状态失败，请刷新页面重试', 'error');
-        return;
-    }
+if (freshError) {
+    console.error('获取用户状态失败:', freshError);
+    showToast('获取用户状态失败，请刷新页面重试', 'error');
+    return;
+}
 
-    const isPremium = freshUserData?.is_premium || false;
-    const currentRound = freshUserData?.current_round || 0;
-    const roundOrdersCount = freshUserData?.round_orders_count || 0;
+const isPremium = freshUserData?.is_premium || false;
+const currentRound = freshUserData?.current_round || 0;
+const roundOrdersCount = freshUserData?.round_orders_count || 0;  // ✅ 使用当前轮订单数
+
+// 🔥 用 round_orders_count 判断是否达到上限
+var currentCount = roundOrdersCount;
 
     // 同步到 localStorage
     user.isPremium = isPremium;
