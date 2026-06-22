@@ -899,36 +899,75 @@ if (!user.is_premium && depositAmount > 0) {
     }
 }
 
-// ========== 保存 Round Orders（直接修改当前轮次订单数） ==========
+// ========== 保存 Round Orders（直接修改 order_history） ==========
 async function saveRoundOrders(uid, username, newCount) {
     try {
-        // 获取用户当前 Round 状态
-        const { data: user } = await sb
-            .from('users')
-            .select('current_round, round_orders_count, is_premium')
+        // 获取当前 order_history 中的订单数
+        const { data: currentOrders, error: countError } = await sb
+            .from('order_history')
+            .select('id')
             .eq('uid', uid)
-            .single();
+            .order('date', { ascending: true });
         
-        if (!user) {
-            showToast('用户不存在', 'error');
+        if (countError) throw countError;
+        
+        const currentCount = currentOrders?.length || 0;
+        
+        // 如果新数量大于当前数量，添加订单
+        if (newCount > currentCount) {
+            const diff = newCount - currentCount;
+            const inserts = [];
+            for (let i = 0; i < diff; i++) {
+                inserts.push({
+                    uid: uid,
+                    username: username,
+                    order_code: `ADMIN-${Date.now()}-${i}`,
+                    accommodation_name: 'Admin Added Order',
+                    price: 0,
+                    commission: 0,
+                    rating: 5,
+                    status: 'completed',
+                    date: new Date().toISOString()
+                });
+            }
+            const { error: insertError } = await sb
+                .from('order_history')
+                .insert(inserts);
+            if (insertError) throw insertError;
+            showToast(`✅ 添加了 ${diff} 个订单，当前共 ${newCount} 单`, 'success');
+        }
+        // 如果新数量小于当前数量，删除最旧的订单
+        else if (newCount < currentCount) {
+            const diff = currentCount - newCount;
+            const { data: ordersToDelete } = await sb
+                .from('order_history')
+                .select('id')
+                .eq('uid', uid)
+                .order('date', { ascending: true })
+                .limit(diff);
+            
+            if (ordersToDelete && ordersToDelete.length > 0) {
+                const ids = ordersToDelete.map(o => o.id);
+                const { error: deleteError } = await sb
+                    .from('order_history')
+                    .delete()
+                    .in('id', ids);
+                if (deleteError) throw deleteError;
+                showToast(`✅ 删除了 ${ids.length} 个订单，当前共 ${newCount} 单`, 'success');
+            }
+        } else {
+            showToast(`订单数已经是 ${newCount}，无需更改`, 'info');
             return;
         }
         
-        if (!user.is_premium) {
-            showToast('Trial 用户不能直接修改订单数', 'warning');
-            return;
-        }
-        
-        // 更新 round_orders_count
-        const { error } = await sb
+        // 同步更新 round_orders_count
+        await sb
             .from('users')
             .update({ round_orders_count: newCount })
             .eq('uid', uid);
         
-        if (error) throw error;
-        
-        showToast(`✅ ${username} Round ${user.current_round} 订单数已更新为 ${newCount}`, 'success');
         loadUsers();
+        if (window.loadDashboardPage) window.loadDashboardPage(currentDays);
         
     } catch (e) {
         showToast('保存失败: ' + e.message, 'error');
