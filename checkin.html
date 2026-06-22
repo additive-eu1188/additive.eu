@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>ADDITIVE - Check In</title>
+    <title>ADDITIVE - Sign In</title>
     <link rel="stylesheet" href="common.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -15,6 +15,8 @@
         .two-columns { display: flex; gap: 32px; flex-wrap: wrap; }
         .left-column { flex: 1.2; }
         .right-column { flex: 0.8; }
+
+        /* ===== 日卡网格 ===== */
         .days-grid {
             display: grid;
             grid-template-columns: repeat(6, 1fr);
@@ -22,46 +24,30 @@
             margin-bottom: 24px;
         }
 
-        /* ====== 卡片样式（深色奢金 · 粒子风格） ====== */
+        /* ===== 卡片设计（粒子容器） ===== */
         .day-card {
             border-radius: 16px;
             padding: 14px 6px;
             text-align: center;
             position: relative;
-            cursor: default; /* 改为 default，不可点击 */
+            cursor: default;
             transition: all 0.4s cubic-bezier(0.2, 0.9, 0.4, 1.1);
             min-height: 100px;
             overflow: hidden;
-            
+
             /* 默认灰暗 */
             opacity: 0.55;
             filter: grayscale(0.85) brightness(0.7);
             transform: scale(0.96);
             will-change: transform, opacity, filter;
-            
-            /* 渐变背景 */
+
             background: linear-gradient(165deg, #181f3a, #0f1428);
             border: none;
-            
+
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-        }
-
-        .day-card::before {
-            content: '';
-            position: absolute;
-            inset: 0;
-            border-radius: 16px;
-            padding: 1.5px;
-            background: linear-gradient(135deg, rgba(204, 178, 153, 0.08), transparent 60%);
-            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-            -webkit-mask-composite: xor;
-            mask-composite: exclude;
-            pointer-events: none;
-            transition: all 0.4s ease;
-            z-index: 5;
         }
 
         .day-card .glow {
@@ -79,27 +65,11 @@
             position: absolute;
             inset: 0;
             border-radius: 16px;
-            background: rgba(11, 11, 33, 0.12);
+            background: rgba(11, 11, 33, 0.06);
             pointer-events: none;
             z-index: 2;
             opacity: 0;
             transition: opacity 0.6s ease;
-        }
-        .day-card.claimed .text-mask {
-            opacity: 1;
-            background: rgba(11, 11, 33, 0.06);
-        }
-
-        .day-card .top-accent {
-            position: absolute;
-            top: 0;
-            left: 30%;
-            right: 30%;
-            height: 2px;
-            border-radius: 0 0 4px 4px;
-            background: rgba(204, 178, 153, 0.12);
-            transition: all 0.5s ease;
-            z-index: 4;
         }
 
         .day-card .card-content {
@@ -165,26 +135,36 @@
             -webkit-backdrop-filter: blur(2px);
         }
 
-        /* ====== 已领取状态 ====== */
+        /* ===== 粒子画布 ===== */
+        .day-card .particle-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1;
+            border-radius: 16px;
+            opacity: 0;
+            transition: opacity 0.8s ease;
+        }
+
+        /* ===== 已领取状态 ===== */
         .day-card.claimed {
             opacity: 1;
             filter: grayscale(0) brightness(1);
             transform: scale(1);
             background: linear-gradient(165deg, #1a2e2a, #0f201a);
+            cursor: default;
         }
-        .day-card.claimed::before {
-            background: linear-gradient(135deg, #4ade80, #22b85a);
-            box-shadow: 0 0 24px rgba(74, 222, 128, 0.12);
+        .day-card.claimed .particle-canvas {
+            opacity: 1;
         }
         .day-card.claimed .glow {
             opacity: 1;
         }
-        .day-card.claimed .top-accent {
-            background: linear-gradient(90deg, transparent, #4ade80, transparent);
-            left: 10%;
-            right: 10%;
-            height: 2.5px;
-            box-shadow: 0 0 16px rgba(74, 222, 128, 0.25);
+        .day-card.claimed .text-mask {
+            opacity: 1;
         }
         .day-card.claimed .day-num {
             color: #6ade90;
@@ -203,7 +183,7 @@
             box-shadow: inset 0 0 20px rgba(74, 222, 128, 0.04);
         }
 
-        /* 悬停效果（只有视觉反馈，不改变状态） */
+        /* ===== 悬停效果 ===== */
         .day-card:hover {
             transform: scale(1.03) translateY(-2px);
         }
@@ -212,7 +192,7 @@
             box-shadow: 0 8px 30px rgba(74, 222, 128, 0.08);
         }
 
-        /* ====== 其他原有样式 ====== */
+        /* ===== 其他原有样式 ===== */
         .claim-btn {
             background: rgba(201, 176, 149, 0.15);
             border: 1px solid rgba(201, 176, 149, 0.3);
@@ -232,7 +212,7 @@
             cursor: not-allowed;
         }
         .claim-btn:not(.disabled):hover {
-            background: rgba(201,176,149,0.25);
+            background: rgba(201, 176, 149, 0.25);
             transform: scale(1.02);
         }
         .claim-warning {
@@ -259,7 +239,7 @@
             border: 1px solid rgba(201, 176, 149, 0.15);
         }
         .streak-title { font-size: 12px; color: #a0a8c0; margin-bottom: 12px; }
-        .streak-progress { background: rgba(255,255,255,0.1); border-radius: 30px; height: 8px; overflow: hidden; margin-bottom: 10px; }
+        .streak-progress { background: rgba(255, 255, 255, 0.1); border-radius: 30px; height: 8px; overflow: hidden; margin-bottom: 10px; }
         .streak-bar { background: linear-gradient(90deg, #C9B095, #d4c8a0); width: 0%; height: 100%; border-radius: 30px; transition: width 0.5s; }
         .streak-text { font-size: 24px; font-weight: 700; color: #ffffff; }
         .rules-card {
@@ -281,18 +261,28 @@
             animation: pulseGlow 2.5s ease-in-out infinite;
             border: 1px solid rgba(201, 176, 149, 0.3);
         }
-        @keyframes pulseGlow { 0% { box-shadow: inset 0 0 10px rgba(201,176,149,0.08), 0 0 5px rgba(201,176,149,0.05); border-color: rgba(201,176,149,0.2); } 50% { box-shadow: inset 0 0 25px rgba(201,176,149,0.25), 0 0 15px rgba(201,176,149,0.12); border-color: rgba(201,176,149,0.5); } 100% { box-shadow: inset 0 0 10px rgba(201,176,149,0.08), 0 0 5px rgba(201,176,149,0.05); border-color: rgba(201,176,149,0.2); } }
+        @keyframes pulseGlow {
+            0% { box-shadow: inset 0 0 10px rgba(201, 176, 149, 0.08), 0 0 5px rgba(201, 176, 149, 0.05);
+                border-color: rgba(201, 176, 149, 0.2); }
+            50% { box-shadow: inset 0 0 25px rgba(201, 176, 149, 0.25), 0 0 15px rgba(201, 176, 149, 0.12);
+                border-color: rgba(201, 176, 149, 0.5); }
+            100% { box-shadow: inset 0 0 10px rgba(201, 176, 149, 0.08), 0 0 5px rgba(201, 176, 149, 0.05);
+                border-color: rgba(201, 176, 149, 0.2); }
+        }
         .upgrade-title { font-size: 18px; font-weight: 600; margin-bottom: 10px; color: #C9B095; }
         .upgrade-desc { font-size: 13px; color: #7a85a5; line-height: 1.5; margin-bottom: 20px; }
-        .btn-upgrade { background: rgba(201,176,149,0.15); padding: 10px 20px; border-radius: 40px; text-decoration: none; color: #C9B095; font-weight: 600; font-size: 14px; display: inline-flex; align-items: center; gap: 8px; border: 1px solid rgba(201,176,149,0.3); }
+        .btn-upgrade { background: rgba(201, 176, 149, 0.15); padding: 10px 20px; border-radius: 40px; text-decoration: none;
+            color: #C9B095; font-weight: 600; font-size: 14px; display: inline-flex; align-items: center; gap: 8px;
+            border: 1px solid rgba(201, 176, 149, 0.3); }
 
-        @media (max-width: 1000px) { .days-grid { grid-template-columns: repeat(3, 1fr); } .two-columns { flex-direction: column; } }
+        @media (max-width: 1000px) { .days-grid { grid-template-columns: repeat(3, 1fr); }
+            .two-columns { flex-direction: column; } }
         @media (max-width: 700px) { .days-grid { grid-template-columns: repeat(3, 1fr); } }
         @media (max-width: 480px) { .days-grid { grid-template-columns: repeat(2, 1fr); } }
     </style>
 </head>
 <body>
-<div class="menu-overlay" id="menuOverlay" onclick="closeMenu()"></div>
+    <div class="menu-overlay" id="menuOverlay" onclick="closeMenu()"></div>
     <div class="app">
         <aside class="sidebar" id="sidebar">
             <div class="sidebar-top">
@@ -361,187 +351,326 @@
     </div>
 
     <script>
-        function toggleMenu() { 
-            const sidebar = document.getElementById('sidebar'); 
-            const overlay = document.querySelector('.menu-overlay'); 
-            const menuBtn = document.getElementById('menuToggleBtn'); 
-            if (sidebar) sidebar.classList.toggle('open'); 
-            if (overlay) overlay.classList.toggle('active'); 
-            if (menuBtn) menuBtn.classList.toggle('hidden'); 
-        }
-        function closeMenu() { 
-            const sidebar = document.getElementById('sidebar'); 
-            const overlay = document.querySelector('.menu-overlay'); 
-            const menuBtn = document.getElementById('menuToggleBtn'); 
-            if (sidebar) sidebar.classList.remove('open'); 
-            if (overlay) overlay.classList.remove('active'); 
-            if (menuBtn) menuBtn.classList.remove('hidden'); 
+        // ============================================================
+        // 菜单控制
+        // ============================================================
+        function toggleMenu() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.querySelector('.menu-overlay');
+            const menuBtn = document.getElementById('menuToggleBtn');
+            if (sidebar) sidebar.classList.toggle('open');
+            if (overlay) overlay.classList.toggle('active');
+            if (menuBtn) menuBtn.classList.toggle('hidden');
         }
 
+        function closeMenu() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.querySelector('.menu-overlay');
+            const menuBtn = document.getElementById('menuToggleBtn');
+            if (sidebar) sidebar.classList.remove('open');
+            if (overlay) overlay.classList.remove('active');
+            if (menuBtn) menuBtn.classList.remove('hidden');
+        }
+
+        // ============================================================
+        // 数据
+        // ============================================================
         let signInRewards = [];
         let userOrderCount = 0;
 
+        // ============================================================
+        // 粒子引擎（金色 × 翠绿混合）
+        // ============================================================
+        const particleAnimators = {};
+
+        class MixParticle {
+            constructor(w, h) {
+                this.w = w;
+                this.h = h;
+                // 70% 金色, 30% 翠绿
+                this.isGold = Math.random() < 0.7;
+                this.reset();
+            }
+
+            reset() {
+                this.x = Math.random() * this.w;
+                this.y = Math.random() * this.h;
+                this.radius = 1.8 + Math.random() * 2.5;
+                this.speedX = (Math.random() - 0.5) * 0.5;
+                this.speedY = (Math.random() - 0.5) * 0.5;
+                this.baseAlpha = 0.4 + Math.random() * 0.5;
+                this.phase = Math.random() * Math.PI * 2;
+                this.phaseSpeed = 0.008 + Math.random() * 0.025;
+                this.floatPhase = Math.random() * Math.PI * 2;
+                this.floatSpeed = 0.003 + Math.random() * 0.005;
+                // 颜色
+                if (this.isGold) {
+                    this.color = '#CCB299';
+                    this.glowColor = 'rgba(204,178,153,0.15)';
+                } else {
+                    this.color = '#4ade80';
+                    this.glowColor = 'rgba(74,222,128,0.15)';
+                }
+            }
+
+            update() {
+                this.x += this.speedX;
+                this.y += this.speedY;
+                this.phase += this.phaseSpeed;
+                this.floatPhase += this.floatSpeed;
+
+                this.x += Math.sin(this.floatPhase) * 0.06;
+                this.y += Math.cos(this.floatPhase * 0.7) * 0.06;
+
+                if (this.x < 0 || this.x > this.w) { this.speedX *= -1;
+                    this.x = Math.max(0, Math.min(this.w, this.x)); }
+                if (this.y < 0 || this.y > this.h) { this.speedY *= -1;
+                    this.y = Math.max(0, Math.min(this.h, this.y)); }
+            }
+
+            draw(ctx, time) {
+                const pulse = 0.55 + 0.45 * Math.sin(this.phase + time * 0.0012);
+                const alpha = this.baseAlpha * pulse;
+                const r = this.radius * (0.75 + 0.25 * Math.sin(this.phase + time * 0.0018));
+
+                // 发光
+                const grad = ctx.createRadialGradient(this.x, this.y, 0, this.x, this.y, r * 5);
+                grad.addColorStop(0, this.color + Math.floor(alpha * 200).toString(16).padStart(2, '0'));
+                grad.addColorStop(0.35, this.color + Math.floor(alpha * 60).toString(16).padStart(2, '0'));
+                grad.addColorStop(1, 'transparent');
+
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, r * 5, 0, Math.PI * 2);
+                ctx.fillStyle = grad;
+                ctx.fill();
+
+                // 核心
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, r * 0.6, 0, Math.PI * 2);
+                ctx.fillStyle = this.color + Math.floor(alpha * 230).toString(16).padStart(2, '0');
+                ctx.fill();
+
+                // 高光
+                ctx.beginPath();
+                ctx.arc(this.x - r * 0.2, this.y - r * 0.25, r * 0.22, 0, Math.PI * 2);
+                ctx.fillStyle = 'rgba(255,255,255,' + (alpha * 0.25) + ')';
+                ctx.fill();
+            }
+        }
+
+        function startParticles(canvas) {
+            if (!canvas) return;
+
+            const rect = canvas.parentElement.getBoundingClientRect();
+            const dpr = window.devicePixelRatio || 1;
+            const w = rect.width || 200;
+            const h = rect.height || 200;
+
+            canvas.width = w * dpr;
+            canvas.height = h * dpr;
+            canvas.style.width = w + 'px';
+            canvas.style.height = h + 'px';
+
+            const ctx = canvas.getContext('2d');
+            ctx.scale(dpr, dpr);
+
+            const count = 35;
+            const particles = [];
+            for (let i = 0; i < count; i++) {
+                particles.push(new MixParticle(w, h));
+            }
+
+            let animId = null;
+            let startTime = performance.now();
+
+            function animate(time) {
+                ctx.clearRect(0, 0, w, h);
+
+                // 背景微光
+                const bgGrad = ctx.createRadialGradient(w / 2, h / 2, 0, w / 2, h / 2, Math.max(w, h) * 0.5);
+                bgGrad.addColorStop(0, 'rgba(74,222,128,0.04)');
+                bgGrad.addColorStop(0.5, 'rgba(204,178,153,0.03)');
+                bgGrad.addColorStop(1, 'transparent');
+                ctx.fillStyle = bgGrad;
+                ctx.fillRect(0, 0, w, h);
+
+                particles.forEach(p => {
+                    p.update();
+                    p.draw(ctx, time);
+                });
+
+                animId = requestAnimationFrame(animate);
+            }
+
+            const key = canvas.dataset.animKey || Math.random().toString(36);
+            canvas.dataset.animKey = key;
+
+            if (particleAnimators[key]) {
+                cancelAnimationFrame(particleAnimators[key]);
+            }
+
+            animate(performance.now());
+            particleAnimators[key] = animId;
+
+            return () => {
+                if (animId) cancelAnimationFrame(animId);
+                delete particleAnimators[key];
+            };
+        }
+
+        // ============================================================
+        // 渲染卡片
+        // ============================================================
         async function loadRewards() {
             const { data, error } = await sb
                 .from('signin_rewards')
                 .select('*')
                 .order('day', { ascending: true });
-            
+
             if (error) {
-                signInRewards = [{day:1,amount:10},{day:2,amount:30},{day:3,amount:50},{day:4,amount:90},{day:5,amount:110},{day:6,amount:200}];
+                signInRewards = [
+                    { day: 1, amount: 10 },
+                    { day: 2, amount: 30 },
+                    { day: 3, amount: 50 },
+                    { day: 4, amount: 90 },
+                    { day: 5, amount: 110 },
+                    { day: 6, amount: 200 }
+                ];
             } else {
                 signInRewards = data;
             }
         }
-        
+
         function loadData() {
             const saved = localStorage.getItem('additive_checkin');
-            if(saved) {
+            if (saved) {
                 const data = JSON.parse(saved);
-                return {streak: data.streak || 0, lastClaimDate: data.lastClaimDate || null, claimedDays: data.claimedDays || []};
+                return { streak: data.streak || 0, lastClaimDate: data.lastClaimDate || null, claimedDays: data
+                        .claimedDays || [] };
             }
-            return {streak: 0, lastClaimDate: null, claimedDays: []};
+            return { streak: 0, lastClaimDate: null, claimedDays: [] };
         }
-        
+
         function saveData(streak, lastClaimDate, claimedDays) {
-            localStorage.setItem('additive_checkin', JSON.stringify({streak, lastClaimDate, claimedDays}));
+            localStorage.setItem('additive_checkin', JSON.stringify({ streak, lastClaimDate, claimedDays }));
         }
-        
-        function hasClaimedToday(last){
-            if(!last) return false;
+
+        function hasClaimedToday(last) {
+            if (!last) return false;
             return new Date().toDateString() === new Date(last).toDateString();
         }
-        
-        function isConsecutive(last){
-            if(!last) return false;
+
+        function isConsecutive(last) {
+            if (!last) return false;
             const today = new Date();
             const yesterday = new Date(today);
             yesterday.setDate(yesterday.getDate() - 1);
             return new Date(last).toDateString() === yesterday.toDateString();
         }
-        
+
         async function getUserOrderCountFromDB() {
             const user = getCurrentUser();
             if (!user) return 0;
-            
             const { data: orders } = await sb
                 .from('order_history')
                 .select('id', { count: 'exact' })
                 .eq('uid', user.uid);
-            
             return orders?.length || 0;
         }
-        
+
         async function addReward(amount) {
             const user = getCurrentUser();
-            if(!user) return;
-            
+            if (!user) return;
             const { data: userData } = await sb
                 .from('users')
                 .select('balance')
                 .eq('uid', user.uid)
                 .single();
-            
             const newBalance = (userData?.balance || 0) + amount;
             await updateUserBalance(user.uid, newBalance);
         }
-        
-        // ====== 渲染卡片 ======
-async function render() {
-    const {streak, lastClaimDate, claimedDays} = loadData();
-    const hasClaimed = hasClaimedToday(lastClaimDate);
-    userOrderCount = await getUserOrderCountFromDB();
-    
-    // 🔥 获取用户 Round 状态
-    const user = getCurrentUser();
-    await syncUserData();
-    const freshUser = getCurrentUser();
-    const isPremium = freshUser?.isPremium || false;
-    const currentRound = freshUser?.currentRound || 0;
-    const roundOrdersCount = freshUser?.roundOrdersCount || 0;
-    
-    // 🔥 判断是否可以 Claim Sign In Bonus
-    // 条件：正式用户 + 完成 Round 2（30单）
-    const canClaimBonus = isPremium && currentRound === 2 && roundOrdersCount >= 30;
-    
-    const total = signInRewards.reduce((s, r) => s + r.amount, 0);
-    document.getElementById('totalRewards').innerText = '€' + total;
-    
-    const grid = document.getElementById('daysGrid');
-    grid.innerHTML = '';
-    
-    signInRewards.forEach((r) => {
-        const dayNum = r.day;
-        const isClaimed = claimedDays.includes(dayNum);
-        const isToday = (streak + 1) === dayNum && !hasClaimed;
-        
-        const card = document.createElement('div');
-        card.className = 'day-card';
-        if (isClaimed) card.classList.add('claimed');
-        if (isToday) card.classList.add('today');
-        
-        card.innerHTML = `
-            <div class="glow"></div>
-            <div class="text-mask"></div>
-            <div class="top-accent"></div>
-            <div class="card-content">
-                <span class="day-num">Day ${String(dayNum).padStart(2, '0')}</span>
-                <span class="day-reward"><span class="currency">€</span>${r.amount}</span>
-                <span class="status-badge">${isClaimed ? 'Claimed' : 'Pending'}</span>
-            </div>
-        `;
-        grid.appendChild(card);
-    });
-    
-    // 更新 streak
-    const percent = (streak / signInRewards.length) * 100;
-    document.getElementById('streakBar').style.width = percent + '%';
-    document.getElementById('streakText').innerHTML = `${streak}/${signInRewards.length} Days`;
-    
-    // 🔥 更新 Claim 按钮状态
-    const claimBtn = document.getElementById('claimBtn');
-    const nextDay = streak + 1;
-    
-    // 🔥 判断是否可以 Claim
-    // 1. 必须是正式用户
-    // 2. 必须完成 Round 2（60单）
-    // 3. 未 Claim 过今天
-    const canClaim = !hasClaimed && nextDay <= signInRewards.length && canClaimBonus;
-    
-    let warningMessage = '';
-    if (!isPremium) {
-        warningMessage = '💎 请充值成为会员后，完成 2 Rounds (60单) 即可领取签到奖励';
-    } else if (currentRound < 2) {
-        warningMessage = `📊 当前 Round ${currentRound}/2，完成 ${30 - roundOrdersCount} 单进入下一轮`;
-    } else if (currentRound === 2 && roundOrdersCount < 30) {
-        warningMessage = `📊 完成 ${30 - roundOrdersCount} 单即可领取签到奖励`;
-    } else if (canClaimBonus) {
-        warningMessage = '✅ 已完成 2 Rounds，可以领取签到奖励！';
-    }
-    
-    if(canClaim) {
-        claimBtn.classList.remove('disabled');
-        claimBtn.disabled = false;
-        document.getElementById('claimWarning').innerHTML = warningMessage || '点击领取签到奖励';
-    } else {
-        claimBtn.classList.add('disabled');
-        claimBtn.disabled = true;
-        document.getElementById('claimWarning').innerHTML = warningMessage || '请完成 2 Rounds (60单) 后领取';
-    }
-}
-        
-        // ====== 领取 ======
+
+        async function render() {
+            const { streak, lastClaimDate, claimedDays } = loadData();
+            const hasClaimed = hasClaimedToday(lastClaimDate);
+            userOrderCount = await getUserOrderCountFromDB();
+
+            const total = signInRewards.reduce((s, r) => s + r.amount, 0);
+            document.getElementById('totalRewards').innerText = '€' + total;
+
+            const grid = document.getElementById('daysGrid');
+            grid.innerHTML = '';
+
+            signInRewards.forEach((r, index) => {
+                const dayNum = r.day;
+                const isClaimed = claimedDays.includes(dayNum);
+                const isToday = (streak + 1) === dayNum && !hasClaimed;
+
+                const card = document.createElement('div');
+                card.className = 'day-card';
+                if (isClaimed) {
+                    card.classList.add('claimed');
+                    // 已领取的卡片延迟启动粒子
+                    setTimeout(() => {
+                        const canvas = card.querySelector('.particle-canvas');
+                        if (canvas) startParticles(canvas);
+                    }, 300 + index * 150);
+                }
+
+                card.innerHTML = `
+                    <canvas class="particle-canvas"></canvas>
+                    <div class="glow"></div>
+                    <div class="text-mask"></div>
+                    <div class="card-content">
+                        <span class="day-num">Day ${String(dayNum).padStart(2, '0')}</span>
+                        <span class="day-reward"><span class="currency">€</span>${r.amount}</span>
+                        <span class="status-badge">${isClaimed ? 'Claimed ✓' : 'Pending'}</span>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+
+            // 更新 streak
+            const percent = (streak / signInRewards.length) * 100;
+            document.getElementById('streakBar').style.width = percent + '%';
+            document.getElementById('streakText').innerHTML = `${streak}/${signInRewards.length} Days`;
+
+            // 更新按钮状态
+            const claimBtn = document.getElementById('claimBtn');
+            const nextDay = streak + 1;
+            const canClaim = !hasClaimed && nextDay <= signInRewards.length && userOrderCount >= 30;
+
+            if (canClaim) {
+                claimBtn.classList.remove('disabled');
+                claimBtn.disabled = false;
+                document.getElementById('claimWarning').innerHTML = '点击领取签到奖励';
+            } else {
+                claimBtn.classList.add('disabled');
+                claimBtn.disabled = true;
+                if (userOrderCount < 30) {
+                    document.getElementById('claimWarning').innerHTML =
+                        `需要完成 30 单才能领取奖励 (当前 ${userOrderCount}/30)`;
+                } else if (hasClaimed) {
+                    document.getElementById('claimWarning').innerHTML = '今日已领取，明天再来吧';
+                } else {
+                    document.getElementById('claimWarning').innerHTML = '已完成所有签到，太棒了！';
+                }
+            }
+        }
+
+        // ============================================================
+        // 领取逻辑
+        // ============================================================
         async function handleClaim() {
-            const {streak, lastClaimDate, claimedDays} = loadData();
+            const { streak, lastClaimDate, claimedDays } = loadData();
             const hasClaimed = hasClaimedToday(lastClaimDate);
             const nextDay = streak + 1;
-            
-            if(hasClaimed) { alert('Already claimed today'); return; }
-            if(nextDay > signInRewards.length) { alert('Completed all days!'); return; }
-            if(userOrderCount < 30) { alert(`Need 30 orders to claim rewards. You have ${userOrderCount}/30.`); return; }
-            
-            // 检查连续性（如果断签则重置到第1天）
-            if(streak > 0 && !isConsecutive(lastClaimDate)) {
+
+            if (hasClaimed) { alert('Already claimed today'); return; }
+            if (nextDay > signInRewards.length) { alert('Completed all days!'); return; }
+            if (userOrderCount < 30) { alert(`Need 30 orders to claim rewards. You have ${userOrderCount}/30.`); return; }
+
+            if (streak > 0 && !isConsecutive(lastClaimDate)) {
                 const amount = signInRewards[0].amount;
                 await addReward(amount);
                 saveData(1, new Date().toISOString(), [1]);
@@ -549,20 +678,43 @@ async function render() {
                 alert(`Day 1 claimed! +€${amount}`);
                 return;
             }
-            
+
             const amount = signInRewards[nextDay - 1].amount;
             await addReward(amount);
             saveData(streak + 1, new Date().toISOString(), [...claimedDays, nextDay]);
             await render();
             alert(`Day ${nextDay} claimed! +€${amount}`);
         }
-        
-        // ====== 初始化 ======
+
+        // ============================================================
+        // 初始化
+        // ============================================================
         checkLogin();
         (async function init() {
             await loadRewards();
             await render();
         })();
+
+        // ============================================================
+        // 窗口自适应 - 重启粒子
+        // ============================================================
+        let resizeTimer;
+        window.addEventListener('resize', () => {
+            clearTimeout(resizeTimer);
+            resizeTimer = setTimeout(() => {
+                document.querySelectorAll('.day-card.claimed .particle-canvas').forEach(canvas => {
+                    const key = canvas.dataset.animKey;
+                    if (key && particleAnimators[key]) {
+                        cancelAnimationFrame(particleAnimators[key]);
+                        delete particleAnimators[key];
+                    }
+                    startParticles(canvas);
+                });
+            }, 300);
+        });
+
+        console.log('✅ checkin.html 已加载 — 金色×翠绿混合粒子');
+        console.log('💡 已领取的卡片会激活粒子动画');
     </script>
 </body>
 </html>
