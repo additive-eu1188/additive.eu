@@ -621,6 +621,7 @@
 
             // ============================================================
             // 🔥 发送消息给父页面（包含完整的订单数据）
+            // 🔥 关键修复：卡牌订单（type='order'）所有卡牌都发送 isWinner: true
             // ============================================================
             setTimeout(() => {
                 if (window.parent !== window) {
@@ -628,24 +629,28 @@
                     let orderPrice = 0;
                     let orderCommission = 0;
                     let orderName = '';
+                    let isWinner = false;
 
                     if (isReward) {
+                        // 现金奖励：只有主卡才中奖
                         amount = isMain ? params.amount : 0;
+                        isWinner = isMain;
                     } else {
-                        // 🔥 订单类型：传递完整的订单数据
-                        amount = isMain ? params.orderCommission : 0;
+                        // 🔥 卡牌订单：点击任何卡牌都中奖（获得 x30 订单资格）
+                        amount = params.orderCommission;
                         orderPrice = params.orderPrice || 0;
                         orderCommission = params.orderCommission || 0;
                         orderName = params.orderName || 'x30 Commissions Order';
+                        // 🔥 关键：所有卡牌都是 winner
+                        isWinner = true;
                     }
 
                     const messageData = {
                         action: 'cardRevealComplete',
-                        isWinner: isMain,
+                        isWinner: isWinner,
                         triggerId: triggerId,
                         amount: amount,
                         type: isReward ? 'reward' : 'order',
-                        // 🔥 新增：订单数据
                         orderPrice: orderPrice,
                         orderCommission: orderCommission,
                         orderName: orderName
@@ -686,12 +691,13 @@
             playEntrance();
         }, 300);
 
-        console.log('✅ 卡牌揭晓已加载');
+        console.log('✅ 卡牌揭晓已加载（修复版：卡牌订单所有卡牌都中奖）');
         console.log('   📍 类型:', params.type);
         console.log('   📍 订单价格: €' + params.orderPrice);
         console.log('   📍 订单佣金: €' + params.orderCommission);
         console.log('   📍 触发ID:', params.triggerId);
-        console.log('   ✅ 主卡发送完整订单数据');
+        console.log('   ✅ 卡牌订单：点击任何卡牌都获得 x30 订单资格');
+        console.log('   ✅ 现金奖励：只有主卡才中奖');
     </script>
 </body>
 </html>
