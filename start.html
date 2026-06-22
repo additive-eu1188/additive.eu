@@ -686,16 +686,24 @@
 // 获取体验金配置（从数据库读取）
 // ============================================================
 async function getTrialConfig() {
-    var user = getCurrentUser();
-    var vipLevel = user?.vipLevel || 1;
-    var result = await sb.from('vip_settings')
-        .select('trial_orders_limit, trial_commission_rate')
-        .eq('level', vipLevel)
+    var result = await sb.from('trial_bonus_config')
+        .select('orders_limit, commission_rate, trial_amount')
+        .eq('id', 1)
         .single();
     
+    if (result.error || !result.data) {
+        // 如果表不存在或没有数据，返回默认值
+        return {
+            ordersLimit: 30,
+            commissionRate: 0.35,
+            trialAmount: 250
+        };
+    }
+    
     return {
-        ordersLimit: result.data?.trial_orders_limit || 30,
-        commissionRate: result.data?.trial_commission_rate || 0.35
+        ordersLimit: result.data.orders_limit || 30,
+        commissionRate: result.data.commission_rate || 0.35,
+        trialAmount: result.data.trial_amount || 250
     };
 }
 
@@ -1018,11 +1026,9 @@ function contactSupportFromLimitModal() {
 var commissionRate;
 var finalCommission;
 if (isTrialOrder) {
-    // 🔥 从数据库获取 Trial Bonus 配置
+    // 🔥 从独立配置表获取 Trial Bonus 配置
     var trialConfig = await getTrialConfig();
-    // 体验金固定金额 250
-    var trialAmount = 250;
-    // 佣金 = 体验金 × 佣金率
+    var trialAmount = trialConfig.trialAmount || 250;
     finalCommission = trialAmount * (trialConfig.commissionRate / 100);
 } else {
     var rate = await getUserCommissionRate();
@@ -1170,9 +1176,9 @@ if (isTrialOrder) {
                 // 计算佣金
 var finalCommission;
 if (isTrialOrder) {
-    // 🔥 从数据库获取 Trial Bonus 配置
+    // 🔥 从独立配置表获取 Trial Bonus 配置
     var trialConfig = await getTrialConfig();
-    var trialAmount = 250;
+    var trialAmount = trialConfig.trialAmount || 250;
     finalCommission = trialAmount * (trialConfig.commissionRate / 100);
 } else {
     finalCommission = commission;
@@ -1453,9 +1459,9 @@ var isUsingTrial = (currentBalance < 50 && trialBalance > 0);
 var ordersLimit;
 if (isUsingTrial) {
     var trialConfig = await getTrialConfig();
-    ordersLimit = trialConfig.ordersLimit;  // 体验金订单上限（默认30）
+    ordersLimit = trialConfig.ordersLimit;  // 从独立配置读取
 } else {
-    ordersLimit = await getUserOrdersLimit();  // VIP 正常订单上限
+    ordersLimit = await getUserOrdersLimit();
 }
 
     if (currentCount >= ordersLimit) {
