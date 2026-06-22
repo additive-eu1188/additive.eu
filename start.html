@@ -1077,20 +1077,22 @@ function contactSupportFromLimitModal() {
             date: new Date().toISOString()
         }]);
 
-        // 🔥 同步更新 round_orders_count
-        try {
-            const result = await sb
-                .from('order_history')
-                .select('id', { count: 'exact', head: true })
-                .eq('uid', user.uid);
-            const count = result.count || 0;
-            await sb
-                .from('users')
-                .update({ round_orders_count: count })
-                .eq('uid', user.uid);
-        } catch (e) {
-            console.error('更新 round_orders_count 失败:', e);
-        }
+        // 🔥 同步更新 round_orders_count - 当前轮订单数 +1
+try {
+    const { data: currentUser } = await sb
+        .from('users')
+        .select('round_orders_count')
+        .eq('uid', user.uid)
+        .single();
+    
+    const newCount = (currentUser?.round_orders_count || 0) + 1;
+    await sb
+        .from('users')
+        .update({ round_orders_count: newCount })
+        .eq('uid', user.uid);
+} catch (e) {
+    console.error('更新 round_orders_count 失败:', e);
+}
 
         await sb.from('deposits').insert([{
             uid: user.uid,
@@ -1240,20 +1242,22 @@ window.submitTriggerOrder = async function() {
             date: new Date().toISOString()
         }]);
 
-        // 🔥 同步更新 round_orders_count
-        try {
-            const result = await sb
-                .from('order_history')
-                .select('id', { count: 'exact', head: true })
-                .eq('uid', user.uid);
-            const count = result.count || 0;
-            await sb
-                .from('users')
-                .update({ round_orders_count: count })
-                .eq('uid', user.uid);
-        } catch (e) {
-            console.error('更新 round_orders_count 失败:', e);
-        }
+        // 🔥 同步更新 round_orders_count - 当前轮订单数 +1
+try {
+    const { data: currentUser } = await sb
+        .from('users')
+        .select('round_orders_count')
+        .eq('uid', user.uid)
+        .single();
+    
+    const newCount = (currentUser?.round_orders_count || 0) + 1;
+    await sb
+        .from('users')
+        .update({ round_orders_count: newCount })
+        .eq('uid', user.uid);
+} catch (e) {
+    console.error('更新 round_orders_count 失败:', e);
+}
 
         await sb.from('deposits').insert([{
             uid: user.uid,
