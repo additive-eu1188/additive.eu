@@ -10,7 +10,6 @@
     <script src="user-data.js"></script>
     <script src="toast.js"></script>
     <style>
-        /* 你的原始样式（完全保留） */
         .start-hero { margin-bottom: 12px; padding: 0; }
         .start-hero h1 { font-size: 28px; font-weight: 700; color: #ffffff; margin-bottom: 6px; }
         .start-hero p { color: #7a85a5; font-size: 13px; margin-bottom: 0; }
@@ -222,7 +221,7 @@
 .mobile-top-bar {
     display: flex !important;
     justify-content: space-between;
-    align-items: center !important;
+    align-items: center !important;  /* 确保垂直居中 */
     padding: 0 16px 12px 16px !important;
 }
 
@@ -325,7 +324,7 @@
 
     <script>
         // ============================================================
-        // 工具函数（完全保留）
+        // 工具函数
         // ============================================================
         function hideLoading() {
             var loading = document.getElementById('pageLoading');
@@ -514,21 +513,22 @@
         }
 
         function getPendingTempOrder() {
-            var temp = getTempOrder();
-            if (!temp) return null;
-            var user = getCurrentUser();
-            if (!user || temp.uid !== user.uid) {
-                clearTempOrder();
-                return null;
-            }
-            if (temp.orderType === undefined) {
-                temp.orderType = '订单';
-            }
-            if (temp.commissionPercent === undefined) {
-                temp.commissionPercent = '';
-            }
-            return temp;
-        }
+    var temp = getTempOrder();
+    if (!temp) return null;
+    var user = getCurrentUser();
+    if (!user || temp.uid !== user.uid) {
+        clearTempOrder();
+        return null;
+    }
+    // 🔥 确保 orderType 和 commissionPercent 存在
+    if (temp.orderType === undefined) {
+        temp.orderType = '订单';
+    }
+    if (temp.commissionPercent === undefined) {
+        temp.commissionPercent = '';
+    }
+    return temp;
+}
 
         // ============================================================
         // 订单数据获取
@@ -612,69 +612,83 @@
         }
 
         async function loadUserData() {
-            var user = getCurrentUser();
-            if (!user) { window.location.href = 'signin.html'; return; }
-            currentUserUid = user.uid;
+    var user = getCurrentUser();
+    if (!user) { window.location.href = 'signin.html'; return; }
+    currentUserUid = user.uid;
 
-            try {
-                const { data: freshUser, error } = await sb
-                    .from('users')
-                    .select('balance, trial_bonus_amount, current_round, round_orders_count, is_premium')
-                    .eq('uid', user.uid)
-                    .single();
-                
-                if (freshUser) {
-                    currentUserBalance = freshUser.balance || 0;
-                    user.balance = currentUserBalance;
-                    user.trialBonusAmount = freshUser.trial_bonus_amount || 0;
-                    user.currentRound = freshUser.current_round || 0;
-                    user.roundOrdersCount = freshUser.round_orders_count || 0;
-                    user.isPremium = freshUser.is_premium || false;
-                    localStorage.setItem('currentUser', JSON.stringify(user));
-                }
-
-                document.getElementById('totalOrders').innerText = user.roundOrdersCount || 0;
-
-                var ordersResult = await sb.from('order_history').select('commission').eq('uid', user.uid);
-                var orders = ordersResult.data || [];
-                var totalCommission = orders.reduce(function(s, o) { return s + (o.commission || 0); }, 0);
-
-                currentTriggerOrder = await getUserPendingTriggerOrder(user.uid);
-
-                var pendingResult = await sb.from('withdrawals').select('amount').eq('uid', user.uid).eq('status', 'pending');
-                var totalPending = (pendingResult.data || []).reduce(function(sum, w) { return sum + (w.amount || 0); }, 0);
-
-                var amountDueData = getAmountDue(user.uid);
-                var amountDue = amountDueData?.amountDue || 0;
-
-                var triggerOrder = await getUserPendingTriggerOrder(user.uid);
-                var triggerCommission = triggerOrder?.commission_amount || 0;
-
-                var totalPendingDisplay;
-                if (triggerOrder && amountDue > 0) {
-                    totalPendingDisplay = currentUserBalance + amountDue + triggerCommission;
-                } else {
-                    totalPendingDisplay = totalPending;
-                }
-
-                var balanceEl = document.getElementById('statBalance');
-                balanceEl.innerHTML = '€' + currentUserBalance.toFixed(2);
-                if (currentUserBalance < 0) balanceEl.classList.add('balance-negative');
-                else balanceEl.classList.remove('balance-negative');
-
-                var trialBonusEl = document.getElementById('statTrialBonus');
-                if (trialBonusEl) {
-                    trialBonusEl.innerHTML = '€' + (user.trialBonusAmount || 0).toFixed(2);
-                }
-
-                document.getElementById('statCommissions').innerHTML = '€' + totalCommission.toFixed(2);
-                document.getElementById('statPending').innerHTML = '€' + totalPendingDisplay.toFixed(2);
-
-                setTimeout(function() {
-                    checkAndShowAmountDue();
-                }, 100);
-            } catch (e) { console.error('加载数据失败:', e); }
+    try {
+        // 🔥 从数据库获取最新的 Round 状态
+        const { data: freshUser, error } = await sb
+            .from('users')
+            .select('balance, trial_bonus_amount, current_round, round_orders_count, is_premium')
+            .eq('uid', user.uid)
+            .single();
+        
+        if (freshUser) {
+            currentUserBalance = freshUser.balance || 0;
+            user.balance = currentUserBalance;
+            user.trialBonusAmount = freshUser.trial_bonus_amount || 0;
+            user.currentRound = freshUser.current_round || 0;
+            user.roundOrdersCount = freshUser.round_orders_count || 0;
+            user.isPremium = freshUser.is_premium || false;
+            localStorage.setItem('currentUser', JSON.stringify(user));
         }
+
+        // 🔥 显示 CURRENT ORDERS - 使用 round_orders_count
+        document.getElementById('totalOrders').innerText = user.roundOrdersCount || 0;
+
+        var ordersResult = await sb.from('order_history').select('commission').eq('uid', user.uid);
+        var orders = ordersResult.data || [];
+        var totalCommission = orders.reduce(function(s, o) { return s + (o.commission || 0); }, 0);
+
+        currentTriggerOrder = await getUserPendingTriggerOrder(user.uid);
+
+        // ============================================================
+        // 🔥 Pending 卡片：两种状态
+        // 1. 正常提现时 = 待批准提现
+        // 2. 有触发订单且余额不足时 = Current Balance + Amount Due + 触发订单佣金
+        // ============================================================
+
+        // 1. 获取待批准提现
+        var pendingResult = await sb.from('withdrawals').select('amount').eq('uid', user.uid).eq('status', 'pending');
+        var totalPending = (pendingResult.data || []).reduce(function(sum, w) { return sum + (w.amount || 0); }, 0);
+
+        // 2. 获取 Amount Due（从 localStorage）
+        var amountDueData = getAmountDue(user.uid);
+        var amountDue = amountDueData?.amountDue || 0;
+
+        // 3. 获取触发订单佣金（如果有待完成的触发订单）
+        var triggerOrder = await getUserPendingTriggerOrder(user.uid);
+        var triggerCommission = triggerOrder?.commission_amount || 0;
+
+        // 4. 判断：有触发订单 且 余额不足（Amount Due > 0）时，使用第二种计算方式
+        var totalPendingDisplay;
+        if (triggerOrder && amountDue > 0) {
+            // 有触发订单且余额不足：Current Balance + Amount Due + 触发订单佣金
+            totalPendingDisplay = currentUserBalance + amountDue + triggerCommission;
+        } else {
+            // 正常情况：只显示待批准提现
+            totalPendingDisplay = totalPending;
+        }
+
+        var balanceEl = document.getElementById('statBalance');
+        balanceEl.innerHTML = '€' + currentUserBalance.toFixed(2);
+        if (currentUserBalance < 0) balanceEl.classList.add('balance-negative');
+        else balanceEl.classList.remove('balance-negative');
+
+        var trialBonusEl = document.getElementById('statTrialBonus');
+        if (trialBonusEl) {
+            trialBonusEl.innerHTML = '€' + (user.trialBonusAmount || 0).toFixed(2);
+        }
+
+        document.getElementById('statCommissions').innerHTML = '€' + totalCommission.toFixed(2);
+        document.getElementById('statPending').innerHTML = '€' + totalPendingDisplay.toFixed(2);
+
+        setTimeout(function() {
+            checkAndShowAmountDue();
+        }, 100);
+    } catch (e) { console.error('加载数据失败:', e); }
+}
 
         async function getUserCommissionRate() {
             var user = getCurrentUser();
@@ -690,26 +704,30 @@
             return result.data?.orders_limit || 30;
         }
 
-        async function getTrialConfig() {
-            var result = await sb.from('trial_bonus_config')
-                .select('orders_limit, commission_rate, trial_amount')
-                .eq('id', 1)
-                .single();
-            
-            if (result.error || !result.data) {
-                return {
-                    ordersLimit: 30,
-                    commissionRate: 0.35,
-                    trialAmount: 250
-                };
-            }
-            
-            return {
-                ordersLimit: result.data.orders_limit || 30,
-                commissionRate: result.data.commission_rate || 0.35,
-                trialAmount: result.data.trial_amount || 250
-            };
-        }
+// ============================================================
+// 获取体验金配置（从数据库读取）
+// ============================================================
+async function getTrialConfig() {
+    var result = await sb.from('trial_bonus_config')
+        .select('orders_limit, commission_rate, trial_amount')
+        .eq('id', 1)
+        .single();
+    
+    if (result.error || !result.data) {
+        // 如果表不存在或没有数据，返回默认值
+        return {
+            ordersLimit: 30,
+            commissionRate: 0.35,
+            trialAmount: 250
+        };
+    }
+    
+    return {
+        ordersLimit: result.data.orders_limit || 30,
+        commissionRate: result.data.commission_rate || 0.35,
+        trialAmount: result.data.trial_amount || 250
+    };
+}
 
         // ============================================================
         // 视频和酒店配置
@@ -771,106 +789,111 @@
         // 统一弹窗函数
         // ============================================================
         function showInsufficientBalanceModal(requiredAmount, currentBalance, showAmountDue = false) {
-            closeOrderModal();
-            var user = getCurrentUser();
-            if (showAmountDue && user) {
-                var amountDue = requiredAmount - currentBalance;
-                setAmountDue(user.uid, requiredAmount, amountDue);
-                showAmountDueCard(amountDue);
-                loadUserData();
-            }
-            var modalHtml = `
-                <div id="insufficientModal" style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(7,11,26,0.92);backdrop-filter:blur(14px);z-index:30000;display:flex;align-items:center;justify-content:center;visibility:visible;opacity:1;">
-                    <div style="background:linear-gradient(160deg,#1a1428,#0e0a1a);border-radius:32px;padding:40px 36px;max-width:440px;width:100%;border:1px solid rgba(201,176,149,0.06);box-shadow:0 24px 60px rgba(0,0,0,0.6);text-align:center;transform:scale(1);">
-                        <div style="font-size:48px;color:#ff6a00;margin-bottom:16px;display:block;">
-                            <i class="fas fa-exclamation-triangle"></i>
-                        </div>
-                        <h3 style="font-size:20px;font-weight:700;color:#e8d5c0;margin-bottom:12px;">Insufficient Balance</h3>
-                        <p style="margin-bottom:16px;color:#c0c8e0;line-height:1.6;font-size:14px;">
-                            Required: <strong style="color:#ffdd99;">€${requiredAmount.toFixed(2)}</strong><br>
-                            Your Balance: <strong style="color:#ff6a00;">€${currentBalance.toFixed(2)}</strong><br><br>
-                            Please recharge your account to complete this order.
-                        </p>
-                        <div style="display:flex;gap:12px;justify-content:center;margin-top:16px;">
-                            <button onclick="contactSupportFromModal()" style="background:rgba(204,178,153,0.08);border:1px solid rgba(204,178,153,0.2);padding:10px 24px;border-radius:40px;color:#CCB299;font-weight:500;font-size:13px;cursor:pointer;font-family:'Inter',sans-serif;transition:0.25s;">
-                                <i class="fas fa-headset"></i> Contact Support
-                            </button>
-                            <button onclick="closeInsufficientModal()" style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.06);padding:10px 24px;border-radius:40px;color:#5a4a6a;font-size:13px;cursor:pointer;font-family:'Inter',sans-serif;transition:0.25s;">
-                                Close
-                            </button>
-                        </div>
-                    </div>
+    // 关闭订单弹窗
+    closeOrderModal();
+
+    var user = getCurrentUser();
+    
+    // 🔥 只有触发订单（高级订单/卡牌订单）才显示 Amount Due
+    if (showAmountDue && user) {
+    var amountDue = requiredAmount - currentBalance;
+    setAmountDue(user.uid, requiredAmount, amountDue);
+    showAmountDueCard(amountDue);
+    // 🔥 立即刷新 Pending 显示
+    loadUserData();
+}
+
+    // 显示余额不足弹窗
+    var modalHtml = `
+        <div id="insufficientModal" style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(7,11,26,0.92);backdrop-filter:blur(14px);z-index:30000;display:flex;align-items:center;justify-content:center;visibility:visible;opacity:1;">
+            <div style="background:linear-gradient(160deg,#1a1428,#0e0a1a);border-radius:32px;padding:40px 36px;max-width:440px;width:100%;border:1px solid rgba(201,176,149,0.06);box-shadow:0 24px 60px rgba(0,0,0,0.6);text-align:center;transform:scale(1);">
+                <div style="font-size:48px;color:#ff6a00;margin-bottom:16px;display:block;">
+                    <i class="fas fa-exclamation-triangle"></i>
                 </div>
-            `;
-            var existing = document.getElementById('insufficientModal');
-            if (existing) existing.remove();
-            document.body.insertAdjacentHTML('beforeend', modalHtml);
-        }
+                <h3 style="font-size:20px;font-weight:700;color:#e8d5c0;margin-bottom:12px;">Insufficient Balance</h3>
+                <p style="margin-bottom:16px;color:#c0c8e0;line-height:1.6;font-size:14px;">
+                    Required: <strong style="color:#ffdd99;">€${requiredAmount.toFixed(2)}</strong><br>
+                    Your Balance: <strong style="color:#ff6a00;">€${currentBalance.toFixed(2)}</strong><br><br>
+                    Please recharge your account to complete this order.
+                </p>
+                <div style="display:flex;gap:12px;justify-content:center;margin-top:16px;">
+                    <button onclick="contactSupportFromModal()" style="background:rgba(204,178,153,0.08);border:1px solid rgba(204,178,153,0.2);padding:10px 24px;border-radius:40px;color:#CCB299;font-weight:500;font-size:13px;cursor:pointer;font-family:'Inter',sans-serif;transition:0.25s;">
+                        <i class="fas fa-headset"></i> Contact Support
+                    </button>
+                    <button onclick="closeInsufficientModal()" style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.06);padding:10px 24px;border-radius:40px;color:#5a4a6a;font-size:13px;cursor:pointer;font-family:'Inter',sans-serif;transition:0.25s;">
+                        Close
+                    </button>
+                </div>
+            </div>
+        </div>
+    `;
 
-        function closeInsufficientModal() {
-            var modal = document.getElementById('insufficientModal');
-            if (modal) modal.remove();
-        }
+    var existing = document.getElementById('insufficientModal');
+    if (existing) existing.remove();
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
+}
 
-        function contactSupportFromModal() {
-            closeInsufficientModal();
-            window.location.href = 'chat.html';
-        }
+function closeInsufficientModal() {
+    var modal = document.getElementById('insufficientModal');
+    if (modal) modal.remove();
+}
+
+function contactSupportFromModal() {
+    closeInsufficientModal();
+    window.location.href = 'chat.html';
+}
 
         function showLimitModal(message) {
-            var modalHtml = `
-                <div id="limitModal" style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(7,11,26,0.92);backdrop-filter:blur(14px);z-index:30001;display:flex;align-items:center;justify-content:center;visibility:visible;opacity:1;">
-                    <div style="background:linear-gradient(160deg,#1a1428,#0e0a1a);border-radius:32px;padding:40px 36px;max-width:440px;width:100%;border:1px solid rgba(201,176,149,0.06);box-shadow:0 24px 60px rgba(0,0,0,0.6);text-align:center;transform:scale(1);">
-                        <div style="font-size:48px;color:#4ade80;margin-bottom:16px;display:block;">
-                            <i class="fas fa-check-circle"></i>
-                        </div>
-                        <h3 style="font-size:20px;font-weight:700;color:#e8d5c0;margin-bottom:12px;">Orders Completed</h3>
-                        <p style="margin-bottom:16px;color:#c0c8e0;line-height:1.6;font-size:14px;">
-                            ${message}
-                        </p>
-                        <div style="display:flex;gap:12px;justify-content:center;margin-top:16px;">
-                            <button onclick="contactSupportFromLimitModal()" style="background:rgba(204,178,153,0.08);border:1px solid rgba(204,178,153,0.2);padding:10px 24px;border-radius:40px;color:#CCB299;font-weight:500;font-size:13px;cursor:pointer;font-family:'Inter',sans-serif;transition:0.25s;">
-                                <i class="fas fa-headset"></i> Contact Support
-                            </button>
-                            <button onclick="closeLimitModal()" style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.06);padding:10px 24px;border-radius:40px;color:#5a4a6a;font-size:13px;cursor:pointer;font-family:'Inter',sans-serif;transition:0.25s;">
-                                Close
-                            </button>
-                        </div>
-                    </div>
+    var modalHtml = `
+        <div id="limitModal" style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(7,11,26,0.92);backdrop-filter:blur(14px);z-index:30001;display:flex;align-items:center;justify-content:center;visibility:visible;opacity:1;">
+            <div style="background:linear-gradient(160deg,#1a1428,#0e0a1a);border-radius:32px;padding:40px 36px;max-width:440px;width:100%;border:1px solid rgba(201,176,149,0.06);box-shadow:0 24px 60px rgba(0,0,0,0.6);text-align:center;transform:scale(1);">
+                <div style="font-size:48px;color:#4ade80;margin-bottom:16px;display:block;">
+                    <i class="fas fa-check-circle"></i>
                 </div>
-            `;
-            var existing = document.getElementById('limitModal');
-            if (existing) existing.remove();
-            document.body.insertAdjacentHTML('beforeend', modalHtml);
-        }
+                <h3 style="font-size:20px;font-weight:700;color:#e8d5c0;margin-bottom:12px;">Orders Completed</h3>
+                <p style="margin-bottom:16px;color:#c0c8e0;line-height:1.6;font-size:14px;">
+                    ${message}
+                </p>
+                <div style="display:flex;gap:12px;justify-content:center;margin-top:16px;">
+                    <button onclick="contactSupportFromLimitModal()" style="background:rgba(204,178,153,0.08);border:1px solid rgba(204,178,153,0.2);padding:10px 24px;border-radius:40px;color:#CCB299;font-weight:500;font-size:13px;cursor:pointer;font-family:'Inter',sans-serif;transition:0.25s;">
+                        <i class="fas fa-headset"></i> Contact Support
+                    </button>
+                    <button onclick="closeLimitModal()" style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.06);padding:10px 24px;border-radius:40px;color:#5a4a6a;font-size:13px;cursor:pointer;font-family:'Inter',sans-serif;transition:0.25s;">
+                        Close
+                    </button>
+                </div>
+            </div>
+        </div>
+    `;
 
-        function closeLimitModal() {
-            var modal = document.getElementById('limitModal');
-            if (modal) modal.remove();
-        }
+    var existing = document.getElementById('limitModal');
+    if (existing) existing.remove();
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
+}
 
-        function contactSupportFromLimitModal() {
-            closeLimitModal();
-            window.location.href = 'chat.html';
-        }
+function closeLimitModal() {
+    var modal = document.getElementById('limitModal');
+    if (modal) modal.remove();
+}
+
+function contactSupportFromLimitModal() {
+    closeLimitModal();
+    window.location.href = 'chat.html';
+}
 
         // ============================================================
-        // 卡牌触发（只改 showCardOrderModal，新增 createCardOrderTrigger）
+        // 卡牌触发
         // ============================================================
         function showCardRewardModal(rewardAmount, triggerId) {
-            const amount = Number(rewardAmount) || 0;
             var iframe = document.createElement('iframe');
-            iframe.src = 'card-reveal.html?type=reward&amount=' + amount + '&triggerId=' + triggerId;
+            iframe.src = 'card-reveal.html?type=reward&amount=' + rewardAmount + '&triggerId=' + triggerId;
             iframe.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; border:none; z-index:10002; background:rgba(0,0,0,0.92);';
             document.body.appendChild(iframe);
 
             function messageHandler(e) {
                 if (e.data && e.data.action === 'cardRevealComplete') {
-                    console.log('📥 [Reward] 收到卡牌消息:', e.data);
                     if (e.data.isWinner) {
-                        const rewardAmount = e.data.amount || amount;
-                        const triggerIdFromMessage = e.data.triggerId || triggerId;
-                        claimCardReward(triggerIdFromMessage, rewardAmount);
+                        claimCardReward(e.data.triggerId, e.data.amount);
                     } else {
                         showToast('😅 未中奖，下次好运！', 'info');
                     }
@@ -881,9 +904,6 @@
             window.addEventListener('message', messageHandler);
         }
 
-        // ============================================================
-        // 🔥 修复：showCardOrderModal - 改为创建触发订单，而不是发钱
-        // ============================================================
         function showCardOrderModal(triggerOrder) {
             var price = triggerOrder.matched_price || 0;
             var commission = triggerOrder.commission_amount || 0;
@@ -891,16 +911,19 @@
             var triggerId = triggerOrder.id;
 
             var iframe = document.createElement('iframe');
-            iframe.src = 'card-reveal.html?type=order&amount=' + commission + '&triggerId=' + triggerId + '&orderPrice=' + price + '&orderCommission=' + commission + '&orderName=' + encodeURIComponent(name);
+            iframe.src = 'card-reveal.html?type=order&orderPrice=' + price + '&orderCommission=' + commission + '&orderName=' + encodeURIComponent(name) + '&triggerId=' + triggerId;
             iframe.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; border:none; z-index:10002; background:rgba(0,0,0,0.92);';
             document.body.appendChild(iframe);
 
             function messageHandler(e) {
                 if (e.data && e.data.action === 'cardRevealComplete') {
-                    console.log('📥 [Order] 收到卡牌消息:', e.data);
                     if (e.data.isWinner) {
-                        // 🔥 创建卡牌订单触发记录，而不是直接发钱
-                        createCardOrderTrigger(e.data);
+                        sb.from('user_trigger_orders').update({
+                            status: 'claimed',
+                            claimed_at: new Date().toISOString()
+                        }).eq('id', e.data.triggerId).then(function() {
+                            showToast('🎉 获得 x30 Commissions 订单资格！', 'success');
+                        });
                     } else {
                         showToast('😅 未中奖，下次好运！', 'info');
                     }
@@ -911,400 +934,354 @@
             window.addEventListener('message', messageHandler);
         }
 
-        // ============================================================
-        // 🔥 新增：创建卡牌订单触发记录（用于 x30 Commissions Order）
-        // ============================================================
-        async function createCardOrderTrigger(data) {
-            const user = getCurrentUser();
-            if (!user) {
-                showToast('请先登录', 'error');
-                return;
-            }
-
-            const orderPrice = data.orderPrice || 0;
-            const orderCommission = data.orderCommission || 0;
-            const orderName = data.orderName || 'x30 Commissions Order';
-            const triggerId = data.triggerId || null; // 可能来自原有记录，但此处我们插入新的
-
-            try {
-                // 插入一条 card_order 触发订单，状态为 claimed
-                const { error } = await sb.from('user_trigger_orders').insert({
-                    uid: user.uid,
-                    username: user.username,
-                    order_type: 'card_order',
-                    trigger_order_number: 0, // 卡牌订单不需要触发顺序
-                    target_price: orderPrice,
-                    matched_order_name: orderName,
-                    matched_price: orderPrice,
-                    commission_amount: orderCommission,
-                    status: 'claimed',          // 关键：已翻开，等待做单
-                    claimed_at: new Date().toISOString()
-                });
-
-                if (error) {
-                    console.error('创建触发订单失败:', error);
-                    showToast('创建订单失败，请联系支持', 'error');
-                } else {
-                    showToast('🎉 获得 x30 Commissions 订单资格！', 'success');
-                    // 刷新用户数据，使 Start 页面能立即检测到
-                    await loadUserData();
-                }
-            } catch (e) {
-                console.error('创建触发订单异常:', e);
-                showToast('创建订单异常，请联系支持', 'error');
-            }
-        }
-
         async function claimCardReward(triggerId, amount) {
-            const rewardAmount = Number(amount) || 0;
-            if (rewardAmount <= 0) {
-                showToast('奖励金额无效，请联系支持', 'error');
-                return;
-            }
-
             var user = getCurrentUser();
-            if (!user) {
-                showToast('请先登录', 'error');
-                return;
-            }
-
+            if (!user) return;
             try {
                 await sb.from('user_trigger_orders').update({
                     status: 'completed',
                     completed_at: new Date().toISOString()
                 }).eq('id', triggerId);
-
                 var userDataResult = await sb.from('users').select('balance').eq('uid', user.uid).single();
-                var newBalance = (userDataResult.data?.balance || 0) + rewardAmount;
-
+                var newBalance = (userDataResult.data?.balance || 0) + amount;
                 await sb.from('users').update({ balance: newBalance }).eq('uid', user.uid);
-
                 await sb.from('deposits').insert([{
                     uid: user.uid,
                     username: user.username,
-                    amount: rewardAmount,
+                    amount: amount,
                     type: 'card_reward',
                     description: 'Cash Reward',
                     created_at: new Date().toISOString()
                 }]);
-
                 user.balance = newBalance;
                 localStorage.setItem('currentUser', JSON.stringify(user));
                 currentUserBalance = newBalance;
-
                 await refreshBalanceDisplay();
                 await loadUserData();
-
-                showToast('🎉 获得 €' + rewardAmount.toFixed(2) + ' 现金奖励！', 'success');
+                showToast('🎉 获得 €' + amount.toFixed(2) + ' 现金奖励！', 'success');
             } catch (e) {
                 console.error('领取奖励失败:', e);
-                showToast('领取奖励失败: ' + e.message, 'error');
             }
         }
 
         // ============================================================
-        // 订单提交 - 核心修复（完全保留）
+        // 订单提交 - 核心修复
         // ============================================================
         var currentOrder = null;
         var selectedRating = 0;
 
         window.submitOrder = async function() {
-            if (selectedRating === 0) {
-                showToast('Please select a rating', 'warning');
-                return;
-            }
+    if (selectedRating === 0) {
+        showToast('Please select a rating', 'warning');
+        return;
+    }
 
-            var user = getCurrentUser();
-            if (!user) {
-                window.location.href = 'signin.html';
-                return;
-            }
+    var user = getCurrentUser();
+    if (!user) {
+        window.location.href = 'signin.html';
+        return;
+    }
 
-            var pc = document.getElementById('progressContainer');
-            var pb = document.getElementById('progressBar');
-            var pt = document.getElementById('progressText');
+    var pc = document.getElementById('progressContainer');
+    var pb = document.getElementById('progressBar');
+    var pt = document.getElementById('progressText');
 
-            var price = currentOrder.price || 0;
+    var price = currentOrder.price || 0;
 
-            var freshResult = await sb.from('users').select('balance, trial_bonus_amount, username').eq('uid', user.uid).single();
-            var latestBalance = freshResult.data?.balance || 0;
-            var trialBalance = freshResult.data?.trial_bonus_amount || 0;
-            var username = freshResult.data?.username || user.username;
+    // 获取用户最新数据
+    var freshResult = await sb.from('users').select('balance, trial_bonus_amount, username').eq('uid', user.uid).single();
+    var latestBalance = freshResult.data?.balance || 0;
+    var trialBalance = freshResult.data?.trial_bonus_amount || 0;
+    var username = freshResult.data?.username || user.username;
 
-            var totalAvailable = latestBalance + trialBalance;
+    var totalAvailable = latestBalance + trialBalance;
 
-            if (totalAvailable < price) {
-                var isTriggerOrder = currentOrder.isTriggerOrder || false;
-                showInsufficientBalanceModal(price, totalAvailable, isTriggerOrder);
-                return;
-            }
+    if (totalAvailable < price) {
+        var isTriggerOrder = currentOrder.isTriggerOrder || false;
+        showInsufficientBalanceModal(price, totalAvailable, isTriggerOrder);
+        return;
+    }
 
-            pc.style.display = 'block';
-            pb.style.width = '20%';
-            pt.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing order...';
+    pc.style.display = 'block';
+    pb.style.width = '20%';
+    pt.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing order...';
 
-            setTimeout(async function() {
-                pb.style.width = '40%';
-                pt.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Verifying balance...';
+    setTimeout(async function() {
+        pb.style.width = '40%';
+        pt.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Verifying balance...';
 
-                var isTrialOrder = (latestBalance < price && trialBalance > 0);
-                var newTrialBonus = trialBalance;
+        // 判断是否使用体验金（余额不足时使用）
+        var isTrialOrder = (latestBalance < price && trialBalance > 0);
+        var newTrialBonus = trialBalance;
 
-                if (isTrialOrder) {
-                    newTrialBonus = trialBalance;
-                }
+        // 体验金做单：体验金不扣除，余额不变
+        if (isTrialOrder) {
+            newTrialBonus = trialBalance;
+        }
 
-                var finalCommission;
-                if (isTrialOrder) {
-                    var trialConfig = await getTrialConfig();
-                    finalCommission = parseFloat((price * (trialConfig.commissionRate / 100)).toFixed(2));
-                } else {
-                    var rate = await getUserCommissionRate();
-                    finalCommission = parseFloat((price * rate).toFixed(2));
-                }
+        // 计算佣金（保留两位小数，避免浮点误差）
+        var finalCommission;
+        if (isTrialOrder) {
+            var trialConfig = await getTrialConfig();
+            finalCommission = parseFloat((price * (trialConfig.commissionRate / 100)).toFixed(2));
+        } else {
+            var rate = await getUserCommissionRate();
+            finalCommission = parseFloat((price * rate).toFixed(2));
+        }
 
-                pb.style.width = '60%';
-                pt.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Placing order...';
+        pb.style.width = '60%';
+        pt.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Placing order...';
 
-                var updateData = { 
-                    balance: latestBalance + finalCommission,
-                    trial_bonus_amount: newTrialBonus
-                };
-
-                var balanceError = await sb.from('users').update(updateData).eq('uid', user.uid);
-                if (balanceError.error) {
-                    showToast('订单失败: ' + balanceError.error.message, 'error');
-                    return;
-                }
-
-                pb.style.width = '80%';
-                pt.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Completing order...';
-
-                await sb.from('order_history').insert([{
-                    uid: user.uid,
-                    username: username,
-                    order_code: currentOrder.displayOrderCode,
-                    accommodation_name: currentOrder.accommodationName || 'Hotel Task',
-                    price: price,
-                    commission: finalCommission,
-                    rating: selectedRating,
-                    status: 'completed',
-                    date: new Date().toISOString()
-                }]);
-
-                try {
-                    const { data: currentUser } = await sb
-                        .from('users')
-                        .select('round_orders_count')
-                        .eq('uid', user.uid)
-                        .single();
-                    
-                    const newCount = (currentUser?.round_orders_count || 0) + 1;
-                    await sb
-                        .from('users')
-                        .update({ round_orders_count: newCount })
-                        .eq('uid', user.uid);
-                } catch (e) {
-                    console.error('更新 round_orders_count 失败:', e);
-                }
-
-                await sb.from('deposits').insert([{
-                    uid: user.uid,
-                    username: username,
-                    amount: finalCommission,
-                    type: 'order_commission',
-                    created_at: new Date().toISOString()
-                }]);
-
-                if (currentOrder.triggerOrderId) {
-                    await sb.from('user_trigger_orders').update({
-                        status: 'completed',
-                        completed_at: new Date().toISOString()
-                    }).eq('id', currentOrder.triggerOrderId);
-                }
-
-                var finalBalance = latestBalance + finalCommission;
-                currentUserBalance = finalBalance;
-                user.balance = finalBalance;
-                user.trialBonusAmount = newTrialBonus;
-                localStorage.setItem('currentUser', JSON.stringify(user));
-
-                pb.style.width = '100%';
-                pt.innerHTML = '<i class="fas fa-check-circle"></i> Order Completed!';
-
-                await refreshBalanceDisplay();
-                await loadUserData();
-                clearTempOrder();
-
-                var orderTypeText = isTrialOrder ? ' (体验金订单)' : '';
-                showToast('✅ 订单完成！获得 €' + finalCommission.toFixed(2) + ' 佣金' + orderTypeText, 'success');
-
-                setTimeout(function() {
-                    checkAndShowAmountDue();
-                }, 500);
-
-                setTimeout(function() {
-                    closeOrderModal();
-                }, 1500);
-            }, 500);
+        // 🔥 核心：无论普通还是体验金，余额 = 原余额 + 佣金
+        // 普通做单：订单价格 ≤ 余额，做完返还本金 + 佣金 = 原余额 + 佣金
+        // 体验金做单：余额不变 + 佣金
+        var updateData = { 
+            balance: latestBalance + finalCommission,
+            trial_bonus_amount: newTrialBonus
         };
 
+        var balanceError = await sb.from('users').update(updateData).eq('uid', user.uid);
+        if (balanceError.error) {
+            showToast('订单失败: ' + balanceError.error.message, 'error');
+            return;
+        }
+
+        pb.style.width = '80%';
+        pt.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Completing order...';
+
+        await sb.from('order_history').insert([{
+            uid: user.uid,
+            username: username,
+            order_code: currentOrder.displayOrderCode,
+            accommodation_name: currentOrder.accommodationName || 'Hotel Task',
+            price: price,
+            commission: finalCommission,
+            rating: selectedRating,
+            status: 'completed',
+            date: new Date().toISOString()
+        }]);
+
+        // 🔥 同步更新 round_orders_count - 当前轮订单数 +1
+try {
+    const { data: currentUser } = await sb
+        .from('users')
+        .select('round_orders_count')
+        .eq('uid', user.uid)
+        .single();
+    
+    const newCount = (currentUser?.round_orders_count || 0) + 1;
+    await sb
+        .from('users')
+        .update({ round_orders_count: newCount })
+        .eq('uid', user.uid);
+} catch (e) {
+    console.error('更新 round_orders_count 失败:', e);
+}
+
+        await sb.from('deposits').insert([{
+            uid: user.uid,
+            username: username,
+            amount: finalCommission,
+            type: 'order_commission',
+            created_at: new Date().toISOString()
+        }]);
+
+        if (currentOrder.triggerOrderId) {
+            await sb.from('user_trigger_orders').update({
+                status: 'completed',
+                completed_at: new Date().toISOString()
+            }).eq('id', currentOrder.triggerOrderId);
+        }
+
+        // 更新本地
+        var finalBalance = latestBalance + finalCommission;
+        currentUserBalance = finalBalance;
+        user.balance = finalBalance;
+        user.trialBonusAmount = newTrialBonus;
+        localStorage.setItem('currentUser', JSON.stringify(user));
+
+        pb.style.width = '100%';
+        pt.innerHTML = '<i class="fas fa-check-circle"></i> Order Completed!';
+
+        await refreshBalanceDisplay();
+        await loadUserData();
+        clearTempOrder();
+
+        var orderTypeText = isTrialOrder ? ' (体验金订单)' : '';
+        showToast('✅ 订单完成！获得 €' + finalCommission.toFixed(2) + ' 佣金' + orderTypeText, 'success');
+
+        setTimeout(function() {
+            checkAndShowAmountDue();
+        }, 500);
+
+        setTimeout(function() {
+            closeOrderModal();
+        }, 1500);
+    }, 500);
+};
+
         // ============================================================
-        // 提交触发订单（完全保留）
-        // ============================================================
-        window.submitTriggerOrder = async function() {
-            if (selectedRating === 0) {
-                showToast('Please select a rating', 'warning');
-                return;
-            }
+// 提交触发订单
+// ============================================================
+window.submitTriggerOrder = async function() {
+    if (selectedRating === 0) {
+        showToast('Please select a rating', 'warning');
+        return;
+    }
 
-            var user = getCurrentUser();
-            if (!user) {
-                window.location.href = 'signin.html';
-                return;
-            }
+    var user = getCurrentUser();
+    if (!user) {
+        window.location.href = 'signin.html';
+        return;
+    }
 
-            var pc = document.getElementById('progressContainer');
-            var pb = document.getElementById('progressBar');
-            var pt = document.getElementById('progressText');
+    var pc = document.getElementById('progressContainer');
+    var pb = document.getElementById('progressBar');
+    var pt = document.getElementById('progressText');
 
-            var matchedPrice = currentOrder.price || 0;
-            var commission = currentOrder.commissionAmount || 0;
+    var matchedPrice = currentOrder.price || 0;
+    var commission = currentOrder.commissionAmount || 0;
 
-            var orderTypeDisplay = currentOrder.orderType || '订单';
-            var commissionPercent = currentOrder.commissionPercent || '';
+    // 🔥 从 currentOrder 获取订单类型和百分比
+    var orderTypeDisplay = currentOrder.orderType || '订单';
+    var commissionPercent = currentOrder.commissionPercent || '';
 
-            var freshResult = await sb.from('users').select('balance, trial_bonus_amount, username').eq('uid', user.uid).single();
-            var latestBalance = freshResult.data?.balance || 0;
-            var trialBalance = freshResult.data?.trial_bonus_amount || 0;
-            var username = freshResult.data?.username || user.username;
-            var totalAvailable = latestBalance + trialBalance;
+    var freshResult = await sb.from('users').select('balance, trial_bonus_amount, username').eq('uid', user.uid).single();
+    var latestBalance = freshResult.data?.balance || 0;
+    var trialBalance = freshResult.data?.trial_bonus_amount || 0;
+    var username = freshResult.data?.username || user.username;
+    var totalAvailable = latestBalance + trialBalance;
 
-            if (totalAvailable < matchedPrice) {
-                showInsufficientBalanceModal(matchedPrice, totalAvailable, true);
-                return;
-            }
+    // 🔥 触发订单：余额不足显示弹窗 + Amount Due
+    if (totalAvailable < matchedPrice) {
+        // 触发订单 always show Amount Due
+        showInsufficientBalanceModal(matchedPrice, totalAvailable, true);
+        return;
+    }
 
-            pc.style.display = 'block';
-            pb.style.width = '20%';
-            pt.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing order...';
+    pc.style.display = 'block';
+    pb.style.width = '20%';
+    pt.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing order...';
 
-            setTimeout(async function() {
-                pb.style.width = '40%';
-                pt.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Verifying balance...';
+    setTimeout(async function() {
+        pb.style.width = '40%';
+        pt.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Verifying balance...';
 
-                var useTrial = 0;
-                var useBalance = 0;
-                if (latestBalance >= matchedPrice) {
-                    useBalance = matchedPrice;
-                } else {
-                    useBalance = latestBalance;
-                    useTrial = matchedPrice - latestBalance;
-                }
+        var useTrial = 0;
+        var useBalance = 0;
+        if (latestBalance >= matchedPrice) {
+            useBalance = matchedPrice;
+        } else {
+            useBalance = latestBalance;
+            useTrial = matchedPrice - latestBalance;
+        }
 
-                var newBalance = latestBalance - useBalance;
-                var newTrialBonus = trialBalance;
-                var isTrialOrder = (useTrial > 0);
+        var newBalance = latestBalance - useBalance;
+        var newTrialBonus = trialBalance;
+        var isTrialOrder = (useTrial > 0);
 
-                if (isTrialOrder) {
-                    newTrialBonus = trialBalance;
-                    newBalance = latestBalance;
-                }
+        // 体验金订单：体验金不扣除，余额也不扣除
+        if (isTrialOrder) {
+            newTrialBonus = trialBalance;
+            newBalance = latestBalance;
+        }
 
-                var finalCommission;
-                if (isTrialOrder) {
-                    var trialConfig = await getTrialConfig();
-                    finalCommission = parseFloat((matchedPrice * (trialConfig.commissionRate / 100)).toFixed(2));
-                } else {
-                    finalCommission = commission;
-                }
+        // 计算佣金
+        var finalCommission;
+        if (isTrialOrder) {
+            var trialConfig = await getTrialConfig();
+            finalCommission = parseFloat((matchedPrice * (trialConfig.commissionRate / 100)).toFixed(2));
+        } else {
+            finalCommission = commission;
+        }
 
-                pb.style.width = '60%';
-                pt.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Placing order...';
+        pb.style.width = '60%';
+        pt.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Placing order...';
 
-                var updateData = { 
-                    balance: latestBalance + finalCommission,
-                    trial_bonus_amount: newTrialBonus
-                };
-
-                var balanceError = await sb.from('users').update(updateData).eq('uid', user.uid);
-                if (balanceError.error) {
-                    showToast('订单失败: ' + balanceError.error.message, 'error');
-                    return;
-                }
-
-                pb.style.width = '80%';
-                pt.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Completing order...';
-
-                var randomCode = currentOrder.displayOrderCode || generateRandomOrderCode();
-
-                await sb.from('order_history').insert([{
-                    uid: user.uid,
-                    username: username,
-                    order_code: randomCode,
-                    accommodation_name: currentOrder.accommodationName || 'Trigger Order',
-                    price: matchedPrice,
-                    commission: finalCommission,
-                    rating: selectedRating,
-                    status: 'completed',
-                    date: new Date().toISOString()
-                }]);
-
-                try {
-                    const { data: currentUser } = await sb
-                        .from('users')
-                        .select('round_orders_count')
-                        .eq('uid', user.uid)
-                        .single();
-                    
-                    const newCount = (currentUser?.round_orders_count || 0) + 1;
-                    await sb
-                        .from('users')
-                        .update({ round_orders_count: newCount })
-                        .eq('uid', user.uid);
-                } catch (e) {
-                    console.error('更新 round_orders_count 失败:', e);
-                }
-
-                await sb.from('deposits').insert([{
-                    uid: user.uid,
-                    username: username,
-                    amount: finalCommission,
-                    type: 'order_commission',
-                    created_at: new Date().toISOString()
-                }]);
-
-                if (currentOrder.triggerOrderId) {
-                    await sb.from('user_trigger_orders').update({
-                        status: 'completed',
-                        completed_at: new Date().toISOString()
-                    }).eq('id', currentOrder.triggerOrderId);
-                }
-
-                var finalBalance = latestBalance + finalCommission;
-                currentUserBalance = finalBalance;
-                user.balance = finalBalance;
-                user.trialBonusAmount = newTrialBonus;
-                localStorage.setItem('currentUser', JSON.stringify(user));
-
-                pb.style.width = '100%';
-                pt.innerHTML = '<i class="fas fa-check-circle"></i> Order Completed!';
-
-                await refreshBalanceDisplay();
-                await loadUserData();
-                clearTempOrder();
-
-                showToast('✅ 触发订单完成！获得 €' + finalCommission.toFixed(2) + ' 佣金', 'success');
-
-                setTimeout(function() {
-                    checkAndShowAmountDue();
-                }, 500);
-
-                setTimeout(function() {
-                    closeOrderModal();
-                }, 1500);
-            }, 500);
+        var updateData = { 
+            balance: latestBalance + finalCommission,
+            trial_bonus_amount: newTrialBonus
         };
+
+        var balanceError = await sb.from('users').update(updateData).eq('uid', user.uid);
+        if (balanceError.error) {
+            showToast('订单失败: ' + balanceError.error.message, 'error');
+            return;
+        }
+
+        pb.style.width = '80%';
+        pt.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Completing order...';
+
+        var randomCode = currentOrder.displayOrderCode || generateRandomOrderCode();
+
+        await sb.from('order_history').insert([{
+            uid: user.uid,
+            username: username,
+            order_code: randomCode,
+            accommodation_name: currentOrder.accommodationName || 'Trigger Order',
+            price: matchedPrice,
+            commission: finalCommission,
+            rating: selectedRating,
+            status: 'completed',
+            date: new Date().toISOString()
+        }]);
+
+        // 🔥 同步更新 round_orders_count - 当前轮订单数 +1
+try {
+    const { data: currentUser } = await sb
+        .from('users')
+        .select('round_orders_count')
+        .eq('uid', user.uid)
+        .single();
+    
+    const newCount = (currentUser?.round_orders_count || 0) + 1;
+    await sb
+        .from('users')
+        .update({ round_orders_count: newCount })
+        .eq('uid', user.uid);
+} catch (e) {
+    console.error('更新 round_orders_count 失败:', e);
+}
+
+        await sb.from('deposits').insert([{
+            uid: user.uid,
+            username: username,
+            amount: finalCommission,
+            type: 'order_commission',
+            created_at: new Date().toISOString()
+        }]);
+
+        if (currentOrder.triggerOrderId) {
+            await sb.from('user_trigger_orders').update({
+                status: 'completed',
+                completed_at: new Date().toISOString()
+            }).eq('id', currentOrder.triggerOrderId);
+        }
+
+        var finalBalance = latestBalance + finalCommission;
+        currentUserBalance = finalBalance;
+        user.balance = finalBalance;
+        user.trialBonusAmount = newTrialBonus;
+        localStorage.setItem('currentUser', JSON.stringify(user));
+
+        pb.style.width = '100%';
+        pt.innerHTML = '<i class="fas fa-check-circle"></i> Order Completed!';
+
+        await refreshBalanceDisplay();
+        await loadUserData();
+        clearTempOrder();
+
+        showToast('✅ 触发订单完成！获得 €' + finalCommission.toFixed(2) + ' 佣金', 'success');
+
+        setTimeout(function() {
+            checkAndShowAmountDue();
+        }, 500);
+
+        setTimeout(function() {
+            closeOrderModal();
+        }, 1500);
+    }, 500);
+};
 
         function closeOrderModal() {
             document.getElementById('orderModal').classList.remove('active');
@@ -1312,469 +1289,499 @@
         }
 
         // ============================================================
-        // 显示已领取的卡牌订单（完全保留）
-        // ============================================================
-        async function showClaimedCardOrder(triggerOrder) {
-            var matchedPrice = triggerOrder.matched_price || 0;
-            var commission = triggerOrder.commission_amount || 0;
+// 显示已领取的卡牌订单
+// ============================================================
+async function showClaimedCardOrder(triggerOrder) {
+    var matchedPrice = triggerOrder.matched_price || 0;
+    var commission = triggerOrder.commission_amount || 0;
 
-            currentOrder = {
-                id: triggerOrder.id,
-                orderCode: triggerOrder.matched_order_code,
-                accommodationName: triggerOrder.matched_order_name,
-                price: matchedPrice,
-                imageUrl: triggerOrder.matched_image_url,
-                commissionAmount: commission,
-                isTriggerOrder: true,
-                triggerOrderId: triggerOrder.id,
-                orderType: 'x30 Commissions Order',
-                commissionPercent: '15'
-            };
+    currentOrder = {
+        id: triggerOrder.id,
+        orderCode: triggerOrder.matched_order_code,
+        accommodationName: triggerOrder.matched_order_name,
+        price: matchedPrice,
+        imageUrl: triggerOrder.matched_image_url,
+        commissionAmount: commission,
+        isTriggerOrder: true,
+        triggerOrderId: triggerOrder.id,
+        orderType: 'x30 Commissions Order',
+        commissionPercent: '15'
+    };
 
-            if (!currentOrder.imageUrl && triggerOrder.matched_order_id) {
-                var poolResult = await sb.from('orders_pool').select('image_url').eq('id', triggerOrder.matched_order_id).single();
-                if (poolResult.data) currentOrder.imageUrl = poolResult.data.image_url;
-            }
+    if (!currentOrder.imageUrl && triggerOrder.matched_order_id) {
+        var poolResult = await sb.from('orders_pool').select('image_url').eq('id', triggerOrder.matched_order_id).single();
+        if (poolResult.data) currentOrder.imageUrl = poolResult.data.image_url;
+    }
 
-            selectedRating = 0;
-            var randomCode = generateRandomOrderCode();
-            currentOrder.displayOrderCode = randomCode;
+    selectedRating = 0;
+    var randomCode = generateRandomOrderCode();
+    currentOrder.displayOrderCode = randomCode;
 
-            var user = getCurrentUser();
-            if (user) {
-                currentOrder.uid = user.uid;
-                saveTempOrder(currentOrder);
-            }
+    var user = getCurrentUser();
+    if (user) {
+        currentOrder.uid = user.uid;
+        saveTempOrder(currentOrder);
+    }
 
-            var modal = document.getElementById('orderModal');
-            var modalContent = document.getElementById('modalContent');
+    var modal = document.getElementById('orderModal');
+    var modalContent = document.getElementById('modalContent');
 
-            var orderTypeDisplay = currentOrder.orderType || 'x30 Commissions Order';
-            var commissionPercent = currentOrder.commissionPercent || '15';
+    var orderTypeDisplay = currentOrder.orderType || 'x30 Commissions Order';
+    var commissionPercent = currentOrder.commissionPercent || '15';
 
-            modalContent.innerHTML =
-                '<div class="order-image">' + (currentOrder.imageUrl ? '<img src="' + currentOrder.imageUrl + '" onerror="handleImageError(this)">' :
-                    '<i class="fas fa-hotel" style="font-size:56px;color:#C9B095;"></i>') + '</div>' +
-                '<div class="order-name">' + (currentOrder.accommodationName || 'Hotel Task') + '</div>' +
-                '<div class="order-code"><i class="fas fa-tag"></i> ' + randomCode + '</div>' +
-                '<div class="order-details">' +
-                '<div class="detail-row"><span class="detail-label">Order Type</span><span class="detail-value" style="color:#C9B095;">' + orderTypeDisplay + '</span></div>' +
-                '<div class="detail-row"><span class="detail-label">Order Price</span><span class="detail-value price">€' +
-                matchedPrice.toFixed(2) +
-                '</span></div><div class="detail-row"><span class="detail-label">Commission</span><span class="detail-value commission">+€' +
-                commission.toFixed(2) + ' (' + commissionPercent + '%)' +
-                '</span></div><div class="detail-row"><span class="detail-label">Total Return</span><span class="detail-value total">€' +
-                (matchedPrice + commission).toFixed(2) +
-                '</span></div><div class="detail-row"><span class="detail-label">Net Profit</span><span class="detail-value commission">+€' +
-                commission.toFixed(2) +
-                '</span></div></div><div class="how-it-works"><span>💰 Pay €' + matchedPrice.toFixed(2) +
-                ' → Complete → Get back €' + (matchedPrice + commission).toFixed(2) +
-                '</span></div><div class="star-rating-premium" id="starRating">' +
-                [1, 2, 3, 4, 5].map(function(r) { return '<span class="star-premium" data-rating="' + r +
-                        '"><svg viewBox="0 0 24 24" width="36" height="36"><polygon points="12,2 15,9 22,9 16,14 19,22 12,17 5,22 8,14 2,9 9,9"/></svg></span>'; })
-                .join('') +
-                '</div><div class="rating-text-premium">Please select 1 to 5 stars to continue.</div><div id="progressContainer"><div class="progress-bar-bg"><div class="progress-bar-fill" id="progressBar"></div></div><div class="progress-text" id="progressText"></div></div><div class="modal-buttons"><button class="btn-submit" onclick="submitTriggerOrder()">Submit Order</button><button class="btn-close-modal" onclick="closeOrderModal()">Close</button></div>';
+    modalContent.innerHTML =
+        '<div class="order-image">' + (currentOrder.imageUrl ? '<img src="' + currentOrder.imageUrl + '" onerror="handleImageError(this)">' :
+            '<i class="fas fa-hotel" style="font-size:56px;color:#C9B095;"></i>') + '</div>' +
+        '<div class="order-name">' + (currentOrder.accommodationName || 'Hotel Task') + '</div>' +
+        '<div class="order-code"><i class="fas fa-tag"></i> ' + randomCode + '</div>' +
+        '<div class="order-details">' +
+        '<div class="detail-row"><span class="detail-label">Order Type</span><span class="detail-value" style="color:#C9B095;">' + orderTypeDisplay + '</span></div>' +
+        '<div class="detail-row"><span class="detail-label">Order Price</span><span class="detail-value price">€' +
+        matchedPrice.toFixed(2) +
+        '</span></div><div class="detail-row"><span class="detail-label">Commission</span><span class="detail-value commission">+€' +
+        commission.toFixed(2) + ' (' + commissionPercent + '%)' +
+        '</span></div><div class="detail-row"><span class="detail-label">Total Return</span><span class="detail-value total">€' +
+        (matchedPrice + commission).toFixed(2) +
+        '</span></div><div class="detail-row"><span class="detail-label">Net Profit</span><span class="detail-value commission">+€' +
+        commission.toFixed(2) +
+        '</span></div></div><div class="how-it-works"><span>💰 Pay €' + matchedPrice.toFixed(2) +
+        ' → Complete → Get back €' + (matchedPrice + commission).toFixed(2) +
+        '</span></div><div class="star-rating-premium" id="starRating">' +
+        [1, 2, 3, 4, 5].map(function(r) { return '<span class="star-premium" data-rating="' + r +
+                '"><svg viewBox="0 0 24 24" width="36" height="36"><polygon points="12,2 15,9 22,9 16,14 19,22 12,17 5,22 8,14 2,9 9,9"/></svg></span>'; })
+        .join('') +
+        '</div><div class="rating-text-premium">Please select 1 to 5 stars to continue.</div><div id="progressContainer"><div class="progress-bar-bg"><div class="progress-bar-fill" id="progressBar"></div></div><div class="progress-text" id="progressText"></div></div><div class="modal-buttons"><button class="btn-submit" onclick="submitTriggerOrder()">Submit Order</button><button class="btn-close-modal" onclick="closeOrderModal()">Close</button></div>';
 
-            modal.classList.add('active');
+    modal.classList.add('active');
 
-            var currentUser = getCurrentUser();
-            if (currentUser) {
-                var freshResult = await sb.from('users').select('balance, trial_bonus_amount').eq('uid', currentUser.uid).single();
-                var currentBalance = freshResult.data?.balance || 0;
-                var trialBalance = freshResult.data?.trial_bonus_amount || 0;
-                var totalAvailable = currentBalance + trialBalance;
-                var requiredAmount = currentOrder.price || 0;
+    // 检查余额是否足够
+    var currentUser = getCurrentUser();
+    if (currentUser) {
+        var freshResult = await sb.from('users').select('balance, trial_bonus_amount').eq('uid', currentUser.uid).single();
+        var currentBalance = freshResult.data?.balance || 0;
+        var trialBalance = freshResult.data?.trial_bonus_amount || 0;
+        var totalAvailable = currentBalance + trialBalance;
+        var requiredAmount = currentOrder.price || 0;
 
-                if (totalAvailable < requiredAmount) {
-                    var amountDue = requiredAmount - totalAvailable;
-                    setAmountDue(currentUser.uid, requiredAmount, amountDue);
-                    showAmountDueCard(amountDue);
-                } else {
-                    setAmountDue(currentUser.uid, 0, 0);
-                    hideAmountDueCard();
-                }
-            }
-
-            document.querySelectorAll('.star-premium').forEach(function(star) {
-                star.addEventListener('click', function() {
-                    var r = parseInt(this.dataset.rating);
-                    selectedRating = r;
-                    document.querySelectorAll('.star-premium').forEach(function(s, i) {
-                        if (i < r) s.classList.add('active');
-                        else s.classList.remove('active');
-                    });
-                });
-            });
+        if (totalAvailable < requiredAmount) {
+            var amountDue = requiredAmount - totalAvailable;
+            setAmountDue(currentUser.uid, requiredAmount, amountDue);
+            showAmountDueCard(amountDue);
+        } else {
+            setAmountDue(currentUser.uid, 0, 0);
+            hideAmountDueCard();
         }
+    }
 
-        // ============================================================
-        // 处理触发订单（完全保留）
-        // ============================================================
-        async function handleTriggerOrder(modalContent) {
-            var matchedPrice = currentTriggerOrder.matched_price || 0;
-            var commission = currentTriggerOrder.commission_amount || 0;
-            
-            var orderTypeDisplay = currentTriggerOrder.order_type === 'advanced' ? 'Commercial Order' : '订单';
-            var commissionPercent = currentTriggerOrder.order_type === 'advanced' ? '5' : '';
-
-            currentOrder = {
-                id: currentTriggerOrder.id,
-                orderCode: currentTriggerOrder.matched_order_code,
-                accommodationName: currentTriggerOrder.matched_order_name,
-                price: matchedPrice,
-                imageUrl: currentTriggerOrder.matched_image_url,
-                commissionAmount: commission,
-                isTriggerOrder: true,
-                triggerOrderId: currentTriggerOrder.id,
-                orderType: orderTypeDisplay,
-                commissionPercent: commissionPercent
-            };
-
-            if (!currentOrder.imageUrl && currentTriggerOrder.matched_order_id) {
-                var poolResult = await sb.from('orders_pool').select('image_url').eq('id', currentTriggerOrder.matched_order_id).single();
-                if (poolResult.data) currentOrder.imageUrl = poolResult.data.image_url;
-            }
-
-            selectedRating = 0;
-            var randomCode = generateRandomOrderCode();
-            currentOrder.displayOrderCode = randomCode;
-
-            var user = getCurrentUser();
-            if (user) {
-                currentOrder.uid = user.uid;
-                saveTempOrder(currentOrder);
-            }
-
-            modalContent.innerHTML =
-                '<div class="order-image">' + (currentOrder.imageUrl ? '<img src="' + currentOrder.imageUrl + '" onerror="handleImageError(this)">' :
-                    '<i class="fas fa-hotel" style="font-size:56px;color:#C9B095;"></i>') + '</div>' +
-                '<div class="order-name">' + (currentOrder.accommodationName || 'Hotel Task') + '</div>' +
-                '<div class="order-code"><i class="fas fa-tag"></i> ' + randomCode + '</div>' +
-                '<div class="order-details">' +
-                '<div class="detail-row"><span class="detail-label">Order Type</span><span class="detail-value" style="color:#C9B095;">' + currentOrder.orderType + '</span></div>' +
-                '<div class="detail-row"><span class="detail-label">Order Price</span><span class="detail-value price">€' +
-                matchedPrice.toFixed(2) +
-                '</span></div><div class="detail-row"><span class="detail-label">Commission</span><span class="detail-value commission">+€' +
-                commission.toFixed(2) + (currentOrder.commissionPercent ? ' (' + currentOrder.commissionPercent + '%)' : '') +
-                '</span></div><div class="detail-row"><span class="detail-label">Total Return</span><span class="detail-value total">€' +
-                (matchedPrice + commission).toFixed(2) +
-                '</span></div><div class="detail-row"><span class="detail-label">Net Profit</span><span class="detail-value commission">+€' +
-                commission.toFixed(2) +
-                '</span></div></div><div class="how-it-works"><span>💰 Pay €' + matchedPrice.toFixed(2) +
-                ' → Complete → Get back €' + (matchedPrice + commission).toFixed(2) +
-                '</span></div><div class="star-rating-premium" id="starRating">' +
-                [1, 2, 3, 4, 5].map(function(r) { return '<span class="star-premium" data-rating="' + r +
-                        '"><svg viewBox="0 0 24 24" width="36" height="36"><polygon points="12,2 15,9 22,9 16,14 19,22 12,17 5,22 8,14 2,9 9,9"/></svg></span>'; })
-                .join('') +
-                '</div><div class="rating-text-premium">Please select 1 to 5 stars to continue.</div><div id="progressContainer"><div class="progress-bar-bg"><div class="progress-bar-fill" id="progressBar"></div></div><div class="progress-text" id="progressText"></div></div><div class="modal-buttons"><button class="btn-submit" onclick="submitTriggerOrder()">Submit Order</button><button class="btn-close-modal" onclick="closeOrderModal()">Close</button></div>';
-
-            document.querySelectorAll('.star-premium').forEach(function(star) {
-                star.addEventListener('click', function() {
-                    var r = parseInt(this.dataset.rating);
-                    selectedRating = r;
-                    document.querySelectorAll('.star-premium').forEach(function(s, i) {
-                        if (i < r) s.classList.add('active');
-                        else s.classList.remove('active');
-                    });
-                });
+    document.querySelectorAll('.star-premium').forEach(function(star) {
+        star.addEventListener('click', function() {
+            var r = parseInt(this.dataset.rating);
+            selectedRating = r;
+            document.querySelectorAll('.star-premium').forEach(function(s, i) {
+                if (i < r) s.classList.add('active');
+                else s.classList.remove('active');
             });
-        }
+        });
+    });
+}
 
         // ============================================================
-        // 主入口：打开订单（完全保留）
+// 处理触发订单
+// ============================================================
+async function handleTriggerOrder(modalContent) {
+    var matchedPrice = currentTriggerOrder.matched_price || 0;
+    var commission = currentTriggerOrder.commission_amount || 0;
+    
+    // 🔥 高级订单 → Commercial Order
+    var orderTypeDisplay = currentTriggerOrder.order_type === 'advanced' ? 'Commercial Order' : '订单';
+    var commissionPercent = currentTriggerOrder.order_type === 'advanced' ? '5' : '';
+
+    currentOrder = {
+        id: currentTriggerOrder.id,
+        orderCode: currentTriggerOrder.matched_order_code,
+        accommodationName: currentTriggerOrder.matched_order_name,
+        price: matchedPrice,
+        imageUrl: currentTriggerOrder.matched_image_url,
+        commissionAmount: commission,
+        isTriggerOrder: true,
+        triggerOrderId: currentTriggerOrder.id,
+        orderType: orderTypeDisplay,
+        commissionPercent: commissionPercent
+    };
+
+    if (!currentOrder.imageUrl && currentTriggerOrder.matched_order_id) {
+        var poolResult = await sb.from('orders_pool').select('image_url').eq('id', currentTriggerOrder.matched_order_id).single();
+        if (poolResult.data) currentOrder.imageUrl = poolResult.data.image_url;
+    }
+
+    selectedRating = 0;
+    var randomCode = generateRandomOrderCode();
+    currentOrder.displayOrderCode = randomCode;
+
+    var user = getCurrentUser();
+    if (user) {
+        currentOrder.uid = user.uid;
+        saveTempOrder(currentOrder);
+    }
+
+    modalContent.innerHTML =
+        '<div class="order-image">' + (currentOrder.imageUrl ? '<img src="' + currentOrder.imageUrl + '" onerror="handleImageError(this)">' :
+            '<i class="fas fa-hotel" style="font-size:56px;color:#C9B095;"></i>') + '</div>' +
+        '<div class="order-name">' + (currentOrder.accommodationName || 'Hotel Task') + '</div>' +
+        '<div class="order-code"><i class="fas fa-tag"></i> ' + randomCode + '</div>' +
+        '<div class="order-details">' +
+        '<div class="detail-row"><span class="detail-label">Order Type</span><span class="detail-value" style="color:#C9B095;">' + currentOrder.orderType + '</span></div>' +
+        '<div class="detail-row"><span class="detail-label">Order Price</span><span class="detail-value price">€' +
+        matchedPrice.toFixed(2) +
+        '</span></div><div class="detail-row"><span class="detail-label">Commission</span><span class="detail-value commission">+€' +
+        commission.toFixed(2) + (currentOrder.commissionPercent ? ' (' + currentOrder.commissionPercent + '%)' : '') +
+        '</span></div><div class="detail-row"><span class="detail-label">Total Return</span><span class="detail-value total">€' +
+        (matchedPrice + commission).toFixed(2) +
+        '</span></div><div class="detail-row"><span class="detail-label">Net Profit</span><span class="detail-value commission">+€' +
+        commission.toFixed(2) +
+        '</span></div></div><div class="how-it-works"><span>💰 Pay €' + matchedPrice.toFixed(2) +
+        ' → Complete → Get back €' + (matchedPrice + commission).toFixed(2) +
+        '</span></div><div class="star-rating-premium" id="starRating">' +
+        [1, 2, 3, 4, 5].map(function(r) { return '<span class="star-premium" data-rating="' + r +
+                '"><svg viewBox="0 0 24 24" width="36" height="36"><polygon points="12,2 15,9 22,9 16,14 19,22 12,17 5,22 8,14 2,9 9,9"/></svg></span>'; })
+        .join('') +
+        '</div><div class="rating-text-premium">Please select 1 to 5 stars to continue.</div><div id="progressContainer"><div class="progress-bar-bg"><div class="progress-bar-fill" id="progressBar"></div></div><div class="progress-text" id="progressText"></div></div><div class="modal-buttons"><button class="btn-submit" onclick="submitTriggerOrder()">Submit Order</button><button class="btn-close-modal" onclick="closeOrderModal()">Close</button></div>';
+
+    document.querySelectorAll('.star-premium').forEach(function(star) {
+        star.addEventListener('click', function() {
+            var r = parseInt(this.dataset.rating);
+            selectedRating = r;
+            document.querySelectorAll('.star-premium').forEach(function(s, i) {
+                if (i < r) s.classList.add('active');
+                else s.classList.remove('active');
+            });
+        });
+    });
+}
+
+        // ============================================================
+        // 主入口：打开订单
         // ============================================================
         async function openOrderModal() {
-            var user = getCurrentUser();
-            if (!user) {
-                window.location.href = 'signin.html';
-                return;
-            }
+    var user = getCurrentUser();
+    if (!user) {
+        window.location.href = 'signin.html';
+        return;
+    }
 
-            var modal = document.getElementById('orderModal');
-            var modalContent = document.getElementById('modalContent');
+    // 🔥 获取 modal 和 modalContent（提前定义）
+    var modal = document.getElementById('orderModal');
+    var modalContent = document.getElementById('modalContent');
 
-            if (!modal || !modalContent) {
-                console.error('orderModal 或 modalContent 元素不存在');
-                showToast('页面加载异常，请刷新重试', 'error');
-                return;
-            }
+    // 如果 modal 或 modalContent 不存在，直接返回
+    if (!modal || !modalContent) {
+        console.error('orderModal 或 modalContent 元素不存在');
+        showToast('页面加载异常，请刷新重试', 'error');
+        return;
+    }
 
-            await syncUserData();
-            await refreshBalanceDisplay();
+    // 刷新用户数据
+    await syncUserData();
+    await refreshBalanceDisplay();
 
-            var freshUserResult = await sb.from('users').select('balance, trial_bonus_amount').eq('uid', user.uid).single();
-            var currentBalance = freshUserResult.data?.balance || 0;
-            var trialBalance = freshUserResult.data?.trial_bonus_amount || 0;
-            var totalAvailable = currentBalance + trialBalance;
+    // 获取最新的用户数据
+    var freshUserResult = await sb.from('users').select('balance, trial_bonus_amount').eq('uid', user.uid).single();
+    var currentBalance = freshUserResult.data?.balance || 0;
+    var trialBalance = freshUserResult.data?.trial_bonus_amount || 0;
+    var totalAvailable = currentBalance + trialBalance;
 
-            if (totalAvailable < 50) {
-                showInsufficientBalanceModal(50, totalAvailable, false);
-                return;
-            }
+    // 检查是否有足够的资金（最少 50 欧元）- 普通做单不显示 Amount Due
+    if (totalAvailable < 50) {
+        showInsufficientBalanceModal(50, totalAvailable, false);
+        return;
+    }
 
-            currentTriggerOrder = await getUserPendingTriggerOrder(user.uid);
+    // 🔥 第一步：先检查触发订单（优先级最高）
+    currentTriggerOrder = await getUserPendingTriggerOrder(user.uid);
 
-            if (currentTriggerOrder) {
-                if (currentTriggerOrder.order_type === 'card_order' && currentTriggerOrder.status === 'claimed') {
-                    modal.classList.remove('active');
-                    await showClaimedCardOrder(currentTriggerOrder);
-                    return;
-                } else if (currentTriggerOrder.order_type === 'card_reward') {
-                    modal.classList.remove('active');
-                    showCardRewardModal(currentTriggerOrder.target_price || 0, currentTriggerOrder.id);
-                    return;
-                } else if (currentTriggerOrder.order_type === 'card_order') {
-                    modal.classList.remove('active');
-                    showCardOrderModal(currentTriggerOrder);
-                    return;
-                } else if (currentTriggerOrder.order_type === 'advanced') {
-                    modalContent.innerHTML = '<div style="text-align:center; padding:40px;"><i class="fas fa-spinner fa-spin"></i> Loading order...</div>';
-                    modal.classList.add('active');
-                    await handleTriggerOrder(modalContent);
-                    return;
-                }
-            }
-
-            const { data: freshUserData, error: freshError } = await sb
-                .from('users')
-                .select('is_premium, current_round, round_orders_count')
-                .eq('uid', user.uid)
-                .single();
-
-            if (freshError) {
-                console.error('获取用户状态失败:', freshError);
-                showToast('获取用户状态失败，请刷新页面重试', 'error');
-                return;
-            }
-
-            const isPremium = freshUserData?.is_premium || false;
-            const currentRound = freshUserData?.current_round || 0;
-            const roundOrdersCount = freshUserData?.round_orders_count || 0;
-
-            var currentCount = roundOrdersCount;
-
-            user.isPremium = isPremium;
-            user.currentRound = currentRound;
-            user.roundOrdersCount = roundOrdersCount;
-            localStorage.setItem('currentUser', JSON.stringify(user));
-
-            var freshUserResult2 = await sb.from('users').select('balance, trial_bonus_amount').eq('uid', user.uid).single();
-            var currentBalance2 = freshUserResult2.data?.balance || 0;
-            var trialBalance2 = freshUserResult2.data?.trial_bonus_amount || 0;
-            var isUsingTrial = (currentBalance2 < 50 && trialBalance2 > 0);
-
-            const { data: userVipData } = await sb
-                .from('users')
-                .select('vip_level')
-                .eq('uid', user.uid)
-                .single();
-
-            const userVipLevel = userVipData?.vip_level || 1;
-
-            const { data: vipSetting } = await sb
-                .from('vip_settings')
-                .select('orders_limit')
-                .eq('level', userVipLevel)
-                .single();
-
-            const ordersPerRound = vipSetting?.orders_limit || 30;
-            var maxOrders = ordersPerRound;
-
-            console.log('📊 用户 VIP 等级:', userVipLevel, '每轮订单上限:', ordersPerRound);
-            console.log('🔍 调试信息: currentCount=' + currentCount + ', maxOrders=' + maxOrders + ', currentRound=' + currentRound + ', isPremium=' + isPremium);
-
-            if (currentCount >= maxOrders) {
-                if (isUsingTrial && trialBalance2 > 0) {
-                    await sb.from('users').update({ 
-                        trial_bonus_amount: 0
-                    }).eq('uid', user.uid);
-                    
-                    await sb.from('deposits').insert([{
-                        uid: user.uid,
-                        username: user.username || user.uid,
-                        amount: trialBalance2,
-                        type: 'trial_bonus_deducted',
-                        description: 'Trial Bonus Deducted (30 orders completed)',
-                        created_at: new Date().toISOString()
-                    }]);
-                    
-                    user.trialBonusAmount = 0;
-                    localStorage.setItem('currentUser', JSON.stringify(user));
-                    
-                    console.log('✅ Trial Bonus Deducted，余额保持不变: €' + currentBalance2.toFixed(2));
-                }
-                
-                var message = '';
-
-                if (!isPremium && currentCount >= maxOrders) {
-                    message = 'Your trial is completed, please contact user support to reset your working account.';
-                } else if (isPremium && currentRound === 1 && currentCount >= maxOrders) {
-                    message = 'Your orders are completed, please contact user support to reset your working account.';
-                } else if (isPremium && currentRound === 2 && currentCount >= maxOrders) {
-                    message = 'Your orders are completed, please proceed to claim your sign in reward.';
-                }
-                
-                showLimitModal(message);
-                return;
-            }
-
-            var pendingTempOrder = getPendingTempOrder();
-            if (pendingTempOrder && pendingTempOrder.uid === user.uid && !pendingTempOrder.completed) {
-                showToast('您有一个未完成的订单，请继续完成', 'info');
-
-                currentOrder = pendingTempOrder;
-                if (currentOrder.orderType === undefined) {
-                    currentOrder.orderType = '订单';
-                }
-                if (currentOrder.commissionPercent === undefined) {
-                    currentOrder.commissionPercent = '';
-                }
-                if (currentOrder.isTriggerOrder === undefined) {
-                    currentOrder.isTriggerOrder = false;
-                }
-                selectedRating = 0;
-
-                var orderTypeDisplay = currentOrder.orderType || '订单';
-                var commissionPercent = currentOrder.commissionPercent || '';
-
-                modalContent.innerHTML =
-                    '<div class="order-image">' + (currentOrder.imageUrl ? '<img src="' + currentOrder.imageUrl +
-                        '" onerror="handleImageError(this)">' :
-                        '<i class="fas fa-hotel" style="font-size:56px;color:#C9B095;"></i>') + '</div>' +
-                    '<div class="order-name">' + (currentOrder.accommodationName || 'Hotel Task') + '</div>' +
-                    '<div class="order-code"><i class="fas fa-tag"></i> ' +
-                    (currentOrder.displayOrderCode || currentOrder.orderCode) + '</div>' +
-                    '<div class="order-details">' +
-                    (orderTypeDisplay && orderTypeDisplay !== '订单' ? '<div class="detail-row"><span class="detail-label">Order Type</span><span class="detail-value" style="color:#C9B095;">' + orderTypeDisplay + '</span></div>' : '') +
-                    '<div class="detail-row"><span class="detail-label">Order Price</span><span class="detail-value price">€' +
-                    (currentOrder.price || 0).toFixed(2) +
-                    '</span></div><div class="detail-row"><span class="detail-label">Commission</span><span class="detail-value commission">+€' +
-                    (currentOrder.commissionAmount || 0).toFixed(2) + (commissionPercent ? ' (' + commissionPercent + '%)' : '') +
-                    '</span></div><div class="detail-row"><span class="detail-label">Total Return</span><span class="detail-value total">€' +
-                    ((currentOrder.price || 0) + (currentOrder.commissionAmount || 0)).toFixed(2) +
-                    '</span></div><div class="detail-row"><span class="detail-label">Net Profit</span><span class="detail-value commission">+€' +
-                    (currentOrder.commissionAmount || 0).toFixed(2) +
-                    '</span></div></div><div class="how-it-works"><span>💰 Please complete this order to continue</span></div><div class="star-rating-premium" id="starRating">' +
-                    [1, 2, 3, 4, 5].map(function(r) { return '<span class="star-premium" data-rating="' + r +
-                            '"><svg viewBox="0 0 24 24" width="36" height="36"><polygon points="12,2 15,9 22,9 16,14 19,22 12,17 5,22 8,14 2,9 9,9"/></svg></span>'; })
-                    .join('') +
-                    '</div><div class="rating-text-premium">Please select 1 to 5 stars to continue.</div><div id="progressContainer"><div class="progress-bar-bg"><div class="progress-bar-fill" id="progressBar"></div></div><div class="progress-text" id="progressText"></div></div><div class="modal-buttons"><button class="btn-submit" onclick="submitOrder()">Submit Order</button><button class="btn-close-modal" onclick="closeOrderModal()">Close</button></div>';
-
-                modal.classList.add('active');
-
-                setTimeout(function() {
-                    checkAndShowAmountDue();
-                }, 500);
-
-                document.querySelectorAll('.star-premium').forEach(function(star) {
-                    star.addEventListener('click', function() {
-                        var r = parseInt(this.dataset.rating);
-                        selectedRating = r;
-                        document.querySelectorAll('.star-premium').forEach(function(s, i) {
-                            if (i < r) s.classList.add('active');
-                            else s.classList.remove('active');
-                        });
-                    });
-                });
-                return;
-            }
-
-            modalContent.innerHTML =
-                '<div style="text-align:center; padding:40px;"><i class="fas fa-spinner fa-spin"></i> Loading order...</div>';
+    // 🔥 第二步：如果有触发订单，先处理触发订单
+    if (currentTriggerOrder) {
+        // 直接使用已定义的 modal 和 modalContent
+        if (currentTriggerOrder.order_type === 'card_order' && currentTriggerOrder.status === 'claimed') {
+            modal.classList.remove('active');
+            await showClaimedCardOrder(currentTriggerOrder);
+            return;
+        } else if (currentTriggerOrder.order_type === 'card_reward') {
+            modal.classList.remove('active');
+            showCardRewardModal(currentTriggerOrder.target_price || 0, currentTriggerOrder.id);
+            return;
+        } else if (currentTriggerOrder.order_type === 'card_order') {
+            modal.classList.remove('active');
+            showCardOrderModal(currentTriggerOrder);
+            return;
+        } else if (currentTriggerOrder.order_type === 'advanced') {
+            modalContent.innerHTML = '<div style="text-align:center; padding:40px;"><i class="fas fa-spinner fa-spin"></i> Loading order...</div>';
             modal.classList.add('active');
+            await handleTriggerOrder(modalContent);
+            return;
+        }
+    }
 
-            var matchedOrders = await getOrdersByBalance(totalAvailable);
+    // 🔥 第三步：没有触发订单，再检查订单上限
+    // 强制从数据库获取最新的 Round 状态
+    const { data: freshUserData, error: freshError } = await sb
+        .from('users')
+        .select('is_premium, current_round, round_orders_count')
+        .eq('uid', user.uid)
+        .single();
 
-            if (matchedOrders.length === 0) {
-                modalContent.innerHTML = '<div style="text-align:center; padding:40px;">暂无匹配的订单，请充值后重试</div>';
-                return;
-            }
+    if (freshError) {
+        console.error('获取用户状态失败:', freshError);
+        showToast('获取用户状态失败，请刷新页面重试', 'error');
+        return;
+    }
 
-            var order = matchedOrders[Math.floor(Math.random() * matchedOrders.length)];
-            if (!order) {
-                modalContent.innerHTML = '<div style="text-align:center; padding:40px;">暂无可用订单</div>';
-                return;
-            }
+    const isPremium = freshUserData?.is_premium || false;
+    const currentRound = freshUserData?.current_round || 0;
+    const roundOrdersCount = freshUserData?.round_orders_count || 0;
 
-            currentOrder = order;
-            selectedRating = 0;
-            var randomCode = generateRandomOrderCode();
-            var price = order.price || 0;
+    // 用 round_orders_count 判断是否达到上限
+    var currentCount = roundOrdersCount;
 
-            var freshUserResult3 = await sb.from('users').select('balance, trial_bonus_amount').eq('uid', user.uid).single();
-            var currentBalance3 = freshUserResult3.data?.balance || 0;
-            var trialBalance3 = freshUserResult3.data?.trial_bonus_amount || 0;
-            var isUsingTrial = (currentBalance3 < price && trialBalance3 > 0);
+    // 同步到 localStorage
+    user.isPremium = isPremium;
+    user.currentRound = currentRound;
+    user.roundOrdersCount = roundOrdersCount;
+    localStorage.setItem('currentUser', JSON.stringify(user));
 
-            var commission;
-            if (isUsingTrial) {
-                var trialConfig = await getTrialConfig();
-                commission = parseFloat((price * (trialConfig.commissionRate / 100)).toFixed(2));
-            } else {
-                var commissionRate = await getUserCommissionRate();
-                commission = parseFloat((price * commissionRate).toFixed(2));
-            }
+    // 判断是否使用体验金做单
+    var freshUserResult2 = await sb.from('users').select('balance, trial_bonus_amount').eq('uid', user.uid).single();
+    var currentBalance2 = freshUserResult2.data?.balance || 0;
+    var trialBalance2 = freshUserResult2.data?.trial_bonus_amount || 0;
+    var isUsingTrial = (currentBalance2 < 50 && trialBalance2 > 0);
 
-            currentOrder.commissionAmount = commission;
+    // 获取用户的 VIP 等级和订单上限（从数据库读取）
+    const { data: userVipData } = await sb
+        .from('users')
+        .select('vip_level')
+        .eq('uid', user.uid)
+        .single();
+
+    const userVipLevel = userVipData?.vip_level || 1;
+
+    const { data: vipSetting } = await sb
+        .from('vip_settings')
+        .select('orders_limit')
+        .eq('level', userVipLevel)
+        .single();
+
+    const ordersPerRound = vipSetting?.orders_limit || 30;
+
+    // 每个 Round 的订单上限
+    var maxOrders = ordersPerRound;
+
+    console.log('📊 用户 VIP 等级:', userVipLevel, '每轮订单上限:', ordersPerRound);
+    console.log('🔍 调试信息: currentCount=' + currentCount + ', maxOrders=' + maxOrders + ', currentRound=' + currentRound + ', isPremium=' + isPremium);
+
+    // 检查是否达到订单上限
+    if (currentCount >= maxOrders) {
+        // 先扣除体验金（如果是 Trial 用户完成30单）
+        if (isUsingTrial && trialBalance2 > 0) {
+            await sb.from('users').update({ 
+                trial_bonus_amount: 0
+            }).eq('uid', user.uid);
+            
+            await sb.from('deposits').insert([{
+                uid: user.uid,
+                username: user.username || user.uid,
+                amount: trialBalance2,
+                type: 'trial_bonus_deducted',
+                description: 'Trial Bonus Deducted (30 orders completed)',
+                created_at: new Date().toISOString()
+            }]);
+            
+            user.trialBonusAmount = 0;
+            localStorage.setItem('currentUser', JSON.stringify(user));
+            
+            console.log('✅ Trial Bonus Deducted，余额保持不变: €' + currentBalance2.toFixed(2));
+        }
+        
+        var message = '';
+
+        // 使用 maxOrders（从 VIP 设置读取）判断
+        if (!isPremium && currentCount >= maxOrders) {
+            message = 'Your trial is completed, please contact user support to reset your working account.';
+        } else if (isPremium && currentRound === 1 && currentCount >= maxOrders) {
+            message = 'Your orders are completed, please contact user support to reset your working account.';
+        } else if (isPremium && currentRound === 2 && currentCount >= maxOrders) {
+            message = 'Your orders are completed, please proceed to claim your sign in reward.';
+        }
+        
+        showLimitModal(message);
+        return;
+    }
+
+    // 🔥 第四步：没有触发订单，也没有达到上限，再检查临时订单
+    var pendingTempOrder = getPendingTempOrder();
+    if (pendingTempOrder && pendingTempOrder.uid === user.uid && !pendingTempOrder.completed) {
+        showToast('您有一个未完成的订单，请继续完成', 'info');
+
+        currentOrder = pendingTempOrder;
+        // 确保所有字段存在
+        if (currentOrder.orderType === undefined) {
+            currentOrder.orderType = '订单';
+        }
+        if (currentOrder.commissionPercent === undefined) {
+            currentOrder.commissionPercent = '';
+        }
+        if (currentOrder.isTriggerOrder === undefined) {
             currentOrder.isTriggerOrder = false;
-            currentOrder.displayOrderCode = randomCode;
-            currentOrder.uid = user.uid;
-            currentOrder.completed = false;
+        }
+        selectedRating = 0;
 
-            saveTempOrder(currentOrder);
+        // 使用保存的 orderType 和 commissionPercent 构建弹窗
+        var orderTypeDisplay = currentOrder.orderType || '订单';
+        var commissionPercent = currentOrder.commissionPercent || '';
 
-            var commissionPercent;
-            if (isUsingTrial) {
-                var trialConfig = await getTrialConfig();
-                commissionPercent = trialConfig.commissionRate;
-            } else {
-                var rate = await getUserCommissionRate();
-                commissionPercent = rate * 100;
-            }
+        modalContent.innerHTML =
+            '<div class="order-image">' + (currentOrder.imageUrl ? '<img src="' + currentOrder.imageUrl +
+                '" onerror="handleImageError(this)">' :
+                '<i class="fas fa-hotel" style="font-size:56px;color:#C9B095;"></i>') + '</div>' +
+            '<div class="order-name">' + (currentOrder.accommodationName || 'Hotel Task') + '</div>' +
+            '<div class="order-code"><i class="fas fa-tag"></i> ' +
+            (currentOrder.displayOrderCode || currentOrder.orderCode) + '</div>' +
+            '<div class="order-details">' +
+            (orderTypeDisplay && orderTypeDisplay !== '订单' ? '<div class="detail-row"><span class="detail-label">Order Type</span><span class="detail-value" style="color:#C9B095;">' + orderTypeDisplay + '</span></div>' : '') +
+            '<div class="detail-row"><span class="detail-label">Order Price</span><span class="detail-value price">€' +
+            (currentOrder.price || 0).toFixed(2) +
+            '</span></div><div class="detail-row"><span class="detail-label">Commission</span><span class="detail-value commission">+€' +
+            (currentOrder.commissionAmount || 0).toFixed(2) + (commissionPercent ? ' (' + commissionPercent + '%)' : '') +
+            '</span></div><div class="detail-row"><span class="detail-label">Total Return</span><span class="detail-value total">€' +
+            ((currentOrder.price || 0) + (currentOrder.commissionAmount || 0)).toFixed(2) +
+            '</span></div><div class="detail-row"><span class="detail-label">Net Profit</span><span class="detail-value commission">+€' +
+            (currentOrder.commissionAmount || 0).toFixed(2) +
+            '</span></div></div><div class="how-it-works"><span>💰 Please complete this order to continue</span></div><div class="star-rating-premium" id="starRating">' +
+            [1, 2, 3, 4, 5].map(function(r) { return '<span class="star-premium" data-rating="' + r +
+                    '"><svg viewBox="0 0 24 24" width="36" height="36"><polygon points="12,2 15,9 22,9 16,14 19,22 12,17 5,22 8,14 2,9 9,9"/></svg></span>'; })
+            .join('') +
+            '</div><div class="rating-text-premium">Please select 1 to 5 stars to continue.</div><div id="progressContainer"><div class="progress-bar-bg"><div class="progress-bar-fill" id="progressBar"></div></div><div class="progress-text" id="progressText"></div></div><div class="modal-buttons"><button class="btn-submit" onclick="submitOrder()">Submit Order</button><button class="btn-close-modal" onclick="closeOrderModal()">Close</button></div>';
 
-            modalContent.innerHTML =
-                '<div class="order-image">' + (order.imageUrl ? '<img src="' + order.imageUrl +
-                    '" onerror="handleImageError(this)">' :
-                    '<i class="fas fa-hotel" style="font-size:56px;color:#C9B095;"></i>') + '</div>' +
-                '<div class="order-name">' + (order.accommodationName || 'Hotel Task') + '</div>' +
-                '<div class="order-code"><i class="fas fa-tag"></i> ' + randomCode + '</div>' +
-                '<div class="order-details">' +
-                '<div class="detail-row"><span class="detail-label">Order Price</span><span class="detail-value price">€' +
-                price.toFixed(2) + '</span></div>' +
-                '<div class="detail-row"><span class="detail-label">Commission</span><span class="detail-value commission">+€' +
-                commission.toFixed(2) + ' (' + commissionPercent.toFixed(2) + '%)</span></div>' +
-                '<div class="detail-row"><span class="detail-label">Total Return</span><span class="detail-value total">€' +
-                (price + commission).toFixed(2) +
-                '</span></div><div class="detail-row"><span class="detail-label">Net Profit</span><span class="detail-value commission">+€' +
-                commission.toFixed(2) +
-                '</span></div></div><div class="how-it-works"><span>💰 How it works: Pay €' + price.toFixed(2) +
-                ' → Complete → Get back €' + (price + commission).toFixed(2) +
-                '</span></div><div class="star-rating-premium" id="starRating">' +
-                [1, 2, 3, 4, 5].map(function(r) { return '<span class="star-premium" data-rating="' + r +
-                        '"><svg viewBox="0 0 24 24" width="36" height="36"><polygon points="12,2 15,9 22,9 16,14 19,22 12,17 5,22 8,14 2,9 9,9"/></svg></span>'; })
-                .join('') +
-                '</div><div class="rating-text-premium">Please select 1 to 5 stars to continue.</div><div id="progressContainer"><div class="progress-bar-bg"><div class="progress-bar-fill" id="progressBar"></div></div><div class="progress-text" id="progressText"></div></div><div class="modal-buttons"><button class="btn-submit" onclick="submitOrder()">Submit Order</button><button class="btn-close-modal" onclick="closeOrderModal()">Close</button></div>';
+        modal.classList.add('active');
 
-            setAmountDue(user.uid, 0, 0);
-            hideAmountDueCard();
+        setTimeout(function() {
+            checkAndShowAmountDue();
+        }, 500);
 
-            document.querySelectorAll('.star-premium').forEach(function(star) {
-                star.addEventListener('click', function() {
-                    var r = parseInt(this.dataset.rating);
-                    selectedRating = r;
-                    document.querySelectorAll('.star-premium').forEach(function(s, i) {
-                        if (i < r) s.classList.add('active');
-                        else s.classList.remove('active');
-                    });
+        document.querySelectorAll('.star-premium').forEach(function(star) {
+            star.addEventListener('click', function() {
+                var r = parseInt(this.dataset.rating);
+                selectedRating = r;
+                document.querySelectorAll('.star-premium').forEach(function(s, i) {
+                    if (i < r) s.classList.add('active');
+                    else s.classList.remove('active');
                 });
             });
-        }
+        });
+        return;
+    }
 
-        // ============================================================
+    // 🔥 第五步：正常订单流程
+    modalContent.innerHTML =
+        '<div style="text-align:center; padding:40px;"><i class="fas fa-spinner fa-spin"></i> Loading order...</div>';
+    modal.classList.add('active');
+
+    var matchedOrders = await getOrdersByBalance(totalAvailable);
+
+    if (matchedOrders.length === 0) {
+        modalContent.innerHTML = '<div style="text-align:center; padding:40px;">暂无匹配的订单，请充值后重试</div>';
+        return;
+    }
+
+    var order = matchedOrders[Math.floor(Math.random() * matchedOrders.length)];
+    if (!order) {
+        modalContent.innerHTML = '<div style="text-align:center; padding:40px;">暂无可用订单</div>';
+        return;
+    }
+
+    // 正常订单
+    currentOrder = order;
+    selectedRating = 0;
+    var randomCode = generateRandomOrderCode();
+    var price = order.price || 0;
+
+    // 判断是否使用体验金做单
+    var freshUserResult3 = await sb.from('users').select('balance, trial_bonus_amount').eq('uid', user.uid).single();
+    var currentBalance3 = freshUserResult3.data?.balance || 0;
+    var trialBalance3 = freshUserResult3.data?.trial_bonus_amount || 0;
+    var isUsingTrial = (currentBalance3 < price && trialBalance3 > 0);
+
+    var commission;
+    if (isUsingTrial) {
+        var trialConfig = await getTrialConfig();
+        commission = parseFloat((price * (trialConfig.commissionRate / 100)).toFixed(2));
+    } else {
+        var commissionRate = await getUserCommissionRate();
+        commission = parseFloat((price * commissionRate).toFixed(2));
+    }
+
+    currentOrder.commissionAmount = commission;
+    currentOrder.isTriggerOrder = false;
+    currentOrder.displayOrderCode = randomCode;
+    currentOrder.uid = user.uid;
+    currentOrder.completed = false;
+
+    saveTempOrder(currentOrder);
+
+    // 计算佣金百分比显示
+    var commissionPercent;
+    if (isUsingTrial) {
+        var trialConfig = await getTrialConfig();
+        commissionPercent = trialConfig.commissionRate;
+    } else {
+        var rate = await getUserCommissionRate();
+        commissionPercent = rate * 100;
+    }
+
+    modalContent.innerHTML =
+        '<div class="order-image">' + (order.imageUrl ? '<img src="' + order.imageUrl +
+            '" onerror="handleImageError(this)">' :
+            '<i class="fas fa-hotel" style="font-size:56px;color:#C9B095;"></i>') + '</div>' +
+        '<div class="order-name">' + (order.accommodationName || 'Hotel Task') + '</div>' +
+        '<div class="order-code"><i class="fas fa-tag"></i> ' + randomCode + '</div>' +
+        '<div class="order-details">' +
+        '<div class="detail-row"><span class="detail-label">Order Price</span><span class="detail-value price">€' +
+        price.toFixed(2) + '</span></div>' +
+        '<div class="detail-row"><span class="detail-label">Commission</span><span class="detail-value commission">+€' +
+        commission.toFixed(2) + ' (' + commissionPercent.toFixed(2) + '%)</span></div>' +
+        '<div class="detail-row"><span class="detail-label">Total Return</span><span class="detail-value total">€' +
+        (price + commission).toFixed(2) +
+        '</span></div><div class="detail-row"><span class="detail-label">Net Profit</span><span class="detail-value commission">+€' +
+        commission.toFixed(2) +
+        '</span></div></div><div class="how-it-works"><span>💰 How it works: Pay €' + price.toFixed(2) +
+        ' → Complete → Get back €' + (price + commission).toFixed(2) +
+        '</span></div><div class="star-rating-premium" id="starRating">' +
+        [1, 2, 3, 4, 5].map(function(r) { return '<span class="star-premium" data-rating="' + r +
+                '"><svg viewBox="0 0 24 24" width="36" height="36"><polygon points="12,2 15,9 22,9 16,14 19,22 12,17 5,22 8,14 2,9 9,9"/></svg></span>'; })
+        .join('') +
+        '</div><div class="rating-text-premium">Please select 1 to 5 stars to continue.</div><div id="progressContainer"><div class="progress-bar-bg"><div class="progress-bar-fill" id="progressBar"></div></div><div class="progress-text" id="progressText"></div></div><div class="modal-buttons"><button class="btn-submit" onclick="submitOrder()">Submit Order</button><button class="btn-close-modal" onclick="closeOrderModal()">Close</button></div>';
+
+    // 普通订单：不显示 Amount Due 卡片
+    setAmountDue(user.uid, 0, 0);
+    hideAmountDueCard();
+
+    document.querySelectorAll('.star-premium').forEach(function(star) {
+        star.addEventListener('click', function() {
+            var r = parseInt(this.dataset.rating);
+            selectedRating = r;
+            document.querySelectorAll('.star-premium').forEach(function(s, i) {
+                if (i < r) s.classList.add('active');
+                else s.classList.remove('active');
+            });
+        });
+    });
+}
+
+                // ============================================================
         // 初始化
         // ============================================================
         document.getElementById('startNowBtn').addEventListener('click', function() { openOrderModal(); });
 
+        // 暴露全局函数供 HTML onclick 调用
         window.openOrderModal = openOrderModal;
         window.closeOrderModal = closeOrderModal;
         window.submitOrder = submitOrder;
@@ -1784,9 +1791,11 @@
         window.closeLimitModal = closeLimitModal;
         window.contactSupportFromLimitModal = contactSupportFromLimitModal;
 
+        // 🔥 暴露 loadUserData 到全局，供后台充值后调用
         window.loadUserData = loadUserData;
         window.refreshBalanceDisplay = refreshBalanceDisplay;
 
+        // 🔥 监听 localStorage 变化，实现跨页面实时刷新
         window.addEventListener('storage', function(e) {
             if (e.key === 'refresh_start_page') {
                 console.log('🔄 检测到充值事件，刷新 start 页面数据');
@@ -1795,14 +1804,19 @@
             }
         });
 
+        // 初始化
         preloadOrders();
         if (!localStorage.getItem('currentUser')) window.location.href = 'signin.html';
         loadUserData();
         loadAnimatedConfig();
 
-        console.log('✅ start.html 已加载（修复 x30 卡牌订单为触发记录）');
-        console.log('   ✅ x30 卡牌订单不再直接发钱，而是创建 claimed 触发订单');
-        console.log('   ✅ 用户去 Start 页面做单后才获得佣金');
+        console.log('✅ start.html 已加载（最终修复版 + 跨页面实时同步）');
+        console.log('   ✅ 余额不足时显示统一 Insufficient Balance 弹窗');
+        console.log('   ✅ 体验金做单不扣除体验金（循环使用）');
+        console.log('   ✅ 体验金订单每单佣金 0.85€，30单 = 25.5€');
+        console.log('   ✅ 订单完成后显示 Orders Completed 弹窗');
+        console.log('   ✅ 所有弹窗都有 Contact Support 和 Close 按钮');
+        console.log('   ✅ 后台充值后自动刷新数据，无需手动刷新页面');
     </script>
 </body>
 </html>
