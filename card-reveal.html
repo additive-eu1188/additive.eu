@@ -7,7 +7,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
     <style>
-        /* ===== 你的原始样式保持不变 ===== */
+        /* ===== 你的原始样式 ===== */
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             background: #070b1e;
@@ -299,25 +299,56 @@
         const isReward = params.type === 'reward';
 
         // ============================================================
-        // 🔥 渲染三张卡牌（全部显示后台设置的内容）
+        // 🔥 生成随机金额（不等于固定金额）
+        // ============================================================
+        function generateRandomAmount(exclude) {
+            const min = 5;
+            const max = 200;
+            let amt;
+            let attempts = 0;
+            do {
+                amt = Math.floor(Math.random() * (max - min + 1)) + min;
+                attempts++;
+            } while (amt === exclude && attempts < 30);
+            return amt;
+        }
+
+        // ============================================================
+        // 🔥 渲染三张卡牌（显示不同金额，但奖励固定）
         // ============================================================
         function renderCards() {
             const grid = document.getElementById('cardsGrid');
             let html = '';
 
+            const fixedAmount = params.amount;
+            const r1 = generateRandomAmount(fixedAmount);
+            const r2 = generateRandomAmount(fixedAmount);
+            const r3 = generateRandomAmount(fixedAmount);
+            let displayAmounts = [fixedAmount, r1, r2];
+
+            // 打乱顺序增加悬念
+            for (let i = displayAmounts.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [displayAmounts[i], displayAmounts[j]] = [displayAmounts[j], displayAmounts[i]];
+            }
+
             for (let i = 0; i < 3; i++) {
                 let backHtml = '';
                 if (isReward) {
+                    const displayAmount = displayAmounts[i];
+                    const isMain = displayAmount === fixedAmount;
                     backHtml = `
                         <div class="reward-icon"><i class="fas fa-gift"></i></div>
-                        <div class="reward-amount">€${params.amount.toFixed(2)}</div>
-                        <div class="reward-label">✨ Cash Reward</div>
+                        <div class="reward-amount" style="${isMain ? 'color:#ffdd99;font-size:28px;' : ''}">€${displayAmount.toFixed(2)}</div>
+                        <div class="reward-label">${isMain ? '⭐ Grand Prize' : '✨ Cash Reward'}</div>
                     `;
                 } else {
+                    // 订单类型：三张都显示 x30，不同标签
+                    const labels = ['🏆 BONUS', '⭐ PRIZE', '✨ REWARD'];
                     backHtml = `
                         <div class="reward-icon"><i class="fas fa-hotel"></i></div>
                         <div class="reward-amount" style="font-size:20px;color:#ffdd99;">x30</div>
-                        <div class="reward-label" style="font-size:12px;color:#C9B095;">COMMISSIONS</div>
+                        <div class="reward-label" style="font-size:12px;color:#C9B095;">${labels[i]}</div>
                     `;
                 }
 
@@ -380,7 +411,7 @@
         }
 
         // ============================================================
-        // 入场动画（你的原始版本）
+        // 入场动画
         // ============================================================
         function createParticles(count) {
             const cx = window.innerWidth / 2;
@@ -489,7 +520,7 @@
         }
 
         // ============================================================
-        // 点击翻牌（你的原始逻辑 + 修复消息传递）
+        // 点击翻牌
         // ============================================================
         async function handleCardFlip(card) {
             if (flipLock || isPlaying || isFlipped) return;
@@ -571,7 +602,7 @@
             flipLock = false;
 
             // ============================================================
-            // 🔥 发送消息给父页面（传递后台设置的内容）
+            // 🔥 发送消息给父页面（固定奖励，不是随机金额）
             // ============================================================
             setTimeout(() => {
                 if (window.parent !== window) {
@@ -617,11 +648,12 @@
             playEntrance();
         }, 300);
 
-        console.log('✅ 卡牌揭晓已加载（后台设置内容 + 完整入场动画）');
+        console.log('✅ 卡牌揭晓已加载');
         console.log('   📍 类型:', params.type);
-        console.log('   📍 奖励金额: €' + params.amount);
+        console.log('   📍 固定奖励: €' + params.amount);
         console.log('   📍 触发ID:', params.triggerId);
-        console.log('   ✅ 三张卡牌都显示相同的后台设置内容');
+        console.log('   ✅ 三张卡牌显示不同金额，但奖励固定');
+        console.log('   ✅ 用户点击任何卡牌都获得固定奖励');
     </script>
 </body>
 </html>
