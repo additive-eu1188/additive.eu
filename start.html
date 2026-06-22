@@ -751,7 +751,7 @@
         showAmountDueCard(amountDue);
     }
 
-    // 使用与 Orders Completed 完全一致的弹窗
+    // 使用与 Orders Completed 完全一致的弹窗样式
     var modalHtml = `
         <div id="insufficientModal" style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(7,11,26,0.92);backdrop-filter:blur(14px);z-index:30000;display:flex;align-items:center;justify-content:center;visibility:visible;opacity:1;">
             <div style="background:linear-gradient(160deg,#1a1428,#0e0a1a);border-radius:32px;padding:40px 36px;max-width:440px;width:100%;border:1px solid rgba(201,176,149,0.06);box-shadow:0 24px 60px rgba(0,0,0,0.6);text-align:center;transform:scale(1);">
@@ -1400,11 +1400,11 @@ function contactSupportFromLimitModal() {
             var trialBalance = freshUserResult.data?.trial_bonus_amount || 0;
             var totalAvailable = currentBalance + trialBalance;
 
-            // 检查是否有足够的资金（最少 30 欧元）
-            if (totalAvailable < 30) {
-                showToast('可用余额不足30欧元（余额 + 试用金），无法做单，请充值', 'warning');
-                return;
-            }
+            // 检查是否有足够的资金（最少 50 欧元）
+if (totalAvailable < 50) {
+    showInsufficientBalanceModal(50, totalAvailable);
+    return;
+}
 
             // 检查订单数量限制
             var ordersDataResult = await sb.from('order_history').select('id', { count: 'exact' }).eq('uid', user.uid);
