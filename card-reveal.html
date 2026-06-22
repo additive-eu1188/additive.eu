@@ -7,11 +7,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+        /* ===== 你的原始样式保持不变 ===== */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             background: #070b1e;
             font-family: 'Inter', sans-serif;
@@ -25,7 +22,6 @@
             overflow: hidden;
             position: relative;
         }
-
         @keyframes auroraSpin {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
@@ -38,7 +34,6 @@
             80% { transform: rotateY(5deg) scale(1.08); }
             100% { transform: rotateY(180deg) scale(1.1); }
         }
-
         #effectLayer {
             position: fixed;
             top: 0;
@@ -49,10 +44,7 @@
             z-index: 5;
             overflow: visible;
         }
-        #effectLayer * {
-            pointer-events: none !important;
-        }
-
+        #effectLayer * { pointer-events: none !important; }
         .particle {
             position: fixed;
             border-radius: 50%;
@@ -85,7 +77,6 @@
             0% { opacity: 0; transform: translate3d(var(--bx), var(--by), 0) scale(0.2); box-shadow: none; }
             100% { opacity: 1; transform: translate3d(var(--bx), var(--by), 0) scale(1.2); box-shadow: 0 0 20px var(--color), 0 0 40px var(--color); }
         }
-
         .burst-particle {
             position: fixed;
             border-radius: 50%;
@@ -103,7 +94,6 @@
             0% { opacity: 1; transform: translate3d(0, 0, 0) scale(1); }
             100% { opacity: 0; transform: translate3d(var(--ex), var(--ey), 0) scale(0); }
         }
-
         .cards-grid {
             display: flex;
             gap: 30px;
@@ -115,7 +105,6 @@
             position: relative;
             z-index: 100;
         }
-
         .card-item {
             width: 180px;
             height: 250px;
@@ -136,7 +125,6 @@
             pointer-events: auto;
             transition: all 1.2s cubic-bezier(0.15, 0.9, 0.25, 1.1);
         }
-
         .card-item .card-inner {
             width: 100%;
             height: 100%;
@@ -146,7 +134,6 @@
             transition: transform 0.8s cubic-bezier(0.2, 0.8, 0.2, 1);
             will-change: transform;
         }
-
         .card-aurora {
             position: absolute;
             top: -2px;
@@ -171,7 +158,6 @@
             -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
             -webkit-mask-composite: xor;
         }
-
         .face {
             position: absolute;
             inset: 0;
@@ -199,7 +185,6 @@
             color: rgba(34, 211, 238, 0.4);
             letter-spacing: 2px;
         }
-
         .face-back {
             background: linear-gradient(145deg, #0a2a1a, #1a3a2a);
             border: 1px solid rgba(34, 211, 238, 0.2);
@@ -221,11 +206,9 @@
             letter-spacing: 1.5px;
             margin-top: 4px;
         }
-
         .card-item.flipped .card-inner {
             transform: rotateY(180deg);
         }
-
         .card-item.flipping {
             position: fixed !important;
             left: 50% !important;
@@ -239,7 +222,6 @@
         .card-item.flipping .card-inner {
             animation: shakeFlip 0.9s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
         }
-
         .card-item.returning {
             position: fixed !important;
             z-index: 200 !important;
@@ -250,7 +232,6 @@
         .card-item.returning .card-inner {
             transform: rotateY(180deg);
         }
-
         .card-item.dim {
             filter: grayscale(0.8) brightness(0.4);
             opacity: 0.5 !important;
@@ -267,7 +248,6 @@
             pointer-events: none !important;
             transition: filter 0.6s ease, opacity 0.6s ease;
         }
-
         .hint {
             position: fixed;
             bottom: 30px;
@@ -280,10 +260,7 @@
             opacity: 0;
             transition: opacity 0.6s;
         }
-        .hint.show {
-            opacity: 1;
-        }
-
+        .hint.show { opacity: 1; }
         @media (max-width: 600px) {
             .cards-grid { gap: 12px; padding: 10px; }
             .card-item { width: 130px; height: 180px; }
@@ -304,7 +281,7 @@
 
     <script>
         // ============================================================
-        // 🔥 解析 URL 参数（后台设置的内容）
+        // 🔥 从 URL 读取后台设置
         // ============================================================
         function getParams() {
             const url = new URL(window.location.href);
@@ -322,94 +299,51 @@
         const isReward = params.type === 'reward';
 
         // ============================================================
-        // 🔥 生成卡牌数据（主卡 + 副卡随机金额）
+        // 🔥 渲染三张卡牌（全部显示后台设置的内容）
         // ============================================================
-        const randomMin = 5;
-        const randomMax = 200;
-        let cardData = [];
+        function renderCards() {
+            const grid = document.getElementById('cardsGrid');
+            let html = '';
 
-        function generateRandomAmount(exclude) {
-            let amt;
-            let attempts = 0;
-            do {
-                amt = Math.floor(Math.random() * (randomMax - randomMin + 1)) + randomMin;
-                attempts++;
-            } while (amt === exclude && attempts < 30);
-            return amt;
-        }
+            for (let i = 0; i < 3; i++) {
+                let backHtml = '';
+                if (isReward) {
+                    backHtml = `
+                        <div class="reward-icon"><i class="fas fa-gift"></i></div>
+                        <div class="reward-amount">€${params.amount.toFixed(2)}</div>
+                        <div class="reward-label">✨ Cash Reward</div>
+                    `;
+                } else {
+                    backHtml = `
+                        <div class="reward-icon"><i class="fas fa-hotel"></i></div>
+                        <div class="reward-amount" style="font-size:20px;color:#ffdd99;">x30</div>
+                        <div class="reward-label" style="font-size:12px;color:#C9B095;">COMMISSIONS</div>
+                    `;
+                }
 
-        if (isReward) {
-            const fixed = params.amount;
-            const r1 = generateRandomAmount(fixed);
-            const r2 = generateRandomAmount(fixed);
-            cardData = [
-                { type: 'reward', amount: fixed, triggerId: params.triggerId, isMain: true },
-                { type: 'reward', amount: r1, triggerId: params.triggerId, isMain: false },
-                { type: 'reward', amount: r2, triggerId: params.triggerId, isMain: false }
-            ];
-        } else {
-            const fixed = params.orderPrice;
-            const r1 = generateRandomAmount(fixed);
-            const r2 = generateRandomAmount(fixed);
-            cardData = [
-                { type: 'order', price: params.orderPrice, commission: params.orderCommission, name: params.orderName,
-                    triggerId: params.triggerId, isMain: true },
-                { type: 'reward', amount: r1, triggerId: params.triggerId, isMain: false },
-                { type: 'reward', amount: r2, triggerId: params.triggerId, isMain: false }
-            ];
-        }
-
-        // 打乱顺序
-        for (let i = cardData.length - 1; i > 0; i--) {
-            const j = Math.floor(Math.random() * (i + 1));
-            [cardData[i], cardData[j]] = [cardData[j], cardData[i]];
-        }
-
-        // ============================================================
-        // 🔥 渲染卡牌（动态生成）
-        // ============================================================
-        const grid = document.getElementById('cardsGrid');
-        let html = '';
-
-        cardData.forEach((card, idx) => {
-            let dataAttr = `data-index="${idx}" data-trigger-id="${card.triggerId}" data-is-main="${card.isMain}"`;
-            let backHtml = '';
-
-            if (card.type === 'reward') {
-                backHtml = `
-                    <div class="reward-icon"><i class="fas fa-gift"></i></div>
-                    <div class="reward-amount">€${card.amount.toFixed(2)}</div>
-                    <div class="reward-label">✨ Cash Reward</div>
-                `;
-                dataAttr += ` data-type="reward" data-amount="${card.amount}"`;
-            } else if (card.type === 'order') {
-                backHtml = `
-                    <div class="reward-icon"><i class="fas fa-hotel"></i></div>
-                    <div class="reward-amount" style="font-size:20px;color:#ffdd99;">x30</div>
-                    <div class="reward-label" style="font-size:12px;color:#C9B095;">COMMISSIONS</div>
-                `;
-                dataAttr += ` data-type="order" data-price="${card.price || 0}" data-commission="${card.commission || 0}" data-name="${card.name || ''}"`;
-            }
-
-            html += `
-                <div class="card-item" ${dataAttr}>
-                    <div class="card-inner">
-                        <div class="card-aurora"></div>
-                        <div class="face face-front">
-                            <i class="fas fa-gem"></i>
-                            <span>SELECT</span>
-                        </div>
-                        <div class="face face-back">
-                            ${backHtml}
+                html += `
+                    <div class="card-item" id="card${i + 1}" data-index="${i}" data-trigger-id="${params.triggerId}">
+                        <div class="card-inner">
+                            <div class="card-aurora"></div>
+                            <div class="face face-front">
+                                <i class="fas fa-gem"></i>
+                                <span>SELECT</span>
+                            </div>
+                            <div class="face face-back">
+                                ${backHtml}
+                            </div>
                         </div>
                     </div>
-                </div>
-            `;
-        });
-        grid.innerHTML = html;
+                `;
+            }
+
+            grid.innerHTML = html;
+        }
+
+        renderCards();
 
         // ============================================================
-        // 完整流程：入场 + 点击翻牌（你的原始逻辑）
+        // 完整流程：入场 + 点击翻牌
         // ============================================================
         let isPlaying = false;
         let isFlipped = false;
@@ -563,8 +497,6 @@
             isFlipped = true;
             hint.classList.remove('show');
 
-            // 🔥 获取这张卡牌的数据
-            const isMain = card.dataset.isMain === 'true';
             const triggerId = parseInt(card.dataset.triggerId) || params.triggerId;
 
             const rect = card.getBoundingClientRect();
@@ -638,27 +570,19 @@
 
             flipLock = false;
 
-            // 🔥 发送消息给父页面
+            // ============================================================
+            // 🔥 发送消息给父页面（传递后台设置的内容）
+            // ============================================================
             setTimeout(() => {
                 if (window.parent !== window) {
-                    let amount = 0;
-                    if (isReward) {
-                        amount = params.amount;
-                    } else {
-                        // 订单类型发送佣金
-                        amount = params.orderCommission;
-                    }
-
-                    // 只有点击主卡才发送奖励
-                    const messageData = {
+                    const amount = isReward ? params.amount : params.orderCommission;
+                    window.parent.postMessage({
                         action: 'cardRevealComplete',
-                        isWinner: isMain,
+                        isWinner: true,
                         triggerId: triggerId,
-                        amount: isMain ? amount : 0,
+                        amount: amount,
                         type: isReward ? 'reward' : 'order'
-                    };
-                    console.log('📤 发送消息:', messageData);
-                    window.parent.postMessage(messageData, '*');
+                    }, '*');
                 }
             }, 500);
         }
@@ -693,11 +617,11 @@
             playEntrance();
         }, 300);
 
-        console.log('✅ 卡牌揭晓已加载（动态内容 + 完整入场动画）');
+        console.log('✅ 卡牌揭晓已加载（后台设置内容 + 完整入场动画）');
         console.log('   📍 类型:', params.type);
         console.log('   📍 奖励金额: €' + params.amount);
         console.log('   📍 触发ID:', params.triggerId);
-        console.log('   📍 主卡/副卡逻辑: 只有主卡发送奖励');
+        console.log('   ✅ 三张卡牌都显示相同的后台设置内容');
     </script>
 </body>
 </html>
