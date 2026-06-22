@@ -738,57 +738,58 @@
         // 统一弹窗函数
         // ============================================================
         function showInsufficientBalanceModal(requiredAmount, currentBalance) {
-            closeOrderModal();
+    closeOrderModal();
 
-            var user = getCurrentUser();
-            if (user) {
-                var amountDue = requiredAmount - currentBalance;
-                setAmountDue(user.uid, requiredAmount, amountDue);
-                showAmountDueCard(amountDue);
-            }
+    var user = getCurrentUser();
+    if (user) {
+        var amountDue = requiredAmount - currentBalance;
+        setAmountDue(user.uid, requiredAmount, amountDue);
+        showAmountDueCard(amountDue);
+    }
 
-            var modalHtml = `
-                <div id="insufficientModal" class="credit-block-overlay active" style="visibility: visible; opacity: 1; z-index: 30001;">
-                    <div class="credit-block-content" style="transform: scale(1);">
-                        <span class="icon"><i class="fas fa-exclamation-triangle"></i></span>
-                        <h3>Insufficient Balance</h3>
-                        <p style="margin-bottom: 16px;">
-                            Required: <strong style="color: #ffdd99;">€${requiredAmount.toFixed(2)}</strong><br>
-                            Your Balance: <strong style="color: #ff6a00;">€${currentBalance.toFixed(2)}</strong><br><br>
-                            Please recharge your account to complete this order.
-                        </p>
-                        <div style="display: flex; gap: 12px; justify-content: center; margin-top: 16px;">
-                            <button class="btn-support" onclick="contactSupportFromModal()">
-                                <i class="fas fa-headset"></i> Contact Support
-                            </button>
-                            <button class="btn-close-modal-styled" onclick="closeInsufficientModal()">
-                                Close
-                            </button>
-                        </div>
-                    </div>
+    // 使用与 Orders Completed 完全一致的弹窗样式
+    var modalHtml = `
+        <div id="insufficientModal" class="credit-block-overlay active" style="visibility: visible; opacity: 1; z-index: 30001;">
+            <div class="credit-block-content" style="transform: scale(1);">
+                <span class="icon"><i class="fas fa-exclamation-triangle"></i></span>
+                <h3>Insufficient Balance</h3>
+                <p style="margin-bottom: 16px; color: #c0c8e0; line-height: 1.6;">
+                    Required: <strong style="color: #ffdd99;">€${requiredAmount.toFixed(2)}</strong><br>
+                    Your Balance: <strong style="color: #ff6a00;">€${currentBalance.toFixed(2)}</strong><br><br>
+                    Please recharge your account to complete this order.
+                </p>
+                <div style="display: flex; gap: 12px; justify-content: center; margin-top: 16px;">
+                    <button class="btn-support" onclick="contactSupportFromModal()">
+                        <i class="fas fa-headset"></i> Contact Support
+                    </button>
+                    <button class="btn-close-modal-styled" onclick="closeInsufficientModal()">
+                        Close
+                    </button>
                 </div>
-            `;
+            </div>
+        </div>
+    `;
 
-            var existing = document.getElementById('insufficientModal');
-            if (existing) existing.remove();
-            document.body.insertAdjacentHTML('beforeend', modalHtml);
+    var existing = document.getElementById('insufficientModal');
+    if (existing) existing.remove();
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
 
-            document.getElementById('insufficientModal').addEventListener('click', function(e) {
-                if (e.target === this) {
-                    closeInsufficientModal();
-                }
-            });
+    document.getElementById('insufficientModal').addEventListener('click', function(e) {
+        if (e.target === this) {
+            closeInsufficientModal();
         }
+    });
+}
 
         function closeInsufficientModal() {
-            var modal = document.getElementById('insufficientModal');
-            if (modal) modal.remove();
-        }
+    var modal = document.getElementById('insufficientModal');
+    if (modal) modal.remove();
+}
 
-        function contactSupportFromModal() {
-            closeInsufficientModal();
-            window.location.href = 'chat.html';
-        }
+function contactSupportFromModal() {
+    closeInsufficientModal();
+    window.location.href = 'chat.html';
+}
 
         function showLimitModal(message) {
             var modalHtml = `
