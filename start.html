@@ -1491,12 +1491,28 @@ async function handleTriggerOrder(modalContent) {
     var ordersDataResult = await sb.from('order_history').select('id', { count: 'exact' }).eq('uid', user.uid);
     var currentCount = ordersDataResult.data?.length || 0;
 
-    // 🔥 获取用户 Round 状态
-    await syncUserData();
-    const freshUser = getCurrentUser();
-    const isPremium = freshUser?.isPremium || false;
-    const currentRound = freshUser?.currentRound || 0;
-    const roundOrdersCount = freshUser?.roundOrdersCount || 0;
+    // 🔥 强制从数据库获取最新的 Round 状态
+    const { data: freshUserData, error: freshError } = await sb
+        .from('users')
+        .select('is_premium, current_round, round_orders_count')
+        .eq('uid', user.uid)
+        .single();
+
+    if (freshError) {
+        console.error('获取用户状态失败:', freshError);
+        showToast('获取用户状态失败，请刷新页面重试', 'error');
+        return;
+    }
+
+    const isPremium = freshUserData?.is_premium || false;
+    const currentRound = freshUserData?.current_round || 0;
+    const roundOrdersCount = freshUserData?.round_orders_count || 0;
+
+    // 同步到 localStorage
+    user.isPremium = isPremium;
+    user.currentRound = currentRound;
+    user.roundOrdersCount = roundOrdersCount;
+    localStorage.setItem('currentUser', JSON.stringify(user));
 
     // 判断是否使用体验金做单
     var freshUserResult2 = await sb.from('users').select('balance, trial_bonus_amount').eq('uid', user.uid).single();
@@ -1504,50 +1520,30 @@ async function handleTriggerOrder(modalContent) {
     var trialBalance2 = freshUserResult2.data?.trial_bonus_amount || 0;
     var isUsingTrial = (currentBalance2 < 50 && trialBalance2 > 0);
 
-    // 🔥 计算订单上限
+    // 🔥 计算订单上限（基于 Round，用户看不到 Round 字样）
     var maxOrders = 30; // 默认 Trial 用户最多30单
     if (isPremium) {
-        // 正式用户最多60单（2 Rounds）
-        maxOrders = 60;
+        if (currentRound === 1) {
+            maxOrders = 30;   // Round 1：总订单最多30
+        } else if (currentRound === 2) {
+            maxOrders = 60;   // Round 2：总订单最多60
+        } else {
+            maxOrders = 30;
+        }
     }
+
+    console.log('🔍 调试信息: currentCount=' + currentCount + ', maxOrders=' + maxOrders + ', currentRound=' + currentRound + ', isPremium=' + isPremium);
 
     // 检查是否达到订单上限
     if (currentCount >= maxOrders) {
-        // 检查是否完成了所有 Round
-        var allOrdersResult = await sb.from('order_history').select('commission').eq('uid', user.uid);
-        var totalCommission = allOrdersResult.data?.reduce(function(sum, o) { return sum + (o.commission || 0); }, 0) || 0;
-        
-        // 🔥 完成30单后，只移除体验金，余额不变
-        if (isUsingTrial && trialBalance2 > 0) {
-            // 只扣除体验金，不修改余额
-            await sb.from('users').update({ 
-                trial_bonus_amount: 0
-            }).eq('uid', user.uid);
-            
-            // 在 deposits 表中记录体验金扣除
-            await sb.from('deposits').insert([{
-                uid: user.uid,
-                username: user.username || user.uid,
-                amount: trialBalance2,
-                type: 'trial_bonus_deducted',
-                description: 'Trial Bonus Deducted (30 orders completed)',
-                created_at: new Date().toISOString()
-            }]);
-            
-            // 更新本地存储
-            user.trialBonusAmount = 0;
-            localStorage.setItem('currentUser', JSON.stringify(user));
-            
-            console.log('✅ Trial Bonus Deducted，余额保持不变: €' + currentBalance2.toFixed(2));
-        }
-        
         var message = 'Your orders are completed, please contact user support to reset your working account.';
-        if (isPremium && currentRound === 2 && roundOrdersCount >= 30) {
-            message = '🎉 You have completed 2 Rounds (60 orders)! You can now claim Sign In Bonus.';
+        
+        if (isPremium && currentRound === 1 && currentCount >= 30) {
+            message = '✅ You have completed 30 orders! Please contact support to continue.';
+        } else if (isPremium && currentRound === 2 && currentCount >= 60) {
+            message = '🎉 You have completed all orders! You can now claim Sign In Bonus.';
         } else if (!isPremium && currentCount >= 30) {
             message = '✅ You have completed 30 orders! You can now withdraw.';
-        } else {
-            message = 'Your orders are completed (Total: ' + currentCount + ' orders). Please contact user support to reset your working account.';
         }
         
         showLimitModal(message);
@@ -1590,7 +1586,6 @@ async function handleTriggerOrder(modalContent) {
             '<div class="order-code"><i class="fas fa-tag"></i> ' +
             (currentOrder.displayOrderCode || currentOrder.orderCode) + '</div>' +
             '<div class="order-details">' +
-            // 🔥 Order Type 行（如果有）
             (orderTypeDisplay && orderTypeDisplay !== '订单' ? '<div class="detail-row"><span class="detail-label">Order Type</span><span class="detail-value" style="color:#C9B095;">' + orderTypeDisplay + '</span></div>' : '') +
             '<div class="detail-row"><span class="detail-label">Order Price</span><span class="detail-value price">€' +
             (currentOrder.price || 0).toFixed(2) +
@@ -1701,7 +1696,7 @@ async function handleTriggerOrder(modalContent) {
     var commissionPercent;
     if (isUsingTrial) {
         var trialConfig = await getTrialConfig();
-        commissionPercent = trialConfig.commissionRate; // 直接使用配置的百分比值
+        commissionPercent = trialConfig.commissionRate;
     } else {
         var rate = await getUserCommissionRate();
         commissionPercent = rate * 100;
@@ -1730,8 +1725,7 @@ async function handleTriggerOrder(modalContent) {
         .join('') +
         '</div><div class="rating-text-premium">Please select 1 to 5 stars to continue.</div><div id="progressContainer"><div class="progress-bar-bg"><div class="progress-bar-fill" id="progressBar"></div></div><div class="progress-text" id="progressText"></div></div><div class="modal-buttons"><button class="btn-submit" onclick="submitOrder()">Submit Order</button><button class="btn-close-modal" onclick="closeOrderModal()">Close</button></div>';
 
-    // 🔥 普通订单：不显示 Amount Due 卡片（余额检查在 submitOrder 中处理）
-    // 隐藏任何可能存在的 Amount Due
+    // 🔥 普通订单：不显示 Amount Due 卡片
     setAmountDue(user.uid, 0, 0);
     hideAmountDueCard();
 
