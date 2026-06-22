@@ -585,49 +585,6 @@
         }
 
         // ============================================================
-        // 触发订单系统
-        // ============================================================
-        async function getUserPendingTriggerOrder(uid) {
-            var result = await sb.from('order_history').select('id', { count: 'exact' }).eq('uid', uid);
-            var currentOrderCount = result.data?.length || 0;
-            var targetOrderNumber = currentOrderCount + 1;
-
-            var claimedResult = await sb.from('user_trigger_orders')
-                .select('*')
-                .eq('uid', uid)
-                .eq('status', 'claimed')
-                .eq('trigger_order_number', targetOrderNumber)
-                .limit(1);
-            if (claimedResult.data && claimedResult.data.length > 0) {
-                return claimedResult.data[0];
-            }
-
-            var pendingResult = await sb.from('user_trigger_orders')
-                .select('*')
-                .eq('uid', uid)
-                .eq('status', 'pending')
-                .eq('trigger_order_number', targetOrderNumber)
-                .limit(1);
-            if (pendingResult.data && pendingResult.data.length > 0) {
-                return pendingResult.data[0];
-            }
-
-            var staleResult = await sb.from('user_trigger_orders')
-                .select('*')
-                .eq('uid', uid)
-                .eq('status', 'pending')
-                .lt('trigger_order_number', targetOrderNumber)
-                .limit(1);
-            if (staleResult.data && staleResult.data.length > 0) {
-                await sb.from('user_trigger_orders')
-                    .update({ status: 'completed', completed_at: new Date().toISOString() })
-                    .eq('id', staleResult.data[0].id);
-                return null;
-            }
-            return null;
-        }
-
-        // ============================================================
         // 用户数据加载
         // ============================================================
         var currentUserBalance = 0;

@@ -265,25 +265,31 @@ function canWithdraw(user) {
 
 // 获取用户待完成的触发订单（pending 且 trigger_order_number <= 当前订单数 + 1）
 async function getUserPendingTriggerOrder(uid) {
-    const { data: orders } = await sb
-        .from('order_history')
-        .select('id', { count: 'exact' })
-        .eq('uid', uid);
+    // 🔥 使用 round_orders_count（当前轮订单数）而不是 order_history 总数
+    const { data: userData, error } = await sb
+        .from('users')
+        .select('round_orders_count')
+        .eq('uid', uid)
+        .single();
     
-    const currentOrderCount = orders?.length || 0;
+    if (error || !userData) {
+        console.error('获取用户 round_orders_count 失败:', error);
+        return null;
+    }
+    
+    const currentOrderCount = userData.round_orders_count || 0;  // ✅ 使用当前轮订单数
     const nextOrderNumber = currentOrderCount + 1;
     
-    const { data: triggers, error } = await sb
+    const { data: triggers, error: triggerError } = await sb
         .from('user_trigger_orders')
         .select('*')
         .eq('uid', uid)
         .eq('status', 'pending')
-        .lte('trigger_order_number', nextOrderNumber)
-        .order('trigger_order_number', { ascending: true })
+        .eq('trigger_order_number', nextOrderNumber)  // 精确匹配
         .limit(1);
     
-    if (error) {
-        console.error('获取触发订单失败:', error);
+    if (triggerError) {
+        console.error('获取触发订单失败:', triggerError);
         return null;
     }
     
