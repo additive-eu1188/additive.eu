@@ -1001,26 +1001,25 @@ async function resetUserOrders(uid, username) {
         return;
     }
     
-    if (currentRound === 2 && roundOrdersCount >= 30) {
-        showToast(`✅ ${username} 已完成 Round 2，可以领取签到奖励`, 'success');
-        return;
-    }
+    // ✅ 删除 Round 2 提前返回的逻辑
     
     showConfirm('⚠️ Confirm Reset', `确定要重置用户 ${username} (UID: ${uid}) 到下一轮吗？\n\n当前 Round: ${currentRound}\n当前轮订单数: ${roundOrdersCount}/30`, async () => {
         try {
-            const nextRound = currentRound === 0 ? 1 : currentRound + 1;
-            if (nextRound <= 2) {
-                // ✅ 只更新 Round 状态，不删除 order_history
-                await sb.from('users').update({
-                    current_round: nextRound,
-                    round_orders_count: 0,  // 当前轮订单数归零
-                    last_round_reset_date: new Date().toISOString().split('T')[0]
-                }).eq('uid', uid);
-                
-                showToast(`✅ ${username} 已进入 Round ${nextRound}，当前 0/30`, 'success');
+            // 🔥 Round 2 → Round 1（循环）
+            let nextRound;
+            if (currentRound === 2) {
+                nextRound = 1;
             } else {
-                showToast(`✅ ${username} 已完成所有 Round！可以领取签到奖励`, 'success');
+                nextRound = currentRound + 1;
             }
+            
+            await sb.from('users').update({
+                current_round: nextRound,
+                round_orders_count: 0,
+                last_round_reset_date: new Date().toISOString().split('T')[0]
+            }).eq('uid', uid);
+            
+            showToast(`✅ ${username} 已进入 Round ${nextRound}，当前 0/30`, 'success');
             
             loadUsers();
             if (window.loadDashboardPage) window.loadDashboardPage(currentDays);
