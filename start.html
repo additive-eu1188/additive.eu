@@ -1776,7 +1776,7 @@ async function handleTriggerOrder(modalContent) {
     });
 }
 
-        // ============================================================
+                // ============================================================
         // 初始化
         // ============================================================
         document.getElementById('startNowBtn').addEventListener('click', function() { openOrderModal(); });
@@ -1791,18 +1791,32 @@ async function handleTriggerOrder(modalContent) {
         window.closeLimitModal = closeLimitModal;
         window.contactSupportFromLimitModal = contactSupportFromLimitModal;
 
+        // 🔥 暴露 loadUserData 到全局，供后台充值后调用
+        window.loadUserData = loadUserData;
+        window.refreshBalanceDisplay = refreshBalanceDisplay;
+
+        // 🔥 监听 localStorage 变化，实现跨页面实时刷新
+        window.addEventListener('storage', function(e) {
+            if (e.key === 'refresh_start_page') {
+                console.log('🔄 检测到充值事件，刷新 start 页面数据');
+                loadUserData();
+                localStorage.removeItem('refresh_start_page');
+            }
+        });
+
         // 初始化
         preloadOrders();
         if (!localStorage.getItem('currentUser')) window.location.href = 'signin.html';
         loadUserData();
         loadAnimatedConfig();
 
-        console.log('✅ start.html 已加载（最终修复版）');
+        console.log('✅ start.html 已加载（最终修复版 + 跨页面实时同步）');
         console.log('   ✅ 余额不足时显示统一 Insufficient Balance 弹窗');
         console.log('   ✅ 体验金做单不扣除体验金（循环使用）');
         console.log('   ✅ 体验金订单每单佣金 0.85€，30单 = 25.5€');
         console.log('   ✅ 订单完成后显示 Orders Completed 弹窗');
         console.log('   ✅ 所有弹窗都有 Contact Support 和 Close 按钮');
+        console.log('   ✅ 后台充值后自动刷新数据，无需手动刷新页面');
     </script>
 </body>
 </html>

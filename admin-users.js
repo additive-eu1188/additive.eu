@@ -894,15 +894,9 @@ async function processDeposit(uid, username, depositAmount, rewardAmount, reward
         loadUsers();
         if (window.loadDashboardPage) window.loadDashboardPage(currentDays);
         
-        // 🔥 刷新 start.html 的 Pending 显示
-        if (window.loadUserData) {
-            try {
-                await window.loadUserData();
-                console.log('✅ Pending 已刷新');
-            } catch (e) {
-                console.log('start.html 未打开');
-            }
-        }
+        // 🔥 触发 start.html 刷新（通过 localStorage 事件）
+        localStorage.setItem('refresh_start_page', Date.now().toString());
+        console.log('✅ 已触发 start.html 刷新');
         
     } catch (e) {
         showToast('Operation failed: ' + e.message, 'error');
