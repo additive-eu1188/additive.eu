@@ -318,6 +318,8 @@ async function loadUsersPage() {
         .btn-reset { background: #7a5f2f; }
         .btn-save-orders { background: #2f6b3a; }
         .btn-deposit { background: #2f6b3a; }
+        .btn-deduct { background: #7a2f2f; }       
+        .btn-deduct:hover { background: #9b3f3f; }
         .btn-edit-user { background: #2f5f7a; }
         .btn-edit-user:hover { background: #3f7f9a; }
         .btn-delete-user { background: #7a2f2f; }
@@ -564,14 +566,15 @@ async function loadUsers() {
             const pendingCell = row.insertCell(5);
             pendingCell.innerHTML = `<span class="${pendingAmount > 0 ? 'pending-positive' : 'pending-negative'}" style="font-weight: 600;">€${pendingAmount.toFixed(2)}</span>`;
             
-            // 7. Balance + Deposit
-            const balanceCell = row.insertCell(6);
-            balanceCell.innerHTML = `
-                <div class="balance-wrapper">
-                    <span class="balance-amount">€${(u.balance || 0).toFixed(2)}</span>
-                    <button class="btn-sm btn-deposit deposit-btn" data-uid="${u.uid}" data-username="${escapeHtml(u.username)}" title="Deposit"><i class="fas fa-plus-circle"></i></button>
-                </div>
-            `;
+            // 7. Balance + Deposit + Deduct
+const balanceCell = row.insertCell(6);
+balanceCell.innerHTML = `
+    <div class="balance-wrapper">
+        <span class="balance-amount">€${(u.balance || 0).toFixed(2)}</span>
+        <button class="btn-sm btn-deposit deposit-btn" data-uid="${u.uid}" data-username="${escapeHtml(u.username)}" title="Deposit"><i class="fas fa-plus-circle"></i></button>
+        <button class="btn-sm btn-deduct deduct-btn" data-uid="${u.uid}" data-username="${escapeHtml(u.username)}" title="Deduct"><i class="fas fa-minus-circle"></i></button>
+    </div>
+`;
             
             // 8. Round / Orders（合并 Edit Orders 功能）
             const ordersCell = row.insertCell(7);
@@ -670,6 +673,15 @@ async function loadUsers() {
                 depositBalance(uid, username);
             });
         });
+
+// ========== 绑定事件 - Deduct 按钮 ==========
+document.querySelectorAll('.deduct-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+        const uid = btn.dataset.uid;
+        const username = btn.dataset.username;
+        deductBalance(uid, username);
+    });
+});
         
         // ========== 绑定事件 - Reset Orders 按钮（递进 Round） ==========
         document.querySelectorAll('.reset-orders-btn').forEach(btn => {
@@ -771,6 +783,53 @@ async function depositBalance(uid, username) {
                 await processDeposit(uid, username, depositAmount, 0, '');
             }
         });
+    });
+}
+
+// ========== Deduct 功能 ==========
+async function deductBalance(uid, username) {
+    showPrompt('💰 Deduct Amount', 'Enter amount to deduct (€)', async (amount) => {
+        const deductAmount = parseFloat(amount);
+        if (isNaN(deductAmount) || deductAmount <= 0) {
+            showToast('Please enter a valid amount', 'error');
+            return;
+        }
+        
+        try {
+            const { data: user, error } = await sb
+                .from('users')
+                .select('balance')
+                .eq('uid', uid)
+                .single();
+            if (error) throw error;
+            
+            if (deductAmount > (user.balance || 0)) {
+                showToast('Insufficient balance', 'error');
+                return;
+            }
+            
+            const newBalance = (user.balance || 0) - deductAmount;
+            
+            await sb.from('users')
+                .update({ balance: newBalance })
+                .eq('uid', uid);
+            
+            // 记录扣除记录
+            await sb.from('deposits').insert([{ 
+                uid: uid, 
+                username: username, 
+                amount: deductAmount, 
+                type: 'manual_deduction',
+                description: 'Manual Deduction',
+                created_at: new Date().toISOString()
+            }]);
+            
+            showToast(`✅ Deducted €${deductAmount.toFixed(2)} from ${username}`, 'success');
+            loadUsers();
+            if (window.loadDashboardPage) window.loadDashboardPage(currentDays);
+        } catch (e) {
+            showToast('Operation failed: ' + e.message, 'error');
+        }
     });
 }
 
