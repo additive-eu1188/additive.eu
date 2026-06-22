@@ -7,6 +7,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
     <style>
+        /* ===== 你的原始样式（完全保留） ===== */
         * {
             margin: 0;
             padding: 0;
@@ -324,7 +325,7 @@
 
     <script>
         // ============================================================
-        // 🔥 从 URL 读取后台设置（逻辑来自备份文件）
+        // 🔥 1. 从 URL 读取后台设置（备份逻辑）
         // ============================================================
         function getParams() {
             const url = new URL(window.location.href);
@@ -342,7 +343,7 @@
         const isReward = params.type === 'reward';
 
         // ============================================================
-        // 🔥 生成卡牌数据（只有一张主卡 isMain: true）
+        // 🔥 2. 生成卡牌数据（备份逻辑：只有一张主卡 isMain: true）
         // ============================================================
         const randomMin = 5;
         const randomMax = 200;
@@ -379,14 +380,14 @@
             ];
         }
 
-        // 打乱顺序
+        // 打乱顺序（备份逻辑）
         for (let i = cardData.length - 1; i > 0; i--) {
             const j = Math.floor(Math.random() * (i + 1));
             [cardData[i], cardData[j]] = [cardData[j], cardData[i]];
         }
 
         // ============================================================
-        // 🔥 渲染卡牌
+        // 🔥 3. 渲染卡牌（备份逻辑）
         // ============================================================
         const grid = document.getElementById('cardsGrid');
         let html = '';
@@ -431,7 +432,7 @@
         grid.innerHTML = html;
 
         // ============================================================
-        // 完整流程：入场 + 点击翻牌（你的精致动画 + 备份逻辑）
+        // 🔥 4. 精致入场 + 点击动画（你的原始版本）
         // ============================================================
         let isPlaying = false;
         let isFlipped = false;
@@ -585,9 +586,12 @@
             isFlipped = true;
             hint.classList.remove('show');
 
-            // 🔥 获取卡牌数据（逻辑来自备份文件）
+            // 🔥 核心：从卡牌上读取 isMain 和 triggerId（备份逻辑）
             const isMain = card.dataset.isMain === 'true';
             const triggerId = parseInt(card.dataset.triggerId) || params.triggerId;
+
+            // 调试日志
+            console.log('🃏 点击卡牌 - isMain:', isMain, 'triggerId:', triggerId);
 
             const rect = card.getBoundingClientRect();
             const cx = window.innerWidth / 2 - rect.width / 2;
@@ -652,7 +656,7 @@
             card.style.transition = 'none';
             card.classList.add('flipped');
 
-            // 🔥 其他卡牌依次翻开，保持灰色（逻辑来自备份文件）
+            // 🔥 其他卡牌依次翻开，并保持灰色（备份逻辑）
             for (let i = 0; i < otherCards.length; i++) {
                 await sleep(350);
                 otherCards[i].classList.remove('dim-other');
@@ -663,7 +667,7 @@
             flipLock = false;
 
             // ============================================================
-            // 🔥 发送消息给父页面（只有主卡发送奖励，逻辑来自备份文件）
+            // 🔥 发送消息给父页面（备份逻辑：只有主卡发送奖励）
             // ============================================================
             setTimeout(() => {
                 if (window.parent !== window) {
@@ -717,14 +721,14 @@
             playEntrance();
         }, 300);
 
-        console.log('✅ 卡牌揭晓已加载（精致动画 + 备份逻辑）');
+        console.log('✅ 最终修复版卡牌揭晓已加载');
         console.log('   📍 类型:', params.type);
         console.log('   📍 主卡奖励: €' + (isReward ? params.amount : params.orderCommission));
         console.log('   📍 触发ID:', params.triggerId);
         console.log('   ✅ 副卡随机金额永远不等于主卡金额');
         console.log('   ✅ 只有主卡发送 isWinner: true');
         console.log('   ✅ 入场动画: 凝聚→卡牌出现→炸开→星空闪烁');
-        console.log('   ✅ 点击动画: 放大1.8倍→摇晃翻牌→粒子爆炸→归位→其他翻开');
+        console.log('   ✅ 点击动画: 放大1.8倍→摇晃翻牌→粒子爆炸→归位→其他翻开灰色');
     </script>
 </body>
 </html>
