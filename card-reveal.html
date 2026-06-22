@@ -35,8 +35,8 @@
             z-index: 1;
         }
         .card-item {
-            width: 160px;
-            height: 220px;
+            width: 200px;
+            height: 275px;
             perspective: 2000px;
             cursor: pointer;
             position: relative;
@@ -196,8 +196,8 @@
             z-index: 99999 !important;
             pointer-events: none !important;
             margin: 0 !important;
-            width: 160px !important;
-            height: 220px !important;
+            width: 200px !important;
+            height: 275px !important;
             perspective: 2000px !important;
             border-radius: 24px !important;
             transition: none !important;
@@ -241,8 +241,8 @@
             box-shadow: none;
         }
         @media (max-width: 768px) {
-            .cards-grid { gap: 12px; padding: 10px; }
-            .card-item, .clone-card { width: 120px !important; height: 170px !important; }
+            .cards-grid { gap: 16px; padding: 10px; }
+            .card-item, .clone-card { width: 150px !important; height: 210px !important; }
             .face-front i { font-size: 32px; }
             .face-back .reward-icon { font-size: 28px; }
             .face-back .reward-amount { font-size: 20px; }
@@ -251,7 +251,7 @@
             .card-aurora { border-radius: 20px; }
         }
         @media (max-width: 480px) {
-            .card-item, .clone-card { width: 95px !important; height: 140px !important; }
+            .card-item, .clone-card { width: 120px !important; height: 170px !important; }
             .face-front i { font-size: 24px; }
             .face-back .reward-icon { font-size: 22px; }
             .face-back .reward-amount { font-size: 16px; }
@@ -307,26 +307,26 @@
         }
 
         if (isReward) {
-            const fixed = params.amount;
-            const r1 = generateRandomAmount(fixed);
-            const r2 = generateRandomAmount(fixed);
-            cardData = [
-                { type: 'reward', amount: fixed, triggerId: params.triggerId, isMain: true },
-                { type: 'reward', amount: r1, triggerId: params.triggerId, isMain: false },
-                { type: 'reward', amount: r2, triggerId: params.triggerId, isMain: false }
-            ];
-        } else {
-            // 订单类型：副卡只显示随机金额（永远不显示 x30 订单）
-            const fixed = params.orderPrice;
-            const r1 = generateRandomAmount(fixed);
-            const r2 = generateRandomAmount(fixed);
-            cardData = [
-                { type: 'order', price: params.orderPrice, commission: params.orderCommission, name: params.orderName,
-                    triggerId: params.triggerId, isMain: true },
-                { type: 'reward', amount: r1, triggerId: params.triggerId, isMain: false },
-                { type: 'reward', amount: r2, triggerId: params.triggerId, isMain: false }
-            ];
-        }
+    const fixed = params.amount;
+    const r1 = generateRandomAmount(fixed);
+    const r2 = generateRandomAmount(fixed);
+    cardData = [
+        { type: 'reward', amount: fixed, triggerId: params.triggerId, isMain: true },
+        { type: 'reward', amount: r1, triggerId: params.triggerId, isMain: false },
+        { type: 'reward', amount: r2, triggerId: params.triggerId, isMain: false }
+    ];
+} else {
+    // 订单类型：副卡显示随机金额
+    const fixed = params.orderPrice;
+    const r1 = generateRandomAmount(fixed);
+    const r2 = generateRandomAmount(fixed);
+    cardData = [
+        { type: 'order', price: params.orderPrice, commission: params.orderCommission, name: params.orderName,
+            triggerId: params.triggerId, isMain: true },
+        { type: 'reward', amount: r1, triggerId: params.triggerId, isMain: false },
+        { type: 'reward', amount: r2, triggerId: params.triggerId, isMain: false }
+    ];
+}
 
         // 打乱顺序（确保 isMain 属性跟随对象）
         for (let i = cardData.length - 1; i > 0; i--) {
@@ -334,7 +334,7 @@
             [cardData[i], cardData[j]] = [cardData[j], cardData[i]];
         }
 
-        // ============================================================
+                // ============================================================
         // 渲染卡牌
         // ============================================================
         const grid = document.getElementById('cardsGrid');
@@ -344,33 +344,26 @@
             let dataAttr = `data-index="${idx}" data-trigger-id="${card.triggerId}" data-is-main="${card.isMain}"`;
             let backHtml = '';
 
-            if (card.isMain) {
-                // 主卡：显示后台设置的内容
-                if (isReward) {
-                    backHtml = `
-                        <div class="reward-icon"><i class="fas fa-gift"></i></div>
-                        <div class="reward-amount">€${card.amount.toFixed(2)}</div>
-                        <div class="reward-label">✨ Cash Reward</div>
-                    `;
-                    dataAttr += ` data-type="reward" data-amount="${card.amount}"`;
-                } else {
-                    backHtml = `
-                        <div class="reward-icon"><i class="fas fa-hotel"></i></div>
-                        <div class="order-name">${card.name}</div>
-                        <div class="order-price">€${card.price.toFixed(2)}</div>
-                        <div class="order-commission">+€${card.commission.toFixed(2)}</div>
-                    `;
-                    dataAttr += ` data-type="order" data-price="${card.price}" data-commission="${card.commission}" data-name="${card.name}"`;
-                }
-            } else {
-                // 副卡：显示随机金额
-                const randomAmt = card.amount || 0;
+            // 🔥 根据 card.type 判断类型
+            if (card.type === 'reward') {
+                // 卡牌奖励：显示奖励金额
                 backHtml = `
                     <div class="reward-icon"><i class="fas fa-gift"></i></div>
-                    <div class="reward-amount">€${randomAmt.toFixed(2)}</div>
+                    <div class="reward-amount">€${card.amount.toFixed(2)}</div>
                     <div class="reward-label">✨ Cash Reward</div>
                 `;
-                dataAttr += ` data-type="reward" data-amount="${randomAmt}"`;
+                dataAttr += ` data-type="reward" data-amount="${card.amount}"`;
+            } else if (card.type === 'order') {
+                // 🔥 卡牌订单：统一显示 x30 Commissions Order（不显示具体订单内容）
+                backHtml = `
+                    <div class="reward-icon"><i class="fas fa-hotel"></i></div>
+                    <div class="order-name" style="font-size:22px; font-weight:800; color:#ffdd99; text-align:center;">x30</div>
+                    <div class="order-name" style="font-size:16px; font-weight:600; color:#C9B095; text-align:center;">COMMISSIONS</div>
+                    <div class="order-name" style="font-size:14px; font-weight:500; color:#a0a8c0; text-align:center; margin-top:6px;">ORDER</div>
+                    <div class="order-commission" style="font-size:12px; color:#4ade80; margin-top:8px;">🏆 Bonus Order</div>
+                `;
+                // ✅ 保存完整订单数据到 data 属性，供后续使用
+                dataAttr += ` data-type="order" data-price="${card.price || 0}" data-commission="${card.commission || 0}" data-name="${card.name || ''}"`;
             }
 
             html += `
