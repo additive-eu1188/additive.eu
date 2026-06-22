@@ -643,15 +643,15 @@
             if (canClaim) {
                 claimBtn.classList.remove('disabled');
                 claimBtn.disabled = false;
-                document.getElementById('claimWarning').innerHTML = '点击领取签到奖励';
+                document.getElementById('claimWarning').innerHTML = 'Claim Sign In Bonus';
             } else {
                 claimBtn.classList.add('disabled');
                 claimBtn.disabled = true;
                 if (userOrderCount < 30) {
                     document.getElementById('claimWarning').innerHTML =
-                        `需要完成 30 单才能领取奖励 (当前 ${userOrderCount}/30)`;
+                        `Complete 60 orders to claim Sign In Bonus (当前 ${userOrderCount}/30)`;
                 } else if (hasClaimed) {
-                    document.getElementById('claimWarning').innerHTML = '今日已领取，明天再来吧';
+                    document.getElementById('claimWarning').innerHTML = 'You have claimed your Sign In Bonus today, Come back tomorrow!';
                 } else {
                     document.getElementById('claimWarning').innerHTML = '已完成所有签到，太棒了！';
                 }
