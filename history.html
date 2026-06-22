@@ -363,7 +363,8 @@
 }
 else if (d.type === 'trial_bonus_deducted') { 
     typeName = 'Trial Bonus Deducted'; 
-    icon = 'fas fa-minus-circle'; 
+    icon = 'fas fa-minus-circle';
+    d.amount = -Math.abs(d.amount);  // 强制为负数，显示红色和 -
 }
 else { 
     typeName = d.type || 'Transaction'; 
