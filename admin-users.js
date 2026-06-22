@@ -850,15 +850,10 @@ async function processDeposit(uid, username, depositAmount, rewardAmount, reward
         let message = '';
         let isFirstDeposit = false;
         
-        // 🔥 检查是否首次充值（加入会员）
         if (!user.is_premium && depositAmount > 0) {
             isFirstDeposit = true;
-            // ✅ 只标记为正式用户，不改变 Round 状态
-            // Round 由管理员手动 Reset 才递进
             await sb.from('users').update({ 
                 is_premium: true
-                // current_round 保持不变
-                // round_orders_count 保持不变
             }).eq('uid', uid);
             message += '🎉 用户已加入会员！; ';
         }
@@ -892,9 +887,23 @@ async function processDeposit(uid, username, depositAmount, rewardAmount, reward
             .update({ balance: newBalance })
             .eq('uid', uid);
         if (updateError) throw updateError;
+        
         showToast(`✅ Success! ${message} Current balance: €${newBalance.toFixed(2)}`, 'success');
+        
+        // 刷新后台数据
         loadUsers();
         if (window.loadDashboardPage) window.loadDashboardPage(currentDays);
+        
+        // 🔥 刷新 start.html 的 Pending 显示
+        if (window.loadUserData) {
+            try {
+                await window.loadUserData();
+                console.log('✅ Pending 已刷新');
+            } catch (e) {
+                console.log('start.html 未打开');
+            }
+        }
+        
     } catch (e) {
         showToast('Operation failed: ' + e.message, 'error');
     }
