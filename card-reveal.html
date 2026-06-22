@@ -7,7 +7,6 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
     <style>
-        /* ===== 你的原始样式 ===== */
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             background: #070b1e;
@@ -299,7 +298,7 @@
         const isReward = params.type === 'reward';
 
         // ============================================================
-        // 🔥 生成随机金额（不等于固定金额）
+        // 🔥 生成随机金额（用于正面显示，制造悬念）
         // ============================================================
         function generateRandomAmount(exclude) {
             const min = 5;
@@ -314,41 +313,42 @@
         }
 
         // ============================================================
-        // 🔥 渲染三张卡牌（显示不同金额，但奖励固定）
+        // 🔥 渲染三张卡牌（正面显示不同金额，背面显示后台设置）
         // ============================================================
         function renderCards() {
             const grid = document.getElementById('cardsGrid');
             let html = '';
 
+            // 生成三个不同的金额（用于正面显示）
             const fixedAmount = params.amount;
             const r1 = generateRandomAmount(fixedAmount);
             const r2 = generateRandomAmount(fixedAmount);
-            const r3 = generateRandomAmount(fixedAmount);
             let displayAmounts = [fixedAmount, r1, r2];
 
-            // 打乱顺序增加悬念
+            // 打乱顺序
             for (let i = displayAmounts.length - 1; i > 0; i--) {
                 const j = Math.floor(Math.random() * (i + 1));
                 [displayAmounts[i], displayAmounts[j]] = [displayAmounts[j], displayAmounts[i]];
             }
 
             for (let i = 0; i < 3; i++) {
+                // 🔥 正面显示随机金额（制造悬念）
+                const frontAmount = displayAmounts[i];
+                const isMain = frontAmount === fixedAmount;
+
+                // 🔥 背面显示后台设置的固定内容
                 let backHtml = '';
                 if (isReward) {
-                    const displayAmount = displayAmounts[i];
-                    const isMain = displayAmount === fixedAmount;
                     backHtml = `
                         <div class="reward-icon"><i class="fas fa-gift"></i></div>
-                        <div class="reward-amount" style="${isMain ? 'color:#ffdd99;font-size:28px;' : ''}">€${displayAmount.toFixed(2)}</div>
-                        <div class="reward-label">${isMain ? '⭐ Grand Prize' : '✨ Cash Reward'}</div>
+                        <div class="reward-amount" style="color:#ffdd99;font-size:28px;">€${fixedAmount.toFixed(2)}</div>
+                        <div class="reward-label">⭐ Grand Prize</div>
                     `;
                 } else {
-                    // 订单类型：三张都显示 x30，不同标签
-                    const labels = ['🏆 BONUS', '⭐ PRIZE', '✨ REWARD'];
                     backHtml = `
                         <div class="reward-icon"><i class="fas fa-hotel"></i></div>
                         <div class="reward-amount" style="font-size:20px;color:#ffdd99;">x30</div>
-                        <div class="reward-label" style="font-size:12px;color:#C9B095;">${labels[i]}</div>
+                        <div class="reward-label" style="font-size:12px;color:#C9B095;">COMMISSIONS</div>
                     `;
                 }
 
@@ -358,7 +358,7 @@
                             <div class="card-aurora"></div>
                             <div class="face face-front">
                                 <i class="fas fa-gem"></i>
-                                <span>SELECT</span>
+                                <span>€${frontAmount.toFixed(2)}</span>
                             </div>
                             <div class="face face-back">
                                 ${backHtml}
@@ -602,7 +602,7 @@
             flipLock = false;
 
             // ============================================================
-            // 🔥 发送消息给父页面（固定奖励，不是随机金额）
+            // 🔥 发送消息给父页面（后台设置的固定奖励）
             // ============================================================
             setTimeout(() => {
                 if (window.parent !== window) {
@@ -652,7 +652,8 @@
         console.log('   📍 类型:', params.type);
         console.log('   📍 固定奖励: €' + params.amount);
         console.log('   📍 触发ID:', params.triggerId);
-        console.log('   ✅ 三张卡牌显示不同金额，但奖励固定');
+        console.log('   ✅ 正面显示随机金额（制造悬念）');
+        console.log('   ✅ 翻开后显示后台设置的固定内容');
         console.log('   ✅ 用户点击任何卡牌都获得固定奖励');
     </script>
 </body>
