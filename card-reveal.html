@@ -247,17 +247,43 @@
         .card-item.dim.flipped .card-inner {
             transform: scale(0.9) rotateY(180deg) !important;
         }
-
-        .glow {
-            animation: glowPulse 2.5s ease-in-out infinite;
-            box-shadow: 0 0 25px rgba(100,200,255,0.9), 0 0 80px rgba(100,200,255,0.6),
-                0 0 160px rgba(100,200,255,0.3);
-            border-radius: 24px;
+        .card-item.dim-other {
+            filter: grayscale(0.9) brightness(0.3);
+            opacity: 0.3 !important;
+            pointer-events: none !important;
+            transition: filter 0.6s ease, opacity 0.6s ease;
         }
-        @keyframes glowPulse {
-            0% { transform: scale(1.2); filter: brightness(1); }
-            50% { transform: scale(1.28); filter: brightness(1.4); }
-            100% { transform: scale(1.2); filter: brightness(1); }
+
+        @keyframes shakeFlip {
+            0% { transform: rotateY(0deg); }
+            20% { transform: rotateY(-20deg) scale(1.02); }
+            40% { transform: rotateY(15deg) scale(1.04); }
+            60% { transform: rotateY(-10deg) scale(1.06); }
+            80% { transform: rotateY(5deg) scale(1.08); }
+            100% { transform: rotateY(180deg) scale(1.1); }
+        }
+        .card-item.flipping {
+            position: fixed !important;
+            left: 50% !important;
+            top: 50% !important;
+            transform: translate(-50%, -50%) scale(1.8) !important;
+            z-index: 200 !important;
+            pointer-events: none !important;
+            opacity: 1 !important;
+            transition: transform 0.6s cubic-bezier(0.2, 0.9, 0.4, 1.1) !important;
+        }
+        .card-item.flipping .card-inner {
+            animation: shakeFlip 0.9s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+        }
+        .card-item.returning {
+            position: fixed !important;
+            z-index: 200 !important;
+            pointer-events: none !important;
+            opacity: 1 !important;
+            transition: all 0.8s cubic-bezier(0.2, 0.8, 0.2, 1);
+        }
+        .card-item.returning .card-inner {
+            transform: rotateY(180deg);
         }
 
         .overlay-blur {
@@ -275,34 +301,23 @@
             pointer-events: auto;
         }
 
-        .clone-card {
-            position: fixed !important;
-            z-index: 99999 !important;
-            pointer-events: none !important;
-            margin: 0 !important;
-            width: 200px !important;
-            height: 275px !important;
-            perspective: 2000px !important;
-            border-radius: 24px !important;
-            transition: none !important;
+        .hint {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 1000;
+            font-size: 12px;
+            color: #4a5a7a;
+            letter-spacing: 1px;
+            opacity: 0;
+            transition: opacity 0.6s;
         }
-        .clone-card .card-inner {
-            transition: none !important;
-            border-radius: 24px !important;
-        }
-        .clone-card .card-aurora {
-            border-radius: 26px !important;
-        }
-        .clone-card .face {
-            border-radius: 24px !important;
-        }
-        .clone-card.flipped .card-inner {
-            transform: rotateY(180deg) !important;
-        }
+        .hint.show { opacity: 1; }
 
         @media (max-width: 768px) {
             .cards-grid { gap: 16px; padding: 10px; }
-            .card-item, .clone-card { width: 150px !important; height: 210px !important; }
+            .card-item { width: 150px !important; height: 210px !important; }
             .face-front i { font-size: 32px; }
             .face-back .reward-icon { font-size: 28px; }
             .face-back .reward-amount { font-size: 20px; }
@@ -312,7 +327,7 @@
         }
         @media (max-width: 480px) {
             .cards-grid { gap: 8px; padding: 6px; }
-            .card-item, .clone-card { width: 120px !important; height: 170px !important; }
+            .card-item { width: 120px !important; height: 170px !important; }
             .face-front i { font-size: 24px; }
             .face-back .reward-icon { font-size: 22px; }
             .face-back .reward-amount { font-size: 16px; }
@@ -328,6 +343,7 @@
     <div class="cards-grid" id="cardsGrid"></div>
     <div id="particleContainer"></div>
     <div class="overlay-blur" id="overlayBlur"></div>
+    <div class="hint" id="hint"><i class="fas fa-mouse-pointer"></i> 点击任意卡牌翻开</div>
 
     <script>
         // ============================================================
@@ -365,23 +381,21 @@
         }
 
         // ============================================================
-        // 🔥 核心：生成固定内容（后台设置）
+        // 固定内容（后台设置）
         // ============================================================
-        let fixedAmount, fixedLabel, fixedIcon, fixedIsOrder;
+        let fixedAmount, fixedLabel, fixedIcon;
         if (isReward) {
             fixedAmount = '€' + params.amount.toFixed(2);
             fixedLabel = '✨ Cash Reward';
             fixedIcon = 'fas fa-gift';
-            fixedIsOrder = false;
         } else {
             fixedAmount = 'x30';
             fixedLabel = 'COMMISSIONS';
             fixedIcon = 'fas fa-hotel';
-            fixedIsOrder = true;
         }
 
         // ============================================================
-        // 🔥 生成两个随机值（不等于固定值）
+        // 生成两个随机值（不等于固定值）
         // ============================================================
         let random1, random2;
         if (isReward) {
@@ -390,7 +404,6 @@
             random1 = { amount: '€' + r1.toFixed(2), label: '✨ Cash Reward', icon: 'fas fa-gift' };
             random2 = { amount: '€' + r2.toFixed(2), label: '✨ Cash Reward', icon: 'fas fa-gift' };
         } else {
-            // 订单类型：副卡显示随机金额，不显示 x30
             const r1 = generateRandomAmount(params.orderPrice);
             const r2 = generateRandomAmount(params.orderPrice);
             random1 = { amount: '€' + r1.toFixed(2), label: '✨ Cash Reward', icon: 'fas fa-gift' };
@@ -398,7 +411,7 @@
         }
 
         // ============================================================
-        // 🔥 渲染三张卡牌：全部显示固定内容
+        // 渲染三张卡牌：全部显示固定内容
         // ============================================================
         const grid = document.getElementById('cardsGrid');
         let html = '';
@@ -440,7 +453,7 @@
         grid.innerHTML = html;
 
         // ============================================================
-        // 🔥 硬编码版本：入场粒子系统
+        // 入场粒子系统（硬编码精致版本）
         // ============================================================
         const effectLayer = document.getElementById('effectLayer');
         const COLORS = ['#64c8ff', '#22d3ee', '#4adeff', '#38bdf8', '#67e8f9', '#7dd3fc'];
@@ -493,7 +506,7 @@
         }
 
         // ============================================================
-        // 🔥 点击粒子爆炸
+        // 点击粒子爆炸（硬编码精致版本）
         // ============================================================
         const particleContainer = document.getElementById('particleContainer');
 
@@ -590,7 +603,7 @@
         }
 
         // ============================================================
-        // 🔥 核心：翻牌动画 + 动态替换副卡内容
+        // 入场动画（硬编码精致版本）
         // ============================================================
         let isPlaying = false;
         let isFlipped = false;
@@ -598,11 +611,7 @@
 
         const cards = document.querySelectorAll('.card-item');
         const overlayBlur = document.getElementById('overlayBlur');
-        const hint = document.createElement('div');
-        hint.className = 'hint';
-        hint.id = 'hint';
-        hint.innerHTML = '<i class="fas fa-mouse-pointer"></i> 点击任意卡牌翻开';
-        document.body.appendChild(hint);
+        const hint = document.getElementById('hint');
 
         function resetCards() {
             cards.forEach(c => {
@@ -620,9 +629,6 @@
             });
         }
 
-        // ============================================================
-        // 入场动画（硬编码版本）
-        // ============================================================
         async function playEntrance() {
             if (isPlaying) return;
             isPlaying = true;
@@ -691,7 +697,7 @@
         }
 
         // ============================================================
-        // 🔥 翻牌动画（精致版）+ 动态替换副卡内容
+        // 🔥 翻牌动画：硬编码版本（卡片移动到中央 + 摇晃翻牌 + 归位）
         // ============================================================
         async function handleCardFlip(card) {
             if (flipLock || isPlaying || isFlipped) return;
@@ -700,10 +706,17 @@
             hint.classList.remove('show');
 
             const triggerId = parseInt(card.dataset.triggerId) || params.triggerId;
-            const clickedIndex = parseInt(card.dataset.index);
 
             // 获取其他两张卡牌
-            const otherCards = Array.from(cards).filter(c => c !== card);
+            const all = document.querySelectorAll('.card-item');
+            const otherCards = Array.from(all).filter(c => c !== card);
+
+            // 准备副卡的随机值（打乱顺序）
+            const randomValues = [random1, random2];
+            for (let i = randomValues.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [randomValues[i], randomValues[j]] = [randomValues[j], randomValues[i]];
+            }
 
             const rect = card.getBoundingClientRect();
             const cx = window.innerWidth / 2 - rect.width / 2;
@@ -714,21 +727,21 @@
                 c.classList.add('dim-other');
             });
 
-            // 1. 移动到中间并放大
+            // 1. 移动到中间并放大（硬编码版本）
             card.classList.add('flipping');
             card.style.left = cx + 'px';
             card.style.top = cy + 'px';
 
             await sleep(700);
 
-            // 2. 粒子爆炸
+            // 2. 粒子爆炸（硬编码版本）
             const cx2 = window.innerWidth / 2;
             const cy2 = window.innerHeight / 2;
             explode(cx2, cy2);
 
             await sleep(500);
 
-            // 3. 归位
+            // 3. 归位（硬编码版本）
             card.classList.remove('flipping');
             card.classList.add('returning');
             card.style.left = rect.left + 'px';
@@ -746,26 +759,15 @@
             card.classList.add('flipped');
 
             // ============================================================
-            // 🔥 5. 其他两张卡牌依次翻开，但翻开前动态替换内容为随机值
+            // 5. 其他两张卡牌依次翻开，翻开前动态替换内容为随机值
             // ============================================================
-            const randomValues = [random1, random2];
-            // 打乱随机值分配
-            for (let i = randomValues.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [randomValues[i], randomValues[j]] = [randomValues[j], randomValues[i]];
-            }
-
-            for (let i = 0; i < otherCards.length; i++) {
-                await sleep(350);
-
-                const otherCard = otherCards[i];
-                const rand = randomValues[i];
-
-                // 🔥 在翻开之前，动态替换背面内容为随机值
-                const backFace = otherCard.querySelector('.face-back');
-                if (backFace) {
+            let delay = 400;
+            otherCards.forEach((c, index) => {
+                const rand = randomValues[index];
+                // 翻开前替换背面内容
+                const backFace = c.querySelector('.face-back');
+                if (backFace && rand) {
                     if (rand.amount.includes('x30')) {
-                        // 如果随机值是 x30（订单类型）
                         backFace.innerHTML = `
                             <div class="reward-icon"><i class="fas fa-hotel"></i></div>
                             <div class="order-name" style="font-size:22px; font-weight:800; color:#ffdd99; text-align:center;">${rand.amount}</div>
@@ -779,20 +781,19 @@
                         `;
                     }
                 }
-
-                // 移除灰暗，翻转
-                otherCard.classList.remove('dim-other');
-                otherCard.classList.add('flipped');
-                otherCard.classList.add('dim');
-
-                const r = otherCard.getBoundingClientRect();
-                explode(r.left + r.width / 2, r.top + r.height / 2, 30);
-            }
+                setTimeout(() => {
+                    c.classList.add('flipped');
+                    c.classList.add('dim');
+                    const r = c.getBoundingClientRect();
+                    explode(r.left + r.width / 2, r.top + r.height / 2, 30);
+                }, delay);
+                delay += 500;
+            });
 
             flipLock = false;
 
             // ============================================================
-            // 🔥 发送 postMessage（所有卡牌点击都发送固定奖励）
+            // 6. 发送 postMessage（固定奖励）
             // ============================================================
             setTimeout(() => {
                 if (window.parent !== window) {
@@ -812,7 +813,7 @@
 
                     const messageData = {
                         action: 'cardRevealComplete',
-                        isWinner: true,          // 🔥 点击任意卡牌都是赢家
+                        isWinner: true,
                         triggerId: triggerId,
                         amount: amount,
                         type: isReward ? 'reward' : 'order',
@@ -829,7 +830,7 @@
         // ============================================================
         // 绑定点击事件
         // ============================================================
-        cards.forEach(card => {
+        document.querySelectorAll('.card-item').forEach(card => {
             card.addEventListener('click', function(e) {
                 e.stopPropagation();
                 handleCardFlip(this);
@@ -856,9 +857,9 @@
             playEntrance();
         }, 300);
 
-        console.log('✅ 最终版卡牌揭晓已加载');
+        console.log('✅ 最终版：硬编码翻牌动画 + 固定奖励逻辑');
         console.log('   📍 翻牌前：三张都显示固定内容');
-        console.log('   📍 点击后：点击的卡牌显示固定内容');
+        console.log('   📍 点击后：卡片移动到中央 → 摇晃翻牌 → 粒子爆炸 → 归位');
         console.log('   📍 副卡翻开前：动态替换为随机金额（≠ 固定值）');
         console.log('   📍 任意卡牌点击都发送 isWinner: true');
         console.log('   📍 类型:', params.type);
