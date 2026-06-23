@@ -281,9 +281,13 @@
 
             <div class="two-columns">
                 <div class="left-col">
-                    <div id="videoContainer">
-                        <div class="video-placeholder"><i class="fas fa-play-circle"></i><p>Video Area</p><small>MP4 / GIF supported</small></div>
-                    </div>
+                    <div id="videoContainer" style="position:relative; background:#000; min-height:400px; display:flex; align-items:center; justify-content:center;">
+    <video id="heroVideo" autoplay loop muted playsinline style="width:100%; height:100%; object-fit:cover; display:none;"></video>
+    <div class="video-placeholder" id="videoPlaceholder" style="position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); text-align:center; color:#5a6388; pointer-events:none;">
+        <i class="fas fa-play-circle" style="font-size:56px; display:block; color:#C9B095; margin-bottom:12px;"></i>
+        <p>Loading video...</p>
+    </div>
+</div>
                 </div>
                 <div class="right-col">
                     <div class="big-card">
@@ -728,55 +732,81 @@
         // Video and hotel configuration
         // ============================================================
         async function loadAnimatedConfig() {
-            sb.from('animated_settings').select('*').eq('id', 1).single().then(function(result) {
-                var data = result.data;
-                if (data && data.video_url) {
-                    var vc = document.getElementById('videoContainer');
-                    if (vc) {
-                        var url = data.video_url;
-                        if (url.endsWith('.mp4') || url.includes('.mp4')) {
-                            var video = document.createElement('video');
-                            video.src = url;
-                            video.autoplay = true;
-                            video.loop = true;
-                            video.muted = true;
-                            video.playsinline = true;
-                            video.style.width = '100%';
-                            video.style.borderRadius = '24px';
-                            vc.innerHTML = '';
-                            vc.appendChild(video);
-                            setTimeout(function() { hideLoading(); }, 3000);
-                        } else {
-                            vc.innerHTML = '<img src="' + url + '" style="width:100%; border-radius:24px;">';
-                            var img = vc.querySelector('img');
-                            if (img) {
-                                img.onload = function() { hideLoading(); };
-                                img.onerror = function() { hideLoading(); };
-                            }
-                        }
-                    }
+    sb.from('animated_settings').select('*').eq('id', 1).single().then(function(result) {
+        var data = result.data;
+        var placeholder = document.getElementById('videoPlaceholder');
+        var video = document.getElementById('heroVideo');
+        
+        if (data && data.video_url) {
+            var url = data.video_url;
+            
+            if (url.endsWith('.mp4') || url.includes('.mp4')) {
+                // 🔥 使用已存在的 video 元素，直接设置 src
+                if (video) {
+                    video.src = url;
+                    video.style.display = 'block';
+                    video.style.position = 'relative';
+                    video.style.borderRadius = '24px';
+                    
+                    // 隐藏占位符
+                    if (placeholder) placeholder.style.display = 'none';
+                    
+                    // 🔥 尝试播放（浏览器会自动播放，因为元素在 HTML 中已存在）
+                    video.play().catch(function(e) {
+                        console.log('Video play failed:', e);
+                        // 降级：用户交互时播放
+                        document.addEventListener('touchstart', function playOnTouch() {
+                            video.play().catch(function() {});
+                            document.removeEventListener('touchstart', playOnTouch);
+                        }, { once: true });
+                    });
                 }
-                if (data && data.featured_hotels && data.featured_hotels.length) {
-                    var container = document.getElementById('hotelImagesContainer');
-                    if (container) {
-                        container.innerHTML = '';
-                        for (var hIdx = 0; hIdx < data.featured_hotels.length; hIdx++) {
-                            var hotel = data.featured_hotels[hIdx];
-                            var div = document.createElement('div');
-                            div.className = 'hotel-img-item';
-                            div.innerHTML = '<img src="' + (hotel.image || '') + '" alt="' + hotel.name + '" onerror="this.src=\'https://placehold.co/180x110/0E1838/C9B095?text=Hotel\'"><span class="hotel-name">' + hotel.name + '</span>';
-                            container.appendChild(div);
-                        }
-                        var items = container.innerHTML;
-                        container.innerHTML = items + items;
-                    }
+                setTimeout(function() { hideLoading(); }, 3000);
+            } else {
+                // 图片模式
+                if (placeholder) {
+                    placeholder.innerHTML = '<img src="' + url + '" style="max-width:100%; border-radius:24px; max-height:400px;">';
+                    placeholder.style.position = 'relative';
+                    placeholder.style.transform = 'none';
+                    placeholder.style.top = 'auto';
+                    placeholder.style.left = 'auto';
                 }
                 setTimeout(function() { hideLoading(); }, 1000);
-            }).catch(function(e) {
-                console.error('loadAnimatedConfig error:', e);
-                hideLoading();
-            });
+            }
+        } else {
+            // 没有视频，显示占位符
+            if (placeholder) {
+                placeholder.style.position = 'relative';
+                placeholder.style.transform = 'none';
+                placeholder.style.top = 'auto';
+                placeholder.style.left = 'auto';
+                placeholder.innerHTML = '<i class="fas fa-play-circle" style="font-size:56px; display:block; color:#C9B095; margin-bottom:12px;"></i><p>Video Area</p><small>MP4 / GIF supported</small>';
+            }
+            setTimeout(function() { hideLoading(); }, 1000);
         }
+        
+        // 精选酒店逻辑保持不变
+        if (data && data.featured_hotels && data.featured_hotels.length) {
+            var container = document.getElementById('hotelImagesContainer');
+            if (container) {
+                container.innerHTML = '';
+                for (var hIdx = 0; hIdx < data.featured_hotels.length; hIdx++) {
+                    var hotel = data.featured_hotels[hIdx];
+                    var div = document.createElement('div');
+                    div.className = 'hotel-img-item';
+                    div.innerHTML = '<img src="' + (hotel.image || '') + '" alt="' + hotel.name + '" onerror="this.src=\'https://placehold.co/180x110/0E1838/C9B095?text=Hotel\'"><span class="hotel-name">' + hotel.name + '</span>';
+                    container.appendChild(div);
+                }
+                var items = container.innerHTML;
+                container.innerHTML = items + items;
+            }
+        }
+        setTimeout(function() { hideLoading(); }, 1000);
+    }).catch(function(e) {
+        console.error('loadAnimatedConfig error:', e);
+        hideLoading();
+    });
+}
 
         async function preloadOrders() { await getOrdersFromAdmin(); }
 
