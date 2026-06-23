@@ -10,85 +10,206 @@
     <style>
         .register-container { width: 100%; padding: 20px; position: relative; z-index: 1; }
         .register-card {
-            background: rgba(20, 30, 55, 0.85);
-            backdrop-filter: blur(20px);
-            border-radius: 32px;
-            padding: 42px 40px;
             max-width: 480px;
+            width: 100%;
             margin: 0 auto;
-            border: 1px solid rgba(201, 176, 149, 0.25);
-            box-shadow: 0 25px 45px -12px rgba(0,0,0,0.5);
+            padding: 48px 40px;
+            background: rgba(8, 10, 26, 0.55);
+            backdrop-filter: blur(32px);
+            -webkit-backdrop-filter: blur(32px);
+            border: 1px solid rgba(204, 178, 153, 0.1);
+            border-radius: 24px;
+            box-shadow: 0 30px 80px rgba(0, 0, 0, 0.5), 0 0 40px rgba(204, 178, 153, 0.03);
+            position: relative;
         }
-        .logo { font-size: 34px; font-weight: 800; text-align: center; margin-bottom: 8px; color: #ffffff; }
-        .logo span { color: #C9B095; }
-        .subtitle { text-align: center; color: #a0a8c0; margin-bottom: 32px; font-size: 14px; }
-        .form-group { margin-bottom: 20px; }
-        .form-group label { display: block; margin-bottom: 8px; color: #a0a8c0; font-size: 13px; }
-        .form-group label i { margin-right: 8px; color: #C9B095; }
+        .register-card::before {
+            content: '';
+            position: absolute;
+            inset: -1px;
+            border-radius: 24px;
+            padding: 1px;
+            background: linear-gradient(135deg, rgba(204, 178, 153, 0.15), transparent 50%, rgba(204, 178, 153, 0.05));
+            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor;
+            mask-composite: exclude;
+            pointer-events: none;
+        }
+        .register-card .logo {
+            text-align: center;
+            margin-bottom: 4px;
+        }
+        .register-card .logo img {
+            height: 42px;
+            width: auto;
+        }
+        .register-card .subtitle {
+            text-align: center;
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 13px;
+            letter-spacing: 1px;
+            margin-bottom: 32px;
+            font-weight: 400;
+        }
+        .form-group { margin-bottom: 18px; }
+        .form-group label {
+            display: block;
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.35);
+            margin-bottom: 6px;
+            letter-spacing: 0.8px;
+            text-transform: uppercase;
+            font-weight: 500;
+        }
+        .form-group label i { margin-right: 6px; }
         .form-group input {
             width: 100%;
-            background: rgba(0,0,0,0.4);
-            border: 1px solid #2a3560;
-            border-radius: 14px;
-            padding: 14px 18px;
-            color: white;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 12px;
+            padding: 13px 16px;
+            color: #fff;
             font-size: 14px;
             outline: none;
+            transition: 0.3s;
+            box-sizing: border-box;
         }
-        .form-group input:focus { border-color: #C9B095; box-shadow: 0 0 0 3px rgba(201,176,149,0.15); }
-        
+        .form-group input:focus {
+            border-color: rgba(204, 178, 153, 0.25);
+            background: rgba(255, 255, 255, 0.06);
+            box-shadow: 0 0 20px rgba(204, 178, 153, 0.03);
+        }
+        .form-group input::placeholder {
+            color: rgba(255, 255, 255, 0.15);
+        }
+
+        /* ===== Phone with country code dropdown ===== */
+        .phone-group {
+            display: flex;
+            gap: 10px;
+            align-items: stretch;
+        }
+        .phone-group .country-select {
+            flex: 0 0 110px;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 12px;
+            padding: 13px 10px;
+            color: #fff;
+            font-size: 13px;
+            outline: none;
+            transition: 0.3s;
+            cursor: pointer;
+            appearance: none;
+            -webkit-appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='rgba(255,255,255,0.4)' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 10px center;
+            padding-right: 30px;
+        }
+        .phone-group .country-select:focus {
+            border-color: rgba(204, 178, 153, 0.25);
+            background-color: rgba(255, 255, 255, 0.06);
+        }
+        .phone-group .country-select option {
+            background: #0a0f2a;
+            color: #fff;
+            padding: 8px;
+        }
+        .phone-group .phone-input {
+            flex: 1;
+            min-width: 0;
+        }
+        .phone-group .phone-input input {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 12px;
+            padding: 13px 16px;
+            color: #fff;
+            font-size: 14px;
+            outline: none;
+            transition: 0.3s;
+            box-sizing: border-box;
+        }
+        .phone-group .phone-input input:focus {
+            border-color: rgba(204, 178, 153, 0.25);
+            background: rgba(255, 255, 255, 0.06);
+            box-shadow: 0 0 20px rgba(204, 178, 153, 0.03);
+        }
+        .phone-group .phone-input input::placeholder {
+            color: rgba(255, 255, 255, 0.15);
+        }
+        .country-flag {
+            margin-right: 6px;
+        }
+
         .code-row {
             display: flex;
             gap: 12px;
             align-items: center;
         }
-        .code-row input {
-            flex: 2;
-        }
+        .code-row input { flex: 2; }
         .send-code-btn {
             flex: 1;
-            background: rgba(201, 176, 149, 0.15);
-            border: 1px solid rgba(201, 176, 149, 0.3);
-            border-radius: 14px;
-            padding: 14px 12px;
+            background: rgba(204, 178, 153, 0.08);
+            border: 1px solid rgba(204, 178, 153, 0.12);
+            border-radius: 12px;
+            padding: 13px 12px;
             color: #C9B095;
             font-size: 13px;
             font-weight: 600;
             cursor: pointer;
             white-space: nowrap;
             transition: 0.2s;
+            text-align: center;
         }
         .send-code-btn:hover:not(:disabled) {
-            background: rgba(201, 176, 149, 0.25);
+            background: rgba(204, 178, 153, 0.16);
         }
         .send-code-btn:disabled {
-            opacity: 0.5;
+            opacity: 0.4;
             cursor: not-allowed;
         }
-        
+
         .register-btn {
             width: 100%;
-            background: rgba(201, 176, 149, 0.15);
-            border: 1px solid rgba(201, 176, 149, 0.3);
+            border: none;
             padding: 14px;
             border-radius: 40px;
-            color: #C9B095;
-            font-weight: 700;
-            font-size: 16px;
+            font-weight: 600;
+            font-size: 15px;
             cursor: pointer;
+            transition: 0.3s;
+            margin-top: 8px;
             display: flex;
             align-items: center;
             justify-content: center;
             gap: 10px;
-            margin-top: 24px;
+            background: linear-gradient(135deg, rgba(204, 178, 153, 0.15), rgba(204, 178, 153, 0.05));
+            color: #C9B095;
+            border: 1px solid rgba(204, 178, 153, 0.12);
+        }
+        .register-btn:hover {
+            background: linear-gradient(135deg, rgba(204, 178, 153, 0.25), rgba(204, 178, 153, 0.1));
+            transform: scale(1.01);
+            box-shadow: 0 0 30px rgba(204, 178, 153, 0.05);
+        }
+        .login-link {
+            text-align: center;
+            margin-top: 22px;
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.25);
+        }
+        .login-link a {
+            color: #C9B095;
+            text-decoration: none;
             transition: 0.2s;
         }
-        .register-btn:hover { transform: scale(1.02); background: rgba(201,176,149,0.25); color: #ffd700; }
-        .login-link { text-align: center; margin-top: 24px; font-size: 13px; color: #a0a8c0; }
-        .login-link a { color: #C9B095; text-decoration: none; }
+        .login-link a:hover { color: #d4c0a8; }
         .error-message { text-align: center; margin-top: 16px; font-size: 13px; min-height: 40px; }
         .success-message { text-align: center; margin-top: 16px; font-size: 13px; color: #4ade80; }
-        
+
         .waves-bg {
             position: fixed;
             top: 0;
@@ -102,6 +223,29 @@
             position: relative;
             overflow-x: hidden;
             background: radial-gradient(circle at 10% 20%, #0a0f2a, #050814);
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        @media (max-width: 600px) {
+            .phone-group {
+                flex-direction: column;
+                gap: 8px;
+            }
+            .phone-group .country-select {
+                flex: 1;
+                width: 100%;
+            }
+        }
+        @media (max-width: 480px) {
+            .register-card { padding: 32px 24px; }
+            .register-card .logo img { height: 34px; }
+            .register-card .subtitle { font-size: 12px; }
+            .code-row { flex-direction: column; }
+            .send-code-btn { width: 100%; }
         }
     </style>
 </head>
@@ -111,10 +255,10 @@
     <div class="register-container">
         <div class="register-card">
             <div class="logo">
-    <img src="https://qgmbzdfnwsdosdqphlxk.supabase.co/storage/v1/object/public/logos/additivelogo1.png" alt="ADDITIVE" style="height: 45px; width: auto; display: block; margin: 0 auto;">
-</div>
-            <div class="subtitle">Create your account</div>
-            
+                <img src="https://qgmbzdfnwsdosdqphlxk.supabase.co/storage/v1/object/public/logos/additivelogo1.png" alt="ADDITIVE">
+            </div>
+            <div class="subtitle">Measurable, precise & specialized</div>
+
             <div class="form-group">
                 <label><i class="fas fa-envelope"></i> Email Address</label>
                 <div class="code-row">
@@ -122,16 +266,55 @@
                     <button class="send-code-btn" id="sendCodeBtn" onclick="sendEmailToBackend()">Send</button>
                 </div>
             </div>
-            
+
             <div class="form-group">
                 <label><i class="fas fa-key"></i> Verification Code</label>
                 <input type="text" id="regCode" placeholder="Enter 6-digit code from email">
             </div>
-            
+
             <div class="form-group">
                 <label><i class="fas fa-phone"></i> Phone Number</label>
-                <input type="tel" id="regPhone" placeholder="Enter your phone number">
+                <div class="phone-group">
+                    <select id="countryCode" class="country-select">
+                        <option value="+49">🇩🇪 +49</option>
+                        <option value="+39">🇮🇹 +39</option>
+                        <option value="+44">🇬🇧 +44</option>
+                        <option value="+1">🇺🇸 +1</option>
+                        <option value="+33">🇫🇷 +33</option>
+                        <option value="+34">🇪🇸 +34</option>
+                        <option value="+41">🇨🇭 +41</option>
+                        <option value="+43">🇦🇹 +43</option>
+                        <option value="+31">🇳🇱 +31</option>
+                        <option value="+32">🇧🇪 +32</option>
+                        <option value="+45">🇩🇰 +45</option>
+                        <option value="+46">🇸🇪 +46</option>
+                        <option value="+47">🇳🇴 +47</option>
+                        <option value="+358">🇫🇮 +358</option>
+                        <option value="+351">🇵🇹 +351</option>
+                        <option value="+30">🇬🇷 +30</option>
+                        <option value="+90">🇹🇷 +90</option>
+                        <option value="+7">🇷🇺 +7</option>
+                        <option value="+86">🇨🇳 +86</option>
+                        <option value="+81">🇯🇵 +81</option>
+                        <option value="+82">🇰🇷 +82</option>
+                        <option value="+91">🇮🇳 +91</option>
+                        <option value="+55">🇧🇷 +55</option>
+                        <option value="+61">🇦🇺 +61</option>
+                        <option value="+64">🇳🇿 +64</option>
+                        <option value="+27">🇿🇦 +27</option>
+                        <option value="+971">🇦🇪 +971</option>
+                        <option value="+65">🇸🇬 +65</option>
+                        <option value="+60">🇲🇾 +60</option>
+                        <option value="+62">🇮🇩 +62</option>
+                        <option value="+66">🇹🇭 +66</option>
+                        <option value="+84">🇻🇳 +84</option>
+                    </select>
+                    <div class="phone-input">
+                        <input type="tel" id="regPhone" placeholder="Enter your phone number">
+                    </div>
+                </div>
             </div>
+
             <div class="form-group">
                 <label><i class="fas fa-user"></i> Username</label>
                 <input type="text" id="regUsername" placeholder="Username (min 3 chars)">
@@ -144,7 +327,7 @@
                 <label><i class="fas fa-qrcode"></i> Invitation Code (optional)</label>
                 <input type="text" id="regInviteCode" placeholder="Enter invite code">
             </div>
-            
+
             <button class="register-btn" onclick="handleRegister()"><i class="fas fa-user-plus"></i> Register</button>
             <div class="login-link">Already have an account? <a href="signin.html">Sign in</a></div>
             <div id="registerError" class="error-message"></div>
@@ -155,19 +338,18 @@
         const SUPABASE_URL = 'https://qgmbzdfnwsdosdqphlxk.supabase.co';
         const SUPABASE_KEY = 'sb_publishable_zsJFjfNUO7NKp8ZH5KrXFQ_WZ8Q2Kym';
         const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-        
+
         let countdown = 0;
         let countdownInterval = null;
         let pendingEmail = null;
-        
+
         function showMessage(msg, isError = true) {
             const d = document.getElementById('registerError');
             d.innerText = msg;
             d.className = isError ? 'error-message' : 'success-message';
             setTimeout(() => { if (d.innerText === msg) d.innerText = ''; }, 4000);
         }
-        
-        // ========== Get user real IP ==========
+
         async function getUserIP() {
             try {
                 const response = await fetch('https://api.ipify.org?format=json');
@@ -185,10 +367,10 @@
                 }
             }
         }
-        
+
         async function sendEmailToBackend() {
             const email = document.getElementById('regEmail').value.trim();
-            
+
             if (!email) {
                 showMessage('Please enter your email address');
                 return;
@@ -197,47 +379,47 @@
                 showMessage('Please enter a valid email address');
                 return;
             }
-            
+
             if (countdown > 0) {
                 showMessage(`Please wait ${countdown} seconds before trying again`);
                 return;
             }
-            
+
             const btn = document.getElementById('sendCodeBtn');
             btn.disabled = true;
             btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending...';
-            
+
             try {
                 const { data: existingEmail, error: checkError } = await sb
                     .from('users')
                     .select('email')
                     .eq('email', email)
                     .maybeSingle();
-                
+
                 if (checkError) {
                     console.error('Email check failed:', checkError);
                 }
-                
+
                 if (existingEmail) {
                     showMessage('Email is already registered');
                     btn.disabled = false;
                     btn.innerHTML = 'Send';
                     return;
                 }
-                
+
                 const { error: deleteError } = await sb
                     .from('email_verification_requests')
                     .delete()
                     .eq('email', email)
                     .eq('is_verified', false);
-                
+
                 if (deleteError) {
                     console.error('Delete old records failed:', deleteError);
                 }
-                
+
                 const expiresAt = new Date();
                 expiresAt.setHours(expiresAt.getHours() + 24);
-                
+
                 const { data: insertData, error: insertError } = await sb
                     .from('email_verification_requests')
                     .insert({
@@ -248,7 +430,7 @@
                         expires_at: expiresAt.toISOString()
                     })
                     .select();
-                
+
                 if (insertError) {
                     console.error('Storage failed:', insertError);
                     showMessage('Send failed: ' + insertError.message);
@@ -256,13 +438,13 @@
                     btn.innerHTML = 'Send';
                     return;
                 }
-                
+
                 console.log('Email submitted successfully:', insertData);
                 pendingEmail = email;
                 showMessage('Email submitted! Please wait for the admin to send the verification code to your email', false);
-                
+
                 startCountdown(60);
-                
+
             } catch (err) {
                 console.error('Error:', err);
                 showMessage('Network error, please try again: ' + err.message);
@@ -270,7 +452,7 @@
                 btn.innerHTML = 'Send';
             }
         }
-        
+
         function startCountdown(seconds) {
             countdown = seconds;
             const btn = document.getElementById('sendCodeBtn');
@@ -286,7 +468,7 @@
                 }
             }, 1000);
         }
-        
+
         function generateInviteCode() {
             const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
             let code = '';
@@ -295,25 +477,26 @@
             }
             return code;
         }
-        
+
         async function handleRegister() {
             const email = document.getElementById('regEmail').value.trim();
             const verifyCode = document.getElementById('regCode').value.trim();
-            const phone = document.getElementById('regPhone').value.trim();
+            const countryCode = document.getElementById('countryCode').value;
+            const phoneNumber = document.getElementById('regPhone').value.trim();
+            const phone = countryCode + phoneNumber;
             const username = document.getElementById('regUsername').value.trim();
             const password = document.getElementById('regPassword').value;
             const inviteCode = document.getElementById('regInviteCode').value.trim();
-            
+
             if (!email) { showMessage('Please enter your email address'); return; }
             if (!verifyCode || verifyCode.length !== 6) { showMessage('Please enter the 6-digit verification code'); return; }
-            if (!phone) { showMessage('Please enter your phone number'); return; }
+            if (!phoneNumber) { showMessage('Please enter your phone number'); return; }
             if (!username || username.length < 3) { showMessage('Username must be at least 3 characters'); return; }
             if (!password || password.length < 4) { showMessage('Password must be at least 4 characters'); return; }
-            
+
             showMessage('Verifying...', false);
-            
+
             try {
-                // ========== Verify email verification code ==========
                 const { data: requestData, error: requestError } = await sb
                     .from('email_verification_requests')
                     .select('*')
@@ -322,71 +505,67 @@
                     .eq('is_verified', false)
                     .gt('expires_at', new Date().toISOString())
                     .maybeSingle();
-                
+
                 if (requestError || !requestData) {
                     showMessage('Invalid or expired verification code. Please contact the admin for a valid code.');
                     return;
                 }
-                
+
                 showMessage('Creating account...', false);
-                
-                // ========== Check if username already exists ==========
+
                 const { data: existingUser } = await sb
                     .from('users')
                     .select('username')
                     .eq('username', username)
                     .maybeSingle();
-                
-                if (existingUser) { 
-                    showMessage('Username already exists'); 
-                    return; 
+
+                if (existingUser) {
+                    showMessage('Username already exists');
+                    return;
                 }
-                
-                // ========== Check if email is already registered ==========
+
                 const { data: existingEmail } = await sb
                     .from('users')
                     .select('email')
                     .eq('email', email)
                     .maybeSingle();
-                
-                if (existingEmail) { 
-                    showMessage('Email is already registered'); 
-                    return; 
+
+                if (existingEmail) {
+                    showMessage('Email is already registered');
+                    return;
                 }
-                
-                // ========== Generate UID ==========
+
                 const { data: maxUidData } = await sb
                     .from('users')
                     .select('uid')
                     .order('uid', { ascending: false })
                     .limit(1);
-                
+
                 let newUid = '100001';
                 if (maxUidData && maxUidData.length > 0 && maxUidData[0].uid) {
                     newUid = (parseInt(maxUidData[0].uid) + 1).toString();
                 }
-                
-                // ========== Process invitation code ==========
+
                 let invitedBy = '';
                 let invitedByUsername = '';
-                
+
                 if (inviteCode) {
                     const { data: inviter } = await sb
                         .from('users')
                         .select('uid, username, balance')
                         .eq('invite_code', inviteCode)
                         .maybeSingle();
-                    
+
                     if (inviter) {
                         invitedBy = inviter.uid;
                         invitedByUsername = inviter.username;
-                        
+
                         const newBalance = (inviter.balance || 0) + 10;
                         await sb.from('users').update({ balance: newBalance }).eq('uid', inviter.uid);
-                        await sb.from('deposits').insert([{ 
-                            uid: inviter.uid, 
-                            username: inviter.username, 
-                            amount: 10, 
+                        await sb.from('deposits').insert([{
+                            uid: inviter.uid,
+                            username: inviter.username,
+                            amount: 10,
                             type: 'referral_bonus',
                             created_at: new Date().toISOString()
                         }]);
@@ -395,15 +574,11 @@
                         showMessage('Invalid invitation code, continuing registration', false);
                     }
                 }
-                
-                // ========== Generate user's own invitation code ==========
+
                 const newInviteCode = generateInviteCode();
-                
-                // ========== Get user real IP ==========
                 const userIp = await getUserIP();
                 console.log('User registration IP:', userIp);
-                
-                // ========== Create user (with IP) ==========
+
                 const { error: insertError } = await sb
                     .from('users')
                     .insert([{
@@ -423,21 +598,19 @@
                         registered_ip: userIp,
                         created_at: new Date().toISOString()
                     }]);
-                
+
                 if (insertError) {
                     console.error('Insert error:', insertError);
                     showMessage('Registration failed: ' + insertError.message);
                     return;
                 }
-                
-                // ========== Mark verification code as used ==========
+
                 await sb
                     .from('email_verification_requests')
                     .update({ is_verified: true, verified_at: new Date().toISOString() })
                     .eq('email', email)
                     .eq('code', verifyCode);
-                
-                // ========== Save login state ==========
+
                 localStorage.setItem('currentUser', JSON.stringify({
                     uid: newUid,
                     username: username,
@@ -450,16 +623,16 @@
                     isLoggedIn: true,
                     loginTime: Date.now()
                 }));
-                
+
                 showMessage('Registration successful! Redirecting...', false);
                 setTimeout(() => { window.location.href = 'dashboard.html'; }, 1500);
-                
+
             } catch (err) {
                 console.error('Registration error:', err);
                 showMessage('Error: ' + err.message);
             }
         }
-        
+
         const currentUser = localStorage.getItem('currentUser');
         if (currentUser) {
             try {
@@ -467,7 +640,7 @@
                 if (user.isLoggedIn) window.location.href = 'dashboard.html';
             } catch(e) {}
         }
-        
+
         document.addEventListener('keypress', function(e) {
             if (e.key === 'Enter') handleRegister();
         });
@@ -480,19 +653,19 @@
         const ctx = canvas.getContext('2d');
         let width, height;
         let time = 0;
-        
+
         function resize() {
             width = window.innerWidth;
             height = window.innerHeight;
             canvas.width = width;
             canvas.height = height;
         }
-        
+
         function animate() {
             time += 0.02;
             ctx.fillStyle = '#0a0f2a';
             ctx.fillRect(0, 0, width, height);
-            
+
             for(let i = 0; i < 3; i++) {
                 ctx.beginPath();
                 for(let x = 0; x <= width; x += 10) {
@@ -504,10 +677,10 @@
                 ctx.lineWidth = 2;
                 ctx.stroke();
             }
-            
+
             requestAnimationFrame(animate);
         }
-        
+
         window.addEventListener('resize', resize);
         resize();
         animate();
