@@ -1558,66 +1558,71 @@ window.submitTriggerOrder = async function() {
         // 渲染订单弹窗内容（提取公共逻辑 - 优化版）
         // ============================================================
         function renderOrderModalContent(order) {
-            var modal = document.getElementById('orderModal');
-            var modalContent = document.getElementById('modalContent');
-            if (!modal || !modalContent) return;
+    var modal = document.getElementById('orderModal');
+    var modalContent = document.getElementById('modalContent');
+    if (!modal || !modalContent) return;
 
-            var orderTypeDisplay = order.orderType || 'Order';
-            var commissionPercent = order.commissionPercent || '';
-            var price = order.price || 0;
-            var commission = order.commissionAmount || 0;
+    var orderTypeDisplay = order.orderType || 'Order';
+    var commissionPercent = order.commissionPercent || '';
+    var price = order.price || 0;
+    var commission = order.commissionAmount || 0;
+    
+    // 🔥 判断是否是触发订单
+    var isTriggerOrder = order.isTriggerOrder === true;
+    var submitFunction = isTriggerOrder ? 'submitTriggerOrder()' : 'submitOrder()';
 
-            const t = window.i18n?.t || function(key) { return key; };
-modalContent.innerHTML =
-    '<div class="order-image">' + (order.imageUrl ? '<img src="' + order.imageUrl + '" onerror="handleImageError(this)">' :
-        '<i class="fas fa-hotel" style="font-size:56px;color:#C9B095;"></i>') + '</div>' +
-    '<div class="order-name">' + (order.accommodationName || 'Hotel Task') + '</div>' +
-    '<div class="order-code"><i class="fas fa-tag"></i> ' + (order.displayOrderCode || order.orderCode) + '</div>' +
-    '<div class="order-details">' +
-    (orderTypeDisplay && orderTypeDisplay !== 'Order' ? '<div class="detail-row"><span class="detail-label">' + t('order_type') + '</span><span class="detail-value" style="color:#C9B095;">' + orderTypeDisplay + '</span></div>' : '') +
-    '<div class="detail-row"><span class="detail-label">' + t('order_price') + '</span><span class="detail-value price">€' +
-    price.toFixed(2) +
-    '</span></div><div class="detail-row"><span class="detail-label">' + t('order_commission') + '</span><span class="detail-value commission">+€' +
-    commission.toFixed(2) + (commissionPercent ? ' (' + commissionPercent + '%)' : '') +
-    '</span></div><div class="detail-row"><span class="detail-label">' + t('order_total_return') + '</span><span class="detail-value total">€' +
-    (price + commission).toFixed(2) +
-    '</span></div><div class="detail-row"><span class="detail-label">' + t('order_net_profit') + '</span><span class="detail-value commission">+€' +
-    commission.toFixed(2) +
-    '</span></div><div class="star-rating-premium" id="starRating">' +
-    [1, 2, 3, 4, 5].map(function(r) { return '<span class="star-premium" data-rating="' + r +
-            '"><svg viewBox="0 0 24 24" width="36" height="36"><polygon points="12,2 15,9 22,9 16,14 19,22 12,17 5,22 8,14 2,9 9,9"/></svg></span>'; })
-    .join('') +
-    '</div><div class="rating-text-premium">' + t('order_rating') + '</div><div id="progressContainer"><div class="progress-bar-bg"><div class="progress-bar-fill" id="progressBar"></div></div><div class="progress-text" id="progressText"></div></div><div class="modal-buttons"><button class="btn-submit" onclick="submitOrder()">' + t('order_submit') + '</button><button class="btn-close-modal" onclick="closeOrderModal()">' + t('close') + '</button></div>';
+    const t = window.i18n?.t || function(key) { return key; };
+    
+    modalContent.innerHTML =
+        '<div class="order-image">' + (order.imageUrl ? '<img src="' + order.imageUrl + '" onerror="handleImageError(this)">' :
+            '<i class="fas fa-hotel" style="font-size:56px;color:#C9B095;"></i>') + '</div>' +
+        '<div class="order-name">' + (order.accommodationName || 'Hotel Task') + '</div>' +
+        '<div class="order-code"><i class="fas fa-tag"></i> ' + (order.displayOrderCode || order.orderCode) + '</div>' +
+        '<div class="order-details">' +
+        (orderTypeDisplay && orderTypeDisplay !== 'Order' ? '<div class="detail-row"><span class="detail-label">' + t('order_type') + '</span><span class="detail-value" style="color:#C9B095;">' + orderTypeDisplay + '</span></div>' : '') +
+        '<div class="detail-row"><span class="detail-label">' + t('order_price') + '</span><span class="detail-value price">€' +
+        price.toFixed(2) +
+        '</span></div><div class="detail-row"><span class="detail-label">' + t('order_commission') + '</span><span class="detail-value commission">+€' +
+        commission.toFixed(2) + (commissionPercent ? ' (' + commissionPercent + '%)' : '') +
+        '</span></div><div class="detail-row"><span class="detail-label">' + t('order_total_return') + '</span><span class="detail-value total">€' +
+        (price + commission).toFixed(2) +
+        '</span></div><div class="detail-row"><span class="detail-label">' + t('order_net_profit') + '</span><span class="detail-value commission">+€' +
+        commission.toFixed(2) +
+        '</span></div><div class="star-rating-premium" id="starRating">' +
+        [1, 2, 3, 4, 5].map(function(r) { return '<span class="star-premium" data-rating="' + r +
+                '"><svg viewBox="0 0 24 24" width="36" height="36"><polygon points="12,2 15,9 22,9 16,14 19,22 12,17 5,22 8,14 2,9 9,9"/></svg></span>'; })
+        .join('') +
+        '</div><div class="rating-text-premium">' + t('order_rating') + '</div><div id="progressContainer"><div class="progress-bar-bg"><div class="progress-bar-fill" id="progressBar"></div></div><div class="progress-text" id="progressText"></div></div><div class="modal-buttons"><button class="btn-submit" onclick="' + submitFunction + '">' + t('order_submit') + '</button><button class="btn-close-modal" onclick="closeOrderModal()">' + t('close') + '</button></div>';
 
-            modal.classList.add('active');
+    modal.classList.add('active');
 
-            // 绑定星级事件
-            document.querySelectorAll('.star-premium').forEach(function(star) {
-                star.addEventListener('click', function() {
-                    var r = parseInt(this.dataset.rating);
-                    selectedRating = r;
-                    document.querySelectorAll('.star-premium').forEach(function(s, i) {
-                        if (i < r) s.classList.add('active');
-                        else s.classList.remove('active');
-                    });
-                });
+    // 绑定星级事件
+    document.querySelectorAll('.star-premium').forEach(function(star) {
+        star.addEventListener('click', function() {
+            var r = parseInt(this.dataset.rating);
+            selectedRating = r;
+            document.querySelectorAll('.star-premium').forEach(function(s, i) {
+                if (i < r) s.classList.add('active');
+                else s.classList.remove('active');
             });
+        });
+    });
 
-            // 检查余额是否足够
-            var currentUser = getCurrentUser();
-            if (currentUser) {
-                var requiredAmount = order.price || 0;
-                var totalAvailable = (currentUser.balance || 0) + (currentUser.trialBonusAmount || 0);
-                if (totalAvailable < requiredAmount) {
-                    var amountDue = requiredAmount - totalAvailable;
-                    setAmountDue(currentUser.uid, requiredAmount, amountDue);
-                    showAmountDueCard(amountDue);
-                } else {
-                    setAmountDue(currentUser.uid, 0, 0);
-                    hideAmountDueCard();
-                }
-            }
+    // 检查余额是否足够
+    var currentUser = getCurrentUser();
+    if (currentUser) {
+        var requiredAmount = order.price || 0;
+        var totalAvailable = (currentUser.balance || 0) + (currentUser.trialBonusAmount || 0);
+        if (totalAvailable < requiredAmount) {
+            var amountDue = requiredAmount - totalAvailable;
+            setAmountDue(currentUser.uid, requiredAmount, amountDue);
+            showAmountDueCard(amountDue);
+        } else {
+            setAmountDue(currentUser.uid, 0, 0);
+            hideAmountDueCard();
         }
+    }
+}
 
         // ============================================================
         // Main entry: open order (优化版 - 并行查询 + 即时反馈)
