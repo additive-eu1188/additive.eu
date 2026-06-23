@@ -562,8 +562,8 @@ async function loadUsers() {
                 </div>
             `;
             
-            // 6. Pending
-const pendingAmount = pendingMap[u.uid] || 0;
+            // 6. Pending - 使用不同的变量名避免冲突
+const pendingWithdrawAmount = pendingMap[u.uid] || 0;
 
 // 🔥 检查 amount_due
 const amountDueRound = u.amount_due_round || 0;
@@ -573,7 +573,7 @@ if (amountDueRound > 0) totalAmountDue += amountDueRound;
 if (amountDueOrdersCount > 0) totalAmountDue += amountDueOrdersCount;
 
 // 🔥 如果有 amount_due，显示为负数；否则显示正常 pending
-let displayPending = pendingAmount;
+let displayPending = pendingWithdrawAmount;
 if (totalAmountDue > 0) {
     displayPending = -totalAmountDue;
 }
