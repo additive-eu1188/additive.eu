@@ -79,7 +79,7 @@
         .upgrade-desc { font-size: 13px; color: #7a85a5; line-height: 1.5; margin-bottom: 20px; }
         .btn-upgrade { background: rgba(201,176,149,0.15); padding: 10px 20px; border-radius: 40px; text-decoration: none; color: #C9B095; font-weight: 600; font-size: 14px; display: inline-flex; align-items: center; gap: 8px; border: 1px solid rgba(201,176,149,0.3); }
         
-        /* 订单详情弹窗 */
+        /* Order detail modal */
         .order-detail-modal {
             position: fixed;
             top: 0;
@@ -225,7 +225,7 @@
         </main>
     </div>
 
-    <!-- 订单详情弹窗 -->
+    <!-- Order detail modal -->
     <div id="orderDetailModal" class="order-detail-modal">
         <div class="order-detail-content">
             <div class="order-detail-header">
@@ -233,7 +233,7 @@
                 <button class="order-detail-close" onclick="closeOrderDetailModal()">&times;</button>
             </div>
             <div class="order-detail-body" id="orderDetailBody">
-                <!-- 动态内容 -->
+                <!-- Dynamic content -->
             </div>
         </div>
     </div>
@@ -256,7 +256,7 @@
             if (menuBtn) menuBtn.classList.remove('hidden'); 
         }
 
-        // 订单详情弹窗
+        // Order detail modal
         let currentOrderDetail = null;
         
         function showOrderDetail(order) {
@@ -337,7 +337,6 @@
                     icon = 'fas fa-plus-circle'; 
                 }
                 else if (d.type === 'deposit_bonus') { 
-                    // 使用自定义的 description 作为奖励名称
                     typeName = d.description || 'Deposit Bonus'; 
                     icon = 'fas fa-gift'; 
                 }
@@ -364,7 +363,7 @@
 else if (d.type === 'trial_bonus_deducted') { 
     typeName = 'Trial Bonus Deducted'; 
     icon = 'fas fa-minus-circle';
-    d.amount = -Math.abs(d.amount);  // 强制为负数，显示红色和 -
+    d.amount = -Math.abs(d.amount);
 }
 else { 
     typeName = d.type || 'Transaction'; 

@@ -1,16 +1,16 @@
-// toast.js - 自定义网页内提示弹窗 + 全局拦截 alert
+// toast.js - Custom in-page toast notifications + global alert interceptor
 
-// ========== Toast 提示消息 ==========
+// ========== Toast Notification ==========
 function showToast(message, type = 'success') {
-    // 移除已存在的弹窗
+    // Remove existing toast
     const existingToast = document.querySelector('.custom-toast');
     if (existingToast) existingToast.remove();
     
-    // 创建弹窗元素
+    // Create toast element
     const toast = document.createElement('div');
     toast.className = `custom-toast custom-toast-${type}`;
     
-    // 图标
+    // Icon
     const icon = type === 'success' ? 'fa-check-circle' : 
                  type === 'error' ? 'fa-exclamation-circle' : 
                  type === 'warning' ? 'fa-exclamation-triangle' : 'fa-info-circle';
@@ -23,17 +23,17 @@ function showToast(message, type = 'success') {
     
     document.body.appendChild(toast);
     
-    // 显示动画
+    // Show animation
     setTimeout(() => toast.classList.add('show'), 10);
     
-    // 3秒后自动消失
+    // Auto dismiss after 3 seconds
     setTimeout(() => {
         toast.classList.remove('show');
         setTimeout(() => toast.remove(), 300);
     }, 3000);
 }
 
-// ========== 确认弹窗（保留供手动调用） ==========
+// ========== Confirm Dialog (kept for manual calls) ==========
 function showConfirm(title, message, onConfirm, onCancel) {
     const existingModal = document.querySelector('.custom-confirm');
     if (existingModal) existingModal.remove();
@@ -46,8 +46,8 @@ function showConfirm(title, message, onConfirm, onCancel) {
             <div class="confirm-title">${title}</div>
             <div class="confirm-message">${message}</div>
             <div class="confirm-buttons">
-                <button class="confirm-btn confirm-cancel">取消</button>
-                <button class="confirm-btn confirm-ok">确认</button>
+                <button class="confirm-btn confirm-cancel">Cancel</button>
+                <button class="confirm-btn confirm-ok">Confirm</button>
             </div>
         </div>
     `;
@@ -74,7 +74,7 @@ function showConfirm(title, message, onConfirm, onCancel) {
     };
 }
 
-// ========== 输入弹窗（保留供手动调用） ==========
+// ========== Prompt Dialog (kept for manual calls) ==========
 function showPrompt(title, placeholder, callback) {
     const existingModal = document.querySelector('.custom-prompt');
     if (existingModal) existingModal.remove();
@@ -87,8 +87,8 @@ function showPrompt(title, placeholder, callback) {
             <div class="prompt-title">${title}</div>
             <input type="text" class="prompt-input" placeholder="${placeholder}">
             <div class="prompt-buttons">
-                <button class="prompt-btn prompt-cancel">取消</button>
-                <button class="prompt-btn prompt-ok">确认</button>
+                <button class="prompt-btn prompt-cancel">Cancel</button>
+                <button class="prompt-btn prompt-ok">Confirm</button>
             </div>
         </div>
     `;
@@ -125,7 +125,7 @@ function showPrompt(title, placeholder, callback) {
     });
 }
 
-// ========== 全局拦截 alert（替换为自定义 Toast） ==========
+// ========== Global alert interceptor (replace with custom Toast) ==========
 window.originalAlert = window.alert;
 window.alert = function(message) {
     showToast(message, 'info');

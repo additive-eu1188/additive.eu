@@ -11,7 +11,6 @@
     <script src="user-data.js"></script>
     <script src="toast.js"></script>
     <style>
-        /* 原有样式保持不变，仅增加信用分阻止弹窗样式 */
         .page-header { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 24px; flex-wrap: wrap; gap: 12px; }
         .page-header h1 { font-size: 28px; font-weight: 700; color: #ffffff; }
         .step-indicator { font-size: 12px; color: #C9B095; background: rgba(201,176,149,0.15); padding: 4px 12px; border-radius: 30px; }
@@ -194,7 +193,7 @@
         .loading-content p { font-size: 16px; color: #fff; margin-top: 12px; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
-        /* ===== 信用分阻止弹窗 ===== */
+        /* ===== Credit score block popup ===== */
         .credit-block-overlay {
             position: fixed;
             top: 0;
@@ -297,7 +296,7 @@
         </aside>
 
         <main class="main" style="max-width: 700px;">
-            <!-- 移动端顶部栏 -->
+            <!-- Mobile top bar -->
             <div class="mobile-top-bar">
                 <div class="menu-toggle" id="menuToggleBtn" onclick="toggleMenu()">
                     <i class="fas fa-bars"></i>
@@ -410,7 +409,7 @@
                 </div>
             </div>
 
-            <!-- 信用分阻止弹窗 -->
+            <!-- Credit score block popup -->
             <div class="credit-block-overlay" id="creditBlockOverlay">
                 <div class="credit-block-content">
                     <span class="icon"><i class="fas fa-exclamation-triangle"></i></span>
@@ -423,7 +422,7 @@
     </div>
 
     <script>
-        // ====== 菜单控制 ======
+        // ====== Menu control ======
         window.toggleMenu = function() {
             const sidebar = document.getElementById('sidebar');
             const overlay = document.getElementById('menuOverlay');
@@ -471,7 +470,7 @@
         }
 
         // ============================================================
-        // 原有 Withdrawal 逻辑（保留）
+        // Existing Withdrawal logic (preserved)
         // ============================================================
         let currentUser = null;
         let currentUserBalance = 0;
@@ -485,7 +484,7 @@
 
         async function getUserKycStatus(uid) {
             const { data, error } = await sb.from('user_kyc_status').select('is_verified').eq('uid', uid).single();
-            if (error && error.code !== 'PGRST116') console.error('获取KYC状态失败:', error);
+            if (error && error.code !== 'PGRST116') console.error('Failed to get KYC status:', error);
             return data?.is_verified || false;
         }
 
@@ -507,7 +506,6 @@
                 if (balanceEl) balanceEl.innerHTML = `€${currentUserBalance.toFixed(2)}`;
                 if (hintEl) hintEl.innerHTML = `Available: €${currentUserBalance.toFixed(2)}`;
                 boundAddress = userData.withdrawal_address || null;
-                // 更新当前用户的creditScore（用于检查）
                 currentUser.creditScore = userData.credit_score || 100;
                 localStorage.setItem('currentUser', JSON.stringify(currentUser));
             }
@@ -595,7 +593,7 @@
             }, 5000);
         }
 
-        // 证件选择
+        // Document selection
         function initDocSelection() {
             const cards = document.querySelectorAll('.doc-card');
             cards.forEach(card => {
@@ -706,7 +704,7 @@
             showVerifyingLoading();
         }
 
-        // Step 2: 支付方式选择
+        // Step 2: Payment method selection
         function initPaymentSelection() {
             const cards = document.querySelectorAll('.payment-card');
             cards.forEach(card => {
@@ -725,7 +723,7 @@
             });
         }
 
-        // Step 3: 地址绑定
+        // Step 3: Address binding
         function initAddressSelection() {
             const cards = document.querySelectorAll('.address-card');
             cards.forEach(card => {
@@ -758,10 +756,10 @@
         }
 
         // ============================================================
-        // 修改后的提款函数（增加信用分检查）
+        // Modified withdrawal function (with credit score check)
         // ============================================================
         async function requestWithdrawal() {
-    // ---- 信用分检查 ----
+    // ---- Credit score check ----
     try {
         const user = getCurrentUser();
         if (user) {
@@ -773,10 +771,10 @@
             }
         }
     } catch (e) {
-        console.error('信用分检查失败:', e);
+        console.error('Credit score check failed:', e);
     }
 
-    // ---- Round 提款条件检查 ----
+    // ---- Round withdrawal condition check ----
     const user = getCurrentUser();
     if (!user) {
         window.location.href = 'signin.html';
@@ -790,26 +788,23 @@
     const roundOrdersCount = freshUser?.roundOrdersCount || 0;
     const totalOrders = (await sb.from('order_history').select('id', { count: 'exact' }).eq('uid', user.uid)).count || 0;
     
-    // 🔥 提款条件判断
     let canWithdraw = false;
     if (!isPremium) {
-        // Trial 用户：完成30单即可提款
         canWithdraw = totalOrders >= 30;
     } else {
-        // 正式用户：必须完成 Round 2（60单）
         canWithdraw = currentRound === 2 && roundOrdersCount >= 30;
     }
     
     if (!canWithdraw) {
         if (!isPremium) {
-            showToast('请完成 30 单后再提款', 'warning');
+            showToast('Please complete 30 orders before withdrawing', 'warning');
         } else {
-            showToast('请完成 2 Rounds (60单) 后再提款', 'warning');
+            showToast('Please complete 2 Rounds (60 orders) before withdrawing', 'warning');
         }
         return;
     }
 
-    // ---- 原有提款逻辑 ----
+    // ---- Existing withdrawal logic ----
     const amount = parseFloat(document.getElementById('amountInput').value);
     if (isNaN(amount) || amount < 10) { showToast('Minimum withdrawal amount is €10', 'error'); return; }
     if (amount > currentUserBalance) { showToast('Insufficient balance', 'error'); return; }
@@ -845,7 +840,7 @@
             showToast(`Withdrawal of €${amount.toFixed(2)} submitted successfully!`, 'success');
         }
 
-        // ====== 信用分阻止弹窗 ======
+        // ====== Credit score block popup ======
         function showCreditBlockModal() {
             const overlay = document.getElementById('creditBlockOverlay');
             overlay.classList.add('active');
@@ -857,7 +852,6 @@
                 count--;
                 if (count <= 0) {
                     clearInterval(timer);
-                    // 跳转到 settings 并带上参数自动打开弹窗
                     window.location.href = 'settings.html?openModal=true';
                 } else {
                     countEl.textContent = count;
@@ -865,12 +859,12 @@
             }, 1000);
         }
 
-        // 快速金额按钮
+        // Quick amount buttons
         document.querySelectorAll('.quick-amount').forEach(btn => {
             btn.addEventListener('click', () => { document.getElementById('amountInput').value = btn.dataset.value; });
         });
 
-        // ====== 初始化 ======
+        // ====== Initialization ======
         (async function init() {
             await loadUserData();
             initDocSelection();

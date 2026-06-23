@@ -16,7 +16,7 @@
         .left-column { flex: 1.2; }
         .right-column { flex: 0.8; }
 
-        /* ===== 日卡网格 ===== */
+        /* ===== Day card grid ===== */
         .days-grid {
             display: grid;
             grid-template-columns: repeat(6, 1fr);
@@ -24,7 +24,7 @@
             margin-bottom: 24px;
         }
 
-        /* ===== 卡片设计（粒子容器） ===== */
+        /* ===== Card design (particle container) ===== */
         .day-card {
             border-radius: 16px;
             padding: 14px 6px;
@@ -35,7 +35,7 @@
             min-height: 100px;
             overflow: hidden;
 
-            /* 默认灰暗 */
+            /* Default dim */
             opacity: 0.55;
             filter: grayscale(0.85) brightness(0.7);
             transform: scale(0.96);
@@ -135,7 +135,7 @@
             -webkit-backdrop-filter: blur(2px);
         }
 
-        /* ===== 粒子画布 ===== */
+        /* ===== Particle canvas ===== */
         .day-card .particle-canvas {
             position: absolute;
             top: 0;
@@ -149,7 +149,7 @@
             transition: opacity 0.8s ease;
         }
 
-        /* ===== 已领取状态 ===== */
+        /* ===== Claimed state ===== */
         .day-card.claimed {
             opacity: 1;
             filter: grayscale(0) brightness(1);
@@ -183,7 +183,7 @@
             box-shadow: inset 0 0 20px rgba(74, 222, 128, 0.04);
         }
 
-        /* ===== 悬停效果 ===== */
+        /* ===== Hover effect ===== */
         .day-card:hover {
             transform: scale(1.03) translateY(-2px);
         }
@@ -192,7 +192,7 @@
             box-shadow: 0 8px 30px rgba(74, 222, 128, 0.08);
         }
 
-        /* ===== 其他原有样式 ===== */
+        /* ===== Other existing styles ===== */
         .claim-btn {
             background: rgba(201, 176, 149, 0.15);
             border: 1px solid rgba(201, 176, 149, 0.3);
@@ -352,7 +352,7 @@
 
     <script>
         // ============================================================
-        // 菜单控制
+        // Menu control
         // ============================================================
         function toggleMenu() {
             const sidebar = document.getElementById('sidebar');
@@ -373,13 +373,13 @@
         }
 
         // ============================================================
-        // 数据
+        // Data
         // ============================================================
         let signInRewards = [];
         let userOrderCount = 0;
 
         // ============================================================
-        // 粒子引擎（金色 × 翠绿混合）
+        // Particle engine (Gold × Emerald mix)
         // ============================================================
         const particleAnimators = {};
 
@@ -387,7 +387,7 @@
             constructor(w, h) {
                 this.w = w;
                 this.h = h;
-                // 70% 金色, 30% 翠绿
+                // 70% gold, 30% emerald
                 this.isGold = Math.random() < 0.7;
                 this.reset();
             }
@@ -403,7 +403,7 @@
                 this.phaseSpeed = 0.008 + Math.random() * 0.025;
                 this.floatPhase = Math.random() * Math.PI * 2;
                 this.floatSpeed = 0.003 + Math.random() * 0.005;
-                // 颜色
+                // Color
                 if (this.isGold) {
                     this.color = '#CCB299';
                     this.glowColor = 'rgba(204,178,153,0.15)';
@@ -433,7 +433,7 @@
                 const alpha = this.baseAlpha * pulse;
                 const r = this.radius * (0.75 + 0.25 * Math.sin(this.phase + time * 0.0018));
 
-                // 发光
+                // Glow
                 const grad = ctx.createRadialGradient(this.x, this.y, 0, this.x, this.y, r * 5);
                 grad.addColorStop(0, this.color + Math.floor(alpha * 200).toString(16).padStart(2, '0'));
                 grad.addColorStop(0.35, this.color + Math.floor(alpha * 60).toString(16).padStart(2, '0'));
@@ -444,13 +444,13 @@
                 ctx.fillStyle = grad;
                 ctx.fill();
 
-                // 核心
+                // Core
                 ctx.beginPath();
                 ctx.arc(this.x, this.y, r * 0.6, 0, Math.PI * 2);
                 ctx.fillStyle = this.color + Math.floor(alpha * 230).toString(16).padStart(2, '0');
                 ctx.fill();
 
-                // 高光
+                // Highlight
                 ctx.beginPath();
                 ctx.arc(this.x - r * 0.2, this.y - r * 0.25, r * 0.22, 0, Math.PI * 2);
                 ctx.fillStyle = 'rgba(255,255,255,' + (alpha * 0.25) + ')';
@@ -486,7 +486,7 @@
             function animate(time) {
                 ctx.clearRect(0, 0, w, h);
 
-                // 背景微光
+                // Background glow
                 const bgGrad = ctx.createRadialGradient(w / 2, h / 2, 0, w / 2, h / 2, Math.max(w, h) * 0.5);
                 bgGrad.addColorStop(0, 'rgba(74,222,128,0.04)');
                 bgGrad.addColorStop(0.5, 'rgba(204,178,153,0.03)');
@@ -519,7 +519,7 @@
         }
 
         // ============================================================
-        // 渲染卡片
+        // Render cards
         // ============================================================
         async function loadRewards() {
             const { data, error } = await sb
@@ -610,7 +610,7 @@
                 card.className = 'day-card';
                 if (isClaimed) {
                     card.classList.add('claimed');
-                    // 已领取的卡片延迟启动粒子
+                    // Delay start particles for claimed cards
                     setTimeout(() => {
                         const canvas = card.querySelector('.particle-canvas');
                         if (canvas) startParticles(canvas);
@@ -630,12 +630,12 @@
                 grid.appendChild(card);
             });
 
-            // 更新 streak
+            // Update streak
             const percent = (streak / signInRewards.length) * 100;
             document.getElementById('streakBar').style.width = percent + '%';
             document.getElementById('streakText').innerHTML = `${streak}/${signInRewards.length} Days`;
 
-            // 更新按钮状态
+            // Update button state
             const claimBtn = document.getElementById('claimBtn');
             const nextDay = streak + 1;
             const canClaim = !hasClaimed && nextDay <= signInRewards.length && userOrderCount >= 30;
@@ -649,7 +649,7 @@
                 claimBtn.disabled = true;
                 if (userOrderCount < 30) {
     document.getElementById('claimWarning').innerHTML =
-        `Complete 60 orders to claim Sign In Bonus`;
+        'Complete 60 orders to claim Sign In Bonus';
 } else if (hasClaimed) {
     document.getElementById('claimWarning').innerHTML = 'You have claimed your Sign In Bonus today, Come back tomorrow!';
 } else {
@@ -659,7 +659,7 @@
         }
 
         // ============================================================
-        // 领取逻辑
+        // Claim logic
         // ============================================================
         async function handleClaim() {
     const { streak, lastClaimDate, claimedDays } = loadData();
@@ -670,20 +670,18 @@
     if (nextDay > signInRewards.length) { alert('Completed all days!'); return; }
     if (userOrderCount < 30) { alert(`Need 30 orders to claim rewards. You have ${userOrderCount}/30.`); return; }
 
-    // 获取当前用户
     const user = getCurrentUser();
     if (!user) {
         alert('Please login first');
         return;
     }
 
-    // 计算奖励金额
     let amount;
     let claimDay;
     let isReset = false;
 
     if (streak > 0 && !isConsecutive(lastClaimDate)) {
-        // 中断后重新开始
+        // Reset after interruption
         amount = signInRewards[0].amount;
         claimDay = 1;
         isReset = true;
@@ -692,29 +690,29 @@
         claimDay = nextDay;
     }
 
-    // 1. 增加余额
+    // 1. Add balance
     await addReward(amount);
 
-    // 2. 写入数据库 - 关键步骤
+    // 2. Write to database
     const { error: insertError } = await sb
     .from('user_checkin_records')
     .insert([{
         uid: user.uid,
-        day_number: claimDay,        // ← 改成 day_number
+        day_number: claimDay,
         amount: amount,
-        checkin_date: new Date().toISOString().split('T')[0],  // ← 只取日期部分 YYYY-MM-DD
+        checkin_date: new Date().toISOString().split('T')[0],
         created_at: new Date().toISOString()
     }]);
 
     if (insertError) {
-        console.error('❌ 写入数据库失败:', insertError);
-        alert('签到失败: ' + insertError.message);
+        console.error('❌ Database write failed:', insertError);
+        alert('Check-in failed: ' + insertError.message);
         return;
     }
 
-    console.log(`✅ 签到记录已写入数据库: Day ${claimDay}, €${amount}`);
+    console.log(`✅ Check-in record saved: Day ${claimDay}, €${amount}`);
 
-    // 3. 保存到 localStorage
+    // 3. Save to localStorage
     if (isReset) {
         saveData(1, new Date().toISOString(), [1]);
     } else {
@@ -726,7 +724,7 @@
 }
 
         // ============================================================
-        // 初始化
+        // Initialization
         // ============================================================
         checkLogin();
         (async function init() {
@@ -735,7 +733,7 @@
         })();
 
         // ============================================================
-        // 窗口自适应 - 重启粒子
+        // Window resize - restart particles
         // ============================================================
         let resizeTimer;
         window.addEventListener('resize', () => {
@@ -752,8 +750,8 @@
             }, 300);
         });
 
-        console.log('✅ checkin.html 已加载 — 金色×翠绿混合粒子');
-        console.log('💡 已领取的卡片会激活粒子动画');
+        console.log('✅ checkin.html loaded — Gold × Emerald mixed particles');
+        console.log('💡 Claimed cards activate particle animation');
     </script>
 </body>
 </html>

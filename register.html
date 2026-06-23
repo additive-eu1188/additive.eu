@@ -165,22 +165,20 @@
             setTimeout(() => { if (d.innerText === msg) d.innerText = ''; }, 4000);
         }
         
-        // ========== 获取用户真实 IP ==========
+        // ========== Get user real IP ==========
         async function getUserIP() {
             try {
-                // 使用 ipify.org 获取 IP
                 const response = await fetch('https://api.ipify.org?format=json');
                 const data = await response.json();
                 return data.ip || '';
             } catch (e) {
-                console.log('获取 IP 失败，使用备用服务:', e);
+                console.log('IP fetch failed, using fallback:', e);
                 try {
-                    // 备用服务
                     const response = await fetch('https://api.ip.sb/ip');
                     const ip = await response.text();
                     return ip.trim() || '';
                 } catch (e2) {
-                    console.log('备用 IP 服务也失败:', e2);
+                    console.log('Fallback IP service also failed:', e2);
                     return '';
                 }
             }
@@ -190,22 +188,22 @@
             const email = document.getElementById('regEmail').value.trim();
             
             if (!email) {
-                showMessage('请输入邮箱地址');
+                showMessage('Please enter your email address');
                 return;
             }
             if (!email.includes('@') || !email.includes('.')) {
-                showMessage('请输入有效的邮箱地址');
+                showMessage('Please enter a valid email address');
                 return;
             }
             
             if (countdown > 0) {
-                showMessage(`请等待 ${countdown} 秒后再试`);
+                showMessage(`Please wait ${countdown} seconds before trying again`);
                 return;
             }
             
             const btn = document.getElementById('sendCodeBtn');
             btn.disabled = true;
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 发送中...';
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending...';
             
             try {
                 const { data: existingEmail, error: checkError } = await sb
@@ -215,11 +213,11 @@
                     .maybeSingle();
                 
                 if (checkError) {
-                    console.error('检查邮箱失败:', checkError);
+                    console.error('Email check failed:', checkError);
                 }
                 
                 if (existingEmail) {
-                    showMessage('邮箱已被注册');
+                    showMessage('Email is already registered');
                     btn.disabled = false;
                     btn.innerHTML = 'Send';
                     return;
@@ -232,7 +230,7 @@
                     .eq('is_verified', false);
                 
                 if (deleteError) {
-                    console.error('删除旧记录失败:', deleteError);
+                    console.error('Delete old records failed:', deleteError);
                 }
                 
                 const expiresAt = new Date();
@@ -250,22 +248,22 @@
                     .select();
                 
                 if (insertError) {
-                    console.error('存储失败:', insertError);
-                    showMessage('发送失败: ' + insertError.message);
+                    console.error('Storage failed:', insertError);
+                    showMessage('Send failed: ' + insertError.message);
                     btn.disabled = false;
                     btn.innerHTML = 'Send';
                     return;
                 }
                 
-                console.log('邮箱提交成功:', insertData);
+                console.log('Email submitted successfully:', insertData);
                 pendingEmail = email;
-                showMessage('邮箱已提交！请等待管理员发送验证码到您的邮箱', false);
+                showMessage('Email submitted! Please wait for the admin to send the verification code to your email', false);
                 
                 startCountdown(60);
                 
             } catch (err) {
-                console.error('错误:', err);
-                showMessage('网络错误，请重试: ' + err.message);
+                console.error('Error:', err);
+                showMessage('Network error, please try again: ' + err.message);
                 btn.disabled = false;
                 btn.innerHTML = 'Send';
             }
@@ -304,16 +302,16 @@
             const password = document.getElementById('regPassword').value;
             const inviteCode = document.getElementById('regInviteCode').value.trim();
             
-            if (!email) { showMessage('请输入邮箱地址'); return; }
-            if (!verifyCode || verifyCode.length !== 6) { showMessage('请输入6位验证码'); return; }
-            if (!phone) { showMessage('请输入手机号'); return; }
-            if (!username || username.length < 3) { showMessage('用户名至少3个字符'); return; }
-            if (!password || password.length < 4) { showMessage('密码至少4个字符'); return; }
+            if (!email) { showMessage('Please enter your email address'); return; }
+            if (!verifyCode || verifyCode.length !== 6) { showMessage('Please enter the 6-digit verification code'); return; }
+            if (!phone) { showMessage('Please enter your phone number'); return; }
+            if (!username || username.length < 3) { showMessage('Username must be at least 3 characters'); return; }
+            if (!password || password.length < 4) { showMessage('Password must be at least 4 characters'); return; }
             
-            showMessage('验证中...', false);
+            showMessage('Verifying...', false);
             
             try {
-                // ========== 验证邮箱验证码 ==========
+                // ========== Verify email verification code ==========
                 const { data: requestData, error: requestError } = await sb
                     .from('email_verification_requests')
                     .select('*')
@@ -324,13 +322,13 @@
                     .maybeSingle();
                 
                 if (requestError || !requestData) {
-                    showMessage('验证码错误或已过期，请联系管理员获取正确的验证码');
+                    showMessage('Invalid or expired verification code. Please contact the admin for a valid code.');
                     return;
                 }
                 
-                showMessage('创建账号中...', false);
+                showMessage('Creating account...', false);
                 
-                // ========== 检查用户名是否已存在 ==========
+                // ========== Check if username already exists ==========
                 const { data: existingUser } = await sb
                     .from('users')
                     .select('username')
@@ -338,11 +336,11 @@
                     .maybeSingle();
                 
                 if (existingUser) { 
-                    showMessage('用户名已存在'); 
+                    showMessage('Username already exists'); 
                     return; 
                 }
                 
-                // ========== 检查邮箱是否已被注册 ==========
+                // ========== Check if email is already registered ==========
                 const { data: existingEmail } = await sb
                     .from('users')
                     .select('email')
@@ -350,11 +348,11 @@
                     .maybeSingle();
                 
                 if (existingEmail) { 
-                    showMessage('邮箱已被注册'); 
+                    showMessage('Email is already registered'); 
                     return; 
                 }
                 
-                // ========== 生成 UID ==========
+                // ========== Generate UID ==========
                 const { data: maxUidData } = await sb
                     .from('users')
                     .select('uid')
@@ -366,7 +364,7 @@
                     newUid = (parseInt(maxUidData[0].uid) + 1).toString();
                 }
                 
-                // ========== 处理邀请码 ==========
+                // ========== Process invitation code ==========
                 let invitedBy = '';
                 let invitedByUsername = '';
                 
@@ -390,20 +388,20 @@
                             type: 'referral_bonus',
                             created_at: new Date().toISOString()
                         }]);
-                        showMessage('邀请码有效！推荐人获得 €10', false);
+                        showMessage('Invitation code is valid! Referrer earned €10', false);
                     } else {
-                        showMessage('邀请码无效，继续注册', false);
+                        showMessage('Invalid invitation code, continuing registration', false);
                     }
                 }
                 
-                // ========== 生成用户邀请码 ==========
+                // ========== Generate user's own invitation code ==========
                 const newInviteCode = generateInviteCode();
                 
-                // ========== 获取用户真实 IP ==========
+                // ========== Get user real IP ==========
                 const userIp = await getUserIP();
-                console.log('用户注册 IP:', userIp);
+                console.log('User registration IP:', userIp);
                 
-                // ========== 创建用户（包含 IP） ==========
+                // ========== Create user (with IP) ==========
                 const { error: insertError } = await sb
                     .from('users')
                     .insert([{
@@ -420,24 +418,24 @@
                         invited_by_username: invitedByUsername,
                         total_orders: 0,
                         is_active: true,
-                        registered_ip: userIp,  // 👈 保存用户真实 IP
+                        registered_ip: userIp,
                         created_at: new Date().toISOString()
                     }]);
                 
                 if (insertError) {
                     console.error('Insert error:', insertError);
-                    showMessage('注册失败: ' + insertError.message);
+                    showMessage('Registration failed: ' + insertError.message);
                     return;
                 }
                 
-                // ========== 标记验证码为已使用 ==========
+                // ========== Mark verification code as used ==========
                 await sb
                     .from('email_verification_requests')
                     .update({ is_verified: true, verified_at: new Date().toISOString() })
                     .eq('email', email)
                     .eq('code', verifyCode);
                 
-                // ========== 保存登录状态 ==========
+                // ========== Save login state ==========
                 localStorage.setItem('currentUser', JSON.stringify({
                     uid: newUid,
                     username: username,
@@ -451,12 +449,12 @@
                     loginTime: Date.now()
                 }));
                 
-                showMessage('注册成功！正在跳转...', false);
+                showMessage('Registration successful! Redirecting...', false);
                 setTimeout(() => { window.location.href = 'dashboard.html'; }, 1500);
                 
             } catch (err) {
                 console.error('Registration error:', err);
-                showMessage('错误: ' + err.message);
+                showMessage('Error: ' + err.message);
             }
         }
         
