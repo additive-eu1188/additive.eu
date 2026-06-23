@@ -792,7 +792,7 @@
                 const container = document.getElementById('featuredProductsGrid');
                 if (!container) return;
                 if (originalProducts.length <= cardsPerStep) return;
-                scrollInterval = setInterval(() => stepScrollNextSmooth(), 1500);
+                scrollInterval = setInterval(() => stepScrollNextSmooth(), 3500);
                 const slider = document.querySelector('.products-slider-container');
                 if (slider) {
                     slider.addEventListener('mouseenter', () => { if (scrollInterval) clearInterval(scrollInterval); });
