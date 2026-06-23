@@ -2,6 +2,8 @@
 <html>
 <head>
     <title>Admin Login - ADDITIVE</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.2.0/crypto-js.min.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
@@ -29,13 +31,14 @@
         }
         .logo span { color: #8ca3ff; }
         .logo small { font-size: 12px; color: #5a6388; }
-        .form-group { margin-bottom: 24px; }
+        .form-group { margin-bottom: 20px; }
         .form-group label {
             display: block;
             margin-bottom: 8px;
             color: #a0a8c0;
             font-size: 13px;
         }
+        .form-group label i { margin-right: 6px; }
         .form-group input {
             width: 100%;
             background: rgba(10, 14, 26, 0.8);
@@ -45,8 +48,10 @@
             color: white;
             font-size: 14px;
             outline: none;
+            box-sizing: border-box;
         }
         .form-group input:focus { border-color: #8ca3ff; }
+        .form-group input::placeholder { color: #4a5a7a; }
         .login-btn {
             width: 100%;
             background: linear-gradient(135deg, #2f3e7a, #1f2a50);
@@ -58,44 +63,421 @@
             font-size: 16px;
             cursor: pointer;
             transition: 0.2s;
+            margin-top: 8px;
         }
         .login-btn:hover { transform: scale(1.02); background: linear-gradient(135deg, #3e5090, #2a3768); }
+        .login-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
         .error-message {
             text-align: center;
             margin-top: 16px;
             color: #ff8888;
             font-size: 13px;
+            min-height: 24px;
         }
+        .success-message {
+            text-align: center;
+            margin-top: 16px;
+            color: #4ade80;
+            font-size: 13px;
+            min-height: 24px;
+        }
+        .ga-hint {
+            font-size: 11px;
+            color: #5a6388;
+            text-align: center;
+            margin-top: 6px;
+        }
+        .ga-hint a { color: #8ca3ff; text-decoration: none; }
+        .ga-hint a:hover { text-decoration: underline; }
+        .divider {
+            display: flex;
+            align-items: center;
+            margin: 20px 0 16px;
+            color: #3a4a6a;
+            font-size: 11px;
+        }
+        .divider::before, .divider::after {
+            content: '';
+            flex: 1;
+            border-bottom: 1px solid rgba(255,255,255,0.06);
+        }
+        .divider::before { margin-right: 16px; }
+        .divider::after { margin-left: 16px; }
+        .back-link {
+            text-align: center;
+            margin-top: 16px;
+            font-size: 12px;
+            color: #5a6388;
+        }
+        .back-link a { color: #8ca3ff; text-decoration: none; }
+        .back-link a:hover { text-decoration: underline; }
+        .setup-ga-link {
+            display: block;
+            text-align: center;
+            margin-top: 12px;
+            font-size: 12px;
+        }
+        .setup-ga-link a { color: #ffb84d; text-decoration: none; }
+        .setup-ga-link a:hover { text-decoration: underline; }
     </style>
 </head>
 <body>
     <div class="login-container">
         <div class="logo">ADDITIVE<small> ADMIN</small></div>
+        
         <div class="form-group">
-            <label>Admin Password</label>
-            <input type="password" id="adminPassword" placeholder="Enter admin password">
+            <label><i class="fas fa-user"></i> Admin Username</label>
+            <input type="text" id="adminUsername" placeholder="Enter admin username">
         </div>
-        <button class="login-btn" onclick="login()">Login to Admin Panel</button>
-        <div id="errorMsg" class="error-message"></div>
+        
+        <div class="form-group">
+            <label><i class="fas fa-lock"></i> Password</label>
+            <input type="password" id="adminPassword" placeholder="Enter password" autocomplete="current-password">
+        </div>
+        
+        <div class="form-group">
+            <label><i class="fas fa-shield-alt"></i> Google Authenticator Code</label>
+            <input type="text" id="gaCode" placeholder="6-digit code" maxlength="6" inputmode="numeric" autocomplete="one-time-code">
+            <div class="ga-hint">
+                <i class="fas fa-mobile-alt"></i> 
+                Open Google Authenticator / Authy app
+            </div>
+        </div>
+        
+        <button class="login-btn" id="loginBtn" onclick="handleLogin()">
+            <i class="fas fa-sign-in-alt"></i> Login
+        </button>
+        
+        <div id="messageBox" class="error-message"></div>
+        
+        <div class="setup-ga-link">
+            <a href="#" onclick="showSetupGuide()"><i class="fas fa-qrcode"></i> First time? Set up Google Authenticator</a>
+        </div>
+        
+        <div class="divider">SECURE ACCESS</div>
+        
+        <div class="back-link">
+            <a href="index.html"><i class="fas fa-arrow-left"></i> Back to website</a>
+        </div>
+    </div>
+
+    <!-- GA 设置弹窗 -->
+    <div id="gaSetupModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); backdrop-filter:blur(8px); z-index:10000; align-items:center; justify-content:center;">
+        <div style="background:linear-gradient(145deg,#12172e,#0e1225); border-radius:32px; padding:40px; max-width:500px; width:90%; border:1px solid rgba(140,163,255,0.3); max-height:90vh; overflow-y:auto;">
+            <h3 style="color:#ffb84d; margin-bottom:20px;"><i class="fas fa-qrcode"></i> Google Authenticator Setup</h3>
+            <p style="color:#a0a8c0; font-size:14px; margin-bottom:20px;">Scan the QR code below with Google Authenticator or Authy app:</p>
+            <div style="text-align:center; margin-bottom:20px;">
+                <div id="qrCodeContainer" style="background:#fff; padding:20px; border-radius:16px; display:inline-block;">
+                    <p style="color:#333;">Loading QR Code...</p>
+                </div>
+            </div>
+            <div style="background:rgba(0,0,0,0.3); border-radius:12px; padding:16px; margin-bottom:20px;">
+                <p style="font-size:12px; color:#8a9abb;">Or manually enter this secret key:</p>
+                <code id="manualSecret" style="display:block; background:#0a0f2a; padding:12px; border-radius:8px; font-size:14px; color:#ffb84d; word-break:break-all; font-family:monospace;">Loading...</code>
+            </div>
+            <div class="form-group">
+                <label>Enter 6-digit code from your app to verify:</label>
+                <input type="text" id="verifyGaCode" placeholder="6-digit code" maxlength="6" inputmode="numeric">
+            </div>
+            <div style="display:flex; gap:12px; margin-top:20px;">
+                <button id="verifyGaBtn" class="login-btn" style="flex:1;" onclick="verifyAndSaveGA()">Verify & Save</button>
+                <button id="closeGaModalBtn" style="flex:1; background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.1); border-radius:40px; padding:14px; color:#fff; cursor:pointer;">Close</button>
+            </div>
+            <div id="gaSetupMessage" style="margin-top:16px; text-align:center; font-size:13px; min-height:24px;"></div>
+        </div>
     </div>
 
     <script>
-        // ⚠️ 请修改为强密码！
-        const ADMIN_PASSWORD = 'addmin123456';
-        
-        function login() {
-            const password = document.getElementById('adminPassword').value;
-            if (password === ADMIN_PASSWORD) {
-                localStorage.setItem('admin_logged_in', 'true');
-                window.location.href = 'ad.html';
-            } else {
-                document.getElementById('errorMsg').innerText = 'Invalid password';
+        // ============================================================
+        // Supabase 配置
+        // ============================================================
+        const SUPABASE_URL = 'https://qgmbzdfnwsdosdqphlxk.supabase.co';
+        const SUPABASE_KEY = 'sb_publishable_zsJFjfNUO7NKp8ZH5KrXFQ_WZ8Q2Kym';
+        const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        // ============================================================
+        // Google Authenticator TOTP 工具函数
+        // ============================================================
+        function base32Decode(encoded) {
+            const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
+            const bytes = [];
+            let bits = 0;
+            let value = 0;
+            for (const char of encoded.toUpperCase()) {
+                const index = alphabet.indexOf(char);
+                if (index === -1) continue;
+                value = (value << 5) | index;
+                bits += 5;
+                if (bits >= 8) {
+                    bytes.push((value >> (bits - 8)) & 0xff);
+                    bits -= 8;
+                }
+            }
+            return new Uint8Array(bytes);
+        }
+
+        function generateTOTP(secret) {
+            try {
+                const key = base32Decode(secret);
+                const epoch = Math.floor(Date.now() / 1000 / 30);
+                const timeBytes = new Uint8Array(8);
+                let e = epoch;
+                for (let i = 7; i >= 0; i--) {
+                    timeBytes[i] = e & 0xff;
+                    e >>= 8;
+                }
+                const hmac = CryptoJS.HmacSHA1(CryptoJS.lib.WordArray.create(timeBytes), CryptoJS.lib.WordArray.create(key));
+                const hmacBytes = new Uint8Array(hmac.words.length * 4);
+                for (let i = 0; i < hmac.words.length; i++) {
+                    hmacBytes[i * 4] = (hmac.words[i] >> 24) & 0xff;
+                    hmacBytes[i * 4 + 1] = (hmac.words[i] >> 16) & 0xff;
+                    hmacBytes[i * 4 + 2] = (hmac.words[i] >> 8) & 0xff;
+                    hmacBytes[i * 4 + 3] = hmac.words[i] & 0xff;
+                }
+                const offset = hmacBytes[19] & 0xf;
+                const binary = ((hmacBytes[offset] & 0x7f) << 24) |
+                              ((hmacBytes[offset + 1] & 0xff) << 16) |
+                              ((hmacBytes[offset + 2] & 0xff) << 8) |
+                              (hmacBytes[offset + 3] & 0xff);
+                const otp = binary % 1000000;
+                return String(otp).padStart(6, '0');
+            } catch (e) {
+                console.error('GA 验证码生成失败:', e);
+                return null;
             }
         }
-        
+
+        function verifyGA(secret, code) {
+            const generated = generateTOTP(secret);
+            return generated === code;
+        }
+
+        // ============================================================
+        // 生成 GA Secret Key
+        // ============================================================
+        function generateGASecret() {
+            const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
+            let secret = '';
+            for (let i = 0; i < 16; i++) {
+                secret += chars[Math.floor(Math.random() * chars.length)];
+            }
+            return secret;
+        }
+
+        // ============================================================
+        // 登录处理
+        // ============================================================
+        async function handleLogin() {
+            const username = document.getElementById('adminUsername').value.trim();
+            const password = document.getElementById('adminPassword').value;
+            const gaCode = document.getElementById('gaCode').value.trim();
+            const messageBox = document.getElementById('messageBox');
+            const loginBtn = document.getElementById('loginBtn');
+
+            messageBox.textContent = '';
+            messageBox.className = '';
+
+            if (!username) {
+                messageBox.textContent = '⚠️ Please enter admin username';
+                messageBox.className = 'error-message';
+                return;
+            }
+            if (!password) {
+                messageBox.textContent = '⚠️ Please enter password';
+                messageBox.className = 'error-message';
+                return;
+            }
+            if (!gaCode || gaCode.length !== 6 || !/^\d{6}$/.test(gaCode)) {
+                messageBox.textContent = '⚠️ Please enter a valid 6-digit Google Authenticator code';
+                messageBox.className = 'error-message';
+                return;
+            }
+
+            loginBtn.disabled = true;
+            loginBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Verifying...';
+
+            try {
+                const { data: admin, error } = await sb
+                    .from('admin_users')
+                    .select('*')
+                    .eq('username', username)
+                    .eq('is_active', true)
+                    .single();
+
+                if (error || !admin) {
+                    messageBox.textContent = '❌ Admin user not found';
+                    messageBox.className = 'error-message';
+                    loginBtn.disabled = false;
+                    loginBtn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Login';
+                    return;
+                }
+
+                // 验证密码 (生产环境建议使用 bcrypt)
+                if (admin.password_hash !== password) {
+                    messageBox.textContent = '❌ Invalid password';
+                    messageBox.className = 'error-message';
+                    loginBtn.disabled = false;
+                    loginBtn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Login';
+                    return;
+                }
+
+                // 验证 Google Authenticator
+                const isValidGA = verifyGA(admin.ga_secret, gaCode);
+                if (!isValidGA) {
+                    messageBox.textContent = '❌ Invalid Google Authenticator code';
+                    messageBox.className = 'error-message';
+                    loginBtn.disabled = false;
+                    loginBtn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Login';
+                    return;
+                }
+
+                // 登录成功
+                messageBox.textContent = '✅ Login successful! Redirecting...';
+                messageBox.className = 'success-message';
+
+                localStorage.setItem('admin_logged_in', 'true');
+                localStorage.setItem('admin_username', username);
+                localStorage.setItem('admin_login_time', Date.now().toString());
+
+                setTimeout(() => {
+                    window.location.href = 'ad.html';
+                }, 800);
+
+            } catch (err) {
+                console.error('Login error:', err);
+                messageBox.textContent = '❌ Login error: ' + err.message;
+                messageBox.className = 'error-message';
+                loginBtn.disabled = false;
+                loginBtn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Login';
+            }
+        }
+
+        // ============================================================
+        // Enter 键支持
+        // ============================================================
         document.addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') login();
+            if (e.key === 'Enter') {
+                handleLogin();
+            }
         });
+
+        // ============================================================
+        // GA 设置向导
+        // ============================================================
+        let newGASecret = '';
+        let newGAUsername = '';
+
+        async function showSetupGuide() {
+            const modal = document.getElementById('gaSetupModal');
+            modal.style.display = 'flex';
+
+            const username = document.getElementById('adminUsername').value.trim() || 'admin';
+            newGAUsername = username;
+            newGASecret = generateGASecret();
+
+            const issuer = 'ADDITIVE';
+            const accountName = username;
+            const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=otpauth://totp/${encodeURIComponent(issuer)}:${encodeURIComponent(accountName)}?secret=${newGASecret}&issuer=${encodeURIComponent(issuer)}`;
+
+            document.getElementById('qrCodeContainer').innerHTML = `<img src="${qrUrl}" style="width:200px;height:200px;" alt="QR Code">`;
+            document.getElementById('manualSecret').textContent = newGASecret;
+            document.getElementById('gaSetupMessage').textContent = '';
+            document.getElementById('gaSetupMessage').className = '';
+            document.getElementById('verifyGaCode').value = '';
+            document.getElementById('verifyGaCode').focus();
+
+            document.getElementById('closeGaModalBtn').onclick = () => {
+                modal.style.display = 'none';
+            };
+        }
+
+        async function verifyAndSaveGA() {
+            const code = document.getElementById('verifyGaCode').value.trim();
+            const messageEl = document.getElementById('gaSetupMessage');
+
+            if (!code || code.length !== 6 || !/^\d{6}$/.test(code)) {
+                messageEl.textContent = '⚠️ Please enter a valid 6-digit code';
+                messageEl.className = 'error-message';
+                return;
+            }
+
+            if (!verifyGA(newGASecret, code)) {
+                messageEl.textContent = '❌ Invalid code, please try again';
+                messageEl.className = 'error-message';
+                return;
+            }
+
+            messageEl.textContent = '✅ Code verified! Saving to database...';
+            messageEl.className = 'success-message';
+
+            try {
+                const { data: existing } = await sb
+                    .from('admin_users')
+                    .select('id')
+                    .eq('username', newGAUsername)
+                    .single();
+
+                if (existing) {
+                    const { error } = await sb
+                        .from('admin_users')
+                        .update({ 
+                            ga_secret: newGASecret,
+                            updated_at: new Date().toISOString()
+                        })
+                        .eq('username', newGAUsername);
+
+                    if (error) throw error;
+                    messageEl.textContent = '✅ GA Secret updated successfully! You can now login with GA.';
+                    messageEl.className = 'success-message';
+                } else {
+                    const password = prompt('Please set a password for this admin account:');
+                    if (!password || password.length < 4) {
+                        messageEl.textContent = '⚠️ Password must be at least 4 characters';
+                        messageEl.className = 'error-message';
+                        return;
+                    }
+
+                    const { error } = await sb
+                        .from('admin_users')
+                        .insert([{
+                            username: newGAUsername,
+                            password_hash: password,
+                            ga_secret: newGASecret,
+                            is_active: true,
+                            created_at: new Date().toISOString()
+                        }]);
+
+                    if (error) throw error;
+                    messageEl.textContent = '✅ Admin account created with GA! You can now login.';
+                    messageEl.className = 'success-message';
+                }
+
+                setTimeout(() => {
+                    document.getElementById('gaSetupModal').style.display = 'none';
+                }, 2000);
+
+            } catch (err) {
+                console.error('Save GA error:', err);
+                messageEl.textContent = '❌ Failed to save: ' + err.message;
+                messageEl.className = 'error-message';
+            }
+        }
+
+        // ============================================================
+        // 检查是否已登录
+        // ============================================================
+        if (localStorage.getItem('admin_logged_in') === 'true') {
+            const loginTime = parseInt(localStorage.getItem('admin_login_time') || '0');
+            if (Date.now() - loginTime < 24 * 60 * 60 * 1000) {
+                window.location.href = 'ad.html';
+            } else {
+                localStorage.removeItem('admin_logged_in');
+            }
+        }
+
+        console.log('🔐 Admin Login with Username + Password + Google Authenticator');
     </script>
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 </body>
 </html>
