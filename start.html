@@ -1263,176 +1263,190 @@ if (/Mobi|Android|iPhone/i.test(navigator.userAgent)) {
             })();
         };
 
-                        // ============================================================
-        // Submit trigger order
-        // ============================================================
-        window.submitTriggerOrder = async function() {
-            if (selectedRating === 0) {
-                showToast(t('order_select_rating'), 'warning');
-                return;
-            }
+                        // 在 start.html 中替换 submitTriggerOrder 函数
+window.submitTriggerOrder = async function() {
+    if (selectedRating === 0) {
+        showToast(t('order_select_rating'), 'warning');
+        return;
+    }
 
-            var user = getCurrentUser();
-            if (!user) {
-                window.location.href = 'signin.html';
-                return;
-            }
+    var user = getCurrentUser();
+    if (!user) {
+        window.location.href = 'signin.html';
+        return;
+    }
 
-            var pc = document.getElementById('progressContainer');
-            var pb = document.getElementById('progressBar');
-            var pt = document.getElementById('progressText');
+    var pc = document.getElementById('progressContainer');
+    var pb = document.getElementById('progressBar');
+    var pt = document.getElementById('progressText');
 
-            var matchedPrice = currentOrder.price || 0;
-            var commission = currentOrder.commissionAmount || 0;
+    var matchedPrice = currentOrder.price || 0;
+    var commission = currentOrder.commissionAmount || 0;
 
-            var orderTypeDisplay = currentOrder.orderType || 'Order';
-            var commissionPercent = currentOrder.commissionPercent || '';
+    var orderTypeDisplay = currentOrder.orderType || 'Order';
+    var commissionPercent = currentOrder.commissionPercent || '';
 
-            var freshResult = await sb.from('users').select('balance, trial_bonus_amount, username').eq('uid', user.uid).single();
-            var latestBalance = freshResult.data?.balance || 0;
-            var trialBalance = freshResult.data?.trial_bonus_amount || 0;
-            var username = freshResult.data?.username || user.username;
-            var totalAvailable = latestBalance + trialBalance;
+    var freshResult = await sb.from('users').select('balance, trial_bonus_amount, username').eq('uid', user.uid).single();
+    var latestBalance = freshResult.data?.balance || 0;
+    var trialBalance = freshResult.data?.trial_bonus_amount || 0;
+    var username = freshResult.data?.username || user.username;
+    var totalAvailable = latestBalance + trialBalance;
 
-            if (totalAvailable < matchedPrice) {
-                showInsufficientBalanceModal(matchedPrice, totalAvailable, true);
-                return;
-            }
+    if (totalAvailable < matchedPrice) {
+        showInsufficientBalanceModal(matchedPrice, totalAvailable, true);
+        return;
+    }
 
-            pc.style.display = 'block';
-            pb.style.width = '20%';
-            pt.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing order...';
+    pc.style.display = 'block';
+    pb.style.width = '20%';
+    pt.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing order...';
 
-            // 直接执行，无延迟
-            (async function() {
-                pb.style.width = '40%';
-                pt.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Verifying balance...';
+    (async function() {
+        pb.style.width = '40%';
+        pt.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Verifying balance...';
 
-                var useTrial = 0;
-                var useBalance = 0;
-                if (latestBalance >= matchedPrice) {
-                    useBalance = matchedPrice;
+        var useTrial = 0;
+        var useBalance = 0;
+        if (latestBalance >= matchedPrice) {
+            useBalance = matchedPrice;
+        } else {
+            useBalance = latestBalance;
+            useTrial = matchedPrice - latestBalance;
+        }
+
+        var newBalance = latestBalance - useBalance;
+        var newTrialBonus = trialBalance;
+        var isTrialOrder = (useTrial > 0);
+
+        if (isTrialOrder) {
+            newTrialBonus = trialBalance;
+            newBalance = latestBalance;
+        }
+
+        // ✅ 计算最终佣金（确保 commission 正确）
+        var finalCommission;
+        if (isTrialOrder) {
+            var trialConfig = await getTrialConfig();
+            finalCommission = parseFloat((matchedPrice * (trialConfig.commissionRate / 100)).toFixed(2));
+        } else {
+            // 🔥 如果 commission 为 0，根据订单类型重新计算
+            if (commission <= 0) {
+                // 判断订单类型：高级订单 (advanced) 佣金 5%，卡牌订单 (card_order) 佣金 15%
+                if (currentOrder.orderType === 'x30 Commissions Order' || 
+                    currentOrder.orderType === 'Card Order' ||
+                    currentOrder.orderType === 'card_order') {
+                    finalCommission = parseFloat((matchedPrice * 0.15).toFixed(2));
+                } else if (currentOrder.orderType === 'Commercial Order' || 
+                           currentOrder.orderType === 'advanced' ||
+                           currentOrder.orderType === 'Advanced Order') {
+                    finalCommission = parseFloat((matchedPrice * 0.05).toFixed(2));
                 } else {
-                    useBalance = latestBalance;
-                    useTrial = matchedPrice - latestBalance;
+                    // 默认使用 5%
+                    finalCommission = parseFloat((matchedPrice * 0.05).toFixed(2));
                 }
+                console.log('💰 Trigger Order Commission (recalculated):', finalCommission, 'for type:', currentOrder.orderType);
+            } else {
+                finalCommission = commission;
+                console.log('💰 Trigger Order Commission (from order):', finalCommission);
+            }
+        }
 
-                var newBalance = latestBalance - useBalance;
-                var newTrialBonus = trialBalance;
-                var isTrialOrder = (useTrial > 0);
+        // ✅ 确保 finalCommission 是一个有效的正数
+        if (isNaN(finalCommission) || finalCommission <= 0) {
+            // 如果还是 0，使用默认值 5%
+            finalCommission = parseFloat((matchedPrice * 0.05).toFixed(2));
+            console.log('⚠️ Commission was 0, using default 5%:', finalCommission);
+        }
 
-                if (isTrialOrder) {
-                    newTrialBonus = trialBalance;
-                    newBalance = latestBalance;
-                }
+        pb.style.width = '60%';
+        pt.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Placing order...';
 
-                // ✅ 计算最终佣金（确保 commission 正确）
-                var finalCommission;
-                if (isTrialOrder) {
-                    var trialConfig = await getTrialConfig();
-                    finalCommission = parseFloat((matchedPrice * (trialConfig.commissionRate / 100)).toFixed(2));
-                } else {
-                    // 🔥 如果 commission 为 0，根据订单类型重新计算
-                    if (commission <= 0) {
-                        if (currentOrder.orderType === 'x30 Commissions Order') {
-                            finalCommission = parseFloat((matchedPrice * 0.15).toFixed(2));
-                        } else if (currentOrder.orderType === 'Commercial Order' || currentOrder.orderType === 'advanced') {
-                            finalCommission = parseFloat((matchedPrice * 0.05).toFixed(2));
-                        } else {
-                            finalCommission = parseFloat((matchedPrice * 0.05).toFixed(2));
-                        }
-                        console.log('💰 Trigger Order Commission (recalculated):', finalCommission);
-                    } else {
-                        finalCommission = commission;
-                        console.log('💰 Trigger Order Commission (from order):', finalCommission);
-                    }
-                }
-
-                pb.style.width = '60%';
-                pt.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Placing order...';
-
-                var updateData = {
-                    balance: latestBalance + finalCommission,
-                    trial_bonus_amount: newTrialBonus
-                };
-
-                var balanceError = await sb.from('users').update(updateData).eq('uid', user.uid);
-                if (balanceError.error) {
-                    showToast('Order failed: ' + balanceError.error.message, 'error');
-                    return;
-                }
-
-                pb.style.width = '80%';
-                pt.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Completing order...';
-
-                var randomCode = currentOrder.displayOrderCode || generateRandomOrderCode();
-
-                // ✅ 写入 order_history（确保 commission 正确保存）
-                await sb.from('order_history').insert([{
-                    uid: user.uid,
-                    username: username,
-                    order_code: randomCode,
-                    accommodation_name: currentOrder.accommodationName || 'Trigger Order',
-                    price: matchedPrice,
-                    commission: finalCommission,
-                    rating: selectedRating,
-                    status: 'completed',
-                    date: new Date().toISOString()
-                }]);
-
-                try {
-                    const { data: currentUser } = await sb
-                        .from('users')
-                        .select('round_orders_count')
-                        .eq('uid', user.uid)
-                        .single();
-
-                    const newCount = (currentUser?.round_orders_count || 0) + 1;
-                    await sb
-                        .from('users')
-                        .update({ round_orders_count: newCount })
-                        .eq('uid', user.uid);
-                } catch (e) {
-                    console.error('Failed to update round_orders_count:', e);
-                }
-
-                // ✅ 写入 deposits 记录（确保 history 显示）
-                await sb.from('deposits').insert([{
-                    uid: user.uid,
-                    username: username,
-                    amount: finalCommission,
-                    type: 'order_commission',
-                    created_at: new Date().toISOString()
-                }]);
-
-                if (currentOrder.triggerOrderId) {
-                    await sb.from('user_trigger_orders').update({
-                        status: 'completed',
-                        completed_at: new Date().toISOString()
-                    }).eq('id', currentOrder.triggerOrderId);
-                }
-
-                var finalBalance = latestBalance + finalCommission;
-                currentUserBalance = finalBalance;
-                user.balance = finalBalance;
-                user.trialBonusAmount = newTrialBonus;
-                localStorage.setItem('currentUser', JSON.stringify(user));
-
-                pb.style.width = '100%';
-                pt.innerHTML = '<i class="fas fa-check-circle"></i> Order Completed!';
-
-                // ✅ 强制刷新所有数据（包括 commission 统计）
-                await refreshBalanceDisplay();
-                await loadUserData();
-                clearTempOrder();
-
-                showToast('✅ Trigger order completed! Earned €' + finalCommission.toFixed(2) + ' commission', 'success');
-
-                // 立即关闭弹窗，无延迟
-                checkAndShowAmountDue();
-                closeOrderModal();
-            })();
+        // ✅ 更新用户余额（加上佣金）
+        var updateData = {
+            balance: latestBalance + finalCommission,
+            trial_bonus_amount: newTrialBonus
         };
+
+        var balanceError = await sb.from('users').update(updateData).eq('uid', user.uid);
+        if (balanceError.error) {
+            showToast('Order failed: ' + balanceError.error.message, 'error');
+            return;
+        }
+
+        pb.style.width = '80%';
+        pt.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Completing order...';
+
+        var randomCode = currentOrder.displayOrderCode || generateRandomOrderCode();
+
+        // ✅ 写入 order_history（确保 commission 正确保存）
+        await sb.from('order_history').insert([{
+            uid: user.uid,
+            username: username,
+            order_code: randomCode,
+            accommodation_name: currentOrder.accommodationName || 'Trigger Order',
+            price: matchedPrice,
+            commission: finalCommission,
+            rating: selectedRating,
+            status: 'completed',
+            date: new Date().toISOString()
+        }]);
+
+        try {
+            const { data: currentUser } = await sb
+                .from('users')
+                .select('round_orders_count')
+                .eq('uid', user.uid)
+                .single();
+
+            const newCount = (currentUser?.round_orders_count || 0) + 1;
+            await sb
+                .from('users')
+                .update({ round_orders_count: newCount })
+                .eq('uid', user.uid);
+        } catch (e) {
+            console.error('Failed to update round_orders_count:', e);
+        }
+
+        // ✅ 写入 deposits 记录（确保 history 显示）
+        await sb.from('deposits').insert([{
+            uid: user.uid,
+            username: username,
+            amount: finalCommission,
+            type: 'order_commission',
+            description: currentOrder.orderType || 'Trigger Order Commission',
+            created_at: new Date().toISOString()
+        }]);
+
+        if (currentOrder.triggerOrderId) {
+            await sb.from('user_trigger_orders').update({
+                status: 'completed',
+                completed_at: new Date().toISOString()
+            }).eq('id', currentOrder.triggerOrderId);
+        }
+
+        var finalBalance = latestBalance + finalCommission;
+        currentUserBalance = finalBalance;
+        user.balance = finalBalance;
+        user.trialBonusAmount = newTrialBonus;
+        localStorage.setItem('currentUser', JSON.stringify(user));
+
+        pb.style.width = '100%';
+        pt.innerHTML = '<i class="fas fa-check-circle"></i> Order Completed!';
+
+        // ✅ 强制刷新所有数据（包括 commission 统计）
+        await refreshBalanceDisplay();
+        await loadUserData();
+        clearTempOrder();
+
+        // ✅ 显示成功消息（包含正确的佣金金额）
+        var orderTypeName = currentOrder.orderType || 'Trigger';
+        showToast('✅ ' + orderTypeName + ' completed! Earned €' + finalCommission.toFixed(2) + ' commission', 'success');
+
+        // 立即关闭弹窗
+        checkAndShowAmountDue();
+        closeOrderModal();
+    })();
+};
 
         function closeOrderModal() {
             document.getElementById('orderModal').classList.remove('active');
@@ -1481,42 +1495,64 @@ if (/Mobi|Android|iPhone/i.test(navigator.userAgent)) {
         // Handle trigger order
         // ============================================================
         async function handleTriggerOrder(modalContent) {
-            var matchedPrice = currentTriggerOrder.matched_price || 0;
-            var commission = currentTriggerOrder.commission_amount || 0;
+    var matchedPrice = currentTriggerOrder.matched_price || 0;
+    
+    // ✅ 直接从数据库对象获取 commission_amount，不要用 || 0 覆盖
+    var commission = currentTriggerOrder.commission_amount;
+    
+    // 🔥 如果 commission 是 null 或 undefined，才使用 0
+    if (commission === null || commission === undefined) {
+        commission = 0;
+    }
+    
+    console.log('💰 handleTriggerOrder - commission_amount from DB:', commission);
+    console.log('💰 handleTriggerOrder - matched_price:', matchedPrice);
+    console.log('💰 handleTriggerOrder - order_type:', currentTriggerOrder.order_type);
 
-            var orderTypeDisplay = currentTriggerOrder.order_type === 'advanced' ? 'Commercial Order' : 'Order';
-            var commissionPercent = currentTriggerOrder.order_type === 'advanced' ? '5' : '';
+    // ✅ 正确设置订单类型
+    var orderTypeDisplay = 'Order';
+    var commissionPercent = '';
+    
+    if (currentTriggerOrder.order_type === 'advanced') {
+        orderTypeDisplay = 'Commercial Order';
+        commissionPercent = '5';
+    } else if (currentTriggerOrder.order_type === 'card_order') {
+        orderTypeDisplay = 'x30 Commissions Order';
+        commissionPercent = '15';
+    }
 
-            currentOrder = {
-                id: currentTriggerOrder.id,
-                orderCode: currentTriggerOrder.matched_order_code,
-                accommodationName: currentTriggerOrder.matched_order_name,
-                price: matchedPrice,
-                imageUrl: currentTriggerOrder.matched_image_url,
-                commissionAmount: commission,
-                isTriggerOrder: true,
-                triggerOrderId: currentTriggerOrder.id,
-                orderType: orderTypeDisplay,
-                commissionPercent: commissionPercent
-            };
+    currentOrder = {
+        id: currentTriggerOrder.id,
+        orderCode: currentTriggerOrder.matched_order_code,
+        accommodationName: currentTriggerOrder.matched_order_name,
+        price: matchedPrice,
+        imageUrl: currentTriggerOrder.matched_image_url,
+        commissionAmount: commission,  // ✅ 使用正确的佣金值
+        isTriggerOrder: true,
+        triggerOrderId: currentTriggerOrder.id,
+        orderType: orderTypeDisplay,
+        commissionPercent: commissionPercent
+    };
+    
+    console.log('📦 currentOrder after setup:', currentOrder);
 
-            if (!currentOrder.imageUrl && currentTriggerOrder.matched_order_id) {
-                var poolResult = await sb.from('orders_pool').select('image_url').eq('id', currentTriggerOrder.matched_order_id).single();
-                if (poolResult.data) currentOrder.imageUrl = poolResult.data.image_url;
-            }
+    if (!currentOrder.imageUrl && currentTriggerOrder.matched_order_id) {
+        var poolResult = await sb.from('orders_pool').select('image_url').eq('id', currentTriggerOrder.matched_order_id).single();
+        if (poolResult.data) currentOrder.imageUrl = poolResult.data.image_url;
+    }
 
-            selectedRating = 0;
-            var randomCode = generateRandomOrderCode();
-            currentOrder.displayOrderCode = randomCode;
+    selectedRating = 0;
+    var randomCode = generateRandomOrderCode();
+    currentOrder.displayOrderCode = randomCode;
 
-            var user = getCurrentUser();
-            if (user) {
-                currentOrder.uid = user.uid;
-                saveTempOrder(currentOrder);
-            }
+    var user = getCurrentUser();
+    if (user) {
+        currentOrder.uid = user.uid;
+        saveTempOrder(currentOrder);
+    }
 
-            renderOrderModalContent(currentOrder);
-        }
+    renderOrderModalContent(currentOrder);
+}
 
         // ============================================================
         // 渲染订单弹窗内容（提取公共逻辑 - 优化版）
