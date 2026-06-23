@@ -33,7 +33,17 @@
         .start-btn { width: 100%; background: linear-gradient(135deg, #C9B095, #b8944a); border: none; padding: 14px; border-radius: 40px; color: #0A122B; font-weight: 700; font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: 0.2s; }
         .start-btn:hover { transform: scale(1.01); box-shadow: 0 5px 15px rgba(201,176,149,0.3); }
         .start-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
-        .amount-due-card { background: linear-gradient(135deg, rgba(255,90,90,0.15), rgba(255,90,90,0.05)); border: 1px solid rgba(255,90,90,0.4); border-radius: 20px; padding: 16px 20px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; animation: slideIn 0.3s ease; }
+        .amount-due-card { 
+    background: linear-gradient(135deg, rgba(255,90,90,0.15), rgba(255,90,90,0.05)); 
+    border: 1px solid rgba(255,90,90,0.4); 
+    border-radius: 20px; 
+    padding: 16px 20px; 
+    margin: 0 16px 16px 16px;  /* 👈 和 orders-row 保持一致 */
+    display: flex; 
+    justify-content: space-between; 
+    align-items: center; 
+    animation: slideIn 0.3s ease; 
+}
         .amount-due-label { font-size: 14px; color: #ff8888; font-weight: 500; }
         .amount-due-value { font-size: 24px; font-weight: 700; color: #ff8888; }
         @keyframes slideIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
