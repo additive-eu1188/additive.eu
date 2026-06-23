@@ -697,14 +697,14 @@
 
     // 2. 写入数据库 - 关键步骤
     const { error: insertError } = await sb
-        .from('user_checkin_records')
-        .insert([{
-            uid: user.uid,
-            username: user.username,
-            day: claimDay,
-            amount: amount,
-            claimed_at: new Date().toISOString()
-        }]);
+    .from('user_checkin_records')
+    .insert([{
+        uid: user.uid,
+        day_number: claimDay,        // ← 改成 day_number
+        amount: amount,
+        checkin_date: new Date().toISOString().split('T')[0],  // ← 只取日期部分 YYYY-MM-DD
+        created_at: new Date().toISOString()
+    }]);
 
     if (insertError) {
         console.error('❌ 写入数据库失败:', insertError);
