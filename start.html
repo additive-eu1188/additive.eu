@@ -660,72 +660,81 @@
         }
 
         async function loadUserData() {
-            var user = getCurrentUser();
-            if (!user) { window.location.href = 'signin.html'; return; }
-            currentUserUid = user.uid;
+    var user = getCurrentUser();
+    if (!user) { window.location.href = 'signin.html'; return; }
+    currentUserUid = user.uid;
 
-            try {
-                const { data: freshUser, error } = await sb
-                    .from('users')
-                    .select('balance, trial_bonus_amount, current_round, round_orders_count, is_premium')
-                    .eq('uid', user.uid)
-                    .single();
+    try {
+        const { data: freshUser, error } = await sb
+            .from('users')
+            .select('balance, trial_bonus_amount, current_round, round_orders_count, is_premium')
+            .eq('uid', user.uid)
+            .single();
 
-                if (freshUser) {
-                    currentUserBalance = freshUser.balance || 0;
-                    user.balance = currentUserBalance;
-                    user.trialBonusAmount = freshUser.trial_bonus_amount || 0;
-                    user.currentRound = freshUser.current_round || 0;
-                    user.roundOrdersCount = freshUser.round_orders_count || 0;
-                    user.isPremium = freshUser.is_premium || false;
-                    localStorage.setItem('currentUser', JSON.stringify(user));
-                }
-
-                document.getElementById('totalOrders').innerText = user.roundOrdersCount || 0;
-
-                var ordersResult = await sb.from('order_history').select('commission').eq('uid', user.uid);
-                var orders = ordersResult.data || [];
-                var totalCommission = orders.reduce(function(s, o) { return s + (o.commission || 0); }, 0);
-
-                currentTriggerOrder = await getUserPendingTriggerOrder(user.uid);
-
-                var pendingResult = await sb.from('withdrawals').select('amount').eq('uid', user.uid).eq('status', 'pending');
-                var totalPending = (pendingResult.data || []).reduce(function(sum, w) { return sum + (w.amount || 0); }, 0);
-
-                var amountDueData = getAmountDue(user.uid);
-                var amountDue = amountDueData?.amountDue || 0;
-
-                var triggerOrder = await getUserPendingTriggerOrder(user.uid);
-                var triggerCommission = triggerOrder?.commission_amount || 0;
-
-                var totalPendingDisplay;
-                if (triggerOrder && amountDue > 0) {
-                    totalPendingDisplay = currentUserBalance + amountDue + triggerCommission;
-                } else {
-                    totalPendingDisplay = totalPending;
-                }
-
-                var balanceEl = document.getElementById('statBalance');
-                balanceEl.innerHTML = '€' + currentUserBalance.toFixed(2);
-                if (currentUserBalance < 0) balanceEl.classList.add('balance-negative');
-                else balanceEl.classList.remove('balance-negative');
-
-                var trialBonusEl = document.getElementById('statTrialBonus');
-                if (trialBonusEl) {
-                    trialBonusEl.innerHTML = '€' + (user.trialBonusAmount || 0).toFixed(2);
-                }
-
-                document.getElementById('statCommissions').innerHTML = '€' + totalCommission.toFixed(2);
-                document.getElementById('statPending').innerHTML = '€' + totalPendingDisplay.toFixed(2);
-
-                // 🔥 预加载订单池（后台静默，不影响UI）
-                getOrdersFromAdmin();
-
-                setTimeout(function() {
-                    checkAndShowAmountDue();
-                }, 100);
-            } catch (e) { console.error('Failed to load data:', e); }
+        if (freshUser) {
+            currentUserBalance = freshUser.balance || 0;
+            user.balance = currentUserBalance;
+            user.trialBonusAmount = freshUser.trial_bonus_amount || 0;
+            user.currentRound = freshUser.current_round || 0;
+            user.roundOrdersCount = freshUser.round_orders_count || 0;
+            user.isPremium = freshUser.is_premium || false;
+            localStorage.setItem('currentUser', JSON.stringify(user));
         }
+
+        document.getElementById('totalOrders').innerText = user.roundOrdersCount || 0;
+
+        // ============================================================
+        // ✅ 先检查并清除 amountDue（必须在计算 totalPendingDisplay 之前）
+        // ============================================================
+        var amountDueData = getAmountDue(user.uid);
+        if (amountDueData && amountDueData.orderPrice > 0 && currentUserBalance >= amountDueData.orderPrice) {
+            setAmountDue(user.uid, 0, 0);
+            hideAmountDueCard();
+        }
+
+        var ordersResult = await sb.from('order_history').select('commission').eq('uid', user.uid);
+        var orders = ordersResult.data || [];
+        var totalCommission = orders.reduce(function(s, o) { return s + (o.commission || 0); }, 0);
+
+        currentTriggerOrder = await getUserPendingTriggerOrder(user.uid);
+
+        var pendingResult = await sb.from('withdrawals').select('amount').eq('uid', user.uid).eq('status', 'pending');
+        var totalPending = (pendingResult.data || []).reduce(function(sum, w) { return sum + (w.amount || 0); }, 0);
+
+        var amountDue = getAmountDue(user.uid)?.amountDue || 0;  // 👈 重新读取（可能已被清除）
+        var triggerOrder = await getUserPendingTriggerOrder(user.uid);
+        var triggerCommission = triggerOrder?.commission_amount || 0;
+
+        var totalPendingDisplay;
+        if (triggerOrder && amountDue > 0) {
+            totalPendingDisplay = currentUserBalance + amountDue + triggerCommission;
+        } else {
+            totalPendingDisplay = totalPending;
+        }
+
+        var balanceEl = document.getElementById('statBalance');
+        balanceEl.innerHTML = '€' + currentUserBalance.toFixed(2);
+        if (currentUserBalance < 0) balanceEl.classList.add('balance-negative');
+        else balanceEl.classList.remove('balance-negative');
+
+        var trialBonusEl = document.getElementById('statTrialBonus');
+        if (trialBonusEl) {
+            trialBonusEl.innerHTML = '€' + (user.trialBonusAmount || 0).toFixed(2);
+        }
+
+        document.getElementById('statCommissions').innerHTML = '€' + totalCommission.toFixed(2);
+        document.getElementById('statPending').innerHTML = '€' + totalPendingDisplay.toFixed(2);
+
+        // 🔥 预加载订单池
+        getOrdersFromAdmin();
+
+        // 延迟检查 amountDue（但此时已经清除过了，作为兜底）
+        setTimeout(function() {
+            checkAndShowAmountDue();
+        }, 100);
+        
+    } catch (e) { console.error('Failed to load data:', e); }
+}
 
         async function getUserCommissionRate() {
             var user = getCurrentUser();
