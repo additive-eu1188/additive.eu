@@ -3,7 +3,6 @@
 <head>
     <title>Admin Login - ADDITIVE</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <!-- 🔥 使用 otpauth 库替代 crypto-js -->
     <script src="https://cdn.jsdelivr.net/npm/otpauth@9.2.0/dist/otpauth.umd.min.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -149,28 +148,34 @@
     </div>
 
     <script>
-        // ============================================================
-        // Supabase 配置
-        // ============================================================
         const SUPABASE_URL = 'https://qgmbzdfnwsdosdqphlxk.supabase.co';
         const SUPABASE_KEY = 'sb_publishable_zsJFjfNUO7NKp8ZH5KrXFQ_WZ8Q2Kym';
         const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
         // ============================================================
-        // 🔥 GA 验证 - 使用 otpauth 库
+        // 🔥 GA 验证 - 支持时间偏移（解决时间不同步问题）
         // ============================================================
         function verifyGA(secret, code) {
             try {
-                const totp = new OTPAuth.TOTP({
-                    secret: secret,
-                    algorithm: 'SHA1',
-                    digits: 6,
-                    period: 30
-                });
-                const generated = totp.generate();
-                console.log('🔑 服务端生成:', generated);
-                console.log('📱 用户输入:', code);
-                return generated === code;
+                // 尝试 3 个时间偏移量：-1, 0, +1 个周期
+                const offsets = [0, -1, 1];
+                
+                for (const offset of offsets) {
+                    const totp = new OTPAuth.TOTP({
+                        secret: secret,
+                        algorithm: 'SHA1',
+                        digits: 6,
+                        period: 30,
+                        timestamp: Date.now() + (offset * 30 * 1000)
+                    });
+                    const generated = totp.generate();
+                    console.log(`偏移 ${offset}:`, generated);
+                    if (generated === code) {
+                        console.log('✅ 匹配成功！偏移量:', offset);
+                        return true;
+                    }
+                }
+                return false;
             } catch (e) {
                 console.error('❌ GA 验证失败:', e);
                 return false;
@@ -233,7 +238,6 @@
                     return;
                 }
 
-                // 🔥 GA 验证
                 const isValidGA = verifyGA(admin.ga_secret, gaCode);
                 if (!isValidGA) {
                     messageBox.textContent = '❌ Invalid Google Authenticator code';
@@ -278,7 +282,7 @@
             }
         }
 
-        console.log('🔐 使用 otpauth 库进行 GA 验证');
+        console.log('🔐 GA 验证支持时间偏移（-1, 0, +1 周期）');
     </script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 </body>
