@@ -3,7 +3,7 @@
 <head>
     <title>Admin Login - ADDITIVE</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.2.0/crypto-js.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/otpauth@9.1.1/dist/otpauth.min.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
@@ -109,13 +109,6 @@
         }
         .back-link a { color: #8ca3ff; text-decoration: none; }
         .back-link a:hover { text-decoration: underline; }
-        .ga-locked {
-            text-align: center;
-            margin-top: 12px;
-            font-size: 12px;
-            color: #5a6388;
-        }
-        .ga-locked i { color: #4ade80; }
     </style>
 </head>
 <body>
@@ -147,10 +140,6 @@
         
         <div id="messageBox" class="error-message"></div>
         
-        <div class="ga-locked">
-            <i class="fas fa-lock"></i> GA is permanently locked to the admin account
-        </div>
-        
         <div class="divider">SECURE ACCESS</div>
         
         <div class="back-link">
@@ -167,60 +156,24 @@
         const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
         // ============================================================
-        // Google Authenticator TOTP 工具函数
+        // 🔥 GA 验证 - 使用 otpauth 库（与 GA 完全兼容）
         // ============================================================
-        function base32Decode(encoded) {
-            const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
-            const bytes = [];
-            let bits = 0;
-            let value = 0;
-            for (const char of encoded.toUpperCase()) {
-                const index = alphabet.indexOf(char);
-                if (index === -1) continue;
-                value = (value << 5) | index;
-                bits += 5;
-                if (bits >= 8) {
-                    bytes.push((value >> (bits - 8)) & 0xff);
-                    bits -= 8;
-                }
-            }
-            return new Uint8Array(bytes);
-        }
-
-        function generateTOTP(secret) {
-            try {
-                const key = base32Decode(secret);
-                const epoch = Math.floor(Date.now() / 1000 / 30);
-                const timeBytes = new Uint8Array(8);
-                let e = epoch;
-                for (let i = 7; i >= 0; i--) {
-                    timeBytes[i] = e & 0xff;
-                    e >>= 8;
-                }
-                const hmac = CryptoJS.HmacSHA1(CryptoJS.lib.WordArray.create(timeBytes), CryptoJS.lib.WordArray.create(key));
-                const hmacBytes = new Uint8Array(hmac.words.length * 4);
-                for (let i = 0; i < hmac.words.length; i++) {
-                    hmacBytes[i * 4] = (hmac.words[i] >> 24) & 0xff;
-                    hmacBytes[i * 4 + 1] = (hmac.words[i] >> 16) & 0xff;
-                    hmacBytes[i * 4 + 2] = (hmac.words[i] >> 8) & 0xff;
-                    hmacBytes[i * 4 + 3] = hmac.words[i] & 0xff;
-                }
-                const offset = hmacBytes[19] & 0xf;
-                const binary = ((hmacBytes[offset] & 0x7f) << 24) |
-                              ((hmacBytes[offset + 1] & 0xff) << 16) |
-                              ((hmacBytes[offset + 2] & 0xff) << 8) |
-                              (hmacBytes[offset + 3] & 0xff);
-                const otp = binary % 1000000;
-                return String(otp).padStart(6, '0');
-            } catch (e) {
-                console.error('GA 验证码生成失败:', e);
-                return null;
-            }
-        }
-
         function verifyGA(secret, code) {
-            const generated = generateTOTP(secret);
-            return generated === code;
+            try {
+                const totp = new OTPAuth.TOTP({
+                    secret: secret,
+                    algorithm: 'SHA1',
+                    digits: 6,
+                    period: 30
+                });
+                const generated = totp.generate();
+                console.log('🔑 服务端生成:', generated);
+                console.log('📱 用户输入:', code);
+                return generated === code;
+            } catch (e) {
+                console.error('❌ GA 验证失败:', e);
+                return false;
+            }
         }
 
         // ============================================================
@@ -247,7 +200,7 @@
                 return;
             }
             if (!gaCode || gaCode.length !== 6 || !/^\d{6}$/.test(gaCode)) {
-                messageBox.textContent = '⚠️ Please enter a valid 6-digit Google Authenticator code';
+                messageBox.textContent = '⚠️ Please enter a valid 6-digit code';
                 messageBox.className = 'error-message';
                 return;
             }
@@ -256,7 +209,6 @@
             loginBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Verifying...';
 
             try {
-                // 从数据库获取管理员信息（包括固定的 GA Secret）
                 const { data: admin, error } = await sb
                     .from('admin_users')
                     .select('*')
@@ -272,7 +224,6 @@
                     return;
                 }
 
-                // 验证密码
                 if (admin.password_hash !== password) {
                     messageBox.textContent = '❌ Invalid password';
                     messageBox.className = 'error-message';
@@ -281,7 +232,7 @@
                     return;
                 }
 
-                // 🔒 验证 Google Authenticator（使用固定的 GA Secret）
+                // 🔥 GA 验证
                 const isValidGA = verifyGA(admin.ga_secret, gaCode);
                 if (!isValidGA) {
                     messageBox.textContent = '❌ Invalid Google Authenticator code';
@@ -291,7 +242,6 @@
                     return;
                 }
 
-                // ✅ 登录成功
                 messageBox.textContent = '✅ Login successful! Redirecting...';
                 messageBox.className = 'success-message';
 
@@ -312,18 +262,12 @@
             }
         }
 
-        // ============================================================
-        // Enter 键支持
-        // ============================================================
         document.addEventListener('keypress', function(e) {
             if (e.key === 'Enter') {
                 handleLogin();
             }
         });
 
-        // ============================================================
-        // 检查是否已登录
-        // ============================================================
         if (localStorage.getItem('admin_logged_in') === 'true') {
             const loginTime = parseInt(localStorage.getItem('admin_login_time') || '0');
             if (Date.now() - loginTime < 24 * 60 * 60 * 1000) {
@@ -333,10 +277,8 @@
             }
         }
 
-        console.log('🔐 Admin Login with Username + Password + Google Authenticator');
-        console.log('🔒 GA is permanently locked - only one GA secret exists');
+        console.log('🔐 使用 otpauth 库进行 GA 验证');
     </script>
-    <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 </body>
 </html>
