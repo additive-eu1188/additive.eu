@@ -563,8 +563,23 @@ async function loadUsers() {
             `;
             
             // 6. Pending
-            const pendingCell = row.insertCell(5);
-            pendingCell.innerHTML = `<span class="${pendingAmount > 0 ? 'pending-positive' : 'pending-negative'}" style="font-weight: 600;">€${pendingAmount.toFixed(2)}</span>`;
+const pendingAmount = pendingMap[u.uid] || 0;
+
+// 🔥 检查 amount_due
+const amountDueRound = u.amount_due_round || 0;
+const amountDueOrdersCount = u.amount_due_orders_count || 0;
+let totalAmountDue = 0;
+if (amountDueRound > 0) totalAmountDue += amountDueRound;
+if (amountDueOrdersCount > 0) totalAmountDue += amountDueOrdersCount;
+
+// 🔥 如果有 amount_due，显示为负数；否则显示正常 pending
+let displayPending = pendingAmount;
+if (totalAmountDue > 0) {
+    displayPending = -totalAmountDue;
+}
+
+const pendingCell = row.insertCell(5);
+pendingCell.innerHTML = `<span class="${displayPending >= 0 ? 'pending-positive' : 'pending-negative'}" style="font-weight: 600;">${displayPending < 0 ? '-' : ''}€${Math.abs(displayPending).toFixed(2)}</span>`;
             
             // 7. Balance + Deposit + Deduct
 const balanceCell = row.insertCell(6);
