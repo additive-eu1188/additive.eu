@@ -4,160 +4,107 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
     <title>卡牌揭晓 · 完整流程</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700;14..32,800&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
     <style>
-        /* ===== 完全照抄好的版本 ===== */
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
-            background: #070b1e;
-            font-family: 'Inter', sans-serif;
-            color: #fff;
+            background: radial-gradient(circle at 10% 20%, #0a0f2a, #050814);
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
             min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            color: #fff;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .stage {
+            position: relative;
+            width: 100%;
+            max-width: 700px;
+            min-height: 500px;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            padding: 20px;
-            overflow: hidden;
-            position: relative;
         }
 
-        #effectLayer {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none !important;
-            z-index: 5;
+        /* ===== 粒子流 ===== */
+        .stream-container {
+            position: absolute;
+            inset: 0;
+            z-index: 1;
+            pointer-events: none;
             overflow: visible;
         }
-        #effectLayer * { pointer-events: none !important; }
 
-        .particle {
-            position: fixed;
+        .stream-particle {
+            position: absolute;
             border-radius: 50%;
-            pointer-events: none;
-            z-index: 3;
-            will-change: transform, opacity;
-            transform: translate3d(0, 0, 0);
-            backface-visibility: hidden;
+            background: #b8944a;
+            box-shadow: 0 0 16px rgba(184, 148, 74, 0.35);
             opacity: 0;
-        }
-        .particle.condense {
-            animation: condenseIn var(--duration) cubic-bezier(0.1, 0.9, 0.2, 1) forwards;
-        }
-        @keyframes condenseIn {
-            0% { opacity: 1; transform: translate3d(var(--sx), var(--sy), 0) scale(0.1); }
-            100% { opacity: 1; transform: translate3d(0, 0, 0) scale(1); }
-        }
-        .particle.burst {
-            animation: burstOut var(--duration) cubic-bezier(0.15, 0.85, 0.3, 1) forwards;
-        }
-        @keyframes burstOut {
-            0% { opacity: 1; transform: translate3d(0, 0, 0) scale(1); }
-            100% { opacity: 1; transform: translate3d(var(--bx), var(--by), 0) scale(0.3); }
-        }
-        .particle.star {
-            animation: starTwinkle var(--duration) ease-in-out infinite alternate;
-            opacity: 1 !important;
-        }
-        @keyframes starTwinkle {
-            0% { opacity: 0; transform: translate3d(var(--bx), var(--by), 0) scale(0.2); box-shadow: none; }
-            100% { opacity: 1; transform: translate3d(var(--bx), var(--by), 0) scale(1.2); box-shadow: 0 0 20px var(--color), 0 0 40px var(--color); }
+            will-change: transform, opacity;
+            transition: all 1.2s cubic-bezier(0.15, 0.85, 0.3, 1.05);
         }
 
-        #particleContainer {
-            position: fixed;
-            inset: 0;
-            pointer-events: none;
-            z-index: 99999;
-            overflow: hidden;
-        }
-        .particle-star {
+        /* ===== 星空粒子（炸开后遍布屏幕） ===== */
+        .star-particle {
             position: fixed;
             border-radius: 50%;
             pointer-events: none;
-            z-index: 99999;
+            z-index: 2;
             will-change: transform, opacity;
-        }
-        .particle-star.active {
-            animation: burstExplode var(--duration) cubic-bezier(0.1, 0.8, 0.2, 1) forwards;
-        }
-        @keyframes burstExplode {
-            0% { opacity: 1; transform: translate3d(0, 0, 0) scale(1); }
-            100% { opacity: 0; transform: translate3d(var(--ex), var(--ey), 0) scale(0); }
+            opacity: 0;
+            transition: none;
         }
 
+        /* ===== 卡牌容器 ===== */
         .cards-grid {
             display: flex;
-            gap: 24px;
+            gap: 28px;
             justify-content: center;
             align-items: center;
             flex-wrap: wrap;
             width: 100%;
-            max-width: 600px;
             padding: 20px;
             position: relative;
-            z-index: 100;
+            z-index: 10;
         }
 
         .card-item {
-            width: 200px;
-            height: 275px;
+            width: 180px;
+            height: 250px;
             perspective: 2000px;
-            cursor: pointer;
+            cursor: default;
             position: relative;
             flex-shrink: 0;
-            border-radius: 24px;
+            border-radius: 20px;
             opacity: 0;
-            transform: scale(0.3) rotateY(90deg);
+            transform: scale(0.85) translateY(20px);
             transition: none;
             pointer-events: none;
             will-change: transform, opacity;
         }
         .card-item.show {
-            opacity: 1;
-            transform: scale(1) rotateY(0deg);
-            pointer-events: auto;
-            transition: all 1.2s cubic-bezier(0.15, 0.9, 0.25, 1.1);
+            opacity: 1 !important;
+            transform: scale(1) translateY(0) !important;
+            pointer-events: auto !important;
+            cursor: pointer !important;
+            transition: opacity 1.2s cubic-bezier(0.15, 0.9, 0.25, 1.1),
+                        transform 1.2s cubic-bezier(0.15, 0.9, 0.25, 1.1) !important;
         }
+
         .card-item .card-inner {
             width: 100%;
             height: 100%;
             position: relative;
             transform-style: preserve-3d;
             transition: transform 0.7s cubic-bezier(0.2, 0.8, 0.2, 1);
-            border-radius: 24px;
-        }
-        .card-aurora {
-            position: absolute;
-            top: -2px;
-            left: -2px;
-            right: -2px;
-            bottom: -2px;
-            border-radius: 26px;
-            background: conic-gradient(from 0deg,
-                    transparent,
-                    rgba(100,200,255,0.25),
-                    transparent,
-                    rgba(150,100,255,0.25),
-                    transparent,
-                    rgba(100,200,255,0.25),
-                    transparent);
-            animation: auroraSpin 4s linear infinite;
-            pointer-events: none;
-            z-index: 0;
-            mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-            mask-composite: exclude;
-            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-            -webkit-mask-composite: xor;
-            padding: 2px;
-        }
-        @keyframes auroraSpin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+            border-radius: 20px;
         }
 
         .face {
@@ -169,65 +116,134 @@
             align-items: center;
             justify-content: center;
             padding: 24px 16px;
-            border-radius: 24px;
+            border-radius: 20px;
+            overflow: hidden;
         }
+
+        /* ===== 正面 ===== */
         .face-front {
-            background: linear-gradient(145deg, #0a0a2a, #1a0a2a, #0a2a2a);
-            border: 1px solid rgba(100,200,255,0.1);
+            background: linear-gradient(160deg, #0a0e1f 0%, #0f1a3a 35%, #1a0e2a 65%, #0a0e1f 100%);
+            border: 1px solid rgba(184, 148, 74, 0.2);
             transform: rotateY(0deg);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(184, 148, 74, 0.06);
         }
-        .face-front i {
-            font-size: 48px;
-            color: #64c8ff;
+        .face-front::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: 
+                repeating-linear-gradient(90deg, transparent 0px, transparent 2px, rgba(184, 148, 74, 0.012) 2px, rgba(184, 148, 74, 0.012) 3px),
+                repeating-linear-gradient(0deg, transparent 0px, transparent 8px, rgba(255,255,255,0.008) 8px, rgba(255,255,255,0.008) 9px);
+            pointer-events: none;
+            z-index: 1;
+        }
+        .face-front::after {
+            content: '';
+            position: absolute;
+            inset: -1px;
+            border-radius: 21px;
+            padding: 1px;
+            background: linear-gradient(135deg, rgba(184,148,74,0.25) 0%, rgba(184,148,74,0.02) 50%, rgba(184,148,74,0.15) 100%);
+            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor;
+            mask-composite: exclude;
+            pointer-events: none;
+            z-index: 2;
+        }
+        .face-front .crown-img {
+            width: 56px;
+            height: 56px;
+            object-fit: contain;
             margin-bottom: 16px;
-            text-shadow: 0 0 30px rgba(100,200,255,0.2);
+            z-index: 3;
+            position: relative;
+            filter: drop-shadow(0 0 30px rgba(184, 148, 74, 0.15));
+            transition: filter 0.3s ease;
+        }
+        .card-item.show:hover .face-front .crown-img {
+            filter: drop-shadow(0 0 40px rgba(184, 148, 74, 0.25));
         }
         .face-front span {
             font-size: 13px;
-            color: rgba(100,200,255,0.5);
+            color: rgba(184, 148, 74, 0.35);
             letter-spacing: 2px;
+            font-weight: 500;
+            z-index: 3;
+            position: relative;
         }
-        .face-front .gem {
-            font-size: 32px;
-            color: rgba(100,200,255,0.1);
+        .face-front .diamond-icon {
+            font-size: 42px;
+            color: rgba(184, 148, 74, 0.20);
             margin-top: 10px;
+            z-index: 3;
+            position: relative;
+            text-shadow: 0 0 30px rgba(184, 148, 74, 0.08);
+            transition: all 0.4s ease;
+            filter: drop-shadow(0 0 20px rgba(184, 148, 74, 0.05));
         }
-        .face-back {
-            background: linear-gradient(145deg, #0a2a1a, #1a3a2a);
-            border: 1px solid rgba(100,200,255,0.25);
-            transform: rotateY(180deg);
+        .card-item.show:hover .face-front .diamond-icon {
+            color: rgba(184, 148, 74, 0.30);
+            text-shadow: 0 0 40px rgba(184, 148, 74, 0.12);
+            transform: scale(1.05);
         }
 
-        /* ===== 荣耀徽章样式（只改背面内容） ===== */
+        /* ===== 背面 ===== */
+        .face-back {
+            background: linear-gradient(160deg, #0a0e1f 0%, #0f1a3a 35%, #1a0e2a 65%, #0a0e1f 100%);
+            border: 1px solid rgba(184, 148, 74, 0.3);
+            transform: rotateY(180deg);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(184, 148, 74, 0.08), inset 0 -1px 0 rgba(0, 0, 0, 0.4);
+        }
+        .face-back::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: 
+                repeating-linear-gradient(90deg, transparent 0px, transparent 2px, rgba(184, 148, 74, 0.015) 2px, rgba(184, 148, 74, 0.015) 3px),
+                repeating-linear-gradient(0deg, transparent 0px, transparent 8px, rgba(255,255,255,0.01) 8px, rgba(255,255,255,0.01) 9px);
+            pointer-events: none;
+            z-index: 1;
+        }
+        .face-back::after {
+            content: '';
+            position: absolute;
+            inset: -1px;
+            border-radius: 21px;
+            padding: 1px;
+            background: linear-gradient(135deg, rgba(184,148,74,0.3) 0%, rgba(184,148,74,0.03) 40%, rgba(184,148,74,0.2) 100%);
+            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor;
+            mask-composite: exclude;
+            pointer-events: none;
+            z-index: 2;
+        }
         .face-back .icon {
             font-size: 40px;
-            color: #E8D5B8;
+            color: #c4a86a;
             margin-bottom: 12px;
-            filter: drop-shadow(0 0 8px rgba(204, 178, 153, 0.15));
-            z-index: 2;
+            filter: drop-shadow(0 0 16px rgba(184, 148, 74, 0.12));
+            z-index: 3;
             position: relative;
         }
         .face-back .amount {
             font-size: 44px;
             font-weight: 800;
-            color: #E8D5B8;
-            text-shadow: 0 0 12px rgba(204, 178, 153, 0.15);
+            color: #d4b87a;
+            text-shadow: 0 0 24px rgba(184, 148, 74, 0.06);
             line-height: 1.1;
             margin-bottom: 2px;
-            z-index: 2;
+            z-index: 3;
             position: relative;
-        }
-        .face-back .amount.x30 {
-            font-size: 48px;
-            letter-spacing: 2px;
+            letter-spacing: 1px;
         }
         .face-back .divider-line {
             width: 40px;
-            height: 2px;
+            height: 1px;
             margin: 10px 0 8px;
-            background: linear-gradient(90deg, transparent, #CCB299, transparent);
-            box-shadow: 0 0 8px rgba(204, 178, 153, 0.15);
-            z-index: 2;
+            background: linear-gradient(90deg, transparent, rgba(184, 148, 74, 0.35), transparent);
+            z-index: 3;
             position: relative;
         }
         .face-back .label {
@@ -235,17 +251,16 @@
             letter-spacing: 2.5px;
             text-transform: uppercase;
             font-weight: 600;
-            color: #CCB299;
-            z-index: 2;
+            color: rgba(184, 148, 74, 0.45);
+            z-index: 3;
             position: relative;
         }
         .face-back .stars {
-            color: #CCB299;
+            color: rgba(184, 148, 74, 0.15);
             font-size: 10px;
             letter-spacing: 4px;
             margin-top: 6px;
-            opacity: 0.4;
-            z-index: 2;
+            z-index: 3;
             position: relative;
         }
         .face-back .bottom-tag {
@@ -259,78 +274,135 @@
             border-radius: 20px;
             z-index: 5;
             letter-spacing: 0.5px;
-            background: rgba(204, 178, 153, 0.08);
-            color: #CCB299;
-            border: 1px solid rgba(204, 178, 153, 0.08);
+            background: rgba(184, 148, 74, 0.05);
+            color: rgba(184, 148, 74, 0.35);
+            border: 1px solid rgba(184, 148, 74, 0.06);
         }
         .face-back .bottom-tag i { margin-right: 4px; }
-
         .face-back .shield-bg {
             position: absolute;
             width: 120px;
             height: 140px;
-            border: 1px solid rgba(204, 178, 153, 0.04);
+            border: 1px solid rgba(184, 148, 74, 0.03);
             border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
             transform: rotate(45deg);
             pointer-events: none;
             z-index: 0;
         }
+        .face-back .inner-border {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            right: 20px;
+            bottom: 20px;
+            border: 1px solid rgba(184, 148, 74, 0.04);
+            border-radius: 12px;
+            pointer-events: none;
+            z-index: 1;
+        }
 
-        .card-item.flipped .card-inner {
-            transform: rotateY(180deg);
+        .card-item.flipped .card-inner { transform: rotateY(180deg); }
+
+        /* ===== 卡牌浮动 ===== */
+        .card-item.float-anim {
+            animation: cardFloatLight 3.6s ease-in-out infinite;
+            will-change: transform;
         }
-        .card-item.dim {
-            opacity: 0.5 !important;
-            filter: grayscale(0.85) brightness(0.75) !important;
-            transform: scale(0.9) !important;
-            pointer-events: none !important;
-            transition: all 0.5s !important;
+        .card-item.float-anim:nth-child(1) { animation-delay: 0s; }
+        .card-item.float-anim:nth-child(2) { animation-delay: 0.5s; }
+        .card-item.float-anim:nth-child(3) { animation-delay: 1.0s; }
+
+        @keyframes cardFloatLight {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-6px); }
+            100% { transform: translateY(0px); }
         }
-        .card-item.dim .card-inner {
-            transform: scale(0.9) !important;
-        }
-        .card-item.dim.flipped .card-inner {
-            transform: scale(0.9) rotateY(180deg) !important;
-        }
-        .card-item.dim-other {
+
+        .card-item.dimmed {
+            opacity: 0.25 !important;
             filter: grayscale(0.9) brightness(0.3);
-            opacity: 0.3 !important;
             pointer-events: none !important;
-            transition: filter 0.6s ease, opacity 0.6s ease;
+            transition: all 0.6s ease !important;
         }
 
-        @keyframes shakeFlip {
-            0% { transform: rotateY(0deg); }
-            20% { transform: rotateY(-20deg) scale(1.02); }
-            40% { transform: rotateY(15deg) scale(1.04); }
-            60% { transform: rotateY(-10deg) scale(1.06); }
-            80% { transform: rotateY(5deg) scale(1.08); }
-            100% { transform: rotateY(180deg) scale(1.1); }
-        }
-        .card-item.flipping {
+        /* ===== 移动到中间 ===== */
+        .card-item.moving-to-center {
             position: fixed !important;
-            left: 50% !important;
-            top: 50% !important;
-            transform: translate(-50%, -50%) scale(1.8) !important;
-            z-index: 200 !important;
+            z-index: 100 !important;
             pointer-events: none !important;
             opacity: 1 !important;
-            transition: transform 0.6s cubic-bezier(0.2, 0.9, 0.4, 1.1) !important;
+            transition: all 1.0s cubic-bezier(0.25, 0.9, 0.4, 1.0) !important;
         }
-        .card-item.flipping .card-inner {
-            animation: shakeFlip 0.9s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+
+        /* ===== 剧烈摇晃 ===== */
+        @keyframes violentShake {
+            0% { transform: rotateY(0deg) rotateX(0deg) scale(1); }
+            8% { transform: rotateY(-22deg) rotateX(4deg) scale(1.06); }
+            18% { transform: rotateY(18deg) rotateX(-3deg) scale(1.10); }
+            28% { transform: rotateY(-14deg) rotateX(5deg) scale(1.08); }
+            38% { transform: rotateY(10deg) rotateX(-4deg) scale(1.04); }
+            50% { transform: rotateY(-7deg) rotateX(3deg) scale(1.02); }
+            62% { transform: rotateY(5deg) rotateX(-2deg) scale(1.0); }
+            75% { transform: rotateY(-3deg) rotateX(1deg) scale(1.0); }
+            88% { transform: rotateY(2deg) rotateX(0deg) scale(1.0); }
+            100% { transform: rotateY(180deg) rotateX(0deg) scale(1.0); }
         }
+
+        .card-item.shaking .card-inner {
+            animation: violentShake 1.2s cubic-bezier(0.15, 0.9, 0.3, 1.1) forwards;
+        }
+
+        /* ===== 归位 ===== */
         .card-item.returning {
             position: fixed !important;
-            z-index: 200 !important;
+            z-index: 100 !important;
             pointer-events: none !important;
             opacity: 1 !important;
-            transition: all 0.8s cubic-bezier(0.2, 0.8, 0.2, 1);
+            transition: all 1.0s cubic-bezier(0.2, 0.8, 0.25, 1.0) !important;
         }
         .card-item.returning .card-inner {
             transform: rotateY(180deg);
+            transition: transform 0.1s ease;
         }
 
+        /* ===== 底部提示 ===== */
+        .hint-text {
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.25);
+            letter-spacing: 2px;
+            margin-top: 32px;
+            opacity: 0;
+            transition: opacity 1.2s ease;
+            position: relative;
+            z-index: 10;
+            text-align: center;
+            font-weight: 400;
+        }
+        .hint-text.show { opacity: 1; }
+        .hint-text i { margin-right: 8px; color: #b8944a; }
+
+        @media (max-width: 700px) {
+            .card-item { width: 140px; height: 200px; }
+            .face-front .crown-img { width: 44px; height: 44px; }
+            .face-front .diamond-icon { font-size: 32px; }
+            .face-back .icon { font-size: 32px; }
+            .face-back .amount { font-size: 32px; }
+            .cards-grid { gap: 16px; padding: 12px; }
+            .card-item.moving-to-center { transform: translate(-50%, -50%) scale(1.5) !important; }
+        }
+        @media (max-width: 480px) {
+            .card-item { width: 110px; height: 160px; }
+            .face-front .crown-img { width: 32px; height: 32px; }
+            .face-front .diamond-icon { font-size: 24px; }
+            .face-back .icon { font-size: 24px; }
+            .face-back .amount { font-size: 24px; }
+            .face-back .bottom-tag { font-size: 7px; padding: 2px 8px; bottom: 8px; }
+            .cards-grid { gap: 10px; padding: 8px; }
+            .hint-text { font-size: 10px; margin-top: 16px; }
+            .card-item.moving-to-center { transform: translate(-50%, -50%) scale(1.3) !important; }
+        }
+
+        /* ===== 保留原有覆层 ===== */
         .overlay-blur {
             position: fixed;
             inset: 0;
@@ -345,588 +417,612 @@
             opacity: 1;
             pointer-events: auto;
         }
-
-        .hint {
-            position: fixed;
-            bottom: 30px;
-            left: 50%;
-            transform: translateX(-50%);
-            z-index: 1000;
-            font-size: 12px;
-            color: #4a5a7a;
-            letter-spacing: 1px;
-            opacity: 0;
-            transition: opacity 0.6s;
-        }
-        .hint.show { opacity: 1; }
-
-        @media (max-width: 768px) {
-            .cards-grid { gap: 16px; padding: 10px; }
-            .card-item { width: 150px !important; height: 210px !important; }
-            .face-front i { font-size: 32px; }
-            .face-back .icon { font-size: 32px; }
-            .face-back .amount { font-size: 32px; }
-            .face-back .amount.x30 { font-size: 36px; }
-            .face-back .bottom-tag { font-size: 8px; padding: 2px 8px; bottom: 10px; }
-            .card-aurora { border-radius: 20px; }
-        }
-        @media (max-width: 480px) {
-            .cards-grid { gap: 8px; padding: 6px; }
-            .card-item { width: 120px !important; height: 170px !important; }
-            .face-front i { font-size: 24px; }
-            .face-back .icon { font-size: 24px; }
-            .face-back .amount { font-size: 24px; }
-            .face-back .amount.x30 { font-size: 28px; }
-            .face-back .bottom-tag { font-size: 7px; padding: 2px 6px; bottom: 8px; }
-            .card-aurora { border-radius: 16px; }
-        }
     </style>
 </head>
 <body>
 
-    <div id="effectLayer"></div>
+<div class="stage">
+    <div class="stream-container" id="streamContainer"></div>
+
     <div class="cards-grid" id="cardsGrid"></div>
-    <div id="particleContainer"></div>
-    <div class="overlay-blur" id="overlayBlur"></div>
-    <div class="hint" id="hint"><i class="fas fa-mouse-pointer"></i> Select one diamond bonus</div>
 
-    <script>
-        // ============================================================
-        // 通用工具
-        // ============================================================
-        function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+    <div class="hint-text" id="hintText">
+        <i class="fas fa-mouse-pointer"></i> Select one diamond reward
+    </div>
+</div>
 
-        // ============================================================
-        // 读取 URL 参数
-        // ============================================================
-        function getParams() {
-            const url = new URL(window.location.href);
-            return {
-                type: url.searchParams.get('type') || 'reward',
-                amount: parseFloat(url.searchParams.get('amount')) || 0,
-                triggerId: parseInt(url.searchParams.get('triggerId')) || 0,
-                orderPrice: parseFloat(url.searchParams.get('orderPrice')) || 0,
-                orderCommission: parseFloat(url.searchParams.get('orderCommission')) || 0,
-                orderName: url.searchParams.get('orderName') || 'x30 Commissions Order'
-            };
-        }
+<div class="overlay-blur" id="overlayBlur"></div>
 
-        const params = getParams();
-        const isReward = params.type === 'reward';
+<script>
+    // ============================================================
+    // 通用工具（保留原有）
+    // ============================================================
+    function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
 
-        // ============================================================
-        // 生成随机金额（不等于固定值）
-        // ============================================================
-        const randomMin = 5;
-        const randomMax = 200;
+    // ============================================================
+    // 读取 URL 参数（保留原有）
+    // ============================================================
+    function getParams() {
+        const url = new URL(window.location.href);
+        return {
+            type: url.searchParams.get('type') || 'reward',
+            amount: parseFloat(url.searchParams.get('amount')) || 0,
+            triggerId: parseInt(url.searchParams.get('triggerId')) || 0,
+            orderPrice: parseFloat(url.searchParams.get('orderPrice')) || 0,
+            orderCommission: parseFloat(url.searchParams.get('orderCommission')) || 0,
+            orderName: url.searchParams.get('orderName') || 'x30 Commissions Order'
+        };
+    }
 
-        function generateRandomAmount(exclude) {
-            let amt;
-            let attempts = 0;
-            do {
-                amt = Math.floor(Math.random() * (randomMax - randomMin + 1)) + randomMin;
-                attempts++;
-            } while (amt === exclude && attempts < 30);
-            return amt;
-        }
+    const params = getParams();
+    const isReward = params.type === 'reward';
 
-        // ============================================================
-        // 固定内容（后台设置）
-        // ============================================================
-        let fixedAmount, fixedLabel, fixedIcon;
+    // ============================================================
+    // 生成随机金额（保留原有）
+    // ============================================================
+    const randomMin = 5;
+    const randomMax = 200;
+
+    function generateRandomAmount(exclude) {
+        let amt;
+        let attempts = 0;
+        do {
+            amt = Math.floor(Math.random() * (randomMax - randomMin + 1)) + randomMin;
+            attempts++;
+        } while (amt === exclude && attempts < 30);
+        return amt;
+    }
+
+    // ============================================================
+    // 固定内容（保留原有）
+    // ============================================================
+    let fixedAmount, fixedLabel, fixedIcon;
+    if (isReward) {
+        fixedAmount = '€' + params.amount.toFixed(2);
+        fixedLabel = 'Cash Reward';
+        fixedIcon = 'fa-money-bill-wave';
+    } else {
+        fixedAmount = 'x30';
+        fixedLabel = 'COMMISSIONS';
+        fixedIcon = 'fa-ticket-alt';
+    }
+
+    // ============================================================
+    // 生成两个随机值（保留原有）
+    // ============================================================
+    let random1, random2;
+    if (isReward) {
+        const r1 = generateRandomAmount(params.amount);
+        const r2 = generateRandomAmount(params.amount);
+        random1 = { amount: '€' + r1.toFixed(2), label: 'Cash Reward', icon: 'fa-money-bill-wave' };
+        random2 = { amount: '€' + r2.toFixed(2), label: 'Cash Reward', icon: 'fa-money-bill-wave' };
+    } else {
+        const r1 = generateRandomAmount(params.orderPrice);
+        const r2 = generateRandomAmount(params.orderPrice);
+        random1 = { amount: '€' + r1.toFixed(2), label: 'Cash Reward', icon: 'fa-money-bill-wave' };
+        random2 = { amount: '€' + r2.toFixed(2), label: 'Cash Reward', icon: 'fa-money-bill-wave' };
+    }
+
+    // ============================================================
+    // 渲染三张卡牌（保留原有逻辑，使用新样式）
+    // ============================================================
+    const grid = document.getElementById('cardsGrid');
+    let html = '';
+
+    for (let i = 0; i < 3; i++) {
+        let backHtml = '';
         if (isReward) {
-            fixedAmount = '€' + params.amount.toFixed(2);
-            fixedLabel = 'Cash Reward';
-            fixedIcon = 'fa-money-bill-wave';
+            backHtml = `
+                <div class="shield-bg"></div>
+                <div class="inner-border"></div>
+                <div class="icon"><i class="fas fa-money-bill-wave"></i></div>
+                <div class="amount">${fixedAmount}</div>
+                <div class="divider-line"></div>
+                <div class="label">Cash Reward</div>
+                <div class="stars">✦ ✦ ✦ ✦ ✦</div>
+                <span class="bottom-tag"><i class="fas fa-tag"></i> Reward</span>
+            `;
         } else {
-            fixedAmount = 'x30';
-            fixedLabel = 'COMMISSIONS';
-            fixedIcon = 'fa-ticket-alt';
-        }
-
-        // ============================================================
-        // 生成两个随机值（不等于固定值）
-        // ============================================================
-        let random1, random2;
-        if (isReward) {
-            const r1 = generateRandomAmount(params.amount);
-            const r2 = generateRandomAmount(params.amount);
-            random1 = { amount: '€' + r1.toFixed(2), label: 'Cash Reward', icon: 'fa-money-bill-wave' };
-            random2 = { amount: '€' + r2.toFixed(2), label: 'Cash Reward', icon: 'fa-money-bill-wave' };
-        } else {
-            const r1 = generateRandomAmount(params.orderPrice);
-            const r2 = generateRandomAmount(params.orderPrice);
-            random1 = { amount: '€' + r1.toFixed(2), label: 'Cash Reward', icon: 'fa-money-bill-wave' };
-            random2 = { amount: '€' + r2.toFixed(2), label: 'Cash Reward', icon: 'fa-money-bill-wave' };
-        }
-
-        // ============================================================
-        // 渲染三张卡牌：全部显示固定内容
-        // ============================================================
-        const grid = document.getElementById('cardsGrid');
-        let html = '';
-
-        for (let i = 0; i < 3; i++) {
-            let backHtml = '';
-            if (isReward) {
-                backHtml = `
-                    <div class="shield-bg"></div>
-                    <div class="icon"><i class="fas fa-money-bill-wave"></i></div>
-                    <div class="amount">${fixedAmount}</div>
-                    <div class="divider-line"></div>
-                    <div class="label">Cash Reward</div>
-                    <div class="stars">✦ ✦ ✦ ✦ ✦</div>
-                    <span class="bottom-tag"><i class="fas fa-tag"></i> Reward</span>
-                `;
-            } else {
-                backHtml = `
-                    <div class="shield-bg"></div>
-                    <div class="icon"><i class="fas fa-ticket-alt"></i></div>
-                    <div class="amount x30">x30</div>
-                    <div class="divider-line"></div>
-                    <div class="label">COMMISSIONS</div>
-                    <div class="stars">✦ ✦ ✦ ✦ ✦</div>
-                    <span class="bottom-tag"><i class="fas fa-tag"></i> Order</span>
-                `;
-            }
-
-            html += `
-                <div class="card-item" id="card${i + 1}" data-index="${i}" data-trigger-id="${params.triggerId}">
-                    <div class="card-inner">
-                        <div class="card-aurora"></div>
-                        <div class="face face-front">
-                            <i class="fas fa-gem"></i>
-                            <span>SELECT</span>
-                            <div class="gem"><i class="fas fa-crown"></i></div>
-                        </div>
-                        <div class="face face-back">
-                            ${backHtml}
-                        </div>
-                    </div>
-                </div>
+            backHtml = `
+                <div class="shield-bg"></div>
+                <div class="inner-border"></div>
+                <div class="icon"><i class="fas fa-ticket-alt"></i></div>
+                <div class="amount x30">x30</div>
+                <div class="divider-line"></div>
+                <div class="label">COMMISSIONS</div>
+                <div class="stars">✦ ✦ ✦ ✦ ✦</div>
+                <span class="bottom-tag"><i class="fas fa-tag"></i> Order</span>
             `;
         }
-        grid.innerHTML = html;
 
-        // ============================================================
-        // 入场粒子系统（完全保留好的版本）
-        // ============================================================
-        const effectLayer = document.getElementById('effectLayer');
-        const COLORS = ['#64c8ff', '#22d3ee', '#4adeff', '#38bdf8', '#67e8f9', '#7dd3fc'];
+        html += `
+            <div class="card-item" id="card${i + 1}" data-index="${i}" data-trigger-id="${params.triggerId}">
+                <div class="card-inner">
+                    <div class="face face-front">
+                        <img class="crown-img" src="https://qgmbzdfnwsdosdqphlxk.supabase.co/storage/v1/object/public/card/cardstyle.png" alt="crown" onerror="this.style.display='none';this.nextElementSibling.style.display='block'">
+                        <span>SELECT</span>
+                        <div class="diamond-icon"><i class="fas fa-gem"></i></div>
+                    </div>
+                    <div class="face face-back">
+                        ${backHtml}
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+    grid.innerHTML = html;
 
-        function random(min, max) { return Math.random() * (max - min) + min; }
-        function randomInt(min, max) { return Math.floor(random(min, max + 1)); }
+    // ============================================================
+    // 粒子流 + 星空粒子系统
+    // ============================================================
+    const streamContainer = document.getElementById('streamContainer');
+    const hintText = document.getElementById('hintText');
+    const cards = document.querySelectorAll('.card-item');
+    let flipLock = false;
+    let isPlaying = false;
+    let isFlipped = false;
+    let starAnimationId = null;
+    let starParticles = [];
+    let starOpacityPhase = 0;
 
-        function createParticles(count) {
-            const cx = window.innerWidth / 2;
-            const cy = window.innerHeight / 2;
-            const fragment = document.createDocumentFragment();
+    function getCardPositions() {
+        const rect = document.querySelector('.stage').getBoundingClientRect();
+        const positions = [];
+        cards.forEach(card => {
+            const r = card.getBoundingClientRect();
+            positions.push({
+                x: r.left + r.width / 2 - rect.left,
+                y: r.top + r.height / 2 - rect.top
+            });
+        });
+        return positions;
+    }
 
-            for (let i = 0; i < count; i++) {
-                const p = document.createElement('div');
-                p.className = 'particle';
-                const size = random(1.5, 5);
-                const color = COLORS[randomInt(0, COLORS.length - 1)];
+    // ===== 创建星空粒子（同一批粒子炸开遍布屏幕） =====
+    function convertToStarParticles() {
+        // 获取所有流粒子
+        const particleElements = streamContainer.querySelectorAll('.stream-particle');
+        if (particleElements.length === 0) return;
 
-                p.style.width = size + 'px';
-                p.style.height = size + 'px';
-                p.style.background = color;
-                p.style.setProperty('--color', color);
-                p.style.boxShadow = `0 0 ${size * 3}px ${color}40`;
-                p.style.left = cx + 'px';
-                p.style.top = cy + 'px';
+        // 移除旧的星空粒子
+        document.querySelectorAll('.star-particle').forEach(el => el.remove());
+        starParticles = [];
 
-                const startX = random(0, window.innerWidth);
-                const startY = random(0, window.innerHeight);
-                p.style.setProperty('--sx', (startX - cx) + 'px');
-                p.style.setProperty('--sy', (startY - cy) + 'px');
+        const centerX = window.innerWidth / 2;
+        const centerY = window.innerHeight / 2;
 
-                const burstAngle = random(0, Math.PI * 2);
-                const burstDist = random(100, Math.max(window.innerWidth, window.innerHeight) * 0.85);
-                p.style.setProperty('--bx', Math.cos(burstAngle) * burstDist + 'px');
-                p.style.setProperty('--by', Math.sin(burstAngle) * burstDist + 'px');
+        particleElements.forEach((p, index) => {
+            // 获取粒子当前位置
+            const rect = p.getBoundingClientRect();
+            const currentX = rect.left + rect.width / 2;
+            const currentY = rect.top + rect.height / 2;
 
-                p.style.setProperty('--duration', random(1.0, 2.5) + 's');
-                p.style.animationDelay = random(0, 0.4) + 's';
+            // 将流粒子转换为星空粒子（保留同一DOM元素）
+            p.className = 'star-particle';
+            p.style.position = 'fixed';
+            p.style.zIndex = '2';
+            p.style.transition = 'none';
+            p.style.pointerEvents = 'none';
+            p.style.left = currentX + 'px';
+            p.style.top = currentY + 'px';
 
-                fragment.appendChild(p);
-            }
+            // 目标位置：屏幕各处
+            const angle = Math.random() * Math.PI * 2;
+            const dist = 80 + Math.random() * Math.max(window.innerWidth, window.innerHeight) * 0.55;
+            const targetX = centerX + Math.cos(angle) * dist;
+            const targetY = centerY + Math.sin(angle) * dist;
 
-            effectLayer.appendChild(fragment);
-            return effectLayer.querySelectorAll('.particle');
-        }
+            // 存储目标位置用于过渡
+            p.dataset.targetX = targetX;
+            p.dataset.targetY = targetY;
+            p.dataset.baseOpacity = 0.6 + Math.random() * 0.35;
+            p.dataset.speed = 0.003 + Math.random() * 0.006; // 更慢的呼吸速度
+            p.dataset.phase = Math.random() * Math.PI * 2;
 
-        function clearParticles() {
-            effectLayer.querySelectorAll('.particle, .burst-particle').forEach(el => el.remove());
-        }
+            // 随机颜色（金色系）
+            const colors = ['#b8944a', '#c4a86a', '#d4b87a', '#a08040', '#e8d5b8', '#ffd700', '#f0e0c0', '#c9b095'];
+            p.style.background = colors[Math.floor(Math.random() * colors.length)];
+            const size = 1.2 + Math.random() * 2.8; // 更小
+            p.style.width = size + 'px';
+            p.style.height = size + 'px';
+            p.style.boxShadow = `0 0 ${size * 3}px ${p.style.background}60`;
 
-        // ============================================================
-        // 点击粒子爆炸（完全保留好的版本）
-        // ============================================================
-        const particleContainer = document.getElementById('particleContainer');
+            // 先设置为可见但低透明度
+            p.style.opacity = '0.1';
 
-        function explode(x, y, count = 160) {
-            for (let i = 0; i < count; i++) {
-                const p = document.createElement('div');
-                document.body.appendChild(p);
-                const type = Math.random();
-                if (type > 0.6) {
-                    p.className = 'particle-star';
-                    p.innerHTML = '✦';
-                    p.style.fontSize = (10 + Math.random() * 26) + 'px';
-                    p.style.color = '#a5d8ff';
-                    p.style.textShadow = '0 0 10px #64c8ff';
-                    p.style.background = 'transparent';
-                    p.style.width = 'auto';
-                    p.style.height = 'auto';
-                    p.style.boxShadow = 'none';
-                } else {
-                    p.className = 'particle-star';
-                    p.style.width = (3 + Math.random() * 8) + 'px';
-                    p.style.height = p.style.width;
-                    p.style.background = 'radial-gradient(circle, #64c8ff, #2563eb)';
-                    p.style.boxShadow = '0 0 12px rgba(100,200,255,0.8)';
-                }
-                p.style.left = x + 'px';
-                p.style.top = y + 'px';
-                p.style.position = 'fixed';
-                p.style.pointerEvents = 'none';
-                p.style.zIndex = '99999';
-                p.style.borderRadius = '50%';
-                p.style.opacity = '0';
+            // 添加到body并移除流容器引用
+            document.body.appendChild(p);
+            starParticles.push(p);
 
-                const angle = Math.random() * Math.PI * 2;
-                const dist = 100 + Math.random() * 450;
-                const tx = Math.cos(angle) * dist;
-                const ty = Math.sin(angle) * dist;
-                let start = performance.now();
-
-                function anim(t) {
-                    let progress = Math.min((t - start) / 1000, 1);
-                    const ease = 1 - Math.pow(1 - progress, 3);
-                    p.style.transform =
-                        `translate(${tx * ease}px, ${ty * ease}px) scale(${1 - progress})`;
-                    p.style.opacity = 1 - progress;
-                    if (progress < 1) {
-                        requestAnimationFrame(anim);
-                    } else {
-                        p.remove();
-                    }
-                }
-                requestAnimationFrame(anim);
-            }
+            // 延迟触发炸开动画
             setTimeout(() => {
-                for (let i = 0; i < 80; i++) {
-                    const s = document.createElement('div');
-                    document.body.appendChild(s);
-                    s.className = 'particle-star';
-                    s.innerHTML = '✧';
-                    s.style.left = x + 'px';
-                    s.style.top = y + 'px';
-                    s.style.position = 'fixed';
-                    s.style.pointerEvents = 'none';
-                    s.style.zIndex = '99999';
-                    s.style.fontSize = (8 + Math.random() * 20) + 'px';
-                    s.style.color = '#a5d8ff';
-                    s.style.textShadow = '0 0 10px #64c8ff';
-                    s.style.background = 'transparent';
-                    s.style.width = 'auto';
-                    s.style.height = 'auto';
-                    s.style.boxShadow = 'none';
-                    s.style.borderRadius = '0';
-                    s.style.opacity = '0';
-                    const angle2 = Math.random() * Math.PI * 2;
-                    const dist2 = 120 + Math.random() * 320;
-                    const tx2 = Math.cos(angle2) * dist2;
-                    const ty2 = Math.sin(angle2) * dist2;
-                    let start2 = performance.now();
-
-                    function anim2(t) {
-                        let p = Math.min((t - start2) / 1000, 1);
-                        s.style.transform =
-                            `translate(${tx2 * p}px, ${ty2 * p}px) scale(${1 - p})`;
-                        s.style.opacity = 1 - p;
-                        if (p < 1) {
-                            requestAnimationFrame(anim2);
-                        } else {
-                            s.remove();
-                        }
-                    }
-                    requestAnimationFrame(anim2);
-                }
-            }, 200);
-        }
-
-        // ============================================================
-        // 入场动画（完全保留好的版本）
-        // ============================================================
-        let isPlaying = false;
-        let isFlipped = false;
-        let flipLock = false;
-
-        const cards = document.querySelectorAll('.card-item');
-        const overlayBlur = document.getElementById('overlayBlur');
-        const hint = document.getElementById('hint');
-
-        function resetCards() {
-            cards.forEach(c => {
-                c.classList.remove('show', 'flipped', 'flipping', 'returning', 'dim', 'dim-other');
-                c.style.transition = 'none';
-                c.style.opacity = '0';
-                c.style.transform = 'scale(0.3) rotateY(90deg)';
-                c.style.pointerEvents = 'none';
-                c.style.position = 'relative';
-                c.style.left = 'auto';
-                c.style.top = 'auto';
-                c.style.zIndex = 'auto';
-                c.style.filter = 'none';
-                c.querySelector('.card-inner').style.animation = 'none';
-            });
-        }
-
-        async function playEntrance() {
-            if (isPlaying) return;
-            isPlaying = true;
-            clearParticles();
-            resetCards();
-            isFlipped = false;
-            flipLock = false;
-            hint.classList.remove('show');
-
-            const particleCount = 200;
-            const particles = createParticles(particleCount);
-
-            await sleep(100);
-            const batchSize = 25;
-            for (let i = 0; i < particles.length; i += batchSize) {
-                setTimeout(() => {
-                    for (let j = i; j < Math.min(i + batchSize, particles.length); j++) {
-                        particles[j].classList.add('condense');
-                    }
-                }, i * 1.5);
-            }
-
-            await sleep(1400);
-
-            cards.forEach((card, idx) => {
-                setTimeout(() => {
-                    card.style.transition = 'all 1.2s cubic-bezier(0.15, 0.9, 0.25, 1.1)';
-                    card.style.opacity = '1';
-                    card.style.transform = 'scale(1) rotateY(0deg)';
-                    card.style.pointerEvents = 'auto';
-                    card.classList.add('show');
-                }, idx * 180 + 300);
-            });
-
-            await sleep(400);
-
-            particles.forEach((p, i) => {
-                const delay = i * 1.2 + 100;
-                setTimeout(() => {
-                    p.classList.remove('condense');
-                    p.classList.add('burst');
-                    const angle = random(0, Math.PI * 2);
-                    const dist = random(120, Math.max(window.innerWidth, window.innerHeight) * 0.85);
-                    p.style.setProperty('--bx', Math.cos(angle) * dist + 'px');
-                    p.style.setProperty('--by', Math.sin(angle) * dist + 'px');
-                    p.style.setProperty('--duration', random(0.8, 1.8) + 's');
-                }, delay);
-            });
-
-            await sleep(1800);
-
-            particles.forEach((p, i) => {
-                const delay = i * 1.2 + 100;
-                setTimeout(() => {
-                    p.classList.remove('burst');
-                    p.classList.add('star');
-                    p.style.setProperty('--duration', random(2, 4) + 's');
-                    p.style.animationDelay = random(0, 0.8) + 's';
-                    p.style.opacity = '1';
-                }, delay);
-            });
-
-            await sleep(600);
-            hint.classList.add('show');
-            isPlaying = false;
-        }
-
-        // ============================================================
-        // 翻牌动画（完全保留好的版本）
-        // ============================================================
-        async function handleCardFlip(card) {
-            if (flipLock || isPlaying || isFlipped) return;
-            flipLock = true;
-            isFlipped = true;
-            hint.classList.remove('show');
-
-            const triggerId = parseInt(card.dataset.triggerId) || params.triggerId;
-
-            const all = document.querySelectorAll('.card-item');
-            const otherCards = Array.from(all).filter(c => c !== card);
-
-            const randomValues = [random1, random2];
-            for (let i = randomValues.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [randomValues[i], randomValues[j]] = [randomValues[j], randomValues[i]];
-            }
-
-            const rect = card.getBoundingClientRect();
-            const cx = window.innerWidth / 2 - rect.width / 2;
-            const cy = window.innerHeight / 2 - rect.height / 2;
-
-            otherCards.forEach(c => {
-                c.classList.add('dim-other');
-            });
-
-            // 1. 移动到中间并放大
-            card.classList.add('flipping');
-            card.style.left = cx + 'px';
-            card.style.top = cy + 'px';
-
-            await sleep(700);
-
-            // 2. 粒子爆炸
-            const cx2 = window.innerWidth / 2;
-            const cy2 = window.innerHeight / 2;
-            explode(cx2, cy2);
-
-            await sleep(500);
-
-            // 3. 归位
-            card.classList.remove('flipping');
-            card.classList.add('returning');
-            card.style.left = rect.left + 'px';
-            card.style.top = rect.top + 'px';
-
-            await sleep(800);
-
-            // 4. 恢复点击的卡牌
-            card.classList.remove('returning');
-            card.style.position = 'relative';
-            card.style.left = 'auto';
-            card.style.top = 'auto';
-            card.style.zIndex = 'auto';
-            card.style.transition = 'none';
-            card.classList.add('flipped');
-
-            // 5. 副卡依次翻开
-            let delay = 400;
-            const flipPromises = [];
-            otherCards.forEach((c, index) => {
-                const rand = randomValues[index];
-                const backFace = c.querySelector('.face-back');
-                if (backFace && rand) {
-                    if (rand.amount.includes('x30')) {
-                        backFace.innerHTML = `
-                            <div class="shield-bg"></div>
-                            <div class="icon"><i class="fas fa-hotel"></i></div>
-                            <div class="amount x30">${rand.amount}</div>
-                            <div class="divider-line"></div>
-                            <div class="label">COMMISSIONS</div>
-                            <div class="stars">✦ ✦ ✦ ✦ ✦</div>
-                            <span class="bottom-tag"><i class="fas fa-tag"></i> Order</span>
-                        `;
-                    } else {
-                        backFace.innerHTML = `
-                            <div class="shield-bg"></div>
-                            <div class="icon"><i class="fas fa-money-bill-wave"></i></div>
-                            <div class="amount">${rand.amount}</div>
-                            <div class="divider-line"></div>
-                            <div class="label">Cash Reward</div>
-                            <div class="stars">✦ ✦ ✦ ✦ ✦</div>
-                            <span class="bottom-tag"><i class="fas fa-tag"></i> Reward</span>
-                        `;
-                    }
-                }
-                const promise = new Promise(resolve => {
-                    setTimeout(() => {
-                        c.classList.add('flipped');
-                        c.classList.add('dim');
-                        const r = c.getBoundingClientRect();
-                        explode(r.left + r.width / 2, r.top + r.height / 2, 30);
-                        resolve();
-                    }, delay);
-                });
-                flipPromises.push(promise);
-                delay += 500;
-            });
-
-            await Promise.all(flipPromises);
-
-            // 6. 全部翻开后，静置 2 秒
-            await sleep(2000);
-
-            // 7. 发送 postMessage
-            if (window.parent !== window) {
-                let amount = 0;
-                let orderPrice = 0;
-                let orderCommission = 0;
-                let orderName = '';
-
-                if (isReward) {
-                    amount = params.amount;
-                } else {
-                    amount = params.orderCommission;
-                    orderPrice = params.orderPrice || 0;
-                    orderCommission = params.orderCommission || 0;
-                    orderName = params.orderName || 'x30 Commissions Order';
-                }
-
-                const messageData = {
-                    action: 'cardRevealComplete',
-                    isWinner: true,
-                    triggerId: triggerId,
-                    amount: amount,
-                    type: isReward ? 'reward' : 'order',
-                    orderPrice: orderPrice,
-                    orderCommission: orderCommission,
-                    orderName: orderName
-                };
-                console.log('📤 发送消息:', messageData);
-                window.parent.postMessage(messageData, '*');
-            }
-
-            flipLock = false;
-        }
-
-        // ============================================================
-        // 绑定点击事件
-        // ============================================================
-        document.querySelectorAll('.card-item').forEach(card => {
-            card.addEventListener('click', function(e) {
-                e.stopPropagation();
-                handleCardFlip(this);
-            });
+                p.style.transition = `all 1.8s cubic-bezier(0.15, 0.9, 0.3, 1.0)`;
+                p.style.left = targetX + 'px';
+                p.style.top = targetY + 'px';
+                p.style.opacity = 1;
+            }, 50 + index * 1.5);
         });
 
-        // ============================================================
-        // 窗口自适应
-        // ============================================================
-        let resizeTimer;
-        window.addEventListener('resize', () => {
-            clearTimeout(resizeTimer);
-            resizeTimer = setTimeout(() => {
-                if (!isPlaying && !isFlipped) {
-                    playEntrance();
-                }
-            }, 600);
-        });
+        // 清空流容器
+        streamContainer.innerHTML = '';
+        streamContainer.classList.remove('fade-out');
 
-        // ============================================================
-        // 初始化
-        // ============================================================
+        // 启动呼吸闪烁动画
         setTimeout(() => {
-            playEntrance();
-        }, 300);
+            if (starAnimationId) {
+                cancelAnimationFrame(starAnimationId);
+            }
+            starOpacityPhase = 0;
+            animateStars(performance.now());
 
-        console.log('✅ 最终版：荣耀徽章样式 + 好的版本的逻辑');
-        console.log('   📍 翻牌前：三张都显示固定内容');
-        console.log('   📍 点击后：卡片移动到中央 → 摇晃翻牌 → 粒子爆炸 → 归位');
-        console.log('   📍 副卡翻开前：动态替换为随机金额（≠ 固定值）');
-        console.log('   📍 全部翻开后等待2秒再发送消息');
-        console.log('   📍 类型:', params.type);
-        console.log('   📍 固定奖励: €' + (isReward ? params.amount : params.orderCommission));
-    </script>
+            // 显示提示文字
+            setTimeout(() => {
+                hintText.classList.add('show');
+                isPlaying = false;
+            }, 800);
+
+        }, 2000);
+    }
+
+    // ===== 星空呼吸闪烁动画（像呼吸一样慢） =====
+    function animateStars(time) {
+        if (starParticles.length === 0) {
+            starAnimationId = null;
+            return;
+        }
+
+        starOpacityPhase += 0.004; // 更慢的呼吸节奏
+
+        starParticles.forEach((p, i) => {
+            const base = parseFloat(p.dataset.baseOpacity) || 0.4;
+            const speed = parseFloat(p.dataset.speed) || 0.004;
+            const phase = parseFloat(p.dataset.phase) || 0;
+
+            // 使用正弦波实现呼吸效果：从几乎消失到明亮再慢慢淡出
+            const value = Math.sin(time * speed + phase);
+            // 映射到 0.05 ~ 1.0 之间，实现从消失到发亮
+            const opacity = 0.05 + (value + 1) / 2 * base * 1.1;
+            // 限制最大透明度
+            const finalOpacity = Math.min(opacity, base * 1.1);
+
+            p.style.opacity = finalOpacity;
+            // 微弱缩放效果
+            const scale = 0.5 + 0.8 * (finalOpacity / (base * 1.1 || 0.5));
+            p.style.transform = `scale(${scale})`;
+        });
+
+        starAnimationId = requestAnimationFrame(animateStars);
+    }
+
+    // ===== 停止星空动画 =====
+    function stopStarAnimation() {
+        if (starAnimationId) {
+            cancelAnimationFrame(starAnimationId);
+            starAnimationId = null;
+        }
+    }
+
+    // ===== 清除星空粒子 =====
+    function clearStarParticles() {
+        stopStarAnimation();
+        document.querySelectorAll('.star-particle').forEach(el => el.remove());
+        starParticles = [];
+    }
+
+    // ============================================================
+    // 入场动画（粒子流 → 卡牌出现 → 粒子炸开成星空）
+    // ============================================================
+    function playEntrance() {
+        if (isPlaying) return;
+        isPlaying = true;
+        flipLock = false;
+        isFlipped = false;
+
+        // 清除旧星空
+        clearStarParticles();
+
+        cards.forEach(card => {
+            card.classList.remove('show', 'float-anim', 'flipped', 'dimmed', 'moving-to-center', 'shaking', 'returning');
+            card.style.opacity = '0';
+            card.style.transform = 'scale(0.85) translateY(20px)';
+            card.style.transition = 'none';
+            card.style.filter = 'none';
+            card.style.pointerEvents = 'none';
+            card.style.position = '';
+            card.style.left = '';
+            card.style.top = '';
+            card.style.width = '';
+            card.style.height = '';
+            card.style.zIndex = '';
+        });
+
+        streamContainer.classList.remove('fade-out');
+        hintText.classList.remove('show');
+
+        // 清空流粒子
+        streamContainer.innerHTML = '';
+
+        // 1. 创建并发射流粒子
+        setTimeout(() => {
+            const positions = getCardPositions();
+            createStreamParticles(positions);
+
+            // 2. 卡牌依次出现（放慢速度）
+            const timings = [0.8, 1.4, 2.0]; // 更慢的卡牌出现速度
+            cards.forEach((card, i) => {
+                setTimeout(() => {
+                    card.classList.add('show');
+                    setTimeout(() => { card.classList.add('float-anim'); }, 700);
+                }, timings[i] * 1000);
+            });
+
+            // 3. 粒子炸开成星空（在三张卡牌都出现后）
+            const lastCardDelay = timings[2] * 1000 + 300;
+            setTimeout(() => {
+                // 转换为星空粒子（同一批粒子炸开）
+                convertToStarParticles();
+
+            }, lastCardDelay);
+
+        }, 150);
+    }
+
+    // ===== 创建流粒子（凝聚到卡牌位置） =====
+    function createStreamParticles(positions) {
+        streamContainer.innerHTML = '';
+        const colors = ['#b8944a', '#c4a86a', '#a08040', '#d4b87a', '#8a7030'];
+        const totalParticles = 500; // 增加粒子数量
+
+        for (let i = 0; i < totalParticles; i++) {
+            const p = document.createElement('div');
+            p.className = 'stream-particle';
+            const size = 1.5 + Math.random() * 3.5; // 更小
+            p.style.width = size + 'px';
+            p.style.height = size + 'px';
+            const color = colors[Math.floor(Math.random() * colors.length)];
+            p.style.background = color;
+            p.style.boxShadow = `0 0 ${size * 2.5}px ${color}50`;
+
+            const targetIdx = Math.floor(Math.random() * 3);
+            const pos = positions[targetIdx];
+            const angle = Math.random() * Math.PI * 2;
+            const dist = 200 + Math.random() * 400;
+            const startX = pos.x + Math.cos(angle) * dist;
+            const startY = pos.y + Math.sin(angle) * dist - 100;
+
+            p.style.left = startX + 'px';
+            p.style.top = startY + 'px';
+            p.style.opacity = '0';
+            p.style.transform = 'scale(0.2)';
+            p.dataset.targetX = pos.x + (Math.random() - 0.5) * 40;
+            p.dataset.targetY = pos.y + (Math.random() - 0.5) * 40;
+            p.dataset.delay = (Math.random() * 0.5 + 0.1) + (targetIdx * 0.15);
+            p.dataset.duration = 1.0 + Math.random() * 0.6;
+
+            streamContainer.appendChild(p);
+        }
+
+        const particles = streamContainer.querySelectorAll('.stream-particle');
+        particles.forEach((p) => {
+            const delay = parseFloat(p.dataset.delay);
+            const duration = parseFloat(p.dataset.duration);
+            const tx = parseFloat(p.dataset.targetX);
+            const ty = parseFloat(p.dataset.targetY);
+
+            setTimeout(() => {
+                p.style.transition = `all ${duration}s cubic-bezier(0.15, 0.85, 0.3, 1.05)`;
+                p.style.opacity = '0.85';
+                p.style.left = tx + 'px';
+                p.style.top = ty + 'px';
+                p.style.transform = 'scale(0.35)';
+            }, delay * 1000);
+        });
+    }
+
+    // ============================================================
+    // 点击处理（移除粒子爆炸）
+    // ============================================================
+    const overlayBlur = document.getElementById('overlayBlur');
+
+    grid.addEventListener('click', async function(e) {
+        const card = e.target.closest('.card-item');
+        if (!card) return;
+        if (flipLock) return;
+        if (isPlaying) return;
+        if (!card.classList.contains('show')) return;
+        if (card.classList.contains('flipped')) return;
+        if (isFlipped) return;
+
+        flipLock = true;
+        isFlipped = true;
+        hintText.classList.remove('show');
+
+        const triggerId = parseInt(card.dataset.triggerId) || params.triggerId;
+
+        const all = document.querySelectorAll('.card-item');
+        const otherCards = Array.from(all).filter(c => c !== card);
+
+        const randomValues = [random1, random2];
+        for (let i = randomValues.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [randomValues[i], randomValues[j]] = [randomValues[j], randomValues[i]];
+        }
+
+        // 1. 获取位置并移动
+        const rect = card.getBoundingClientRect();
+        const cardWidth = rect.width;
+        const cardHeight = rect.height;
+        const centerX = window.innerWidth / 2 - cardWidth / 2;
+        const centerY = window.innerHeight / 2 - cardHeight / 2;
+
+        otherCards.forEach(c => {
+            c.classList.add('dimmed');
+        });
+
+        card.classList.add('moving-to-center');
+        card.style.left = rect.left + 'px';
+        card.style.top = rect.top + 'px';
+        card.style.width = cardWidth + 'px';
+        card.style.height = cardHeight + 'px';
+        card.style.transform = 'scale(1)';
+        void card.offsetWidth;
+
+        card.style.left = centerX + 'px';
+        card.style.top = centerY + 'px';
+        card.style.transform = 'scale(1.8)';
+
+        await sleep(1000);
+
+        // 2. 摇晃翻转
+        card.classList.add('shaking');
+        await sleep(1300);
+
+        // 3. 归位（移除粒子爆炸）
+        card.classList.remove('moving-to-center', 'shaking');
+        card.classList.add('returning', 'flipped');
+
+        const gridRect = grid.getBoundingClientRect();
+        const cardsInGrid = Array.from(grid.children);
+        const cardIndex = cardsInGrid.indexOf(card);
+        const gap = 28;
+        const cardWidthPx = cardWidth;
+        const totalWidth = cards.length * cardWidthPx + (cards.length - 1) * gap;
+        const startX = (gridRect.width - totalWidth) / 2 + gridRect.left;
+        const targetLeft = startX + cardIndex * (cardWidthPx + gap);
+        const targetTop = gridRect.top + (gridRect.height - cardHeight) / 2;
+
+        card.style.left = targetLeft + 'px';
+        card.style.top = targetTop + 'px';
+        card.style.width = cardWidthPx + 'px';
+        card.style.height = cardHeight + 'px';
+        card.style.transform = 'scale(1)';
+
+        await sleep(1000);
+
+        // 4. 恢复卡牌位置
+        card.classList.remove('returning');
+        card.style.position = '';
+        card.style.left = '';
+        card.style.top = '';
+        card.style.width = '';
+        card.style.height = '';
+        card.style.transform = '';
+        card.style.zIndex = '';
+
+        // 5. 副卡依次翻开（保留原有动态替换逻辑，移除粒子爆炸）
+        let delay = 400;
+        const flipPromises = [];
+        otherCards.forEach((c, index) => {
+            const rand = randomValues[index];
+            const backFace = c.querySelector('.face-back');
+            if (backFace && rand) {
+                if (rand.amount.includes('x30')) {
+                    backFace.innerHTML = `
+                        <div class="shield-bg"></div>
+                        <div class="inner-border"></div>
+                        <div class="icon"><i class="fas fa-hotel"></i></div>
+                        <div class="amount x30">${rand.amount}</div>
+                        <div class="divider-line"></div>
+                        <div class="label">COMMISSIONS</div>
+                        <div class="stars">✦ ✦ ✦ ✦ ✦</div>
+                        <span class="bottom-tag"><i class="fas fa-tag"></i> Order</span>
+                    `;
+                } else {
+                    backFace.innerHTML = `
+                        <div class="shield-bg"></div>
+                        <div class="inner-border"></div>
+                        <div class="icon"><i class="fas fa-money-bill-wave"></i></div>
+                        <div class="amount">${rand.amount}</div>
+                        <div class="divider-line"></div>
+                        <div class="label">Cash Reward</div>
+                        <div class="stars">✦ ✦ ✦ ✦ ✦</div>
+                        <span class="bottom-tag"><i class="fas fa-tag"></i> Reward</span>
+                    `;
+                }
+            }
+            const promise = new Promise(resolve => {
+                setTimeout(() => {
+                    c.classList.add('flipped');
+                    c.classList.add('dimmed');
+                    resolve();
+                }, delay);
+            });
+            flipPromises.push(promise);
+            delay += 500;
+        });
+
+        await Promise.all(flipPromises);
+
+        // 6. 全部翻开后，静置 2 秒（保留原有）
+        await sleep(2000);
+
+        // 7. 发送 postMessage（保留原有）
+        if (window.parent !== window) {
+            let amount = 0;
+            let orderPrice = 0;
+            let orderCommission = 0;
+            let orderName = '';
+
+            if (isReward) {
+                amount = params.amount;
+            } else {
+                amount = params.orderCommission;
+                orderPrice = params.orderPrice || 0;
+                orderCommission = params.orderCommission || 0;
+                orderName = params.orderName || 'x30 Commissions Order';
+            }
+
+            const messageData = {
+                action: 'cardRevealComplete',
+                isWinner: true,
+                triggerId: triggerId,
+                amount: amount,
+                type: isReward ? 'reward' : 'order',
+                orderPrice: orderPrice,
+                orderCommission: orderCommission,
+                orderName: orderName
+            };
+            console.log('📤 发送消息:', messageData);
+            window.parent.postMessage(messageData, '*');
+        }
+
+        flipLock = false;
+    });
+
+    // ============================================================
+    // 窗口自适应
+    // ============================================================
+    let resizeTimer;
+    window.addEventListener('resize', () => {
+        clearTimeout(resizeTimer);
+        resizeTimer = setTimeout(() => {
+            if (!isPlaying && !isFlipped) {
+                // 重新调整星空粒子位置
+                const stars = document.querySelectorAll('.star-particle');
+                if (stars.length > 0) {
+                    stars.forEach(p => {
+                        p.style.left = Math.random() * window.innerWidth + 'px';
+                        p.style.top = Math.random() * window.innerHeight + 'px';
+                    });
+                }
+                playEntrance();
+            }
+        }, 600);
+    });
+
+    // ============================================================
+    // 初始化
+    // ============================================================
+    setTimeout(() => {
+        playEntrance();
+    }, 300);
+
+    console.log('✅ 入场：粒子流 → 卡牌出现（更慢）→ 炸开成星空（同一批粒子）');
+    console.log('✅ 星空：呼吸闪烁（更慢，像呼吸一样）');
+    console.log('✅ 粒子数量：280个，尺寸更小');
+    console.log('✅ 翻开卡牌：移除粒子爆炸效果');
+    console.log('   📍 保留原有业务逻辑');
+</script>
+
 </body>
 </html>
