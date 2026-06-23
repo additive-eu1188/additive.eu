@@ -7,7 +7,8 @@
     <link rel="stylesheet" href="common.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="user-data.js"></script>
+<script src="toast.js"></script>    
+<script src="user-data.js"></script>
     <style>
         .checkin-header { margin-bottom: 24px; }
         .checkin-header h1 { font-size: 28px; font-weight: 700; color: #ffffff; margin-bottom: 6px; }
@@ -680,47 +681,42 @@ if (isPremium && currentRound === 2 && roundOrdersCount >= 30) {
     }
 }
 
-        // ============================================================
-        // Claim logic
-        // ============================================================
         async function handleClaim() {
     const t = window.i18n?.t || function(key) { return key; };
     const { streak, lastClaimDate, claimedDays } = loadData();
     const hasClaimed = hasClaimedToday(lastClaimDate);
     const nextDay = streak + 1;
 
-    if (hasClaimed) { 
-        alert(t('checkin_claimed_today_msg')); 
-        return; 
+    if (hasClaimed) {
+        showToast(t('checkin_claimed_today_msg'), 'warning');
+        return;
     }
-    if (nextDay > signInRewards.length) { 
-        alert(t('checkin_all_completed')); 
-        return; 
+    if (nextDay > signInRewards.length) {
+        showToast(t('checkin_all_completed'), 'success');
+        return;
     }
 
     const user = getCurrentUser();
     if (!user) {
-        alert('Please login first');
+        showToast('Please login first', 'error');
         return;
     }
 
-    // ✅ 获取用户完整数据，检查是否满足 Claim 条件
     const freshUser = await syncUserData();
     const isPremium = freshUser?.isPremium || false;
     const currentRound = freshUser?.currentRound || 0;
     const roundOrdersCount = freshUser?.roundOrdersCount || 0;
 
-    // ✅ 只有正式用户（已充值）且 current_round === 2 且完成 30 单才能 Claim
     if (!isPremium) {
-        alert('Please recharge your account first to become a premium member');
+        showToast('Please recharge your account first to become a premium member', 'warning');
         return;
     }
     if (currentRound !== 2) {
-        alert(`Complete Round 2 (${roundOrdersCount}/30 orders) to claim Sign In Bonus`);
+        showToast(`Complete Round 2 (${roundOrdersCount}/30 orders) to claim Sign In Bonus`, 'warning');
         return;
     }
     if (roundOrdersCount < 30) {
-        alert(`Complete ${30 - roundOrdersCount} more orders in Round 2 to claim Sign In Bonus`);
+        showToast(`Complete ${30 - roundOrdersCount} more orders in Round 2 to claim Sign In Bonus`, 'warning');
         return;
     }
 
@@ -737,34 +733,44 @@ if (isPremium && currentRound === 2 && roundOrdersCount >= 30) {
         claimDay = nextDay;
     }
 
-    await addReward(amount);
+    // 🔥 使用自定义确认弹窗
+    showConfirm(
+        '💰 Claim Reward',
+        `Are you sure you want to claim Day ${claimDay} reward of €${amount}?`,
+        async () => {
+            await addReward(amount);
 
-    const { error: insertError } = await sb
-        .from('user_checkin_records')
-        .insert([{
-            uid: user.uid,
-            day_number: claimDay,
-            amount: amount,
-            checkin_date: new Date().toISOString().split('T')[0],
-            created_at: new Date().toISOString()
-        }]);
+            const { error: insertError } = await sb
+                .from('user_checkin_records')
+                .insert([{
+                    uid: user.uid,
+                    day_number: claimDay,
+                    amount: amount,
+                    checkin_date: new Date().toISOString().split('T')[0],
+                    created_at: new Date().toISOString()
+                }]);
 
-    if (insertError) {
-        console.error('❌ Database write failed:', insertError);
-        alert('Check-in failed: ' + insertError.message);
-        return;
-    }
+            if (insertError) {
+                console.error('❌ Database write failed:', insertError);
+                showToast('Check-in failed: ' + insertError.message, 'error');
+                return;
+            }
 
-    console.log(`✅ Check-in record saved: Day ${claimDay}, €${amount}`);
+            console.log(`✅ Check-in record saved: Day ${claimDay}, €${amount}`);
 
-    if (isReset) {
-        saveData(1, new Date().toISOString(), [1]);
-    } else {
-        saveData(streak + 1, new Date().toISOString(), [...claimedDays, claimDay]);
-    }
+            if (isReset) {
+                saveData(1, new Date().toISOString(), [1]);
+            } else {
+                saveData(streak + 1, new Date().toISOString(), [...claimedDays, claimDay]);
+            }
 
-    await render();
-    alert(t('checkin_claim_success', { day: claimDay, amount: amount }));
+            await render();
+            showToast(`🎉 Day ${claimDay} claimed! +€${amount}`, 'success');
+        },
+        () => {
+            showToast('Claim cancelled', 'info');
+        }
+    );
 }
 
         // ============================================================
