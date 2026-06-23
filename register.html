@@ -89,41 +89,121 @@
             width: 100%;
         }
 
-        /* ===== Phone with country code dropdown ===== */
+        /* ===== Phone with country code - 金色渐变背景样式 ===== */
         .phone-group {
             display: flex;
             gap: 10px;
             align-items: stretch;
         }
-        .phone-group .country-select {
+
+        /* ===== 自定义下拉容器 ===== */
+        .custom-select-wrapper {
+            position: relative;
             flex: 0 0 120px;
-            background: rgba(255, 255, 255, 0.04);
-            border: 1px solid rgba(255, 255, 255, 0.06);
+            min-width: 120px;
+        }
+
+        /* ===== 选中的显示框 ===== */
+        .custom-select-wrapper .selected-display {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 13px 10px 13px 14px;
             border-radius: 12px;
-            padding: 13px 10px;
-            color: #fff;
-            font-size: 14px;
-            outline: none;
-            transition: 0.3s;
             cursor: pointer;
-            appearance: none;
-            -webkit-appearance: none;
-            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='rgba(255,255,255,0.4)' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
-            background-repeat: no-repeat;
-            background-position: right 10px center;
-            padding-right: 30px;
+            user-select: none;
+            transition: all 0.25s ease;
+            font-size: 14px;
             font-weight: 500;
-        }
-        .phone-group .country-select:focus {
-            border-color: rgba(204, 178, 153, 0.25);
-            background-color: rgba(255, 255, 255, 0.06);
-        }
-        .phone-group .country-select option {
-            background: #0a0f2a;
             color: #fff;
-            padding: 8px;
-            font-weight: 500;
+            position: relative;
+            background: rgba(204, 178, 153, 0.04);
+            border: 1px solid rgba(204, 178, 153, 0.1);
+            height: 100%;
         }
+        .custom-select-wrapper .selected-display:hover {
+            border-color: rgba(204, 178, 153, 0.2);
+        }
+        .custom-select-wrapper .selected-display .arrow {
+            margin-left: auto;
+            transition: transform 0.3s ease;
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.3);
+        }
+        .custom-select-wrapper .selected-display .arrow.open {
+            transform: rotate(180deg);
+        }
+        .custom-select-wrapper .selected-display .sel-flag {
+            font-size: 18px;
+        }
+        .custom-select-wrapper .selected-display .sel-code {
+            color: rgba(255, 255, 255, 0.5);
+            font-weight: 400;
+            font-size: 13px;
+        }
+
+        /* ===== 下拉选项列表 - 金色渐变背景 ===== */
+        .custom-select-wrapper .dropdown-options {
+            position: absolute;
+            top: calc(100% + 6px);
+            left: 0;
+            right: 0;
+            border-radius: 12px;
+            overflow: hidden;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-6px) scale(0.98);
+            transition: all 0.25s ease;
+            z-index: 100;
+            max-height: 0;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+            background: linear-gradient(160deg, rgba(18, 14, 10, 0.98), rgba(8, 6, 12, 0.98));
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(204, 178, 153, 0.08);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(204, 178, 153, 0.03);
+        }
+        .custom-select-wrapper .dropdown-options.open {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0) scale(1);
+            max-height: 260px;
+        }
+        .custom-select-wrapper .dropdown-options .option-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 14px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 14px;
+            font-weight: 500;
+            color: #e8e8f0;
+            border-bottom: 1px solid rgba(204, 178, 153, 0.03);
+        }
+        .custom-select-wrapper .dropdown-options .option-item:last-child {
+            border-bottom: none;
+        }
+        .custom-select-wrapper .dropdown-options .option-item .opt-flag {
+            font-size: 18px;
+        }
+        .custom-select-wrapper .dropdown-options .option-item .opt-code {
+            color: rgba(255, 255, 255, 0.3);
+            font-weight: 400;
+            font-size: 13px;
+            margin-left: auto;
+        }
+        .custom-select-wrapper .dropdown-options .option-item:hover {
+            background: rgba(204, 178, 153, 0.06);
+            color: #C9B095;
+        }
+        .custom-select-wrapper .dropdown-options .option-item.selected-opt {
+            background: linear-gradient(90deg, rgba(204, 178, 153, 0.1), transparent);
+            color: #C9B095;
+        }
+
+        /* ===== 手机号输入框 ===== */
         .phone-group .phone-input {
             flex: 1;
             min-width: 0;
@@ -139,6 +219,7 @@
             outline: none;
             transition: 0.3s;
             box-sizing: border-box;
+            height: 100%;
         }
         .phone-group .phone-input input:focus {
             border-color: rgba(204, 178, 153, 0.25);
@@ -243,9 +324,16 @@
                 flex-direction: column;
                 gap: 8px;
             }
-            .phone-group .country-select {
+            .custom-select-wrapper {
                 flex: 1;
                 width: 100%;
+                min-width: unset;
+            }
+            .custom-select-wrapper .selected-display {
+                padding: 11px 10px 11px 14px;
+            }
+            .phone-group .phone-input input {
+                padding: 11px 14px;
             }
         }
 
@@ -254,7 +342,6 @@
             .register-card .logo img { height: 34px; }
             .register-card .subtitle { font-size: 12px; }
 
-            /* Email 行保持横向 */
             .code-row {
                 flex-direction: row;
                 align-items: center;
@@ -271,8 +358,6 @@
                 font-size: 13px;
                 white-space: nowrap;
             }
-
-            /* Verification Code 输入框缩短 */
             #regCode {
                 max-width: 180px;
                 width: 100%;
@@ -306,11 +391,32 @@
             <div class="form-group">
                 <label><i class="fas fa-phone"></i> Phone Number</label>
                 <div class="phone-group">
-                    <select id="countryCode" class="country-select">
-                        <option value="+49">🇩🇪 +49</option>
-                        <option value="+39">🇮🇹 +39</option>
-                        <option value="+44">🇬🇧 +44</option>
-                    </select>
+                    <!-- ===== 自定义下拉 ===== -->
+                    <div class="custom-select-wrapper" id="countrySelectWrapper">
+                        <div class="selected-display" id="selectedDisplay">
+                            <span class="sel-flag">🇩🇪</span>
+                            <span class="sel-code">+49</span>
+                            <span class="arrow"><i class="fas fa-chevron-down"></i></span>
+                        </div>
+                        <div class="dropdown-options" id="dropdownOptions">
+                            <div class="option-item selected-opt" data-value="+49" data-flag="🇩🇪">
+                                <span class="opt-flag">🇩🇪</span>
+                                <span>Germany</span>
+                                <span class="opt-code">+49</span>
+                            </div>
+                            <div class="option-item" data-value="+39" data-flag="🇮🇹">
+                                <span class="opt-flag">🇮🇹</span>
+                                <span>Italy</span>
+                                <span class="opt-code">+39</span>
+                            </div>
+                            <div class="option-item" data-value="+44" data-flag="🇬🇧">
+                                <span class="opt-flag">🇬🇧</span>
+                                <span>United Kingdom</span>
+                                <span class="opt-code">+44</span>
+                            </div>
+                        </div>
+                    </div>
+
                     <div class="phone-input">
                         <input type="tel" id="regPhone" placeholder="Enter your phone number">
                     </div>
@@ -337,6 +443,92 @@
     </div>
 
     <script>
+        // ===== 自定义下拉逻辑 =====
+        document.addEventListener('DOMContentLoaded', function() {
+            const wrapper = document.getElementById('countrySelectWrapper');
+            const display = document.getElementById('selectedDisplay');
+            const options = document.getElementById('dropdownOptions');
+            const items = options.querySelectorAll('.option-item');
+            let selectedValue = '+49';
+            let selectedFlag = '🇩🇪';
+
+            // 从 localStorage 读取上次选中的值
+            const savedCountry = localStorage.getItem('selectedCountry');
+            if (savedCountry) {
+                items.forEach(item => {
+                    if (item.dataset.value === savedCountry) {
+                        selectOption(item);
+                    }
+                });
+            }
+
+            function selectOption(item) {
+                // 移除所有选中状态
+                items.forEach(el => el.classList.remove('selected-opt'));
+                item.classList.add('selected-opt');
+
+                const value = item.dataset.value;
+                const flag = item.dataset.flag;
+                selectedValue = value;
+                selectedFlag = flag;
+
+                // 更新显示
+                display.innerHTML = `
+                    <span class="sel-flag">${flag}</span>
+                    <span class="sel-code">${value}</span>
+                    <span class="arrow"><i class="fas fa-chevron-down"></i></span>
+                `;
+
+                // 保存到 localStorage
+                localStorage.setItem('selectedCountry', value);
+
+                // 关闭下拉
+                options.classList.remove('open');
+                display.querySelector('.arrow').classList.remove('open');
+            }
+
+            // 点击显示框切换下拉
+            display.addEventListener('click', function(e) {
+                e.stopPropagation();
+                const isOpen = options.classList.contains('open');
+                // 关闭所有其他下拉
+                document.querySelectorAll('.dropdown-options').forEach(el => {
+                    el.classList.remove('open');
+                    el.closest('.custom-select-wrapper').querySelector('.arrow')?.classList.remove('open');
+                });
+                if (!isOpen) {
+                    options.classList.add('open');
+                    this.querySelector('.arrow').classList.add('open');
+                } else {
+                    options.classList.remove('open');
+                    this.querySelector('.arrow').classList.remove('open');
+                }
+            });
+
+            // 点击选项
+            items.forEach(item => {
+                item.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    selectOption(this);
+                });
+            });
+
+            // 点击外部关闭
+            document.addEventListener('click', function() {
+                document.querySelectorAll('.dropdown-options').forEach(el => {
+                    el.classList.remove('open');
+                    el.closest('.custom-select-wrapper').querySelector('.arrow')?.classList.remove(
+                    'open');
+                });
+            });
+
+            // 暴露获取选中值的方法
+            window.getSelectedCountry = function() {
+                return selectedValue;
+            };
+        });
+
+        // ===== 原有注册逻辑 =====
         const SUPABASE_URL = 'https://qgmbzdfnwsdosdqphlxk.supabase.co';
         const SUPABASE_KEY = 'sb_publishable_zsJFjfNUO7NKp8ZH5KrXFQ_WZ8Q2Kym';
         const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -483,7 +675,7 @@
         async function handleRegister() {
             const email = document.getElementById('regEmail').value.trim();
             const verifyCode = document.getElementById('regCode').value.trim();
-            const countryCode = document.getElementById('countryCode').value;
+            const countryCode = window.getSelectedCountry ? window.getSelectedCountry() : '+49';
             const phoneNumber = document.getElementById('regPhone').value.trim();
             const phone = countryCode + phoneNumber;
             const username = document.getElementById('regUsername').value.trim();
@@ -649,44 +841,45 @@
     </script>
 
     <script>
-    (function() {
-        const canvas = document.getElementById('wavesBg');
-        if(!canvas) return;
-        const ctx = canvas.getContext('2d');
-        let width, height;
-        let time = 0;
+        (function() {
+            const canvas = document.getElementById('wavesBg');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            let width, height;
+            let time = 0;
 
-        function resize() {
-            width = window.innerWidth;
-            height = window.innerHeight;
-            canvas.width = width;
-            canvas.height = height;
-        }
-
-        function animate() {
-            time += 0.02;
-            ctx.fillStyle = '#0a0f2a';
-            ctx.fillRect(0, 0, width, height);
-
-            for(let i = 0; i < 3; i++) {
-                ctx.beginPath();
-                for(let x = 0; x <= width; x += 10) {
-                    const y = height * (0.4 + i * 0.2) + Math.sin(x * 0.01 + time * (1 + i * 0.5)) * 30 + Math.cos(x * 0.02 + time) * 15;
-                    if(x === 0) ctx.moveTo(x, y);
-                    else ctx.lineTo(x, y);
-                }
-                ctx.strokeStyle = `rgba(201, 176, 149, ${0.15 - i * 0.03})`;
-                ctx.lineWidth = 2;
-                ctx.stroke();
+            function resize() {
+                width = window.innerWidth;
+                height = window.innerHeight;
+                canvas.width = width;
+                canvas.height = height;
             }
 
-            requestAnimationFrame(animate);
-        }
+            function animate() {
+                time += 0.02;
+                ctx.fillStyle = '#0a0f2a';
+                ctx.fillRect(0, 0, width, height);
 
-        window.addEventListener('resize', resize);
-        resize();
-        animate();
-    })();
+                for (let i = 0; i < 3; i++) {
+                    ctx.beginPath();
+                    for (let x = 0; x <= width; x += 10) {
+                        const y = height * (0.4 + i * 0.2) + Math.sin(x * 0.01 + time * (1 + i * 0.5)) * 30 + Math.cos(x *
+                            0.02 + time) * 15;
+                        if (x === 0) ctx.moveTo(x, y);
+                        else ctx.lineTo(x, y);
+                    }
+                    ctx.strokeStyle = `rgba(201, 176, 149, ${0.15 - i * 0.03})`;
+                    ctx.lineWidth = 2;
+                    ctx.stroke();
+                }
+
+                requestAnimationFrame(animate);
+            }
+
+            window.addEventListener('resize', resize);
+            resize();
+            animate();
+        })();
     </script>
 </body>
 </html>
