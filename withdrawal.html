@@ -527,39 +527,35 @@
 }
 
 function showStep1() {
-    const t = window.i18n?.t || function(key) { return key; };
     document.getElementById('step1Container').style.display = 'block';
     document.getElementById('step2Container').style.display = 'none';
     document.getElementById('step3Container').style.display = 'none';
     document.getElementById('step4Container').style.display = 'none';
-    document.getElementById('stepIndicator').innerHTML = '<i class="fas fa-circle"></i> ' + t('withdrawal_step', { current: 1, total: 4 });
+    document.getElementById('stepIndicator').innerHTML = '<i class="fas fa-circle"></i> STEP 1 OF 4';
 }
 
 function showStep2() {
-    const t = window.i18n?.t || function(key) { return key; };
     document.getElementById('step1Container').style.display = 'none';
     document.getElementById('step2Container').style.display = 'block';
     document.getElementById('step3Container').style.display = 'none';
     document.getElementById('step4Container').style.display = 'none';
-    document.getElementById('stepIndicator').innerHTML = '<i class="fas fa-circle"></i> ' + t('withdrawal_step', { current: 2, total: 4 });
+    document.getElementById('stepIndicator').innerHTML = '<i class="fas fa-circle"></i> STEP 2 OF 4';
 }
 
 function showStep3() {
-    const t = window.i18n?.t || function(key) { return key; };
     document.getElementById('step1Container').style.display = 'none';
     document.getElementById('step2Container').style.display = 'none';
     document.getElementById('step3Container').style.display = 'block';
     document.getElementById('step4Container').style.display = 'none';
-    document.getElementById('stepIndicator').innerHTML = '<i class="fas fa-circle"></i> ' + t('withdrawal_step', { current: 3, total: 4 });
+    document.getElementById('stepIndicator').innerHTML = '<i class="fas fa-circle"></i> STEP 3 OF 4';
 }
 
 function showStep4() {
-    const t = window.i18n?.t || function(key) { return key; };
     document.getElementById('step1Container').style.display = 'none';
     document.getElementById('step2Container').style.display = 'none';
     document.getElementById('step3Container').style.display = 'none';
     document.getElementById('step4Container').style.display = 'block';
-    document.getElementById('stepIndicator').innerHTML = '<i class="fas fa-circle"></i> ' + t('withdrawal_step', { current: 4, total: 4 });
+    document.getElementById('stepIndicator').innerHTML = '<i class="fas fa-circle"></i> STEP 4 OF 4';
 }
 
 function showVerifyingLoading() {
@@ -580,24 +576,23 @@ function showVerifyingLoading() {
     }
 
     document.getElementById('stepIndicator').innerHTML = '<i class="fas fa-spinner fa-pulse"></i> ' + t('withdrawal_verifying');
-}
 
-            if (window.kycCheckInterval) clearInterval(window.kycCheckInterval);
-            window.kycCheckInterval = setInterval(async () => {
-                if (!currentUser) return;
-                const stillPending = await isKycUnderReview(currentUser.uid);
-                const nowVerified = await getUserKycStatus(currentUser.uid);
-                if (nowVerified) {
-                    clearInterval(window.kycCheckInterval);
-                    loadingOverlay.classList.remove('active');
-                    await loadUserData();
-                } else if (!stillPending && !nowVerified) {
-                    clearInterval(window.kycCheckInterval);
-                    loadingOverlay.classList.remove('active');
-                    location.reload();
-                }
-            }, 5000);
+    if (window.kycCheckInterval) clearInterval(window.kycCheckInterval);
+    window.kycCheckInterval = setInterval(async () => {
+        if (!currentUser) return;
+        const stillPending = await isKycUnderReview(currentUser.uid);
+        const nowVerified = await getUserKycStatus(currentUser.uid);
+        if (nowVerified) {
+            clearInterval(window.kycCheckInterval);
+            loadingOverlay.classList.remove('active');
+            await loadUserData();
+        } else if (!stillPending && !nowVerified) {
+            clearInterval(window.kycCheckInterval);
+            loadingOverlay.classList.remove('active');
+            location.reload();
         }
+    }, 5000);
+}
 
         // Document selection
         function initDocSelection() {
