@@ -423,10 +423,9 @@
                     <!-- ===== 自定义下拉 ===== -->
                     <div class="custom-select-wrapper" id="countrySelectWrapper">
                         <div class="selected-display" id="selectedDisplay">
-                            <img src="https://qgmbzdfnwsdosdqphlxk.supabase.co/storage/v1/object/public/flags/de.png" class="sel-flag-img" alt="DE">
-                            <span class="sel-code">+49</span>
-                            <span class="arrow"><i class="fas fa-chevron-down"></i></span>
-                        </div>
+    <img src="https://qgmbzdfnwsdosdqphlxk.supabase.co/storage/v1/object/public/flags/de.png" class="sel-flag-img" alt="DE">
+    <span class="sel-code">+49</span>
+</div>
                         <div class="dropdown-options" id="dropdownOptions">
                             <div class="option-item selected-opt" data-value="+49" data-flag="https://qgmbzdfnwsdosdqphlxk.supabase.co/storage/v1/object/public/flags/de.png">
     <img src="https://qgmbzdfnwsdosdqphlxk.supabase.co/storage/v1/object/public/flags/de.png" class="opt-flag-img" alt="DE">
@@ -503,10 +502,9 @@
 
                 // 更新显示
                 display.innerHTML = `
-                    <img src="${flagUrl}" class="sel-flag-img" alt="">
-                    <span class="sel-code">${value}</span>
-                    <span class="arrow"><i class="fas fa-chevron-down"></i></span>
-                `;
+    <img src="${flagUrl}" class="sel-flag-img" alt="">
+    <span class="sel-code">${value}</span>
+`;
 
                 // 保存到 localStorage
                 localStorage.setItem('selectedCountry', value);
