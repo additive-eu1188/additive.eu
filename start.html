@@ -342,10 +342,27 @@
 </div>
 
     <script>
-        // ============================================================
-        // Utility functions
-        // ============================================================
-        function hideLoading() {
+    // ============================================================
+    // i18n 翻译函数 (兼容)
+    // ============================================================
+    function t(key, params) {
+        if (window.i18n && typeof window.i18n.t === 'function') {
+            return window.i18n.t(key, params);
+        }
+        // fallback: 返回 key 或者替换参数
+        let text = key;
+        if (params) {
+            for (var p in params) {
+                text = text.replace(new RegExp('\\{' + p + '\\}', 'g'), params[p]);
+            }
+        }
+        return text;
+    }
+
+    // ============================================================
+    // Utility functions
+    // ============================================================
+    function hideLoading() {
             var loading = document.getElementById('pageLoading');
             if (loading && loading.style.display !== 'none') {
                 loading.style.opacity = '0';
