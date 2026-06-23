@@ -639,7 +639,29 @@
 
     const claimBtn = document.getElementById('claimBtn');
     const nextDay = streak + 1;
-    const canClaim = !hasClaimed && nextDay <= signInRewards.length && userOrderCount >= 30;
+    // 获取用户完整数据（包含 current_round）
+const user = getCurrentUser();
+const freshUser = await syncUserData();
+const isPremium = freshUser?.isPremium || false;
+const currentRound = freshUser?.currentRound || 0;
+const roundOrdersCount = freshUser?.roundOrdersCount || 0;
+
+// ✅ 只有正式用户（已充值）且 current_round === 2 且完成 30 单才能 Claim
+let canClaim = false;
+if (isPremium && currentRound === 2 && roundOrdersCount >= 30) {
+    canClaim = true;
+} else {
+    // 显示提示信息
+    let warningMsg = '';
+    if (!isPremium) {
+        warningMsg = 'Please recharge your account first to become a premium member';
+    } else if (currentRound < 2) {
+        warningMsg = `Complete Round 2 (${roundOrdersCount}/30 orders) to claim Sign In Bonus`;
+    } else if (roundOrdersCount < 30) {
+        warningMsg = `Complete ${30 - roundOrdersCount} more orders in Round 2 to claim Sign In Bonus`;
+    }
+    document.getElementById('claimWarning').innerHTML = warningMsg;
+}
 
     if (canClaim) {
         claimBtn.classList.remove('disabled');
@@ -675,14 +697,30 @@
         alert(t('checkin_all_completed')); 
         return; 
     }
-    if (userOrderCount < 30) { 
-        alert(t('checkin_need_orders_claim', { count: userOrderCount })); 
-        return; 
-    }
 
     const user = getCurrentUser();
     if (!user) {
         alert('Please login first');
+        return;
+    }
+
+    // ✅ 获取用户完整数据，检查是否满足 Claim 条件
+    const freshUser = await syncUserData();
+    const isPremium = freshUser?.isPremium || false;
+    const currentRound = freshUser?.currentRound || 0;
+    const roundOrdersCount = freshUser?.roundOrdersCount || 0;
+
+    // ✅ 只有正式用户（已充值）且 current_round === 2 且完成 30 单才能 Claim
+    if (!isPremium) {
+        alert('Please recharge your account first to become a premium member');
+        return;
+    }
+    if (currentRound !== 2) {
+        alert(`Complete Round 2 (${roundOrdersCount}/30 orders) to claim Sign In Bonus`);
+        return;
+    }
+    if (roundOrdersCount < 30) {
+        alert(`Complete ${30 - roundOrdersCount} more orders in Round 2 to claim Sign In Bonus`);
         return;
     }
 
