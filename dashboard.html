@@ -621,8 +621,8 @@
             </div>
 
             <!-- ========== 产品推荐 ========== -->
-            <div class="section-header" style="margin-top: 20px;"><h3><i class="fas fa-box-open"></i> RECOMMENDED PRODUCTS</h3><a href="start.html" class="view-all">View all →</a></div>
-            <div class="products-slider-container"><div id="featuredProductsGrid" class="step-scroll-products"><div style="text-align: center; padding: 40px; color: var(--text-secondary); width: 100%;">加载产品中...</div></div></div>
+            <div class="section-header" style="margin-top: 20px;"><h3><i class="fas fa-box-open"></i> FEATURED HOTELS</h3><a href="start.html" class="view-all">View all →</a></div>
+            <div class="products-slider-container"><div id="featuredProductsGrid" class="step-scroll-products"><div style="text-align: center; padding: 40px; color: var(--text-secondary); width: 100%;">Loading hotels...</div></div></div>
 
             <!-- ========== 最近预订 ========== -->
             <div class="section-header"><h3>RECENT BOOKINGS</h3><a href="history.html" class="view-all">View all <i class="fas fa-chevron-right"></i></a></div>
@@ -829,7 +829,7 @@
                     if (error) throw error;
                     if (!products || products.length === 0) {
                         container.innerHTML =
-                            '<div style="text-align: center; padding: 40px; color: var(--text-secondary); width: 100%;">暂无产品，请在后台添加</div>';
+                            '<div style="text-align: center; padding: 40px; color: var(--text-secondary); width: 100%;">Loading hotels</div>';
                         return;
                     }
                     originalProducts = products;
@@ -846,7 +846,7 @@
                 } catch (e) {
                     console.error('加载产品失败:', e);
                     container.innerHTML =
-                        '<div style="text-align: center; padding: 40px; color: var(--text-secondary); width: 100%;">加载失败</div>';
+                        '<div style="text-align: center; padding: 40px; color: var(--text-secondary); width: 100%;">Loading failed</div>';
                 }
             }
 
