@@ -609,14 +609,11 @@
         function updateShield(score) {
     const color = getColor(score);
     const offset = CIRCUMFERENCE - (score / 100) * CIRCUMFERENCE;
-    shieldRing.style.transition = 'none';
-    shieldRing.setAttribute('stroke-dashoffset', offset);
-    shieldRing.setAttribute('stroke', color);
+    
+    // 直接用 style 设置，覆盖 CSS
+    shieldRing.style.strokeDashoffset = offset;
     shieldRing.style.stroke = color;
     shieldIcon.style.color = color;
-    requestAnimationFrame(() => {
-        shieldRing.style.transition = 'stroke-dashoffset 0.8s ease, stroke 0.6s ease';
-    });
 }
 
         // ============================================================
