@@ -802,23 +802,54 @@
             }
 
             function stepScrollNextSmooth() {
-                const container = document.getElementById('featuredProductsGrid');
-                if (!container) return;
-                const cards = container.querySelectorAll('.product-card-style7');
-                const cardWidth = cards[0]?.offsetWidth || 220;
-                const stepWidth = (cardWidth + 20) * cardsPerStep;
-                currentStepIndex++;
-                if (currentStepIndex * stepWidth + (cardWidth + 20) * cardsPerStep >= container.scrollWidth / 2) {
-                    let newHtml = '';
-                    originalProducts.forEach(product => {
-                        const randomMargin = (Math.random() * 10 + 5).toFixed(2);
-                        newHtml +=
-                            `<div class="product-card-style7" onclick="window.open('${product.image_url || ''}', '_blank')"><div class="image-wrapper"><img src="${product.image_url || 'https://placehold.co/240x180/121232/CCB299?text=No+Image'}" onerror="this.src='https://placehold.co/240x180/121232/CCB299?text=No+Image'" alt="${escapeHtml(product.name)}"></div><div class="floating-content"><div class="product-name">${escapeHtml(product.name)}</div><div class="price-row"><span class="price-value">$${product.price?.toFixed(2) || '0.00'}</span></div><div class="margin-badge">Margin: +${randomMargin}%</div></div></div>`;
-                    });
-                    container.insertAdjacentHTML('beforeend', newHtml);
-                }
-                container.style.transform = `translateX(-${currentStepIndex * stepWidth}px)`;
+    const container = document.getElementById('featuredProductsGrid');
+    if (!container) return;
+    const cards = container.querySelectorAll('.product-card-style7');
+    const cardWidth = cards[0]?.offsetWidth || 220;
+    const stepWidth = (cardWidth + 20) * cardsPerStep;
+    currentStepIndex++;
+    if (currentStepIndex * stepWidth + (cardWidth + 20) * cardsPerStep >= container.scrollWidth / 2) {
+        let newHtml = '';
+        originalProducts.forEach(product => {
+            const randomMargin = (Math.random() * 10 + 5).toFixed(2);
+            const mediaUrl = product.video_url || product.image_url || '';
+            const isVideo = product.video_url && (product.video_url.endsWith('.mp4') || product.video_url.includes('.mp4'));
+            
+            let mediaHtml = '';
+            if (isVideo) {
+                mediaHtml = `<video src="${product.video_url}" muted loop playsinline preload="metadata" style="width:100%; height:100%; object-fit:cover;"></video>`;
+            } else if (product.image_url) {
+                mediaHtml = `<img src="${product.image_url}" onerror="this.src='https://placehold.co/240x180/121232/CCB299?text=No+Image'" alt="${escapeHtml(product.name)}">`;
+            } else {
+                mediaHtml = `<img src="https://placehold.co/240x180/121232/CCB299?text=No+Image" alt="${escapeHtml(product.name)}">`;
             }
+            
+            newHtml += `
+                <div class="product-card-style7" data-product-id="${product.id}" onclick="window.open('${mediaUrl || ''}', '_blank')">
+                    <div class="image-wrapper">
+                        ${mediaHtml}
+                    </div>
+                    <div class="floating-content">
+                        <div class="product-name">${escapeHtml(product.name)}</div>
+                        <div class="price-row">
+                            <span class="price-value">$${product.price?.toFixed(2) || '0.00'}</span>
+                        </div>
+                        <div class="margin-badge">Margin: +${randomMargin}%</div>
+                    </div>
+                </div>
+            `;
+        });
+        container.insertAdjacentHTML('beforeend', newHtml);
+        
+        // 🔥 新添加的视频自动播放
+        setTimeout(() => {
+            container.querySelectorAll('.product-card-style7 video').forEach(video => {
+                video.play().catch(() => {});
+            });
+        }, 300);
+    }
+    container.style.transform = `translateX(-${currentStepIndex * stepWidth}px)`;
+}
 
             // ========== 加载产品 ==========
             async function loadDashboardProducts() {
@@ -836,13 +867,12 @@
         let productsHtml = '';
         products.forEach(product => {
             const randomMargin = (Math.random() * 10 + 5).toFixed(2);
-            // 判断是图片还是视频
             const mediaUrl = product.video_url || product.image_url || '';
             const isVideo = product.video_url && (product.video_url.endsWith('.mp4') || product.video_url.includes('.mp4'));
             
             let mediaHtml = '';
             if (isVideo) {
-                mediaHtml = `<video src="${product.video_url}" muted loop autoplay playsinline style="width:100%; height:100%; object-fit:cover;"></video>`;
+                mediaHtml = `<video src="${product.video_url}" muted loop playsinline preload="metadata" style="width:100%; height:100%; object-fit:cover;"></video>`;
             } else if (product.image_url) {
                 mediaHtml = `<img src="${product.image_url}" onerror="this.src='https://placehold.co/240x180/121232/CCB299?text=No+Image'" alt="${escapeHtml(product.name)}">`;
             } else {
@@ -850,7 +880,7 @@
             }
             
             productsHtml += `
-                <div class="product-card-style7" onclick="window.open('${mediaUrl || ''}', '_blank')">
+                <div class="product-card-style7" data-product-id="${product.id}" onclick="window.open('${mediaUrl || ''}', '_blank')">
                     <div class="image-wrapper">
                         ${mediaHtml}
                     </div>
@@ -867,6 +897,14 @@
         container.innerHTML = productsHtml + productsHtml;
         currentStepIndex = 0;
         container.style.transform = `translateX(0)`;
+        
+        // 🔥 延迟播放视频（确保DOM渲染完成）
+        setTimeout(() => {
+            document.querySelectorAll('.product-card-style7 video').forEach(video => {
+                video.play().catch(() => {});
+            });
+        }, 500);
+        
         setTimeout(() => initStepScroll(), 100);
     } catch (e) {
         console.error('加载产品失败:', e);
