@@ -974,9 +974,9 @@ window.showLanguageSelector = function() {
     if (existing) existing.remove();
     
     const options = [
-        { code: 'en', name: 'English', flag: '🇬🇧' },
-        { code: 'de', name: 'Deutsch', flag: '🇩🇪' },
-        { code: 'it', name: 'Italiano', flag: '🇮🇹' }
+        { code: 'en', name: 'English', flag: 'https://qgmbzdfnwsdosdqphlxk.supabase.co/storage/v1/object/public/flags/uk.png' },
+        { code: 'de', name: 'Deutsch', flag: 'https://qgmbzdfnwsdosdqphlxk.supabase.co/storage/v1/object/public/flags/de.png' },
+        { code: 'it', name: 'Italiano', flag: 'https://qgmbzdfnwsdosdqphlxk.supabase.co/storage/v1/object/public/flags/it.png' }
     ];
     
     const current = window.i18n?.getLanguage?.() || 'en';
@@ -1035,7 +1035,7 @@ window.showLanguageSelector = function() {
                     background: ${lang.code === current ? 'rgba(201,176,149,0.1)' : 'rgba(255,255,255,0.02)'};
                     border: 1px solid ${lang.code === current ? 'rgba(201,176,149,0.3)' : 'rgba(255,255,255,0.04)'};
                 ">
-                    <span style="font-size: 28px;">${lang.flag}</span>
+                    <img src="${lang.flag}" alt="${lang.name}" style="width: 32px; height: 22px; border-radius: 4px; object-fit: cover; border: 1px solid rgba(255,255,255,0.06);">
                     <span style="font-size: 16px; font-weight: 500; color: ${lang.code === current ? '#CCB299' : '#e8e8f0'};">${lang.name}</span>
                     ${lang.code === current ? '<span style="margin-left: auto; font-size: 12px; color: #4ade80;">✓</span>' : ''}
                 </div>
