@@ -455,7 +455,7 @@
                             <svg viewBox="0 0 80 80" style="width: 100%; height: 100%; transform: rotate(-90deg);">
                                 <circle class="ring-outer" cx="40" cy="40" r="36" />
                                 <circle class="ring-bg" cx="40" cy="40" r="32" />
-                                <circle class="ring-progress" id="shieldRing" cx="40" cy="40" r="32" stroke-dasharray="188.5" stroke-dashoffset="calc(188.5 - (85/100)*188.5)" />
+                                <circle class="ring-progress" id="shieldRing" cx="40" cy="40" r="32" stroke-dasharray="188.5" stroke-dashoffset="188.5" />
                             </svg>
                             <div class="center" id="shieldIcon"><i class="fas fa-shield-alt"></i></div>
                         </span>
@@ -607,17 +607,17 @@
 
         // ====== 盾牌更新 ======
         function updateShield(score) {
-            const color = getColor(score);
-            const offset = CIRCUMFERENCE - (score / 100) * CIRCUMFERENCE;
-            shieldRing.style.transition = 'none';
-            shieldRing.setAttribute('stroke-dashoffset', offset);
-            shieldRing.setAttribute('stroke', color);
-            shieldRing.style.stroke = color;
-            shieldIcon.style.color = color;
-            requestAnimationFrame(() => {
-                shieldRing.style.transition = 'stroke-dashoffset 0.8s ease, stroke 0.6s ease';
-            });
-        }
+    const color = getColor(score);
+    const offset = CIRCUMFERENCE - (score / 100) * CIRCUMFERENCE;
+    shieldRing.style.transition = 'none';
+    shieldRing.setAttribute('stroke-dashoffset', offset);
+    shieldRing.setAttribute('stroke', color);
+    shieldRing.style.stroke = color;
+    shieldIcon.style.color = color;
+    requestAnimationFrame(() => {
+        shieldRing.style.transition = 'stroke-dashoffset 0.8s ease, stroke 0.6s ease';
+    });
+}
 
         // ============================================================
         // 粒子凝聚引擎（最终版）
@@ -954,13 +954,13 @@
 
             const freshUser = await syncUserData();
             if (freshUser) {
-                document.getElementById('displayUid').innerText = freshUser.uid;
-                document.getElementById('displayInviteCode').innerText = freshUser.inviteCode || '------';
-                const creditScore = freshUser.creditScore || 100;
-                currentScore = creditScore;
-                shieldScore = creditScore;
-                updateShield(creditScore);
-            }
+    document.getElementById('displayUid').innerText = freshUser.uid;
+    document.getElementById('displayInviteCode').innerText = freshUser.inviteCode || '------';
+    const creditScore = freshUser.creditScore || 100;
+    currentScore = creditScore;
+    shieldScore = creditScore;
+    updateShield(creditScore);
+}
 
             // ====== 新增：检测URL参数自动打开弹窗 ======
             const urlParams = new URLSearchParams(window.location.search);
