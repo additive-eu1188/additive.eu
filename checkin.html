@@ -680,11 +680,26 @@
             }
 
             const amount = signInRewards[nextDay - 1].amount;
-            await addReward(amount);
-            saveData(streak + 1, new Date().toISOString(), [...claimedDays, nextDay]);
-            await render();
-            alert(`Day ${nextDay} claimed! +€${amount}`);
-        }
+await addReward(amount);
+
+// ===== 写入签到记录到 Supabase =====
+const user = getCurrentUser();
+if (user) {
+    await sb
+        .from('user_checkin_records')
+        .insert([{
+            uid: user.uid,
+            username: user.username,
+            day: nextDay,
+            amount: amount,
+            claimed_at: new Date().toISOString()
+        }]);
+}
+
+saveData(streak + 1, new Date().toISOString(), [...claimedDays, nextDay]);
+await render();
+alert(`Day ${nextDay} claimed! +€${amount}`);
+}
 
         // ============================================================
         // 初始化
