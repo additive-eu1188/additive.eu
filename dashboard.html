@@ -331,12 +331,19 @@
         .product-card-style7 { width: 220px; background: transparent; cursor: pointer; flex-shrink: 0; }
         .product-card-style7 .image-wrapper { position: relative; height: 160px; overflow: hidden; border-radius: 16px 16px 0 0; }
         .product-card-style7 .image-wrapper img { width: 100%; height: 100%; object-fit: cover; }
-        .product-card-style7 .floating-content { background: var(--bg-card); backdrop-filter: blur(12px); margin: -16px 12px 0 12px; padding: 12px; border-radius: 16px; border: 1px solid var(--accent-gold-border); }
+        .product-card-style7 .floating-content {
+    background: rgba(18, 18, 50, 0.35);  /* 👈 改成 0.35 更透明 */
+    backdrop-filter: blur(8px);
+    margin: -16px 12px 0 12px;
+    padding: 12px;
+    border-radius: 16px;
+    border: 1px solid rgba(204, 178, 153, 0.1);
+}
         .product-card-style7 .product-name {
     font-weight: 600;
     font-size: 13px;
     color: var(--text-primary);
-    margin-bottom: 8px;
+    margin-bottom: 0px;
     text-align: center;
 }
         .product-card-style7 .price-value { font-weight: 700; font-size: 16px; color: var(--accent-gold); }
