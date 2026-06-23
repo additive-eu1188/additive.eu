@@ -880,7 +880,7 @@ const TRANSLATIONS = {
         'withdrawal_available_balance': 'Verfügbares Guthaben',
         'withdrawal_amount_min': 'Minimum: €10',
         'withdrawal_available_hint': 'Verfügbar: €{amount}',
-        'withdrawal_min_amount': ''withdrawal_min_amount': 'Auszahlung',',
+        'withdrawal_min_amount': ''withdrawal_min_amount': 'Auszahlung',
         'withdrawal_insufficient': 'Unzureichendes Guthaben',
         'withdrawal_no_address': 'Bitte binden Sie zuerst eine Auszahlungsadresse',
         'withdrawal_success': 'Auszahlung von €{amount} erfolgreich beantragt!',
