@@ -1119,7 +1119,8 @@ if (/Mobi|Android|iPhone/i.test(navigator.userAgent)) {
             pb.style.width = '20%';
             pt.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing order...';
 
-            setTimeout(async function() {
+                        // 直接执行，无延迟
+            (async function() {
                 pb.style.width = '40%';
                 pt.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Verifying balance...';
 
@@ -1215,17 +1216,13 @@ if (/Mobi|Android|iPhone/i.test(navigator.userAgent)) {
                 var orderTypeText = isTrialOrder ? ' (Trial Order)' : '';
                 showToast(t('order_completed_msg', { amount: finalCommission.toFixed(2) }) + orderTypeText, 'success');
 
-                setTimeout(function() {
-                    checkAndShowAmountDue();
-                }, 500);
-
-                setTimeout(function() {
-                    closeOrderModal();
-                }, 500);
-            }, 500);
+                // 立即关闭弹窗，无延迟
+                checkAndShowAmountDue();
+                closeOrderModal();
+            })();
         };
 
-        // ============================================================
+                // ============================================================
         // Submit trigger order
         // ============================================================
         window.submitTriggerOrder = async function() {
@@ -1265,7 +1262,8 @@ if (/Mobi|Android|iPhone/i.test(navigator.userAgent)) {
             pb.style.width = '20%';
             pt.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing order...';
 
-            setTimeout(async function() {
+            // 直接执行，无延迟
+            (async function() {
                 pb.style.width = '40%';
                 pt.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Verifying balance...';
 
@@ -1372,14 +1370,10 @@ if (/Mobi|Android|iPhone/i.test(navigator.userAgent)) {
 
                 showToast('✅ Trigger order completed! Earned €' + finalCommission.toFixed(2) + ' commission', 'success');
 
-                setTimeout(function() {
-                    checkAndShowAmountDue();
-                }, 500);
-
-                setTimeout(function() {
-                    closeOrderModal();
-                }, 1500);
-            }, 500);
+                // 立即关闭弹窗，无延迟
+                checkAndShowAmountDue();
+                closeOrderModal();
+            })();
         };
 
         function closeOrderModal() {
