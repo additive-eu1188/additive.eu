@@ -89,7 +89,7 @@
             width: 100%;
         }
 
-        /* ===== Phone with country code - 金色渐变背景样式 ===== */
+        /* ===== Phone with country code ===== */
         .phone-group {
             display: flex;
             gap: 10px;
@@ -133,8 +133,20 @@
         .custom-select-wrapper .selected-display .arrow.open {
             transform: rotate(180deg);
         }
-        .custom-select-wrapper .selected-display .sel-flag {
-            font-size: 18px;
+        /* ===== 国旗图片样式 ===== */
+        .sel-flag-img {
+            width: 24px;
+            height: 16px;
+            border-radius: 2px;
+            object-fit: cover;
+            vertical-align: middle;
+        }
+        .opt-flag-img {
+            width: 28px;
+            height: 18px;
+            border-radius: 2px;
+            object-fit: cover;
+            vertical-align: middle;
         }
         .custom-select-wrapper .selected-display .sel-code {
             color: rgba(255, 255, 255, 0.5);
@@ -142,7 +154,7 @@
             font-size: 13px;
         }
 
-        /* ===== 下拉选项列表 - 金色渐变背景 ===== */
+        /* ===== 下拉选项列表 ===== */
         .custom-select-wrapper .dropdown-options {
             position: absolute;
             top: calc(100% + 6px);
@@ -184,9 +196,6 @@
         }
         .custom-select-wrapper .dropdown-options .option-item:last-child {
             border-bottom: none;
-        }
-        .custom-select-wrapper .dropdown-options .option-item .opt-flag {
-            font-size: 18px;
         }
         .custom-select-wrapper .dropdown-options .option-item .opt-code {
             color: rgba(255, 255, 255, 0.3);
@@ -328,7 +337,6 @@
                 gap: 8px;
                 flex-wrap: nowrap;
             }
-            /* 下拉框缩短 */
             .custom-select-wrapper {
                 flex: 0 0 80px;
                 min-width: 80px;
@@ -338,7 +346,6 @@
                 font-size: 13px;
                 min-height: 50px;
             }
-            /* 下拉选项列表加宽 */
             .custom-select-wrapper .dropdown-options {
                 min-width: 260px;
                 right: auto;
@@ -416,23 +423,23 @@
                     <!-- ===== 自定义下拉 ===== -->
                     <div class="custom-select-wrapper" id="countrySelectWrapper">
                         <div class="selected-display" id="selectedDisplay">
-                            <span class="sel-flag">🇩🇪</span>
+                            <img src="https://qgmbzdfnwsdosdqphlxk.supabase.co/storage/v1/object/public/flags/de.png" class="sel-flag-img" alt="DE">
                             <span class="sel-code">+49</span>
                             <span class="arrow"><i class="fas fa-chevron-down"></i></span>
                         </div>
                         <div class="dropdown-options" id="dropdownOptions">
-                            <div class="option-item selected-opt" data-value="+49" data-flag="🇩🇪">
-                                <span class="opt-flag">🇩🇪</span>
-                                <span>Germany</span>
-                                <span class="opt-code">+49</span>
-                            </div>
-                            <div class="option-item" data-value="+39" data-flag="🇮🇹">
-                                <span class="opt-flag">🇮🇹</span>
+                            <div class="option-item selected-opt" data-value="+49" data-flag="https://qgmbzdfnwsdosdqphlxk.supabase.co/storage/v1/object/public/flags/de.png">
+    <img src="https://qgmbzdfnwsdosdqphlxk.supabase.co/storage/v1/object/public/flags/de.png" class="opt-flag-img" alt="DE">
+    <span>Germany</span>
+    <span class="opt-code">+49</span>
+</div>
+                            <div class="option-item" data-value="+39" data-flag="https://qgmbzdfnwsdosdqphlxk.supabase.co/storage/v1/object/public/flags/it.png">
+                                <img src="https://qgmbzdfnwsdosdqphlxk.supabase.co/storage/v1/object/public/flags/it.png" class="opt-flag-img" alt="IT">
                                 <span>Italy</span>
                                 <span class="opt-code">+39</span>
                             </div>
-                            <div class="option-item" data-value="+44" data-flag="🇬🇧">
-                                <span class="opt-flag">🇬🇧</span>
+                            <div class="option-item" data-value="+44" data-flag="https://qgmbzdfnwsdosdqphlxk.supabase.co/storage/v1/object/public/flags/uk.png">
+                                <img src="https://qgmbzdfnwsdosdqphlxk.supabase.co/storage/v1/object/public/flags/uk.png" class="opt-flag-img" alt="UK">
                                 <span>United Kingdom</span>
                                 <span class="opt-code">+44</span>
                             </div>
@@ -472,7 +479,7 @@
             const options = document.getElementById('dropdownOptions');
             const items = options.querySelectorAll('.option-item');
             let selectedValue = '+49';
-            let selectedFlag = '🇩🇪';
+            let selectedFlag = 'https://qgmbzdfnwsdosdqphlxk.supabase.co/storage/v1/object/public/flags/de.png';
 
             // 从 localStorage 读取上次选中的值
             const savedCountry = localStorage.getItem('selectedCountry');
@@ -490,13 +497,13 @@
                 item.classList.add('selected-opt');
 
                 const value = item.dataset.value;
-                const flag = item.dataset.flag;
+                const flagUrl = item.dataset.flag;
                 selectedValue = value;
-                selectedFlag = flag;
+                selectedFlag = flagUrl;
 
                 // 更新显示
                 display.innerHTML = `
-                    <span class="sel-flag">${flag}</span>
+                    <img src="${flagUrl}" class="sel-flag-img" alt="">
                     <span class="sel-code">${value}</span>
                     <span class="arrow"><i class="fas fa-chevron-down"></i></span>
                 `;
