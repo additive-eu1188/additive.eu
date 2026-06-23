@@ -327,6 +327,7 @@ const TRANSLATIONS = {
         'withdrawal_verifying': 'Verifying Your Document...',
         'withdrawal_verifying_desc': 'Please wait, this may take a few minutes',
         'withdrawal_close': 'Close',
+'withdrawal_withdraw_btn': 'Withdraw',
         
         // ==================== Settings ====================
         'settings_title': 'SETTINGS',
@@ -891,6 +892,7 @@ const TRANSLATIONS = {
         'withdrawal_verifying': 'Ihr Dokument wird verifiziert...',
         'withdrawal_verifying_desc': 'Bitte warten Sie, dies kann einige Minuten dauern',
         'withdrawal_close': 'Schließen',
+'withdrawal_withdraw_btn': 'Auszahlen',
         
         // Settings
         'settings_title': 'EINSTELLUNGEN',
@@ -1455,6 +1457,7 @@ const TRANSLATIONS = {
         'withdrawal_verifying': 'Verifica del documento in corso...',
         'withdrawal_verifying_desc': 'Attendi, potrebbe richiedere alcuni minuti',
         'withdrawal_close': 'Chiudi',
+'withdrawal_withdraw_btn': 'Preleva',
         
         // Settings
         'settings_title': 'IMPOSTAZIONI',
