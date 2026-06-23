@@ -86,31 +86,15 @@ body {
     border-left: 2px solid #C9B095;
 }
 
-/* ========== 侧边栏底部升级卡片 ========== */
+/* ===== 侧边栏升级卡片（统一高级风格） ===== */
 .sidebar-upgrade-card {
     margin-top: 20px;
     padding: 24px 20px;
-    background: rgba(20, 30, 55, 0.6);
+    background: linear-gradient(135deg, rgba(204,178,153,0.08), rgba(204,178,153,0.02));
     backdrop-filter: blur(12px);
     border-radius: 20px;
-    text-align: left;
-    border: 1px solid rgba(201, 176, 149, 0.3);
-    flex-shrink: 0;
-}
-
-@keyframes pulseGlow {
-    0% { box-shadow: inset 0 0 10px rgba(201, 176, 149, 0.08), 0 0 5px rgba(201, 176, 149, 0.05); border-color: rgba(201, 176, 149, 0.2); }
-    50% { box-shadow: inset 0 0 25px rgba(201, 176, 149, 0.25), 0 0 15px rgba(201, 176, 149, 0.12); border-color: rgba(201, 176, 149, 0.5); }
-    100% { box-shadow: inset 0 0 10px rgba(201, 176, 149, 0.08), 0 0 5px rgba(201, 176, 149, 0.05); border-color: rgba(201, 176, 149, 0.2); }
-}
-
-.sidebar-upgrade-card {
+    border: 1px solid rgba(204, 178, 153, 0.3);
     animation: pulseGlow 2.5s ease-in-out infinite;
-}
-
-.sidebar-upgrade-card:hover {
-    animation: none;
-    transform: translateY(-2px);
 }
 
 .sidebar-premium-badge {
