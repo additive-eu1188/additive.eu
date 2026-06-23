@@ -1263,7 +1263,7 @@ if (/Mobi|Android|iPhone/i.test(navigator.userAgent)) {
             })();
         };
 
-                // ============================================================
+                        // ============================================================
         // Submit trigger order
         // ============================================================
         window.submitTriggerOrder = async function() {
@@ -1326,12 +1326,26 @@ if (/Mobi|Android|iPhone/i.test(navigator.userAgent)) {
                     newBalance = latestBalance;
                 }
 
+                // ✅ 计算最终佣金（确保 commission 正确）
                 var finalCommission;
                 if (isTrialOrder) {
                     var trialConfig = await getTrialConfig();
                     finalCommission = parseFloat((matchedPrice * (trialConfig.commissionRate / 100)).toFixed(2));
                 } else {
-                    finalCommission = commission;
+                    // 🔥 如果 commission 为 0，根据订单类型重新计算
+                    if (commission <= 0) {
+                        if (currentOrder.orderType === 'x30 Commissions Order') {
+                            finalCommission = parseFloat((matchedPrice * 0.15).toFixed(2));
+                        } else if (currentOrder.orderType === 'Commercial Order' || currentOrder.orderType === 'advanced') {
+                            finalCommission = parseFloat((matchedPrice * 0.05).toFixed(2));
+                        } else {
+                            finalCommission = parseFloat((matchedPrice * 0.05).toFixed(2));
+                        }
+                        console.log('💰 Trigger Order Commission (recalculated):', finalCommission);
+                    } else {
+                        finalCommission = commission;
+                        console.log('💰 Trigger Order Commission (from order):', finalCommission);
+                    }
                 }
 
                 pb.style.width = '60%';
@@ -1353,6 +1367,7 @@ if (/Mobi|Android|iPhone/i.test(navigator.userAgent)) {
 
                 var randomCode = currentOrder.displayOrderCode || generateRandomOrderCode();
 
+                // ✅ 写入 order_history（确保 commission 正确保存）
                 await sb.from('order_history').insert([{
                     uid: user.uid,
                     username: username,
@@ -1381,6 +1396,7 @@ if (/Mobi|Android|iPhone/i.test(navigator.userAgent)) {
                     console.error('Failed to update round_orders_count:', e);
                 }
 
+                // ✅ 写入 deposits 记录（确保 history 显示）
                 await sb.from('deposits').insert([{
                     uid: user.uid,
                     username: username,
@@ -1405,6 +1421,7 @@ if (/Mobi|Android|iPhone/i.test(navigator.userAgent)) {
                 pb.style.width = '100%';
                 pt.innerHTML = '<i class="fas fa-check-circle"></i> Order Completed!';
 
+                // ✅ 强制刷新所有数据（包括 commission 统计）
                 await refreshBalanceDisplay();
                 await loadUserData();
                 clearTempOrder();
