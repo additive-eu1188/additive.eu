@@ -319,32 +319,45 @@
             justify-content: center;
         }
 
+        /* ============================================================
+                   手机版样式
+                   ============================================================ */
         @media (max-width: 600px) {
-    .phone-group {
-        flex-direction: row;  /* ← 保持同一行 */
-        gap: 8px;
-        flex-wrap: nowrap;
-    }
-    .custom-select-wrapper {
-        flex: 0 0 120px;
-        min-width: 100px;
-        width: auto;
-    }
-    .custom-select-wrapper .selected-display {
-        padding: 13px 8px 13px 12px;
-        font-size: 13px;
-        min-height: 50px;
-    }
-    .phone-group .phone-input {
-        flex: 1;
-        min-width: 0;
-    }
-    .phone-group .phone-input input {
-        padding: 13px 14px;
-        font-size: 14px;
-        min-height: 50px;
-    }
-}
+            .phone-group {
+                flex-direction: row;
+                gap: 8px;
+                flex-wrap: nowrap;
+            }
+            /* 下拉框缩短 */
+            .custom-select-wrapper {
+                flex: 0 0 80px;
+                min-width: 80px;
+            }
+            .custom-select-wrapper .selected-display {
+                padding: 13px 6px 13px 10px;
+                font-size: 13px;
+                min-height: 50px;
+            }
+            /* 下拉选项列表加宽 */
+            .custom-select-wrapper .dropdown-options {
+                min-width: 260px;
+                right: auto;
+                left: 0;
+            }
+            .custom-select-wrapper .dropdown-options .option-item {
+                padding: 10px 12px;
+                font-size: 13px;
+            }
+            .phone-group .phone-input {
+                flex: 1;
+                min-width: 0;
+            }
+            .phone-group .phone-input input {
+                padding: 13px 14px;
+                font-size: 14px;
+                min-height: 50px;
+            }
+        }
 
         @media (max-width: 480px) {
             .register-card { padding: 32px 24px; }
