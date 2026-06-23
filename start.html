@@ -749,80 +749,138 @@
         // Video and hotel configuration
         // ============================================================
         async function loadAnimatedConfig() {
-    sb.from('animated_settings').select('*').eq('id', 1).single().then(function(result) {
-        var data = result.data;
-        var placeholder = document.getElementById('videoPlaceholder');
-        var video = document.getElementById('heroVideo');
-        
-        if (data && data.video_url) {
-            var url = data.video_url;
+    let retryCount = 0;
+    const maxRetries = 2;
+    
+    async function load() {
+        try {
+            const result = await sb.from('animated_settings').select('*').eq('id', 1).single();
+            const data = result.data;
+            const placeholder = document.getElementById('videoPlaceholder');
+            const video = document.getElementById('heroVideo');
             
-            if (url.endsWith('.mp4') || url.includes('.mp4')) {
-                // 🔥 使用已存在的 video 元素，直接设置 src
-                if (video) {
-                    video.src = url;
-                    video.style.display = 'block';
-                    video.style.position = 'relative';
-                    video.style.borderRadius = '24px';
-                    
-                    // 隐藏占位符
-                    if (placeholder) placeholder.style.display = 'none';
-                    
-                    // 🔥 尝试播放（浏览器会自动播放，因为元素在 HTML 中已存在）
-                    video.play().catch(function(e) {
-                        console.log('Video play failed:', e);
-                        // 降级：用户交互时播放
-                        document.addEventListener('touchstart', function playOnTouch() {
-                            video.play().catch(function() {});
-                            document.removeEventListener('touchstart', playOnTouch);
-                        }, { once: true });
-                    });
+            if (data && data.video_url) {
+                var url = data.video_url;
+                
+                if (url.endsWith('.mp4') || url.includes('.mp4')) {
+                    if (video) {
+                        video.src = url;
+                        video.style.display = 'block';
+                        video.style.position = 'relative';
+                        video.style.borderRadius = '24px';
+                        
+                        if (placeholder) placeholder.style.display = 'none';
+                        
+                        video.play().catch(function(e) {
+                            console.log('Video play failed:', e);
+                            document.addEventListener('touchstart', function playOnTouch() {
+                                video.play().catch(function() {});
+                                document.removeEventListener('touchstart', playOnTouch);
+                            }, { once: true });
+                        });
+                    }
+                    setTimeout(function() { hideLoading(); }, 3000);
+                } else {
+                    if (placeholder) {
+                        placeholder.innerHTML = '<img src="' + url + '" style="max-width:100%; border-radius:24px; max-height:400px;">';
+                        placeholder.style.position = 'relative';
+                        placeholder.style.transform = 'none';
+                        placeholder.style.top = 'auto';
+                        placeholder.style.left = 'auto';
+                    }
+                    setTimeout(function() { hideLoading(); }, 1000);
                 }
-                setTimeout(function() { hideLoading(); }, 3000);
             } else {
-                // 图片模式
                 if (placeholder) {
-                    placeholder.innerHTML = '<img src="' + url + '" style="max-width:100%; border-radius:24px; max-height:400px;">';
                     placeholder.style.position = 'relative';
                     placeholder.style.transform = 'none';
                     placeholder.style.top = 'auto';
                     placeholder.style.left = 'auto';
+                    placeholder.innerHTML = '<i class="fas fa-play-circle" style="font-size:56px; display:block; color:#C9B095; margin-bottom:12px;"></i><p>Video Area</p><small>MP4 / GIF supported</small>';
                 }
                 setTimeout(function() { hideLoading(); }, 1000);
             }
-        } else {
-            // 没有视频，显示占位符
-            if (placeholder) {
-                placeholder.style.position = 'relative';
-                placeholder.style.transform = 'none';
-                placeholder.style.top = 'auto';
-                placeholder.style.left = 'auto';
-                placeholder.innerHTML = '<i class="fas fa-play-circle" style="font-size:56px; display:block; color:#C9B095; margin-bottom:12px;"></i><p>Video Area</p><small>MP4 / GIF supported</small>';
-            }
-            setTimeout(function() { hideLoading(); }, 1000);
-        }
-        
-        // 精选酒店逻辑保持不变
-        if (data && data.featured_hotels && data.featured_hotels.length) {
+            
+            // ===== 精选酒店（带去重检查） =====
             var container = document.getElementById('hotelImagesContainer');
-            if (container) {
-                container.innerHTML = '';
-                for (var hIdx = 0; hIdx < data.featured_hotels.length; hIdx++) {
-                    var hotel = data.featured_hotels[hIdx];
-                    var div = document.createElement('div');
-                    div.className = 'hotel-img-item';
-                    div.innerHTML = '<img src="' + (hotel.image || '') + '" alt="' + hotel.name + '" onerror="this.src=\'https://placehold.co/180x110/0E1838/C9B095?text=Hotel\'"><span class="hotel-name">' + hotel.name + '</span>';
-                    container.appendChild(div);
-                }
-                var items = container.innerHTML;
-                container.innerHTML = items + items;
+            
+            // 🔥 如果已经有内容，不重复加载
+            if (container && container.children.length > 0) {
+                console.log('✅ 精选酒店已加载，跳过');
+                setTimeout(hideLoading, 500);
+                return;
             }
+            
+            if (data && data.featured_hotels && data.featured_hotels.length) {
+                if (container) {
+                    container.innerHTML = '';
+                    for (var hIdx = 0; hIdx < data.featured_hotels.length; hIdx++) {
+                        var hotel = data.featured_hotels[hIdx];
+                        var div = document.createElement('div');
+                        div.className = 'hotel-img-item';
+                        div.innerHTML = '<img src="' + (hotel.image || '') + '" alt="' + hotel.name + '" onerror="this.src=\'https://placehold.co/180x110/0E1838/C9B095?text=Hotel\'"><span class="hotel-name">' + hotel.name + '</span>';
+                        container.appendChild(div);
+                    }
+                    var items = container.innerHTML;
+                    if (items.trim()) {
+                        container.innerHTML = items + items;
+                        // 🔥 重置动画确保滚动
+                        container.style.animation = 'none';
+                        void container.offsetWidth;
+                        container.style.animation = 'scrollImages 35s linear infinite';
+                        console.log('✅ 精选酒店加载成功，共 ' + data.featured_hotels.length + ' 个');
+                    } else {
+                        container.innerHTML = '<div style="text-align:center; padding:20px; color:#7a85a5; width:100%;">No featured hotels</div>';
+                    }
+                }
+            } else {
+                if (container) {
+                    container.innerHTML = '<div style="text-align:center; padding:20px; color:#7a85a5; width:100%;">No featured hotels available</div>';
+                }
+            }
+            
+            setTimeout(function() { hideLoading(); }, 1000);
+            
+        } catch (e) {
+            console.error('loadAnimatedConfig error:', e);
+            retryCount++;
+            if (retryCount <= maxRetries) {
+                console.log('🔄 重试加载 (' + retryCount + '/' + maxRetries + ')...');
+                setTimeout(load, 1000);
+                return;
+            }
+            // 失败后显示占位
+            var container = document.getElementById('hotelImagesContainer');
+            if (container && container.children.length === 0) {
+                container.innerHTML = '<div style="text-align:center; padding:20px; color:#7a85a5; width:100%;">Featured hotels loading...</div>';
+            }
+            hideLoading();
         }
-        setTimeout(function() { hideLoading(); }, 1000);
-    }).catch(function(e) {
-        console.error('loadAnimatedConfig error:', e);
-        hideLoading();
-    });
+    }
+    
+    await load();
+}
+
+// 🔥 页面加载完成后检查 Featured Hotels 是否渲染
+document.addEventListener('DOMContentLoaded', function() {
+    setTimeout(function() {
+        var container = document.getElementById('hotelImagesContainer');
+        if (container && (!container.children.length || container.children.length === 0)) {
+            console.log('🔄 检测到精选酒店未加载，重新加载...');
+            loadAnimatedConfig();
+        }
+    }, 2000);
+});
+
+// 🔥 手机端额外检查
+if (/Mobi|Android|iPhone/i.test(navigator.userAgent)) {
+    setTimeout(function() {
+        var container = document.getElementById('hotelImagesContainer');
+        if (container && (!container.children.length || container.children.length === 0)) {
+            console.log('📱 手机端重试加载精选酒店...');
+            loadAnimatedConfig();
+        }
+    }, 3500);
 }
 
         async function preloadOrders() { await getOrdersFromAdmin(); }
