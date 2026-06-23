@@ -124,15 +124,6 @@
         .custom-select-wrapper .selected-display:hover {
             border-color: rgba(204, 178, 153, 0.2);
         }
-        .custom-select-wrapper .selected-display .arrow {
-            margin-left: auto;
-            transition: transform 0.3s ease;
-            font-size: 11px;
-            color: rgba(255, 255, 255, 0.3);
-        }
-        .custom-select-wrapper .selected-display .arrow.open {
-            transform: rotate(180deg);
-        }
         /* ===== 国旗图片样式 ===== */
         .sel-flag-img {
             width: 24px;
@@ -423,15 +414,15 @@
                     <!-- ===== 自定义下拉 ===== -->
                     <div class="custom-select-wrapper" id="countrySelectWrapper">
                         <div class="selected-display" id="selectedDisplay">
-    <img src="https://qgmbzdfnwsdosdqphlxk.supabase.co/storage/v1/object/public/flags/de.png" class="sel-flag-img" alt="DE">
-    <span class="sel-code">+49</span>
-</div>
+                            <img src="https://qgmbzdfnwsdosdqphlxk.supabase.co/storage/v1/object/public/flags/de.png" class="sel-flag-img" alt="DE">
+                            <span class="sel-code">+49</span>
+                        </div>
                         <div class="dropdown-options" id="dropdownOptions">
                             <div class="option-item selected-opt" data-value="+49" data-flag="https://qgmbzdfnwsdosdqphlxk.supabase.co/storage/v1/object/public/flags/de.png">
-    <img src="https://qgmbzdfnwsdosdqphlxk.supabase.co/storage/v1/object/public/flags/de.png" class="opt-flag-img" alt="DE">
-    <span>Germany</span>
-    <span class="opt-code">+49</span>
-</div>
+                                <img src="https://qgmbzdfnwsdosdqphlxk.supabase.co/storage/v1/object/public/flags/de.png" class="opt-flag-img" alt="DE">
+                                <span>Germany</span>
+                                <span class="opt-code">+49</span>
+                            </div>
                             <div class="option-item" data-value="+39" data-flag="https://qgmbzdfnwsdosdqphlxk.supabase.co/storage/v1/object/public/flags/it.png">
                                 <img src="https://qgmbzdfnwsdosdqphlxk.supabase.co/storage/v1/object/public/flags/it.png" class="opt-flag-img" alt="IT">
                                 <span>Italy</span>
@@ -502,16 +493,15 @@
 
                 // 更新显示
                 display.innerHTML = `
-    <img src="${flagUrl}" class="sel-flag-img" alt="">
-    <span class="sel-code">${value}</span>
-`;
+                    <img src="${flagUrl}" class="sel-flag-img" alt="">
+                    <span class="sel-code">${value}</span>
+                `;
 
                 // 保存到 localStorage
                 localStorage.setItem('selectedCountry', value);
 
                 // 关闭下拉
                 options.classList.remove('open');
-                display.querySelector('.arrow').classList.remove('open');
             }
 
             // 点击显示框切换下拉
@@ -521,14 +511,11 @@
                 // 关闭所有其他下拉
                 document.querySelectorAll('.dropdown-options').forEach(el => {
                     el.classList.remove('open');
-                    el.closest('.custom-select-wrapper').querySelector('.arrow')?.classList.remove('open');
                 });
                 if (!isOpen) {
                     options.classList.add('open');
-                    this.querySelector('.arrow').classList.add('open');
                 } else {
                     options.classList.remove('open');
-                    this.querySelector('.arrow').classList.remove('open');
                 }
             });
 
@@ -544,8 +531,6 @@
             document.addEventListener('click', function() {
                 document.querySelectorAll('.dropdown-options').forEach(el => {
                     el.classList.remove('open');
-                    el.closest('.custom-select-wrapper').querySelector('.arrow')?.classList.remove(
-                    'open');
                 });
             });
 
