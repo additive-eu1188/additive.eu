@@ -662,43 +662,67 @@
         // 领取逻辑
         // ============================================================
         async function handleClaim() {
-            const { streak, lastClaimDate, claimedDays } = loadData();
-            const hasClaimed = hasClaimedToday(lastClaimDate);
-            const nextDay = streak + 1;
+    const { streak, lastClaimDate, claimedDays } = loadData();
+    const hasClaimed = hasClaimedToday(lastClaimDate);
+    const nextDay = streak + 1;
 
-            if (hasClaimed) { alert('Already claimed today'); return; }
-            if (nextDay > signInRewards.length) { alert('Completed all days!'); return; }
-            if (userOrderCount < 30) { alert(`Need 30 orders to claim rewards. You have ${userOrderCount}/30.`); return; }
+    if (hasClaimed) { alert('Already claimed today'); return; }
+    if (nextDay > signInRewards.length) { alert('Completed all days!'); return; }
+    if (userOrderCount < 30) { alert(`Need 30 orders to claim rewards. You have ${userOrderCount}/30.`); return; }
 
-            if (streak > 0 && !isConsecutive(lastClaimDate)) {
-                const amount = signInRewards[0].amount;
-                await addReward(amount);
-                saveData(1, new Date().toISOString(), [1]);
-                await render();
-                alert(`Day 1 claimed! +€${amount}`);
-                return;
-            }
+    // 获取当前用户
+    const user = getCurrentUser();
+    if (!user) {
+        alert('Please login first');
+        return;
+    }
 
-            const amount = signInRewards[nextDay - 1].amount;
-await addReward(amount);
+    // 计算奖励金额
+    let amount;
+    let claimDay;
+    let isReset = false;
 
-// ===== 写入签到记录到 Supabase =====
-const user = getCurrentUser();
-if (user) {
-    await sb
+    if (streak > 0 && !isConsecutive(lastClaimDate)) {
+        // 中断后重新开始
+        amount = signInRewards[0].amount;
+        claimDay = 1;
+        isReset = true;
+    } else {
+        amount = signInRewards[nextDay - 1].amount;
+        claimDay = nextDay;
+    }
+
+    // 1. 增加余额
+    await addReward(amount);
+
+    // 2. 写入数据库 - 关键步骤
+    const { error: insertError } = await sb
         .from('user_checkin_records')
         .insert([{
             uid: user.uid,
             username: user.username,
-            day: nextDay,
+            day: claimDay,
             amount: amount,
             claimed_at: new Date().toISOString()
         }]);
-}
 
-saveData(streak + 1, new Date().toISOString(), [...claimedDays, nextDay]);
-await render();
-alert(`Day ${nextDay} claimed! +€${amount}`);
+    if (insertError) {
+        console.error('❌ 写入数据库失败:', insertError);
+        alert('签到失败: ' + insertError.message);
+        return;
+    }
+
+    console.log(`✅ 签到记录已写入数据库: Day ${claimDay}, €${amount}`);
+
+    // 3. 保存到 localStorage
+    if (isReset) {
+        saveData(1, new Date().toISOString(), [1]);
+    } else {
+        saveData(streak + 1, new Date().toISOString(), [...claimedDays, claimDay]);
+    }
+
+    await render();
+    alert(`Day ${claimDay} claimed! +€${amount}`);
 }
 
         // ============================================================
