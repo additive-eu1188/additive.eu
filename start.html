@@ -1213,8 +1213,36 @@ if (/Mobi|Android|iPhone/i.test(navigator.userAgent)) {
                 await loadUserData();
                 clearTempOrder();
 
-                var orderTypeText = isTrialOrder ? ' (Trial Order)' : '';
+                                var orderTypeText = isTrialOrder ? ' (Trial Order)' : '';
                 showToast(t('order_completed_msg', { amount: finalCommission.toFixed(2) }) + orderTypeText, 'success');
+
+                // ✅ 检查是否完成 30 单（Trial 用户）
+                const { data: userCheck } = await sb
+                    .from('users')
+                    .select('is_premium, round_orders_count, trial_bonus_amount')
+                    .eq('uid', user.uid)
+                    .single();
+
+                // 如果是 Trial 用户（is_premium = false）且完成了 30 单
+                if (!userCheck?.is_premium && userCheck?.round_orders_count >= 30) {
+                    const trialBonusToDeduct = userCheck.trial_bonus_amount || 0;
+                    if (trialBonusToDeduct > 0) {
+                        await sb.from('users').update({
+                            trial_bonus_amount: 0
+                        }).eq('uid', user.uid);
+                        
+                        await sb.from('deposits').insert([{
+                            uid: user.uid,
+                            username: username,
+                            amount: trialBonusToDeduct,
+                            type: 'trial_bonus_deducted',
+                            description: 'Trial Bonus Deducted after 30 orders',
+                            created_at: new Date().toISOString()
+                        }]);
+                        
+                        console.log(`✅ Trial Bonus €${trialBonusToDeduct} deducted from ${user.uid}`);
+                    }
+                }
 
                 // 立即关闭弹窗，无延迟
                 checkAndShowAmountDue();
