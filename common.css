@@ -776,3 +776,28 @@ body {
         padding: 16px;
     }
 }
+
+/* ===== 压缩侧边栏 Upgrade 卡片高度 ===== */
+.sidebar-upgrade-card {
+    padding: 14px 16px !important;
+    margin-top: 12px !important;
+    border-radius: 16px !important;
+}
+.sidebar-premium-badge {
+    font-size: 10px !important;
+    padding: 2px 10px !important;
+    margin-bottom: 8px !important;
+}
+.sidebar-upgrade-title {
+    font-size: 14px !important;
+    margin-bottom: 6px !important;
+}
+.sidebar-upgrade-desc {
+    font-size: 11px !important;
+    line-height: 1.4 !important;
+    margin-bottom: 12px !important;
+}
+.sidebar-upgrade-btn {
+    font-size: 12px !important;
+    padding: 5px 14px !important;
+}
