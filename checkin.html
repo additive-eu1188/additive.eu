@@ -648,13 +648,13 @@
                 claimBtn.classList.add('disabled');
                 claimBtn.disabled = true;
                 if (userOrderCount < 30) {
-                    document.getElementById('claimWarning').innerHTML =
-                        `Complete 60 orders to claim Sign In Bonus (${userOrderCount}/30)`;
-                } else if (hasClaimed) {
-                    document.getElementById('claimWarning').innerHTML = 'You have claimed your Sign In Bonus today, Come back tomorrow!';
-                } else {
-                    document.getElementById('claimWarning').innerHTML = '已完成所有签到，太棒了！';
-                }
+    document.getElementById('claimWarning').innerHTML =
+        `Complete 30 orders to claim Sign In Bonus`;
+} else if (hasClaimed) {
+    document.getElementById('claimWarning').innerHTML = 'You have claimed your Sign In Bonus today, Come back tomorrow!';
+} else {
+    document.getElementById('claimWarning').innerHTML = '7 consecutive check in completed.';
+}
             }
         }
 
