@@ -83,6 +83,12 @@
             color: rgba(255, 255, 255, 0.15);
         }
 
+        /* ===== Verification Code 缩短 ===== */
+        #regCode {
+            max-width: 200px;
+            width: 100%;
+        }
+
         /* ===== Phone with country code dropdown ===== */
         .phone-group {
             display: flex;
@@ -90,13 +96,13 @@
             align-items: stretch;
         }
         .phone-group .country-select {
-            flex: 0 0 110px;
+            flex: 0 0 120px;
             background: rgba(255, 255, 255, 0.04);
             border: 1px solid rgba(255, 255, 255, 0.06);
             border-radius: 12px;
             padding: 13px 10px;
             color: #fff;
-            font-size: 13px;
+            font-size: 14px;
             outline: none;
             transition: 0.3s;
             cursor: pointer;
@@ -106,6 +112,7 @@
             background-repeat: no-repeat;
             background-position: right 10px center;
             padding-right: 30px;
+            font-weight: 500;
         }
         .phone-group .country-select:focus {
             border-color: rgba(204, 178, 153, 0.25);
@@ -115,6 +122,7 @@
             background: #0a0f2a;
             color: #fff;
             padding: 8px;
+            font-weight: 500;
         }
         .phone-group .phone-input {
             flex: 1;
@@ -140,22 +148,22 @@
         .phone-group .phone-input input::placeholder {
             color: rgba(255, 255, 255, 0.15);
         }
-        .country-flag {
-            margin-right: 6px;
-        }
 
         .code-row {
             display: flex;
             gap: 12px;
             align-items: center;
         }
-        .code-row input { flex: 2; }
+        .code-row input {
+            flex: 2;
+            min-width: 0;
+        }
         .send-code-btn {
-            flex: 1;
+            flex: 0 0 auto;
             background: rgba(204, 178, 153, 0.08);
             border: 1px solid rgba(204, 178, 153, 0.12);
             border-radius: 12px;
-            padding: 13px 12px;
+            padding: 13px 20px;
             color: #C9B095;
             font-size: 13px;
             font-weight: 600;
@@ -240,12 +248,35 @@
                 width: 100%;
             }
         }
+
         @media (max-width: 480px) {
             .register-card { padding: 32px 24px; }
             .register-card .logo img { height: 34px; }
             .register-card .subtitle { font-size: 12px; }
-            .code-row { flex-direction: column; }
-            .send-code-btn { width: 100%; }
+
+            /* Email 行保持横向 */
+            .code-row {
+                flex-direction: row;
+                align-items: center;
+                gap: 10px;
+            }
+            .code-row input {
+                flex: 2;
+                min-width: 0;
+            }
+            .send-code-btn {
+                flex: 0 0 auto;
+                width: auto;
+                padding: 13px 16px;
+                font-size: 13px;
+                white-space: nowrap;
+            }
+
+            /* Verification Code 输入框缩短 */
+            #regCode {
+                max-width: 180px;
+                width: 100%;
+            }
         }
     </style>
 </head>
@@ -269,7 +300,7 @@
 
             <div class="form-group">
                 <label><i class="fas fa-key"></i> Verification Code</label>
-                <input type="text" id="regCode" placeholder="Enter 6-digit code from email">
+                <input type="text" id="regCode" placeholder="Enter 6-digit code">
             </div>
 
             <div class="form-group">
@@ -279,35 +310,6 @@
                         <option value="+49">🇩🇪 +49</option>
                         <option value="+39">🇮🇹 +39</option>
                         <option value="+44">🇬🇧 +44</option>
-                        <option value="+1">🇺🇸 +1</option>
-                        <option value="+33">🇫🇷 +33</option>
-                        <option value="+34">🇪🇸 +34</option>
-                        <option value="+41">🇨🇭 +41</option>
-                        <option value="+43">🇦🇹 +43</option>
-                        <option value="+31">🇳🇱 +31</option>
-                        <option value="+32">🇧🇪 +32</option>
-                        <option value="+45">🇩🇰 +45</option>
-                        <option value="+46">🇸🇪 +46</option>
-                        <option value="+47">🇳🇴 +47</option>
-                        <option value="+358">🇫🇮 +358</option>
-                        <option value="+351">🇵🇹 +351</option>
-                        <option value="+30">🇬🇷 +30</option>
-                        <option value="+90">🇹🇷 +90</option>
-                        <option value="+7">🇷🇺 +7</option>
-                        <option value="+86">🇨🇳 +86</option>
-                        <option value="+81">🇯🇵 +81</option>
-                        <option value="+82">🇰🇷 +82</option>
-                        <option value="+91">🇮🇳 +91</option>
-                        <option value="+55">🇧🇷 +55</option>
-                        <option value="+61">🇦🇺 +61</option>
-                        <option value="+64">🇳🇿 +64</option>
-                        <option value="+27">🇿🇦 +27</option>
-                        <option value="+971">🇦🇪 +971</option>
-                        <option value="+65">🇸🇬 +65</option>
-                        <option value="+60">🇲🇾 +60</option>
-                        <option value="+62">🇮🇩 +62</option>
-                        <option value="+66">🇹🇭 +66</option>
-                        <option value="+84">🇻🇳 +84</option>
                     </select>
                     <div class="phone-input">
                         <input type="tel" id="regPhone" placeholder="Enter your phone number">
