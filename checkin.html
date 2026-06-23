@@ -649,7 +649,7 @@
                 claimBtn.disabled = true;
                 if (userOrderCount < 30) {
                     document.getElementById('claimWarning').innerHTML =
-                        `Complete 60 orders to claim Sign In Bonus (当前 ${userOrderCount}/30)`;
+                        `Complete 60 orders to claim Sign In Bonus (${userOrderCount}/30)`;
                 } else if (hasClaimed) {
                     document.getElementById('claimWarning').innerHTML = 'You have claimed your Sign In Bonus today, Come back tomorrow!';
                 } else {
