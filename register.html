@@ -320,22 +320,31 @@
         }
 
         @media (max-width: 600px) {
-            .phone-group {
-                flex-direction: column;
-                gap: 8px;
-            }
-            .custom-select-wrapper {
-                flex: 1;
-                width: 100%;
-                min-width: unset;
-            }
-            .custom-select-wrapper .selected-display {
-                padding: 11px 10px 11px 14px;
-            }
-            .phone-group .phone-input input {
-                padding: 11px 14px;
-            }
-        }
+    .phone-group {
+        flex-direction: row;  /* ← 保持同一行 */
+        gap: 8px;
+        flex-wrap: nowrap;
+    }
+    .custom-select-wrapper {
+        flex: 0 0 120px;
+        min-width: 100px;
+        width: auto;
+    }
+    .custom-select-wrapper .selected-display {
+        padding: 13px 8px 13px 12px;
+        font-size: 13px;
+        min-height: 50px;
+    }
+    .phone-group .phone-input {
+        flex: 1;
+        min-width: 0;
+    }
+    .phone-group .phone-input input {
+        padding: 13px 14px;
+        font-size: 14px;
+        min-height: 50px;
+    }
+}
 
         @media (max-width: 480px) {
             .register-card { padding: 32px 24px; }
