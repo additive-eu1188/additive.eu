@@ -665,6 +665,7 @@ function showVerifyingLoading() {
 }
 
         async function submitKyc() {
+const t = window.i18n?.t || function(key) { return key; };
             if (!selectedDocType) { showToast(t('withdrawal_select_doc'), 'error'); return; }
 
             let imagesToSubmit = [];
