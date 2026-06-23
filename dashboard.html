@@ -458,25 +458,25 @@
                     <img src="https://qgmbzdfnwsdosdqphlxk.supabase.co/storage/v1/object/public/logos/additivelogo1.png" alt="ADDITIVE">
                 </div>
                 <nav class="nav">
-                    <a href="dashboard.html" class="nav-item active"><i class="fas fa-th-large"></i><span>Dashboard</span></a>
-                    <a href="start.html" class="nav-item"><i class="fas fa-play"></i><span>Start</span></a>
-                    <a href="history.html" class="nav-item"><i class="fas fa-clock"></i><span>History</span></a>
-                    <a href="checkin.html" class="nav-item"><i class="fas fa-calendar-check"></i><span>Sign in</span></a>
-                    <a href="event.html" class="nav-item"><i class="fas fa-calendar-alt"></i><span>Event</span></a>
-                    <a href="withdrawal.html" class="nav-item"><i class="fas fa-arrow-right-to-bracket"></i><span>Withdrawal</span></a>
-                    <a href="employment.html" class="nav-item"><i class="fas fa-file-contract"></i><span>Employment Contract</span></a>
-                    <a href="company.html" class="nav-item"><i class="fas fa-building"></i><span>Company Profile</span></a>
-                    <a href="chat.html" class="nav-item"><i class="fas fa-comment-dots"></i><span>Chat with us</span></a>
-                    <a href="settings.html" class="nav-item"><i class="fas fa-sliders-h"></i><span>Settings</span></a>
-                    <a href="membership.html" class="nav-item"><i class="fas fa-crown"></i><span>Membership</span></a>
-                </nav>
+    <a href="dashboard.html" class="nav-item active"><i class="fas fa-th-large"></i><span data-i18n="nav_dashboard">Dashboard</span></a>
+    <a href="start.html" class="nav-item"><i class="fas fa-play"></i><span data-i18n="nav_start">Start</span></a>
+    <a href="history.html" class="nav-item"><i class="fas fa-clock"></i><span data-i18n="nav_history">History</span></a>
+    <a href="checkin.html" class="nav-item"><i class="fas fa-calendar-check"></i><span data-i18n="nav_checkin">Sign in</span></a>
+    <a href="event.html" class="nav-item"><i class="fas fa-calendar-alt"></i><span data-i18n="nav_event">Event</span></a>
+    <a href="withdrawal.html" class="nav-item"><i class="fas fa-arrow-right-to-bracket"></i><span data-i18n="nav_withdrawal">Withdrawal</span></a>
+    <a href="chat.html" class="nav-item"><i class="fas fa-comment-dots"></i><span data-i18n="nav_chat">Chat with us</span></a>
+    <a href="employment.html" class="nav-item"><i class="fas fa-file-contract"></i><span data-i18n="nav_employment">Employment Contract</span></a>
+    <a href="company.html" class="nav-item"><i class="fas fa-building"></i><span data-i18n="nav_company">Company Profile</span></a>
+    <a href="settings.html" class="nav-item"><i class="fas fa-sliders-h"></i><span data-i18n="nav_settings">Settings</span></a>
+    <a href="membership.html" class="nav-item"><i class="fas fa-crown"></i><span data-i18n="nav_membership">Membership</span></a>
+</nav>
             </div>
             <div class="sidebar-upgrade-card">
-                <div class="sidebar-premium-badge">PREMIUM ACCESS</div>
-                <div class="sidebar-upgrade-title">Upgrade your membership</div>
-                <div class="sidebar-upgrade-desc">Unlock higher rewards,<br>priority support, and premium<br>hotel discovery benefits</div>
-                <a href="membership.html" class="sidebar-upgrade-btn">Upgrade Now <i class="fas fa-arrow-right"></i></a>
-            </div>
+    <div class="sidebar-premium-badge" data-i18n="sidebar_premium">PREMIUM ACCESS</div>
+    <div class="sidebar-upgrade-title" data-i18n="sidebar_upgrade">Upgrade your membership</div>
+    <div class="sidebar-upgrade-desc" data-i18n="sidebar_upgrade_desc">Unlock higher rewards,<br>priority support, and premium<br>hotel discovery benefits</div>
+    <a href="membership.html" class="sidebar-upgrade-btn" data-i18n="sidebar_upgrade_btn">Upgrade Now <i class="fas fa-arrow-right"></i></a>
+</div>
         </aside>
 
         <main class="main">
@@ -491,58 +491,58 @@
 
             <div class="welcome-header">
                 <div>
-                    <h1>Welcome, <span class="username" id="displayUsername">Loading...</span></h1>
-                    <div class="uid-badge">UID: <span id="displayUid">---</span></div>
+                    <h1><span data-i18n="dashboard_welcome">Welcome</span>, <span class="username" id="displayUsername">Loading...</span></h1>
+<div class="uid-badge"><span data-i18n="uid">UID</span>: <span id="displayUid">---</span></div>
                 </div>
-                <div class="premium-tag"><i class="fas fa-gem"></i> OPERATOR ACCESS</div>
+                <div class="premium-tag"><i class="fas fa-gem"></i> <span data-i18n="dashboard_operator_access">OPERATOR ACCESS</span></div>
             </div>
 
             <div class="metal-card">
-                <div class="card-label"><i class="fas fa-wallet"></i> AVAILABLE BALANCE</div>
+                <div class="card-label"><i class="fas fa-wallet"></i> <span data-i18n="dashboard_balance">AVAILABLE BALANCE</span></div>
                 <div class="balance-amount" id="displayBalance">€0.00</div>
                 <div class="membership-info">
-                    <span class="membership-badge" id="displayMembership">Membership Normal</span>
-                    <a href="membership.html" class="upgrade-link-sm">Upgrade Now →</a>
+                    <span class="membership-badge" id="displayMembership"><span data-i18n="dashboard_membership">Membership</span> Normal</span>
+<a href="membership.html" class="upgrade-link-sm" data-i18n="dashboard_upgrade_now">Upgrade Now →</a>
                 </div>
             </div>
 
             <div class="action-row">
-                <div class="action-card" onclick="location.href='withdrawal.html'"><i class="fas fa-arrow-right-to-bracket"></i><div class="action-text">Withdraw</div><div class="action-sub">Request payout</div></div>
-                <div class="action-card" onclick="location.href='start.html'"><i class="fas fa-rocket"></i><div class="action-text">Start</div><div class="action-sub">Complete tasks</div></div>
-                <div class="action-card" onclick="location.href='history.html'"><i class="fas fa-chart-line"></i><div class="action-text">History</div><div class="action-sub">View records</div></div>
-                <div class="action-card" onclick="location.href='chat.html'"><i class="fas fa-headset"></i><div class="action-text">Support</div><div class="action-sub">24/7 help</div></div>
-            </div>
+    <div class="action-card" onclick="location.href='withdrawal.html'"><i class="fas fa-arrow-right-to-bracket"></i><div class="action-text" data-i18n="dashboard_withdraw">Withdraw</div><div class="action-sub" data-i18n="withdrawal_min_amount">Request payout</div></div>
+    <div class="action-card" onclick="location.href='start.html'"><i class="fas fa-rocket"></i><div class="action-text" data-i18n="dashboard_start">Start</div><div class="action-sub" data-i18n="start_now">Complete tasks</div></div>
+    <div class="action-card" onclick="location.href='history.html'"><i class="fas fa-chart-line"></i><div class="action-text" data-i18n="dashboard_history">History</div><div class="action-sub" data-i18n="history_title">View records</div></div>
+    <div class="action-card" onclick="location.href='chat.html'"><i class="fas fa-headset"></i><div class="action-text" data-i18n="dashboard_support">Support</div><div class="action-sub" data-i18n="chat_connect_btn">24/7 help</div></div>
+</div>
 
             <div class="dashboard-row">
                 <div class="dashboard-left">
                     <div class="chart-container">
                         <div class="chart-header">
                             <div class="chart-title-section">
-                                <i class="fas fa-chart-line"></i> Commission Trend
-                                <span class="chart-subtitle">Last 7 days</span>
-                            </div>
-                            <div class="chart-buttons">
-                                <button class="chart-btn line-btn active" data-type="line"><i class="fas fa-chart-line"></i> Line</button>
-                                <button class="chart-btn bar-btn" data-type="bar"><i class="fas fa-chart-bar"></i> Bar</button>
-                            </div>
+    <i class="fas fa-chart-line"></i> <span data-i18n="dashboard_chart_title">Commission Trend</span>
+    <span class="chart-subtitle" data-i18n="dashboard_chart_subtitle">Last 7 days</span>
+</div>
+<div class="chart-buttons">
+    <button class="chart-btn line-btn active" data-type="line"><i class="fas fa-chart-line"></i> <span data-i18n="dashboard_chart_line">Line</span></button>
+    <button class="chart-btn bar-btn" data-type="bar"><i class="fas fa-chart-bar"></i> <span data-i18n="dashboard_chart_bar">Bar</span></button>
+</div>
                         </div>
                         <div class="chart-wrapper">
                             <canvas id="commissionChart" height="180"></canvas>
                         </div>
                         <div class="chart-stats">
-                            <div class="chart-stat-item">
-                                <div class="chart-stat-label">Total</div>
-                                <div class="chart-stat-value" id="chartTotalCommission">€0.00</div>
-                            </div>
-                            <div class="chart-stat-item">
-                                <div class="chart-stat-label">Avg/Day</div>
-                                <div class="chart-stat-value" id="chartAvgCommission">€0.00</div>
-                            </div>
-                            <div class="chart-stat-item">
-                                <div class="chart-stat-label">Best Day</div>
-                                <div class="chart-stat-value" id="chartBestCommission">€0.00</div>
-                            </div>
-                        </div>
+    <div class="chart-stat-item">
+        <div class="chart-stat-label" data-i18n="dashboard_chart_total">Total</div>
+        <div class="chart-stat-value" id="chartTotalCommission">€0.00</div>
+    </div>
+    <div class="chart-stat-item">
+        <div class="chart-stat-label" data-i18n="dashboard_chart_avg">Avg/Day</div>
+        <div class="chart-stat-value" id="chartAvgCommission">€0.00</div>
+    </div>
+    <div class="chart-stat-item">
+        <div class="chart-stat-label" data-i18n="dashboard_chart_best">Best Day</div>
+        <div class="chart-stat-value" id="chartBestCommission">€0.00</div>
+    </div>
+</div>
                     </div>
                 </div>
 
@@ -550,28 +550,28 @@
                     <div class="card">
                         <div class="card-label"><i class="fas fa-chart-line"></i> QUICK STATS</div>
                         <div style="display: flex; justify-content: space-between; margin: 20px 0;">
-                            <div><div style="font-size: 28px; font-weight: 700;" id="totalOrdersStat">0</div><div style="font-size: 11px; color: var(--text-secondary);">Total Orders</div></div>
-                            <div><div style="font-size: 28px; font-weight: 700;" id="totalCommissionStat">€0</div><div style="font-size: 11px; color: var(--text-secondary);">Commission</div></div>
-                        </div>
-                        <div class="membership-info">
-                            <span class="membership-badge"><i class="fas fa-chart-simple"></i> Lifetime Earnings</span>
-                            <span id="lifetimeEarnings" style="color: var(--accent-gold); font-weight: 600;">€0</span>
-                        </div>
+    <div><div style="font-size: 28px; font-weight: 700;" id="totalOrdersStat">0</div><div style="font-size: 11px; color: var(--text-secondary);" data-i18n="dashboard_stats_orders">Total Orders</div></div>
+    <div><div style="font-size: 28px; font-weight: 700;" id="totalCommissionStat">€0</div><div style="font-size: 11px; color: var(--text-secondary);" data-i18n="dashboard_stats_commission">Commission</div></div>
+</div>
+<div class="membership-info">
+    <span class="membership-badge"><i class="fas fa-chart-simple"></i> <span data-i18n="dashboard_stats_earnings">Lifetime Earnings</span></span>
+    <span id="lifetimeEarnings" style="color: var(--accent-gold); font-weight: 600;">€0</span>
+</div>
                     </div>
                 </div>
             </div>
 
             <!-- ========== OVERVIEW 卡片 ========== -->
-            <div class="section-header"><h3>OVERVIEW</h3><a href="#" class="view-all">View all <i class="fas fa-chevron-right"></i></a></div>
+            <div class="section-header"><h3 data-i18n="dashboard_overview">OVERVIEW</h3><a href="#" class="view-all"><span data-i18n="view_all">View all</span> <i class="fas fa-chevron-right"></i></a></div>
             <div class="cards-grid">
                 <!-- 卡片1: Total Earnings - 无跳转 -->
                 <div class="overview-card" id="card1">
                     <div class="overview-card-content">
                         <canvas id="bubbleCanvas1" class="bubble-canvas"></canvas>
                         <i class="fas fa-coins card-icon"></i>
-                        <div class="overview-label">TOTAL EARNINGS</div>
+                        <div class="overview-label" data-i18n="dashboard_total_earnings">TOTAL EARNINGS</div>
                         <div class="overview-value" id="totalEarnings">€0.00</div>
-                        <div class="overview-tag">Lifetime earnings</div>
+                        <div class="overview-tag" data-i18n="dashboard_lifetime_earnings">Lifetime earnings</div>
                     </div>
                 </div>
 
@@ -580,7 +580,7 @@
                     <div class="overview-card-content">
                         <canvas id="bubbleCanvas2" class="bubble-canvas"></canvas>
                         <i class="fas fa-calendar-alt card-icon"></i>
-                        <div class="overview-label">ACTIVE EVENTS</div>
+                        <div class="overview-label" data-i18n="dashboard_active_events">ACTIVE EVENTS</div>
                         <div class="overview-value" id="currentEventValue">0</div>
                         <div class="overview-tag" id="currentEventTag">Loading...</div>
                     </div>
@@ -591,9 +591,9 @@
                     <div class="overview-card-content">
                         <canvas id="bubbleCanvas3" class="bubble-canvas"></canvas>
                         <i class="fas fa-gem card-icon"></i>
-                        <div class="overview-label">PREMIUM STATUS</div>
+                        <div class="overview-label" data-i18n="dashboard_premium_status">PREMIUM STATUS</div>
                         <div class="overview-value" id="premiumStatusText">Normal</div>
-                        <div class="overview-tag">Upgrade Now</div>
+                        <div class="overview-tag" data-i18n="dashboard_upgrade_tag">Upgrade Now</div>
                     </div>
                 </div>
 
@@ -602,7 +602,7 @@
                     <div class="overview-card-content">
                         <canvas id="bubbleCanvas4" class="bubble-canvas"></canvas>
                         <i class="fas fa-file-contract card-icon"></i>
-                        <div class="overview-label">EMPLOYMENT CONTRACT</div>
+                        <div class="overview-label" data-i18n="dashboard_contract">EMPLOYMENT CONTRACT</div>
                         <div class="overview-value" id="contractStatus">0/7</div>
                         <div class="overview-tag" id="contractTag">Loading...</div>
                     </div>
@@ -613,22 +613,22 @@
                     <div class="overview-card-content">
                         <canvas id="bubbleCanvas5" class="bubble-canvas"></canvas>
                         <i class="fas fa-certificate card-icon"></i>
-                        <div class="overview-label">CERTIFICATE</div>
+                        <div class="overview-label" data-i18n="dashboard_certificate">CERTIFICATE</div>
                         <div class="overview-value" id="certificateStatus">✓</div>
-                        <div class="overview-tag">View Certificate</div>
+                        <div class="overview-tag" data-i18n="dashboard_view_certificate">View Certificate</div>
                     </div>
                 </div>
             </div>
 
             <!-- ========== 产品推荐 ========== -->
-            <div class="section-header" style="margin-top: 20px;"><h3><i class="fas fa-box-open"></i> FEATURED HOTELS</h3><a href="start.html" class="view-all">View all →</a></div>
+            <div class="section-header" style="margin-top: 20px;"><h3><i class="fas fa-box-open"></i> <span data-i18n="dashboard_featured_hotels">FEATURED HOTELS</span></h3><a href="start.html" class="view-all"><span data-i18n="view_all">View all</span> →</a></div>
             <div class="products-slider-container"><div id="featuredProductsGrid" class="step-scroll-products"><div style="text-align: center; padding: 40px; color: var(--text-secondary); width: 100%;">Loading hotels...</div></div></div>
 
             <!-- ========== 最近预订 ========== -->
-            <div class="section-header"><h3>RECENT BOOKINGS</h3><a href="history.html" class="view-all">View all <i class="fas fa-chevron-right"></i></a></div>
-            <div class="bookings-list" id="recentBookings"><div class="empty-bookings"><i class="fas fa-calendar-alt"></i><p>No bookings yet</p><span>Start your first task to see recent bookings here</span></div></div>
+            <div class="section-header"><h3 data-i18n="dashboard_recent_bookings">RECENT BOOKINGS</h3><a href="history.html" class="view-all"><span data-i18n="view_all">View all</span> <i class="fas fa-chevron-right"></i></a></div>
+            <div class="bookings-list" id="recentBookings"><div class="empty-bookings"><i class="fas fa-calendar-alt"></i><p data-i18n="dashboard_no_bookings">No bookings yet</p><span data-i18n="dashboard_start_first">Start your first task to see recent bookings here</span></div></div>
 
-            <div class="footer-note"><i class="fas fa-lock"></i> Secure platform · Protected by ADDITIVE</div>
+            <div class="footer-note"><i class="fas fa-lock"></i> <span data-i18n="secure_platform">Secure platform · Protected by ADDITIVE</span></div>
         </main>
     </div>
 
@@ -1101,5 +1101,13 @@
             loadDashboard();
         })();
     </script>
+<script src="i18n.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        if (window.i18n) {
+            window.i18n.applyTranslations();
+        }
+    });
+</script>
 </body>
 </html>

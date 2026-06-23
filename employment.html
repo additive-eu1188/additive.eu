@@ -199,25 +199,25 @@
                     
                 </div>
                 <nav class="nav">
-                    <a href="dashboard.html" class="nav-item"><i class="fas fa-th-large"></i><span>Dashboard</span></a>
-                    <a href="start.html" class="nav-item"><i class="fas fa-play"></i><span>Start</span></a>
-                    <a href="history.html" class="nav-item"><i class="fas fa-clock"></i><span>History</span></a>
-                    <a href="checkin.html" class="nav-item"><i class="fas fa-calendar-check"></i><span>Sign in</span></a>
-                    <a href="event.html" class="nav-item"><i class="fas fa-calendar-alt"></i><span>Event</span></a>
-                    <a href="withdrawal.html" class="nav-item"><i class="fas fa-arrow-right-to-bracket"></i><span>Withdrawal</span></a>
-                    <a href="employment.html" class="nav-item active"><i class="fas fa-file-contract"></i><span>Employment Contract</span></a>
-                    <a href="company.html" class="nav-item"><i class="fas fa-building"></i><span>Company Profile</span></a>
-                    <a href="chat.html" class="nav-item"><i class="fas fa-comment-dots"></i><span>Chat with us</span></a>
-                    <a href="settings.html" class="nav-item"><i class="fas fa-sliders-h"></i><span>Settings</span></a>
-                    <a href="membership.html" class="nav-item"><i class="fas fa-crown"></i><span>Membership</span></a>
-                </nav>
+    <a href="dashboard.html" class="nav-item"><i class="fas fa-th-large"></i><span data-i18n="nav_dashboard">Dashboard</span></a>
+    <a href="start.html" class="nav-item"><i class="fas fa-play"></i><span data-i18n="nav_start">Start</span></a>
+    <a href="history.html" class="nav-item"><i class="fas fa-clock"></i><span data-i18n="nav_history">History</span></a>
+    <a href="checkin.html" class="nav-item"><i class="fas fa-calendar-check"></i><span data-i18n="nav_checkin">Sign in</span></a>
+    <a href="event.html" class="nav-item"><i class="fas fa-calendar-alt"></i><span data-i18n="nav_event">Event</span></a>
+    <a href="withdrawal.html" class="nav-item"><i class="fas fa-arrow-right-to-bracket"></i><span data-i18n="nav_withdrawal">Withdrawal</span></a>
+    <a href="employment.html" class="nav-item active"><i class="fas fa-file-contract"></i><span data-i18n="nav_employment">Employment Contract</span></a>
+    <a href="company.html" class="nav-item"><i class="fas fa-building"></i><span data-i18n="nav_company">Company Profile</span></a>
+    <a href="chat.html" class="nav-item"><i class="fas fa-comment-dots"></i><span data-i18n="nav_chat">Chat with us</span></a>
+    <a href="settings.html" class="nav-item"><i class="fas fa-sliders-h"></i><span data-i18n="nav_settings">Settings</span></a>
+    <a href="membership.html" class="nav-item"><i class="fas fa-crown"></i><span data-i18n="nav_membership">Membership</span></a>
+</nav>
             </div>
             <div class="sidebar-upgrade-card">
-                <div class="sidebar-premium-badge">PREMIUM ACCESS</div>
-                <div class="sidebar-upgrade-title">Upgrade your membership</div>
-                <div class="sidebar-upgrade-desc">Unlock higher rewards,<br>priority support, and premium<br>hotel discovery benefits</div>
-                <a href="membership.html" class="sidebar-upgrade-btn">Upgrade Now <i class="fas fa-arrow-right"></i></a>
-            </div>
+    <div class="sidebar-premium-badge" data-i18n="sidebar_premium">PREMIUM ACCESS</div>
+    <div class="sidebar-upgrade-title" data-i18n="sidebar_upgrade">Upgrade your membership</div>
+    <div class="sidebar-upgrade-desc" data-i18n="sidebar_upgrade_desc">Unlock higher rewards,<br>priority support, and premium<br>hotel discovery benefits</div>
+    <a href="membership.html" class="sidebar-upgrade-btn" data-i18n="sidebar_upgrade_btn">Upgrade Now <i class="fas fa-arrow-right"></i></a>
+</div>
         </aside>
 
         <main class="main">
@@ -232,22 +232,22 @@
 
             <div class="page-content">
                 <div class="page-header">
-                    <h1>📄 Employment Contract</h1>
-                    <p>Your employment agreement and terms with ADDITIVE</p>
+                    <h1 data-i18n="employment_title">📄 Employment Contract</h1>
+<p data-i18n="employment_subtitle">Your employment agreement and terms with ADDITIVE</p>
                 </div>
 
                 <div id="contentContainer">
                     <div class="content-loading">
                         <i class="fas fa-spinner fa-spin"></i>
-                        <p>Loading...</p>
+                        <p data-i18n="employment_loading">Loading...</p>
                     </div>
                 </div>
 
                 <div class="upgrade-card-pulse">
-                    <div class="upgrade-title">✨ Upgrade your membership</div>
-                    <div class="upgrade-desc">Unlock higher rewards, priority support, and premium hotel discovery benefits.</div>
-                    <a href="membership.html" class="btn-upgrade">Upgrade Now <i class="fas fa-arrow-right"></i></a>
-                </div>
+    <div class="upgrade-title" data-i18n="upgrade_title">✨ Upgrade your membership</div>
+    <div class="upgrade-desc" data-i18n="upgrade_desc">Unlock higher rewards, priority support, and premium hotel discovery benefits.</div>
+    <a href="membership.html" class="btn-upgrade" data-i18n="upgrade_btn">Upgrade Now <i class="fas fa-arrow-right"></i></a>
+</div>
             </div>
         </main>
     </div>
@@ -282,100 +282,109 @@
         }
 
         async function loadContent() {
-            const container = document.getElementById('contentContainer');
+    const container = document.getElementById('contentContainer');
 
-            try {
-                const { data, error } = await sb
-                    .from('system_content')
-                    .select('*')
-                    .eq('type', 'contract')
-                    .single();
+    try {
+        const { data, error } = await sb
+            .from('system_content')
+            .select('*')
+            .eq('type', 'contract')
+            .single();
 
-                if (error) throw error;
+        if (error) throw error;
 
-                if (data) {
-                    // 解析图片数组
-                    let images = [];
-                    if (data.image_url) {
-                        try {
-                            const parsed = JSON.parse(data.image_url);
-                            if (Array.isArray(parsed)) {
-                                images = parsed;
-                            } else {
-                                images = [data.image_url];
-                            }
-                        } catch (e) {
-                            images = data.image_url ? [data.image_url] : [];
-                        }
-                    }
-
-                    // 构建多图 HTML
-                    let imagesHtml = '';
-                    if (images.length > 0) {
-                        imagesHtml = `<div class="image-grid-container">`;
-                        images.forEach((url, index) => {
-                            imagesHtml += `
-                                <div class="image-item">
-                                    <div class="img-wrapper">
-                                        <img src="${url}" alt="Employment Contract Image ${index + 1}" onerror="this.parentElement.innerHTML='<div class=\\'image-placeholder\\'><i class=\\'fas fa-file-contract\\'></i><span>Image ${index + 1} not available</span></div>'">
-                                        <span class="image-number">${index + 1} / ${images.length}</span>
-                                    </div>
-                                </div>
-                            `;
-                        });
-                        imagesHtml += `</div>`;
+        if (data) {
+            // 解析图片数组
+            let images = [];
+            if (data.image_url) {
+                try {
+                    const parsed = JSON.parse(data.image_url);
+                    if (Array.isArray(parsed)) {
+                        images = parsed;
                     } else {
-                        imagesHtml = `
-                            <div class="content-image-wrapper">
-                                <div class="image-placeholder">
-                                    <i class="fas fa-file-contract"></i>
-                                    <span>No images uploaded</span>
-                                </div>
-                            </div>
-                        `;
+                        images = [data.image_url];
                     }
-
-                    container.innerHTML = `
-                        <div class="content-card">
-                            ${imagesHtml}
-                            <div class="content-text">
-                                ${data.content || '<p>Content coming soon...</p>'}
-                            </div>
-                            <div style="margin-top: 20px; padding-top: 16px; border-top: 1px solid rgba(201,176,149,0.1); font-size: 11px; color: #6a7a9a;">
-                                <i class="fas fa-clock"></i> Last updated: ${new Date(data.updated_at || data.created_at).toLocaleString()}
-                            </div>
-                        </div>
-                    `;
-                } else {
-                    container.innerHTML = `
-                        <div class="content-card">
-                            <div class="content-image-wrapper">
-                                <div class="image-placeholder">
-                                    <i class="fas fa-file-contract"></i>
-                                    <span>No content yet</span>
-                                </div>
-                            </div>
-                            <div class="content-text">
-                                <p>Content not found. Please check back later.</p>
-                            </div>
-                        </div>
-                    `;
+                } catch (e) {
+                    images = data.image_url ? [data.image_url] : [];
                 }
-            } catch (error) {
-                console.error('加载内容失败:', error);
-                container.innerHTML = `
-                    <div class="content-card">
-                        <div class="content-text">
-                            <p>Unable to load content. Please try again later.</p>
-                            <p style="font-size: 12px; color: #ff8888;">Error: ${escapeHtml(error.message)}</p>
+            }
+
+            // 构建多图 HTML
+            let imagesHtml = '';
+            if (images.length > 0) {
+                imagesHtml = `<div class="image-grid-container">`;
+                images.forEach((url, index) => {
+                    imagesHtml += `
+                        <div class="image-item">
+                            <div class="img-wrapper">
+                                <img src="${url}" alt="Employment Contract Image ${index + 1}" onerror="this.parentElement.innerHTML='<div class=\\'image-placeholder\\'><i class=\\'fas fa-file-contract\\'></i><span data-i18n=\\"employment_no_images\\">Image ${index + 1} not available</span></div>'">
+                                <span class="image-number">${index + 1} / ${images.length}</span>
+                            </div>
+                        </div>
+                    `;
+                });
+                imagesHtml += `</div>`;
+            } else {
+                imagesHtml = `
+                    <div class="content-image-wrapper">
+                        <div class="image-placeholder">
+                            <i class="fas fa-file-contract"></i>
+                            <span data-i18n="employment_no_images">No images uploaded</span>
                         </div>
                     </div>
                 `;
             }
+
+            container.innerHTML = `
+                <div class="content-card">
+                    ${imagesHtml}
+                    <div class="content-text">
+                        ${data.content || '<p data-i18n="employment_no_content">Content coming soon...</p>'}
+                    </div>
+                    <div style="margin-top: 20px; padding-top: 16px; border-top: 1px solid rgba(201,176,149,0.1); font-size: 11px; color: #6a7a9a;">
+                        <i class="fas fa-clock"></i> <span data-i18n="employment_last_updated">Last updated: ${new Date(data.updated_at || data.created_at).toLocaleString()}</span>
+                    </div>
+                </div>
+            `;
+        } else {
+            container.innerHTML = `
+                <div class="content-card">
+                    <div class="content-image-wrapper">
+                        <div class="image-placeholder">
+                            <i class="fas fa-file-contract"></i>
+                            <span data-i18n="employment_no_images">No content yet</span>
+                        </div>
+                    </div>
+                    <div class="content-text">
+                        <p data-i18n="employment_no_content">Content not found. Please check back later.</p>
+                    </div>
+                </div>
+            `;
         }
+    } catch (error) {
+        console.error('加载内容失败:', error);
+        const t = window.i18n?.t || function(key) { return key; };
+        container.innerHTML = `
+            <div class="content-card">
+                <div class="content-text">
+                    <p>${t('employment_error')}</p>
+                    <p style="font-size: 12px; color: #ff8888;">Error: ${escapeHtml(error.message)}</p>
+                </div>
+            </div>
+        `;
+    }
+}
 
         checkLogin();
         loadContent();
     </script>
+<script src="i18n.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        if (window.i18n) {
+            window.i18n.applyTranslations();
+        }
+    });
+</script>
 </body>
 </html>

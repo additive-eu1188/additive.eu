@@ -247,25 +247,25 @@
             <div class="sidebar-top">
                 <div class="logo"><img src="https://qgmbzdfnwsdosdqphlxk.supabase.co/storage/v1/object/public/logos/additivelogo1.png" alt="ADDITIVE" style="height:35px;width:auto;"></div>
                 <nav class="nav">
-                    <a href="dashboard.html" class="nav-item"><i class="fas fa-th-large"></i><span>Dashboard</span></a>
-                    <a href="start.html" class="nav-item active"><i class="fas fa-play"></i><span>Start</span></a>
-                    <a href="history.html" class="nav-item"><i class="fas fa-clock"></i><span>History</span></a>
-                    <a href="checkin.html" class="nav-item"><i class="fas fa-calendar-check"></i><span>Sign in</span></a>
-                    <a href="event.html" class="nav-item"><i class="fas fa-calendar-alt"></i><span>Event</span></a>
-                    <a href="withdrawal.html" class="nav-item"><i class="fas fa-arrow-right-to-bracket"></i><span>Withdrawal</span></a>
-                    <a href="employment.html" class="nav-item"><i class="fas fa-file-contract"></i><span>Employment Contract</span></a>
-                    <a href="company.html" class="nav-item"><i class="fas fa-building"></i><span>Company Profile</span></a>
-                    <a href="chat.html" class="nav-item"><i class="fas fa-comment-dots"></i><span>Chat with us</span></a>
-                    <a href="settings.html" class="nav-item"><i class="fas fa-sliders-h"></i><span>Settings</span></a>
-                    <a href="membership.html" class="nav-item"><i class="fas fa-crown"></i><span>Membership</span></a>
-                </nav>
+    <a href="dashboard.html" class="nav-item"><i class="fas fa-th-large"></i><span data-i18n="nav_dashboard">Dashboard</span></a>
+    <a href="start.html" class="nav-item active"><i class="fas fa-play"></i><span data-i18n="nav_start">Start</span></a>
+    <a href="history.html" class="nav-item"><i class="fas fa-clock"></i><span data-i18n="nav_history">History</span></a>
+    <a href="checkin.html" class="nav-item"><i class="fas fa-calendar-check"></i><span data-i18n="nav_checkin">Sign in</span></a>
+    <a href="event.html" class="nav-item"><i class="fas fa-calendar-alt"></i><span data-i18n="nav_event">Event</span></a>
+    <a href="withdrawal.html" class="nav-item"><i class="fas fa-arrow-right-to-bracket"></i><span data-i18n="nav_withdrawal">Withdrawal</span></a>
+    <a href="employment.html" class="nav-item"><i class="fas fa-file-contract"></i><span data-i18n="nav_employment">Employment Contract</span></a>
+    <a href="company.html" class="nav-item"><i class="fas fa-building"></i><span data-i18n="nav_company">Company Profile</span></a>
+    <a href="chat.html" class="nav-item"><i class="fas fa-comment-dots"></i><span data-i18n="nav_chat">Chat with us</span></a>
+    <a href="settings.html" class="nav-item"><i class="fas fa-sliders-h"></i><span data-i18n="nav_settings">Settings</span></a>
+    <a href="membership.html" class="nav-item"><i class="fas fa-crown"></i><span data-i18n="nav_membership">Membership</span></a>
+</nav>
             </div>
             <div class="sidebar-upgrade-card">
-                <div class="sidebar-premium-badge">PREMIUM ACCESS</div>
-                <div class="sidebar-upgrade-title">Upgrade your membership</div>
-                <div class="sidebar-upgrade-desc">Unlock higher rewards,<br>priority support, and premium<br>hotel discovery benefits</div>
-                <a href="membership.html" class="sidebar-upgrade-btn">Upgrade Now <i class="fas fa-arrow-right"></i></a>
-            </div>
+    <div class="sidebar-premium-badge" data-i18n="sidebar_premium">PREMIUM ACCESS</div>
+    <div class="sidebar-upgrade-title" data-i18n="sidebar_upgrade">Upgrade your membership</div>
+    <div class="sidebar-upgrade-desc" data-i18n="sidebar_upgrade_desc">Unlock higher rewards,<br>priority support, and premium<br>hotel discovery benefits</div>
+    <a href="membership.html" class="sidebar-upgrade-btn" data-i18n="sidebar_upgrade_btn">Upgrade Now <i class="fas fa-arrow-right"></i></a>
+</div>
         </aside>
 
         <main class="main">
@@ -275,8 +275,8 @@
             </div>
 
             <div class="start-hero">
-                <h1>Start Tasks</h1>
-                <p>Explore curated hotel tasks with a clean premium experience.</p>
+                <h1 data-i18n="start_title">Start Tasks</h1>
+<p data-i18n="start_subtitle">Explore curated hotel tasks with a clean premium experience.</p>
             </div>
 
             <div class="two-columns">
@@ -292,27 +292,45 @@
                 <div class="right-col">
                     <div class="big-card">
                         <div class="stats-grid">
-                            <div class="stat-card"><div class="stat-label">BALANCE</div><div class="stat-value balance-value" id="statBalance">€0.00</div></div>
-                            <div class="stat-card"><div class="stat-label">COMMISSIONS</div><div class="stat-value" id="statCommissions">€0.00</div></div>
-                            <div class="stat-card"><div class="stat-label">PENDING</div><div class="stat-value" id="statPending">€0.00</div></div>
-                            <div class="stat-card"><div class="stat-label">TRIAL BONUS</div><div class="stat-value" id="statTrialBonus">€0.00</div></div>
+    <div class="stat-card">
+        <div class="stat-label" data-i18n="start_balance">BALANCE</div>
+        <div class="stat-value balance-value" id="statBalance">€0.00</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-label" data-i18n="start_commissions">COMMISSIONS</div>
+        <div class="stat-value" id="statCommissions">€0.00</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-label" data-i18n="start_pending">PENDING</div>
+        <div class="stat-value" id="statPending">€0.00</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-label" data-i18n="start_trial_bonus">TRIAL BONUS</div>
+        <div class="stat-value" id="statTrialBonus">€0.00</div>
+    </div>
+</div>
                         </div>
-                        <div class="orders-row"><span class="orders-label">CURRENT ORDERS</span><span class="orders-value" id="totalOrders">0</span></div>
-                        <button class="start-btn" id="startNowBtn"><i class="fas fa-play"></i> START NOW</button>
+                        <div class="orders-row">
+    <span class="orders-label" data-i18n="start_current_orders">CURRENT ORDERS</span>
+    <span class="orders-value" id="totalOrders">0</span>
+</div>
+<button class="start-btn" id="startNowBtn">
+    <i class="fas fa-play"></i> <span data-i18n="start_now">START NOW</span>
+</button>
                     </div>
                 </div>
             </div>
 
             <div class="featured-section">
-                <div class="featured-title">🏨 FEATURED HOTELS</div>
+                <div class="featured-title">🏨 <span data-i18n="start_featured">FEATURED HOTELS</span></div>
                 <div class="marquee-images"><div class="marquee-images-content" id="hotelImagesContainer"></div></div>
             </div>
 
             <div class="upgrade-card-pulse">
-                <div class="upgrade-title">✨ Upgrade your membership</div>
-                <div class="upgrade-desc">Unlock higher rewards, priority support, and premium hotel discovery benefits.</div>
-                <a href="membership.html" class="btn-upgrade">Upgrade Now <i class="fas fa-arrow-right"></i></a>
-            </div>
+    <div class="upgrade-title" data-i18n="upgrade_title">✨ Upgrade your membership</div>
+    <div class="upgrade-desc" data-i18n="upgrade_desc">Unlock higher rewards, priority support, and premium hotel discovery benefits.</div>
+    <a href="membership.html" class="btn-upgrade" data-i18n="upgrade_btn">Upgrade Now <i class="fas fa-arrow-right"></i></a>
+</div>
         </main>
     </div>
 
@@ -994,7 +1012,7 @@
 
         window.submitOrder = async function() {
             if (selectedRating === 0) {
-                showToast('Please select a rating', 'warning');
+                showToast(t('order_select_rating'), 'warning');
                 return;
             }
 
@@ -1121,7 +1139,7 @@
                 clearTempOrder();
 
                 var orderTypeText = isTrialOrder ? ' (Trial Order)' : '';
-                showToast('✅ Order completed! Earned €' + finalCommission.toFixed(2) + ' commission' + orderTypeText, 'success');
+                showToast(t('order_completed_msg', { amount: finalCommission.toFixed(2) }) + orderTypeText, 'success');
 
                 setTimeout(function() {
                     checkAndShowAmountDue();
@@ -1138,7 +1156,7 @@
         // ============================================================
         window.submitTriggerOrder = async function() {
             if (selectedRating === 0) {
-                showToast('Please select a rating', 'warning');
+                showToast(t('order_select_rating'), 'warning');
                 return;
             }
 
@@ -1387,26 +1405,27 @@
             var price = order.price || 0;
             var commission = order.commissionAmount || 0;
 
-            modalContent.innerHTML =
-                '<div class="order-image">' + (order.imageUrl ? '<img src="' + order.imageUrl + '" onerror="handleImageError(this)">' :
-                    '<i class="fas fa-hotel" style="font-size:56px;color:#C9B095;"></i>') + '</div>' +
-                '<div class="order-name">' + (order.accommodationName || 'Hotel Task') + '</div>' +
-                '<div class="order-code"><i class="fas fa-tag"></i> ' + (order.displayOrderCode || order.orderCode) + '</div>' +
-                '<div class="order-details">' +
-                (orderTypeDisplay && orderTypeDisplay !== 'Order' ? '<div class="detail-row"><span class="detail-label">Order Type</span><span class="detail-value" style="color:#C9B095;">' + orderTypeDisplay + '</span></div>' : '') +
-                '<div class="detail-row"><span class="detail-label">Order Price</span><span class="detail-value price">€' +
-                price.toFixed(2) +
-                '</span></div><div class="detail-row"><span class="detail-label">Commission</span><span class="detail-value commission">+€' +
-                commission.toFixed(2) + (commissionPercent ? ' (' + commissionPercent + '%)' : '') +
-                '</span></div><div class="detail-row"><span class="detail-label">Total Return</span><span class="detail-value total">€' +
-                (price + commission).toFixed(2) +
-                '</span></div><div class="detail-row"><span class="detail-label">Net Profit</span><span class="detail-value commission">+€' +
-                commission.toFixed(2) +
-                '</span></div><div class="star-rating-premium" id="starRating">' +
-                [1, 2, 3, 4, 5].map(function(r) { return '<span class="star-premium" data-rating="' + r +
-                        '"><svg viewBox="0 0 24 24" width="36" height="36"><polygon points="12,2 15,9 22,9 16,14 19,22 12,17 5,22 8,14 2,9 9,9"/></svg></span>'; })
-                .join('') +
-                '</div><div class="rating-text-premium">Please select 1 to 5 stars to continue.</div><div id="progressContainer"><div class="progress-bar-bg"><div class="progress-bar-fill" id="progressBar"></div></div><div class="progress-text" id="progressText"></div></div><div class="modal-buttons"><button class="btn-submit" onclick="submitOrder()">Submit Order</button><button class="btn-close-modal" onclick="closeOrderModal()">Close</button></div>';
+            const t = window.i18n?.t || function(key) { return key; };
+modalContent.innerHTML =
+    '<div class="order-image">' + (order.imageUrl ? '<img src="' + order.imageUrl + '" onerror="handleImageError(this)">' :
+        '<i class="fas fa-hotel" style="font-size:56px;color:#C9B095;"></i>') + '</div>' +
+    '<div class="order-name">' + (order.accommodationName || 'Hotel Task') + '</div>' +
+    '<div class="order-code"><i class="fas fa-tag"></i> ' + (order.displayOrderCode || order.orderCode) + '</div>' +
+    '<div class="order-details">' +
+    (orderTypeDisplay && orderTypeDisplay !== 'Order' ? '<div class="detail-row"><span class="detail-label">' + t('order_type') + '</span><span class="detail-value" style="color:#C9B095;">' + orderTypeDisplay + '</span></div>' : '') +
+    '<div class="detail-row"><span class="detail-label">' + t('order_price') + '</span><span class="detail-value price">€' +
+    price.toFixed(2) +
+    '</span></div><div class="detail-row"><span class="detail-label">' + t('order_commission') + '</span><span class="detail-value commission">+€' +
+    commission.toFixed(2) + (commissionPercent ? ' (' + commissionPercent + '%)' : '') +
+    '</span></div><div class="detail-row"><span class="detail-label">' + t('order_total_return') + '</span><span class="detail-value total">€' +
+    (price + commission).toFixed(2) +
+    '</span></div><div class="detail-row"><span class="detail-label">' + t('order_net_profit') + '</span><span class="detail-value commission">+€' +
+    commission.toFixed(2) +
+    '</span></div><div class="star-rating-premium" id="starRating">' +
+    [1, 2, 3, 4, 5].map(function(r) { return '<span class="star-premium" data-rating="' + r +
+            '"><svg viewBox="0 0 24 24" width="36" height="36"><polygon points="12,2 15,9 22,9 16,14 19,22 12,17 5,22 8,14 2,9 9,9"/></svg></span>'; })
+    .join('') +
+    '</div><div class="rating-text-premium">' + t('order_rating') + '</div><div id="progressContainer"><div class="progress-bar-bg"><div class="progress-bar-fill" id="progressBar"></div></div><div class="progress-text" id="progressText"></div></div><div class="modal-buttons"><button class="btn-submit" onclick="submitOrder()">' + t('order_submit') + '</button><button class="btn-close-modal" onclick="closeOrderModal()">' + t('close') + '</button></div>';
 
             modal.classList.add('active');
 
@@ -1653,5 +1672,13 @@
         console.log('   ✅ 并行执行多个数据库查询');
         console.log('   ✅ 所有原有功能完整保留（卡牌奖励、卡牌订单、高级订单）');
     </script>
+<script src="i18n.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        if (window.i18n) {
+            window.i18n.applyTranslations();
+        }
+    });
+</script>
 </body>
 </html>

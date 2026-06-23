@@ -488,7 +488,15 @@
                 <div class="settings-section">
                     <h3><span class="left"><i class="fas fa-shield-alt"></i> SECURITY OPTIONS</span></h3>
 
-                    <div class="setting-item"><div><div class="setting-title">Language</div><div class="setting-desc">Change app language</div></div><button class="setting-action" onclick="changeLanguage()">English ▼</button></div>
+                    <div class="setting-item">
+    <div>
+        <div class="setting-title" data-i18n="settings_language">Language</div>
+        <div class="setting-desc" data-i18n="settings_language_desc">Change app language</div>
+    </div>
+    <button class="setting-action" onclick="showLanguageSelector()" style="min-width:130px;">
+        <span class="lang-btn-text">🌐 English</span>
+    </button>
+</div>
                     <div class="setting-item"><div><div class="setting-title">Logout</div><div class="setting-desc">Sign out from this device</div></div><button class="setting-action logout-btn" onclick="logout()">Logout</button></div>
                 </div>
             </div>
@@ -959,6 +967,39 @@
     updateShield(creditScore);
 }
 
+// ====== 语言选择器 ======
+function showLanguageSelector() {
+    const options = [
+        { code: 'en', name: 'English' },
+        { code: 'de', name: 'Deutsch' },
+        { code: 'it', name: 'Italiano' }
+    ];
+    
+    const current = window.i18n?.getLanguage?.() || 'en';
+    let msg = 'Select your language:\n\n';
+    options.forEach((lang, i) => {
+        msg += `${i+1}. ${lang.name}\n`;
+    });
+    msg += '\nEnter number (1-3):';
+    
+    const choice = prompt(msg, options.findIndex(l => l.code === current) + 1);
+    if (!choice) return;
+    
+    const idx = parseInt(choice) - 1;
+    if (idx >= 0 && idx < options.length) {
+        window.i18n?.setLanguage?.(options[idx].code);
+        setTimeout(() => location.reload(), 300);
+    }
+}
+
+// 页面加载时更新语言按钮文字
+document.addEventListener('DOMContentLoaded', function() {
+    const lang = window.i18n?.getLanguage?.() || 'en';
+    const names = { en: 'English', de: 'Deutsch', it: 'Italiano' };
+    const btn = document.querySelector('.lang-btn-text');
+    if (btn) btn.textContent = '🌐 ' + (names[lang] || 'English');
+});
+
             // ====== 新增：检测URL参数自动打开弹窗 ======
             const urlParams = new URLSearchParams(window.location.search);
             if (urlParams.get('openModal') === 'true') {
@@ -1056,7 +1097,6 @@
         }
 
         function contactSupport() { window.location.href = 'chat.html'; }
-        function changeLanguage() { showToast('English only at this time.', 'info'); }
 
         let resizeTimer;
         window.addEventListener('resize', () => {
@@ -1074,5 +1114,13 @@
         loadSettings();
         console.log('✅ Settings 页面加载完成 — 粒子凝聚环已集成，支持URL参数自动打开弹窗');
     </script>
+<script src="i18n.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        if (window.i18n) {
+            window.i18n.applyTranslations();
+        }
+    });
+</script>
 </body>
 </html>

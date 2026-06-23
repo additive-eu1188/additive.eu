@@ -276,25 +276,25 @@
     
 </div>
                 <nav class="nav">
-                    <a href="dashboard.html" class="nav-item"><i class="fas fa-th-large"></i><span>Dashboard</span></a>
-                    <a href="start.html" class="nav-item"><i class="fas fa-play"></i><span>Start</span></a>
-                    <a href="history.html" class="nav-item"><i class="fas fa-clock"></i><span>History</span></a>
-                    <a href="checkin.html" class="nav-item"><i class="fas fa-calendar-check"></i><span>Sign in</span></a>
-                    <a href="event.html" class="nav-item active"><i class="fas fa-calendar-alt"></i><span>Event</span></a>
-                    <a href="withdrawal.html" class="nav-item"><i class="fas fa-arrow-right-to-bracket"></i><span>Withdrawal</span></a>
-<a href="employment.html" class="nav-item"><i class="fas fa-file-contract"></i><span>Employment Contract</span></a>
-                    <a href="company.html" class="nav-item"><i class="fas fa-building"></i><span>Company Profile</span></a>
-                    <a href="chat.html" class="nav-item"><i class="fas fa-comment-dots"></i><span>Chat with us</span></a>
-                    <a href="settings.html" class="nav-item"><i class="fas fa-sliders-h"></i><span>Settings</span></a>
-                    <a href="membership.html" class="nav-item"><i class="fas fa-crown"></i><span>Membership</span></a>
-                </nav>
+    <a href="dashboard.html" class="nav-item"><i class="fas fa-th-large"></i><span data-i18n="nav_dashboard">Dashboard</span></a>
+    <a href="start.html" class="nav-item"><i class="fas fa-play"></i><span data-i18n="nav_start">Start</span></a>
+    <a href="history.html" class="nav-item"><i class="fas fa-clock"></i><span data-i18n="nav_history">History</span></a>
+    <a href="checkin.html" class="nav-item"><i class="fas fa-calendar-check"></i><span data-i18n="nav_checkin">Sign in</span></a>
+    <a href="event.html" class="nav-item active"><i class="fas fa-calendar-alt"></i><span data-i18n="nav_event">Event</span></a>
+    <a href="withdrawal.html" class="nav-item"><i class="fas fa-arrow-right-to-bracket"></i><span data-i18n="nav_withdrawal">Withdrawal</span></a>
+    <a href="employment.html" class="nav-item"><i class="fas fa-file-contract"></i><span data-i18n="nav_employment">Employment Contract</span></a>
+    <a href="company.html" class="nav-item"><i class="fas fa-building"></i><span data-i18n="nav_company">Company Profile</span></a>
+    <a href="chat.html" class="nav-item"><i class="fas fa-comment-dots"></i><span data-i18n="nav_chat">Chat with us</span></a>
+    <a href="settings.html" class="nav-item"><i class="fas fa-sliders-h"></i><span data-i18n="nav_settings">Settings</span></a>
+    <a href="membership.html" class="nav-item"><i class="fas fa-crown"></i><span data-i18n="nav_membership">Membership</span></a>
+</nav>
             </div>
             <div class="sidebar-upgrade-card">
-                <div class="sidebar-premium-badge">PREMIUM ACCESS</div>
-                <div class="sidebar-upgrade-title">Upgrade your membership</div>
-                <div class="sidebar-upgrade-desc">Unlock higher rewards,<br>priority support, and premium<br>hotel discovery benefits</div>
-                <a href="membership.html" class="sidebar-upgrade-btn">Upgrade Now <i class="fas fa-arrow-right"></i></a>
-            </div>
+    <div class="sidebar-premium-badge" data-i18n="sidebar_premium">PREMIUM ACCESS</div>
+    <div class="sidebar-upgrade-title" data-i18n="sidebar_upgrade">Upgrade your membership</div>
+    <div class="sidebar-upgrade-desc" data-i18n="sidebar_upgrade_desc">Unlock higher rewards,<br>priority support, and premium<br>hotel discovery benefits</div>
+    <a href="membership.html" class="sidebar-upgrade-btn" data-i18n="sidebar_upgrade_btn">Upgrade Now <i class="fas fa-arrow-right"></i></a>
+</div>
         </aside>
 
         <main class="main">
@@ -307,19 +307,19 @@
     </div>
 </div>
             <div class="events-header">
-                <h1>EVENTS</h1>
-                <p>Discover our latest promotions, campaigns, and special offers.</p>
+                <h1 data-i18n="event_title">EVENTS</h1>
+<p data-i18n="event_subtitle">Discover our latest promotions, campaigns, and special offers.</p>
             </div>
 
             <div id="eventsGrid" class="events-grid">
-                <div class="empty-events"><i class="fas fa-calendar-alt"></i><p>Loading events...</p></div>
+                <div class="empty-events"><i class="fas fa-calendar-alt"></i><p data-i18n="event_loading">Loading events...</p></div>
             </div>
 
             <div class="upgrade-card-pulse">
-                <div class="upgrade-title">✨ Upgrade your membership</div>
-                <div class="upgrade-desc">Unlock higher rewards, priority support, and premium hotel discovery benefits.</div>
-                <a href="membership.html" class="btn-upgrade">Upgrade Now <i class="fas fa-arrow-right"></i></a>
-            </div>
+    <div class="upgrade-title" data-i18n="upgrade_title">✨ Upgrade your membership</div>
+    <div class="upgrade-desc" data-i18n="upgrade_desc">Unlock higher rewards, priority support, and premium hotel discovery benefits.</div>
+    <a href="membership.html" class="btn-upgrade" data-i18n="upgrade_btn">Upgrade Now <i class="fas fa-arrow-right"></i></a>
+</div>
         </main>
     </div>
 
@@ -359,52 +359,53 @@
         }
 
         async function loadEvents() {
-            const container = document.getElementById('eventsGrid');
-            
-            try {
-                const { data: events, error } = await sb
-                    .from('events')
-                    .select('*')
-                    .eq('status', 'active')
-                    .order('sort_order', { ascending: true })
-                    .order('created_at', { ascending: false });
-                
-                if (error) throw error;
-                
-                if (!events || events.length === 0) {
-                    container.innerHTML = '<div class="empty-events"><i class="fas fa-calendar-alt"></i><p>No events available at the moment.</p><span>Check back later for exciting promotions!</span></div>';
-                    return;
-                }
-                
-                container.innerHTML = '';
-                
-                events.forEach(event => {
-                    const card = document.createElement('div');
-                    card.className = 'event-card';
-                    card.onclick = () => showEventDetail(event);
-                    
-                    const imageUrl = event.image_url || 'https://placehold.co/1080x1920/1a1f3a/C9B095?text=Event';
-                    const eventDate = event.event_date ? new Date(event.event_date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) : 'Date TBA';
-                    
-                    card.innerHTML = `
-                        <div class="event-image-wrapper">
-                            <img src="${imageUrl}" class="event-image" alt="${escapeHtml(event.title)}" onerror="this.src='https://placehold.co/1080x1920/1a1f3a/C9B095?text=Event'">
-                        </div>
-                        <div class="event-content">
-                            <div class="event-title">${escapeHtml(event.title)}</div>
-                            <div class="event-date"><i class="fas fa-calendar-day"></i> ${eventDate}</div>
-                            <div class="event-description">${escapeHtml(event.short_description || event.description || '').substring(0, 100)}${(event.description || '').length > 100 ? '...' : ''}</div>
-                            <span class="event-badge"><i class="fas fa-tag"></i> ${event.badge || 'Promotion'}</span>
-                        </div>
-                    `;
-                    container.appendChild(card);
-                });
-                
-            } catch(e) {
-                console.error('加载活动失败:', e);
-                container.innerHTML = '<div class="empty-events"><i class="fas fa-exclamation-circle"></i><p>Failed to load events.</p><span>Please try again later.</span></div>';
-            }
+    const t = window.i18n?.t || function(key) { return key; };
+    const container = document.getElementById('eventsGrid');
+    
+    try {
+        const { data: events, error } = await sb
+            .from('events')
+            .select('*')
+            .eq('status', 'active')
+            .order('sort_order', { ascending: true })
+            .order('created_at', { ascending: false });
+        
+        if (error) throw error;
+        
+        if (!events || events.length === 0) {
+            container.innerHTML = '<div class="empty-events"><i class="fas fa-calendar-alt"></i><p>' + t('event_no_events') + '</p><span>' + t('event_check_back') + '</span></div>';
+            return;
         }
+        
+        container.innerHTML = '';
+        
+        events.forEach(event => {
+            const card = document.createElement('div');
+            card.className = 'event-card';
+            card.onclick = () => showEventDetail(event);
+            
+            const imageUrl = event.image_url || 'https://placehold.co/1080x1920/1a1f3a/C9B095?text=Event';
+            const eventDate = event.event_date ? new Date(event.event_date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) : 'Date TBA';
+            
+            card.innerHTML = `
+                <div class="event-image-wrapper">
+                    <img src="${imageUrl}" class="event-image" alt="${escapeHtml(event.title)}" onerror="this.src='https://placehold.co/1080x1920/1a1f3a/C9B095?text=Event'">
+                </div>
+                <div class="event-content">
+                    <div class="event-title">${escapeHtml(event.title)}</div>
+                    <div class="event-date"><i class="fas fa-calendar-day"></i> ${eventDate}</div>
+                    <div class="event-description">${escapeHtml(event.short_description || event.description || '').substring(0, 100)}${(event.description || '').length > 100 ? '...' : ''}</div>
+                    <span class="event-badge"><i class="fas fa-tag"></i> ${event.badge || 'Promotion'}</span>
+                </div>
+            `;
+            container.appendChild(card);
+        });
+        
+    } catch(e) {
+        console.error('加载活动失败:', e);
+        container.innerHTML = '<div class="empty-events"><i class="fas fa-exclamation-circle"></i><p>' + t('event_failed') + '</p><span>' + t('event_try_again') + '</span></div>';
+    }
+}
         
         function showEventDetail(event) {
             const modal = document.getElementById('eventModal');
@@ -447,5 +448,13 @@
         // 加载活动
         loadEvents();
     </script>
+<script src="i18n.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        if (window.i18n) {
+            window.i18n.applyTranslations();
+        }
+    });
+</script>
 </body>
 </html>

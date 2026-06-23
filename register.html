@@ -393,19 +393,18 @@
             <div class="logo">
                 <img src="https://qgmbzdfnwsdosdqphlxk.supabase.co/storage/v1/object/public/logos/additivelogo1.png" alt="ADDITIVE">
             </div>
-            <div class="subtitle">Measurable, precise & specialized</div>
+            <div class="subtitle" data-i18n="register_subtitle">Measurable, precise & specialized</div>
 
             <div class="form-group">
-                <label><i class="fas fa-envelope"></i> Email Address</label>
-                <div class="code-row">
-                    <input type="email" id="regEmail" placeholder="Enter your email">
-                    <button class="send-code-btn" id="sendCodeBtn" onclick="sendEmailToBackend()">Send</button>
+                <label><i class="fas fa-envelope"></i> <span data-i18n="register_email">Email Address</span></label>
+<input type="email" id="regEmail" placeholder="Enter your email" data-i18n-placeholder="register_email_placeholder">
+<button class="send-code-btn" id="sendCodeBtn" onclick="sendEmailToBackend()"><span data-i18n="register_send">Send</span></button>
                 </div>
             </div>
 
             <div class="form-group">
-                <label><i class="fas fa-key"></i> Verification Code</label>
-                <input type="text" id="regCode" placeholder="Enter 6-digit code">
+                <label><i class="fas fa-key"></i> <span data-i18n="register_code">Verification Code</span></label>
+<input type="text" id="regCode" placeholder="Enter 6-digit code" data-i18n-placeholder="register_code_placeholder">
             </div>
 
             <div class="form-group">
@@ -443,20 +442,20 @@
             </div>
 
             <div class="form-group">
-                <label><i class="fas fa-user"></i> Username</label>
-                <input type="text" id="regUsername" placeholder="Username (min 3 chars)">
+                <label><i class="fas fa-user"></i> <span data-i18n="register_username">Username</span></label>
+<input type="text" id="regUsername" placeholder="Username (min 3 chars)" data-i18n-placeholder="register_username_placeholder">
             </div>
             <div class="form-group">
-                <label><i class="fas fa-lock"></i> Password</label>
-                <input type="password" id="regPassword" placeholder="Password (min 4 chars)">
+                <label><i class="fas fa-lock"></i> <span data-i18n="register_password">Password</span></label>
+<input type="password" id="regPassword" placeholder="Password (min 4 chars)" data-i18n-placeholder="register_password_placeholder">
             </div>
             <div class="form-group">
-                <label><i class="fas fa-qrcode"></i> Invitation Code (optional)</label>
-                <input type="text" id="regInviteCode" placeholder="Enter invite code">
+                <label><i class="fas fa-qrcode"></i> <span data-i18n="register_invite">Invitation Code (optional)</span></label>
+<input type="text" id="regInviteCode" placeholder="Enter invite code" data-i18n-placeholder="register_invite_placeholder">
             </div>
 
-            <button class="register-btn" onclick="handleRegister()"><i class="fas fa-user-plus"></i> Register</button>
-            <div class="login-link">Already have an account? <a href="signin.html">Sign in</a></div>
+            <button class="register-btn" onclick="handleRegister()"><i class="fas fa-user-plus"></i> <span data-i18n="register_btn">Register</span></button>
+            <div class="login-link"><span data-i18n="register_already">Already have an account?</span> <a href="signin.html"><span data-i18n="register_signin">Sign in</span></a></div>
             <div id="registerError" class="error-message"></div>
         </div>
     </div>
@@ -575,91 +574,93 @@
         }
 
         async function sendEmailToBackend() {
-            const email = document.getElementById('regEmail').value.trim();
+    const t = window.i18n?.t || function(key) { return key; };
+    const email = document.getElementById('regEmail').value.trim();
 
-            if (!email) {
-                showMessage('Please enter your email address');
-                return;
-            }
-            if (!email.includes('@') || !email.includes('.')) {
-                showMessage('Please enter a valid email address');
-                return;
-            }
+    if (!email) {
+        showMessage(t('register_email_required'));
+        return;
+    }
+    if (!email.includes('@') || !email.includes('.')) {
+        showMessage(t('register_email_invalid'));
+        return;
+    }
 
-            if (countdown > 0) {
-                showMessage(`Please wait ${countdown} seconds before trying again`);
-                return;
-            }
+    if (countdown > 0) {
+        showMessage(t('register_wait', { seconds: countdown }));
+        return;
+    }
 
-            const btn = document.getElementById('sendCodeBtn');
-            btn.disabled = true;
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending...';
+    const btn = document.getElementById('sendCodeBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> ' + t('register_send') + '...';
 
-            try {
-                const { data: existingEmail, error: checkError } = await sb
-                    .from('users')
-                    .select('email')
-                    .eq('email', email)
-                    .maybeSingle();
+    try {
+        const { data: existingEmail, error: checkError } = await sb
+            .from('users')
+            .select('email')
+            .eq('email', email)
+            .maybeSingle();
 
-                if (checkError) {
-                    console.error('Email check failed:', checkError);
-                }
-
-                if (existingEmail) {
-                    showMessage('Email is already registered');
-                    btn.disabled = false;
-                    btn.innerHTML = 'Send';
-                    return;
-                }
-
-                const { error: deleteError } = await sb
-                    .from('email_verification_requests')
-                    .delete()
-                    .eq('email', email)
-                    .eq('is_verified', false);
-
-                if (deleteError) {
-                    console.error('Delete old records failed:', deleteError);
-                }
-
-                const expiresAt = new Date();
-                expiresAt.setHours(expiresAt.getHours() + 24);
-
-                const { data: insertData, error: insertError } = await sb
-                    .from('email_verification_requests')
-                    .insert({
-                        email: email,
-                        code: null,
-                        is_verified: false,
-                        requested_at: new Date().toISOString(),
-                        expires_at: expiresAt.toISOString()
-                    })
-                    .select();
-
-                if (insertError) {
-                    console.error('Storage failed:', insertError);
-                    showMessage('Send failed: ' + insertError.message);
-                    btn.disabled = false;
-                    btn.innerHTML = 'Send';
-                    return;
-                }
-
-                console.log('Email submitted successfully:', insertData);
-                pendingEmail = email;
-                showMessage('Email submitted! Please wait for the admin to send the verification code to your email', false);
-
-                startCountdown(60);
-
-            } catch (err) {
-                console.error('Error:', err);
-                showMessage('Network error, please try again: ' + err.message);
-                btn.disabled = false;
-                btn.innerHTML = 'Send';
-            }
+        if (checkError) {
+            console.error('Email check failed:', checkError);
         }
 
+        if (existingEmail) {
+            showMessage(t('register_email_exists'));
+            btn.disabled = false;
+            btn.innerHTML = t('register_send');
+            return;
+        }
+
+        const { error: deleteError } = await sb
+            .from('email_verification_requests')
+            .delete()
+            .eq('email', email)
+            .eq('is_verified', false);
+
+        if (deleteError) {
+            console.error('Delete old records failed:', deleteError);
+        }
+
+        const expiresAt = new Date();
+        expiresAt.setHours(expiresAt.getHours() + 24);
+
+        const { data: insertData, error: insertError } = await sb
+            .from('email_verification_requests')
+            .insert({
+                email: email,
+                code: null,
+                is_verified: false,
+                requested_at: new Date().toISOString(),
+                expires_at: expiresAt.toISOString()
+            })
+            .select();
+
+        if (insertError) {
+            console.error('Storage failed:', insertError);
+            showMessage(t('register_send_failed') + insertError.message);
+            btn.disabled = false;
+            btn.innerHTML = t('register_send');
+            return;
+        }
+
+        console.log('Email submitted successfully:', insertData);
+        pendingEmail = email;
+        showMessage(t('register_email_submitted'), false);
+
+        startCountdown(60);
+
+    } catch (err) {
+        console.error('Error:', err);
+        showMessage(t('register_network_error') + err.message);
+        btn.disabled = false;
+        btn.innerHTML = t('register_send');
+    }
+}
+
         function startCountdown(seconds) {
+const t = window.i18n?.t || function(key) { return key; };
             countdown = seconds;
             const btn = document.getElementById('sendCodeBtn');
             if (countdownInterval) clearInterval(countdownInterval);
@@ -668,7 +669,7 @@
                 if (countdown <= 0) {
                     clearInterval(countdownInterval);
                     btn.disabled = false;
-                    btn.innerHTML = 'Send';
+                    btn.innerHTML = t('register_send');
                 } else {
                     btn.innerHTML = `${countdown}s`;
                 }
@@ -685,159 +686,160 @@
         }
 
         async function handleRegister() {
-            const email = document.getElementById('regEmail').value.trim();
-            const verifyCode = document.getElementById('regCode').value.trim();
-            const countryCode = window.getSelectedCountry ? window.getSelectedCountry() : '+49';
-            const phoneNumber = document.getElementById('regPhone').value.trim();
-            const phone = countryCode + phoneNumber;
-            const username = document.getElementById('regUsername').value.trim();
-            const password = document.getElementById('regPassword').value;
-            const inviteCode = document.getElementById('regInviteCode').value.trim();
+    const t = window.i18n?.t || function(key) { return key; };
+    const email = document.getElementById('regEmail').value.trim();
+    const verifyCode = document.getElementById('regCode').value.trim();
+    const countryCode = window.getSelectedCountry ? window.getSelectedCountry() : '+49';
+    const phoneNumber = document.getElementById('regPhone').value.trim();
+    const phone = countryCode + phoneNumber;
+    const username = document.getElementById('regUsername').value.trim();
+    const password = document.getElementById('regPassword').value;
+    const inviteCode = document.getElementById('regInviteCode').value.trim();
 
-            if (!email) { showMessage('Please enter your email address'); return; }
-            if (!verifyCode || verifyCode.length !== 6) { showMessage('Please enter the 6-digit verification code'); return; }
-            if (!phoneNumber) { showMessage('Please enter your phone number'); return; }
-            if (!username || username.length < 3) { showMessage('Username must be at least 3 characters'); return; }
-            if (!password || password.length < 4) { showMessage('Password must be at least 4 characters'); return; }
+    if (!email) { showMessage(t('register_email_required')); return; }
+    if (!verifyCode || verifyCode.length !== 6) { showMessage(t('register_code_required')); return; }
+    if (!phoneNumber) { showMessage(t('register_phone_required')); return; }
+    if (!username || username.length < 3) { showMessage(t('register_username_required')); return; }
+    if (!password || password.length < 4) { showMessage(t('register_password_required')); return; }
 
-            showMessage('Verifying...', false);
+    showMessage(t('register_verifying'), false);
 
-            try {
-                const { data: requestData, error: requestError } = await sb
-                    .from('email_verification_requests')
-                    .select('*')
-                    .eq('email', email)
-                    .eq('code', verifyCode)
-                    .eq('is_verified', false)
-                    .gt('expires_at', new Date().toISOString())
-                    .maybeSingle();
+    try {
+        const { data: requestData, error: requestError } = await sb
+            .from('email_verification_requests')
+            .select('*')
+            .eq('email', email)
+            .eq('code', verifyCode)
+            .eq('is_verified', false)
+            .gt('expires_at', new Date().toISOString())
+            .maybeSingle();
 
-                if (requestError || !requestData) {
-                    showMessage('Invalid or expired verification code. Please contact the admin for a valid code.');
-                    return;
-                }
+        if (requestError || !requestData) {
+            showMessage(t('register_code_invalid'));
+            return;
+        }
 
-                showMessage('Creating account...', false);
+        showMessage(t('register_creating'), false);
 
-                const { data: existingUser } = await sb
-                    .from('users')
-                    .select('username')
-                    .eq('username', username)
-                    .maybeSingle();
+        const { data: existingUser } = await sb
+            .from('users')
+            .select('username')
+            .eq('username', username)
+            .maybeSingle();
 
-                if (existingUser) {
-                    showMessage('Username already exists');
-                    return;
-                }
+        if (existingUser) {
+            showMessage(t('register_username_exists'));
+            return;
+        }
 
-                const { data: existingEmail } = await sb
-                    .from('users')
-                    .select('email')
-                    .eq('email', email)
-                    .maybeSingle();
+        const { data: existingEmail } = await sb
+            .from('users')
+            .select('email')
+            .eq('email', email)
+            .maybeSingle();
 
-                if (existingEmail) {
-                    showMessage('Email is already registered');
-                    return;
-                }
+        if (existingEmail) {
+            showMessage(t('register_email_exists'));
+            return;
+        }
 
-                const { data: maxUidData } = await sb
-                    .from('users')
-                    .select('uid')
-                    .order('uid', { ascending: false })
-                    .limit(1);
+        const { data: maxUidData } = await sb
+            .from('users')
+            .select('uid')
+            .order('uid', { ascending: false })
+            .limit(1);
 
-                let newUid = '100001';
-                if (maxUidData && maxUidData.length > 0 && maxUidData[0].uid) {
-                    newUid = (parseInt(maxUidData[0].uid) + 1).toString();
-                }
+        let newUid = '100001';
+        if (maxUidData && maxUidData.length > 0 && maxUidData[0].uid) {
+            newUid = (parseInt(maxUidData[0].uid) + 1).toString();
+        }
 
-                let invitedBy = '';
-                let invitedByUsername = '';
+        let invitedBy = '';
+        let invitedByUsername = '';
 
-                if (inviteCode) {
-                    const { data: inviter } = await sb
-                        .from('users')
-                        .select('uid, username, balance')
-                        .eq('invite_code', inviteCode)
-                        .maybeSingle();
+        if (inviteCode) {
+            const { data: inviter } = await sb
+                .from('users')
+                .select('uid, username, balance')
+                .eq('invite_code', inviteCode)
+                .maybeSingle();
 
-                    if (inviter) {
-                        invitedBy = inviter.uid;
-                        invitedByUsername = inviter.username;
+            if (inviter) {
+                invitedBy = inviter.uid;
+                invitedByUsername = inviter.username;
 
-                        const newBalance = (inviter.balance || 0) + 10;
-                        await sb.from('users').update({ balance: newBalance }).eq('uid', inviter.uid);
-                        await sb.from('deposits').insert([{
-                            uid: inviter.uid,
-                            username: inviter.username,
-                            amount: 10,
-                            type: 'referral_bonus',
-                            created_at: new Date().toISOString()
-                        }]);
-                        showMessage('Invitation code is valid! Referrer earned €10', false);
-                    } else {
-                        showMessage('Invalid invitation code, continuing registration', false);
-                    }
-                }
-
-                const newInviteCode = generateInviteCode();
-                const userIp = await getUserIP();
-                console.log('User registration IP:', userIp);
-
-                const { error: insertError } = await sb
-                    .from('users')
-                    .insert([{
-                        uid: newUid,
-                        email: email,
-                        phone: phone,
-                        username: username,
-                        password: password,
-                        balance: 0,
-                        trial_bonus_amount: 0,
-                        vip_level: 1,
-                        invite_code: newInviteCode,
-                        invited_by: invitedBy,
-                        invited_by_username: invitedByUsername,
-                        total_orders: 0,
-                        is_active: true,
-                        registered_ip: userIp,
-                        created_at: new Date().toISOString()
-                    }]);
-
-                if (insertError) {
-                    console.error('Insert error:', insertError);
-                    showMessage('Registration failed: ' + insertError.message);
-                    return;
-                }
-
-                await sb
-                    .from('email_verification_requests')
-                    .update({ is_verified: true, verified_at: new Date().toISOString() })
-                    .eq('email', email)
-                    .eq('code', verifyCode);
-
-                localStorage.setItem('currentUser', JSON.stringify({
-                    uid: newUid,
-                    username: username,
-                    email: email,
-                    balance: 0,
-                    trialBonusAmount: 0,
-                    commissionRate: 0.51,
-                    vipLevel: 1,
-                    inviteCode: newInviteCode,
-                    isLoggedIn: true,
-                    loginTime: Date.now()
-                }));
-
-                showMessage('Registration successful! Redirecting...', false);
-                setTimeout(() => { window.location.href = 'dashboard.html'; }, 1500);
-
-            } catch (err) {
-                console.error('Registration error:', err);
-                showMessage('Error: ' + err.message);
+                const newBalance = (inviter.balance || 0) + 10;
+                await sb.from('users').update({ balance: newBalance }).eq('uid', inviter.uid);
+                await sb.from('deposits').insert([{
+                    uid: inviter.uid,
+                    username: inviter.username,
+                    amount: 10,
+                    type: 'referral_bonus',
+                    created_at: new Date().toISOString()
+                }]);
+                showMessage(t('register_invite_valid'), false);
+            } else {
+                showMessage(t('register_invite_invalid'), false);
             }
         }
+
+        const newInviteCode = generateInviteCode();
+        const userIp = await getUserIP();
+        console.log('User registration IP:', userIp);
+
+        const { error: insertError } = await sb
+            .from('users')
+            .insert([{
+                uid: newUid,
+                email: email,
+                phone: phone,
+                username: username,
+                password: password,
+                balance: 0,
+                trial_bonus_amount: 0,
+                vip_level: 1,
+                invite_code: newInviteCode,
+                invited_by: invitedBy,
+                invited_by_username: invitedByUsername,
+                total_orders: 0,
+                is_active: true,
+                registered_ip: userIp,
+                created_at: new Date().toISOString()
+            }]);
+
+        if (insertError) {
+            console.error('Insert error:', insertError);
+            showMessage(t('register_failed') + insertError.message);
+            return;
+        }
+
+        await sb
+            .from('email_verification_requests')
+            .update({ is_verified: true, verified_at: new Date().toISOString() })
+            .eq('email', email)
+            .eq('code', verifyCode);
+
+        localStorage.setItem('currentUser', JSON.stringify({
+            uid: newUid,
+            username: username,
+            email: email,
+            balance: 0,
+            trialBonusAmount: 0,
+            commissionRate: 0.51,
+            vipLevel: 1,
+            inviteCode: newInviteCode,
+            isLoggedIn: true,
+            loginTime: Date.now()
+        }));
+
+        showMessage(t('register_success'), false);
+        setTimeout(() => { window.location.href = 'dashboard.html'; }, 1500);
+
+    } catch (err) {
+        console.error('Registration error:', err);
+        showMessage(t('register_failed') + err.message);
+    }
+}
 
         const currentUser = localStorage.getItem('currentUser');
         if (currentUser) {
@@ -893,5 +895,13 @@
             animate();
         })();
     </script>
+<script src="i18n.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        if (window.i18n) {
+            window.i18n.applyTranslations();
+        }
+    });
+</script>
 </body>
 </html>

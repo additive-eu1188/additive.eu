@@ -158,26 +158,24 @@
             <div class="logo">
                 <img src="https://qgmbzdfnwsdosdqphlxk.supabase.co/storage/v1/object/public/logos/additivelogo1.png" alt="ADDITIVE">
             </div>
-            <div class="subtitle">Measurable, precise & specialized</div>
+            <div class="subtitle" data-i18n="signin_subtitle">Measurable, precise & specialized</div>
 
             <div class="form-group">
-                <label><i class="fas fa-user" style="margin-right: 6px;"></i> Username</label>
-                <input type="text" id="loginUsername" placeholder="Enter your username">
-            </div>
-            <div class="form-group">
-                <label><i class="fas fa-lock" style="margin-right: 6px;"></i> Password</label>
-                <input type="password" id="loginPassword" placeholder="Enter your password">
+                <label><i class="fas fa-user" style="margin-right: 6px;"></i> <span data-i18n="signin_username">Username</span></label>
+<input type="text" id="loginUsername" placeholder="Enter your username" data-i18n-placeholder="signin_username_placeholder">
+<label><i class="fas fa-lock" style="margin-right: 6px;"></i> <span data-i18n="signin_password">Password</span></label>
+<input type="password" id="loginPassword" placeholder="Enter your password" data-i18n-placeholder="signin_password_placeholder">
             </div>
 
             <button class="login-btn" onclick="handleSignIn()">
-                <i class="fas fa-sign-in-alt"></i> Sign In
-            </button>
+    <i class="fas fa-sign-in-alt"></i> <span data-i18n="signin_btn">Sign In</span>
+</button>
 
             <div id="loginError" class="error-message"></div>
 
             <div class="register-link">
-                Don't have an account? <a href="register.html">Register now <i class="fas fa-arrow-right"></i></a>
-            </div>
+    <span data-i18n="signin_no_account">Don't have an account?</span> <a href="register.html"><span data-i18n="signin_register_now">Register now</span> <i class="fas fa-arrow-right"></i></a>
+</div>
         </div>
     </div>
 
@@ -188,55 +186,56 @@
             const _supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
             
             window.handleSignIn = async function() {
-                const username = document.getElementById('loginUsername').value.trim();
-                const password = document.getElementById('loginPassword').value;
-                const errorDiv = document.getElementById('loginError');
-                
-                if (!username || !password) {
-                    errorDiv.innerHTML = '<span style="color: #ff8080;">Please enter username and password</span>';
-                    return;
-                }
-                
-                errorDiv.innerHTML = '<span style="color: #C9B095;">Checking...</span>';
-                
-                try {
-                    const { data: users, error } = await _supabase
-                        .from('users')
-                        .select('*')
-                        .eq('username', username)
-                        .eq('password', password);
-                    
-                    if (error) {
-                        errorDiv.innerHTML = '<span style="color: #ff8080;">Error: ' + error.message + '</span>';
-                        return;
-                    }
-                    
-                    if (!users || users.length === 0) {
-                        errorDiv.innerHTML = '<span style="color: #ff8080;">Invalid username or password</span>';
-                        return;
-                    }
-                    
-                    const user = users[0];
-                    
-                    localStorage.setItem('currentUser', JSON.stringify({
-                        uid: user.uid,
-                        username: user.username,
-                        balance: user.balance || 0,
-                        trialBonusAmount: user.trial_bonus_amount || 0,
-                        commissionRate: user.commission_rate || 5,
-                        vipLevel: user.vip_level || 1,
-                        inviteCode: user.invite_code,
-                        pin: user.pin,
-                        isLoggedIn: true,
-                        loginTime: Date.now()
-                    }));
-                    
-                    errorDiv.innerHTML = '<span style="color: #4ade80;">Login successful! Redirecting...</span>';
-                    setTimeout(() => { window.location.href = 'dashboard.html'; }, 800);
-                } catch(err) {
-                    errorDiv.innerHTML = '<span style="color: #ff8080;">Error: ' + err.message + '</span>';
-                }
-            };
+    const t = window.i18n?.t || function(key) { return key; };
+    const username = document.getElementById('loginUsername').value.trim();
+    const password = document.getElementById('loginPassword').value;
+    const errorDiv = document.getElementById('loginError');
+    
+    if (!username || !password) {
+        errorDiv.innerHTML = '<span style="color: #ff8080;">' + t('signin_required') + '</span>';
+        return;
+    }
+    
+    errorDiv.innerHTML = '<span style="color: #C9B095;">' + t('signin_checking') + '</span>';
+    
+    try {
+        const { data: users, error } = await _supabase
+            .from('users')
+            .select('*')
+            .eq('username', username)
+            .eq('password', password);
+        
+        if (error) {
+            errorDiv.innerHTML = '<span style="color: #ff8080;">' + t('signin_error') + error.message + '</span>';
+            return;
+        }
+        
+        if (!users || users.length === 0) {
+            errorDiv.innerHTML = '<span style="color: #ff8080;">' + t('signin_invalid') + '</span>';
+            return;
+        }
+        
+        const user = users[0];
+        
+        localStorage.setItem('currentUser', JSON.stringify({
+            uid: user.uid,
+            username: user.username,
+            balance: user.balance || 0,
+            trialBonusAmount: user.trial_bonus_amount || 0,
+            commissionRate: user.commission_rate || 5,
+            vipLevel: user.vip_level || 1,
+            inviteCode: user.invite_code,
+            pin: user.pin,
+            isLoggedIn: true,
+            loginTime: Date.now()
+        }));
+        
+        errorDiv.innerHTML = '<span style="color: #4ade80;">' + t('signin_success') + '</span>';
+        setTimeout(() => { window.location.href = 'dashboard.html'; }, 800);
+    } catch(err) {
+        errorDiv.innerHTML = '<span style="color: #ff8080;">' + t('signin_error') + err.message + '</span>';
+    }
+};
         })();
         
         const currentUser = localStorage.getItem('currentUser');
@@ -290,5 +289,13 @@
         animate();
     })();
     </script>
+<script src="i18n.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        if (window.i18n) {
+            window.i18n.applyTranslations();
+        }
+    });
+</script>
 </body>
 </html>

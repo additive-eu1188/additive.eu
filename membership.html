@@ -95,25 +95,25 @@
     
 </div>
                 <nav class="nav">
-                    <a href="dashboard.html" class="nav-item"><i class="fas fa-th-large"></i><span>Dashboard</span></a>
-                    <a href="start.html" class="nav-item"><i class="fas fa-play"></i><span>Start</span></a>
-                    <a href="history.html" class="nav-item"><i class="fas fa-clock"></i><span>History</span></a>
-                    <a href="checkin.html" class="nav-item"><i class="fas fa-calendar-check"></i><span>Sign in</span></a>
-<a href="event.html" class="nav-item"><i class="fas fa-calendar-alt"></i><span>Event</span></a>
-                    <a href="withdrawal.html" class="nav-item"><i class="fas fa-arrow-right-to-bracket"></i><span>Withdrawal</span></a>
-                    <a href="chat.html" class="nav-item"><i class="fas fa-comment-dots"></i><span>Chat with us</span></a>
-                    <a href="employment.html" class="nav-item"><i class="fas fa-file-contract"></i><span>Employment Contract</span></a>
-                    <a href="company.html" class="nav-item"><i class="fas fa-building"></i><span>Company Profile</span></a>
-                    <a href="settings.html" class="nav-item"><i class="fas fa-sliders-h"></i><span>Settings</span></a>
-                    <a href="membership.html" class="nav-item active"><i class="fas fa-crown"></i><span>Membership</span></a>
-                </nav>
+    <a href="dashboard.html" class="nav-item"><i class="fas fa-th-large"></i><span data-i18n="nav_dashboard">Dashboard</span></a>
+    <a href="start.html" class="nav-item"><i class="fas fa-play"></i><span data-i18n="nav_start">Start</span></a>
+    <a href="history.html" class="nav-item"><i class="fas fa-clock"></i><span data-i18n="nav_history">History</span></a>
+    <a href="checkin.html" class="nav-item"><i class="fas fa-calendar-check"></i><span data-i18n="nav_checkin">Sign in</span></a>
+    <a href="event.html" class="nav-item"><i class="fas fa-calendar-alt"></i><span data-i18n="nav_event">Event</span></a>
+    <a href="withdrawal.html" class="nav-item"><i class="fas fa-arrow-right-to-bracket"></i><span data-i18n="nav_withdrawal">Withdrawal</span></a>
+    <a href="chat.html" class="nav-item"><i class="fas fa-comment-dots"></i><span data-i18n="nav_chat">Chat with us</span></a>
+    <a href="employment.html" class="nav-item"><i class="fas fa-file-contract"></i><span data-i18n="nav_employment">Employment Contract</span></a>
+    <a href="company.html" class="nav-item"><i class="fas fa-building"></i><span data-i18n="nav_company">Company Profile</span></a>
+    <a href="settings.html" class="nav-item"><i class="fas fa-sliders-h"></i><span data-i18n="nav_settings">Settings</span></a>
+    <a href="membership.html" class="nav-item active"><i class="fas fa-crown"></i><span data-i18n="nav_membership">Membership</span></a>
+</nav>
             </div>
             <div class="sidebar-upgrade-card">
-                <div class="sidebar-premium-badge">PREMIUM ACCESS</div>
-                <div class="sidebar-upgrade-title">Upgrade your membership</div>
-                <div class="sidebar-upgrade-desc">Unlock higher rewards,<br>priority support, and premium<br>hotel discovery benefits</div>
-                <a href="membership.html" class="sidebar-upgrade-btn">Upgrade Now <i class="fas fa-arrow-right"></i></a>
-            </div>
+    <div class="sidebar-premium-badge" data-i18n="sidebar_premium">PREMIUM ACCESS</div>
+    <div class="sidebar-upgrade-title" data-i18n="sidebar_upgrade">Upgrade your membership</div>
+    <div class="sidebar-upgrade-desc" data-i18n="sidebar_upgrade_desc">Unlock higher rewards,<br>priority support, and premium<br>hotel discovery benefits</div>
+    <a href="membership.html" class="sidebar-upgrade-btn" data-i18n="sidebar_upgrade_btn">Upgrade Now <i class="fas fa-arrow-right"></i></a>
+</div>
         </aside>
 
         <main class="main">
@@ -127,22 +127,18 @@
             </div>
 
             <div class="membership-header">
-                <h1>MEMBERSHIP</h1>
-                <p>Compare membership tiers, review your current benefits, and unlock stronger commission rewards through premium access.</p>
+                <h1 data-i18n="membership_title">MEMBERSHIP</h1>
+<p data-i18n="membership_subtitle">Compare membership tiers, review your current benefits, and unlock stronger commission rewards through premium access.</p>
             </div>
 
             <div class="membership-two-columns">
                 <div class="membership-left">
                     <div class="current-membership-card">
-                        <h3>YOUR MEMBERSHIP</h3>
-                        <div class="current-tier-name" id="currentTierName">Normal</div>
-                        <div class="current-stats">
-                            <div class="stat-row"><span class="stat-label">ORDERS</span><span class="stat-value highlight" id="currentOrders">0 / 0</span></div>
-                            <div class="stat-row"><span class="stat-label">COMMISSION RATE</span><span class="stat-value" id="currentRate">0%</span></div>
-                        </div>
-                        <div class="premium-upgrade">
-                            <p><strong>Upgrade your membership</strong><br>Unlock higher rewards, priority support, and premium hotel discovery benefits.</p>
-                            <button class="btn-contact-support" onclick="contactSupport()"><i class="fas fa-headset"></i> Contact Support</button>
+                        <h3 data-i18n="membership_your_plan">YOUR MEMBERSHIP</h3>
+<div class="stat-row"><span class="stat-label" data-i18n="membership_orders">ORDERS</span><span class="stat-value highlight" id="currentOrders">0 / 0</span></div>
+<div class="stat-row"><span class="stat-label" data-i18n="membership_commission_rate">COMMISSION RATE</span><span class="stat-value" id="currentRate">0%</span></div>
+<p><strong data-i18n="membership_upgrade_plan">Upgrade your membership</strong><br><span data-i18n="membership_upgrade_desc">Unlock higher rewards, priority support, and premium hotel discovery benefits.</span></p>
+<button class="btn-contact-support" onclick="contactSupport()"><i class="fas fa-headset"></i> <span data-i18n="membership_contact_support">Contact Support</span></button>
                         </div>
                     </div>
                 </div>
@@ -152,10 +148,10 @@
             </div>
 
             <div class="upgrade-card-pulse">
-                <div class="upgrade-title">✨ Upgrade your membership</div>
-                <div class="upgrade-desc">Unlock higher rewards, priority support, and premium hotel discovery benefits.</div>
-                <a href="membership.html" class="btn-upgrade">Upgrade Now <i class="fas fa-arrow-right"></i></a>
-            </div>
+    <div class="upgrade-title" data-i18n="upgrade_title">✨ Upgrade your membership</div>
+    <div class="upgrade-desc" data-i18n="upgrade_desc">Unlock higher rewards, priority support, and premium hotel discovery benefits.</div>
+    <a href="membership.html" class="btn-upgrade" data-i18n="upgrade_btn">Upgrade Now <i class="fas fa-arrow-right"></i></a>
+</div>
         </main>
     </div>
 
@@ -206,64 +202,73 @@
         }
         
         async function renderMembership() {
-            const user = checkLogin();
-            if (!user) return;
-            
-            // 同步最新用户数据
-            await syncUserData();
-            const freshUser = getCurrentUser();
-            const userVipLevel = freshUser?.vipLevel || 1;
-            const userOrders = await getUserOrderCount(freshUser.uid);
-            const currentVip = vipSettings.find(v => v.level === userVipLevel) || vipSettings[0];
-            
-            document.getElementById('currentTierName').innerText = currentVip.rank_name || 'Normal';
-            document.getElementById('currentOrders').innerHTML = `${userOrders} / ${currentVip.orders_limit || 30}`;
-            document.getElementById('currentRate').innerHTML = `${(currentVip.commission_rate || 0.51)}%`;
-            
-            const tiersGrid = document.getElementById('tiersGrid');
-            tiersGrid.innerHTML = '';
-            
-            // 定义每个等级的功能特性
-            const featuresMap = {
-                1: ['Standard daily access', 'Standard commission rate', 'Standard order limit'],
-                2: ['Higher commission rate per order', 'Better account benefits', 'Priority support access'],
-                3: ['Maximum commission rate', 'Premium level benefits', 'Exclusive priority services']
-            };
-            
-            vipSettings.forEach(vip => {
-                const isCurrent = vip.level === userVipLevel;
-                const card = document.createElement('div');
-                card.className = 'tier-card';
-                if (isCurrent) card.classList.add('current-tier');
-                
-                const features = featuresMap[vip.level] || [`${vip.commission_rate}% commission`, `${vip.orders_limit} orders limit`];
-                
-                card.innerHTML = `
-                    ${isCurrent ? '<div class="current-badge">CURRENT</div>' : ''}
-                    <div class="tier-name">${vip.rank_name}</div>
-                    <div class="tier-sub">${vip.rank_name} Membership</div>
-                    <div class="deposit-requirement">
-                        <span class="label">COMMISSION RATE</span>
-                        <span class="value">${vip.commission_rate}%</span>
-                    </div>
-                    <div class="tier-description">${vip.rank_name} membership benefits</div>
-                    <ul class="tier-features">
-                        ${features.map(f => `<li><i class="fas fa-check-circle"></i> ${f}</li>`).join('')}
-                    </ul>
-                    <div class="tier-stats">
-                        <div class="tier-stat">
-                            <span class="stat-label">Orders Limit</span>
-                            <span class="stat-value">${vip.orders_limit}</span>
-                        </div>
-                        <div class="tier-stat">
-                            <span class="stat-label">Commission Rate</span>
-                            <span class="stat-value">${vip.commission_rate}%</span>
-                        </div>
-                    </div>
-                `;
-                tiersGrid.appendChild(card);
-            });
-        }
+    const t = window.i18n?.t || function(key) { return key; };
+    const user = checkLogin();
+    if (!user) return;
+    
+    await syncUserData();
+    const freshUser = getCurrentUser();
+    const userVipLevel = freshUser?.vipLevel || 1;
+    const userOrders = await getUserOrderCount(freshUser.uid);
+    const currentVip = vipSettings.find(v => v.level === userVipLevel) || vipSettings[0];
+    
+    document.getElementById('currentTierName').innerText = currentVip.rank_name || 'Normal';
+    document.getElementById('currentOrders').innerHTML = `${userOrders} / ${currentVip.orders_limit || 30}`;
+    document.getElementById('currentRate').innerHTML = `${(currentVip.commission_rate || 0.51)}%`;
+    
+    const tiersGrid = document.getElementById('tiersGrid');
+    tiersGrid.innerHTML = '';
+    
+    const tierNames = {
+        1: t('membership_normal'),
+        2: t('membership_vip'),
+        3: t('membership_svip')
+    };
+    const tierDescs = {
+        1: t('membership_normal_desc'),
+        2: t('membership_vip_desc'),
+        3: t('membership_svip_desc')
+    };
+    const featuresMap = {
+        1: [t('membership_normal_features')],
+        2: [t('membership_vip_features')],
+        3: [t('membership_svip_features')]
+    };
+    
+    vipSettings.forEach(vip => {
+        const isCurrent = vip.level === userVipLevel;
+        const card = document.createElement('div');
+        card.className = 'tier-card';
+        if (isCurrent) card.classList.add('current-tier');
+        
+        const features = featuresMap[vip.level] || [`${vip.commission_rate}% commission`, `${vip.orders_limit} orders limit`];
+        
+        card.innerHTML = `
+            ${isCurrent ? '<div class="current-badge">' + t('membership_current') + '</div>' : ''}
+            <div class="tier-name">${vip.rank_name}</div>
+            <div class="tier-sub">${tierNames[vip.level]} ${t('membership_membership')}</div>
+            <div class="deposit-requirement">
+                <span class="label">${t('membership_commission_rate')}</span>
+                <span class="value">${vip.commission_rate}%</span>
+            </div>
+            <div class="tier-description">${tierDescs[vip.level]}</div>
+            <ul class="tier-features">
+                ${features.map(f => `<li><i class="fas fa-check-circle"></i> ${f}</li>`).join('')}
+            </ul>
+            <div class="tier-stats">
+                <div class="tier-stat">
+                    <span class="stat-label">${t('membership_orders_limit')}</span>
+                    <span class="stat-value">${vip.orders_limit}</span>
+                </div>
+                <div class="tier-stat">
+                    <span class="stat-label">${t('membership_commission_rate')}</span>
+                    <span class="stat-value">${vip.commission_rate}%</span>
+                </div>
+            </div>
+        `;
+        tiersGrid.appendChild(card);
+    });
+}
         
         function contactSupport() { 
             window.location.href = 'chat.html'; 
@@ -275,5 +280,13 @@
             await renderMembership();
         })();
     </script>
+<script src="i18n.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        if (window.i18n) {
+            window.i18n.applyTranslations();
+        }
+    });
+</script>
 </body>
 </html>
