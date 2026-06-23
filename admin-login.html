@@ -87,8 +87,6 @@
             text-align: center;
             margin-top: 6px;
         }
-        .ga-hint a { color: #8ca3ff; text-decoration: none; }
-        .ga-hint a:hover { text-decoration: underline; }
         .divider {
             display: flex;
             align-items: center;
@@ -111,14 +109,13 @@
         }
         .back-link a { color: #8ca3ff; text-decoration: none; }
         .back-link a:hover { text-decoration: underline; }
-        .setup-ga-link {
-            display: block;
+        .ga-locked {
             text-align: center;
             margin-top: 12px;
             font-size: 12px;
+            color: #5a6388;
         }
-        .setup-ga-link a { color: #ffb84d; text-decoration: none; }
-        .setup-ga-link a:hover { text-decoration: underline; }
+        .ga-locked i { color: #4ade80; }
     </style>
 </head>
 <body>
@@ -127,7 +124,7 @@
         
         <div class="form-group">
             <label><i class="fas fa-user"></i> Admin Username</label>
-            <input type="text" id="adminUsername" placeholder="Enter admin username">
+            <input type="text" id="adminUsername" placeholder="Enter admin username" value="admin">
         </div>
         
         <div class="form-group">
@@ -150,40 +147,14 @@
         
         <div id="messageBox" class="error-message"></div>
         
-        <div class="setup-ga-link">
-            <a href="#" onclick="showSetupGuide()"><i class="fas fa-qrcode"></i> First time? Set up Google Authenticator</a>
+        <div class="ga-locked">
+            <i class="fas fa-lock"></i> GA is permanently locked to the admin account
         </div>
         
         <div class="divider">SECURE ACCESS</div>
         
         <div class="back-link">
             <a href="index.html"><i class="fas fa-arrow-left"></i> Back to website</a>
-        </div>
-    </div>
-
-    <!-- GA 设置弹窗 -->
-    <div id="gaSetupModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); backdrop-filter:blur(8px); z-index:10000; align-items:center; justify-content:center;">
-        <div style="background:linear-gradient(145deg,#12172e,#0e1225); border-radius:32px; padding:40px; max-width:500px; width:90%; border:1px solid rgba(140,163,255,0.3); max-height:90vh; overflow-y:auto;">
-            <h3 style="color:#ffb84d; margin-bottom:20px;"><i class="fas fa-qrcode"></i> Google Authenticator Setup</h3>
-            <p style="color:#a0a8c0; font-size:14px; margin-bottom:20px;">Scan the QR code below with Google Authenticator or Authy app:</p>
-            <div style="text-align:center; margin-bottom:20px;">
-                <div id="qrCodeContainer" style="background:#fff; padding:20px; border-radius:16px; display:inline-block;">
-                    <p style="color:#333;">Loading QR Code...</p>
-                </div>
-            </div>
-            <div style="background:rgba(0,0,0,0.3); border-radius:12px; padding:16px; margin-bottom:20px;">
-                <p style="font-size:12px; color:#8a9abb;">Or manually enter this secret key:</p>
-                <code id="manualSecret" style="display:block; background:#0a0f2a; padding:12px; border-radius:8px; font-size:14px; color:#ffb84d; word-break:break-all; font-family:monospace;">Loading...</code>
-            </div>
-            <div class="form-group">
-                <label>Enter 6-digit code from your app to verify:</label>
-                <input type="text" id="verifyGaCode" placeholder="6-digit code" maxlength="6" inputmode="numeric">
-            </div>
-            <div style="display:flex; gap:12px; margin-top:20px;">
-                <button id="verifyGaBtn" class="login-btn" style="flex:1;" onclick="verifyAndSaveGA()">Verify & Save</button>
-                <button id="closeGaModalBtn" style="flex:1; background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.1); border-radius:40px; padding:14px; color:#fff; cursor:pointer;">Close</button>
-            </div>
-            <div id="gaSetupMessage" style="margin-top:16px; text-align:center; font-size:13px; min-height:24px;"></div>
         </div>
     </div>
 
@@ -253,18 +224,6 @@
         }
 
         // ============================================================
-        // 生成 GA Secret Key
-        // ============================================================
-        function generateGASecret() {
-            const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
-            let secret = '';
-            for (let i = 0; i < 16; i++) {
-                secret += chars[Math.floor(Math.random() * chars.length)];
-            }
-            return secret;
-        }
-
-        // ============================================================
         // 登录处理
         // ============================================================
         async function handleLogin() {
@@ -297,6 +256,7 @@
             loginBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Verifying...';
 
             try {
+                // 从数据库获取管理员信息（包括固定的 GA Secret）
                 const { data: admin, error } = await sb
                     .from('admin_users')
                     .select('*')
@@ -312,7 +272,7 @@
                     return;
                 }
 
-                // 验证密码 (生产环境建议使用 bcrypt)
+                // 验证密码
                 if (admin.password_hash !== password) {
                     messageBox.textContent = '❌ Invalid password';
                     messageBox.className = 'error-message';
@@ -321,7 +281,7 @@
                     return;
                 }
 
-                // 验证 Google Authenticator
+                // 🔒 验证 Google Authenticator（使用固定的 GA Secret）
                 const isValidGA = verifyGA(admin.ga_secret, gaCode);
                 if (!isValidGA) {
                     messageBox.textContent = '❌ Invalid Google Authenticator code';
@@ -331,7 +291,7 @@
                     return;
                 }
 
-                // 登录成功
+                // ✅ 登录成功
                 messageBox.textContent = '✅ Login successful! Redirecting...';
                 messageBox.className = 'success-message';
 
@@ -362,108 +322,6 @@
         });
 
         // ============================================================
-        // GA 设置向导
-        // ============================================================
-        let newGASecret = '';
-        let newGAUsername = '';
-
-        async function showSetupGuide() {
-            const modal = document.getElementById('gaSetupModal');
-            modal.style.display = 'flex';
-
-            const username = document.getElementById('adminUsername').value.trim() || 'admin';
-            newGAUsername = username;
-            newGASecret = generateGASecret();
-
-            const issuer = 'ADDITIVE';
-            const accountName = username;
-            const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=otpauth://totp/${encodeURIComponent(issuer)}:${encodeURIComponent(accountName)}?secret=${newGASecret}&issuer=${encodeURIComponent(issuer)}`;
-
-            document.getElementById('qrCodeContainer').innerHTML = `<img src="${qrUrl}" style="width:200px;height:200px;" alt="QR Code">`;
-            document.getElementById('manualSecret').textContent = newGASecret;
-            document.getElementById('gaSetupMessage').textContent = '';
-            document.getElementById('gaSetupMessage').className = '';
-            document.getElementById('verifyGaCode').value = '';
-            document.getElementById('verifyGaCode').focus();
-
-            document.getElementById('closeGaModalBtn').onclick = () => {
-                modal.style.display = 'none';
-            };
-        }
-
-        async function verifyAndSaveGA() {
-            const code = document.getElementById('verifyGaCode').value.trim();
-            const messageEl = document.getElementById('gaSetupMessage');
-
-            if (!code || code.length !== 6 || !/^\d{6}$/.test(code)) {
-                messageEl.textContent = '⚠️ Please enter a valid 6-digit code';
-                messageEl.className = 'error-message';
-                return;
-            }
-
-            if (!verifyGA(newGASecret, code)) {
-                messageEl.textContent = '❌ Invalid code, please try again';
-                messageEl.className = 'error-message';
-                return;
-            }
-
-            messageEl.textContent = '✅ Code verified! Saving to database...';
-            messageEl.className = 'success-message';
-
-            try {
-                const { data: existing } = await sb
-                    .from('admin_users')
-                    .select('id')
-                    .eq('username', newGAUsername)
-                    .single();
-
-                if (existing) {
-                    const { error } = await sb
-                        .from('admin_users')
-                        .update({ 
-                            ga_secret: newGASecret,
-                            updated_at: new Date().toISOString()
-                        })
-                        .eq('username', newGAUsername);
-
-                    if (error) throw error;
-                    messageEl.textContent = '✅ GA Secret updated successfully! You can now login with GA.';
-                    messageEl.className = 'success-message';
-                } else {
-                    const password = prompt('Please set a password for this admin account:');
-                    if (!password || password.length < 4) {
-                        messageEl.textContent = '⚠️ Password must be at least 4 characters';
-                        messageEl.className = 'error-message';
-                        return;
-                    }
-
-                    const { error } = await sb
-                        .from('admin_users')
-                        .insert([{
-                            username: newGAUsername,
-                            password_hash: password,
-                            ga_secret: newGASecret,
-                            is_active: true,
-                            created_at: new Date().toISOString()
-                        }]);
-
-                    if (error) throw error;
-                    messageEl.textContent = '✅ Admin account created with GA! You can now login.';
-                    messageEl.className = 'success-message';
-                }
-
-                setTimeout(() => {
-                    document.getElementById('gaSetupModal').style.display = 'none';
-                }, 2000);
-
-            } catch (err) {
-                console.error('Save GA error:', err);
-                messageEl.textContent = '❌ Failed to save: ' + err.message;
-                messageEl.className = 'error-message';
-            }
-        }
-
-        // ============================================================
         // 检查是否已登录
         // ============================================================
         if (localStorage.getItem('admin_logged_in') === 'true') {
@@ -476,6 +334,7 @@
         }
 
         console.log('🔐 Admin Login with Username + Password + Google Authenticator');
+        console.log('🔒 GA is permanently locked - only one GA secret exists');
     </script>
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
