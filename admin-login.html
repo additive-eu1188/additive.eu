@@ -153,14 +153,11 @@
         const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
         // ============================================================
-        // 🔥 GA 验证 - 支持时间偏移（解决时间不同步问题）
+        // ✅ GA 验证 - 检查前后 2 个周期（共 5 个时间窗口）
         // ============================================================
         function verifyGA(secret, code) {
             try {
-                // 尝试 3 个时间偏移量：-1, 0, +1 个周期
-                const offsets = [0, -1, 1];
-                
-                for (const offset of offsets) {
+                for (let offset = -2; offset <= 2; offset++) {
                     const totp = new OTPAuth.TOTP({
                         secret: secret,
                         algorithm: 'SHA1',
@@ -175,9 +172,10 @@
                         return true;
                     }
                 }
+                console.log('❌ 所有偏移量都不匹配');
                 return false;
             } catch (e) {
-                console.error('❌ GA 验证失败:', e);
+                console.error('GA 验证失败:', e);
                 return false;
             }
         }
@@ -238,6 +236,7 @@
                     return;
                 }
 
+                // ✅ GA 验证（支持时间偏移）
                 const isValidGA = verifyGA(admin.ga_secret, gaCode);
                 if (!isValidGA) {
                     messageBox.textContent = '❌ Invalid Google Authenticator code';
@@ -282,7 +281,7 @@
             }
         }
 
-        console.log('🔐 GA 验证支持时间偏移（-1, 0, +1 周期）');
+        console.log('🔐 GA 验证 - 检查前后 2 个周期（共 5 个时间窗口）');
     </script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 </body>
