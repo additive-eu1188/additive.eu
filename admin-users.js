@@ -598,8 +598,7 @@ balanceCell.innerHTML = `
 const isPremium = u.is_premium || false;
 const currentRound = u.current_round || 0;
 const roundOrdersCount = u.round_orders_count || 0;
-const amountDueRound = u.amount_due_round || 0;
-const amountDueOrdersCount = u.amount_due_orders_count || 0;
+// amountDueRound 和 amountDueOrdersCount 已在上面声明，直接使用
 
 // 判断是否有 amount due
 const hasAmountDue = (amountDueRound > 0 || amountDueOrdersCount > 0);
