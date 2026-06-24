@@ -7,13 +7,16 @@ async function loadWithdrawalsPage() {
     if (!container) return;
     container.innerHTML = `
         <div class="card">
-            <div class="search-bar" style="justify-content: space-between; flex-wrap: wrap; gap: 12px;">
+            <!-- 顶部：左侧标题 + 右侧按钮 -->
+            <div class="withdraw-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 24px;">
+                <h2 style="font-size: 18px; font-weight: 600; color: #d8e0f0; margin: 0;">
+                    <i class="fas fa-arrow-right-to-bracket" style="color: #8892a8; margin-right: 10px;"></i>
+                    Current Withdrawal and recent withdrawals records
+                </h2>
                 <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-                    <button id="tabPending" class="tab-withdraw-btn active" data-tab="pending"><i class="fas fa-clock"></i> 待处理</button>
-                    <button id="tabHistory" class="tab-withdraw-btn" data-tab="history"><i class="fas fa-history"></i> 提现记录</button>
-                </div>
-                <div style="display: flex; gap: 10px; flex-wrap: wrap; align-items: center;">
-                    <button id="refreshWithdrawBtn" class="btn-primary"><i class="fas fa-sync-alt"></i> 刷新</button>
+                    <button id="tabPending" class="tab-withdraw-btn active" data-tab="pending"><i class="fas fa-list-ul"></i> Withdrawals</button>
+                    <button id="tabHistory" class="tab-withdraw-btn" data-tab="history"><i class="fas fa-clock-rotate-left"></i> Withdrawals History</button>
+                    <button id="refreshWithdrawBtn" class="btn-primary"><i class="fas fa-sync-alt"></i> Refresh</button>
                 </div>
             </div>
             
@@ -40,36 +43,36 @@ async function loadWithdrawalsPage() {
                 </div>
                 
                 <!-- 搜索栏 -->
-                <div class="search-bar" style="display: flex; flex-wrap: wrap; gap: 12px; align-items: center; background: rgba(8, 12, 24, 0.5); border-radius: 16px; padding: 14px 18px; margin-bottom: 20px; border: 1px solid rgba(255,255,255,0.03);">
-                    <input type="text" id="pendingSearchInput" class="search-input" placeholder="🔍 搜索 UID / 手机 / 钱包地址" style="flex: 2; min-width: 180px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06); border-radius: 40px; padding: 8px 18px; color: #d0d8ee; font-size: 13px; outline: none;">
-                    <select id="pendingCryptoFilter" style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06); border-radius: 40px; padding: 8px 18px; color: #d0d8ee; font-size: 13px; outline: none; min-width: 140px; cursor: pointer;">
+                <div class="search-bar" style="display: flex; flex-wrap: wrap; gap: 10px; align-items: center; background: rgba(8, 12, 24, 0.5); border-radius: 16px; padding: 12px 16px; margin-bottom: 20px; border: 1px solid rgba(255,255,255,0.03);">
+                    <input type="text" id="pendingSearchInput" class="search-input" placeholder="Search UID / phone / wallet address" style="flex: 0 1 280px; min-width: 180px; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.10); border-radius: 40px; padding: 8px 16px; color: #e6edf5; font-size: 13px; outline: none;">
+                    <select id="pendingCryptoFilter" style="background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.10); border-radius: 40px; padding: 8px 16px 8px 18px; color: #e6edf5; font-size: 13px; outline: none; min-width: 140px; cursor: pointer; appearance: auto; padding-right: 32px;">
                         <option value="">All Crypto</option>
                         <option value="BTC">BTC</option>
                         <option value="ETH">ETH</option>
                         <option value="USDC">USDC</option>
                         <option value="USDT">USDT</option>
                     </select>
-                    <input type="number" id="pendingMinAmount" placeholder="Min Amount" style="width: 120px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06); border-radius: 40px; padding: 8px 18px; color: #d0d8ee; font-size: 13px; outline: none;">
-                    <input type="number" id="pendingMaxAmount" placeholder="Max Amount" style="width: 120px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06); border-radius: 40px; padding: 8px 18px; color: #d0d8ee; font-size: 13px; outline: none;">
-                    <button id="pendingSearchBtn" class="btn-primary" style="padding: 8px 24px; border-radius: 40px; border: none; background: #2a3a5a; color: #e6edf5; font-weight: 600; cursor: pointer; font-size: 13px;"><i class="fas fa-search"></i> 搜索</button>
-                    <button id="pendingClearBtn" class="btn-primary" style="padding: 8px 20px; border-radius: 40px; border: none; background: rgba(255,255,255,0.06); color: #b8c4de; font-weight: 500; cursor: pointer; font-size: 13px;"><i class="fas fa-times"></i> 清除</button>
+                    <input type="number" id="pendingMinAmount" placeholder="Min Amount" style="width: 110px; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.10); border-radius: 40px; padding: 8px 16px; color: #e6edf5; font-size: 13px; outline: none;">
+                    <input type="number" id="pendingMaxAmount" placeholder="Max Amount" style="width: 110px; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.10); border-radius: 40px; padding: 8px 16px; color: #e6edf5; font-size: 13px; outline: none;">
+                    <button id="pendingSearchBtn" class="btn-primary" style="padding: 8px 20px; border-radius: 40px; border: none; background: #2a3a5a; color: #e6edf5; font-weight: 600; cursor: pointer; font-size: 13px;"><i class="fas fa-search"></i> Search</button>
+                    <button id="pendingClearBtn" class="btn-primary" style="padding: 8px 18px; border-radius: 40px; border: none; background: rgba(255,255,255,0.06); color: #b8c4de; font-weight: 500; cursor: pointer; font-size: 13px;"><i class="fas fa-times"></i> Clear</button>
                 </div>
                 
                 <div class="table-container" style="max-height: 500px; overflow-y: auto; border-radius: 16px; border: 1px solid rgba(255,255,255,0.03);">
                     <table class="data-table" style="width: 100%; border-collapse: collapse; font-size: 13px; min-width: 1000px;">
                         <thead>
                             <tr>
-                                <th style="padding: 14px 14px; color: #8892a8; font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid rgba(255,255,255,0.04); background: rgba(10,14,28,0.3); text-align: left;">User ID</th>
-                                <th style="padding: 14px 14px; color: #8892a8; font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid rgba(255,255,255,0.04); background: rgba(10,14,28,0.3); text-align: left;">Username</th>
-                                <th style="padding: 14px 14px; color: #8892a8; font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid rgba(255,255,255,0.04); background: rgba(10,14,28,0.3); text-align: left;">Amount</th>
-                                <th style="padding: 14px 14px; color: #8892a8; font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid rgba(255,255,255,0.04); background: rgba(10,14,28,0.3); text-align: left;">Crypto Type</th>
-                                <th style="padding: 14px 14px; color: #8892a8; font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid rgba(255,255,255,0.04); background: rgba(10,14,28,0.3); text-align: left;">Wallet Address</th>
-                                <th style="padding: 14px 14px; color: #8892a8; font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid rgba(255,255,255,0.04); background: rgba(10,14,28,0.3); text-align: left;">User IP</th>
-                                <th style="padding: 14px 14px; color: #8892a8; font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid rgba(255,255,255,0.04); background: rgba(10,14,28,0.3); text-align: left;">Withdrawal Time</th>
-                                <th style="padding: 14px 14px; color: #8892a8; font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid rgba(255,255,255,0.04); background: rgba(10,14,28,0.3); text-align: left;">Actions</th>
+                                <th style="padding: 14px 14px; color: #a8b4d0; font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid rgba(255,255,255,0.04); background: rgba(10,14,28,0.3); text-align: left;">User ID</th>
+                                <th style="padding: 14px 14px; color: #a8b4d0; font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid rgba(255,255,255,0.04); background: rgba(10,14,28,0.3); text-align: left;">Username</th>
+                                <th style="padding: 14px 14px; color: #a8b4d0; font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid rgba(255,255,255,0.04); background: rgba(10,14,28,0.3); text-align: left;">Amount</th>
+                                <th style="padding: 14px 14px; color: #a8b4d0; font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid rgba(255,255,255,0.04); background: rgba(10,14,28,0.3); text-align: left;">Crypto Type</th>
+                                <th style="padding: 14px 14px; color: #a8b4d0; font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid rgba(255,255,255,0.04); background: rgba(10,14,28,0.3); text-align: left;">Wallet Address</th>
+                                <th style="padding: 14px 14px; color: #a8b4d0; font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid rgba(255,255,255,0.04); background: rgba(10,14,28,0.3); text-align: left;">User IP</th>
+                                <th style="padding: 14px 14px; color: #a8b4d0; font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid rgba(255,255,255,0.04); background: rgba(10,14,28,0.3); text-align: left;">Withdrawal Time</th>
+                                <th style="padding: 14px 14px; color: #a8b4d0; font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid rgba(255,255,255,0.04); background: rgba(10,14,28,0.3); text-align: left;">Actions</th>
                             </tr>
                         </thead>
-                        <tbody id="withdrawalsTableBody"><tr><td colspan="8" style="text-align:center; padding:30px; color:#6a7a9a;">加载中...</td></tr></tbody>
+                        <tbody id="withdrawalsTableBody"><tr><td colspan="8" style="text-align:center; padding:30px; color:#6a7a9a;">Loading...</td></tr></tbody>
                     </table>
                 </div>
             </div>
@@ -97,37 +100,37 @@ async function loadWithdrawalsPage() {
                 </div>
                 
                 <!-- 历史搜索栏 -->
-                <div class="search-bar" style="display: flex; flex-wrap: wrap; gap: 12px; align-items: center; background: rgba(8, 12, 24, 0.5); border-radius: 16px; padding: 14px 18px; margin-bottom: 20px; border: 1px solid rgba(255,255,255,0.03);">
-                    <input type="text" id="historySearchInput" class="search-input" placeholder="🔍 搜索 UID / 手机 / 钱包地址" style="flex: 2; min-width: 180px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06); border-radius: 40px; padding: 8px 18px; color: #d0d8ee; font-size: 13px; outline: none;">
-                    <select id="historyCryptoFilter" style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06); border-radius: 40px; padding: 8px 18px; color: #d0d8ee; font-size: 13px; outline: none; min-width: 140px; cursor: pointer;">
+                <div class="search-bar" style="display: flex; flex-wrap: wrap; gap: 10px; align-items: center; background: rgba(8, 12, 24, 0.5); border-radius: 16px; padding: 12px 16px; margin-bottom: 20px; border: 1px solid rgba(255,255,255,0.03);">
+                    <input type="text" id="historySearchInput" class="search-input" placeholder="Search UID / phone / wallet address" style="flex: 0 1 280px; min-width: 180px; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.10); border-radius: 40px; padding: 8px 16px; color: #e6edf5; font-size: 13px; outline: none;">
+                    <select id="historyCryptoFilter" style="background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.10); border-radius: 40px; padding: 8px 16px 8px 18px; color: #e6edf5; font-size: 13px; outline: none; min-width: 140px; cursor: pointer; appearance: auto; padding-right: 32px;">
                         <option value="">All Crypto</option>
                         <option value="BTC">BTC</option>
                         <option value="ETH">ETH</option>
                         <option value="USDC">USDC</option>
                         <option value="USDT">USDT</option>
                     </select>
-                    <input type="number" id="historyMinAmount" placeholder="Min Amount" style="width: 120px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06); border-radius: 40px; padding: 8px 18px; color: #d0d8ee; font-size: 13px; outline: none;">
-                    <input type="number" id="historyMaxAmount" placeholder="Max Amount" style="width: 120px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06); border-radius: 40px; padding: 8px 18px; color: #d0d8ee; font-size: 13px; outline: none;">
-                    <button id="historySearchBtn" class="btn-primary" style="padding: 8px 24px; border-radius: 40px; border: none; background: #2a3a5a; color: #e6edf5; font-weight: 600; cursor: pointer; font-size: 13px;"><i class="fas fa-search"></i> 搜索</button>
-                    <button id="historyClearBtn" class="btn-primary" style="padding: 8px 20px; border-radius: 40px; border: none; background: rgba(255,255,255,0.06); color: #b8c4de; font-weight: 500; cursor: pointer; font-size: 13px;"><i class="fas fa-times"></i> 清除</button>
-                    <button id="clearHistoryBtn" class="danger" style="background:#7a2f2f; border:none; padding:8px 16px; border-radius:40px; color:#fff; cursor:pointer; margin-left: auto;"><i class="fas fa-trash"></i> 清空记录</button>
+                    <input type="number" id="historyMinAmount" placeholder="Min Amount" style="width: 110px; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.10); border-radius: 40px; padding: 8px 16px; color: #e6edf5; font-size: 13px; outline: none;">
+                    <input type="number" id="historyMaxAmount" placeholder="Max Amount" style="width: 110px; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.10); border-radius: 40px; padding: 8px 16px; color: #e6edf5; font-size: 13px; outline: none;">
+                    <button id="historySearchBtn" class="btn-primary" style="padding: 8px 20px; border-radius: 40px; border: none; background: #2a3a5a; color: #e6edf5; font-weight: 600; cursor: pointer; font-size: 13px;"><i class="fas fa-search"></i> Search</button>
+                    <button id="historyClearBtn" class="btn-primary" style="padding: 8px 18px; border-radius: 40px; border: none; background: rgba(255,255,255,0.06); color: #b8c4de; font-weight: 500; cursor: pointer; font-size: 13px;"><i class="fas fa-times"></i> Clear</button>
+                    <button id="clearHistoryBtn" class="danger" style="background:#7a2f2f; border:none; padding:8px 16px; border-radius:40px; color:#fff; cursor:pointer; margin-left: auto;"><i class="fas fa-trash"></i> Clear All</button>
                 </div>
                 
                 <div class="table-container" style="max-height: 500px; overflow-y: auto; border-radius: 16px; border: 1px solid rgba(255,255,255,0.03);">
                     <table class="data-table" style="width: 100%; border-collapse: collapse; font-size: 13px; min-width: 1000px;">
                         <thead>
                             <tr>
-                                <th style="padding: 14px 14px; color: #8892a8; font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid rgba(255,255,255,0.04); background: rgba(10,14,28,0.3); text-align: left;">User ID</th>
-                                <th style="padding: 14px 14px; color: #8892a8; font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid rgba(255,255,255,0.04); background: rgba(10,14,28,0.3); text-align: left;">Username</th>
-                                <th style="padding: 14px 14px; color: #8892a8; font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid rgba(255,255,255,0.04); background: rgba(10,14,28,0.3); text-align: left;">Amount</th>
-                                <th style="padding: 14px 14px; color: #8892a8; font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid rgba(255,255,255,0.04); background: rgba(10,14,28,0.3); text-align: left;">Crypto Type</th>
-                                <th style="padding: 14px 14px; color: #8892a8; font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid rgba(255,255,255,0.04); background: rgba(10,14,28,0.3); text-align: left;">Wallet Address</th>
-                                <th style="padding: 14px 14px; color: #8892a8; font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid rgba(255,255,255,0.04); background: rgba(10,14,28,0.3); text-align: left;">User IP</th>
-                                <th style="padding: 14px 14px; color: #8892a8; font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid rgba(255,255,255,0.04); background: rgba(10,14,28,0.3); text-align: left;">Withdrawal Time</th>
-                                <th style="padding: 14px 14px; color: #8892a8; font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid rgba(255,255,255,0.04); background: rgba(10,14,28,0.3); text-align: left;">Status</th>
+                                <th style="padding: 14px 14px; color: #a8b4d0; font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid rgba(255,255,255,0.04); background: rgba(10,14,28,0.3); text-align: left;">User ID</th>
+                                <th style="padding: 14px 14px; color: #a8b4d0; font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid rgba(255,255,255,0.04); background: rgba(10,14,28,0.3); text-align: left;">Username</th>
+                                <th style="padding: 14px 14px; color: #a8b4d0; font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid rgba(255,255,255,0.04); background: rgba(10,14,28,0.3); text-align: left;">Amount</th>
+                                <th style="padding: 14px 14px; color: #a8b4d0; font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid rgba(255,255,255,0.04); background: rgba(10,14,28,0.3); text-align: left;">Crypto Type</th>
+                                <th style="padding: 14px 14px; color: #a8b4d0; font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid rgba(255,255,255,0.04); background: rgba(10,14,28,0.3); text-align: left;">Wallet Address</th>
+                                <th style="padding: 14px 14px; color: #a8b4d0; font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid rgba(255,255,255,0.04); background: rgba(10,14,28,0.3); text-align: left;">User IP</th>
+                                <th style="padding: 14px 14px; color: #a8b4d0; font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid rgba(255,255,255,0.04); background: rgba(10,14,28,0.3); text-align: left;">Withdrawal Time</th>
+                                <th style="padding: 14px 14px; color: #a8b4d0; font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid rgba(255,255,255,0.04); background: rgba(10,14,28,0.3); text-align: left;">Status</th>
                             </tr>
                         </thead>
-                        <tbody id="withdrawalHistoryBody"><tr><td colspan="8" style="text-align:center; padding:30px; color:#6a7a9a;">加载中...</td></tr></tbody>
+                        <tbody id="withdrawalHistoryBody"><tr><td colspan="8" style="text-align:center; padding:30px; color:#6a7a9a;">Loading...</td></tr></tbody>
                     </table>
                 </div>
             </div>
@@ -147,6 +150,7 @@ async function loadWithdrawalsPage() {
             transition: all 0.2s;
             font-size: 14px;
             font-weight: 500;
+            font-family: 'Inter', sans-serif;
         }
         .tab-withdraw-btn:hover {
             background: rgba(255,255,255,0.08);
@@ -243,6 +247,15 @@ async function loadWithdrawalsPage() {
             color: #c8d2e8;
             vertical-align: middle;
         }
+        /* 优化下拉菜单选项样式 */
+        select option {
+            background: #141c2e !important;
+            color: #e6edf5 !important;
+            padding: 8px 12px !important;
+        }
+        select option:hover {
+            background: #2a3a5a !important;
+        }
         @media (max-width: 768px) {
             .wallet-address-cell {
                 max-width: 120px;
@@ -264,6 +277,7 @@ async function loadWithdrawalsPage() {
             .search-bar input, .search-bar select {
                 width: 100% !important;
                 min-width: unset;
+                flex: 1 1 auto !important;
             }
         }
     `;
@@ -344,7 +358,7 @@ async function refreshWithdrawData() {
     const btn = document.getElementById('refreshWithdrawBtn');
     if (btn) {
         btn.disabled = true;
-        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 刷新中...';
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Refreshing...';
     }
     
     try {
@@ -353,14 +367,14 @@ async function refreshWithdrawData() {
             loadWithdrawalHistory()
         ]);
         if (window.loadDashboardPage) window.loadDashboardPage(currentDays);
-        showToast('数据已刷新', 'success');
+        showToast('Data refreshed', 'success');
     } catch (e) {
-        console.error('刷新失败:', e);
-        showToast('刷新失败: ' + e.message, 'error');
+        console.error('Refresh failed:', e);
+        showToast('Refresh failed: ' + e.message, 'error');
     } finally {
         if (btn) {
             btn.disabled = false;
-            btn.innerHTML = '<i class="fas fa-sync-alt"></i> 刷新';
+            btn.innerHTML = '<i class="fas fa-sync-alt"></i> Refresh';
         }
     }
 }
@@ -438,7 +452,7 @@ async function loadWithdrawals() {
         document.getElementById('statRejectedWithdraw').innerHTML = '€0.00';
         
         if (!filtered || filtered.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="8" style="text-align:center; padding:30px; color:#6a7a9a;">暂无待处理提现</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="8" style="text-align:center; padding:30px; color:#6a7a9a;">No pending withdrawals</td></tr>';
             return;
         }
         
@@ -459,7 +473,7 @@ async function loadWithdrawals() {
                 }
             } catch (e) { /* ignore */ }
             
-            row.insertCell(0).innerHTML = `<span class="badge">${escapeHtml(w.uid)}</span>`;
+            row.insertCell(0).innerHTML = `<span class="badge" style="background: rgba(255,255,255,0.08); padding: 2px 12px; border-radius: 20px; font-size: 11px; color: #c8d2e8; border: 1px solid rgba(255,255,255,0.06);">${escapeHtml(w.uid)}</span>`;
             row.insertCell(1).innerText = w.username || w.uid;
             row.insertCell(2).innerHTML = `<span style="color: #d4c09a; font-weight: 600;">€${(w.amount || 0).toFixed(2)}</span>`;
             row.insertCell(3).innerHTML = `<span class="currency-badge ${currencyClass}">${escapeHtml(currency)}</span>`;
@@ -485,8 +499,8 @@ async function loadWithdrawals() {
             
             row.insertCell(6).innerText = w.request_date ? new Date(w.request_date).toLocaleString() : '-';
             row.insertCell(7).innerHTML = `
-                <button class="btn-sm-action btn-approve approve-withdraw" data-id="${w.id}" data-uid="${w.uid}" data-amt="${w.amount}"><i class="fas fa-check"></i> 批准</button>
-                <button class="btn-sm-action btn-reject reject-withdraw" data-id="${w.id}" data-uid="${w.uid}" data-amt="${w.amount}"><i class="fas fa-times"></i> 拒绝</button>
+                <button class="btn-sm-action btn-approve approve-withdraw" data-id="${w.id}" data-uid="${w.uid}" data-amt="${w.amount}"><i class="fas fa-check"></i> Approve</button>
+                <button class="btn-sm-action btn-reject reject-withdraw" data-id="${w.id}" data-uid="${w.uid}" data-amt="${w.amount}"><i class="fas fa-times"></i> Reject</button>
             `;
         }
         
@@ -562,7 +576,7 @@ async function loadWithdrawalHistory() {
         document.getElementById('historyStatRejected').innerHTML = '€' + rejected.toFixed(2);
         
         if (!filtered || filtered.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="8" style="text-align:center; padding:30px; color:#6a7a9a;">暂无提现记录</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="8" style="text-align:center; padding:30px; color:#6a7a9a;">No withdrawal records</td></tr>';
             return;
         }
         
@@ -583,7 +597,7 @@ async function loadWithdrawalHistory() {
                 }
             } catch (e) { /* ignore */ }
             
-            row.insertCell(0).innerHTML = `<span class="badge">${escapeHtml(w.uid)}</span>`;
+            row.insertCell(0).innerHTML = `<span class="badge" style="background: rgba(255,255,255,0.08); padding: 2px 12px; border-radius: 20px; font-size: 11px; color: #c8d2e8; border: 1px solid rgba(255,255,255,0.06);">${escapeHtml(w.uid)}</span>`;
             row.insertCell(1).innerText = w.username || w.uid;
             row.insertCell(2).innerHTML = `<span style="color: ${w.status === 'approved' ? '#7ad0b0' : '#e88080'}; font-weight: 600;">€${(w.amount || 0).toFixed(2)}</span>`;
             row.insertCell(3).innerHTML = `<span class="currency-badge ${currencyClass}">${escapeHtml(currency)}</span>`;
@@ -606,7 +620,7 @@ async function loadWithdrawalHistory() {
             }
             
             row.insertCell(6).innerText = w.request_date ? new Date(w.request_date).toLocaleString() : '-';
-            row.insertCell(7).innerHTML = `<span class="status-badge-${w.status}">${w.status === 'approved' ? '✅ 已批准' : '❌ 已拒绝'}</span>`;
+            row.insertCell(7).innerHTML = `<span class="status-badge-${w.status}">${w.status === 'approved' ? '✅ Approved' : '❌ Rejected'}</span>`;
         }
         
         // 绑定复制按钮
@@ -627,7 +641,7 @@ async function loadWithdrawalHistory() {
 function copyToClipboard(text) {
     if (navigator.clipboard && navigator.clipboard.writeText) {
         navigator.clipboard.writeText(text).then(() => {
-            showToast('地址已复制！', 'success');
+            showToast('Address copied!', 'success');
         }).catch(() => {
             fallbackCopy(text);
         });
@@ -646,16 +660,16 @@ function fallbackCopy(text) {
     textarea.select();
     try {
         document.execCommand('copy');
-        showToast('地址已复制！', 'success');
+        showToast('Address copied!', 'success');
     } catch (e) {
-        showToast('复制失败，请手动复制', 'error');
+        showToast('Copy failed, please copy manually', 'error');
     }
     textarea.remove();
 }
 
 // ========== 批准提现 ==========
 async function handleApproveWithdraw(id, uid, amount) {
-    showConfirm('批准提现', `确认批准用户 ${uid} 的提现申请 €${parseFloat(amount).toFixed(2)}？`, async () => {
+    showConfirm('Approve Withdrawal', `Confirm to approve withdrawal of €${parseFloat(amount).toFixed(2)} for user ${uid}?`, async () => {
         try {
             const { error } = await sb
                 .from('withdrawals')
@@ -669,16 +683,16 @@ async function handleApproveWithdraw(id, uid, amount) {
             
             await refreshWithdrawData();
             if (window.loadDashboardPage) window.loadDashboardPage(currentDays);
-            showToast('✅ 提现已批准', 'success');
+            showToast('✅ Withdrawal approved', 'success');
         } catch (e) {
-            showToast('批准失败: ' + e.message, 'error');
+            showToast('Approval failed: ' + e.message, 'error');
         }
     });
 }
 
 // ========== 拒绝提现 ==========
 async function handleRejectWithdraw(id, uid, amount) {
-    showConfirm('拒绝提现', `确认拒绝用户 ${uid} 的提现申请？金额 €${parseFloat(amount).toFixed(2)} 将退回用户账户。`, async () => {
+    showConfirm('Reject Withdrawal', `Confirm to reject withdrawal of €${parseFloat(amount).toFixed(2)} for user ${uid}? Amount will be returned.`, async () => {
         try {
             const { data: user, error: userError } = await sb
                 .from('users')
@@ -707,16 +721,16 @@ async function handleRejectWithdraw(id, uid, amount) {
             
             await refreshWithdrawData();
             if (window.loadDashboardPage) window.loadDashboardPage(currentDays);
-            showToast('❌ 已拒绝，金额已退回', 'success');
+            showToast('❌ Withdrawal rejected, amount returned', 'success');
         } catch (e) {
-            showToast('拒绝失败: ' + e.message, 'error');
+            showToast('Rejection failed: ' + e.message, 'error');
         }
     });
 }
 
 // ========== 清空历史记录 ==========
 async function clearWithdrawalHistory() {
-    showConfirm('⚠️ 清空记录', '确定要清空所有提现历史记录吗？此操作不可恢复！', async () => {
+    showConfirm('⚠️ Clear Records', 'Are you sure you want to delete all withdrawal history? This cannot be undone!', async () => {
         try {
             const { error } = await sb
                 .from('withdrawals')
@@ -725,10 +739,10 @@ async function clearWithdrawalHistory() {
             
             if (error) throw error;
             
-            showToast('已清空所有提现记录', 'success');
+            showToast('All withdrawal records cleared', 'success');
             loadWithdrawalHistory();
         } catch (e) {
-            showToast('清空失败: ' + e.message, 'error');
+            showToast('Clear failed: ' + e.message, 'error');
         }
     });
 }
