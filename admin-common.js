@@ -1,5 +1,5 @@
 // admin-common.js - 完整版（包含自定义弹窗和通知 + 所有页面实时刷新）
-const SUPABASE_URL = 'https://qgmbzdfnwsdosdqphlxk.supabase.co';  // ← 检查这里
+const SUPABASE_URL = 'https://qgmbzdfnwsdosdqphlxk.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_zsJFjfNUO7NKp8ZH5KrXFQ_WZ8Q2Kym';
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
@@ -362,7 +362,6 @@ function initGlobalRealtime() {
     
     realtimeChannel = sb
         .channel('global-realtime')
-        // 监听 KYC 新申请
         .on(
             'postgres_changes',
             { event: 'INSERT', schema: 'public', table: 'kyc_verifications' },
@@ -371,7 +370,6 @@ function initGlobalRealtime() {
                 handleNewKyc(payload.new);
             }
         )
-        // 监听提现新申请
         .on(
             'postgres_changes',
             { event: 'INSERT', schema: 'public', table: 'withdrawals' },
@@ -380,7 +378,6 @@ function initGlobalRealtime() {
                 handleNewWithdrawal(payload.new);
             }
         )
-        // 监听邮箱验证新请求
         .on(
             'postgres_changes',
             { event: 'INSERT', schema: 'public', table: 'email_verification_requests' },
@@ -402,19 +399,15 @@ function initGlobalRealtime() {
         });
 }
 
-// 处理新KYC申请
 function handleNewKyc(data) {
     console.log('📋 处理新KYC申请:', data);
-    
     if (window.refreshDashboardData) {
         window.refreshDashboardData(currentDays);
     }
-    
     if (window.loadKycPage && document.getElementById('page_kyc')?.classList.contains('active')) {
         console.log('刷新KYC页面');
         window.loadKycPage();
     }
-    
     if (window.showAmberNotification) {
         window.showAmberNotification(
             '📋 新KYC申请',
@@ -424,19 +417,15 @@ function handleNewKyc(data) {
     }
 }
 
-// 处理新提现申请
 function handleNewWithdrawal(data) {
     console.log('💰 处理新提现申请:', data);
-    
     if (window.refreshDashboardData) {
         window.refreshDashboardData(currentDays);
     }
-    
     if (window.loadWithdrawalsPage && document.getElementById('page_withdrawals')?.classList.contains('active')) {
         console.log('刷新提现页面');
         window.loadWithdrawalsPage();
     }
-    
     if (window.showAmberNotification) {
         window.showAmberNotification(
             '💰 新提现申请',
@@ -446,14 +435,11 @@ function handleNewWithdrawal(data) {
     }
 }
 
-// 处理新邮箱验证请求
 function handleNewEmailRequest(data) {
     console.log('📧 处理新邮箱验证请求:', data.email);
-    
     if (window.refreshDashboardData) {
         window.refreshDashboardData(currentDays);
     }
-    
     const emailPage = document.getElementById('page_emailverify');
     if (emailPage && emailPage.classList.contains('active')) {
         console.log('当前在Email页面，自动刷新列表');
@@ -461,7 +447,6 @@ function handleNewEmailRequest(data) {
             window.loadEmailVerifyPage();
         }
     }
-    
     if (window.showAmberNotification) {
         window.showAmberNotification(
             '📧 新邮箱验证请求',
@@ -474,7 +459,6 @@ function handleNewEmailRequest(data) {
     }
 }
 
-// 启动全局实时订阅
 setTimeout(() => {
     initGlobalRealtime();
 }, 1000);
@@ -493,7 +477,6 @@ function showPage(pageId) {
     const activeNav = document.querySelector(`.nav-item[data-page="${pageId}"]`);
     if (activeNav) activeNav.classList.add('active');
     
-    // 每次切换页面都重新加载，确保数据最新
     if (pageId === 'dashboard' && window.loadDashboardPage) {
         console.log('加载仪表板');
         window.loadDashboardPage(currentDays);
@@ -528,7 +511,6 @@ function showPage(pageId) {
     }
 }
 
-// 登录检查
 if (localStorage.getItem('admin_logged_in') !== 'true') {
     window.location.href = 'admin-login.html';
 }
@@ -536,36 +518,56 @@ if (localStorage.getItem('admin_logged_in') !== 'true') {
 console.log('✅ admin-common.js 加载完成');
 
 // ============================================================
-//  金色粒子网络 · 侧边栏背景动画 (新增)
+//  金色粒子网络 · 侧边栏背景动画
 // ============================================================
 
 function initParticleNetwork() {
     const sidebar = document.querySelector('.sidebar');
     if (!sidebar) return;
 
-    // 检查是否已存在 canvas
-    let canvas = sidebar.querySelector('.sidebar-canvas canvas');
-    if (!canvas) {
-        // 创建容器
-        let container = sidebar.querySelector('.sidebar-canvas');
-        if (!container) {
-            container = document.createElement('div');
-            container.className = 'sidebar-canvas';
-            container.style.cssText = `
-                position: absolute;
-                top: 0;
-                left: 0;
-                width: 100%;
-                height: 100%;
-                z-index: 0;
-                pointer-events: none;
-                overflow: hidden;
-            `;
-            sidebar.insertBefore(container, sidebar.firstChild);
-        }
+    // 1. 创建粒子 canvas 容器
+    let container = sidebar.querySelector('.sidebar-canvas');
+    if (!container) {
+        container = document.createElement('div');
+        container.className = 'sidebar-canvas';
+        container.style.cssText = `
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            pointer-events: none;
+            overflow: hidden;
+        `;
+        sidebar.insertBefore(container, sidebar.firstChild);
+    }
 
+    let canvas = container.querySelector('canvas');
+    if (!canvas) {
         canvas = document.createElement('canvas');
         container.appendChild(canvas);
+    }
+
+    // 2. 创建毛玻璃覆盖层 (在粒子之上)
+    let glassLayer = sidebar.querySelector('.sidebar-glass');
+    if (!glassLayer) {
+        glassLayer = document.createElement('div');
+        glassLayer.className = 'sidebar-glass';
+        glassLayer.style.cssText = `
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+            pointer-events: none;
+            background: rgba(10, 14, 30, 0.20);
+            backdrop-filter: blur(5px) saturate(1.15);
+            -webkit-backdrop-filter: blur(5px) saturate(1.15);
+            border-radius: 0;
+        `;
+        sidebar.insertBefore(glassLayer, sidebar.querySelector('.sidebar-content'));
     }
 
     const ctx = canvas.getContext('2d');
@@ -689,7 +691,6 @@ function initParticleNetwork() {
     function animate() {
         ctx.clearRect(0, 0, width, height);
 
-        // 极淡金色氛围
         const grad = ctx.createRadialGradient(
             width * 0.5 + Math.sin(Date.now() * 0.0001) * 30,
             height * 0.5 + Math.cos(Date.now() * 0.00015) * 30,
@@ -726,7 +727,6 @@ function initParticleNetwork() {
 
     start();
 
-    // 窗口变化自适应
     const resizeObserver = new ResizeObserver(() => {
         resize();
         for (const p of particles) {
@@ -736,7 +736,6 @@ function initParticleNetwork() {
     });
     resizeObserver.observe(sidebar);
 
-    // 侧边栏展开/收起时重新调整
     const observer = new MutationObserver(() => {
         setTimeout(resize, 300);
     });
@@ -745,10 +744,8 @@ function initParticleNetwork() {
     console.log('✨ 金色粒子网络已启动 (侧边栏背景)');
 }
 
-// ===== 在 DOM 加载完成后初始化粒子网络 =====
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', initParticleNetwork);
 } else {
-    // 如果 DOM 已加载，等待一下确保 sidebar 渲染完成
     setTimeout(initParticleNetwork, 500);
 }
