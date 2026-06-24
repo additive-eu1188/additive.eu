@@ -1205,14 +1205,14 @@ function openEditUserModal(uid, username, phone, pin, currency, address, creditS
     const modalHtml = `
         <div id="editUserModal" class="modal-overlay" style="visibility: visible; opacity: 1; display: flex; align-items: center; justify-content: center; z-index: 9999;">
             <div class="modal-card" style="
-                width: 680px; 
-                max-width: 94%; 
-                max-height: 88vh; 
-                overflow-y: auto; 
-                background: linear-gradient(145deg, #0a0a0f, #1a1a2e);
-                border: 1px solid rgba(180, 180, 200, 0.08);
-                border-radius: 20px; 
-                padding: 24px 28px; 
+    width: 620px; 
+    max-width: 94%; 
+    max-height: 75vh; 
+    overflow-y: auto; 
+    background: linear-gradient(145deg, #0a0a0f, #1a1a2e);
+    border: 1px solid rgba(180, 180, 200, 0.08);
+    border-radius: 14px; 
+    padding: 14px 20px; 
                 box-shadow: 0 30px 80px rgba(0, 0, 0, 0.7), inset 0 0 60px rgba(180, 180, 200, 0.02);
                 position: relative;
                 overflow: hidden;
