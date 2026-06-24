@@ -1,4 +1,4 @@
-// admin-dashboard.js - 金属拉丝质感 + 暗金波浪环形图 + All Time
+// admin-dashboard.js - 金属拉丝质感 + 暗金波浪环形图 + All Time + 用户注册表格
 let trendChart = null;
 let ringChart = null;
 let breatheInterval = null;
@@ -374,15 +374,13 @@ function initWaveRing() {
     }, 100);
 }
 
-// ========== 波浪动画引擎 - 更明显，向外扩散渐变消失 ==========
+// ========== 波浪动画引擎 ==========
 function startWaveAnimation(canvas) {
     var ctx = canvas.getContext('2d');
     var w = 200, h = 200;
     var cx = 100, cy = 100;
     
     var waves = [];
-    
-    // 内圈波浪 - 更密集，更明显
     for (var layer = 0; layer < 6; layer++) {
         var baseRadius = 10 + layer * 14;
         var speed = 0.8 + layer * 0.15;
@@ -399,8 +397,6 @@ function startWaveAnimation(canvas) {
             color: layer % 2 === 0 ? '#c8b090' : '#d4af37'
         });
     }
-    
-    // 外圈波浪 - 向外扩散，渐变消失
     for (var layer = 0; layer < 5; layer++) {
         var baseRadius = 70 + layer * 16;
         var speed = 0.15 + layer * 0.06;
@@ -417,8 +413,6 @@ function startWaveAnimation(canvas) {
             color: '#c8b090'
         });
     }
-    
-    // 额外稀疏外层 - 渐变消失
     for (var layer = 0; layer < 4; layer++) {
         var baseRadius = 110 + layer * 18;
         var speed = 0.08 + layer * 0.04;
@@ -442,47 +436,34 @@ function startWaveAnimation(canvas) {
         time++;
         ctx.clearRect(0, 0, w, h);
         
-        // ===== 绘制每一层波浪 =====
         waves.forEach(function(wave) {
             var radius = wave.baseRadius + Math.sin(time * 0.018 + wave.phaseOffset) * 2.5;
-            
-            // 波浪线条 - 更亮更明显
             ctx.beginPath();
             ctx.arc(cx, cy, radius, 0, Math.PI * 2);
             ctx.strokeStyle = wave.color;
             ctx.lineWidth = 2 + Math.sin(time * 0.025 + wave.phaseOffset) * 0.8;
             ctx.globalAlpha = wave.alpha * (0.8 + 0.2 * Math.sin(time * 0.012 + wave.phaseOffset));
-            
-            // 发光效果
             ctx.shadowColor = wave.color;
             ctx.shadowBlur = 12 + Math.sin(time * 0.018 + wave.phaseOffset) * 6;
             ctx.stroke();
             ctx.shadowBlur = 0;
             
-            // ===== 波峰光点 - 更多更亮 =====
             var pointCount = wave.count + 2;
             for (var i = 0; i < pointCount; i++) {
                 var angle = (i / pointCount) * Math.PI * 2 + time * 0.015 * wave.speed + wave.phaseOffset;
                 var waveRadius = radius + Math.sin(time * 0.03 * wave.speed + angle * 2.5 + wave.phaseOffset) * wave.amplitude;
-                
                 var x = cx + Math.cos(angle) * waveRadius;
                 var y = cy + Math.sin(angle) * waveRadius;
-                
                 var pulse = 0.4 + 0.6 * Math.sin(time * 0.035 * wave.speed + angle * 1.5 + wave.phaseOffset);
                 var dotRadius = 1.5 + pulse * 3.5;
-                
-                // 光点发光
                 var grad = ctx.createRadialGradient(x, y, 0, x, y, dotRadius * 4);
                 grad.addColorStop(0, 'rgba(255, 215, 180, ' + (0.8 * wave.alpha * 2.5) + ')');
                 grad.addColorStop(0.3, 'rgba(200, 176, 144, ' + (0.4 * wave.alpha * 2.5) + ')');
                 grad.addColorStop(1, 'transparent');
-                
                 ctx.fillStyle = grad;
                 ctx.beginPath();
                 ctx.arc(x, y, dotRadius * 4, 0, Math.PI * 2);
                 ctx.fill();
-                
-                // 光点核心
                 ctx.beginPath();
                 ctx.arc(x, y, dotRadius * 0.6, 0, Math.PI * 2);
                 ctx.fillStyle = 'rgba(255, 240, 220, ' + (0.9 * wave.alpha * 2.5) + ')';
@@ -490,7 +471,6 @@ function startWaveAnimation(canvas) {
             }
         });
         
-        // ===== 中心光晕 =====
         var centerGlow = ctx.createRadialGradient(cx, cy, 0, cx, cy, 70);
         centerGlow.addColorStop(0, 'rgba(200, 176, 144, 0.04)');
         centerGlow.addColorStop(0.5, 'rgba(200, 176, 144, 0.02)');
@@ -500,7 +480,6 @@ function startWaveAnimation(canvas) {
         ctx.arc(cx, cy, 70, 0, Math.PI * 2);
         ctx.fill();
         
-        // ===== 中心微弱金光 =====
         var innerGlow = ctx.createRadialGradient(cx, cy, 0, cx, cy, 25);
         innerGlow.addColorStop(0, 'rgba(200, 176, 144, 0.03)');
         innerGlow.addColorStop(1, 'transparent');
@@ -513,6 +492,46 @@ function startWaveAnimation(canvas) {
         requestAnimationFrame(draw);
     }
     draw();
+}
+
+// ========== 加载最近注册用户数据 ==========
+async function loadRecentRegistrations() {
+    var tbody = document.getElementById('recentRegistrationsBody');
+    if (!tbody) return;
+    
+    try {
+        var usersRes = await sb.from('users')
+            .select('uid, username, invited_by_username, created_at, balance')
+            .order('created_at', { ascending: false })
+            .limit(10);
+        
+        var users = usersRes.data || [];
+        
+        if (users.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; padding: 16px; color: #4a5a72; font-size: 12px;">No users yet</td></tr>';
+            return;
+        }
+        
+        var html = '';
+        for (var i = 0; i < users.length; i++) {
+            var u = users[i];
+            var referrer = u.invited_by_username || '-';
+            var joinedMembership = u.balance > 0 ? '✅ Yes' : '❌ No';
+            var amount = u.balance > 0 ? '€' + u.balance.toFixed(2) : '€0.00';
+            
+            html += '<tr style="border-bottom: 1px solid rgba(200,176,144,0.03);">' +
+                '<td style="padding: 6px 8px; color: #d8dff0; font-weight: 500;">' + escapeHtml(u.username) + '</td>' +
+                '<td style="padding: 6px 8px; color: #8892a8;">' + escapeHtml(referrer) + '</td>' +
+                '<td style="padding: 6px 8px; text-align: center; color: ' + (u.balance > 0 ? '#7ad0b0' : '#5a4a2a') + ';">' + joinedMembership + '</td>' +
+                '<td style="padding: 6px 8px; text-align: right; color: ' + (u.balance > 0 ? '#c8b090' : '#4a5a72') + '; font-weight: 600;">' + amount + '</td>' +
+                '</tr>';
+        }
+        tbody.innerHTML = html;
+        
+    } catch (e) {
+        console.error('加载最近注册用户失败:', e);
+        tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; padding: 16px; color: #e88080; font-size: 12px;">Failed to load</td></tr>';
+    }
 }
 
 async function loadActivityTimeline(force) {
@@ -671,10 +690,10 @@ async function refreshDashboard(days, force) {
         loadStatsData(days, force),
         loadChartData(days, force),
         loadConversionData(days, force),
-        loadActivityTimeline(force)
+        loadActivityTimeline(force),
+        loadRecentRegistrations()
     ]);
     
-    // 更新环形图百分比
     var ringPercent = document.getElementById('ringPercent');
     if (ringPercent && cachedData.conversion) {
         var targetLabel = 'Today';
@@ -685,7 +704,6 @@ async function refreshDashboard(days, force) {
         if (matched.length > 0) {
             var rate = matched[0].rate;
             ringPercent.innerText = rate + '%';
-            // 更新进度条
             var container = document.getElementById('waveRingContainer');
             if (container) {
                 var progressRing = container.querySelector('.progress-ring');
@@ -806,7 +824,6 @@ function loadDashboardPage(days) {
     dashboardRendered = true;
     
     container.innerHTML = `
-        <!-- 日期筛选按钮 -->
         <div style="display: flex; justify-content: flex-end; gap: 10px; margin-bottom: 24px; flex-wrap: wrap;">
             <button class="date-filter-btn active" data-days="1" style="background: linear-gradient(145deg, rgba(20,24,40,0.6), rgba(10,12,24,0.4)); border: 1px solid rgba(180,180,200,0.06); border-radius: 30px; padding: 8px 20px; color: #8892a8; cursor: pointer; transition: all 0.3s; font-size: 13px; font-weight: 500; font-family: 'Inter', sans-serif; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">Today</button>
             <button class="date-filter-btn" data-days="7" style="background: linear-gradient(145deg, rgba(20,24,40,0.6), rgba(10,12,24,0.4)); border: 1px solid rgba(180,180,200,0.06); border-radius: 30px; padding: 8px 20px; color: #8892a8; cursor: pointer; transition: all 0.3s; font-size: 13px; font-weight: 500; font-family: 'Inter', sans-serif; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">7 Days</button>
@@ -814,7 +831,6 @@ function loadDashboardPage(days) {
             <button class="date-filter-btn" data-days="-1" style="background: linear-gradient(145deg, rgba(20,24,40,0.6), rgba(10,12,24,0.4)); border: 1px solid rgba(180,180,200,0.06); border-radius: 30px; padding: 8px 20px; color: #8892a8; cursor: pointer; transition: all 0.3s; font-size: 13px; font-weight: 500; font-family: 'Inter', sans-serif; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">All Time</button>
         </div>
         
-        <!-- 快捷卡片 -->
         <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px;">
             <div onclick="showPage('kyc')" style="background: linear-gradient(145deg, rgba(20,24,40,0.85), rgba(10,12,24,0.6)); border-radius: 16px; padding: 18px 16px; border: 1px solid rgba(180,180,200,0.06); cursor: pointer; transition: all 0.3s; position: relative; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.04);">
                 <div style="position: absolute; top: -15%; right: -5%; width: 75%; height: 75%; background: radial-gradient(ellipse at 70% 20%, rgba(255,255,255,0.10), transparent 70%); pointer-events: none; border-radius: 50%;"></div>
@@ -846,7 +862,6 @@ function loadDashboardPage(days) {
             </div>
         </div>
         
-        <!-- 统计卡片 -->
         <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px;">
             <div style="background: linear-gradient(145deg, rgba(20,24,40,0.85), rgba(10,12,24,0.6)); border-radius: 16px; padding: 18px 20px; border: 1px solid rgba(180,180,200,0.06); transition: all 0.3s; position: relative; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.04);">
                 <div style="position: absolute; top: -15%; right: -5%; width: 75%; height: 75%; background: radial-gradient(ellipse at 70% 20%, rgba(255,255,255,0.10), transparent 70%); pointer-events: none; border-radius: 50%;"></div>
@@ -882,9 +897,7 @@ function loadDashboardPage(days) {
             </div>
         </div>
         
-        <!-- 图表区域 -->
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 28px;">
-            <!-- 趋势图 -->
             <div style="background: linear-gradient(145deg, rgba(20,24,40,0.85), rgba(10,12,24,0.6)); backdrop-filter: blur(8px); border-radius: 20px; padding: 20px; border: 1px solid rgba(180,180,200,0.06); box-shadow: 0 4px 20px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.04); position: relative; overflow: hidden;">
                 <div style="position: absolute; top: -15%; right: -5%; width: 75%; height: 75%; background: radial-gradient(ellipse at 70% 20%, rgba(255,255,255,0.06), transparent 70%); pointer-events: none; border-radius: 50%;"></div>
                 <div style="position: absolute; top: 0; left: 0; right: 0; height: 1px; background: linear-gradient(90deg, transparent, rgba(180,180,200,0.08), transparent);"></div>
@@ -895,24 +908,18 @@ function loadDashboardPage(days) {
                 <div id="trendChart" style="height: 320px; width: 100%; position: relative; z-index: 1;"></div>
             </div>
             
-            <!-- 转化率卡片 - 暗金金属波浪环形图 -->
+            <!-- 转化率卡片 -->
             <div style="background: linear-gradient(145deg, rgba(20,24,40,0.85), rgba(10,12,24,0.6)); backdrop-filter: blur(8px); border-radius: 20px; padding: 20px; border: 1px solid rgba(180,180,200,0.06); box-shadow: 0 4px 20px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.04); position: relative; overflow: hidden;">
                 <div style="position: absolute; top: -15%; right: -5%; width: 75%; height: 75%; background: radial-gradient(ellipse at 70% 20%, rgba(255,255,255,0.06), transparent 70%); pointer-events: none; border-radius: 50%;"></div>
                 <div style="position: absolute; top: 0; left: 0; right: 0; height: 1px; background: linear-gradient(90deg, transparent, rgba(180,180,200,0.08), transparent);"></div>
                 
-                <!-- 标题行 -->
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; position: relative; z-index: 1;">
                     <div style="font-size: 15px; font-weight: 600; color: #d8dff0;">📈 New Orders Conversion Rate</div>
                 </div>
                 
-                <!-- 环形图 + 右侧信息 - 上下间距均衡 -->
                 <div style="display: flex; align-items: center; gap: 16px; position: relative; z-index: 1; padding: 4px 0;">
-                    <!-- 环形图容器 -->
-                    <div id="waveRingContainer" style="width: 200px; height: 200px; flex-shrink: 0; position: relative;">
-                        <!-- 由 JavaScript 动态生成 -->
-                    </div>
+                    <div id="waveRingContainer" style="width: 200px; height: 200px; flex-shrink: 0; position: relative;"></div>
                     
-                    <!-- 右侧统计数据 -->
                     <div style="flex: 1; min-width: 0;">
                         <div style="font-size: 11px; color: #6a5a3a; letter-spacing: 0.5px; margin-bottom: 6px;">
                             <span id="conversionLabel" style="color: #8892a8;">Today Register</span>
@@ -924,7 +931,6 @@ function loadDashboardPage(days) {
                             <span style="font-size: 11px; color: #5a4a2a;">converted</span>
                         </div>
                         
-                        <!-- 所有时间线数据 -->
                         <div style="margin-top: 4px; border-top: 1px solid rgba(200,176,144,0.06); padding-top: 6px;">
                             <div class="conversion-stat-row" style="display: flex; justify-content: space-between; padding: 3px 0; font-size: 11px; color: #6a7a92;">
                                 <span class="conversion-stat-label">Today</span>
@@ -949,10 +955,34 @@ function loadDashboardPage(days) {
                         </div>
                     </div>
                 </div>
+                
+                <!-- 用户注册数据表格 -->
+                <div style="margin-top: 16px; padding-top: 14px; border-top: 1px solid rgba(200,176,144,0.08); position: relative; z-index: 1;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                        <div style="font-size: 12px; color: #8892a8; font-weight: 500; letter-spacing: 0.5px;">
+                            <i class="fas fa-users" style="color: #c8b090; margin-right: 6px;"></i>Recent Registrations
+                        </div>
+                        <a href="#" onclick="showPage('users'); return false;" style="font-size: 10px; color: #5a4a2a; text-decoration: none; transition: 0.2s;" onmouseover="this.style.color='#c8b090'" onmouseout="this.style.color='#5a4a2a'">View All →</a>
+                    </div>
+                    <div style="overflow-x: auto;">
+                        <table style="width: 100%; border-collapse: collapse; font-size: 12px;">
+                            <thead>
+                                <tr style="border-bottom: 1px solid rgba(200,176,144,0.06);">
+                                    <th style="text-align: left; padding: 6px 8px; color: #5a4a2a; font-weight: 500; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px;">User</th>
+                                    <th style="text-align: left; padding: 6px 8px; color: #5a4a2a; font-weight: 500; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px;">Referrer</th>
+                                    <th style="text-align: center; padding: 6px 8px; color: #5a4a2a; font-weight: 500; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px;">Joined Membership</th>
+                                    <th style="text-align: right; padding: 6px 8px; color: #5a4a2a; font-weight: 500; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px;">Amount</th>
+                                </tr>
+                            </thead>
+                            <tbody id="recentRegistrationsBody">
+                                <tr><td colspan="4" style="text-align: center; padding: 16px; color: #4a5a72; font-size: 12px;">Loading...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
             </div>
         </div>
         
-        <!-- 实时活动 -->
         <div style="background: linear-gradient(145deg, rgba(20,24,40,0.85), rgba(10,12,24,0.6)); backdrop-filter: blur(8px); border-radius: 20px; padding: 20px; border: 1px solid rgba(180,180,200,0.06); box-shadow: 0 4px 20px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.04); position: relative; overflow: hidden;">
             <div style="position: absolute; top: -15%; right: -5%; width: 75%; height: 75%; background: radial-gradient(ellipse at 70% 20%, rgba(255,255,255,0.06), transparent 70%); pointer-events: none; border-radius: 50%;"></div>
             <div style="position: absolute; top: 0; left: 0; right: 0; height: 1px; background: linear-gradient(90deg, transparent, rgba(180,180,200,0.08), transparent);"></div>
@@ -966,7 +996,6 @@ function loadDashboardPage(days) {
         </div>
     `;
     
-    // 添加样式
     var style = document.createElement('style');
     style.textContent = `
         .date-filter-btn.active {
@@ -996,6 +1025,12 @@ function loadDashboardPage(days) {
         .conversion-stat-row:hover {
             background: rgba(200,176,144,0.04);
             border-radius: 6px;
+        }
+        #recentRegistrationsBody tr:hover {
+            background: rgba(200,176,144,0.04);
+        }
+        #recentRegistrationsBody td {
+            padding: 6px 8px;
         }
     `;
     document.head.appendChild(style);
