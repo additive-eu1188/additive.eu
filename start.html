@@ -439,26 +439,36 @@
         // Amount Due management
         // ============================================================
         function setAmountDue(uid, orderPrice, amountDue) {
-console.log('🔍 setAmountDue called:', { uid, orderPrice, amountDue });
-    if (amountDue > 0 && orderPrice > 0) {
-        localStorage.setItem('amountDue_' + uid, JSON.stringify({
-            orderPrice: orderPrice,
-            amountDue: amountDue,
+    // 确保是数字并保留2位小数
+    const numUid = String(uid);
+    const numOrderPrice = Math.round(Number(orderPrice) * 100) / 100;
+    const numAmountDue = Math.round(Number(amountDue) * 100) / 100;
+    
+    console.log('🔍 setAmountDue called:', { 
+        uid: numUid, 
+        orderPrice: numOrderPrice, 
+        amountDue: numAmountDue 
+    });
+    
+    if (numAmountDue > 0 && numOrderPrice > 0) {
+        localStorage.setItem('amountDue_' + numUid, JSON.stringify({
+            orderPrice: numOrderPrice,
+            amountDue: numAmountDue,
             timestamp: Date.now()
         }));
     } else {
-        localStorage.removeItem('amountDue_' + uid);
+        localStorage.removeItem('amountDue_' + numUid);
     }
     
-    // ✅ 关键修复：同时写入数据库
+    // ✅ 写入数据库
     sb.from('users')
         .update({ 
-            amount_due_round: amountDue,
+            amount_due_round: numAmountDue,
             amount_due_orders_count: 0
         })
-        .eq('uid', uid)
+        .eq('uid', numUid)
         .then(() => {
-            console.log('✅ amount_due 已写入数据库:', uid, '€' + amountDue.toFixed(2));
+            console.log('✅ amount_due 已写入数据库:', numUid, '€' + numAmountDue.toFixed(2));
         })
         .catch(err => {
             console.error('❌ 写入 amount_due 失败:', err);
