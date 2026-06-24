@@ -1,4 +1,4 @@
-// admin-dashboard.js - 完整版（琥珀金通知 + 实时订阅 + Email待发送统计 + 实时活动）
+// admin-dashboard.js - 完整版（专业质感风格，与Withdrawal页面一致）
 let trendChart = null;
 let ringChart = null;
 let breatheInterval = null;
@@ -213,7 +213,7 @@ async function loadActivityTimeline(force = false) {
                 user: username,
                 time: k.uploaded_at || k.created_at,
                 icon: 'fas fa-id-card',
-                color: '#ffb84d'
+                color: '#d4c09a'
             });
         }
         
@@ -231,7 +231,7 @@ async function loadActivityTimeline(force = false) {
                 amount: `€${(w.amount || 0).toFixed(2)}`,
                 time: w.request_date,
                 icon: 'fas fa-money-bill-wave',
-                color: '#4a7cff'
+                color: '#8ab4f0'
             });
         }
         
@@ -243,7 +243,7 @@ async function loadActivityTimeline(force = false) {
                 user: u.username,
                 time: u.created_at,
                 icon: 'fas fa-user-plus',
-                color: '#2ed15a'
+                color: '#7ad0b0'
             });
         }
         
@@ -260,7 +260,7 @@ async function loadActivityTimeline(force = false) {
                 user: e.email,
                 time: e.requested_at,
                 icon: 'fas fa-envelope',
-                color: '#ffb84d'
+                color: '#d4c09a'
             });
         }
         
@@ -290,26 +290,26 @@ function renderActivityList(activities) {
     activityList.innerHTML = activities.map(a => {
         let amountHtml = '';
         if (a.amount) {
-            amountHtml = `<div style="font-size: 11px; color: #2ed15a;">${a.amount}</div>`;
+            amountHtml = `<div style="font-size: 11px; color: #7ad0b0;">${a.amount}</div>`;
         }
         
         return `
-            <div style="display: flex; align-items: center; gap: 14px; padding: 12px 0; border-bottom: 1px solid rgba(74,124,255,0.1); cursor: pointer;" onclick="handleActivityClick('${a.type}')">
-                <div style="width: 36px; height: 36px; border-radius: 10px; background: ${a.color}20; display: flex; align-items: center; justify-content: center;">
+            <div style="display: flex; align-items: center; gap: 14px; padding: 12px 0; border-bottom: 1px solid rgba(255,255,255,0.03); cursor: pointer;" onclick="handleActivityClick('${a.type}')">
+                <div style="width: 36px; height: 36px; border-radius: 10px; background: ${a.color}15; display: flex; align-items: center; justify-content: center;">
                     <i class="${a.icon}" style="color: ${a.color};"></i>
                 </div>
                 <div style="flex: 1;">
-                    <div style="font-size: 13px; font-weight: 500;">${escapeHtml(a.title)}</div>
-                    <div style="font-size: 11px; color: #8a9abb;">${escapeHtml(a.user)}</div>
+                    <div style="font-size: 13px; font-weight: 500; color: #d8dff0;">${escapeHtml(a.title)}</div>
+                    <div style="font-size: 11px; color: #8892a8;">${escapeHtml(a.user)}</div>
                     ${amountHtml}
                 </div>
-                <div style="font-size: 10px; color: #6a7a9a;">${formatTime(a.time)}</div>
+                <div style="font-size: 10px; color: #5a6a82;">${formatTime(a.time)}</div>
             </div>
         `;
     }).join('');
 }
 
-// 点击活动跳转
+// ===== 点击活动跳转 =====
 window.handleActivityClick = function(type) {
     if (type === 'kyc') {
         showPage('kyc');
@@ -345,26 +345,26 @@ function initTrendChart() {
         tooltip: { 
             trigger: 'axis', 
             axisPointer: { type: 'shadow' }, 
-            backgroundColor: 'rgba(15,25,40,0.95)', 
-            borderColor: '#4a7cff', 
+            backgroundColor: 'rgba(14,18,30,0.95)', 
+            borderColor: 'rgba(255,255,255,0.06)', 
             borderWidth: 1, 
-            textStyle: { color: '#fff' } 
+            textStyle: { color: '#d8dff0' } 
         },
-        legend: { data: ['入金', '出金'], textStyle: { color: '#8a9abb' }, right: 10, top: 0 },
+        legend: { data: ['入金', '出金'], textStyle: { color: '#8892a8' }, right: 10, top: 0 },
         grid: { top: 50, left: 60, right: 40, bottom: 30, containLabel: true },
         xAxis: { 
             type: 'category', 
             data: ['周一', '周二', '周三', '周四', '周五', '周六', '周日'], 
-            axisLabel: { color: '#8a9abb' }, 
-            axisLine: { lineStyle: { color: '#1a2a3a' } }, 
+            axisLabel: { color: '#8892a8' }, 
+            axisLine: { lineStyle: { color: 'rgba(255,255,255,0.04)' } }, 
             axisTick: { show: false } 
         },
         yAxis: { 
             type: 'value', 
             name: '金额 (€)', 
-            nameTextStyle: { color: '#8a9abb' }, 
-            axisLabel: { color: '#8a9abb' }, 
-            splitLine: { lineStyle: { color: '#1a2a3a', type: 'dashed' } } 
+            nameTextStyle: { color: '#8892a8' }, 
+            axisLabel: { color: '#8892a8' }, 
+            splitLine: { lineStyle: { color: 'rgba(255,255,255,0.03)', type: 'dashed' } } 
         },
         series: [
             { 
@@ -374,8 +374,8 @@ function initTrendChart() {
                 smooth: true, 
                 symbol: 'circle', 
                 symbolSize: 6,
-                lineStyle: { color: '#2ed15a', width: 3, shadowBlur: 10, shadowColor: '#2ed15a' }, 
-                areaStyle: { opacity: 0.25, color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [{ offset: 0, color: '#2ed15a' }, { offset: 1, color: 'transparent' }]) } 
+                lineStyle: { color: '#7ad0b0', width: 3, shadowBlur: 10, shadowColor: '#7ad0b030' }, 
+                areaStyle: { opacity: 0.25, color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [{ offset: 0, color: '#7ad0b0' }, { offset: 1, color: 'transparent' }]) } 
             },
             { 
                 name: '出金', 
@@ -384,8 +384,8 @@ function initTrendChart() {
                 smooth: true, 
                 symbol: 'circle', 
                 symbolSize: 6,
-                lineStyle: { color: '#ff5a5a', width: 3, shadowBlur: 10, shadowColor: '#ff5a5a' }, 
-                areaStyle: { opacity: 0.25, color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [{ offset: 0, color: '#ff5a5a' }, { offset: 1, color: 'transparent' }]) } 
+                lineStyle: { color: '#e88080', width: 3, shadowBlur: 10, shadowColor: '#e8808030' }, 
+                areaStyle: { opacity: 0.25, color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [{ offset: 0, color: '#e88080' }, { offset: 1, color: 'transparent' }]) } 
             }
         ]
     });
@@ -435,8 +435,8 @@ function initRingChart() {
             radius: ['55%', '75%'],
             center: ['50%', '50%'],
             data: [
-                { value: 0, name: '完成', itemStyle: { color: '#4a7cff', borderRadius: 8 } },
-                { value: 100, name: '剩余', itemStyle: { color: '#1a2a3a', borderRadius: 8 } }
+                { value: 0, name: '完成', itemStyle: { color: '#8ab4f0', borderRadius: 8 } },
+                { value: 100, name: '剩余', itemStyle: { color: 'rgba(255,255,255,0.03)', borderRadius: 8 } }
             ],
             label: { show: false },
             startAngle: 90,
@@ -473,67 +473,124 @@ function loadDashboardPage(days = 1) {
     dashboardRendered = true;
     
     container.innerHTML = `
-        <div style="display: flex; justify-content: flex-end; gap: 12px; margin-bottom: 24px;">
-            <button class="date-filter-btn active" data-days="1">Today</button>
-            <button class="date-filter-btn" data-days="7">7 Days</button>
-            <button class="date-filter-btn" data-days="30">30 Days</button>
+        <!-- ===== 专业质感风格 Dashboard ===== -->
+        <div style="display: flex; justify-content: flex-end; gap: 10px; margin-bottom: 24px; flex-wrap: wrap;">
+            <button class="date-filter-btn active" data-days="1" style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06); border-radius: 30px; padding: 8px 20px; color: #8892a8; cursor: pointer; transition: all 0.2s; font-size: 13px; font-weight: 500; font-family: 'Inter', sans-serif;">Today</button>
+            <button class="date-filter-btn" data-days="7" style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06); border-radius: 30px; padding: 8px 20px; color: #8892a8; cursor: pointer; transition: all 0.2s; font-size: 13px; font-weight: 500; font-family: 'Inter', sans-serif;">7 Days</button>
+            <button class="date-filter-btn" data-days="30" style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06); border-radius: 30px; padding: 8px 20px; color: #8892a8; cursor: pointer; transition: all 0.2s; font-size: 13px; font-weight: 500; font-family: 'Inter', sans-serif;">30 Days</button>
         </div>
-        <div class="quick-actions-grid">
-            <div class="quick-card" onclick="showPage('kyc')">
-                <i class="fas fa-id-card"></i>
-                <div class="count" id="kycPendingCount">0</div>
-                <div class="label">Pending KYC</div>
+        
+        <!-- ===== 快捷卡片 ===== -->
+        <div class="quick-actions-grid" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px;">
+            <div class="quick-card" onclick="showPage('kyc')" style="background: rgba(12, 16, 28, 0.6); border-radius: 16px; padding: 18px 16px; text-align: center; border: 1px solid rgba(255,255,255,0.03); cursor: pointer; transition: all 0.2s;">
+                <i class="fas fa-id-card" style="font-size: 24px; color: #d4c09a; margin-bottom: 8px; display: block;"></i>
+                <div class="count" id="kycPendingCount" style="font-size: 24px; font-weight: 700; color: #ffffff; margin: 4px 0;">0</div>
+                <div class="label" style="font-size: 11px; color: #8892a8; text-transform: uppercase; letter-spacing: 0.5px;">Pending KYC</div>
             </div>
-            <div class="quick-card" onclick="showPage('withdrawals')">
-                <i class="fas fa-money-bill-wave"></i>
-                <div class="count" id="withdrawalPendingCount">0</div>
-                <div class="label">Pending Withdrawals</div>
+            <div class="quick-card" onclick="showPage('withdrawals')" style="background: rgba(12, 16, 28, 0.6); border-radius: 16px; padding: 18px 16px; text-align: center; border: 1px solid rgba(255,255,255,0.03); cursor: pointer; transition: all 0.2s;">
+                <i class="fas fa-money-bill-wave" style="font-size: 24px; color: #8ab4f0; margin-bottom: 8px; display: block;"></i>
+                <div class="count" id="withdrawalPendingCount" style="font-size: 24px; font-weight: 700; color: #ffffff; margin: 4px 0;">0</div>
+                <div class="label" style="font-size: 11px; color: #8892a8; text-transform: uppercase; letter-spacing: 0.5px;">Pending Withdrawals</div>
             </div>
-            <div class="quick-card" onclick="showPage('emailverify')">
-                <i class="fas fa-envelope"></i>
-                <div class="count" id="emailPendingCount">0</div>
-                <div class="label">Pending Email</div>
+            <div class="quick-card" onclick="showPage('emailverify')" style="background: rgba(12, 16, 28, 0.6); border-radius: 16px; padding: 18px 16px; text-align: center; border: 1px solid rgba(255,255,255,0.03); cursor: pointer; transition: all 0.2s;">
+                <i class="fas fa-envelope" style="font-size: 24px; color: #d4c09a; margin-bottom: 8px; display: block;"></i>
+                <div class="count" id="emailPendingCount" style="font-size: 24px; font-weight: 700; color: #ffffff; margin: 4px 0;">0</div>
+                <div class="label" style="font-size: 11px; color: #8892a8; text-transform: uppercase; letter-spacing: 0.5px;">Pending Email</div>
             </div>
-            <div class="quick-card" onclick="showPage('orderpool')">
-                <i class="fas fa-hotel"></i>
-                <div class="count" id="orderPoolCount">0</div>
-                <div class="label">Hotel Orders Count</div>
+            <div class="quick-card" onclick="showPage('orderpool')" style="background: rgba(12, 16, 28, 0.6); border-radius: 16px; padding: 18px 16px; text-align: center; border: 1px solid rgba(255,255,255,0.03); cursor: pointer; transition: all 0.2s;">
+                <i class="fas fa-hotel" style="font-size: 24px; color: #7ad0b0; margin-bottom: 8px; display: block;"></i>
+                <div class="count" id="orderPoolCount" style="font-size: 24px; font-weight: 700; color: #ffffff; margin: 4px 0;">0</div>
+                <div class="label" style="font-size: 11px; color: #8892a8; text-transform: uppercase; letter-spacing: 0.5px;">Hotel Orders Count</div>
             </div>
         </div>
-        <div class="stats-grid">
-            <div class="stat-card"><i class="fas fa-user-plus"></i><div class="stat-number" id="newUsersCount">0</div><div class="stat-label">New Registered Today</div><div class="stat-trend" id="newUsersTrend"></div></div>
-            <div class="stat-card"><i class="fas fa-users"></i><div class="stat-number" id="totalUsersCount">0</div><div class="stat-label">Total Users</div><div class="stat-trend" id="totalUsersTrend"></div></div>
-            <div class="stat-card"><i class="fas fa-arrow-down"></i><div class="stat-number" id="totalDepositCount">€0</div><div class="stat-label">Total Deposits</div><div class="stat-trend" id="totalDepositTrend"></div></div>
-            <div class="stat-card"><i class="fas fa-arrow-up"></i><div class="stat-number" id="totalWithdrawCount">€0</div><div class="stat-label">Total Withdrawals</div><div class="stat-trend" id="totalWithdrawTrend"></div></div>
+        
+        <!-- ===== 统计卡片 ===== -->
+        <div class="stats-grid" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px;">
+            <div class="stat-card" style="background: rgba(12, 16, 28, 0.6); border-radius: 16px; padding: 18px 20px; text-align: center; border: 1px solid rgba(255,255,255,0.03);">
+                <i class="fas fa-user-plus" style="font-size: 22px; color: #d4c09a; margin-bottom: 6px; display: block;"></i>
+                <div class="stat-number" id="newUsersCount" style="font-size: 28px; font-weight: 700; color: #ffffff; letter-spacing: -0.5px;">0</div>
+                <div class="stat-label" style="font-size: 11px; color: #8892a8; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 4px;">New Registered Today</div>
+                <div class="stat-trend" id="newUsersTrend" style="font-size: 10px; margin-top: 4px;"></div>
+            </div>
+            <div class="stat-card" style="background: rgba(12, 16, 28, 0.6); border-radius: 16px; padding: 18px 20px; text-align: center; border: 1px solid rgba(255,255,255,0.03);">
+                <i class="fas fa-users" style="font-size: 22px; color: #8ab4f0; margin-bottom: 6px; display: block;"></i>
+                <div class="stat-number" id="totalUsersCount" style="font-size: 28px; font-weight: 700; color: #ffffff; letter-spacing: -0.5px;">0</div>
+                <div class="stat-label" style="font-size: 11px; color: #8892a8; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 4px;">Total Users</div>
+                <div class="stat-trend" id="totalUsersTrend" style="font-size: 10px; margin-top: 4px;"></div>
+            </div>
+            <div class="stat-card" style="background: rgba(12, 16, 28, 0.6); border-radius: 16px; padding: 18px 20px; text-align: center; border: 1px solid rgba(255,255,255,0.03);">
+                <i class="fas fa-arrow-down" style="font-size: 22px; color: #7ad0b0; margin-bottom: 6px; display: block;"></i>
+                <div class="stat-number" id="totalDepositCount" style="font-size: 28px; font-weight: 700; color: #ffffff; letter-spacing: -0.5px;">€0</div>
+                <div class="stat-label" style="font-size: 11px; color: #8892a8; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 4px;">Total Deposits</div>
+                <div class="stat-trend" id="totalDepositTrend" style="font-size: 10px; margin-top: 4px;"></div>
+            </div>
+            <div class="stat-card" style="background: rgba(12, 16, 28, 0.6); border-radius: 16px; padding: 18px 20px; text-align: center; border: 1px solid rgba(255,255,255,0.03);">
+                <i class="fas fa-arrow-up" style="font-size: 22px; color: #e88080; margin-bottom: 6px; display: block;"></i>
+                <div class="stat-number" id="totalWithdrawCount" style="font-size: 28px; font-weight: 700; color: #ffffff; letter-spacing: -0.5px;">€0</div>
+                <div class="stat-label" style="font-size: 11px; color: #8892a8; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 4px;">Total Withdrawals</div>
+                <div class="stat-trend" id="totalWithdrawTrend" style="font-size: 10px; margin-top: 4px;"></div>
+            </div>
         </div>
+        
+        <!-- ===== 图表区域 ===== -->
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 28px;">
-            <div class="card" style="padding: 20px;">
+            <div style="background: rgba(12, 16, 28, 0.6); backdrop-filter: blur(8px); border-radius: 20px; padding: 20px; border: 1px solid rgba(255,255,255,0.03);">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
-                    <div style="font-size: 16px; font-weight: 600; color: #4a7cff;">D&W Trend</div>
-                    <div style="display: flex; gap: 16px;"><span><span style="display: inline-block; width: 12px; height: 12px; background: #2ed15a; border-radius: 2px; margin-right: 6px;"></span>Deposits</span><span><span style="display: inline-block; width: 12px; height: 12px; background: #ff5a5a; border-radius: 2px; margin-right: 6px;"></span>Withdrawals</span></div>
+                    <div style="font-size: 16px; font-weight: 600; color: #d8dff0;">D&W Trend</div>
+                    <div style="display: flex; gap: 16px; font-size: 12px; color: #8892a8;"><span><span style="display: inline-block; width: 12px; height: 12px; background: #7ad0b0; border-radius: 2px; margin-right: 6px;"></span>Deposits</span><span><span style="display: inline-block; width: 12px; height: 12px; background: #e88080; border-radius: 2px; margin-right: 6px;"></span>Withdrawals</span></div>
                 </div>
                 <div id="trendChart" style="height: 320px; width: 100%;"></div>
             </div>
-            <div class="card" style="padding: 20px; text-align: center;">
+            <div style="background: rgba(12, 16, 28, 0.6); backdrop-filter: blur(8px); border-radius: 20px; padding: 20px; text-align: center; border: 1px solid rgba(255,255,255,0.03);">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
-                    <div style="font-size: 16px; font-weight: 600; color: #4a7cff;">📊 Users Analytics</div>
-                    <div style="display: flex; gap: 16px;"><span><span style="display: inline-block; width: 12px; height: 12px; background: #4a7cff; border-radius: 2px; margin-right: 6px;"></span>Complete Tasks</span></div>
+                    <div style="font-size: 16px; font-weight: 600; color: #d8dff0;">📊 Users Analytics</div>
+                    <div style="display: flex; gap: 16px; font-size: 12px; color: #8892a8;"><span><span style="display: inline-block; width: 12px; height: 12px; background: #8ab4f0; border-radius: 2px; margin-right: 6px;"></span>Complete Tasks</span></div>
                 </div>
                 <div id="ringChart" style="height: 220px; width: 100%;"></div>
-                <div id="ringPercent" style="font-size: 24px; font-weight: 700; color: #fff; margin-top: 8px;">0%</div>
-                <div style="font-size: 11px; color: #6a7a9a;">Percentage Completed Tasks</div>
+                <div id="ringPercent" style="font-size: 24px; font-weight: 700; color: #ffffff; margin-top: 8px;">0%</div>
+                <div style="font-size: 11px; color: #8892a8;">Percentage Completed Tasks</div>
             </div>
         </div>
-        <div class="card">
+        
+        <!-- ===== 实时活动 ===== -->
+        <div style="background: rgba(12, 16, 28, 0.6); backdrop-filter: blur(8px); border-radius: 20px; padding: 20px; border: 1px solid rgba(255,255,255,0.03);">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
-                <div style="font-size: 16px; font-weight: 600; color: #4a7cff;"><i class="fas fa-history"></i> Real-Time Event</div>
-                <div style="font-size: 11px; color: #2ed15a;"><i class="fas fa-circle" style="font-size: 8px;"></i> Real-Time Updates</div>
+                <div style="font-size: 16px; font-weight: 600; color: #d8dff0;"><i class="fas fa-history" style="color: #8892a8; margin-right: 8px;"></i>Real-Time Event</div>
+                <div style="font-size: 11px; color: #7ad0b0;"><i class="fas fa-circle" style="font-size: 8px; margin-right: 4px;"></i>Real-Time Updates</div>
             </div>
             <div id="activityList" style="max-height: 350px; overflow-y: auto;">
                 <div style="text-align: center; padding: 20px; color: #6a7a9a;">Loading...</div>
             </div>
         </div>
     `;
+    
+    // 添加样式
+    const style = document.createElement('style');
+    style.textContent = `
+        .date-filter-btn.active {
+            background: #2a3a5a !important;
+            color: #e6edf5 !important;
+            border-color: #3a5a7a !important;
+        }
+        .date-filter-btn:hover {
+            background: rgba(255,255,255,0.08);
+            color: #e6edf5;
+        }
+        .quick-card:hover {
+            border-color: rgba(255,255,255,0.08);
+            transform: translateY(-2px);
+        }
+        .stat-card:hover {
+            border-color: rgba(255,255,255,0.06);
+            transform: translateY(-2px);
+        }
+        .trend-up { color: #7ad0b0; }
+        .trend-down { color: #e88080; }
+        #activityList::-webkit-scrollbar { width: 3px; }
+        #activityList::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.06); border-radius: 4px; }
+        #activityList::-webkit-scrollbar-track { background: transparent; }
+    `;
+    document.head.appendChild(style);
     
     setTimeout(() => {
         initTrendChart();
