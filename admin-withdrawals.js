@@ -44,7 +44,7 @@ async function loadWithdrawalsPage() {
                 
                 <!-- 搜索栏 -->
                 <div class="search-bar" style="display: flex; flex-wrap: wrap; gap: 10px; align-items: center; background: rgba(8, 12, 24, 0.5); border-radius: 16px; padding: 12px 16px; margin-bottom: 20px; border: 1px solid rgba(255,255,255,0.03);">
-                    <input type="text" id="pendingSearchInput" class="search-input" placeholder="Search UID / phone / wallet address" style="flex: 0 1 280px; min-width: 180px; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.10); border-radius: 40px; padding: 8px 16px; color: #e6edf5; font-size: 13px; outline: none;">
+                    <input type="text" id="pendingSearchInput" class="search-input" placeholder="Search UID / phone / wallet address" style="flex: 1; min-width: 180px; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.10); border-radius: 40px; padding: 8px 16px; color: #e6edf5; font-size: 13px; outline: none;">
                     <select id="pendingCryptoFilter" style="background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.10); border-radius: 40px; padding: 8px 16px 8px 18px; color: #e6edf5; font-size: 13px; outline: none; min-width: 140px; cursor: pointer; appearance: auto; padding-right: 32px;">
                         <option value="">All Crypto</option>
                         <option value="BTC">BTC</option>
@@ -101,7 +101,7 @@ async function loadWithdrawalsPage() {
                 
                 <!-- 历史搜索栏 -->
                 <div class="search-bar" style="display: flex; flex-wrap: wrap; gap: 10px; align-items: center; background: rgba(8, 12, 24, 0.5); border-radius: 16px; padding: 12px 16px; margin-bottom: 20px; border: 1px solid rgba(255,255,255,0.03);">
-                    <input type="text" id="historySearchInput" class="search-input" placeholder="Search UID / phone / wallet address" style="flex: 0 1 280px; min-width: 180px; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.10); border-radius: 40px; padding: 8px 16px; color: #e6edf5; font-size: 13px; outline: none;">
+                    <input type="text" id="historySearchInput" class="search-input" placeholder="Search UID / phone / wallet address" style="flex: 1; min-width: 180px; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.10); border-radius: 40px; padding: 8px 16px; color: #e6edf5; font-size: 13px; outline: none;">
                     <select id="historyCryptoFilter" style="background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.10); border-radius: 40px; padding: 8px 16px 8px 18px; color: #e6edf5; font-size: 13px; outline: none; min-width: 140px; cursor: pointer; appearance: auto; padding-right: 32px;">
                         <option value="">All Crypto</option>
                         <option value="BTC">BTC</option>
