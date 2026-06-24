@@ -534,3 +534,221 @@ if (localStorage.getItem('admin_logged_in') !== 'true') {
 }
 
 console.log('✅ admin-common.js 加载完成');
+
+// ============================================================
+//  金色粒子网络 · 侧边栏背景动画 (新增)
+// ============================================================
+
+function initParticleNetwork() {
+    const sidebar = document.querySelector('.sidebar');
+    if (!sidebar) return;
+
+    // 检查是否已存在 canvas
+    let canvas = sidebar.querySelector('.sidebar-canvas canvas');
+    if (!canvas) {
+        // 创建容器
+        let container = sidebar.querySelector('.sidebar-canvas');
+        if (!container) {
+            container = document.createElement('div');
+            container.className = 'sidebar-canvas';
+            container.style.cssText = `
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                z-index: 0;
+                pointer-events: none;
+                overflow: hidden;
+            `;
+            sidebar.insertBefore(container, sidebar.firstChild);
+        }
+
+        canvas = document.createElement('canvas');
+        container.appendChild(canvas);
+    }
+
+    const ctx = canvas.getContext('2d');
+    let width, height;
+    let particles = [];
+    const PARTICLE_COUNT = 55;
+    const CONNECT_DISTANCE = 130;
+    const MAX_LINE_WIDTH = 1.8;
+    const GOLD_PALETTE = [
+        'rgba(214, 178, 94, ',
+        'rgba(243, 211, 139, ',
+        'rgba(184, 148, 42, ',
+    ];
+    let animationId = null;
+
+    function resize() {
+        const rect = sidebar.getBoundingClientRect();
+        canvas.width = rect.width || 280;
+        canvas.height = rect.height || 600;
+        width = canvas.width;
+        height = canvas.height;
+        canvas.style.width = '100%';
+        canvas.style.height = '100%';
+    }
+
+    class Particle {
+        constructor() {
+            this.reset();
+            this.vx = (Math.random() - 0.5) * 0.25;
+            this.vy = (Math.random() - 0.5) * 0.25;
+            this.colorIndex = Math.floor(Math.random() * GOLD_PALETTE.length);
+            this.baseRadius = 1.5 + Math.random() * 2.5;
+        }
+
+        reset() {
+            this.x = Math.random() * width;
+            this.y = Math.random() * height;
+            this.vx = (Math.random() - 0.5) * 0.3;
+            this.vy = (Math.random() - 0.5) * 0.3;
+            this.phaseX = Math.random() * Math.PI * 2;
+            this.phaseY = Math.random() * Math.PI * 2;
+            this.freqX = 0.002 + Math.random() * 0.005;
+            this.freqY = 0.002 + Math.random() * 0.005;
+            this.amplitude = 0.2 + Math.random() * 0.4;
+        }
+
+        update() {
+            this.x += this.vx + Math.sin(Date.now() * this.freqX + this.phaseX) * this.amplitude * 0.08;
+            this.y += this.vy + Math.cos(Date.now() * this.freqY + this.phaseY) * this.amplitude * 0.08;
+
+            if (this.x < 0) { this.x = 0; this.vx *= -0.9; }
+            if (this.x > width) { this.x = width; this.vx *= -0.9; }
+            if (this.y < 0) { this.y = 0; this.vy *= -0.9; }
+            if (this.y > height) { this.y = height; this.vy *= -0.9; }
+
+            if (Math.random() < 0.002) {
+                this.vx += (Math.random() - 0.5) * 0.06;
+                this.vy += (Math.random() - 0.5) * 0.06;
+                const maxSpeed = 0.4;
+                const sp = Math.hypot(this.vx, this.vy);
+                if (sp > maxSpeed) {
+                    this.vx = (this.vx / sp) * maxSpeed;
+                    this.vy = (this.vy / sp) * maxSpeed;
+                }
+            }
+        }
+
+        draw() {
+            const alpha = 0.5 + 0.4 * Math.sin(Date.now() * 0.001 + this.phaseX);
+            const color = GOLD_PALETTE[this.colorIndex];
+            const radius = this.baseRadius * (0.8 + 0.2 * Math.sin(Date.now() * 0.002 + this.phaseX));
+            ctx.beginPath();
+            ctx.arc(this.x, this.y, radius, 0, Math.PI * 2);
+            ctx.fillStyle = color + (0.5 + 0.4 * Math.sin(Date.now() * 0.0015 + this.phaseX)) + ')';
+            ctx.shadowColor = 'rgba(214, 178, 94, 0.12)';
+            ctx.shadowBlur = 6;
+            ctx.fill();
+            ctx.shadowBlur = 0;
+        }
+    }
+
+    function initParticles() {
+        particles = [];
+        for (let i = 0; i < PARTICLE_COUNT; i++) {
+            particles.push(new Particle());
+        }
+    }
+
+    function drawLines() {
+        for (let i = 0; i < particles.length; i++) {
+            for (let j = i + 1; j < particles.length; j++) {
+                const p1 = particles[i];
+                const p2 = particles[j];
+                const dx = p1.x - p2.x;
+                const dy = p1.y - p2.y;
+                const dist = Math.hypot(dx, dy);
+
+                if (dist < CONNECT_DISTANCE) {
+                    const alpha = (1 - dist / CONNECT_DISTANCE) * 0.6;
+                    const lineWidth = (1 - dist / CONNECT_DISTANCE) * MAX_LINE_WIDTH + 0.2;
+
+                    const gradient = ctx.createLinearGradient(p1.x, p1.y, p2.x, p2.y);
+                    gradient.addColorStop(0, `rgba(214, 178, 94, ${alpha * 0.9})`);
+                    gradient.addColorStop(0.5, `rgba(243, 211, 139, ${alpha * 0.7})`);
+                    gradient.addColorStop(1, `rgba(184, 148, 42, ${alpha * 0.9})`);
+
+                    ctx.beginPath();
+                    ctx.moveTo(p1.x, p1.y);
+                    ctx.lineTo(p2.x, p2.y);
+                    ctx.strokeStyle = gradient;
+                    ctx.lineWidth = lineWidth;
+                    ctx.shadowColor = `rgba(214, 178, 94, ${alpha * 0.08})`;
+                    ctx.shadowBlur = 4;
+                    ctx.stroke();
+                    ctx.shadowBlur = 0;
+                }
+            }
+        }
+    }
+
+    function animate() {
+        ctx.clearRect(0, 0, width, height);
+
+        // 极淡金色氛围
+        const grad = ctx.createRadialGradient(
+            width * 0.5 + Math.sin(Date.now() * 0.0001) * 30,
+            height * 0.5 + Math.cos(Date.now() * 0.00015) * 30,
+            10,
+            width * 0.5,
+            height * 0.5,
+            width * 0.7
+        );
+        grad.addColorStop(0, 'rgba(214, 178, 94, 0.015)');
+        grad.addColorStop(0.5, 'rgba(214, 178, 94, 0.008)');
+        grad.addColorStop(1, 'rgba(214, 178, 94, 0)');
+        ctx.fillStyle = grad;
+        ctx.fillRect(0, 0, width, height);
+
+        for (const p of particles) {
+            p.update();
+        }
+
+        drawLines();
+
+        for (const p of particles) {
+            p.draw();
+        }
+
+        animationId = requestAnimationFrame(animate);
+    }
+
+    function start() {
+        resize();
+        initParticles();
+        if (animationId) cancelAnimationFrame(animationId);
+        animate();
+    }
+
+    start();
+
+    // 窗口变化自适应
+    const resizeObserver = new ResizeObserver(() => {
+        resize();
+        for (const p of particles) {
+            p.x = Math.random() * width;
+            p.y = Math.random() * height;
+        }
+    });
+    resizeObserver.observe(sidebar);
+
+    // 侧边栏展开/收起时重新调整
+    const observer = new MutationObserver(() => {
+        setTimeout(resize, 300);
+    });
+    observer.observe(sidebar, { attributes: true, attributeFilter: ['class'] });
+
+    console.log('✨ 金色粒子网络已启动 (侧边栏背景)');
+}
+
+// ===== 在 DOM 加载完成后初始化粒子网络 =====
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initParticleNetwork);
+} else {
+    // 如果 DOM 已加载，等待一下确保 sidebar 渲染完成
+    setTimeout(initParticleNetwork, 500);
+}
