@@ -562,24 +562,29 @@ async function loadUsers() {
                 </div>
             `;
             
-            // 6. Pending - 使用不同的变量名避免冲突
+            // 6. Pending - 修复显示负数（兼容字段不存在的情况）
 const pendingWithdrawAmount = pendingMap[u.uid] || 0;
 
-// 🔥 检查 amount_due
-const amountDueRound = u.amount_due_round || 0;
-const amountDueOrdersCount = u.amount_due_orders_count || 0;
-let totalAmountDue = 0;
-if (amountDueRound > 0) totalAmountDue += amountDueRound;
-if (amountDueOrdersCount > 0) totalAmountDue += amountDueOrdersCount;
+// 从用户数据中读取 amount_due
+const amountDue = parseFloat(u.amount_due) || 0;
+const amountDueRound = parseFloat(u.amount_due_round) || 0;
+const amountDueOrdersCount = parseFloat(u.amount_due_orders_count) || 0;
+let totalAmountDue = amountDue + amountDueRound + amountDueOrdersCount;
 
-// 🔥 如果有 amount_due，显示为负数；否则显示正常 pending
+// 如果有 amount_due，显示为负数
 let displayPending = pendingWithdrawAmount;
 if (totalAmountDue > 0) {
     displayPending = -totalAmountDue;
 }
 
 const pendingCell = row.insertCell(5);
-pendingCell.innerHTML = `<span class="${displayPending >= 0 ? 'pending-positive' : 'pending-negative'}" style="font-weight: 600;">${displayPending < 0 ? '-' : ''}€${Math.abs(displayPending).toFixed(2)}</span>`;
+const isNegative = displayPending < 0;
+pendingCell.innerHTML = `
+    <span style="font-weight: 700; ${isNegative ? 'color: #ff5a5a;' : 'color: #ffb84d;'}">
+        ${isNegative ? '-' : ''}€${Math.abs(displayPending).toFixed(2)}
+    </span>
+    ${isNegative ? '<div style="font-size: 9px; color: #ff5a5a; opacity: 0.7;">Amount Due</div>' : ''}
+`;
             
             // 7. Balance + Deposit + Deduct
 const balanceCell = row.insertCell(6);
