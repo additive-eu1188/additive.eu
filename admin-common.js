@@ -543,38 +543,39 @@ function initParticleNetwork() {
         sidebar.insertBefore(container, sidebar.firstChild);
     }
 
-    let canvas = container.querySelector('canvas');
-    if (!canvas) {
-        canvas = document.createElement('canvas');
-        container.appendChild(canvas);
-    }
+    // ★ 清空容器，重新构建 (避免重复)
+    container.innerHTML = '';
 
-    // 2. 创建毛玻璃覆盖层 (z-index: 1 - 在粒子之上，内容之下)
-    let glassLayer = sidebar.querySelector('.sidebar-glass');
-    if (!glassLayer) {
-        glassLayer = document.createElement('div');
-        glassLayer.className = 'sidebar-glass';
-        glassLayer.style.cssText = `
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: 1;
-            pointer-events: none;
-            background: rgba(10, 14, 30, 0.15);
-            backdrop-filter: blur(4px) saturate(1.1);
-            -webkit-backdrop-filter: blur(4px) saturate(1.1);
-            border-radius: 0;
-        `;
-        // ★ 关键：插入到 canvas 之后，sidebar-content 之前
-        const content = sidebar.querySelector('.sidebar-content');
-        if (content) {
-            sidebar.insertBefore(glassLayer, content);
-        } else {
-            sidebar.appendChild(glassLayer);
-        }
-    }
+    // 2. 创建毛玻璃覆盖层 (在 canvas 内部，覆盖粒子)
+    const glassLayer = document.createElement('div');
+    glassLayer.className = 'sidebar-glass';
+    glassLayer.style.cssText = `
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 1;
+        pointer-events: none;
+        background: rgba(10, 14, 30, 0.15);
+        backdrop-filter: blur(4px) saturate(1.1);
+        -webkit-backdrop-filter: blur(4px) saturate(1.1);
+        border-radius: 0;
+    `;
+    container.appendChild(glassLayer);
+
+    // 3. 创建 canvas (在毛玻璃下方)
+    const canvas = document.createElement('canvas');
+    canvas.style.cssText = `
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        display: block;
+        z-index: 0;
+    `;
+    container.appendChild(canvas);
 
     const ctx = canvas.getContext('2d');
     let width, height;
