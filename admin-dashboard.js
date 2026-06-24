@@ -282,7 +282,7 @@ function applyConversionData(data, days) {
         if (allConverteds[i]) allConverteds[i].innerText = d.converted;
         if (allRates[i]) {
             allRates[i].innerText = d.rate + '%';
-            allRates[i].style.color = d.rate >= 50 ? '#7ad0b0' : d.rate >= 20 ? '#d4c09a' : '#e88080';
+            allRates[i].style.color = d.rate >= 50 ? '#7ad0b0' : d.rate >= 20 ? '#c8b090' : '#e88080';
         }
     }
     
@@ -292,10 +292,12 @@ function applyConversionData(data, days) {
         var row = allRows[j];
         var label = row.querySelector('.conversion-stat-label');
         if (label && label.innerText === targetLabel) {
-            row.style.background = 'rgba(212, 175, 55, 0.06)';
+            row.style.background = 'rgba(200, 176, 144, 0.08)';
             row.style.borderRadius = '8px';
+            row.style.padding = '3px 6px';
         } else {
             row.style.background = 'transparent';
+            row.style.padding = '3px 0';
         }
     }
 }
@@ -307,49 +309,51 @@ function initWaveRing() {
     
     // 清空容器
     container.innerHTML = '';
+    container.style.width = '200px';
+    container.style.height = '200px';
+    container.style.position = 'relative';
+    container.style.margin = '0 auto';
     
-    // 创建 canvas
+    // 创建 canvas - 波浪层（最底层）
     var canvas = document.createElement('canvas');
-    canvas.width = 220;
-    canvas.height = 220;
+    canvas.width = 200;
+    canvas.height = 200;
     canvas.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;border-radius:50%;z-index:1;';
     canvas.id = 'waveCanvas';
     container.appendChild(canvas);
     
-    // 创建 SVG
+    // 创建 SVG - 进度条层（中间层）
     var svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-    svg.setAttribute('viewBox', '0 0 220 220');
+    svg.setAttribute('viewBox', '0 0 200 200');
     svg.style.cssText = 'width:100%;height:100%;transform:rotate(-90deg);position:relative;z-index:2;';
     svg.innerHTML = `
         <defs>
             <linearGradient id="metalGrad" x1="0%" y1="0%" x2="100%" y2="100%">
                 <stop offset="0%" stop-color="#3a2a1a"/>
-                <stop offset="15%" stop-color="#f0d8a0"/>
-                <stop offset="30%" stop-color="#b8942a"/>
-                <stop offset="45%" stop-color="#e8cc80"/>
-                <stop offset="60%" stop-color="#8a7020"/>
-                <stop offset="75%" stop-color="#f0e0b0"/>
-                <stop offset="90%" stop-color="#c8a838"/>
+                <stop offset="20%" stop-color="#c8b090"/>
+                <stop offset="40%" stop-color="#b8942a"/>
+                <stop offset="55%" stop-color="#e8d5c0"/>
+                <stop offset="70%" stop-color="#8a7020"/>
+                <stop offset="85%" stop-color="#c8b090"/>
                 <stop offset="100%" stop-color="#2a1a0a"/>
             </linearGradient>
             <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
                 <stop offset="0%" stop-color="#b8942a"/>
-                <stop offset="40%" stop-color="#e8cc80"/>
-                <stop offset="70%" stop-color="#d4af37"/>
-                <stop offset="100%" stop-color="#f0d8a0"/>
+                <stop offset="30%" stop-color="#c8b090"/>
+                <stop offset="60%" stop-color="#d4af37"/>
+                <stop offset="100%" stop-color="#c8b090"/>
             </linearGradient>
         </defs>
-        <circle cx="110" cy="110" r="95" fill="none" stroke="url(#metalGrad)" stroke-width="14" filter="drop-shadow(0 0 20px rgba(212,175,55,0.08))"/>
-        <circle cx="110" cy="110" r="80" fill="none" stroke="rgba(255,255,255,0.04)" stroke-width="10"/>
-        <circle cx="110" cy="110" r="80" fill="none" stroke="url(#grad)" stroke-width="10" stroke-linecap="round" stroke-dasharray="408.4" stroke-dashoffset="408.4" filter="drop-shadow(0 0 16px rgba(212,175,55,0.25))" class="progress-ring"/>
+        <circle cx="100" cy="100" r="85" fill="none" stroke="rgba(255,255,255,0.03)" stroke-width="12"/>
+        <circle cx="100" cy="100" r="85" fill="none" stroke="url(#grad)" stroke-width="12" stroke-linecap="round" stroke-dasharray="534.07" stroke-dashoffset="534.07" filter="drop-shadow(0 0 20px rgba(200,176,144,0.3))" class="progress-ring"/>
     `;
     container.appendChild(svg);
     
-    // 创建中心文字
+    // 创建中心文字（最上层）
     var centerText = document.createElement('div');
     centerText.style.cssText = 'position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;pointer-events:none;z-index:10;';
     centerText.innerHTML = `
-        <div id="ringPercent" style="font-size:42px;font-weight:700;color:#f0e0b0;letter-spacing:-1px;line-height:1.1;text-shadow:0 0 40px rgba(212,175,55,0.15);">78%</div>
+        <div id="ringPercent" style="font-size:42px;font-weight:700;color:#c8b090;letter-spacing:-1px;line-height:1.1;text-shadow:0 0 40px rgba(200,176,144,0.2);">78%</div>
         <div style="font-size:9px;color:#6a5a3a;letter-spacing:1.5px;text-transform:uppercase;margin-top:2px;">Conversion Rate</div>
     `;
     container.appendChild(centerText);
@@ -362,7 +366,7 @@ function initWaveRing() {
         var progressRing = container.querySelector('.progress-ring');
         if (progressRing) {
             var rate = parseInt(document.getElementById('ringPercent')?.innerText || '78');
-            var circumference = 408.4;
+            var circumference = 534.07;
             var offset = circumference - (circumference * rate / 100);
             progressRing.style.transition = 'stroke-dashoffset 2.2s cubic-bezier(0.22,1,0.36,1)';
             progressRing.style.strokeDashoffset = offset;
@@ -370,42 +374,64 @@ function initWaveRing() {
     }, 100);
 }
 
-// ========== 波浪动画引擎 ==========
+// ========== 波浪动画引擎 - 更明显，向外扩散渐变消失 ==========
 function startWaveAnimation(canvas) {
     var ctx = canvas.getContext('2d');
-    var w = 220, h = 220;
-    var cx = 110, cy = 110;
+    var w = 200, h = 200;
+    var cx = 100, cy = 100;
     
     var waves = [];
-    for (var layer = 0; layer < 5; layer++) {
-        var baseRadius = 12 + layer * 16;
-        var speed = 0.6 + layer * 0.2;
-        var amplitude = 6 + layer * 2;
-        var count = 6 + layer * 2;
-        var alpha = 0.10 - layer * 0.012;
+    
+    // 内圈波浪 - 更密集，更明显
+    for (var layer = 0; layer < 6; layer++) {
+        var baseRadius = 10 + layer * 14;
+        var speed = 0.8 + layer * 0.15;
+        var amplitude = 6 + layer * 2.5;
+        var count = 8 + layer * 2;
+        var alpha = 0.12 - layer * 0.012;
         waves.push({
             baseRadius: baseRadius,
             speed: speed,
             amplitude: amplitude,
             count: count,
             alpha: Math.max(alpha, 0.02),
-            phaseOffset: layer * 0.8,
-            color: layer % 2 === 0 ? '#d4af37' : '#f0d8a0'
+            phaseOffset: layer * 0.7 + 0.5,
+            color: layer % 2 === 0 ? '#c8b090' : '#d4af37'
         });
     }
-    for (var layer = 0; layer < 3; layer++) {
-        var baseRadius = 85 + layer * 14;
-        var speed = 0.15 + layer * 0.08;
-        var amplitude = 10 + layer * 4;
-        var count = 4 + layer * 2;
-        var alpha = 0.035 - layer * 0.007;
+    
+    // 外圈波浪 - 向外扩散，渐变消失
+    for (var layer = 0; layer < 5; layer++) {
+        var baseRadius = 70 + layer * 16;
+        var speed = 0.15 + layer * 0.06;
+        var amplitude = 8 + layer * 3;
+        var count = 5 + layer * 2;
+        var alpha = 0.05 - layer * 0.007;
         waves.push({
             baseRadius: baseRadius,
             speed: speed,
             amplitude: amplitude,
             count: count,
-            alpha: Math.max(alpha, 0.008),
-            phaseOffset: layer * 1.2,
+            alpha: Math.max(alpha, 0.005),
+            phaseOffset: layer * 1.0 + 1.2,
+            color: '#c8b090'
+        });
+    }
+    
+    // 额外稀疏外层 - 渐变消失
+    for (var layer = 0; layer < 4; layer++) {
+        var baseRadius = 110 + layer * 18;
+        var speed = 0.08 + layer * 0.04;
+        var amplitude = 6 + layer * 2;
+        var count = 3 + layer * 1;
+        var alpha = 0.025 - layer * 0.004;
+        waves.push({
+            baseRadius: baseRadius,
+            speed: speed,
+            amplitude: amplitude,
+            count: count,
+            alpha: Math.max(alpha, 0.003),
+            phaseOffset: layer * 1.4 + 2.0,
             color: '#b8942a'
         });
     }
@@ -416,48 +442,71 @@ function startWaveAnimation(canvas) {
         time++;
         ctx.clearRect(0, 0, w, h);
         
+        // ===== 绘制每一层波浪 =====
         waves.forEach(function(wave) {
-            var radius = wave.baseRadius + Math.sin(time * 0.015 + wave.phaseOffset) * 2;
+            var radius = wave.baseRadius + Math.sin(time * 0.018 + wave.phaseOffset) * 2.5;
+            
+            // 波浪线条 - 更亮更明显
             ctx.beginPath();
             ctx.arc(cx, cy, radius, 0, Math.PI * 2);
             ctx.strokeStyle = wave.color;
-            ctx.lineWidth = 1.5 + Math.sin(time * 0.02 + wave.phaseOffset) * 0.5;
-            ctx.globalAlpha = wave.alpha * (0.7 + 0.3 * Math.sin(time * 0.01 + wave.phaseOffset));
+            ctx.lineWidth = 2 + Math.sin(time * 0.025 + wave.phaseOffset) * 0.8;
+            ctx.globalAlpha = wave.alpha * (0.8 + 0.2 * Math.sin(time * 0.012 + wave.phaseOffset));
+            
+            // 发光效果
             ctx.shadowColor = wave.color;
-            ctx.shadowBlur = 6 + Math.sin(time * 0.015 + wave.phaseOffset) * 3;
+            ctx.shadowBlur = 12 + Math.sin(time * 0.018 + wave.phaseOffset) * 6;
             ctx.stroke();
             ctx.shadowBlur = 0;
             
-            var pointCount = wave.count;
+            // ===== 波峰光点 - 更多更亮 =====
+            var pointCount = wave.count + 2;
             for (var i = 0; i < pointCount; i++) {
-                var angle = (i / pointCount) * Math.PI * 2 + time * 0.012 * wave.speed + wave.phaseOffset;
-                var waveRadius = radius + Math.sin(time * 0.025 * wave.speed + angle * 2 + wave.phaseOffset) * wave.amplitude;
+                var angle = (i / pointCount) * Math.PI * 2 + time * 0.015 * wave.speed + wave.phaseOffset;
+                var waveRadius = radius + Math.sin(time * 0.03 * wave.speed + angle * 2.5 + wave.phaseOffset) * wave.amplitude;
+                
                 var x = cx + Math.cos(angle) * waveRadius;
                 var y = cy + Math.sin(angle) * waveRadius;
-                var pulse = 0.5 + 0.5 * Math.sin(time * 0.03 * wave.speed + angle + wave.phaseOffset);
-                var dotRadius = 1.2 + pulse * 2.5;
-                var grad = ctx.createRadialGradient(x, y, 0, x, y, dotRadius * 3);
-                grad.addColorStop(0, 'rgba(255, 215, 0, ' + (0.5 * wave.alpha * 2) + ')');
-                grad.addColorStop(0.5, 'rgba(212, 175, 55, ' + (0.25 * wave.alpha * 2) + ')');
+                
+                var pulse = 0.4 + 0.6 * Math.sin(time * 0.035 * wave.speed + angle * 1.5 + wave.phaseOffset);
+                var dotRadius = 1.5 + pulse * 3.5;
+                
+                // 光点发光
+                var grad = ctx.createRadialGradient(x, y, 0, x, y, dotRadius * 4);
+                grad.addColorStop(0, 'rgba(255, 215, 180, ' + (0.8 * wave.alpha * 2.5) + ')');
+                grad.addColorStop(0.3, 'rgba(200, 176, 144, ' + (0.4 * wave.alpha * 2.5) + ')');
                 grad.addColorStop(1, 'transparent');
+                
                 ctx.fillStyle = grad;
                 ctx.beginPath();
-                ctx.arc(x, y, dotRadius * 3, 0, Math.PI * 2);
+                ctx.arc(x, y, dotRadius * 4, 0, Math.PI * 2);
                 ctx.fill();
+                
+                // 光点核心
                 ctx.beginPath();
-                ctx.arc(x, y, dotRadius * 0.5, 0, Math.PI * 2);
-                ctx.fillStyle = 'rgba(255, 232, 180, ' + (0.7 * wave.alpha * 2) + ')';
+                ctx.arc(x, y, dotRadius * 0.6, 0, Math.PI * 2);
+                ctx.fillStyle = 'rgba(255, 240, 220, ' + (0.9 * wave.alpha * 2.5) + ')';
                 ctx.fill();
             }
         });
         
-        var centerGlow = ctx.createRadialGradient(cx, cy, 0, cx, cy, 60);
-        centerGlow.addColorStop(0, 'rgba(212, 175, 55, 0.035)');
-        centerGlow.addColorStop(0.5, 'rgba(212, 175, 55, 0.015)');
+        // ===== 中心光晕 =====
+        var centerGlow = ctx.createRadialGradient(cx, cy, 0, cx, cy, 70);
+        centerGlow.addColorStop(0, 'rgba(200, 176, 144, 0.04)');
+        centerGlow.addColorStop(0.5, 'rgba(200, 176, 144, 0.02)');
         centerGlow.addColorStop(1, 'transparent');
         ctx.fillStyle = centerGlow;
         ctx.beginPath();
-        ctx.arc(cx, cy, 60, 0, Math.PI * 2);
+        ctx.arc(cx, cy, 70, 0, Math.PI * 2);
+        ctx.fill();
+        
+        // ===== 中心微弱金光 =====
+        var innerGlow = ctx.createRadialGradient(cx, cy, 0, cx, cy, 25);
+        innerGlow.addColorStop(0, 'rgba(200, 176, 144, 0.03)');
+        innerGlow.addColorStop(1, 'transparent');
+        ctx.fillStyle = innerGlow;
+        ctx.beginPath();
+        ctx.arc(cx, cy, 25, 0, Math.PI * 2);
         ctx.fill();
         
         ctx.globalAlpha = 1;
@@ -641,7 +690,7 @@ async function refreshDashboard(days, force) {
             if (container) {
                 var progressRing = container.querySelector('.progress-ring');
                 if (progressRing) {
-                    var circumference = 408.4;
+                    var circumference = 534.07;
                     var offset = circumference - (circumference * rate / 100);
                     progressRing.style.strokeDashoffset = offset;
                 }
@@ -856,27 +905,27 @@ function loadDashboardPage(days) {
                     <div style="font-size: 15px; font-weight: 600; color: #d8dff0;">📈 New Orders Conversion Rate</div>
                 </div>
                 
-                <!-- 环形图 + 右侧信息 -->
-                <div style="display: flex; align-items: center; gap: 16px; position: relative; z-index: 1;">
+                <!-- 环形图 + 右侧信息 - 上下间距均衡 -->
+                <div style="display: flex; align-items: center; gap: 16px; position: relative; z-index: 1; padding: 4px 0;">
                     <!-- 环形图容器 -->
-                    <div id="waveRingContainer" style="width: 180px; height: 180px; flex-shrink: 0; position: relative; margin: 0 auto;">
+                    <div id="waveRingContainer" style="width: 200px; height: 200px; flex-shrink: 0; position: relative;">
                         <!-- 由 JavaScript 动态生成 -->
                     </div>
                     
                     <!-- 右侧统计数据 -->
                     <div style="flex: 1; min-width: 0;">
-                        <div style="font-size: 11px; color: #6a5a3a; letter-spacing: 0.5px; margin-bottom: 8px;">
+                        <div style="font-size: 11px; color: #6a5a3a; letter-spacing: 0.5px; margin-bottom: 6px;">
                             <span id="conversionLabel" style="color: #8892a8;">Today Register</span>
                         </div>
-                        <div style="display: flex; align-items: baseline; gap: 6px; margin-bottom: 12px;">
-                            <span id="conversionRegister" style="font-size: 28px; font-weight: 700; color: #f0e0b0;">0</span>
+                        <div style="display: flex; align-items: baseline; gap: 6px; margin-bottom: 10px;">
+                            <span id="conversionRegister" style="font-size: 28px; font-weight: 700; color: #c8b090;">0</span>
                             <span style="font-size: 14px; color: #6a5a3a;">/</span>
                             <span id="conversionConverted" style="font-size: 20px; font-weight: 600; color: #d4af37;">0</span>
                             <span style="font-size: 11px; color: #5a4a2a;">converted</span>
                         </div>
                         
                         <!-- 所有时间线数据 -->
-                        <div style="margin-top: 6px; border-top: 1px solid rgba(212,175,55,0.06); padding-top: 8px;">
+                        <div style="margin-top: 4px; border-top: 1px solid rgba(200,176,144,0.06); padding-top: 6px;">
                             <div class="conversion-stat-row" style="display: flex; justify-content: space-between; padding: 3px 0; font-size: 11px; color: #6a7a92;">
                                 <span class="conversion-stat-label">Today</span>
                                 <span><span class="conversion-stat-register">0</span> / <span class="conversion-stat-converted">0</span></span>
@@ -945,7 +994,7 @@ function loadDashboardPage(days) {
         #activityList::-webkit-scrollbar-thumb { background: rgba(180,180,200,0.06); border-radius: 4px; }
         #activityList::-webkit-scrollbar-track { background: transparent; }
         .conversion-stat-row:hover {
-            background: rgba(212,175,55,0.04);
+            background: rgba(200,176,144,0.04);
             border-radius: 6px;
         }
     `;
