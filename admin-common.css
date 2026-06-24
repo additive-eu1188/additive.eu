@@ -205,7 +205,7 @@ body {
 .nav-list {
     display: flex;
     flex-direction: column;
-    gap: 5px;
+    gap: 6px;
     flex: 1;
     overflow-y: auto;
     padding-right: 2px;
@@ -225,12 +225,14 @@ body {
     align-items: center;
     gap: 14px;
     padding: 12px 18px;
-    border-radius: 14px;
-    background: rgba(12, 18, 38, 0.65);
+    /* ★ 左侧直角，右侧圆角 ★ */
+    border-radius: 0 14px 14px 0;
+    background: rgba(12, 18, 38, 0.50);
     backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px);
-    border: 1px solid rgba(255, 255, 255, 0.03);
-    color: rgba(255, 255, 255, 0.45);
+    /* ★ 完全没有边框 ★ */
+    border: none;
+    color: rgba(255, 255, 255, 0.35);
     font-size: 14px;
     font-weight: 500;
     cursor: pointer;
@@ -239,29 +241,20 @@ body {
     text-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
     user-select: none;
     -webkit-tap-highlight-color: transparent;
-    overflow: hidden;
+    overflow: visible;
     transform-origin: left center;
     pointer-events: auto;
 }
 
-/* 卡片内发光边框 */
-.nav-item::before {
+/* 左侧边缘细线（卡片的"起点"） */
+.nav-item::after {
     content: '';
     position: absolute;
-    inset: 0;
-    border-radius: 14px;
-    padding: 1px;
-    background: linear-gradient(135deg, rgba(214, 178, 94, 0.05), transparent 60%, rgba(214, 178, 94, 0.02));
-    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-    -webkit-mask-composite: xor;
-    mask-composite: exclude;
-    pointer-events: none;
-    opacity: 0;
-    transition: opacity 0.5s ease;
-}
-
-.nav-item:hover::before {
-    opacity: 1;
+    left: 0;
+    top: 0;
+    width: 1px;
+    height: 100%;
+    background: linear-gradient(180deg, transparent, rgba(214, 178, 94, 0.08), transparent);
 }
 
 .nav-item i {
@@ -291,7 +284,6 @@ body {
     border-radius: 20px;
     background: rgba(214, 178, 94, 0.04);
     color: rgba(214, 178, 94, 0.15);
-    border: 1px solid rgba(214, 178, 94, 0.02);
     flex-shrink: 0;
     transition: all 0.4s ease;
     position: relative;
@@ -301,60 +293,53 @@ body {
 
 /* 悬停效果 */
 .nav-item:hover {
-    background: rgba(20, 30, 60, 0.75);
-    border-color: rgba(214, 178, 94, 0.06);
-    color: rgba(255, 255, 255, 0.7);
-    transform: translateX(4px) scale(1.01);
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
+    background: rgba(20, 30, 60, 0.65);
+    color: rgba(255, 255, 255, 0.6);
+    transform: translateX(4px);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
 }
 
 .nav-item:hover i {
-    color: rgba(214, 178, 94, 0.5);
+    color: rgba(214, 178, 94, 0.4);
     transform: scale(1.05);
 }
 
 .nav-item:hover .badge {
     background: rgba(214, 178, 94, 0.06);
-    color: rgba(214, 178, 94, 0.3);
+    color: rgba(214, 178, 94, 0.25);
 }
 
-/* 激活状态 */
+/* 激活状态 - 金色 */
 .nav-item.active {
-    background: rgba(214, 178, 94, 0.08);
-    border-color: rgba(214, 178, 94, 0.12);
     color: #F3D38B;
-    box-shadow: 0 0 40px rgba(214, 178, 94, 0.04), inset 0 1px 0 rgba(214, 178, 94, 0.06);
+    background: rgba(214, 178, 94, 0.06);
     transform: translateX(2px);
-}
-
-.nav-item.active::before {
-    opacity: 1;
+    box-shadow: 0 0 40px rgba(214, 178, 94, 0.03);
 }
 
 .nav-item.active i {
     color: #D6B25E;
-    filter: drop-shadow(0 0 8px rgba(214, 178, 94, 0.15));
+    filter: drop-shadow(0 0 8px rgba(214, 178, 94, 0.1));
 }
 
 .nav-item.active .badge {
-    background: rgba(214, 178, 94, 0.12);
+    background: rgba(214, 178, 94, 0.08);
     color: #D6B25E;
-    border-color: rgba(214, 178, 94, 0.08);
-    box-shadow: 0 0 20px rgba(214, 178, 94, 0.04);
 }
 
 /* 左侧金色光条 */
-.nav-item.active::after {
+.nav-item.active::before {
     content: '';
     position: absolute;
-    left: -1px;
+    left: 0px;
     top: 15%;
     height: 70%;
     width: 3px;
     background: linear-gradient(180deg, #F3D38B, #D6B25E, #B8942A);
-    border-radius: 0 6px 6px 0;
-    box-shadow: 0 0 24px rgba(214, 178, 94, 0.2), inset 0 0 12px rgba(214, 178, 94, 0.1);
+    border-radius: 0 4px 4px 0;
+    box-shadow: 0 0 24px rgba(214, 178, 94, 0.15), inset 0 0 12px rgba(214, 178, 94, 0.05);
     animation: glowPulse 2s ease-in-out infinite alternate;
+    z-index: 3;
 }
 
 @keyframes glowPulse {
@@ -366,15 +351,14 @@ body {
 .nav-item.clicking {
     transform: scale(0.94) !important;
     transition-duration: 0.08s !important;
-    border-color: rgba(214, 178, 94, 0.2) !important;
-    box-shadow: 0 0 60px rgba(214, 178, 94, 0.08), inset 0 0 40px rgba(214, 178, 94, 0.04) !important;
+    box-shadow: 0 0 60px rgba(214, 178, 94, 0.06) !important;
 }
 
 /* 点击波纹 */
 .ripple-container {
     position: absolute;
     inset: 0;
-    border-radius: 14px;
+    border-radius: 0 14px 14px 0;
     overflow: hidden;
     pointer-events: none;
     z-index: 0;
@@ -383,7 +367,7 @@ body {
 .ripple-wave {
     position: absolute;
     border-radius: 50%;
-    background: radial-gradient(circle, rgba(214, 178, 94, 0.2) 0%, rgba(214, 178, 94, 0.05) 60%, transparent 80%);
+    background: radial-gradient(circle, rgba(214, 178, 94, 0.15) 0%, rgba(214, 178, 94, 0.03) 60%, transparent 80%);
     transform: scale(0);
     animation: rippleWave 0.7s cubic-bezier(0.22, 1, 0.36, 1) forwards;
     pointer-events: none;
@@ -401,7 +385,7 @@ body {
     left: -100%;
     width: 60%;
     height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(214, 178, 94, 0.06), transparent);
+    background: linear-gradient(90deg, transparent, rgba(214, 178, 94, 0.04), transparent);
     transform: skewX(-25deg);
     animation: shimmerSweep 0.6s ease-out forwards;
     pointer-events: none;
@@ -438,7 +422,7 @@ body {
     100% { transform: translate(var(--tx), var(--ty)) scale(0); opacity: 0; }
 }
 
-/* ===== 底部 ===== */
+/* ===== 底部 Logout ===== */
 .footer-section {
     pointer-events: auto;
     flex-shrink: 0;
@@ -452,12 +436,12 @@ body {
     align-items: center;
     gap: 14px;
     padding: 11px 18px;
-    border-radius: 14px;
-    background: rgba(12, 18, 38, 0.40);
+    border-radius: 0 14px 14px 0;
+    background: rgba(12, 18, 38, 0.30);
     backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px);
-    border: 1px solid rgba(255, 255, 255, 0.02);
-    color: rgba(255, 255, 255, 0.15);
+    border: none;
+    color: rgba(255, 255, 255, 0.12);
     font-size: 13px;
     cursor: pointer;
     transition: all 0.35s cubic-bezier(0.22, 1, 0.36, 1);
@@ -467,19 +451,18 @@ body {
 }
 
 .footer-item:hover {
-    background: rgba(20, 30, 60, 0.55);
-    color: rgba(255, 255, 255, 0.30);
-    border-color: rgba(255, 255, 255, 0.04);
+    background: rgba(20, 30, 60, 0.45);
+    color: rgba(255, 255, 255, 0.25);
     transform: translateX(2px);
 }
 
 .footer-item i {
-    color: rgba(214, 178, 94, 0.10);
+    color: rgba(214, 178, 94, 0.08);
     transition: 0.3s;
 }
 
 .footer-item:hover i {
-    color: rgba(214, 178, 94, 0.20);
+    color: rgba(214, 178, 94, 0.15);
 }
 
 .footer-item .version {
