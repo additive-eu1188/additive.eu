@@ -71,7 +71,44 @@ body {
     display: block;
 }
 
-/* ★ 毛玻璃覆盖层 - 在粒子上方，轻微打朦 */
+/* ===== 侧边栏 - 毛玻璃 + 粒子网络背景 ===== */
+.sidebar {
+    width: 280px;
+    height: 100vh;
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 10;
+    padding: 0;
+    overflow-y: auto;
+    background: transparent;
+    border-right: 1px solid rgba(214, 178, 94, 0.06);
+    display: flex;
+    flex-direction: column;
+    isolation: isolate;
+    transition: all 0.3s;
+}
+
+/* 粒子网络 Canvas 容器 - 最下层 (z-index: 0) */
+.sidebar-canvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 0;
+    pointer-events: none;
+    overflow: hidden;
+    border-radius: 0;
+}
+
+.sidebar-canvas canvas {
+    width: 100%;
+    height: 100%;
+    display: block;
+}
+
+/* ★ 毛玻璃覆盖层 - 在粒子上方 (z-index: 1)，内容下方 (z-index: 2) */
 .sidebar-glass {
     position: absolute;
     top: 0;
@@ -80,13 +117,13 @@ body {
     height: 100%;
     z-index: 1;
     pointer-events: none;
-    background: rgba(10, 14, 30, 0.20);
-    backdrop-filter: blur(5px) saturate(1.15);
-    -webkit-backdrop-filter: blur(5px) saturate(1.15);
+    background: rgba(10, 14, 30, 0.15);
+    backdrop-filter: blur(4px) saturate(1.1);
+    -webkit-backdrop-filter: blur(4px) saturate(1.1);
     border-radius: 0;
 }
 
-/* 侧边栏内容 (在毛玻璃上层) */
+/* 侧边栏内容 (在毛玻璃上层 - z-index: 2) */
 .sidebar-content {
     position: relative;
     z-index: 2;

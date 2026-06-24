@@ -525,7 +525,7 @@ function initParticleNetwork() {
     const sidebar = document.querySelector('.sidebar');
     if (!sidebar) return;
 
-    // 1. 创建粒子 canvas 容器
+    // 1. 创建粒子 canvas 容器 (z-index: 0 - 最下层)
     let container = sidebar.querySelector('.sidebar-canvas');
     if (!container) {
         container = document.createElement('div');
@@ -549,7 +549,7 @@ function initParticleNetwork() {
         container.appendChild(canvas);
     }
 
-    // 2. 创建毛玻璃覆盖层 (在粒子之上)
+    // 2. 创建毛玻璃覆盖层 (z-index: 1 - 在粒子之上，内容之下)
     let glassLayer = sidebar.querySelector('.sidebar-glass');
     if (!glassLayer) {
         glassLayer = document.createElement('div');
@@ -562,12 +562,18 @@ function initParticleNetwork() {
             height: 100%;
             z-index: 1;
             pointer-events: none;
-            background: rgba(10, 14, 30, 0.20);
-            backdrop-filter: blur(5px) saturate(1.15);
-            -webkit-backdrop-filter: blur(5px) saturate(1.15);
+            background: rgba(10, 14, 30, 0.15);
+            backdrop-filter: blur(4px) saturate(1.1);
+            -webkit-backdrop-filter: blur(4px) saturate(1.1);
             border-radius: 0;
         `;
-        sidebar.insertBefore(glassLayer, sidebar.querySelector('.sidebar-content'));
+        // ★ 关键：插入到 canvas 之后，sidebar-content 之前
+        const content = sidebar.querySelector('.sidebar-content');
+        if (content) {
+            sidebar.insertBefore(glassLayer, content);
+        } else {
+            sidebar.appendChild(glassLayer);
+        }
     }
 
     const ctx = canvas.getContext('2d');
