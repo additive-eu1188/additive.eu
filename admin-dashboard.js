@@ -1,4 +1,4 @@
-// admin-dashboard.js - 完整版（专业质感风格，与Withdrawal页面一致）
+// admin-dashboard.js - 金属拉丝质感风格
 let trendChart = null;
 let ringChart = null;
 let breatheInterval = null;
@@ -19,7 +19,7 @@ const DEBOUNCE_DELAY = 300;
 function debounce(func, wait) {
     let timeout;
     return function executedFunction(...args) {
-        const later = () => {
+        const later = function() {
             clearTimeout(timeout);
             func(...args);
         };
@@ -30,58 +30,55 @@ function debounce(func, wait) {
 
 async function loadQuickCards() {
     try {
-        const [kycRes, withdrawalRes, poolRes, emailRes] = await Promise.all([
-            sb.from('kyc_verifications').select('id', { count: 'exact', head: true }).eq('status', 'pending'),
-            sb.from('withdrawals').select('id', { count: 'exact', head: true }).eq('status', 'pending'),
-            sb.from('orders_pool').select('*', { count: 'exact', head: true }),
-            sb.from('email_verification_requests').select('id', { count: 'exact', head: true }).eq('is_verified', false).is('code', null)
-        ]);
+        var kycRes = await sb.from('kyc_verifications').select('id', { count: 'exact', head: true }).eq('status', 'pending');
+        var withdrawalRes = await sb.from('withdrawals').select('id', { count: 'exact', head: true }).eq('status', 'pending');
+        var poolRes = await sb.from('orders_pool').select('*', { count: 'exact', head: true });
+        var emailRes = await sb.from('email_verification_requests').select('id', { count: 'exact', head: true }).eq('is_verified', false).is('code', null);
         
-        const kycEl = document.getElementById('kycPendingCount');
-        const withdrawalEl = document.getElementById('withdrawalPendingCount');
-        const poolEl = document.getElementById('orderPoolCount');
-        const emailEl = document.getElementById('emailPendingCount');
+        var kycEl = document.getElementById('kycPendingCount');
+        var withdrawalEl = document.getElementById('withdrawalPendingCount');
+        var poolEl = document.getElementById('orderPoolCount');
+        var emailEl = document.getElementById('emailPendingCount');
         
         if (kycEl) kycEl.innerText = kycRes.count || 0;
         if (withdrawalEl) withdrawalEl.innerText = withdrawalRes.count || 0;
         if (poolEl) poolEl.innerText = poolRes.count || 0;
         if (emailEl) emailEl.innerText = emailRes.count || 0;
         
-        console.log(`实时更新: KYC待审核=${kycRes.count || 0}, 提现待处理=${withdrawalRes.count || 0}, 待发送Email=${emailRes.count || 0}`);
+        console.log('实时更新: KYC待审核=' + (kycRes.count || 0) + ', 提现待处理=' + (withdrawalRes.count || 0) + ', 待发送Email=' + (emailRes.count || 0));
     } catch (e) { console.error('加载快捷卡片失败:', e); }
 }
 
-async function loadStatsData(days, force = false) {
-    const now = Date.now();
+async function loadStatsData(days, force) {
+    force = force || false;
+    var now = Date.now();
     if (!force && cachedData.stats && (now - cachedData.lastStatsTime) < CACHE_DURATION) {
         applyStatsData(cachedData.stats);
         return;
     }
     try {
-        const [usersRes, depositsRes, withdrawalsRes] = await Promise.all([
-            sb.from('users').select('created_at, balance'),
-            sb.from('deposits').select('created_at, amount'),
-            sb.from('withdrawals').select('request_date, amount, status')
-        ]);
-        const users = usersRes.data || [];
-        const deposits = depositsRes.data || [];
-        const withdrawals = withdrawalsRes.data || [];
-        const nowDate = new Date();
-        const startDate = new Date(); startDate.setDate(nowDate.getDate() - days);
-        const startStr = startDate.toISOString().split('T')[0];
-        const lastPeriodStart = new Date(); lastPeriodStart.setDate(nowDate.getDate() - days * 2);
-        const lastPeriodStr = lastPeriodStart.toISOString().split('T')[0];
+        var usersRes = await sb.from('users').select('created_at, balance');
+        var depositsRes = await sb.from('deposits').select('created_at, amount');
+        var withdrawalsRes = await sb.from('withdrawals').select('request_date, amount, status');
+        var users = usersRes.data || [];
+        var deposits = depositsRes.data || [];
+        var withdrawals = withdrawalsRes.data || [];
+        var nowDate = new Date();
+        var startDate = new Date(); startDate.setDate(nowDate.getDate() - days);
+        var startStr = startDate.toISOString().split('T')[0];
+        var lastPeriodStart = new Date(); lastPeriodStart.setDate(nowDate.getDate() - days * 2);
+        var lastPeriodStr = lastPeriodStart.toISOString().split('T')[0];
         
-        const newUsers = users.filter(u => u.created_at && u.created_at.split('T')[0] >= startStr).length;
-        const prevNewUsers = users.filter(u => u.created_at && u.created_at.split('T')[0] >= lastPeriodStr && u.created_at.split('T')[0] < startStr).length;
-        const totalDeposit = deposits.reduce((s, d) => s + (d.amount || 0), 0);
-        const periodDeposit = deposits.filter(d => d.created_at && d.created_at.split('T')[0] >= startStr).reduce((s, d) => s + (d.amount || 0), 0);
-        const prevPeriodDeposit = deposits.filter(d => d.created_at && d.created_at.split('T')[0] >= lastPeriodStr && d.created_at.split('T')[0] < startStr).reduce((s, d) => s + (d.amount || 0), 0);
-        const totalWithdraw = withdrawals.filter(w => w.status === 'approved').reduce((s, w) => s + (w.amount || 0), 0);
-        const periodWithdraw = withdrawals.filter(w => w.status === 'approved' && w.request_date && w.request_date.split('T')[0] >= startStr).reduce((s, w) => s + (w.amount || 0), 0);
-        const prevPeriodWithdraw = withdrawals.filter(w => w.status === 'approved' && w.request_date && w.request_date.split('T')[0] >= lastPeriodStr && w.request_date.split('T')[0] < startStr).reduce((s, w) => s + (w.amount || 0), 0);
+        var newUsers = users.filter(function(u) { return u.created_at && u.created_at.split('T')[0] >= startStr; }).length;
+        var prevNewUsers = users.filter(function(u) { return u.created_at && u.created_at.split('T')[0] >= lastPeriodStr && u.created_at.split('T')[0] < startStr; }).length;
+        var totalDeposit = deposits.reduce(function(s, d) { return s + (d.amount || 0); }, 0);
+        var periodDeposit = deposits.filter(function(d) { return d.created_at && d.created_at.split('T')[0] >= startStr; }).reduce(function(s, d) { return s + (d.amount || 0); }, 0);
+        var prevPeriodDeposit = deposits.filter(function(d) { return d.created_at && d.created_at.split('T')[0] >= lastPeriodStr && d.created_at.split('T')[0] < startStr; }).reduce(function(s, d) { return s + (d.amount || 0); }, 0);
+        var totalWithdraw = withdrawals.filter(function(w) { return w.status === 'approved'; }).reduce(function(s, w) { return s + (w.amount || 0); }, 0);
+        var periodWithdraw = withdrawals.filter(function(w) { return w.status === 'approved' && w.request_date && w.request_date.split('T')[0] >= startStr; }).reduce(function(s, w) { return s + (w.amount || 0); }, 0);
+        var prevPeriodWithdraw = withdrawals.filter(function(w) { return w.status === 'approved' && w.request_date && w.request_date.split('T')[0] >= lastPeriodStr && w.request_date.split('T')[0] < startStr; }).reduce(function(s, w) { return s + (w.amount || 0); }, 0);
         
-        const statsData = { newUsers, prevNewUsers, totalUsers: users.length, totalDeposit, periodDeposit, prevPeriodDeposit, totalWithdraw, periodWithdraw, prevPeriodWithdraw };
+        var statsData = { newUsers: newUsers, prevNewUsers: prevNewUsers, totalUsers: users.length, totalDeposit: totalDeposit, periodDeposit: periodDeposit, prevPeriodDeposit: prevPeriodDeposit, totalWithdraw: totalWithdraw, periodWithdraw: periodWithdraw, prevPeriodWithdraw: prevPeriodWithdraw };
         cachedData.stats = statsData;
         cachedData.lastStatsTime = now;
         applyStatsData(statsData);
@@ -89,13 +86,13 @@ async function loadStatsData(days, force = false) {
 }
 
 function applyStatsData(data) {
-    const newUsersEl = document.getElementById('newUsersCount');
-    const totalUsersEl = document.getElementById('totalUsersCount');
-    const totalDepositEl = document.getElementById('totalDepositCount');
-    const totalWithdrawEl = document.getElementById('totalWithdrawCount');
-    const newUsersTrendEl = document.getElementById('newUsersTrend');
-    const totalDepositTrendEl = document.getElementById('totalDepositTrend');
-    const totalWithdrawTrendEl = document.getElementById('totalWithdrawTrend');
+    var newUsersEl = document.getElementById('newUsersCount');
+    var totalUsersEl = document.getElementById('totalUsersCount');
+    var totalDepositEl = document.getElementById('totalDepositCount');
+    var totalWithdrawEl = document.getElementById('totalWithdrawCount');
+    var newUsersTrendEl = document.getElementById('newUsersTrend');
+    var totalDepositTrendEl = document.getElementById('totalDepositTrend');
+    var totalWithdrawTrendEl = document.getElementById('totalWithdrawTrend');
     
     if (newUsersEl) animateNumber(newUsersEl, data.newUsers, '', '');
     if (newUsersTrendEl) newUsersTrendEl.innerHTML = getTrendHtml(data.newUsers, data.prevNewUsers);
@@ -106,31 +103,30 @@ function applyStatsData(data) {
     if (totalWithdrawTrendEl) totalWithdrawTrendEl.innerHTML = getTrendHtml(data.periodWithdraw, data.prevPeriodWithdraw);
 }
 
-async function loadChartData(days, force = false) {
-    const now = Date.now();
+async function loadChartData(days, force) {
+    force = force || false;
+    var now = Date.now();
     if (!force && cachedData.chart && (now - cachedData.lastChartTime) < CACHE_DURATION && trendChart) {
         trendChart.setOption({ xAxis: { data: cachedData.chart.dates }, series: [{ data: cachedData.chart.depositData }, { data: cachedData.chart.withdrawData }] });
         return;
     }
     try {
-        const [depositsRes, withdrawalsRes] = await Promise.all([
-            sb.from('deposits').select('created_at, amount'),
-            sb.from('withdrawals').select('request_date, amount, status')
-        ]);
-        const deposits = depositsRes.data || [];
-        const withdrawals = withdrawalsRes.data || [];
-        const dates = [], depositData = [], withdrawData = [];
-        const today = new Date();
-        for (let i = days - 1; i >= 0; i--) {
-            const d = new Date(); d.setDate(today.getDate() - i);
-            const dateStr = d.toISOString().split('T')[0];
-            dates.push(`${d.getMonth() + 1}/${d.getDate()}`);
-            const dayDeposit = deposits.filter(dep => dep.created_at && dep.created_at.split('T')[0] === dateStr).reduce((s, d) => s + (d.amount || 0), 0);
-            const dayWithdraw = withdrawals.filter(w => w.status === 'approved' && w.request_date && w.request_date.split('T')[0] === dateStr).reduce((s, w) => s + (w.amount || 0), 0);
+        var depositsRes = await sb.from('deposits').select('created_at, amount');
+        var withdrawalsRes = await sb.from('withdrawals').select('request_date, amount, status');
+        var deposits = depositsRes.data || [];
+        var withdrawals = withdrawalsRes.data || [];
+        var dates = [], depositData = [], withdrawData = [];
+        var today = new Date();
+        for (var i = days - 1; i >= 0; i--) {
+            var d = new Date(); d.setDate(today.getDate() - i);
+            var dateStr = d.toISOString().split('T')[0];
+            dates.push((d.getMonth() + 1) + '/' + d.getDate());
+            var dayDeposit = deposits.filter(function(dep) { return dep.created_at && dep.created_at.split('T')[0] === dateStr; }).reduce(function(s, d) { return s + (d.amount || 0); }, 0);
+            var dayWithdraw = withdrawals.filter(function(w) { return w.status === 'approved' && w.request_date && w.request_date.split('T')[0] === dateStr; }).reduce(function(s, w) { return s + (w.amount || 0); }, 0);
             depositData.push(dayDeposit);
             withdrawData.push(dayWithdraw);
         }
-        cachedData.chart = { dates, depositData, withdrawData };
+        cachedData.chart = { dates: dates, depositData: depositData, withdrawData: withdrawData };
         cachedData.lastChartTime = now;
         if (trendChart) {
             trendChart.setOption({ 
@@ -140,26 +136,27 @@ async function loadChartData(days, force = false) {
                     { name: '出金', data: withdrawData }
                 ]
             });
-            console.log('趋势线图已更新:', { dates, depositData, withdrawData });
+            console.log('趋势线图已更新');
         }
     } catch (e) { console.error('加载图表数据失败:', e); }
 }
 
 async function loadRingData() {
     try {
-        const { data: users } = await sb.from('users').select('uid');
+        var usersResult = await sb.from('users').select('uid');
+        var users = usersResult.data;
         if (!users || users.length === 0) return;
         
-        let completed30Orders = 0;
-        const batchSize = 50;
-        for (let i = 0; i < users.length; i += batchSize) {
-            const batch = users.slice(i, i + batchSize);
-            const promises = batch.map(user => sb.from('order_history').select('id', { count: 'exact', head: true }).eq('uid', user.uid));
-            const results = await Promise.all(promises);
-            completed30Orders += results.filter(r => (r.count || 0) >= 30).length;
+        var completed30Orders = 0;
+        var batchSize = 50;
+        for (var i = 0; i < users.length; i += batchSize) {
+            var batch = users.slice(i, i + batchSize);
+            var promises = batch.map(function(user) { return sb.from('order_history').select('id', { count: 'exact', head: true }).eq('uid', user.uid); });
+            var results = await Promise.all(promises);
+            completed30Orders += results.filter(function(r) { return (r.count || 0) >= 30; }).length;
         }
-        const rate = Math.round((completed30Orders / users.length) * 100);
-        const percentEl = document.getElementById('ringPercent');
+        var rate = Math.round((completed30Orders / users.length) * 100);
+        var percentEl = document.getElementById('ringPercent');
         if (percentEl) percentEl.innerText = rate + '%';
         
         if (ringChart) {
@@ -169,8 +166,9 @@ async function loadRingData() {
 }
 
 // ========== 实时活动加载函数 ==========
-async function loadActivityTimeline(force = false) {
-    const now = Date.now();
+async function loadActivityTimeline(force) {
+    force = force || false;
+    var now = Date.now();
     if (!force && cachedData.activity && (now - cachedData.lastActivityTime) < CACHE_DURATION) {
         renderActivityList(cachedData.activity);
         return;
@@ -178,96 +176,93 @@ async function loadActivityTimeline(force = false) {
     try {
         console.log('🔄 加载实时活动...');
         
-        const [kycRes, withdrawalRes, userRes, emailRes] = await Promise.all([
-            sb.from('kyc_verifications').select('*').order('uploaded_at', { ascending: false }).limit(30),
-            sb.from('withdrawals').select('*').order('request_date', { ascending: false }).limit(30),
-            sb.from('users').select('*').order('created_at', { ascending: false }).limit(30),
-            sb.from('email_verification_requests').select('*').order('requested_at', { ascending: false }).limit(30)
-        ]);
+        var kycRes = await sb.from('kyc_verifications').select('*').order('uploaded_at', { ascending: false }).limit(30);
+        var withdrawalRes = await sb.from('withdrawals').select('*').order('request_date', { ascending: false }).limit(30);
+        var userRes = await sb.from('users').select('*').order('created_at', { ascending: false }).limit(30);
+        var emailRes = await sb.from('email_verification_requests').select('*').order('requested_at', { ascending: false }).limit(30);
         
-        const kycList = kycRes.data || [];
-        const withdrawalList = withdrawalRes.data || [];
-        const userList = userRes.data || [];
-        const emailList = emailRes.data || [];
+        var kycList = kycRes.data || [];
+        var withdrawalList = withdrawalRes.data || [];
+        var userList = userRes.data || [];
+        var emailList = emailRes.data || [];
         
-        console.log(`📊 数据统计: KYC=${kycList.length}, 提现=${withdrawalList.length}, 用户=${userList.length}, 邮箱=${emailList.length}`);
+        console.log('📊 数据统计: KYC=' + kycList.length + ', 提现=' + withdrawalList.length + ', 用户=' + userList.length + ', 邮箱=' + emailList.length);
         
-        const activities = [];
+        var activities = [];
         
-        // 添加KYC活动
-        for (const k of kycList) {
-            let username = k.username || k.uid;
-            if (!k.username || k.username === k.uid) {
-                const { data: user } = await sb.from('users').select('username').eq('uid', k.uid).maybeSingle();
-                if (user) username = user.username;
+        for (var k = 0; k < kycList.length; k++) {
+            var item = kycList[k];
+            var username = item.username || item.uid;
+            if (!item.username || item.username === item.uid) {
+                var userResult = await sb.from('users').select('username').eq('uid', item.uid).maybeSingle();
+                if (userResult.data) username = userResult.data.username;
             }
             
-            let statusText = '';
-            if (k.status === 'pending') statusText = '待审核';
-            else if (k.status === 'approved') statusText = '已通过';
-            else if (k.status === 'rejected') statusText = '已拒绝';
+            var statusText = '';
+            if (item.status === 'pending') statusText = '待审核';
+            else if (item.status === 'approved') statusText = '已通过';
+            else if (item.status === 'rejected') statusText = '已拒绝';
             
             activities.push({
                 type: 'kyc',
-                title: `📋 KYC申请 ${statusText}`,
+                title: '📋 KYC申请 ' + statusText,
                 user: username,
-                time: k.uploaded_at || k.created_at,
+                time: item.uploaded_at || item.created_at,
                 icon: 'fas fa-id-card',
-                color: '#d4c09a'
+                color: '#c8b090'
             });
         }
         
-        // 添加提现活动
-        for (const w of withdrawalList) {
-            let statusText = '';
-            if (w.status === 'pending') statusText = '待审核';
-            else if (w.status === 'approved') statusText = '已批准';
-            else if (w.status === 'rejected') statusText = '已拒绝';
+        for (var w = 0; w < withdrawalList.length; w++) {
+            var item = withdrawalList[w];
+            var statusText = '';
+            if (item.status === 'pending') statusText = '待审核';
+            else if (item.status === 'approved') statusText = '已批准';
+            else if (item.status === 'rejected') statusText = '已拒绝';
             
             activities.push({
                 type: 'withdrawal',
-                title: `💰 提现申请 ${statusText}`,
-                user: w.username,
-                amount: `€${(w.amount || 0).toFixed(2)}`,
-                time: w.request_date,
+                title: '💰 提现申请 ' + statusText,
+                user: item.username,
+                amount: '€' + (item.amount || 0).toFixed(2),
+                time: item.request_date,
                 icon: 'fas fa-money-bill-wave',
                 color: '#8ab4f0'
             });
         }
         
-        // 添加新用户注册活动
-        for (const u of userList) {
+        for (var u = 0; u < userList.length; u++) {
+            var item = userList[u];
             activities.push({
                 type: 'user',
                 title: '👤 新用户注册',
-                user: u.username,
-                time: u.created_at,
+                user: item.username,
+                time: item.created_at,
                 icon: 'fas fa-user-plus',
                 color: '#7ad0b0'
             });
         }
         
-        // 添加邮箱验证请求活动
-        for (const e of emailList) {
-            let statusText = '';
-            if (e.code && !e.is_verified) statusText = '待验证';
-            else if (e.is_verified) statusText = '已验证';
+        for (var e = 0; e < emailList.length; e++) {
+            var item = emailList[e];
+            var statusText = '';
+            if (item.code && !item.is_verified) statusText = '待验证';
+            else if (item.is_verified) statusText = '已验证';
             else statusText = '待设置验证码';
             
             activities.push({
                 type: 'email',
-                title: `📧 邮箱验证请求 ${statusText}`,
-                user: e.email,
-                time: e.requested_at,
+                title: '📧 邮箱验证请求 ' + statusText,
+                user: item.email,
+                time: item.requested_at,
                 icon: 'fas fa-envelope',
-                color: '#d4c09a'
+                color: '#c8b090'
             });
         }
         
-        // 按时间倒序排序
-        activities.sort((a, b) => new Date(b.time) - new Date(a.time));
+        activities.sort(function(a, b) { return new Date(b.time) - new Date(a.time); });
         
-        console.log(`📋 生成活动列表: ${activities.length} 条`);
+        console.log('📋 生成活动列表: ' + activities.length + ' 条');
         
         cachedData.activity = activities.slice(0, 30);
         cachedData.lastActivityTime = now;
@@ -279,7 +274,7 @@ async function loadActivityTimeline(force = false) {
 }
 
 function renderActivityList(activities) {
-    const activityList = document.getElementById('activityList');
+    var activityList = document.getElementById('activityList');
     if (!activityList) return;
     
     if (!activities || activities.length === 0) {
@@ -287,26 +282,26 @@ function renderActivityList(activities) {
         return;
     }
     
-    activityList.innerHTML = activities.map(a => {
-        let amountHtml = '';
+    var html = '';
+    for (var i = 0; i < activities.length; i++) {
+        var a = activities[i];
+        var amountHtml = '';
         if (a.amount) {
-            amountHtml = `<div style="font-size: 11px; color: #7ad0b0;">${a.amount}</div>`;
+            amountHtml = '<div style="font-size: 11px; color: #7ad0b0;">' + a.amount + '</div>';
         }
-        
-        return `
-            <div style="display: flex; align-items: center; gap: 14px; padding: 12px 0; border-bottom: 1px solid rgba(255,255,255,0.03); cursor: pointer;" onclick="handleActivityClick('${a.type}')">
-                <div style="width: 36px; height: 36px; border-radius: 10px; background: ${a.color}15; display: flex; align-items: center; justify-content: center;">
-                    <i class="${a.icon}" style="color: ${a.color};"></i>
-                </div>
-                <div style="flex: 1;">
-                    <div style="font-size: 13px; font-weight: 500; color: #d8dff0;">${escapeHtml(a.title)}</div>
-                    <div style="font-size: 11px; color: #8892a8;">${escapeHtml(a.user)}</div>
-                    ${amountHtml}
-                </div>
-                <div style="font-size: 10px; color: #5a6a82;">${formatTime(a.time)}</div>
-            </div>
-        `;
-    }).join('');
+        html += '<div style="display: flex; align-items: center; gap: 14px; padding: 12px 0; border-bottom: 1px solid rgba(180,180,200,0.04); cursor: pointer;" onclick="handleActivityClick(\'' + a.type + '\')">' +
+            '<div style="width: 36px; height: 36px; border-radius: 10px; background: ' + a.color + '15; display: flex; align-items: center; justify-content: center;">' +
+            '<i class="' + a.icon + '" style="color: ' + a.color + ';"></i>' +
+            '</div>' +
+            '<div style="flex: 1;">' +
+            '<div style="font-size: 13px; font-weight: 500; color: #d8dff0;">' + escapeHtml(a.title) + '</div>' +
+            '<div style="font-size: 11px; color: #8892a8;">' + escapeHtml(a.user) + '</div>' +
+            amountHtml +
+            '</div>' +
+            '<div style="font-size: 10px; color: #5a6a82;">' + formatTime(a.time) + '</div>' +
+            '</div>';
+    }
+    activityList.innerHTML = html;
 }
 
 // ===== 点击活动跳转 =====
@@ -320,7 +315,9 @@ window.handleActivityClick = function(type) {
     }
 };
 
-async function refreshDashboard(days = currentDays, force = false) {
+async function refreshDashboard(days, force) {
+    days = days || currentDays;
+    force = force || false;
     await Promise.all([
         loadQuickCards(),
         loadStatsData(days, force),
@@ -331,7 +328,7 @@ async function refreshDashboard(days = currentDays, force = false) {
 }
 
 function initTrendChart() {
-    const dom = document.getElementById('trendChart');
+    var dom = document.getElementById('trendChart');
     if (!dom) {
         console.error('trendChart容器不存在');
         return;
@@ -346,7 +343,7 @@ function initTrendChart() {
             trigger: 'axis', 
             axisPointer: { type: 'shadow' }, 
             backgroundColor: 'rgba(14,18,30,0.95)', 
-            borderColor: 'rgba(255,255,255,0.06)', 
+            borderColor: 'rgba(180,180,200,0.06)', 
             borderWidth: 1, 
             textStyle: { color: '#d8dff0' } 
         },
@@ -356,7 +353,7 @@ function initTrendChart() {
             type: 'category', 
             data: ['周一', '周二', '周三', '周四', '周五', '周六', '周日'], 
             axisLabel: { color: '#8892a8' }, 
-            axisLine: { lineStyle: { color: 'rgba(255,255,255,0.04)' } }, 
+            axisLine: { lineStyle: { color: 'rgba(180,180,200,0.04)' } }, 
             axisTick: { show: false } 
         },
         yAxis: { 
@@ -364,7 +361,7 @@ function initTrendChart() {
             name: '金额 (€)', 
             nameTextStyle: { color: '#8892a8' }, 
             axisLabel: { color: '#8892a8' }, 
-            splitLine: { lineStyle: { color: 'rgba(255,255,255,0.03)', type: 'dashed' } } 
+            splitLine: { lineStyle: { color: 'rgba(180,180,200,0.03)', type: 'dashed' } } 
         },
         series: [
             { 
@@ -393,8 +390,8 @@ function initTrendChart() {
     console.log('趋势线图初始化完成');
     
     if (pulseInterval) clearInterval(pulseInterval);
-    let pulseOpacity = 0.3, pulseDirection = 0.006;
-    pulseInterval = setInterval(() => {
+    var pulseOpacity = 0.3, pulseDirection = 0.006;
+    pulseInterval = setInterval(function() {
         pulseOpacity += pulseDirection;
         if (pulseOpacity >= 0.5) pulseDirection = -0.006;
         if (pulseOpacity <= 0.2) pulseDirection = 0.006;
@@ -410,7 +407,7 @@ function initTrendChart() {
 }
 
 function initRingChart() {
-    const dom = document.getElementById('ringChart');
+    var dom = document.getElementById('ringChart');
     if (!dom) {
         console.error('ringChart容器不存在');
         return;
@@ -436,7 +433,7 @@ function initRingChart() {
             center: ['50%', '50%'],
             data: [
                 { value: 0, name: '完成', itemStyle: { color: '#8ab4f0', borderRadius: 8 } },
-                { value: 100, name: '剩余', itemStyle: { color: 'rgba(255,255,255,0.03)', borderRadius: 8 } }
+                { value: 100, name: '剩余', itemStyle: { color: 'rgba(180,180,200,0.03)', borderRadius: 8 } }
             ],
             label: { show: false },
             startAngle: 90,
@@ -448,21 +445,22 @@ function initRingChart() {
 }
 
 function bindDateFilters() {
-    const handleFilterChange = debounce(async (btn) => {
-        document.querySelectorAll('.date-filter-btn').forEach(b => b.classList.remove('active'));
+    var handleFilterChange = debounce(function(btn) {
+        document.querySelectorAll('.date-filter-btn').forEach(function(b) { b.classList.remove('active'); });
         btn.classList.add('active');
         currentDays = parseInt(btn.dataset.days);
-        await refreshDashboard(currentDays, true);
+        refreshDashboard(currentDays, true);
     }, DEBOUNCE_DELAY);
-    document.querySelectorAll('.date-filter-btn').forEach(btn => {
+    document.querySelectorAll('.date-filter-btn').forEach(function(btn) {
         if (btn._handler) btn.removeEventListener('click', btn._handler);
-        btn._handler = () => handleFilterChange(btn);
+        btn._handler = function() { handleFilterChange(btn); };
         btn.addEventListener('click', btn._handler);
     });
 }
 
-function loadDashboardPage(days = 1) {
-    const container = document.getElementById('page_dashboard');
+function loadDashboardPage(days) {
+    days = days || 1;
+    var container = document.getElementById('page_dashboard');
     if (!container) return;
     
     if (dashboardRendered) {
@@ -473,75 +471,93 @@ function loadDashboardPage(days = 1) {
     dashboardRendered = true;
     
     container.innerHTML = `
-        <!-- ===== 专业质感风格 Dashboard ===== -->
+        <!-- 日期筛选按钮 -->
         <div style="display: flex; justify-content: flex-end; gap: 10px; margin-bottom: 24px; flex-wrap: wrap;">
-            <button class="date-filter-btn active" data-days="1" style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06); border-radius: 30px; padding: 8px 20px; color: #8892a8; cursor: pointer; transition: all 0.2s; font-size: 13px; font-weight: 500; font-family: 'Inter', sans-serif;">Today</button>
-            <button class="date-filter-btn" data-days="7" style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06); border-radius: 30px; padding: 8px 20px; color: #8892a8; cursor: pointer; transition: all 0.2s; font-size: 13px; font-weight: 500; font-family: 'Inter', sans-serif;">7 Days</button>
-            <button class="date-filter-btn" data-days="30" style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06); border-radius: 30px; padding: 8px 20px; color: #8892a8; cursor: pointer; transition: all 0.2s; font-size: 13px; font-weight: 500; font-family: 'Inter', sans-serif;">30 Days</button>
+            <button class="date-filter-btn active" data-days="1" style="background: linear-gradient(145deg, rgba(20,24,40,0.6), rgba(10,12,24,0.4)); border: 1px solid rgba(180,180,200,0.06); border-radius: 30px; padding: 8px 20px; color: #8892a8; cursor: pointer; transition: all 0.3s; font-size: 13px; font-weight: 500; font-family: 'Inter', sans-serif; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">Today</button>
+            <button class="date-filter-btn" data-days="7" style="background: linear-gradient(145deg, rgba(20,24,40,0.6), rgba(10,12,24,0.4)); border: 1px solid rgba(180,180,200,0.06); border-radius: 30px; padding: 8px 20px; color: #8892a8; cursor: pointer; transition: all 0.3s; font-size: 13px; font-weight: 500; font-family: 'Inter', sans-serif; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">7 Days</button>
+            <button class="date-filter-btn" data-days="30" style="background: linear-gradient(145deg, rgba(20,24,40,0.6), rgba(10,12,24,0.4)); border: 1px solid rgba(180,180,200,0.06); border-radius: 30px; padding: 8px 20px; color: #8892a8; cursor: pointer; transition: all 0.3s; font-size: 13px; font-weight: 500; font-family: 'Inter', sans-serif; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">30 Days</button>
         </div>
         
-        <!-- ===== 快捷卡片 ===== -->
-        <div class="quick-actions-grid" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px;">
-            <div class="quick-card" onclick="showPage('kyc')" style="background: rgba(12, 16, 28, 0.6); border-radius: 16px; padding: 18px 16px; text-align: center; border: 1px solid rgba(255,255,255,0.03); cursor: pointer; transition: all 0.2s;">
-                <i class="fas fa-id-card" style="font-size: 24px; color: #d4c09a; margin-bottom: 8px; display: block;"></i>
-                <div class="count" id="kycPendingCount" style="font-size: 24px; font-weight: 700; color: #ffffff; margin: 4px 0;">0</div>
-                <div class="label" style="font-size: 11px; color: #8892a8; text-transform: uppercase; letter-spacing: 0.5px;">Pending KYC</div>
+        <!-- 快捷卡片 - 金属拉丝质感 -->
+        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px;">
+            <div onclick="showPage('kyc')" style="background: linear-gradient(145deg, rgba(20,24,40,0.85), rgba(10,12,24,0.6)); border-radius: 16px; padding: 18px 16px; border: 1px solid rgba(180,180,200,0.06); cursor: pointer; transition: all 0.3s; position: relative; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.04);">
+                <div style="position: absolute; top: 0; left: 0; right: 0; height: 1px; background: linear-gradient(90deg, transparent, rgba(180,180,200,0.08), transparent);"></div>
+                <i class="fas fa-id-card" style="font-size: 22px; color: #c8b090; margin-bottom: 6px; display: block;"></i>
+                <div id="kycPendingCount" style="font-size: 26px; font-weight: 700; color: #ffffff; margin: 2px 0;">0</div>
+                <div style="font-size: 11px; color: #8892a8; text-transform: uppercase; letter-spacing: 0.5px;">Pending KYC</div>
+                <div style="position: absolute; top: 16px; right: 16px; font-size: 28px; color: rgba(180,180,200,0.03); pointer-events: none;"><i class="fas fa-id-card"></i></div>
             </div>
-            <div class="quick-card" onclick="showPage('withdrawals')" style="background: rgba(12, 16, 28, 0.6); border-radius: 16px; padding: 18px 16px; text-align: center; border: 1px solid rgba(255,255,255,0.03); cursor: pointer; transition: all 0.2s;">
-                <i class="fas fa-money-bill-wave" style="font-size: 24px; color: #8ab4f0; margin-bottom: 8px; display: block;"></i>
-                <div class="count" id="withdrawalPendingCount" style="font-size: 24px; font-weight: 700; color: #ffffff; margin: 4px 0;">0</div>
-                <div class="label" style="font-size: 11px; color: #8892a8; text-transform: uppercase; letter-spacing: 0.5px;">Pending Withdrawals</div>
+            <div onclick="showPage('withdrawals')" style="background: linear-gradient(145deg, rgba(20,24,40,0.85), rgba(10,12,24,0.6)); border-radius: 16px; padding: 18px 16px; border: 1px solid rgba(180,180,200,0.06); cursor: pointer; transition: all 0.3s; position: relative; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.04);">
+                <div style="position: absolute; top: 0; left: 0; right: 0; height: 1px; background: linear-gradient(90deg, transparent, rgba(180,180,200,0.08), transparent);"></div>
+                <i class="fas fa-money-bill-wave" style="font-size: 22px; color: #8ab4f0; margin-bottom: 6px; display: block;"></i>
+                <div id="withdrawalPendingCount" style="font-size: 26px; font-weight: 700; color: #ffffff; margin: 2px 0;">0</div>
+                <div style="font-size: 11px; color: #8892a8; text-transform: uppercase; letter-spacing: 0.5px;">Pending Withdrawals</div>
+                <div style="position: absolute; top: 16px; right: 16px; font-size: 28px; color: rgba(180,180,200,0.03); pointer-events: none;"><i class="fas fa-money-bill-wave"></i></div>
             </div>
-            <div class="quick-card" onclick="showPage('emailverify')" style="background: rgba(12, 16, 28, 0.6); border-radius: 16px; padding: 18px 16px; text-align: center; border: 1px solid rgba(255,255,255,0.03); cursor: pointer; transition: all 0.2s;">
-                <i class="fas fa-envelope" style="font-size: 24px; color: #d4c09a; margin-bottom: 8px; display: block;"></i>
-                <div class="count" id="emailPendingCount" style="font-size: 24px; font-weight: 700; color: #ffffff; margin: 4px 0;">0</div>
-                <div class="label" style="font-size: 11px; color: #8892a8; text-transform: uppercase; letter-spacing: 0.5px;">Pending Email</div>
+            <div onclick="showPage('emailverify')" style="background: linear-gradient(145deg, rgba(20,24,40,0.85), rgba(10,12,24,0.6)); border-radius: 16px; padding: 18px 16px; border: 1px solid rgba(180,180,200,0.06); cursor: pointer; transition: all 0.3s; position: relative; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.04);">
+                <div style="position: absolute; top: 0; left: 0; right: 0; height: 1px; background: linear-gradient(90deg, transparent, rgba(180,180,200,0.08), transparent);"></div>
+                <i class="fas fa-envelope" style="font-size: 22px; color: #c8b090; margin-bottom: 6px; display: block;"></i>
+                <div id="emailPendingCount" style="font-size: 26px; font-weight: 700; color: #ffffff; margin: 2px 0;">0</div>
+                <div style="font-size: 11px; color: #8892a8; text-transform: uppercase; letter-spacing: 0.5px;">Pending Email</div>
+                <div style="position: absolute; top: 16px; right: 16px; font-size: 28px; color: rgba(180,180,200,0.03); pointer-events: none;"><i class="fas fa-envelope"></i></div>
             </div>
-            <div class="quick-card" onclick="showPage('orderpool')" style="background: rgba(12, 16, 28, 0.6); border-radius: 16px; padding: 18px 16px; text-align: center; border: 1px solid rgba(255,255,255,0.03); cursor: pointer; transition: all 0.2s;">
-                <i class="fas fa-hotel" style="font-size: 24px; color: #7ad0b0; margin-bottom: 8px; display: block;"></i>
-                <div class="count" id="orderPoolCount" style="font-size: 24px; font-weight: 700; color: #ffffff; margin: 4px 0;">0</div>
-                <div class="label" style="font-size: 11px; color: #8892a8; text-transform: uppercase; letter-spacing: 0.5px;">Hotel Orders Count</div>
-            </div>
-        </div>
-        
-        <!-- ===== 统计卡片 ===== -->
-        <div class="stats-grid" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px;">
-            <div class="stat-card" style="background: rgba(12, 16, 28, 0.6); border-radius: 16px; padding: 18px 20px; text-align: center; border: 1px solid rgba(255,255,255,0.03);">
-                <i class="fas fa-user-plus" style="font-size: 22px; color: #d4c09a; margin-bottom: 6px; display: block;"></i>
-                <div class="stat-number" id="newUsersCount" style="font-size: 28px; font-weight: 700; color: #ffffff; letter-spacing: -0.5px;">0</div>
-                <div class="stat-label" style="font-size: 11px; color: #8892a8; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 4px;">New Registered Today</div>
-                <div class="stat-trend" id="newUsersTrend" style="font-size: 10px; margin-top: 4px;"></div>
-            </div>
-            <div class="stat-card" style="background: rgba(12, 16, 28, 0.6); border-radius: 16px; padding: 18px 20px; text-align: center; border: 1px solid rgba(255,255,255,0.03);">
-                <i class="fas fa-users" style="font-size: 22px; color: #8ab4f0; margin-bottom: 6px; display: block;"></i>
-                <div class="stat-number" id="totalUsersCount" style="font-size: 28px; font-weight: 700; color: #ffffff; letter-spacing: -0.5px;">0</div>
-                <div class="stat-label" style="font-size: 11px; color: #8892a8; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 4px;">Total Users</div>
-                <div class="stat-trend" id="totalUsersTrend" style="font-size: 10px; margin-top: 4px;"></div>
-            </div>
-            <div class="stat-card" style="background: rgba(12, 16, 28, 0.6); border-radius: 16px; padding: 18px 20px; text-align: center; border: 1px solid rgba(255,255,255,0.03);">
-                <i class="fas fa-arrow-down" style="font-size: 22px; color: #7ad0b0; margin-bottom: 6px; display: block;"></i>
-                <div class="stat-number" id="totalDepositCount" style="font-size: 28px; font-weight: 700; color: #ffffff; letter-spacing: -0.5px;">€0</div>
-                <div class="stat-label" style="font-size: 11px; color: #8892a8; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 4px;">Total Deposits</div>
-                <div class="stat-trend" id="totalDepositTrend" style="font-size: 10px; margin-top: 4px;"></div>
-            </div>
-            <div class="stat-card" style="background: rgba(12, 16, 28, 0.6); border-radius: 16px; padding: 18px 20px; text-align: center; border: 1px solid rgba(255,255,255,0.03);">
-                <i class="fas fa-arrow-up" style="font-size: 22px; color: #e88080; margin-bottom: 6px; display: block;"></i>
-                <div class="stat-number" id="totalWithdrawCount" style="font-size: 28px; font-weight: 700; color: #ffffff; letter-spacing: -0.5px;">€0</div>
-                <div class="stat-label" style="font-size: 11px; color: #8892a8; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 4px;">Total Withdrawals</div>
-                <div class="stat-trend" id="totalWithdrawTrend" style="font-size: 10px; margin-top: 4px;"></div>
+            <div onclick="showPage('orderpool')" style="background: linear-gradient(145deg, rgba(20,24,40,0.85), rgba(10,12,24,0.6)); border-radius: 16px; padding: 18px 16px; border: 1px solid rgba(180,180,200,0.06); cursor: pointer; transition: all 0.3s; position: relative; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.04);">
+                <div style="position: absolute; top: 0; left: 0; right: 0; height: 1px; background: linear-gradient(90deg, transparent, rgba(180,180,200,0.08), transparent);"></div>
+                <i class="fas fa-hotel" style="font-size: 22px; color: #7ad0b0; margin-bottom: 6px; display: block;"></i>
+                <div id="orderPoolCount" style="font-size: 26px; font-weight: 700; color: #ffffff; margin: 2px 0;">0</div>
+                <div style="font-size: 11px; color: #8892a8; text-transform: uppercase; letter-spacing: 0.5px;">Hotel Orders Count</div>
+                <div style="position: absolute; top: 16px; right: 16px; font-size: 28px; color: rgba(180,180,200,0.03); pointer-events: none;"><i class="fas fa-hotel"></i></div>
             </div>
         </div>
         
-        <!-- ===== 图表区域 ===== -->
+        <!-- 统计卡片 - 金属拉丝质感 -->
+        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px;">
+            <div style="background: linear-gradient(145deg, rgba(20,24,40,0.85), rgba(10,12,24,0.6)); border-radius: 16px; padding: 18px 20px; border: 1px solid rgba(180,180,200,0.06); transition: all 0.3s; position: relative; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.04);">
+                <div style="position: absolute; top: 0; left: 0; right: 0; height: 1px; background: linear-gradient(90deg, transparent, rgba(180,180,200,0.08), transparent);"></div>
+                <i class="fas fa-user-plus" style="font-size: 20px; color: #c8b090; margin-bottom: 4px; display: block;"></i>
+                <div id="newUsersCount" style="font-size: 28px; font-weight: 700; color: #ffffff; letter-spacing: -0.5px;">0</div>
+                <div style="font-size: 11px; color: #8892a8; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 2px;">New Registered Today</div>
+                <div id="newUsersTrend" style="font-size: 10px; margin-top: 4px;"></div>
+                <div style="position: absolute; bottom: 12px; right: 16px; font-size: 40px; color: rgba(180,180,200,0.02); pointer-events: none;"><i class="fas fa-user-plus"></i></div>
+            </div>
+            <div style="background: linear-gradient(145deg, rgba(20,24,40,0.85), rgba(10,12,24,0.6)); border-radius: 16px; padding: 18px 20px; border: 1px solid rgba(180,180,200,0.06); transition: all 0.3s; position: relative; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.04);">
+                <div style="position: absolute; top: 0; left: 0; right: 0; height: 1px; background: linear-gradient(90deg, transparent, rgba(180,180,200,0.08), transparent);"></div>
+                <i class="fas fa-users" style="font-size: 20px; color: #8ab4f0; margin-bottom: 4px; display: block;"></i>
+                <div id="totalUsersCount" style="font-size: 28px; font-weight: 700; color: #ffffff; letter-spacing: -0.5px;">0</div>
+                <div style="font-size: 11px; color: #8892a8; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 2px;">Total Users</div>
+                <div id="totalUsersTrend" style="font-size: 10px; margin-top: 4px;"></div>
+                <div style="position: absolute; bottom: 12px; right: 16px; font-size: 40px; color: rgba(180,180,200,0.02); pointer-events: none;"><i class="fas fa-users"></i></div>
+            </div>
+            <div style="background: linear-gradient(145deg, rgba(20,24,40,0.85), rgba(10,12,24,0.6)); border-radius: 16px; padding: 18px 20px; border: 1px solid rgba(180,180,200,0.06); transition: all 0.3s; position: relative; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.04);">
+                <div style="position: absolute; top: 0; left: 0; right: 0; height: 1px; background: linear-gradient(90deg, transparent, rgba(180,180,200,0.08), transparent);"></div>
+                <i class="fas fa-arrow-down" style="font-size: 20px; color: #7ad0b0; margin-bottom: 4px; display: block;"></i>
+                <div id="totalDepositCount" style="font-size: 28px; font-weight: 700; color: #ffffff; letter-spacing: -0.5px;">€0</div>
+                <div style="font-size: 11px; color: #8892a8; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 2px;">Total Deposits</div>
+                <div id="totalDepositTrend" style="font-size: 10px; margin-top: 4px;"></div>
+                <div style="position: absolute; bottom: 12px; right: 16px; font-size: 40px; color: rgba(180,180,200,0.02); pointer-events: none;"><i class="fas fa-arrow-down"></i></div>
+            </div>
+            <div style="background: linear-gradient(145deg, rgba(20,24,40,0.85), rgba(10,12,24,0.6)); border-radius: 16px; padding: 18px 20px; border: 1px solid rgba(180,180,200,0.06); transition: all 0.3s; position: relative; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.04);">
+                <div style="position: absolute; top: 0; left: 0; right: 0; height: 1px; background: linear-gradient(90deg, transparent, rgba(180,180,200,0.08), transparent);"></div>
+                <i class="fas fa-arrow-up" style="font-size: 20px; color: #e88080; margin-bottom: 4px; display: block;"></i>
+                <div id="totalWithdrawCount" style="font-size: 28px; font-weight: 700; color: #ffffff; letter-spacing: -0.5px;">€0</div>
+                <div style="font-size: 11px; color: #8892a8; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 2px;">Total Withdrawals</div>
+                <div id="totalWithdrawTrend" style="font-size: 10px; margin-top: 4px;"></div>
+                <div style="position: absolute; bottom: 12px; right: 16px; font-size: 40px; color: rgba(180,180,200,0.02); pointer-events: none;"><i class="fas fa-arrow-up"></i></div>
+            </div>
+        </div>
+        
+        <!-- 图表区域 -->
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 28px;">
-            <div style="background: rgba(12, 16, 28, 0.6); backdrop-filter: blur(8px); border-radius: 20px; padding: 20px; border: 1px solid rgba(255,255,255,0.03);">
+            <div style="background: linear-gradient(145deg, rgba(20,24,40,0.85), rgba(10,12,24,0.6)); backdrop-filter: blur(8px); border-radius: 20px; padding: 20px; border: 1px solid rgba(180,180,200,0.06); box-shadow: 0 4px 20px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.04); position: relative; overflow: hidden;">
+                <div style="position: absolute; top: 0; left: 0; right: 0; height: 1px; background: linear-gradient(90deg, transparent, rgba(180,180,200,0.08), transparent);"></div>
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
                     <div style="font-size: 16px; font-weight: 600; color: #d8dff0;">D&W Trend</div>
                     <div style="display: flex; gap: 16px; font-size: 12px; color: #8892a8;"><span><span style="display: inline-block; width: 12px; height: 12px; background: #7ad0b0; border-radius: 2px; margin-right: 6px;"></span>Deposits</span><span><span style="display: inline-block; width: 12px; height: 12px; background: #e88080; border-radius: 2px; margin-right: 6px;"></span>Withdrawals</span></div>
                 </div>
                 <div id="trendChart" style="height: 320px; width: 100%;"></div>
             </div>
-            <div style="background: rgba(12, 16, 28, 0.6); backdrop-filter: blur(8px); border-radius: 20px; padding: 20px; text-align: center; border: 1px solid rgba(255,255,255,0.03);">
+            <div style="background: linear-gradient(145deg, rgba(20,24,40,0.85), rgba(10,12,24,0.6)); backdrop-filter: blur(8px); border-radius: 20px; padding: 20px; border: 1px solid rgba(180,180,200,0.06); box-shadow: 0 4px 20px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.04); position: relative; overflow: hidden; text-align: center;">
+                <div style="position: absolute; top: 0; left: 0; right: 0; height: 1px; background: linear-gradient(90deg, transparent, rgba(180,180,200,0.08), transparent);"></div>
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
                     <div style="font-size: 16px; font-weight: 600; color: #d8dff0;">📊 Users Analytics</div>
                     <div style="display: flex; gap: 16px; font-size: 12px; color: #8892a8;"><span><span style="display: inline-block; width: 12px; height: 12px; background: #8ab4f0; border-radius: 2px; margin-right: 6px;"></span>Complete Tasks</span></div>
@@ -552,8 +568,9 @@ function loadDashboardPage(days = 1) {
             </div>
         </div>
         
-        <!-- ===== 实时活动 ===== -->
-        <div style="background: rgba(12, 16, 28, 0.6); backdrop-filter: blur(8px); border-radius: 20px; padding: 20px; border: 1px solid rgba(255,255,255,0.03);">
+        <!-- 实时活动 -->
+        <div style="background: linear-gradient(145deg, rgba(20,24,40,0.85), rgba(10,12,24,0.6)); backdrop-filter: blur(8px); border-radius: 20px; padding: 20px; border: 1px solid rgba(180,180,200,0.06); box-shadow: 0 4px 20px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.04); position: relative; overflow: hidden;">
+            <div style="position: absolute; top: 0; left: 0; right: 0; height: 1px; background: linear-gradient(90deg, transparent, rgba(180,180,200,0.08), transparent);"></div>
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
                 <div style="font-size: 16px; font-weight: 600; color: #d8dff0;"><i class="fas fa-history" style="color: #8892a8; margin-right: 8px;"></i>Real-Time Event</div>
                 <div style="font-size: 11px; color: #7ad0b0;"><i class="fas fa-circle" style="font-size: 8px; margin-right: 4px;"></i>Real-Time Updates</div>
@@ -565,34 +582,34 @@ function loadDashboardPage(days = 1) {
     `;
     
     // 添加样式
-    const style = document.createElement('style');
+    var style = document.createElement('style');
     style.textContent = `
         .date-filter-btn.active {
-            background: #2a3a5a !important;
+            background: linear-gradient(145deg, rgba(30,40,70,0.8), rgba(20,28,50,0.6)) !important;
             color: #e6edf5 !important;
-            border-color: #3a5a7a !important;
+            border-color: rgba(180,180,200,0.12) !important;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.04) !important;
         }
         .date-filter-btn:hover {
-            background: rgba(255,255,255,0.08);
-            color: #e6edf5;
+            background: linear-gradient(145deg, rgba(24,28,48,0.7), rgba(14,16,28,0.5)) !important;
+            color: #e6edf5 !important;
+            border-color: rgba(180,180,200,0.10) !important;
         }
-        .quick-card:hover {
-            border-color: rgba(255,255,255,0.08);
-            transform: translateY(-2px);
-        }
-        .stat-card:hover {
-            border-color: rgba(255,255,255,0.06);
-            transform: translateY(-2px);
+        .quick-card:hover, [onclick] > div[style*="linear-gradient"]:hover {
+            border-color: rgba(180,180,200,0.12) !important;
+            transform: translateY(-3px);
+            box-shadow: 0 8px 30px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.06) !important;
         }
         .trend-up { color: #7ad0b0; }
         .trend-down { color: #e88080; }
         #activityList::-webkit-scrollbar { width: 3px; }
-        #activityList::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.06); border-radius: 4px; }
+        #activityList::-webkit-scrollbar-thumb { background: rgba(180,180,200,0.06); border-radius: 4px; }
         #activityList::-webkit-scrollbar-track { background: transparent; }
+        .ring-chart-container { position: relative; }
     `;
     document.head.appendChild(style);
     
-    setTimeout(() => {
+    setTimeout(function() {
         initTrendChart();
         initRingChart();
         bindDateFilters();
@@ -600,7 +617,7 @@ function loadDashboardPage(days = 1) {
     }, 200);
     
     if (dashboardRefreshInterval) clearInterval(dashboardRefreshInterval);
-    dashboardRefreshInterval = setInterval(() => refreshDashboard(currentDays, false), 15000);
+    dashboardRefreshInterval = setInterval(function() { refreshDashboard(currentDays, false); }, 15000);
 }
 
 window.loadDashboardPage = loadDashboardPage;
