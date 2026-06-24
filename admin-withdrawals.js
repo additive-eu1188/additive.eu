@@ -4,63 +4,55 @@ let withdrawSearchKeyword = '';
 
 // ========== 自定义下拉初始化 ==========
 function initCustomSelect(containerId, options, selectedValue) {
-    const container = document.getElementById(containerId);
+    var container = document.getElementById(containerId);
     if (!container) return;
     
-    // 如果已经初始化过，跳过
     if (container.dataset.initialized === 'true') return;
     container.dataset.initialized = 'true';
     
-    const display = container.querySelector('.custom-select-display');
-    const dropdown = container.querySelector('.custom-select-dropdown');
-    const optionsList = container.querySelector('.custom-select-options');
-    const hiddenInput = container.querySelector('.custom-select-hidden');
+    var display = container.querySelector('.custom-select-display');
+    var dropdown = container.querySelector('.custom-select-dropdown');
+    var optionsList = container.querySelector('.custom-select-options');
+    var hiddenInput = container.querySelector('.custom-select-hidden');
     
     if (!display || !dropdown || !optionsList || !hiddenInput) return;
     
-    // 设置初始值
     if (selectedValue) {
         hiddenInput.value = selectedValue;
-        const selectedOption = optionsList.querySelector(`[data-value="${selectedValue}"]`);
+        var selectedOption = optionsList.querySelector('[data-value="' + selectedValue + '"]');
         if (selectedOption) {
             display.innerHTML = selectedOption.innerHTML;
         }
     }
     
-    // 切换下拉显示
     display.addEventListener('click', function(e) {
         e.stopPropagation();
-        const isOpen = dropdown.classList.contains('open');
-        // 关闭所有其他下拉
-        document.querySelectorAll('.custom-select-dropdown.open').forEach(el => {
+        var isOpen = dropdown.classList.contains('open');
+        document.querySelectorAll('.custom-select-dropdown.open').forEach(function(el) {
             if (el !== dropdown) el.classList.remove('open');
         });
         dropdown.classList.toggle('open');
     });
     
-    // 选项点击
-    optionsList.querySelectorAll('.custom-select-option').forEach(option => {
+    optionsList.querySelectorAll('.custom-select-option').forEach(function(option) {
         option.addEventListener('click', function(e) {
             e.stopPropagation();
-            const value = this.dataset.value;
-            const label = this.dataset.label || this.textContent.trim();
+            var value = this.dataset.value;
+            var label = this.dataset.label || this.textContent.trim();
             hiddenInput.value = value;
-            display.innerHTML = `<span>${label}</span>`;
+            display.innerHTML = '<span>' + label + '</span><i class="fas fa-chevron-down"></i>';
             dropdown.classList.remove('open');
             
-            // 触发 change 事件
-            const changeEvent = new Event('change', { bubbles: true });
+            var changeEvent = new Event('change', { bubbles: true });
             hiddenInput.dispatchEvent(changeEvent);
             
-            // 触发搜索
-            const searchBtn = container.closest('.search-bar')?.querySelector('.btn-search, .search-btn');
+            var searchBtn = container.closest('.search-bar') ? container.closest('.search-bar').querySelector('.btn-search, .search-btn') : null;
             if (searchBtn) {
                 searchBtn.click();
             }
         });
     });
     
-    // 点击外部关闭
     document.addEventListener('click', function() {
         dropdown.classList.remove('open');
     });
@@ -68,34 +60,25 @@ function initCustomSelect(containerId, options, selectedValue) {
 
 // ========== 渲染自定义下拉HTML ==========
 function renderCustomSelectHTML(id, options, selectedValue, placeholder) {
-    const opts = options || ['All Crypto', 'BTC', 'ETH', 'USDC', 'USDT'];
-    const selected = selectedValue || '';
-    const ph = placeholder || 'All Crypto';
+    var opts = options || ['All Crypto', 'BTC', 'ETH', 'USDC', 'USDT'];
+    var selected = selectedValue || '';
+    var ph = placeholder || 'All Crypto';
     
-    let optionsHtml = opts.map(opt => {
-        const value = opt === 'All Crypto' ? '' : opt;
-        const selectedAttr = (value === selected) ? ' class="custom-select-option selected"' : ' class="custom-select-option"';
-        return `<div${selectedAttr} data-value="${value}" data-label="${opt}">${opt}</div>`;
+    var optionsHtml = opts.map(function(opt) {
+        var value = opt === 'All Crypto' ? '' : opt;
+        var selectedAttr = (value === selected) ? ' class="custom-select-option selected"' : ' class="custom-select-option"';
+        return '<div' + selectedAttr + ' data-value="' + value + '" data-label="' + opt + '">' + opt + '</div>';
     }).join('');
     
-    return `
-        <div class="custom-select-wrapper" id="${id}">
-            <div class="custom-select-display">
-                <span>${selected ? opts.find(o => (o === 'All Crypto' ? '' : o) === selected) || ph : ph}</span>
-                <i class="fas fa-chevron-down"></i>
-            </div>
-            <div class="custom-select-dropdown">
-                <div class="custom-select-options">
-                    ${optionsHtml}
-                </div>
-            </div>
-            <input type="hidden" class="custom-select-hidden" value="${selected}">
-        </div>
-    `;
+    return '<div class="custom-select-wrapper" id="' + id + '">' +
+        '<div class="custom-select-display"><span>' + (selected ? (opts.find(function(o) { return (o === 'All Crypto' ? '' : o) === selected; }) || ph) : ph) + '</span><i class="fas fa-chevron-down"></i></div>' +
+        '<div class="custom-select-dropdown"><div class="custom-select-options">' + optionsHtml + '</div></div>' +
+        '<input type="hidden" class="custom-select-hidden" value="' + selected + '">' +
+        '</div>';
 }
 
 async function loadWithdrawalsPage() {
-    const container = document.getElementById('page_withdrawals');
+    var container = document.getElementById('page_withdrawals');
     if (!container) return;
     container.innerHTML = `
         <div class="card">
@@ -227,8 +210,8 @@ async function loadWithdrawalsPage() {
         </div>
     `;
     
-    // 添加样式（包含自定义下拉样式，与 register 页面一致）
-    const style = document.createElement('style');
+    // 添加样式
+    var style = document.createElement('style');
     style.textContent = `
         .tab-withdraw-btn {
             background: rgba(255,255,255,0.04);
@@ -338,7 +321,7 @@ async function loadWithdrawalsPage() {
             vertical-align: middle;
         }
         
-        /* ===== 自定义下拉样式（与 register 页面一致） ===== */
+        /* ===== 自定义下拉样式 ===== */
         .custom-select-wrapper {
             position: relative;
             width: 100%;
@@ -428,14 +411,6 @@ async function loadWithdrawalsPage() {
             color: #6a8af0;
         }
         
-        select option {
-            background: #141c2e !important;
-            color: #e6edf5 !important;
-            padding: 8px 12px !important;
-        }
-        select option:hover {
-            background: #2a3a5a !important;
-        }
         @media (max-width: 768px) {
             .wallet-address-cell {
                 max-width: 120px;
@@ -467,33 +442,36 @@ async function loadWithdrawalsPage() {
     document.head.appendChild(style);
     
     // 绑定标签切换
-    document.getElementById('tabPending')?.addEventListener('click', () => switchWithdrawTab('pending'));
-    document.getElementById('tabHistory')?.addEventListener('click', () => switchWithdrawTab('history'));
+    document.getElementById('tabPending')?.addEventListener('click', function() { switchWithdrawTab('pending'); });
+    document.getElementById('tabHistory')?.addEventListener('click', function() { switchWithdrawTab('history'); });
     
     // 绑定刷新按钮
     document.getElementById('refreshWithdrawBtn')?.addEventListener('click', refreshWithdrawData);
     
     // 初始化自定义下拉
-    setTimeout(() => {
+    setTimeout(function() {
         initCustomSelect('pendingCryptoSelect', ['All Crypto', 'BTC', 'ETH', 'USDC', 'USDT'], '');
         initCustomSelect('historyCryptoSelect', ['All Crypto', 'BTC', 'ETH', 'USDC', 'USDT'], '');
     }, 100);
     
     // 绑定待处理搜索
-    document.getElementById('pendingSearchBtn')?.addEventListener('click', () => {
+    document.getElementById('pendingSearchBtn')?.addEventListener('click', function() {
         withdrawSearchKeyword = document.getElementById('pendingSearchInput').value.trim();
         loadWithdrawals();
     });
-    document.getElementById('pendingClearBtn')?.addEventListener('click', () => {
+    document.getElementById('pendingClearBtn')?.addEventListener('click', function() {
         document.getElementById('pendingSearchInput').value = '';
-        document.getElementById('pendingCryptoSelect')?.querySelector('.custom-select-hidden').value = '';
-        document.getElementById('pendingCryptoSelect')?.querySelector('.custom-select-display').innerHTML = '<span>All Crypto</span><i class="fas fa-chevron-down"></i>';
+        var pendingSelect = document.getElementById('pendingCryptoSelect');
+        if (pendingSelect) {
+            pendingSelect.querySelector('.custom-select-hidden').value = '';
+            pendingSelect.querySelector('.custom-select-display').innerHTML = '<span>All Crypto</span><i class="fas fa-chevron-down"></i>';
+        }
         document.getElementById('pendingMinAmount').value = '';
         document.getElementById('pendingMaxAmount').value = '';
         withdrawSearchKeyword = '';
         loadWithdrawals();
     });
-    document.getElementById('pendingSearchInput')?.addEventListener('keypress', (e) => {
+    document.getElementById('pendingSearchInput')?.addEventListener('keypress', function(e) {
         if (e.key === 'Enter') {
             withdrawSearchKeyword = document.getElementById('pendingSearchInput').value.trim();
             loadWithdrawals();
@@ -501,28 +479,37 @@ async function loadWithdrawalsPage() {
     });
     
     // 绑定自定义下拉 change 事件
-    document.getElementById('pendingCryptoSelect')?.querySelector('.custom-select-hidden')?.addEventListener('change', function() {
-        loadWithdrawals();
-    });
-    document.getElementById('historyCryptoSelect')?.querySelector('.custom-select-hidden')?.addEventListener('change', function() {
-        loadWithdrawalHistory();
-    });
+    var pendingHidden = document.querySelector('#pendingCryptoSelect .custom-select-hidden');
+    if (pendingHidden) {
+        pendingHidden.addEventListener('change', function() {
+            loadWithdrawals();
+        });
+    }
+    var historyHidden = document.querySelector('#historyCryptoSelect .custom-select-hidden');
+    if (historyHidden) {
+        historyHidden.addEventListener('change', function() {
+            loadWithdrawalHistory();
+        });
+    }
     
     // 绑定历史搜索
-    document.getElementById('historySearchBtn')?.addEventListener('click', () => {
+    document.getElementById('historySearchBtn')?.addEventListener('click', function() {
         withdrawSearchKeyword = document.getElementById('historySearchInput').value.trim();
         loadWithdrawalHistory();
     });
-    document.getElementById('historyClearBtn')?.addEventListener('click', () => {
+    document.getElementById('historyClearBtn')?.addEventListener('click', function() {
         document.getElementById('historySearchInput').value = '';
-        document.getElementById('historyCryptoSelect')?.querySelector('.custom-select-hidden').value = '';
-        document.getElementById('historyCryptoSelect')?.querySelector('.custom-select-display').innerHTML = '<span>All Crypto</span><i class="fas fa-chevron-down"></i>';
+        var historySelect = document.getElementById('historyCryptoSelect');
+        if (historySelect) {
+            historySelect.querySelector('.custom-select-hidden').value = '';
+            historySelect.querySelector('.custom-select-display').innerHTML = '<span>All Crypto</span><i class="fas fa-chevron-down"></i>';
+        }
         document.getElementById('historyMinAmount').value = '';
         document.getElementById('historyMaxAmount').value = '';
         withdrawSearchKeyword = '';
         loadWithdrawalHistory();
     });
-    document.getElementById('historySearchInput')?.addEventListener('keypress', (e) => {
+    document.getElementById('historySearchInput')?.addEventListener('keypress', function(e) {
         if (e.key === 'Enter') {
             withdrawSearchKeyword = document.getElementById('historySearchInput').value.trim();
             loadWithdrawalHistory();
@@ -554,7 +541,7 @@ function switchWithdrawTab(tab) {
 
 // ========== 刷新所有数据 ==========
 async function refreshWithdrawData() {
-    const btn = document.getElementById('refreshWithdrawBtn');
+    var btn = document.getElementById('refreshWithdrawBtn');
     if (btn) {
         btn.disabled = true;
         btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Refreshing...';
@@ -581,7 +568,7 @@ async function refreshWithdrawData() {
 // ========== 获取国家国旗 ==========
 function getCountryFlag(countryName) {
     if (!countryName || countryName === 'Unknown') return null;
-    const flagMap = {
+    var flagMap = {
         'Germany': 'de', 'United States': 'us', 'United Kingdom': 'gb',
         'Italy': 'it', 'China': 'cn', 'France': 'fr', 'Spain': 'es',
         'Switzerland': 'ch', 'Austria': 'at', 'Netherlands': 'nl',
@@ -601,50 +588,50 @@ function getCountryFlag(countryName) {
         'Peru': 'pe', 'Venezuela': 've', 'Egypt': 'eg', 'Nigeria': 'ng',
         'Kenya': 'ke', 'Israel': 'il', 'Pakistan': 'pk', 'Bangladesh': 'bd'
     };
-    const code = flagMap[countryName];
-    return code ? `https://flagcdn.com/w40/${code}.png` : null;
+    var code = flagMap[countryName];
+    return code ? 'https://flagcdn.com/w40/' + code + '.png' : null;
 }
 
 // ========== 加载待处理提现 ==========
 async function loadWithdrawals() {
-    const tbody = document.getElementById('withdrawalsTableBody');
+    var tbody = document.getElementById('withdrawalsTableBody');
     if (!tbody) return;
     
     try {
-        let query = sb
+        var query = sb
             .from('withdrawals')
             .select('*')
             .eq('status', 'pending')
             .order('request_date', { ascending: false });
         
-        // 应用搜索过滤
-        const keyword = document.getElementById('pendingSearchInput')?.value.trim() || '';
-        const cryptoFilter = document.getElementById('pendingCryptoSelect')?.querySelector('.custom-select-hidden')?.value || '';
-        const minAmount = parseFloat(document.getElementById('pendingMinAmount')?.value) || 0;
-        const maxAmount = parseFloat(document.getElementById('pendingMaxAmount')?.value) || Infinity;
+        var keyword = document.getElementById('pendingSearchInput')?.value.trim() || '';
+        var pendingSelect = document.getElementById('pendingCryptoSelect');
+        var cryptoFilter = pendingSelect ? pendingSelect.querySelector('.custom-select-hidden')?.value || '' : '';
+        var minAmount = parseFloat(document.getElementById('pendingMinAmount')?.value) || 0;
+        var maxAmount = parseFloat(document.getElementById('pendingMaxAmount')?.value) || Infinity;
         
         if (keyword) {
-            query = query.or(`uid.ilike.%${keyword}%,username.ilike.%${keyword}%,wallet_address.ilike.%${keyword}%`);
+            query = query.or('uid.ilike.%' + keyword + '%,username.ilike.%' + keyword + '%,wallet_address.ilike.%' + keyword + '%');
         }
         
-        const { data: wd, error } = await query;
+        var result = await query;
+        var wd = result.data;
+        var error = result.error;
         
         if (error) throw error;
         
-        // 前端过滤（crypto, amount）
-        let filtered = wd || [];
+        var filtered = wd || [];
         if (cryptoFilter) {
-            filtered = filtered.filter(w => (w.currency || w.withdrawal_address_type || 'USDT').toUpperCase() === cryptoFilter.toUpperCase());
+            filtered = filtered.filter(function(w) { return (w.currency || w.withdrawal_address_type || 'USDT').toUpperCase() === cryptoFilter.toUpperCase(); });
         }
         if (minAmount > 0) {
-            filtered = filtered.filter(w => (w.amount || 0) >= minAmount);
+            filtered = filtered.filter(function(w) { return (w.amount || 0) >= minAmount; });
         }
         if (maxAmount < Infinity) {
-            filtered = filtered.filter(w => (w.amount || 0) <= maxAmount);
+            filtered = filtered.filter(function(w) { return (w.amount || 0) <= maxAmount; });
         }
         
-        // 更新统计卡片
-        const totalAmount = filtered.reduce((sum, w) => sum + (w.amount || 0), 0);
+        var totalAmount = filtered.reduce(function(sum, w) { return sum + (w.amount || 0); }, 0);
         document.getElementById('statTotalWithdraw').innerHTML = '€' + totalAmount.toFixed(2);
         document.getElementById('statPendingWithdraw').innerHTML = '€' + totalAmount.toFixed(2);
         document.getElementById('statApprovedWithdraw').innerHTML = '€0.00';
@@ -656,118 +643,112 @@ async function loadWithdrawals() {
         }
         
         tbody.innerHTML = '';
-        for (let w of filtered) {
-            const row = tbody.insertRow();
-            const currency = w.currency || w.withdrawal_address_type || 'USDT';
-            const currencyClass = currency.toLowerCase();
+        for (var i = 0; i < filtered.length; i++) {
+            var w = filtered[i];
+            var row = tbody.insertRow();
+            var currency = w.currency || w.withdrawal_address_type || 'USDT';
+            var currencyClass = currency.toLowerCase();
             
-            // 获取用户国家
-            let countryName = 'Unknown';
-            let flagUrl = null;
+            var countryName = 'Unknown';
+            var flagUrl = null;
             try {
-                const { data: userData } = await sb.from('users').select('country').eq('uid', w.uid).single();
+                var userResult = await sb.from('users').select('country').eq('uid', w.uid).single();
+                var userData = userResult.data;
                 if (userData) {
                     countryName = userData.country || 'Unknown';
                     flagUrl = getCountryFlag(countryName);
                 }
             } catch (e) { /* ignore */ }
             
-            row.insertCell(0).innerHTML = `<span class="badge" style="background: rgba(255,255,255,0.08); padding: 2px 12px; border-radius: 20px; font-size: 11px; color: #c8d2e8; border: 1px solid rgba(255,255,255,0.06);">${escapeHtml(w.uid)}</span>`;
+            row.insertCell(0).innerHTML = '<span class="badge" style="background: rgba(255,255,255,0.08); padding: 2px 12px; border-radius: 20px; font-size: 11px; color: #c8d2e8; border: 1px solid rgba(255,255,255,0.06);">' + escapeHtml(w.uid) + '</span>';
             row.insertCell(1).innerText = w.username || w.uid;
-            row.insertCell(2).innerHTML = `<span style="color: #d4c09a; font-weight: 600;">€${(w.amount || 0).toFixed(2)}</span>`;
-            row.insertCell(3).innerHTML = `<span class="currency-badge ${currencyClass}">${escapeHtml(currency)}</span>`;
+            row.insertCell(2).innerHTML = '<span style="color: #d4c09a; font-weight: 600;">€' + (w.amount || 0).toFixed(2) + '</span>';
+            row.insertCell(3).innerHTML = '<span class="currency-badge ' + currencyClass + '">' + escapeHtml(currency) + '</span>';
             
-            // 钱包地址 - 完整显示 + 复制按钮
-            const address = w.wallet_address || '-';
-            const addressCell = row.insertCell(4);
+            var address = w.wallet_address || '-';
+            var addressCell = row.insertCell(4);
             addressCell.className = 'wallet-address-cell';
-            addressCell.innerHTML = `
-                <div class="wallet-address-wrapper">
-                    <span class="wallet-address-text">${escapeHtml(address)}</span>
-                    ${address !== '-' ? `<button class="copy-address-btn" data-address="${escapeHtml(address)}"><i class="fas fa-copy"></i></button>` : ''}
-                </div>
-            `;
+            addressCell.innerHTML = '<div class="wallet-address-wrapper"><span class="wallet-address-text">' + escapeHtml(address) + '</span>' + (address !== '-' ? '<button class="copy-address-btn" data-address="' + escapeHtml(address) + '"><i class="fas fa-copy"></i></button>' : '') + '</div>';
             
-            // User IP with country flag
-            const ipCell = row.insertCell(5);
+            var ipCell = row.insertCell(5);
             if (flagUrl && countryName !== 'Unknown') {
-                ipCell.innerHTML = `<img src="${flagUrl}" class="country-flag-img" onerror="this.style.display='none'" alt=""> <span class="country-name">${escapeHtml(countryName)}</span>`;
+                ipCell.innerHTML = '<img src="' + flagUrl + '" class="country-flag-img" onerror="this.style.display=\'none\'" alt=""> <span class="country-name">' + escapeHtml(countryName) + '</span>';
             } else {
-                ipCell.innerHTML = `<span style="font-size: 12px; color: #6a7a9a;">${escapeHtml(w.user_ip || '-')}</span>`;
+                ipCell.innerHTML = '<span style="font-size: 12px; color: #6a7a9a;">' + escapeHtml(w.user_ip || '-') + '</span>';
             }
             
             row.insertCell(6).innerText = w.request_date ? new Date(w.request_date).toLocaleString() : '-';
-            row.insertCell(7).innerHTML = `
-                <button class="btn-sm-action btn-approve approve-withdraw" data-id="${w.id}" data-uid="${w.uid}" data-amt="${w.amount}"><i class="fas fa-check"></i> Approve</button>
-                <button class="btn-sm-action btn-reject reject-withdraw" data-id="${w.id}" data-uid="${w.uid}" data-amt="${w.amount}"><i class="fas fa-times"></i> Reject</button>
-            `;
+            row.insertCell(7).innerHTML = '<button class="btn-sm-action btn-approve approve-withdraw" data-id="' + w.id + '" data-uid="' + w.uid + '" data-amt="' + w.amount + '"><i class="fas fa-check"></i> Approve</button><button class="btn-sm-action btn-reject reject-withdraw" data-id="' + w.id + '" data-uid="' + w.uid + '" data-amt="' + w.amount + '"><i class="fas fa-times"></i> Reject</button>';
         }
         
-        // 绑定复制按钮
-        document.querySelectorAll('#withdrawalsTableBody .copy-address-btn').forEach(btn => {
-            btn.addEventListener('click', (e) => {
+        document.querySelectorAll('#withdrawalsTableBody .copy-address-btn').forEach(function(btn) {
+            btn.addEventListener('click', function(e) {
                 e.stopPropagation();
-                copyToClipboard(btn.dataset.address);
+                copyToClipboard(this.dataset.address);
             });
         });
         
-        // 绑定批准/拒绝
-        document.querySelectorAll('.approve-withdraw').forEach(btn => {
-            btn.addEventListener('click', () => handleApproveWithdraw(btn.dataset.id, btn.dataset.uid, btn.dataset.amt));
+        document.querySelectorAll('.approve-withdraw').forEach(function(btn) {
+            btn.addEventListener('click', function() {
+                handleApproveWithdraw(this.dataset.id, this.dataset.uid, this.dataset.amt);
+            });
         });
-        document.querySelectorAll('.reject-withdraw').forEach(btn => {
-            btn.addEventListener('click', () => handleRejectWithdraw(btn.dataset.id, btn.dataset.uid, btn.dataset.amt));
+        document.querySelectorAll('.reject-withdraw').forEach(function(btn) {
+            btn.addEventListener('click', function() {
+                handleRejectWithdraw(this.dataset.id, this.dataset.uid, this.dataset.amt);
+            });
         });
         
     } catch (e) {
         console.error('加载提现失败:', e);
-        tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; padding:30px; color:#ff8888;">加载失败: ${escapeHtml(e.message)}</td></tr>`;
+        tbody.innerHTML = '<tr><td colspan="8" style="text-align:center; padding:30px; color:#ff8888;">加载失败: ' + escapeHtml(e.message) + '</td></tr>';
     }
 }
 
 // ========== 加载提现历史 ==========
 async function loadWithdrawalHistory() {
-    const tbody = document.getElementById('withdrawalHistoryBody');
+    var tbody = document.getElementById('withdrawalHistoryBody');
     if (!tbody) return;
     
     try {
-        let query = sb
+        var query = sb
             .from('withdrawals')
             .select('*')
             .in('status', ['approved', 'rejected'])
             .order('processed_at', { ascending: false })
             .limit(200);
         
-        const keyword = document.getElementById('historySearchInput')?.value.trim() || '';
-        const cryptoFilter = document.getElementById('historyCryptoSelect')?.querySelector('.custom-select-hidden')?.value || '';
-        const minAmount = parseFloat(document.getElementById('historyMinAmount')?.value) || 0;
-        const maxAmount = parseFloat(document.getElementById('historyMaxAmount')?.value) || Infinity;
+        var keyword = document.getElementById('historySearchInput')?.value.trim() || '';
+        var historySelect = document.getElementById('historyCryptoSelect');
+        var cryptoFilter = historySelect ? historySelect.querySelector('.custom-select-hidden')?.value || '' : '';
+        var minAmount = parseFloat(document.getElementById('historyMinAmount')?.value) || 0;
+        var maxAmount = parseFloat(document.getElementById('historyMaxAmount')?.value) || Infinity;
         
         if (keyword) {
-            query = query.or(`uid.ilike.%${keyword}%,username.ilike.%${keyword}%,wallet_address.ilike.%${keyword}%`);
+            query = query.or('uid.ilike.%' + keyword + '%,username.ilike.%' + keyword + '%,wallet_address.ilike.%' + keyword + '%');
         }
         
-        const { data: history, error } = await query;
+        var result = await query;
+        var history = result.data;
+        var error = result.error;
         
         if (error) throw error;
         
-        // 前端过滤
-        let filtered = history || [];
+        var filtered = history || [];
         if (cryptoFilter) {
-            filtered = filtered.filter(w => (w.currency || w.withdrawal_address_type || 'USDT').toUpperCase() === cryptoFilter.toUpperCase());
+            filtered = filtered.filter(function(w) { return (w.currency || w.withdrawal_address_type || 'USDT').toUpperCase() === cryptoFilter.toUpperCase(); });
         }
         if (minAmount > 0) {
-            filtered = filtered.filter(w => (w.amount || 0) >= minAmount);
+            filtered = filtered.filter(function(w) { return (w.amount || 0) >= minAmount; });
         }
         if (maxAmount < Infinity) {
-            filtered = filtered.filter(w => (w.amount || 0) <= maxAmount);
+            filtered = filtered.filter(function(w) { return (w.amount || 0) <= maxAmount; });
         }
         
-        // 更新历史统计卡片
-        const total = filtered.reduce((sum, w) => sum + (w.amount || 0), 0);
-        const pending = filtered.filter(w => w.status === 'pending').reduce((sum, w) => sum + (w.amount || 0), 0);
-        const approved = filtered.filter(w => w.status === 'approved').reduce((sum, w) => sum + (w.amount || 0), 0);
-        const rejected = filtered.filter(w => w.status === 'rejected').reduce((sum, w) => sum + (w.amount || 0), 0);
+        var total = filtered.reduce(function(sum, w) { return sum + (w.amount || 0); }, 0);
+        var pending = filtered.filter(function(w) { return w.status === 'pending'; }).reduce(function(sum, w) { return sum + (w.amount || 0); }, 0);
+        var approved = filtered.filter(function(w) { return w.status === 'approved'; }).reduce(function(sum, w) { return sum + (w.amount || 0); }, 0);
+        var rejected = filtered.filter(function(w) { return w.status === 'rejected'; }).reduce(function(sum, w) { return sum + (w.amount || 0); }, 0);
         
         document.getElementById('historyStatTotal').innerHTML = '€' + total.toFixed(2);
         document.getElementById('historyStatPending').innerHTML = '€' + pending.toFixed(2);
@@ -780,68 +761,63 @@ async function loadWithdrawalHistory() {
         }
         
         tbody.innerHTML = '';
-        for (let w of filtered) {
-            const row = tbody.insertRow();
-            const currency = w.currency || w.withdrawal_address_type || 'USDT';
-            const currencyClass = currency.toLowerCase();
+        for (var i = 0; i < filtered.length; i++) {
+            var w = filtered[i];
+            var row = tbody.insertRow();
+            var currency = w.currency || w.withdrawal_address_type || 'USDT';
+            var currencyClass = currency.toLowerCase();
             
-            // 获取用户国家
-            let countryName = 'Unknown';
-            let flagUrl = null;
+            var countryName = 'Unknown';
+            var flagUrl = null;
             try {
-                const { data: userData } = await sb.from('users').select('country').eq('uid', w.uid).single();
+                var userResult = await sb.from('users').select('country').eq('uid', w.uid).single();
+                var userData = userResult.data;
                 if (userData) {
                     countryName = userData.country || 'Unknown';
                     flagUrl = getCountryFlag(countryName);
                 }
             } catch (e) { /* ignore */ }
             
-            row.insertCell(0).innerHTML = `<span class="badge" style="background: rgba(255,255,255,0.08); padding: 2px 12px; border-radius: 20px; font-size: 11px; color: #c8d2e8; border: 1px solid rgba(255,255,255,0.06);">${escapeHtml(w.uid)}</span>`;
+            row.insertCell(0).innerHTML = '<span class="badge" style="background: rgba(255,255,255,0.08); padding: 2px 12px; border-radius: 20px; font-size: 11px; color: #c8d2e8; border: 1px solid rgba(255,255,255,0.06);">' + escapeHtml(w.uid) + '</span>';
             row.insertCell(1).innerText = w.username || w.uid;
-            row.insertCell(2).innerHTML = `<span style="color: ${w.status === 'approved' ? '#7ad0b0' : '#e88080'}; font-weight: 600;">€${(w.amount || 0).toFixed(2)}</span>`;
-            row.insertCell(3).innerHTML = `<span class="currency-badge ${currencyClass}">${escapeHtml(currency)}</span>`;
+            row.insertCell(2).innerHTML = '<span style="color: ' + (w.status === 'approved' ? '#7ad0b0' : '#e88080') + '; font-weight: 600;">€' + (w.amount || 0).toFixed(2) + '</span>';
+            row.insertCell(3).innerHTML = '<span class="currency-badge ' + currencyClass + '">' + escapeHtml(currency) + '</span>';
             
-            const address = w.wallet_address || '-';
-            const addressCell = row.insertCell(4);
+            var address = w.wallet_address || '-';
+            var addressCell = row.insertCell(4);
             addressCell.className = 'wallet-address-cell';
-            addressCell.innerHTML = `
-                <div class="wallet-address-wrapper">
-                    <span class="wallet-address-text">${escapeHtml(address)}</span>
-                    ${address !== '-' ? `<button class="copy-address-btn" data-address="${escapeHtml(address)}"><i class="fas fa-copy"></i></button>` : ''}
-                </div>
-            `;
+            addressCell.innerHTML = '<div class="wallet-address-wrapper"><span class="wallet-address-text">' + escapeHtml(address) + '</span>' + (address !== '-' ? '<button class="copy-address-btn" data-address="' + escapeHtml(address) + '"><i class="fas fa-copy"></i></button>' : '') + '</div>';
             
-            const ipCell = row.insertCell(5);
+            var ipCell = row.insertCell(5);
             if (flagUrl && countryName !== 'Unknown') {
-                ipCell.innerHTML = `<img src="${flagUrl}" class="country-flag-img" onerror="this.style.display='none'" alt=""> <span class="country-name">${escapeHtml(countryName)}</span>`;
+                ipCell.innerHTML = '<img src="' + flagUrl + '" class="country-flag-img" onerror="this.style.display=\'none\'" alt=""> <span class="country-name">' + escapeHtml(countryName) + '</span>';
             } else {
-                ipCell.innerHTML = `<span style="font-size: 12px; color: #6a7a9a;">${escapeHtml(w.user_ip || '-')}</span>`;
+                ipCell.innerHTML = '<span style="font-size: 12px; color: #6a7a9a;">' + escapeHtml(w.user_ip || '-') + '</span>';
             }
             
             row.insertCell(6).innerText = w.request_date ? new Date(w.request_date).toLocaleString() : '-';
-            row.insertCell(7).innerHTML = `<span class="status-badge-${w.status}">${w.status === 'approved' ? '✅ Approved' : '❌ Rejected'}</span>`;
+            row.insertCell(7).innerHTML = '<span class="status-badge-' + w.status + '">' + (w.status === 'approved' ? '✅ Approved' : '❌ Rejected') + '</span>';
         }
         
-        // 绑定复制按钮
-        document.querySelectorAll('#withdrawalHistoryBody .copy-address-btn').forEach(btn => {
-            btn.addEventListener('click', (e) => {
+        document.querySelectorAll('#withdrawalHistoryBody .copy-address-btn').forEach(function(btn) {
+            btn.addEventListener('click', function(e) {
                 e.stopPropagation();
-                copyToClipboard(btn.dataset.address);
+                copyToClipboard(this.dataset.address);
             });
         });
         
     } catch (e) {
         console.error('加载历史记录失败:', e);
-        tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; padding:30px; color:#ff8888;">加载失败: ${escapeHtml(e.message)}</td></tr>`;
+        tbody.innerHTML = '<tr><td colspan="8" style="text-align:center; padding:30px; color:#ff8888;">加载失败: ' + escapeHtml(e.message) + '</td></tr>';
     }
 }
 
 // ========== 复制功能 ==========
 function copyToClipboard(text) {
     if (navigator.clipboard && navigator.clipboard.writeText) {
-        navigator.clipboard.writeText(text).then(() => {
+        navigator.clipboard.writeText(text).then(function() {
             showToast('Address copied!', 'success');
-        }).catch(() => {
+        }).catch(function() {
             fallbackCopy(text);
         });
     } else {
@@ -850,7 +826,7 @@ function copyToClipboard(text) {
 }
 
 function fallbackCopy(text) {
-    const textarea = document.createElement('textarea');
+    var textarea = document.createElement('textarea');
     textarea.value = text;
     textarea.style.position = 'fixed';
     textarea.style.left = '-9999px';
@@ -868,18 +844,10 @@ function fallbackCopy(text) {
 
 // ========== 批准提现 ==========
 async function handleApproveWithdraw(id, uid, amount) {
-    showConfirm('Approve Withdrawal', `Confirm to approve withdrawal of €${parseFloat(amount).toFixed(2)} for user ${uid}?`, async () => {
+    showConfirm('Approve Withdrawal', 'Confirm to approve withdrawal of €' + parseFloat(amount).toFixed(2) + ' for user ' + uid + '?', async function() {
         try {
-            const { error } = await sb
-                .from('withdrawals')
-                .update({ 
-                    status: 'approved',
-                    processed_at: new Date().toISOString()
-                })
-                .eq('id', parseInt(id));
-            
+            var error = (await sb.from('withdrawals').update({ status: 'approved', processed_at: new Date().toISOString() }).eq('id', parseInt(id))).error;
             if (error) throw error;
-            
             await refreshWithdrawData();
             if (window.loadDashboardPage) window.loadDashboardPage(currentDays);
             showToast('✅ Withdrawal approved', 'success');
@@ -891,31 +859,17 @@ async function handleApproveWithdraw(id, uid, amount) {
 
 // ========== 拒绝提现 ==========
 async function handleRejectWithdraw(id, uid, amount) {
-    showConfirm('Reject Withdrawal', `Confirm to reject withdrawal of €${parseFloat(amount).toFixed(2)} for user ${uid}? Amount will be returned.`, async () => {
+    showConfirm('Reject Withdrawal', 'Confirm to reject withdrawal of €' + parseFloat(amount).toFixed(2) + ' for user ' + uid + '? Amount will be returned.', async function() {
         try {
-            const { data: user, error: userError } = await sb
-                .from('users')
-                .select('balance')
-                .eq('uid', uid)
-                .single();
-            
+            var userResult = await sb.from('users').select('balance').eq('uid', uid).single();
+            var user = userResult.data;
+            var userError = userResult.error;
             if (userError) throw userError;
             
-            const { error: balanceError } = await sb
-                .from('users')
-                .update({ balance: (user.balance || 0) + parseFloat(amount) })
-                .eq('uid', uid);
-            
+            var balanceError = (await sb.from('users').update({ balance: (user.balance || 0) + parseFloat(amount) }).eq('uid', uid)).error;
             if (balanceError) throw balanceError;
             
-            const { error } = await sb
-                .from('withdrawals')
-                .update({ 
-                    status: 'rejected',
-                    processed_at: new Date().toISOString()
-                })
-                .eq('id', parseInt(id));
-            
+            var error = (await sb.from('withdrawals').update({ status: 'rejected', processed_at: new Date().toISOString() }).eq('id', parseInt(id))).error;
             if (error) throw error;
             
             await refreshWithdrawData();
@@ -929,15 +883,10 @@ async function handleRejectWithdraw(id, uid, amount) {
 
 // ========== 清空历史记录 ==========
 async function clearWithdrawalHistory() {
-    showConfirm('⚠️ Clear Records', 'Are you sure you want to delete all withdrawal history? This cannot be undone!', async () => {
+    showConfirm('⚠️ Clear Records', 'Are you sure you want to delete all withdrawal history? This cannot be undone!', async function() {
         try {
-            const { error } = await sb
-                .from('withdrawals')
-                .delete()
-                .in('status', ['approved', 'rejected']);
-            
+            var error = (await sb.from('withdrawals').delete().in('status', ['approved', 'rejected'])).error;
             if (error) throw error;
-            
             showToast('All withdrawal records cleared', 'success');
             loadWithdrawalHistory();
         } catch (e) {
