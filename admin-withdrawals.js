@@ -1,6 +1,18 @@
-// admin-withdrawals.js - 完整版（标签切换 + 搜索功能 + 专业质感样式 + 自定义下拉）
+// admin-withdrawals.js - 完整版（标签切换 + 搜索功能 + 专业质感样式 + 自定义下拉 + Crypto图标）
 let currentWithdrawTab = 'pending';
 let withdrawSearchKeyword = '';
+
+// ========== Crypto 图标映射 ==========
+function getCryptoIcon(currency) {
+    var upper = currency.toUpperCase();
+    var icons = {
+        'BTC': '<i class="fab fa-bitcoin" style="color: #f7931a; margin-right: 6px;"></i>',
+        'ETH': '<i class="fab fa-ethereum" style="color: #627eea; margin-right: 6px;"></i>',
+        'USDC': '<i class="fas fa-dollar-sign" style="color: #2775ca; margin-right: 6px;"></i>',
+        'USDT': '<i class="fas fa-dollar-sign" style="color: #26a17b; margin-right: 6px;"></i>'
+    };
+    return icons[upper] || '<i class="fas fa-coins" style="color: #8892a8; margin-right: 6px;"></i>';
+}
 
 // ========== 自定义下拉初始化 ==========
 function initCustomSelect(containerId, options, selectedValue) {
@@ -40,7 +52,7 @@ function initCustomSelect(containerId, options, selectedValue) {
             var value = this.dataset.value;
             var label = this.dataset.label || this.textContent.trim();
             hiddenInput.value = value;
-            display.innerHTML = '<span>' + label + '</span><i class="fas fa-chevron-down"></i>';
+            display.innerHTML = this.innerHTML + ' <i class="fas fa-chevron-down" style="color: #5a6a82; font-size: 11px; margin-left: 6px;"></i>';
             dropdown.classList.remove('open');
             
             var changeEvent = new Event('change', { bubbles: true });
@@ -58,7 +70,7 @@ function initCustomSelect(containerId, options, selectedValue) {
     });
 }
 
-// ========== 渲染自定义下拉HTML ==========
+// ========== 渲染自定义下拉HTML（带图标） ==========
 function renderCustomSelectHTML(id, options, selectedValue, placeholder) {
     var opts = options || ['All Crypto', 'BTC', 'ETH', 'USDC', 'USDT'];
     var selected = selectedValue || '';
@@ -67,11 +79,30 @@ function renderCustomSelectHTML(id, options, selectedValue, placeholder) {
     var optionsHtml = opts.map(function(opt) {
         var value = opt === 'All Crypto' ? '' : opt;
         var selectedAttr = (value === selected) ? ' class="custom-select-option selected"' : ' class="custom-select-option"';
-        return '<div' + selectedAttr + ' data-value="' + value + '" data-label="' + opt + '">' + opt + '</div>';
+        var label = opt;
+        var iconHtml = '';
+        if (opt !== 'All Crypto') {
+            iconHtml = getCryptoIcon(opt);
+        }
+        return '<div' + selectedAttr + ' data-value="' + value + '" data-label="' + opt + '">' + iconHtml + opt + '</div>';
     }).join('');
     
+    // 当前选中显示的图标
+    var displayIcon = '';
+    var displayText = ph;
+    if (selected) {
+        var found = opts.find(function(o) { return (o === 'All Crypto' ? '' : o) === selected; });
+        if (found && found !== 'All Crypto') {
+            displayIcon = getCryptoIcon(found);
+            displayText = found;
+        }
+    }
+    
     return '<div class="custom-select-wrapper" id="' + id + '">' +
-        '<div class="custom-select-display"><span>' + (selected ? (opts.find(function(o) { return (o === 'All Crypto' ? '' : o) === selected; }) || ph) : ph) + '</span><i class="fas fa-chevron-down"></i></div>' +
+        '<div class="custom-select-display">' +
+            '<span>' + displayIcon + displayText + '</span>' +
+            '<i class="fas fa-chevron-down" style="color: #5a6a82; font-size: 11px; margin-left: 6px;"></i>' +
+        '</div>' +
         '<div class="custom-select-dropdown"><div class="custom-select-options">' + optionsHtml + '</div></div>' +
         '<input type="hidden" class="custom-select-hidden" value="' + selected + '">' +
         '</div>';
@@ -122,12 +153,12 @@ async function loadWithdrawalsPage() {
                     <input type="text" id="pendingSearchInput" class="search-input" placeholder="Search UID / phone / wallet address" style="flex: 1; min-width: 160px; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.10); border-radius: 40px; padding: 8px 16px; color: #e6edf5; font-size: 13px; outline: none;">
                     
                     <!-- 自定义 Crypto Type 下拉 -->
-                    <div style="min-width: 140px; flex-shrink: 0;">
+                    <div style="min-width: 160px; flex-shrink: 0;">
                         ${renderCustomSelectHTML('pendingCryptoSelect', ['All Crypto', 'BTC', 'ETH', 'USDC', 'USDT'], '')}
                     </div>
                     
                     <input type="number" id="pendingMinAmount" placeholder="Min Amount" style="width: 150px; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.10); border-radius: 40px; padding: 8px 16px; color: #e6edf5; font-size: 13px; outline: none; -moz-appearance: textfield; appearance: textfield;">
-<input type="number" id="pendingMaxAmount" placeholder="Max Amount" style="width: 150px; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.10); border-radius: 40px; padding: 8px 16px; color: #e6edf5; font-size: 13px; outline: none; -moz-appearance: textfield; appearance: textfield;">
+                    <input type="number" id="pendingMaxAmount" placeholder="Max Amount" style="width: 150px; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.10); border-radius: 40px; padding: 8px 16px; color: #e6edf5; font-size: 13px; outline: none; -moz-appearance: textfield; appearance: textfield;">
                     <button id="pendingSearchBtn" class="btn-primary" style="padding: 8px 20px; border-radius: 40px; border: none; background: #2a3a5a; color: #e6edf5; font-weight: 600; cursor: pointer; font-size: 13px; white-space: nowrap;"><i class="fas fa-search"></i> Search</button>
                     <button id="pendingClearBtn" class="btn-primary" style="padding: 8px 18px; border-radius: 40px; border: none; background: rgba(255,255,255,0.06); color: #b8c4de; font-weight: 500; cursor: pointer; font-size: 13px; white-space: nowrap;"><i class="fas fa-times"></i> Clear</button>
                 </div>
@@ -178,12 +209,12 @@ async function loadWithdrawalsPage() {
                     <input type="text" id="historySearchInput" class="search-input" placeholder="Search UID / phone / wallet address" style="flex: 1; min-width: 160px; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.10); border-radius: 40px; padding: 8px 16px; color: #e6edf5; font-size: 13px; outline: none;">
                     
                     <!-- 自定义 Crypto Type 下拉 -->
-                    <div style="min-width: 140px; flex-shrink: 0;">
+                    <div style="min-width: 160px; flex-shrink: 0;">
                         ${renderCustomSelectHTML('historyCryptoSelect', ['All Crypto', 'BTC', 'ETH', 'USDC', 'USDT'], '')}
                     </div>
                     
                     <input type="number" id="historyMinAmount" placeholder="Min Amount" style="width: 150px; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.10); border-radius: 40px; padding: 8px 16px; color: #e6edf5; font-size: 13px; outline: none; -moz-appearance: textfield; appearance: textfield;">
-<input type="number" id="historyMaxAmount" placeholder="Max Amount" style="width: 150px; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.10); border-radius: 40px; padding: 8px 16px; color: #e6edf5; font-size: 13px; outline: none; -moz-appearance: textfield; appearance: textfield;">
+                    <input type="number" id="historyMaxAmount" placeholder="Max Amount" style="width: 150px; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.10); border-radius: 40px; padding: 8px 16px; color: #e6edf5; font-size: 13px; outline: none; -moz-appearance: textfield; appearance: textfield;">
                     <button id="historySearchBtn" class="btn-primary" style="padding: 8px 20px; border-radius: 40px; border: none; background: #2a3a5a; color: #e6edf5; font-weight: 600; cursor: pointer; font-size: 13px; white-space: nowrap;"><i class="fas fa-search"></i> Search</button>
                     <button id="historyClearBtn" class="btn-primary" style="padding: 8px 18px; border-radius: 40px; border: none; background: rgba(255,255,255,0.06); color: #b8c4de; font-weight: 500; cursor: pointer; font-size: 13px; white-space: nowrap;"><i class="fas fa-times"></i> Clear</button>
                     <button id="clearHistoryBtn" class="danger" style="background:#7a2f2f; border:none; padding:8px 16px; border-radius:40px; color:#fff; cursor:pointer; margin-left: auto; white-space: nowrap;"><i class="fas fa-trash"></i> Clear All</button>
@@ -267,17 +298,22 @@ async function loadWithdrawalsPage() {
         }
         .currency-badge {
             display: inline-block;
-            padding: 2px 12px;
+            padding: 4px 14px 4px 10px;
             border-radius: 40px;
-            font-size: 11px;
-            font-weight: 600;
+            font-size: 12px;
+            font-weight: 500;
             background: rgba(255,255,255,0.04);
             color: #b8c4de;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            width: fit-content;
         }
-        .currency-badge.usdt { background: rgba(212, 192, 154, 0.10); color: #d4c09a; }
-        .currency-badge.eth { background: rgba(138, 180, 240, 0.10); color: #8ab4f0; }
-        .currency-badge.btc { background: rgba(232, 128, 128, 0.10); color: #e88080; }
-        .currency-badge.usdc { background: rgba(122, 208, 176, 0.10); color: #7ad0b0; }
+        .currency-badge.usdt { background: rgba(38, 161, 123, 0.12); color: #26a17b; }
+        .currency-badge.eth { background: rgba(98, 126, 234, 0.12); color: #627eea; }
+        .currency-badge.btc { background: rgba(247, 147, 26, 0.12); color: #f7931a; }
+        .currency-badge.usdc { background: rgba(39, 117, 202, 0.12); color: #2775ca; }
+        .currency-badge i { font-size: 14px; }
         .status-badge-approved { background: rgba(122, 208, 176, 0.10); color: #7ad0b0; padding: 2px 12px; border-radius: 40px; font-size: 11px; display: inline-block; }
         .status-badge-rejected { background: rgba(232, 128, 128, 0.10); color: #e88080; padding: 2px 12px; border-radius: 40px; font-size: 11px; display: inline-block; }
         .status-badge-pending { background: rgba(212, 192, 154, 0.10); color: #d4c09a; padding: 2px 12px; border-radius: 40px; font-size: 11px; display: inline-block; }
@@ -325,13 +361,13 @@ async function loadWithdrawalsPage() {
         .custom-select-wrapper {
             position: relative;
             width: 100%;
-            min-width: 140px;
+            min-width: 160px;
         }
         .custom-select-display {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 8px 14px 8px 18px;
+            padding: 8px 14px 8px 16px;
             background: rgba(255,255,255,0.08);
             border: 1px solid rgba(255,255,255,0.10);
             border-radius: 40px;
@@ -353,6 +389,11 @@ async function loadWithdrawalsPage() {
             transition: 0.25s ease;
             margin-left: 6px;
             flex-shrink: 0;
+        }
+        .custom-select-display i.fa-chevron-down {
+            color: #5a6a82;
+            font-size: 11px;
+            margin-left: 6px;
         }
         .custom-select-dropdown {
             position: absolute;
@@ -397,6 +438,9 @@ async function loadWithdrawalsPage() {
             color: #b8c4de;
             font-size: 13px;
             font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
         .custom-select-option:hover {
             background: rgba(255,255,255,0.04);
@@ -409,6 +453,9 @@ async function loadWithdrawalsPage() {
         .custom-select-option.selected::after {
             content: ' ✓';
             color: #6a8af0;
+        }
+        .custom-select-option i {
+            font-size: 16px;
         }
         
         @media (max-width: 768px) {
@@ -464,7 +511,7 @@ async function loadWithdrawalsPage() {
         var pendingSelect = document.getElementById('pendingCryptoSelect');
         if (pendingSelect) {
             pendingSelect.querySelector('.custom-select-hidden').value = '';
-            pendingSelect.querySelector('.custom-select-display').innerHTML = '<span>All Crypto</span><i class="fas fa-chevron-down"></i>';
+            pendingSelect.querySelector('.custom-select-display').innerHTML = '<span>All Crypto</span><i class="fas fa-chevron-down" style="color: #5a6a82; font-size: 11px; margin-left: 6px;"></i>';
         }
         document.getElementById('pendingMinAmount').value = '';
         document.getElementById('pendingMaxAmount').value = '';
@@ -502,7 +549,7 @@ async function loadWithdrawalsPage() {
         var historySelect = document.getElementById('historyCryptoSelect');
         if (historySelect) {
             historySelect.querySelector('.custom-select-hidden').value = '';
-            historySelect.querySelector('.custom-select-display').innerHTML = '<span>All Crypto</span><i class="fas fa-chevron-down"></i>';
+            historySelect.querySelector('.custom-select-display').innerHTML = '<span>All Crypto</span><i class="fas fa-chevron-down" style="color: #5a6a82; font-size: 11px; margin-left: 6px;"></i>';
         }
         document.getElementById('historyMinAmount').value = '';
         document.getElementById('historyMaxAmount').value = '';
@@ -647,10 +694,11 @@ async function loadWithdrawals() {
             var w = filtered[i];
             var row = tbody.insertRow();
             
-            // ========== Crypto Type 大写显示 ==========
+            // ========== Crypto Type 大写 + 图标 ==========
             var currency = w.currency || w.withdrawal_address_type || 'USDT';
-            var currencyDisplay = currency.toUpperCase();  // 显示用大写
-            var currencyClass = currency.toLowerCase();    // CSS 类名用小写
+            var currencyDisplay = currency.toUpperCase();
+            var currencyClass = currency.toLowerCase();
+            var iconHtml = getCryptoIcon(currency);
             
             var countryName = 'Unknown';
             var flagUrl = null;
@@ -666,7 +714,7 @@ async function loadWithdrawals() {
             row.insertCell(0).innerHTML = '<span class="badge" style="background: rgba(255,255,255,0.08); padding: 2px 12px; border-radius: 20px; font-size: 11px; color: #c8d2e8; border: 1px solid rgba(255,255,255,0.06);">' + escapeHtml(w.uid) + '</span>';
             row.insertCell(1).innerText = w.username || w.uid;
             row.insertCell(2).innerHTML = '<span style="color: #d4c09a; font-weight: 600;">€' + (w.amount || 0).toFixed(2) + '</span>';
-            row.insertCell(3).innerHTML = '<span class="currency-badge ' + currencyClass + '">' + escapeHtml(currencyDisplay) + '</span>';
+            row.insertCell(3).innerHTML = '<span class="currency-badge ' + currencyClass + '">' + iconHtml + escapeHtml(currencyDisplay) + '</span>';
             
             var address = w.wallet_address || '-';
             var addressCell = row.insertCell(4);
@@ -768,10 +816,11 @@ async function loadWithdrawalHistory() {
             var w = filtered[i];
             var row = tbody.insertRow();
             
-            // ========== Crypto Type 大写显示 ==========
+            // ========== Crypto Type 大写 + 图标 ==========
             var currency = w.currency || w.withdrawal_address_type || 'USDT';
-            var currencyDisplay = currency.toUpperCase();  // 显示用大写
-            var currencyClass = currency.toLowerCase();    // CSS 类名用小写
+            var currencyDisplay = currency.toUpperCase();
+            var currencyClass = currency.toLowerCase();
+            var iconHtml = getCryptoIcon(currency);
             
             var countryName = 'Unknown';
             var flagUrl = null;
@@ -787,7 +836,7 @@ async function loadWithdrawalHistory() {
             row.insertCell(0).innerHTML = '<span class="badge" style="background: rgba(255,255,255,0.08); padding: 2px 12px; border-radius: 20px; font-size: 11px; color: #c8d2e8; border: 1px solid rgba(255,255,255,0.06);">' + escapeHtml(w.uid) + '</span>';
             row.insertCell(1).innerText = w.username || w.uid;
             row.insertCell(2).innerHTML = '<span style="color: ' + (w.status === 'approved' ? '#7ad0b0' : '#e88080') + '; font-weight: 600;">€' + (w.amount || 0).toFixed(2) + '</span>';
-            row.insertCell(3).innerHTML = '<span class="currency-badge ' + currencyClass + '">' + escapeHtml(currencyDisplay) + '</span>';
+            row.insertCell(3).innerHTML = '<span class="currency-badge ' + currencyClass + '">' + iconHtml + escapeHtml(currencyDisplay) + '</span>';
             
             var address = w.wallet_address || '-';
             var addressCell = row.insertCell(4);
