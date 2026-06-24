@@ -622,8 +622,8 @@ function initParticleNetwork() {
         }
 
         update() {
-            this.x += this.vx + Math.sin(Date.now() * this.freqX + this.phaseX) * this.amplitude * 0.08;
-            this.y += this.vy + Math.cos(Date.now() * this.freqY + this.phaseY) * this.amplitude * 0.08;
+            this.x += this.vx + Math.sin(Date.now() * this.freqX + this.phaseX) * this.amplitude * 0.16;
+            this.y += this.vy + Math.cos(Date.now() * this.freqY + this.phaseY) * this.amplitude * 0.16;
 
             if (this.x < 0) { this.x = 0; this.vx *= -0.9; }
             if (this.x > width) { this.x = width; this.vx *= -0.9; }
