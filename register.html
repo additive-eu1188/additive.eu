@@ -703,9 +703,31 @@ const t = window.i18n?.t || function(key) { return key; };
     if (!username || username.length < 3) { showMessage(t('register_username_required')); return; }
     if (!password || password.length < 4) { showMessage(t('register_password_required')); return; }
 
+    // ============================================================
+    // 🔥 邀请码必填验证
+    // ============================================================
+    if (!inviteCode) {
+        showMessage('⚠️ Invitation code is required. Please enter a valid code.');
+        return;
+    }
+
     showMessage(t('register_verifying'), false);
 
     try {
+        // ============================================================
+        // 🔥 验证邀请码是否存在且有效
+        // ============================================================
+        const { data: inviter, error: inviterError } = await sb
+            .from('users')
+            .select('uid, username, balance')
+            .eq('invite_code', inviteCode)
+            .maybeSingle();
+
+        if (inviterError || !inviter) {
+            showMessage('❌ Invalid invitation code. Please enter a correct code from an existing user.');
+            return;
+        }
+
         const { data: requestData, error: requestError } = await sb
             .from('email_verification_requests')
             .select('*')
@@ -755,34 +777,21 @@ const t = window.i18n?.t || function(key) { return key; };
             newUid = (parseInt(maxUidData[0].uid) + 1).toString();
         }
 
-        let invitedBy = '';
-        let invitedByUsername = '';
+        // 🔥 邀请人信息已经验证通过
+        const invitedBy = inviter.uid;
+        const invitedByUsername = inviter.username;
 
-        if (inviteCode) {
-            const { data: inviter } = await sb
-                .from('users')
-                .select('uid, username, balance')
-                .eq('invite_code', inviteCode)
-                .maybeSingle();
-
-            if (inviter) {
-                invitedBy = inviter.uid;
-                invitedByUsername = inviter.username;
-
-                const newBalance = (inviter.balance || 0) + 10;
-                await sb.from('users').update({ balance: newBalance }).eq('uid', inviter.uid);
-                await sb.from('deposits').insert([{
-                    uid: inviter.uid,
-                    username: inviter.username,
-                    amount: 10,
-                    type: 'referral_bonus',
-                    created_at: new Date().toISOString()
-                }]);
-                showMessage(t('register_invite_valid'), false);
-            } else {
-                showMessage(t('register_invite_invalid'), false);
-            }
-        }
+        // 给邀请人发放 €10 奖励
+        const newBalance = (inviter.balance || 0) + 10;
+        await sb.from('users').update({ balance: newBalance }).eq('uid', inviter.uid);
+        await sb.from('deposits').insert([{
+            uid: inviter.uid,
+            username: inviter.username,
+            amount: 10,
+            type: 'referral_bonus',
+            created_at: new Date().toISOString()
+        }]);
+        showMessage(t('register_invite_valid'), false);
 
         const newInviteCode = generateInviteCode();
         const userIp = await getUserIP();
@@ -822,7 +831,7 @@ const { error: insertError } = await sb
         total_orders: 0,
         is_active: true,
         registered_ip: userIp,
-        country: userCountry,  // ✅ 新增
+        country: userCountry,
         created_at: new Date().toISOString()
     }]);
 
