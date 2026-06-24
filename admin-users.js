@@ -509,7 +509,7 @@ async function loadUsers() {
         
                 tbody.innerHTML = '';
         
-        // ========== IP 重复检测（新增） ==========
+                // ========== IP 重复检测（新增） ==========
         const ipMap = {};
         const duplicateIps = [];
         for (const u of users) {
@@ -526,52 +526,70 @@ async function loadUsers() {
         
         // 如果有重复 IP，检查是否需要通知
         if (duplicateIps.length > 0) {
-            // 构建当前重复 IP 的标识（排序后拼接，用于比较）
             const sortedIps = [...duplicateIps].sort();
             const currentKey = sortedIps.join('|');
-            
-            // 从 localStorage 读取上次忽略的标识
             const ignoredKey = localStorage.getItem('duplicate_ip_ignored');
             
-            // 如果当前重复 IP 组合与上次忽略的不同，则显示通知
             if (ignoredKey !== currentKey) {
-                let message = '';
+                // 构建纯文本消息（用 \n 换行）
+                let textMessage = '';
                 for (const ip of duplicateIps) {
                     const usersWithIp = users.filter(u => u.registered_ip === ip);
-                    const userList = usersWithIp.map(u => `${u.username} (UID: ${u.uid})`).join('<br>');
+                    const userList = usersWithIp.map(u => `${u.username} (UID: ${u.uid})`).join('\n');
                     const displayIp = ip || 'Unknown';
-                    message += `📌 IP: ${displayIp}<br>${userList}<br><br>`;
+                    textMessage += `📌 IP: ${displayIp}\n${userList}\n\n`;
                 }
-                message += 'Please check abnormal users registration activity.';
+                textMessage += 'Please check abnormal users registration activity.';
                 
-                // 创建带 "Don't show again" 按钮的 HTML
-                const messageWithButton = `
-                    ${message}
-                    <br>
-                    <button onclick="dismissDuplicateIpAlert()" style="
-                        background: rgba(255,255,255,0.1);
-                        border: 1px solid rgba(255,255,255,0.2);
-                        padding: 6px 16px;
-                        border-radius: 20px;
-                        color: #d4c8a0;
-                        cursor: pointer;
-                        font-size: 12px;
-                        margin-top: 8px;
-                        font-family: 'Inter', sans-serif;
-                    ">
-                        Don't show again
-                    </button>
-                `;
-                
-                // 存储当前重复 IP 标识到全局变量，供按钮使用
+                // 存储当前重复 IP 标识到全局变量
                 window._duplicateIpKey = currentKey;
                 
+                // 延迟显示通知
                 setTimeout(() => {
+                    // 使用 showAmberNotification 显示纯文本
                     showAmberNotification(
                         '⚠️ Multiple Registered IP Detected',
-                        messageWithButton,
+                        textMessage,
                         'warning'
                     );
+                    
+                    // 等待通知出现后，添加 "Don't show again" 按钮
+                    setTimeout(() => {
+                        const notifications = document.querySelectorAll('.notification-amber');
+                        if (notifications.length > 0) {
+                            const latestNotification = notifications[notifications.length - 1];
+                            // 找到消息区域
+                            const messageDiv = latestNotification.querySelector('div[style*="flex: 1"]');
+                            if (messageDiv) {
+                                // 创建按钮
+                                const btn = document.createElement('button');
+                                btn.textContent = 'Don\'t show again';
+                                btn.style.cssText = `
+                                    background: rgba(255,255,255,0.1);
+                                    border: 1px solid rgba(255,255,255,0.2);
+                                    padding: 4px 14px;
+                                    border-radius: 20px;
+                                    color: #d4c8a0;
+                                    cursor: pointer;
+                                    font-size: 11px;
+                                    margin-top: 8px;
+                                    font-family: 'Inter', sans-serif;
+                                    transition: 0.2s;
+                                `;
+                                btn.onmouseover = function() {
+                                    this.style.background = 'rgba(255,255,255,0.2)';
+                                };
+                                btn.onmouseout = function() {
+                                    this.style.background = 'rgba(255,255,255,0.1)';
+                                };
+                                btn.onclick = function(e) {
+                                    e.stopPropagation();
+                                    dismissDuplicateIpAlert();
+                                };
+                                messageDiv.appendChild(btn);
+                            }
+                        }
+                    }, 300);
                 }, 500);
             }
         }
