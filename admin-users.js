@@ -507,7 +507,37 @@ async function loadUsers() {
             });
         }
         
-        tbody.innerHTML = '';
+                tbody.innerHTML = '';
+        
+        // ========== IP 重复检测（新增） ==========
+        const ipMap = {};
+        const duplicateIps = [];
+        for (const u of users) {
+            if (u.registered_ip && u.registered_ip !== '') {
+                if (ipMap[u.registered_ip]) {
+                    if (!duplicateIps.includes(u.registered_ip)) {
+                        duplicateIps.push(u.registered_ip);
+                    }
+                } else {
+                    ipMap[u.registered_ip] = u.uid;
+                }
+            }
+        }
+        
+        // 如果有重复 IP，弹出 Alert 提示
+        if (duplicateIps.length > 0) {
+            let message = '⚠️ Multiple Registered IP Address Detected!：\n\n';
+            for (const ip of duplicateIps) {
+                const usersWithIp = users.filter(u => u.registered_ip === ip);
+                const uids = usersWithIp.map(u => `${u.username} (UID: ${u.uid})`).join(', ');
+                message += `📌 IP: ${ip}\n   User: ${uids}\n\n`;
+            }
+            message += 'Please check abnormal users registration activity.';
+            
+            setTimeout(() => {
+                alert(message);
+            }, 500);
+        }
         
         for (let u of users) {
             const row = tbody.insertRow();
