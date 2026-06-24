@@ -524,23 +524,26 @@ async function loadUsers() {
             }
         }
         
-        // 如果有重复 IP，弹出琥珀色通知
-if (duplicateIps.length > 0) {
-    let message = '';
-    for (const ip of duplicateIps) {
-        const usersWithIp = users.filter(u => u.registered_ip === ip);
-        const uids = usersWithIp.map(u => `${u.username} (UID: ${u.uid})`).join(', ');
-        message += `📌 IP: ${ip} → ${uids}\n`;
-    }
-    
-    setTimeout(() => {
-        showAmberNotification(
-            '⚠️ Multiple Registered IP Detected',
-            message + '\nPlease check abnormal users registration activity.',
-            'warning'
-        );
-    }, 500);
-}
+                // 如果有重复 IP，弹出琥珀色通知
+        if (duplicateIps.length > 0) {
+            let message = '';
+            for (const ip of duplicateIps) {
+                const usersWithIp = users.filter(u => u.registered_ip === ip);
+                // 格式化用户名和UID
+                const userList = usersWithIp.map(u => `${u.username} (UID: ${u.uid})`).join('\n');
+                const displayIp = ip || 'Unknown';
+                message += `📌 IP: ${displayIp}\n${userList}\n\n`;
+            }
+            message += 'Please check abnormal users registration activity.';
+            
+            setTimeout(() => {
+                showAmberNotification(
+                    '⚠️ Multiple Registered IP Detected',
+                    message,
+                    'warning'
+                );
+            }, 500);
+        }
         
         for (let u of users) {
             const row = tbody.insertRow();
