@@ -439,7 +439,7 @@
         // Amount Due management
         // ============================================================
         function setAmountDue(uid, orderPrice, amountDue) {
-    // 存 localStorage（保持兼容）
+console.log('🔍 setAmountDue called:', { uid, orderPrice, amountDue });
     if (amountDue > 0 && orderPrice > 0) {
         localStorage.setItem('amountDue_' + uid, JSON.stringify({
             orderPrice: orderPrice,
@@ -940,11 +940,17 @@ if (/Mobi|Android|iPhone/i.test(navigator.userAgent)) {
             var user = getCurrentUser();
 
             if (showAmountDue && user) {
-                var amountDue = requiredAmount - currentBalance;
-                setAmountDue(user.uid, requiredAmount, amountDue);
-                showAmountDueCard(amountDue);
-                loadUserData();
-            }
+    var amountDue = requiredAmount - currentBalance;
+    console.log('🔍 showInsufficientBalanceModal:', {
+        requiredAmount,
+        currentBalance,
+        amountDue,
+        uid: user.uid
+    });
+    setAmountDue(user.uid, requiredAmount, amountDue);
+    showAmountDueCard(amountDue);
+    loadUserData();
+}
 
             var modalHtml = `
                 <div id="insufficientModal" style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(7,11,26,0.92);backdrop-filter:blur(14px);z-index:30000;display:flex;align-items:center;justify-content:center;visibility:visible;opacity:1;">
