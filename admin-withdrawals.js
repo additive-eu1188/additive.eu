@@ -1,6 +1,98 @@
-// admin-withdrawals.js - 完整版（标签切换 + 搜索功能 + 专业质感样式）
+// admin-withdrawals.js - 完整版（标签切换 + 搜索功能 + 专业质感样式 + 自定义下拉）
 let currentWithdrawTab = 'pending';
 let withdrawSearchKeyword = '';
+
+// ========== 自定义下拉初始化 ==========
+function initCustomSelect(containerId, options, selectedValue) {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+    
+    // 如果已经初始化过，跳过
+    if (container.dataset.initialized === 'true') return;
+    container.dataset.initialized = 'true';
+    
+    const display = container.querySelector('.custom-select-display');
+    const dropdown = container.querySelector('.custom-select-dropdown');
+    const optionsList = container.querySelector('.custom-select-options');
+    const hiddenInput = container.querySelector('.custom-select-hidden');
+    
+    if (!display || !dropdown || !optionsList || !hiddenInput) return;
+    
+    // 设置初始值
+    if (selectedValue) {
+        hiddenInput.value = selectedValue;
+        const selectedOption = optionsList.querySelector(`[data-value="${selectedValue}"]`);
+        if (selectedOption) {
+            display.innerHTML = selectedOption.innerHTML;
+        }
+    }
+    
+    // 切换下拉显示
+    display.addEventListener('click', function(e) {
+        e.stopPropagation();
+        const isOpen = dropdown.classList.contains('open');
+        // 关闭所有其他下拉
+        document.querySelectorAll('.custom-select-dropdown.open').forEach(el => {
+            if (el !== dropdown) el.classList.remove('open');
+        });
+        dropdown.classList.toggle('open');
+    });
+    
+    // 选项点击
+    optionsList.querySelectorAll('.custom-select-option').forEach(option => {
+        option.addEventListener('click', function(e) {
+            e.stopPropagation();
+            const value = this.dataset.value;
+            const label = this.dataset.label || this.textContent.trim();
+            hiddenInput.value = value;
+            display.innerHTML = `<span>${label}</span>`;
+            dropdown.classList.remove('open');
+            
+            // 触发 change 事件
+            const changeEvent = new Event('change', { bubbles: true });
+            hiddenInput.dispatchEvent(changeEvent);
+            
+            // 触发搜索
+            const searchBtn = container.closest('.search-bar')?.querySelector('.btn-search, .search-btn');
+            if (searchBtn) {
+                searchBtn.click();
+            }
+        });
+    });
+    
+    // 点击外部关闭
+    document.addEventListener('click', function() {
+        dropdown.classList.remove('open');
+    });
+}
+
+// ========== 渲染自定义下拉HTML ==========
+function renderCustomSelectHTML(id, options, selectedValue, placeholder) {
+    const opts = options || ['All Crypto', 'BTC', 'ETH', 'USDC', 'USDT'];
+    const selected = selectedValue || '';
+    const ph = placeholder || 'All Crypto';
+    
+    let optionsHtml = opts.map(opt => {
+        const value = opt === 'All Crypto' ? '' : opt;
+        const selectedAttr = (value === selected) ? ' class="custom-select-option selected"' : ' class="custom-select-option"';
+        return `<div${selectedAttr} data-value="${value}" data-label="${opt}">${opt}</div>`;
+    }).join('');
+    
+    return `
+        <div class="custom-select-wrapper" id="${id}">
+            <div class="custom-select-display">
+                <span>${selected ? opts.find(o => (o === 'All Crypto' ? '' : o) === selected) || ph : ph}</span>
+                <i class="fas fa-chevron-down"></i>
+            </div>
+            <div class="custom-select-dropdown">
+                <div class="custom-select-options">
+                    ${optionsHtml}
+                </div>
+            </div>
+            <input type="hidden" class="custom-select-hidden" value="${selected}">
+        </div>
+    `;
+}
 
 async function loadWithdrawalsPage() {
     const container = document.getElementById('page_withdrawals');
@@ -44,18 +136,17 @@ async function loadWithdrawalsPage() {
                 
                 <!-- 搜索栏 -->
                 <div class="search-bar" style="display: flex; flex-wrap: wrap; gap: 10px; align-items: center; background: rgba(8, 12, 24, 0.5); border-radius: 16px; padding: 12px 16px; margin-bottom: 20px; border: 1px solid rgba(255,255,255,0.03);">
-                    <input type="text" id="pendingSearchInput" class="search-input" placeholder="Search UID / phone / wallet address" style="flex: 1; min-width: 180px; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.10); border-radius: 40px; padding: 8px 16px; color: #e6edf5; font-size: 13px; outline: none;">
-                    <select id="pendingCryptoFilter" style="background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.10); border-radius: 40px; padding: 8px 16px 8px 18px; color: #e6edf5; font-size: 13px; outline: none; min-width: 140px; cursor: pointer; appearance: auto; padding-right: 32px;">
-                        <option value="">All Crypto</option>
-                        <option value="BTC">BTC</option>
-                        <option value="ETH">ETH</option>
-                        <option value="USDC">USDC</option>
-                        <option value="USDT">USDT</option>
-                    </select>
+                    <input type="text" id="pendingSearchInput" class="search-input" placeholder="Search UID / phone / wallet address" style="flex: 1; min-width: 160px; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.10); border-radius: 40px; padding: 8px 16px; color: #e6edf5; font-size: 13px; outline: none;">
+                    
+                    <!-- 自定义 Crypto Type 下拉 -->
+                    <div style="min-width: 140px; flex-shrink: 0;">
+                        ${renderCustomSelectHTML('pendingCryptoSelect', ['All Crypto', 'BTC', 'ETH', 'USDC', 'USDT'], '')}
+                    </div>
+                    
                     <input type="number" id="pendingMinAmount" placeholder="Min Amount" style="width: 110px; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.10); border-radius: 40px; padding: 8px 16px; color: #e6edf5; font-size: 13px; outline: none;">
                     <input type="number" id="pendingMaxAmount" placeholder="Max Amount" style="width: 110px; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.10); border-radius: 40px; padding: 8px 16px; color: #e6edf5; font-size: 13px; outline: none;">
-                    <button id="pendingSearchBtn" class="btn-primary" style="padding: 8px 20px; border-radius: 40px; border: none; background: #2a3a5a; color: #e6edf5; font-weight: 600; cursor: pointer; font-size: 13px;"><i class="fas fa-search"></i> Search</button>
-                    <button id="pendingClearBtn" class="btn-primary" style="padding: 8px 18px; border-radius: 40px; border: none; background: rgba(255,255,255,0.06); color: #b8c4de; font-weight: 500; cursor: pointer; font-size: 13px;"><i class="fas fa-times"></i> Clear</button>
+                    <button id="pendingSearchBtn" class="btn-primary" style="padding: 8px 20px; border-radius: 40px; border: none; background: #2a3a5a; color: #e6edf5; font-weight: 600; cursor: pointer; font-size: 13px; white-space: nowrap;"><i class="fas fa-search"></i> Search</button>
+                    <button id="pendingClearBtn" class="btn-primary" style="padding: 8px 18px; border-radius: 40px; border: none; background: rgba(255,255,255,0.06); color: #b8c4de; font-weight: 500; cursor: pointer; font-size: 13px; white-space: nowrap;"><i class="fas fa-times"></i> Clear</button>
                 </div>
                 
                 <div class="table-container" style="max-height: 500px; overflow-y: auto; border-radius: 16px; border: 1px solid rgba(255,255,255,0.03);">
@@ -101,19 +192,18 @@ async function loadWithdrawalsPage() {
                 
                 <!-- 历史搜索栏 -->
                 <div class="search-bar" style="display: flex; flex-wrap: wrap; gap: 10px; align-items: center; background: rgba(8, 12, 24, 0.5); border-radius: 16px; padding: 12px 16px; margin-bottom: 20px; border: 1px solid rgba(255,255,255,0.03);">
-                    <input type="text" id="historySearchInput" class="search-input" placeholder="Search UID / phone / wallet address" style="flex: 1; min-width: 180px; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.10); border-radius: 40px; padding: 8px 16px; color: #e6edf5; font-size: 13px; outline: none;">
-                    <select id="historyCryptoFilter" style="background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.10); border-radius: 40px; padding: 8px 16px 8px 18px; color: #e6edf5; font-size: 13px; outline: none; min-width: 140px; cursor: pointer; appearance: auto; padding-right: 32px;">
-                        <option value="">All Crypto</option>
-                        <option value="BTC">BTC</option>
-                        <option value="ETH">ETH</option>
-                        <option value="USDC">USDC</option>
-                        <option value="USDT">USDT</option>
-                    </select>
+                    <input type="text" id="historySearchInput" class="search-input" placeholder="Search UID / phone / wallet address" style="flex: 1; min-width: 160px; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.10); border-radius: 40px; padding: 8px 16px; color: #e6edf5; font-size: 13px; outline: none;">
+                    
+                    <!-- 自定义 Crypto Type 下拉 -->
+                    <div style="min-width: 140px; flex-shrink: 0;">
+                        ${renderCustomSelectHTML('historyCryptoSelect', ['All Crypto', 'BTC', 'ETH', 'USDC', 'USDT'], '')}
+                    </div>
+                    
                     <input type="number" id="historyMinAmount" placeholder="Min Amount" style="width: 110px; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.10); border-radius: 40px; padding: 8px 16px; color: #e6edf5; font-size: 13px; outline: none;">
                     <input type="number" id="historyMaxAmount" placeholder="Max Amount" style="width: 110px; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.10); border-radius: 40px; padding: 8px 16px; color: #e6edf5; font-size: 13px; outline: none;">
-                    <button id="historySearchBtn" class="btn-primary" style="padding: 8px 20px; border-radius: 40px; border: none; background: #2a3a5a; color: #e6edf5; font-weight: 600; cursor: pointer; font-size: 13px;"><i class="fas fa-search"></i> Search</button>
-                    <button id="historyClearBtn" class="btn-primary" style="padding: 8px 18px; border-radius: 40px; border: none; background: rgba(255,255,255,0.06); color: #b8c4de; font-weight: 500; cursor: pointer; font-size: 13px;"><i class="fas fa-times"></i> Clear</button>
-                    <button id="clearHistoryBtn" class="danger" style="background:#7a2f2f; border:none; padding:8px 16px; border-radius:40px; color:#fff; cursor:pointer; margin-left: auto;"><i class="fas fa-trash"></i> Clear All</button>
+                    <button id="historySearchBtn" class="btn-primary" style="padding: 8px 20px; border-radius: 40px; border: none; background: #2a3a5a; color: #e6edf5; font-weight: 600; cursor: pointer; font-size: 13px; white-space: nowrap;"><i class="fas fa-search"></i> Search</button>
+                    <button id="historyClearBtn" class="btn-primary" style="padding: 8px 18px; border-radius: 40px; border: none; background: rgba(255,255,255,0.06); color: #b8c4de; font-weight: 500; cursor: pointer; font-size: 13px; white-space: nowrap;"><i class="fas fa-times"></i> Clear</button>
+                    <button id="clearHistoryBtn" class="danger" style="background:#7a2f2f; border:none; padding:8px 16px; border-radius:40px; color:#fff; cursor:pointer; margin-left: auto; white-space: nowrap;"><i class="fas fa-trash"></i> Clear All</button>
                 </div>
                 
                 <div class="table-container" style="max-height: 500px; overflow-y: auto; border-radius: 16px; border: 1px solid rgba(255,255,255,0.03);">
@@ -137,7 +227,7 @@ async function loadWithdrawalsPage() {
         </div>
     `;
     
-    // 添加样式
+    // 添加样式（包含自定义下拉样式，与 register 页面一致）
     const style = document.createElement('style');
     style.textContent = `
         .tab-withdraw-btn {
@@ -247,7 +337,97 @@ async function loadWithdrawalsPage() {
             color: #c8d2e8;
             vertical-align: middle;
         }
-        /* 优化下拉菜单选项样式 */
+        
+        /* ===== 自定义下拉样式（与 register 页面一致） ===== */
+        .custom-select-wrapper {
+            position: relative;
+            width: 100%;
+            min-width: 140px;
+        }
+        .custom-select-display {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 8px 14px 8px 18px;
+            background: rgba(255,255,255,0.08);
+            border: 1px solid rgba(255,255,255,0.10);
+            border-radius: 40px;
+            cursor: pointer;
+            color: #e6edf5;
+            font-size: 13px;
+            font-weight: 500;
+            transition: 0.25s ease;
+            min-height: 38px;
+            user-select: none;
+        }
+        .custom-select-display:hover {
+            border-color: rgba(255,255,255,0.18);
+            background: rgba(255,255,255,0.10);
+        }
+        .custom-select-display i {
+            color: #5a6a82;
+            font-size: 11px;
+            transition: 0.25s ease;
+            margin-left: 6px;
+            flex-shrink: 0;
+        }
+        .custom-select-dropdown {
+            position: absolute;
+            top: calc(100% + 6px);
+            left: 0;
+            right: 0;
+            background: rgba(14, 18, 30, 0.98);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(255,255,255,0.06);
+            border-radius: 12px;
+            padding: 6px 0;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-6px) scale(0.98);
+            transition: all 0.2s ease;
+            z-index: 100;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+            overflow: hidden;
+            max-height: 0;
+            overflow-y: auto;
+        }
+        .custom-select-dropdown.open {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0) scale(1);
+            max-height: 240px;
+        }
+        .custom-select-dropdown::-webkit-scrollbar {
+            width: 3px;
+        }
+        .custom-select-dropdown::-webkit-scrollbar-thumb {
+            background: rgba(255,255,255,0.08);
+            border-radius: 4px;
+        }
+        .custom-select-options {
+            padding: 4px 0;
+        }
+        .custom-select-option {
+            padding: 10px 18px;
+            cursor: pointer;
+            transition: 0.15s ease;
+            color: #b8c4de;
+            font-size: 13px;
+            font-weight: 500;
+        }
+        .custom-select-option:hover {
+            background: rgba(255,255,255,0.04);
+            color: #e6edf5;
+        }
+        .custom-select-option.selected {
+            background: rgba(255,255,255,0.02);
+            color: #e6edf5;
+        }
+        .custom-select-option.selected::after {
+            content: ' ✓';
+            color: #6a8af0;
+        }
+        
         select option {
             background: #141c2e !important;
             color: #e6edf5 !important;
@@ -274,10 +454,13 @@ async function loadWithdrawalsPage() {
                 flex-direction: column;
                 align-items: stretch;
             }
-            .search-bar input, .search-bar select {
+            .search-bar input, .search-bar .custom-select-wrapper {
                 width: 100% !important;
                 min-width: unset;
                 flex: 1 1 auto !important;
+            }
+            .custom-select-wrapper {
+                min-width: unset !important;
             }
         }
     `;
@@ -290,6 +473,12 @@ async function loadWithdrawalsPage() {
     // 绑定刷新按钮
     document.getElementById('refreshWithdrawBtn')?.addEventListener('click', refreshWithdrawData);
     
+    // 初始化自定义下拉
+    setTimeout(() => {
+        initCustomSelect('pendingCryptoSelect', ['All Crypto', 'BTC', 'ETH', 'USDC', 'USDT'], '');
+        initCustomSelect('historyCryptoSelect', ['All Crypto', 'BTC', 'ETH', 'USDC', 'USDT'], '');
+    }, 100);
+    
     // 绑定待处理搜索
     document.getElementById('pendingSearchBtn')?.addEventListener('click', () => {
         withdrawSearchKeyword = document.getElementById('pendingSearchInput').value.trim();
@@ -297,7 +486,8 @@ async function loadWithdrawalsPage() {
     });
     document.getElementById('pendingClearBtn')?.addEventListener('click', () => {
         document.getElementById('pendingSearchInput').value = '';
-        document.getElementById('pendingCryptoFilter').value = '';
+        document.getElementById('pendingCryptoSelect')?.querySelector('.custom-select-hidden').value = '';
+        document.getElementById('pendingCryptoSelect')?.querySelector('.custom-select-display').innerHTML = '<span>All Crypto</span><i class="fas fa-chevron-down"></i>';
         document.getElementById('pendingMinAmount').value = '';
         document.getElementById('pendingMaxAmount').value = '';
         withdrawSearchKeyword = '';
@@ -310,6 +500,14 @@ async function loadWithdrawalsPage() {
         }
     });
     
+    // 绑定自定义下拉 change 事件
+    document.getElementById('pendingCryptoSelect')?.querySelector('.custom-select-hidden')?.addEventListener('change', function() {
+        loadWithdrawals();
+    });
+    document.getElementById('historyCryptoSelect')?.querySelector('.custom-select-hidden')?.addEventListener('change', function() {
+        loadWithdrawalHistory();
+    });
+    
     // 绑定历史搜索
     document.getElementById('historySearchBtn')?.addEventListener('click', () => {
         withdrawSearchKeyword = document.getElementById('historySearchInput').value.trim();
@@ -317,7 +515,8 @@ async function loadWithdrawalsPage() {
     });
     document.getElementById('historyClearBtn')?.addEventListener('click', () => {
         document.getElementById('historySearchInput').value = '';
-        document.getElementById('historyCryptoFilter').value = '';
+        document.getElementById('historyCryptoSelect')?.querySelector('.custom-select-hidden').value = '';
+        document.getElementById('historyCryptoSelect')?.querySelector('.custom-select-display').innerHTML = '<span>All Crypto</span><i class="fas fa-chevron-down"></i>';
         document.getElementById('historyMinAmount').value = '';
         document.getElementById('historyMaxAmount').value = '';
         withdrawSearchKeyword = '';
@@ -420,7 +619,7 @@ async function loadWithdrawals() {
         
         // 应用搜索过滤
         const keyword = document.getElementById('pendingSearchInput')?.value.trim() || '';
-        const cryptoFilter = document.getElementById('pendingCryptoFilter')?.value || '';
+        const cryptoFilter = document.getElementById('pendingCryptoSelect')?.querySelector('.custom-select-hidden')?.value || '';
         const minAmount = parseFloat(document.getElementById('pendingMinAmount')?.value) || 0;
         const maxAmount = parseFloat(document.getElementById('pendingMaxAmount')?.value) || Infinity;
         
@@ -540,7 +739,7 @@ async function loadWithdrawalHistory() {
             .limit(200);
         
         const keyword = document.getElementById('historySearchInput')?.value.trim() || '';
-        const cryptoFilter = document.getElementById('historyCryptoFilter')?.value || '';
+        const cryptoFilter = document.getElementById('historyCryptoSelect')?.querySelector('.custom-select-hidden')?.value || '';
         const minAmount = parseFloat(document.getElementById('historyMinAmount')?.value) || 0;
         const maxAmount = parseFloat(document.getElementById('historyMaxAmount')?.value) || Infinity;
         
