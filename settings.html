@@ -441,15 +441,15 @@
             </div>
 
             <div class="settings-header">
-                <h1>SETTINGS</h1>
-                <p>Manage account security, language preferences, withdrawal PIN, and support access.</p>
-            </div>
+    <h1 data-i18n="settings_title">SETTINGS</h1>
+    <p data-i18n="settings_subtitle">Manage account security, language preferences, withdrawal PIN, and support access.</p>
+</div>
 
             <div class="settings-grid">
                 <!-- ====== ACCOUNT CENTER ====== -->
                 <div class="settings-section">
                     <h3>
-                        <span class="left"><i class="fas fa-user-circle"></i> ACCOUNT CENTER</span>
+                        <span class="left"><i class="fas fa-user-circle"></i> <span data-i18n="settings_account_center">ACCOUNT CENTER</span></span>
                         <!-- 信誉盾牌 -->
                         <span class="shield-trigger" id="headerShield" onclick="openModal()" style="width: 56px; height: 56px;">
                             <svg viewBox="0 0 80 80" style="width: 100%; height: 100%; transform: rotate(-90deg);">
@@ -462,31 +462,55 @@
                     </h3>
 
                     <div class="info-card">
-                        <div class="info-row">
-                            <span class="info-label"><i class="fas fa-hashtag"></i> UID</span>
-                            <div class="info-value">
-                                <span id="displayUid">---</span>
-                                <button class="copy-btn" onclick="copyUID()"><i class="fas fa-copy"></i> Copy</button>
-                            </div>
-                        </div>
-                        <div class="info-row">
-                            <span class="info-label"><i class="fas fa-qrcode"></i> Invitation Code</span>
-                            <div class="info-value">
-                                <span id="displayInviteCode">---</span>
-                                <button class="copy-btn" onclick="copyInviteCode()"><i class="fas fa-copy"></i> Copy</button>
-                            </div>
-                        </div>
-                    </div>
+    <div class="info-row">
+        <span class="info-label"><i class="fas fa-hashtag"></i> <span data-i18n="uid">UID</span></span>
+        <div class="info-value">
+            <span id="displayUid">---</span>
+            <button class="copy-btn" onclick="copyUID()"><i class="fas fa-copy"></i> <span data-i18n="copy">Copy</span></button>
+        </div>
+    </div>
+    <div class="info-row">
+        <span class="info-label"><i class="fas fa-qrcode"></i> <span data-i18n="invite_code">Invitation Code</span></span>
+        <div class="info-value">
+            <span id="displayInviteCode">---</span>
+            <button class="copy-btn" onclick="copyInviteCode()"><i class="fas fa-copy"></i> <span data-i18n="copy">Copy</span></button>
+        </div>
+    </div>
+</div>
 
-                    <div class="setting-item"><div><div class="setting-title">Change Password</div><div class="setting-desc">Update your login password</div></div><button class="setting-action" onclick="changePassword()">→</button></div>
-                    <div class="setting-item"><div><div class="setting-title">Set Withdrawal PIN</div><div class="setting-desc">Create a PIN to protect your withdrawals</div></div><button class="setting-action" onclick="setWithdrawalPin()">→</button></div>
-                    <div class="setting-item"><div><div class="setting-title">Change Withdrawal PIN</div><div class="setting-desc">Update your withdrawal PIN</div></div><button class="setting-action" onclick="changeWithdrawalPin()">→</button></div>
-                    <div class="setting-item"><div><div class="setting-title">Contact Support</div><div class="setting-desc">Chat with customer service</div></div><button class="setting-action" onclick="contactSupport()">→</button></div>
+                    <div class="setting-item">
+    <div>
+        <div class="setting-title" data-i18n="settings_change_password">Change Password</div>
+        <div class="setting-desc" data-i18n="settings_change_password_desc">Update your login password</div>
+    </div>
+    <button class="setting-action" onclick="changePassword()"><span data-i18n="edit">→</span></button>
+</div>
+<div class="setting-item">
+    <div>
+        <div class="setting-title" data-i18n="settings_set_pin">Set Withdrawal PIN</div>
+        <div class="setting-desc" data-i18n="settings_set_pin_desc">Create a PIN to protect your withdrawals</div>
+    </div>
+    <button class="setting-action" onclick="setWithdrawalPin()"><span data-i18n="edit">→</span></button>
+</div>
+<div class="setting-item">
+    <div>
+        <div class="setting-title" data-i18n="settings_change_pin">Change Withdrawal PIN</div>
+        <div class="setting-desc" data-i18n="settings_change_pin_desc">Update your withdrawal PIN</div>
+    </div>
+    <button class="setting-action" onclick="changeWithdrawalPin()"><span data-i18n="edit">→</span></button>
+</div>
+<div class="setting-item">
+    <div>
+        <div class="setting-title" data-i18n="settings_contact_support">Contact Support</div>
+        <div class="setting-desc" data-i18n="settings_contact_support_desc">Chat with customer service</div>
+    </div>
+    <button class="setting-action" onclick="contactSupport()"><span data-i18n="edit">→</span></button>
+</div>
                 </div>
 
                 <!-- ====== SECURITY OPTIONS ====== -->
                 <div class="settings-section">
-                    <h3><span class="left"><i class="fas fa-shield-alt"></i> SECURITY OPTIONS</span></h3>
+                    <h3><span class="left"><i class="fas fa-shield-alt"></i> <span data-i18n="settings_security">SECURITY OPTIONS</span></span></h3>
 
                     <div class="setting-item">
     <div>
@@ -497,17 +521,27 @@
         <span class="lang-btn-text">🌐 English</span>
     </button>
 </div>
-                    <div class="setting-item"><div><div class="setting-title">Logout</div><div class="setting-desc">Sign out from this device</div></div><button class="setting-action logout-btn" onclick="logout()">Logout</button></div>
+                    <div class="setting-item">
+    <div>
+        <div class="setting-title" data-i18n="settings_logout">Logout</div>
+        <div class="setting-desc" data-i18n="settings_logout_desc">Sign out from this device</div>
+    </div>
+    <button class="setting-action logout-btn" onclick="logout()"><span data-i18n="settings_logout">Logout</span></button>
+</div>
                 </div>
             </div>
 
             <div class="upgrade-card-pulse">
-                <div class="upgrade-title">✨ Upgrade your membership</div>
-                <div class="upgrade-desc">Unlock higher rewards, priority support, and premium hotel discovery benefits.</div>
-                <a href="membership.html" class="btn-upgrade">Upgrade Now <i class="fas fa-arrow-right"></i></a>
-            </div>
+    <div class="upgrade-title" data-i18n="upgrade_title">✨ Upgrade your membership</div>
+    <div class="upgrade-desc" data-i18n="upgrade_desc">Unlock higher rewards, priority support, and premium hotel discovery benefits.</div>
+    <a href="membership.html" class="btn-upgrade" data-i18n="upgrade_btn">Upgrade Now <i class="fas fa-arrow-right"></i></a>
+</div>
 
-            <div class="footer-links"><a href="#">T&C</a> · <a href="#">Privacy & Security</a> · <a href="#">Platform Rules</a></div>
+            <div class="footer-links">
+    <a href="#" data-i18n="terms">T&C</a> · 
+    <a href="#" data-i18n="privacy">Privacy & Security</a> · 
+    <a href="#" data-i18n="rules">Platform Rules</a>
+</div>
         </main>
     </div>
 
@@ -515,53 +549,36 @@
     <div class="modal-overlay" id="scoreModal" onclick="closeModalOutside(event)">
         <div class="modal-content">
 
-            <!-- 1. 金属框架标签 -->
-            <div class="modal-top-label">ACCOUNT TRUST LEVEL</div>
-
-            <!-- 2. 标题 -->
-            <div class="modal-title">Your <span>Credit Rating</span></div>
-
-            <!-- 3. 粒子凝聚环 + 分数 -->
-            <div class="ring-wrapper">
-                <canvas id="particleCanvas"></canvas>
-            </div>
-
-            <!-- 4. 状态文字 -->
-            <div class="status-text" id="statusText"></div>
-
-            <!-- 5. 状态描述 -->
-            <div class="status-desc" id="statusDesc">Withdrawal access and account trust level are in good condition</div>
-
-            <!-- 6. REQUIRED 和 RANGE 卡片 -->
-            <div class="footer-cards">
-                <div class="card">
-                    <div class="card-label">Required</div>
-                    <div class="card-value"><span class="hl" id="requiredValue">95</span>+</div>
-                </div>
-                <div class="card">
-                    <div class="card-label">Range</div>
-                    <div class="card-value">0 — 100</div>
-                </div>
-            </div>
-
-            <!-- 7. 提示文字 -->
-            <div class="notice">
-                <i class="fas fa-info-circle"></i>
-                Scores below <strong id="thresholdText">95</strong> may restrict withdrawals.
-            </div>
-
-            <!-- 8. 联系支持 -->
-            <div class="notice-support">
-                <i class="fas fa-headset"></i> Please contact user support
-            </div>
-
-            <!-- 9. 按钮 -->
-            <div class="actions">
-                <button class="btn-support" onclick="goToSupport()">
-                    <i class="fas fa-headset"></i> Contact Support
-                </button>
-                <button class="btn-close" onclick="closeModal()">Close</button>
-            </div>
+            <div class="modal-top-label" data-i18n="settings_account_trust">ACCOUNT TRUST LEVEL</div>
+<div class="modal-title" data-i18n-html="settings_credit_rating">Your <span>Credit Rating</span></div>
+<div class="ring-wrapper">
+    <canvas id="particleCanvas"></canvas>
+</div>
+<div class="status-text" id="statusText"></div>
+<div class="status-desc" id="statusDesc" data-i18n="settings_credit_strong_desc">Withdrawal access and account trust level are in good condition</div>
+<div class="footer-cards">
+    <div class="card">
+        <div class="card-label" data-i18n="settings_credit_required">Required</div>
+        <div class="card-value"><span class="hl" id="requiredValue">95</span>+</div>
+    </div>
+    <div class="card">
+        <div class="card-label" data-i18n="settings_credit_range">Range</div>
+        <div class="card-value">0 — 100</div>
+    </div>
+</div>
+<div class="notice" data-i18n-html="settings_credit_below">
+    <i class="fas fa-info-circle"></i>
+    Scores below <strong id="thresholdText">95</strong> may restrict withdrawals.
+</div>
+<div class="notice-support" data-i18n="settings_connect_support">
+    <i class="fas fa-headset"></i> Please contact user support
+</div>
+<div class="actions">
+    <button class="btn-support" onclick="goToSupport()">
+        <i class="fas fa-headset"></i> <span data-i18n="settings_contact_support_btn">Contact Support</span>
+    </button>
+    <button class="btn-close" onclick="closeModal()"><span data-i18n="settings_close">Close</span></button>
+</div>
 
         </div>
     </div>
