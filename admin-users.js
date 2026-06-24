@@ -524,25 +524,56 @@ async function loadUsers() {
             }
         }
         
-                // 如果有重复 IP，弹出琥珀色通知
+        // 如果有重复 IP，检查是否需要通知
         if (duplicateIps.length > 0) {
-            let message = '';
-            for (const ip of duplicateIps) {
-                const usersWithIp = users.filter(u => u.registered_ip === ip);
-                // 格式化用户名和UID
-                const userList = usersWithIp.map(u => `${u.username} (UID: ${u.uid})`).join('\n');
-                const displayIp = ip || 'Unknown';
-                message += `📌 IP: ${displayIp}\n${userList}\n\n`;
-            }
-            message += 'Please check abnormal users registration activity.';
+            // 构建当前重复 IP 的标识（排序后拼接，用于比较）
+            const sortedIps = [...duplicateIps].sort();
+            const currentKey = sortedIps.join('|');
             
-            setTimeout(() => {
-                showAmberNotification(
-                    '⚠️ Multiple Registered IP Detected',
-                    message,
-                    'warning'
-                );
-            }, 500);
+            // 从 localStorage 读取上次忽略的标识
+            const ignoredKey = localStorage.getItem('duplicate_ip_ignored');
+            
+            // 如果当前重复 IP 组合与上次忽略的不同，则显示通知
+            if (ignoredKey !== currentKey) {
+                let message = '';
+                for (const ip of duplicateIps) {
+                    const usersWithIp = users.filter(u => u.registered_ip === ip);
+                    const userList = usersWithIp.map(u => `${u.username} (UID: ${u.uid})`).join('<br>');
+                    const displayIp = ip || 'Unknown';
+                    message += `📌 IP: ${displayIp}<br>${userList}<br><br>`;
+                }
+                message += 'Please check abnormal users registration activity.';
+                
+                // 创建带 "Don't show again" 按钮的 HTML
+                const messageWithButton = `
+                    ${message}
+                    <br>
+                    <button onclick="dismissDuplicateIpAlert()" style="
+                        background: rgba(255,255,255,0.1);
+                        border: 1px solid rgba(255,255,255,0.2);
+                        padding: 6px 16px;
+                        border-radius: 20px;
+                        color: #d4c8a0;
+                        cursor: pointer;
+                        font-size: 12px;
+                        margin-top: 8px;
+                        font-family: 'Inter', sans-serif;
+                    ">
+                        Don't show again
+                    </button>
+                `;
+                
+                // 存储当前重复 IP 标识到全局变量，供按钮使用
+                window._duplicateIpKey = currentKey;
+                
+                setTimeout(() => {
+                    showAmberNotification(
+                        '⚠️ Multiple Registered IP Detected',
+                        messageWithButton,
+                        'warning'
+                    );
+                }, 500);
+            }
         }
         
         for (let u of users) {
@@ -1312,3 +1343,14 @@ document.getElementById('closeUserModalBtn')?.addEventListener('click', () => {
 });
 
 window.loadUsersPage = loadUsersPage;
+
+// ========== IP 重复检测 - Don't show again ==========
+function dismissDuplicateIpAlert() {
+    const key = window._duplicateIpKey;
+    if (key) {
+        localStorage.setItem('duplicate_ip_ignored', key);
+        console.log('✅ IP 重复检测已忽略，当前标识:', key);
+    }
+    // 关闭所有琥珀通知
+    document.querySelectorAll('.notification-amber').forEach(el => el.remove());
+}
