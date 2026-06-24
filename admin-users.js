@@ -531,29 +531,30 @@ async function loadUsers() {
             const ignoredKey = localStorage.getItem('duplicate_ip_ignored');
             
             if (ignoredKey !== currentKey) {
-                // 构建纯文本消息（用 \n 换行）
-                let textMessage = '';
+                // 构建显示消息（用 HTML 换行）
+                let htmlMessage = '';
                 for (const ip of duplicateIps) {
                     const usersWithIp = users.filter(u => u.registered_ip === ip);
-                    const userList = usersWithIp.map(u => `${u.username} (UID: ${u.uid})`).join('\n');
+                    const userList = usersWithIp.map(u => `${u.username} (UID: ${u.uid})`).join('<br>');
                     const displayIp = ip || 'Unknown';
-                    textMessage += `📌 IP: ${displayIp}\n${userList}\n\n`;
+                    htmlMessage += `📌 IP: ${displayIp}<br>${userList}<br><br>`;
                 }
-                textMessage += 'Please check abnormal users registration activity.';
+                htmlMessage += 'Please check abnormal users registration activity.';
                 
                 // 存储当前重复 IP 标识到全局变量
                 window._duplicateIpKey = currentKey;
                 
                 // 延迟显示通知
                 setTimeout(() => {
-                    // 使用 showAmberNotification 显示纯文本
+                    // 先显示纯文本通知（用 \n 作为占位）
+                    const plainText = htmlMessage.replace(/<br>/g, '\n');
                     showAmberNotification(
                         '⚠️ Multiple Registered IP Detected',
-                        textMessage,
+                        plainText,
                         'warning'
                     );
                     
-                    // 等待通知出现后，添加 "Don't show again" 按钮
+                    // 等待通知出现后，用 HTML 替换内容
                     setTimeout(() => {
                         const notifications = document.querySelectorAll('.notification-amber');
                         if (notifications.length > 0) {
@@ -561,7 +562,21 @@ async function loadUsers() {
                             // 找到消息区域
                             const messageDiv = latestNotification.querySelector('div[style*="flex: 1"]');
                             if (messageDiv) {
-                                // 创建按钮
+                                // 找到消息文本所在的元素
+                                const messageTextEl = messageDiv.querySelector('div[style*="font-size: 12px"]');
+                                if (messageTextEl) {
+                                    // 用 innerHTML 替换，显示 HTML 格式
+                                    messageTextEl.innerHTML = htmlMessage;
+                                } else {
+                                    // 如果找不到精确的元素，直接替换整个消息区域的内容
+                                    const allDivs = messageDiv.querySelectorAll('div');
+                                    if (allDivs.length >= 2) {
+                                        // 第二个 div 通常是消息内容
+                                        allDivs[1].innerHTML = htmlMessage;
+                                    }
+                                }
+                                
+                                // 创建 "Don't show again" 按钮
                                 const btn = document.createElement('button');
                                 btn.textContent = 'Don\'t show again';
                                 btn.style.cssText = `
@@ -575,6 +590,7 @@ async function loadUsers() {
                                     margin-top: 8px;
                                     font-family: 'Inter', sans-serif;
                                     transition: 0.2s;
+                                    display: block;
                                 `;
                                 btn.onmouseover = function() {
                                     this.style.background = 'rgba(255,255,255,0.2)';
