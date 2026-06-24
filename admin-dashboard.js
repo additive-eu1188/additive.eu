@@ -1,4 +1,4 @@
-// admin-dashboard.js - 金属拉丝质感 + 右上角光晕 + 转化率卡片
+// admin-dashboard.js - 金属拉丝质感 + 暗金波浪环形图 + All Time
 let trendChart = null;
 let ringChart = null;
 let breatheInterval = null;
@@ -152,7 +152,6 @@ async function loadConversionData(days, force) {
         return;
     }
     try {
-        var today = new Date();
         var periods = [
             { label: 'Today', days: 0 },
             { label: '7 Days', days: 7 },
@@ -167,7 +166,6 @@ async function loadConversionData(days, force) {
         var users = allUsers.data || [];
         var deposits = allDeposits.data || [];
         
-        // 获取有充值记录的用户ID列表
         var depositUsers = {};
         deposits.forEach(function(d) {
             if (d.uid && (d.amount || 0) > 0) {
@@ -180,10 +178,8 @@ async function loadConversionData(days, force) {
             var startDate = new Date();
             
             if (period.days === -1) {
-                // All Time
                 startDate = new Date(0);
             } else if (period.days === 0) {
-                // Today
                 startDate = new Date();
                 startDate.setHours(0, 0, 0, 0);
             } else {
@@ -193,7 +189,6 @@ async function loadConversionData(days, force) {
             var startStr = startDate.toISOString().split('T')[0];
             var endStr = new Date().toISOString().split('T')[0];
             
-            // 统计该时间段内注册的用户
             var registeredUsers = users.filter(function(u) {
                 if (!u.created_at) return false;
                 var dateStr = u.created_at.split('T')[0];
@@ -203,7 +198,6 @@ async function loadConversionData(days, force) {
             
             var totalRegister = registeredUsers.length;
             
-            // 统计这些用户中有多少人有充值记录
             var convertedUsers = registeredUsers.filter(function(u) {
                 return depositUsers[u.uid] === true;
             });
@@ -231,63 +225,245 @@ async function loadConversionData(days, force) {
 
 function applyConversionData(data, days) {
     var selected = data || [];
-    var displayData = [];
+    var targetLabel = 'Today';
+    if (days === 7) targetLabel = '7 Days';
+    else if (days === 30) targetLabel = '30 Days';
+    else if (days === -1) targetLabel = 'All Time';
     
-    // 根据当前选中的天数显示对应的数据
-    var labelMap = {
-        0: 'Today',
-        1: 'Today',
-        7: '7 Days',
-        30: '30 Days',
-        '-1': 'All Time'
-    };
+    var matched = selected.filter(function(d) { return d.label === targetLabel; });
+    var displayData = matched.length > 0 ? matched[0] : selected[0];
     
-    var targetLabel = labelMap[days] || 'Today';
-    if (days === -1) targetLabel = 'All Time';
-    
-    // 找到匹配的数据
-    var matched = selected.filter(function(d) { 
-        if (days === -1) return d.label === 'All Time';
-        return d.label === targetLabel;
-    });
-    
-    if (matched.length > 0) {
-        displayData = matched;
-    } else {
-        // fallback
-        displayData = selected.filter(function(d) { return d.label === 'Today'; });
-    }
-    
-    var container = document.getElementById('conversionStats');
-    if (!container) return;
-    
-    var html = '';
-    for (var i = 0; i < selected.length; i++) {
-        var d = selected[i];
-        var isActive = false;
-        if (days === -1 && d.label === 'All Time') isActive = true;
-        else if (d.label === targetLabel) isActive = true;
-        
-        html += '<div style="display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid rgba(180,180,200,0.03);">' +
-            '<span style="font-size: 12px; color: ' + (isActive ? '#d8dff0' : '#6a7a92') + '; font-weight: ' + (isActive ? '600' : '400') + ';">' + d.label + '</span>' +
-            '<span style="font-size: 12px; color: #8892a8;">' + d.register + ' / ' + d.converted + '</span>' +
-            '<span style="font-size: 12px; font-weight: 600; color: ' + (d.rate >= 50 ? '#7ad0b0' : d.rate >= 20 ? '#d4c09a' : '#e88080') + ';">' + d.rate + '%</span>' +
-            '</div>';
-    }
-    
-    container.innerHTML = html;
-    
-    // 更新中间的百分比显示
+    // 更新环形图百分比
     var percentEl = document.getElementById('conversionPercent');
+    if (percentEl) {
+        percentEl.innerText = displayData.rate + '%';
+    }
+    
+    // 更新环形图中心文字
+    var ringPercent = document.getElementById('ringPercent');
+    if (ringPercent) {
+        ringPercent.innerText = displayData.rate + '%';
+    }
+    
+    // 更新 Today Register / Today Conversion
     var registerEl = document.getElementById('conversionRegister');
     var convertedEl = document.getElementById('conversionConverted');
+    var labelEl = document.getElementById('conversionLabel');
     
-    if (displayData.length > 0) {
-        var data = displayData[0];
-        if (percentEl) percentEl.innerText = data.rate + '%';
-        if (registerEl) registerEl.innerText = data.register;
-        if (convertedEl) convertedEl.innerText = data.converted;
+    if (registerEl) registerEl.innerText = displayData.register;
+    if (convertedEl) convertedEl.innerText = displayData.converted;
+    if (labelEl) {
+        var labelMap = {
+            'Today': 'Today Register',
+            '7 Days': '7 Days Register',
+            '30 Days': '30 Days Register',
+            'All Time': 'All Time Register'
+        };
+        labelEl.innerText = labelMap[displayData.label] || 'Today Register';
     }
+    
+    // 更新所有时间线的数据显示
+    var allLabels = document.querySelectorAll('.conversion-stat-label');
+    var allRegisters = document.querySelectorAll('.conversion-stat-register');
+    var allConverteds = document.querySelectorAll('.conversion-stat-converted');
+    var allRates = document.querySelectorAll('.conversion-stat-rate');
+    
+    var labelMap2 = {
+        'Today': 'Today',
+        '7 Days': '7 Days',
+        '30 Days': '30 Days',
+        'All Time': 'All Time'
+    };
+    
+    for (var i = 0; i < data.length; i++) {
+        var d = data[i];
+        if (allLabels[i]) allLabels[i].innerText = labelMap2[d.label] || d.label;
+        if (allRegisters[i]) allRegisters[i].innerText = d.register;
+        if (allConverteds[i]) allConverteds[i].innerText = d.converted;
+        if (allRates[i]) {
+            allRates[i].innerText = d.rate + '%';
+            allRates[i].style.color = d.rate >= 50 ? '#7ad0b0' : d.rate >= 20 ? '#d4c09a' : '#e88080';
+        }
+    }
+    
+    // 高亮当前选中的行
+    var allRows = document.querySelectorAll('.conversion-stat-row');
+    for (var j = 0; j < allRows.length; j++) {
+        var row = allRows[j];
+        var label = row.querySelector('.conversion-stat-label');
+        if (label && label.innerText === targetLabel) {
+            row.style.background = 'rgba(212, 175, 55, 0.06)';
+            row.style.borderRadius = '8px';
+        } else {
+            row.style.background = 'transparent';
+        }
+    }
+}
+
+// ========== 初始化波浪环形图 ==========
+function initWaveRing() {
+    var container = document.getElementById('waveRingContainer');
+    if (!container) return;
+    
+    // 清空容器
+    container.innerHTML = '';
+    
+    // 创建 canvas
+    var canvas = document.createElement('canvas');
+    canvas.width = 220;
+    canvas.height = 220;
+    canvas.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;border-radius:50%;z-index:1;';
+    canvas.id = 'waveCanvas';
+    container.appendChild(canvas);
+    
+    // 创建 SVG
+    var svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    svg.setAttribute('viewBox', '0 0 220 220');
+    svg.style.cssText = 'width:100%;height:100%;transform:rotate(-90deg);position:relative;z-index:2;';
+    svg.innerHTML = `
+        <defs>
+            <linearGradient id="metalGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#3a2a1a"/>
+                <stop offset="15%" stop-color="#f0d8a0"/>
+                <stop offset="30%" stop-color="#b8942a"/>
+                <stop offset="45%" stop-color="#e8cc80"/>
+                <stop offset="60%" stop-color="#8a7020"/>
+                <stop offset="75%" stop-color="#f0e0b0"/>
+                <stop offset="90%" stop-color="#c8a838"/>
+                <stop offset="100%" stop-color="#2a1a0a"/>
+            </linearGradient>
+            <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#b8942a"/>
+                <stop offset="40%" stop-color="#e8cc80"/>
+                <stop offset="70%" stop-color="#d4af37"/>
+                <stop offset="100%" stop-color="#f0d8a0"/>
+            </linearGradient>
+        </defs>
+        <circle cx="110" cy="110" r="95" fill="none" stroke="url(#metalGrad)" stroke-width="14" filter="drop-shadow(0 0 20px rgba(212,175,55,0.08))"/>
+        <circle cx="110" cy="110" r="80" fill="none" stroke="rgba(255,255,255,0.04)" stroke-width="10"/>
+        <circle cx="110" cy="110" r="80" fill="none" stroke="url(#grad)" stroke-width="10" stroke-linecap="round" stroke-dasharray="408.4" stroke-dashoffset="408.4" filter="drop-shadow(0 0 16px rgba(212,175,55,0.25))" class="progress-ring"/>
+    `;
+    container.appendChild(svg);
+    
+    // 创建中心文字
+    var centerText = document.createElement('div');
+    centerText.style.cssText = 'position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;pointer-events:none;z-index:10;';
+    centerText.innerHTML = `
+        <div id="ringPercent" style="font-size:42px;font-weight:700;color:#f0e0b0;letter-spacing:-1px;line-height:1.1;text-shadow:0 0 40px rgba(212,175,55,0.15);">78%</div>
+        <div style="font-size:9px;color:#6a5a3a;letter-spacing:1.5px;text-transform:uppercase;margin-top:2px;">Conversion Rate</div>
+    `;
+    container.appendChild(centerText);
+    
+    // 启动波浪动画
+    startWaveAnimation(canvas);
+    
+    // 进度条加载动画
+    setTimeout(function() {
+        var progressRing = container.querySelector('.progress-ring');
+        if (progressRing) {
+            var rate = parseInt(document.getElementById('ringPercent')?.innerText || '78');
+            var circumference = 408.4;
+            var offset = circumference - (circumference * rate / 100);
+            progressRing.style.transition = 'stroke-dashoffset 2.2s cubic-bezier(0.22,1,0.36,1)';
+            progressRing.style.strokeDashoffset = offset;
+        }
+    }, 100);
+}
+
+// ========== 波浪动画引擎 ==========
+function startWaveAnimation(canvas) {
+    var ctx = canvas.getContext('2d');
+    var w = 220, h = 220;
+    var cx = 110, cy = 110;
+    
+    var waves = [];
+    for (var layer = 0; layer < 5; layer++) {
+        var baseRadius = 12 + layer * 16;
+        var speed = 0.6 + layer * 0.2;
+        var amplitude = 6 + layer * 2;
+        var count = 6 + layer * 2;
+        var alpha = 0.10 - layer * 0.012;
+        waves.push({
+            baseRadius: baseRadius,
+            speed: speed,
+            amplitude: amplitude,
+            count: count,
+            alpha: Math.max(alpha, 0.02),
+            phaseOffset: layer * 0.8,
+            color: layer % 2 === 0 ? '#d4af37' : '#f0d8a0'
+        });
+    }
+    for (var layer = 0; layer < 3; layer++) {
+        var baseRadius = 85 + layer * 14;
+        var speed = 0.15 + layer * 0.08;
+        var amplitude = 10 + layer * 4;
+        var count = 4 + layer * 2;
+        var alpha = 0.035 - layer * 0.007;
+        waves.push({
+            baseRadius: baseRadius,
+            speed: speed,
+            amplitude: amplitude,
+            count: count,
+            alpha: Math.max(alpha, 0.008),
+            phaseOffset: layer * 1.2,
+            color: '#b8942a'
+        });
+    }
+    
+    var time = 0;
+    
+    function draw() {
+        time++;
+        ctx.clearRect(0, 0, w, h);
+        
+        waves.forEach(function(wave) {
+            var radius = wave.baseRadius + Math.sin(time * 0.015 + wave.phaseOffset) * 2;
+            ctx.beginPath();
+            ctx.arc(cx, cy, radius, 0, Math.PI * 2);
+            ctx.strokeStyle = wave.color;
+            ctx.lineWidth = 1.5 + Math.sin(time * 0.02 + wave.phaseOffset) * 0.5;
+            ctx.globalAlpha = wave.alpha * (0.7 + 0.3 * Math.sin(time * 0.01 + wave.phaseOffset));
+            ctx.shadowColor = wave.color;
+            ctx.shadowBlur = 6 + Math.sin(time * 0.015 + wave.phaseOffset) * 3;
+            ctx.stroke();
+            ctx.shadowBlur = 0;
+            
+            var pointCount = wave.count;
+            for (var i = 0; i < pointCount; i++) {
+                var angle = (i / pointCount) * Math.PI * 2 + time * 0.012 * wave.speed + wave.phaseOffset;
+                var waveRadius = radius + Math.sin(time * 0.025 * wave.speed + angle * 2 + wave.phaseOffset) * wave.amplitude;
+                var x = cx + Math.cos(angle) * waveRadius;
+                var y = cy + Math.sin(angle) * waveRadius;
+                var pulse = 0.5 + 0.5 * Math.sin(time * 0.03 * wave.speed + angle + wave.phaseOffset);
+                var dotRadius = 1.2 + pulse * 2.5;
+                var grad = ctx.createRadialGradient(x, y, 0, x, y, dotRadius * 3);
+                grad.addColorStop(0, 'rgba(255, 215, 0, ' + (0.5 * wave.alpha * 2) + ')');
+                grad.addColorStop(0.5, 'rgba(212, 175, 55, ' + (0.25 * wave.alpha * 2) + ')');
+                grad.addColorStop(1, 'transparent');
+                ctx.fillStyle = grad;
+                ctx.beginPath();
+                ctx.arc(x, y, dotRadius * 3, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.beginPath();
+                ctx.arc(x, y, dotRadius * 0.5, 0, Math.PI * 2);
+                ctx.fillStyle = 'rgba(255, 232, 180, ' + (0.7 * wave.alpha * 2) + ')';
+                ctx.fill();
+            }
+        });
+        
+        var centerGlow = ctx.createRadialGradient(cx, cy, 0, cx, cy, 60);
+        centerGlow.addColorStop(0, 'rgba(212, 175, 55, 0.035)');
+        centerGlow.addColorStop(0.5, 'rgba(212, 175, 55, 0.015)');
+        centerGlow.addColorStop(1, 'transparent');
+        ctx.fillStyle = centerGlow;
+        ctx.beginPath();
+        ctx.arc(cx, cy, 60, 0, Math.PI * 2);
+        ctx.fill();
+        
+        ctx.globalAlpha = 1;
+        requestAnimationFrame(draw);
+    }
+    draw();
 }
 
 async function loadActivityTimeline(force) {
@@ -448,6 +624,30 @@ async function refreshDashboard(days, force) {
         loadConversionData(days, force),
         loadActivityTimeline(force)
     ]);
+    
+    // 更新环形图百分比
+    var ringPercent = document.getElementById('ringPercent');
+    if (ringPercent && cachedData.conversion) {
+        var targetLabel = 'Today';
+        if (days === 7) targetLabel = '7 Days';
+        else if (days === 30) targetLabel = '30 Days';
+        else if (days === -1) targetLabel = 'All Time';
+        var matched = cachedData.conversion.filter(function(d) { return d.label === targetLabel; });
+        if (matched.length > 0) {
+            var rate = matched[0].rate;
+            ringPercent.innerText = rate + '%';
+            // 更新进度条
+            var container = document.getElementById('waveRingContainer');
+            if (container) {
+                var progressRing = container.querySelector('.progress-ring');
+                if (progressRing) {
+                    var circumference = 408.4;
+                    var offset = circumference - (circumference * rate / 100);
+                    progressRing.style.strokeDashoffset = offset;
+                }
+            }
+        }
+    }
 }
 
 function initTrendChart() {
@@ -533,8 +733,9 @@ function bindDateFilters() {
     var handleFilterChange = debounce(function(btn) {
         document.querySelectorAll('.date-filter-btn').forEach(function(b) { b.classList.remove('active'); });
         btn.classList.add('active');
-        currentDays = parseInt(btn.dataset.days);
-        refreshDashboard(currentDays, true);
+        var days = parseInt(btn.dataset.days);
+        currentDays = days;
+        refreshDashboard(days, true);
     }, DEBOUNCE_DELAY);
     document.querySelectorAll('.date-filter-btn').forEach(function(btn) {
         if (btn._handler) btn.removeEventListener('click', btn._handler);
@@ -561,9 +762,10 @@ function loadDashboardPage(days) {
             <button class="date-filter-btn active" data-days="1" style="background: linear-gradient(145deg, rgba(20,24,40,0.6), rgba(10,12,24,0.4)); border: 1px solid rgba(180,180,200,0.06); border-radius: 30px; padding: 8px 20px; color: #8892a8; cursor: pointer; transition: all 0.3s; font-size: 13px; font-weight: 500; font-family: 'Inter', sans-serif; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">Today</button>
             <button class="date-filter-btn" data-days="7" style="background: linear-gradient(145deg, rgba(20,24,40,0.6), rgba(10,12,24,0.4)); border: 1px solid rgba(180,180,200,0.06); border-radius: 30px; padding: 8px 20px; color: #8892a8; cursor: pointer; transition: all 0.3s; font-size: 13px; font-weight: 500; font-family: 'Inter', sans-serif; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">7 Days</button>
             <button class="date-filter-btn" data-days="30" style="background: linear-gradient(145deg, rgba(20,24,40,0.6), rgba(10,12,24,0.4)); border: 1px solid rgba(180,180,200,0.06); border-radius: 30px; padding: 8px 20px; color: #8892a8; cursor: pointer; transition: all 0.3s; font-size: 13px; font-weight: 500; font-family: 'Inter', sans-serif; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">30 Days</button>
+            <button class="date-filter-btn" data-days="-1" style="background: linear-gradient(145deg, rgba(20,24,40,0.6), rgba(10,12,24,0.4)); border: 1px solid rgba(180,180,200,0.06); border-radius: 30px; padding: 8px 20px; color: #8892a8; cursor: pointer; transition: all 0.3s; font-size: 13px; font-weight: 500; font-family: 'Inter', sans-serif; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">All Time</button>
         </div>
         
-        <!-- 快捷卡片 - 金属拉丝质感 + 右上角光晕 -->
+        <!-- 快捷卡片 -->
         <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px;">
             <div onclick="showPage('kyc')" style="background: linear-gradient(145deg, rgba(20,24,40,0.85), rgba(10,12,24,0.6)); border-radius: 16px; padding: 18px 16px; border: 1px solid rgba(180,180,200,0.06); cursor: pointer; transition: all 0.3s; position: relative; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.04);">
                 <div style="position: absolute; top: -15%; right: -5%; width: 75%; height: 75%; background: radial-gradient(ellipse at 70% 20%, rgba(255,255,255,0.10), transparent 70%); pointer-events: none; border-radius: 50%;"></div>
@@ -595,7 +797,7 @@ function loadDashboardPage(days) {
             </div>
         </div>
         
-        <!-- 统计卡片 - 金属拉丝质感 + 右上角光晕 -->
+        <!-- 统计卡片 -->
         <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px;">
             <div style="background: linear-gradient(145deg, rgba(20,24,40,0.85), rgba(10,12,24,0.6)); border-radius: 16px; padding: 18px 20px; border: 1px solid rgba(180,180,200,0.06); transition: all 0.3s; position: relative; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.04);">
                 <div style="position: absolute; top: -15%; right: -5%; width: 75%; height: 75%; background: radial-gradient(ellipse at 70% 20%, rgba(255,255,255,0.10), transparent 70%); pointer-events: none; border-radius: 50%;"></div>
@@ -644,27 +846,58 @@ function loadDashboardPage(days) {
                 <div id="trendChart" style="height: 320px; width: 100%; position: relative; z-index: 1;"></div>
             </div>
             
-            <!-- 转化率卡片 - 替换原来的环形图 -->
+            <!-- 转化率卡片 - 暗金金属波浪环形图 -->
             <div style="background: linear-gradient(145deg, rgba(20,24,40,0.85), rgba(10,12,24,0.6)); backdrop-filter: blur(8px); border-radius: 20px; padding: 20px; border: 1px solid rgba(180,180,200,0.06); box-shadow: 0 4px 20px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.04); position: relative; overflow: hidden;">
                 <div style="position: absolute; top: -15%; right: -5%; width: 75%; height: 75%; background: radial-gradient(ellipse at 70% 20%, rgba(255,255,255,0.06), transparent 70%); pointer-events: none; border-radius: 50%;"></div>
                 <div style="position: absolute; top: 0; left: 0; right: 0; height: 1px; background: linear-gradient(90deg, transparent, rgba(180,180,200,0.08), transparent);"></div>
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; position: relative; z-index: 1;">
-                    <div style="font-size: 16px; font-weight: 600; color: #d8dff0;">📈 New Orders Conversion Rate</div>
-                    <div style="font-size: 11px; color: #6a7a92;">Total New Orders: <span id="conversionRegister" style="color: #d8dff0; font-weight: 600;">0</span></div>
+                
+                <!-- 标题行 -->
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; position: relative; z-index: 1;">
+                    <div style="font-size: 15px; font-weight: 600; color: #d8dff0;">📈 New Orders Conversion Rate</div>
                 </div>
                 
-                <!-- 百分比显示 -->
-                <div style="text-align: center; position: relative; z-index: 1; padding: 8px 0 4px 0;">
-                    <div id="conversionPercent" style="font-size: 48px; font-weight: 700; color: #8ab4f0; letter-spacing: -2px;">0%</div>
-                    <div style="font-size: 12px; color: #8892a8; margin-top: -2px;">Percentage of New Order Conversion Rate</div>
-                </div>
-                
-                <!-- 统计列表 -->
-                <div id="conversionStats" style="margin-top: 12px; position: relative; z-index: 1; padding: 0 4px;">
-                    <div style="display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid rgba(180,180,200,0.03);">
-                        <span style="font-size: 12px; color: #6a7a92;">Loading...</span>
-                        <span style="font-size: 12px; color: #6a7a92;">-</span>
-                        <span style="font-size: 12px; color: #6a7a92;">-</span>
+                <!-- 环形图 + 右侧信息 -->
+                <div style="display: flex; align-items: center; gap: 16px; position: relative; z-index: 1;">
+                    <!-- 环形图容器 -->
+                    <div id="waveRingContainer" style="width: 180px; height: 180px; flex-shrink: 0; position: relative; margin: 0 auto;">
+                        <!-- 由 JavaScript 动态生成 -->
+                    </div>
+                    
+                    <!-- 右侧统计数据 -->
+                    <div style="flex: 1; min-width: 0;">
+                        <div style="font-size: 11px; color: #6a5a3a; letter-spacing: 0.5px; margin-bottom: 8px;">
+                            <span id="conversionLabel" style="color: #8892a8;">Today Register</span>
+                        </div>
+                        <div style="display: flex; align-items: baseline; gap: 6px; margin-bottom: 12px;">
+                            <span id="conversionRegister" style="font-size: 28px; font-weight: 700; color: #f0e0b0;">0</span>
+                            <span style="font-size: 14px; color: #6a5a3a;">/</span>
+                            <span id="conversionConverted" style="font-size: 20px; font-weight: 600; color: #d4af37;">0</span>
+                            <span style="font-size: 11px; color: #5a4a2a;">converted</span>
+                        </div>
+                        
+                        <!-- 所有时间线数据 -->
+                        <div style="margin-top: 6px; border-top: 1px solid rgba(212,175,55,0.06); padding-top: 8px;">
+                            <div class="conversion-stat-row" style="display: flex; justify-content: space-between; padding: 3px 0; font-size: 11px; color: #6a7a92;">
+                                <span class="conversion-stat-label">Today</span>
+                                <span><span class="conversion-stat-register">0</span> / <span class="conversion-stat-converted">0</span></span>
+                                <span class="conversion-stat-rate" style="font-weight: 600;">0%</span>
+                            </div>
+                            <div class="conversion-stat-row" style="display: flex; justify-content: space-between; padding: 3px 0; font-size: 11px; color: #6a7a92;">
+                                <span class="conversion-stat-label">7 Days</span>
+                                <span><span class="conversion-stat-register">0</span> / <span class="conversion-stat-converted">0</span></span>
+                                <span class="conversion-stat-rate" style="font-weight: 600;">0%</span>
+                            </div>
+                            <div class="conversion-stat-row" style="display: flex; justify-content: space-between; padding: 3px 0; font-size: 11px; color: #6a7a92;">
+                                <span class="conversion-stat-label">30 Days</span>
+                                <span><span class="conversion-stat-register">0</span> / <span class="conversion-stat-converted">0</span></span>
+                                <span class="conversion-stat-rate" style="font-weight: 600;">0%</span>
+                            </div>
+                            <div class="conversion-stat-row" style="display: flex; justify-content: space-between; padding: 3px 0; font-size: 11px; color: #6a7a92;">
+                                <span class="conversion-stat-label">All Time</span>
+                                <span><span class="conversion-stat-register">0</span> / <span class="conversion-stat-converted">0</span></span>
+                                <span class="conversion-stat-rate" style="font-weight: 600;">0%</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -711,12 +944,17 @@ function loadDashboardPage(days) {
         #activityList::-webkit-scrollbar { width: 3px; }
         #activityList::-webkit-scrollbar-thumb { background: rgba(180,180,200,0.06); border-radius: 4px; }
         #activityList::-webkit-scrollbar-track { background: transparent; }
+        .conversion-stat-row:hover {
+            background: rgba(212,175,55,0.04);
+            border-radius: 6px;
+        }
     `;
     document.head.appendChild(style);
     
     setTimeout(function() {
         initTrendChart();
         bindDateFilters();
+        initWaveRing();
         refreshDashboard(days, true);
     }, 200);
     
