@@ -646,8 +646,11 @@ async function loadWithdrawals() {
         for (var i = 0; i < filtered.length; i++) {
             var w = filtered[i];
             var row = tbody.insertRow();
+            
+            // ========== Crypto Type 大写显示 ==========
             var currency = w.currency || w.withdrawal_address_type || 'USDT';
-            var currencyClass = currency.toLowerCase();
+            var currencyDisplay = currency.toUpperCase();  // 显示用大写
+            var currencyClass = currency.toLowerCase();    // CSS 类名用小写
             
             var countryName = 'Unknown';
             var flagUrl = null;
@@ -663,7 +666,7 @@ async function loadWithdrawals() {
             row.insertCell(0).innerHTML = '<span class="badge" style="background: rgba(255,255,255,0.08); padding: 2px 12px; border-radius: 20px; font-size: 11px; color: #c8d2e8; border: 1px solid rgba(255,255,255,0.06);">' + escapeHtml(w.uid) + '</span>';
             row.insertCell(1).innerText = w.username || w.uid;
             row.insertCell(2).innerHTML = '<span style="color: #d4c09a; font-weight: 600;">€' + (w.amount || 0).toFixed(2) + '</span>';
-            row.insertCell(3).innerHTML = '<span class="currency-badge ' + currencyClass + '">' + escapeHtml(currency) + '</span>';
+            row.insertCell(3).innerHTML = '<span class="currency-badge ' + currencyClass + '">' + escapeHtml(currencyDisplay) + '</span>';
             
             var address = w.wallet_address || '-';
             var addressCell = row.insertCell(4);
@@ -764,8 +767,11 @@ async function loadWithdrawalHistory() {
         for (var i = 0; i < filtered.length; i++) {
             var w = filtered[i];
             var row = tbody.insertRow();
+            
+            // ========== Crypto Type 大写显示 ==========
             var currency = w.currency || w.withdrawal_address_type || 'USDT';
-            var currencyClass = currency.toLowerCase();
+            var currencyDisplay = currency.toUpperCase();  // 显示用大写
+            var currencyClass = currency.toLowerCase();    // CSS 类名用小写
             
             var countryName = 'Unknown';
             var flagUrl = null;
@@ -781,7 +787,7 @@ async function loadWithdrawalHistory() {
             row.insertCell(0).innerHTML = '<span class="badge" style="background: rgba(255,255,255,0.08); padding: 2px 12px; border-radius: 20px; font-size: 11px; color: #c8d2e8; border: 1px solid rgba(255,255,255,0.06);">' + escapeHtml(w.uid) + '</span>';
             row.insertCell(1).innerText = w.username || w.uid;
             row.insertCell(2).innerHTML = '<span style="color: ' + (w.status === 'approved' ? '#7ad0b0' : '#e88080') + '; font-weight: 600;">€' + (w.amount || 0).toFixed(2) + '</span>';
-            row.insertCell(3).innerHTML = '<span class="currency-badge ' + currencyClass + '">' + escapeHtml(currency) + '</span>';
+            row.insertCell(3).innerHTML = '<span class="currency-badge ' + currencyClass + '">' + escapeHtml(currencyDisplay) + '</span>';
             
             var address = w.wallet_address || '-';
             var addressCell = row.insertCell(4);
