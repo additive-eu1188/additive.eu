@@ -1,4 +1,4 @@
-// admin-dashboard.js - 金属拉丝质感 + 右上角光晕
+// admin-dashboard.js - 金属拉丝质感 + 右上角光晕 + 转化率卡片
 let trendChart = null;
 let ringChart = null;
 let breatheInterval = null;
@@ -9,9 +9,11 @@ let cachedData = {
     stats: null,
     chart: null,
     activity: null,
+    conversion: null,
     lastStatsTime: 0,
     lastChartTime: 0,
-    lastActivityTime: 0
+    lastActivityTime: 0,
+    lastConversionTime: 0
 };
 const CACHE_DURATION = 30000;
 const DEBOUNCE_DELAY = 300;
@@ -141,28 +143,151 @@ async function loadChartData(days, force) {
     } catch (e) { console.error('加载图表数据失败:', e); }
 }
 
-async function loadRingData() {
+// ========== 加载转化率数据 ==========
+async function loadConversionData(days, force) {
+    force = force || false;
+    var now = Date.now();
+    if (!force && cachedData.conversion && (now - cachedData.lastConversionTime) < CACHE_DURATION) {
+        applyConversionData(cachedData.conversion, days);
+        return;
+    }
     try {
-        var usersResult = await sb.from('users').select('uid');
-        var users = usersResult.data;
-        if (!users || users.length === 0) return;
+        var today = new Date();
+        var periods = [
+            { label: 'Today', days: 0 },
+            { label: '7 Days', days: 7 },
+            { label: '30 Days', days: 30 },
+            { label: 'All Time', days: -1 }
+        ];
         
-        var completed30Orders = 0;
-        var batchSize = 50;
-        for (var i = 0; i < users.length; i += batchSize) {
-            var batch = users.slice(i, i + batchSize);
-            var promises = batch.map(function(user) { return sb.from('order_history').select('id', { count: 'exact', head: true }).eq('uid', user.uid); });
-            var results = await Promise.all(promises);
-            completed30Orders += results.filter(function(r) { return (r.count || 0) >= 30; }).length;
-        }
-        var rate = Math.round((completed30Orders / users.length) * 100);
-        var percentEl = document.getElementById('ringPercent');
-        if (percentEl) percentEl.innerText = rate + '%';
+        var result = [];
+        var allUsers = await sb.from('users').select('uid, created_at');
+        var allDeposits = await sb.from('deposits').select('uid, created_at, amount');
         
-        if (ringChart) {
-            ringChart.setOption({ series: [{ data: [{ value: rate }, { value: 100 - rate }] }] });
+        var users = allUsers.data || [];
+        var deposits = allDeposits.data || [];
+        
+        // 获取有充值记录的用户ID列表
+        var depositUsers = {};
+        deposits.forEach(function(d) {
+            if (d.uid && (d.amount || 0) > 0) {
+                depositUsers[d.uid] = true;
+            }
+        });
+        
+        for (var p = 0; p < periods.length; p++) {
+            var period = periods[p];
+            var startDate = new Date();
+            
+            if (period.days === -1) {
+                // All Time
+                startDate = new Date(0);
+            } else if (period.days === 0) {
+                // Today
+                startDate = new Date();
+                startDate.setHours(0, 0, 0, 0);
+            } else {
+                startDate.setDate(startDate.getDate() - period.days);
+            }
+            
+            var startStr = startDate.toISOString().split('T')[0];
+            var endStr = new Date().toISOString().split('T')[0];
+            
+            // 统计该时间段内注册的用户
+            var registeredUsers = users.filter(function(u) {
+                if (!u.created_at) return false;
+                var dateStr = u.created_at.split('T')[0];
+                if (period.days === -1) return true;
+                return dateStr >= startStr && dateStr <= endStr;
+            });
+            
+            var totalRegister = registeredUsers.length;
+            
+            // 统计这些用户中有多少人有充值记录
+            var convertedUsers = registeredUsers.filter(function(u) {
+                return depositUsers[u.uid] === true;
+            });
+            
+            var totalConverted = convertedUsers.length;
+            var rate = totalRegister > 0 ? Math.round((totalConverted / totalRegister) * 100) : 0;
+            
+            result.push({
+                label: period.label,
+                days: period.days,
+                register: totalRegister,
+                converted: totalConverted,
+                rate: rate
+            });
         }
-    } catch (e) { console.error('加载环形图数据失败:', e); }
+        
+        cachedData.conversion = result;
+        cachedData.lastConversionTime = now;
+        applyConversionData(result, days);
+        
+    } catch (e) {
+        console.error('加载转化率数据失败:', e);
+    }
+}
+
+function applyConversionData(data, days) {
+    var selected = data || [];
+    var displayData = [];
+    
+    // 根据当前选中的天数显示对应的数据
+    var labelMap = {
+        0: 'Today',
+        1: 'Today',
+        7: '7 Days',
+        30: '30 Days',
+        '-1': 'All Time'
+    };
+    
+    var targetLabel = labelMap[days] || 'Today';
+    if (days === -1) targetLabel = 'All Time';
+    
+    // 找到匹配的数据
+    var matched = selected.filter(function(d) { 
+        if (days === -1) return d.label === 'All Time';
+        return d.label === targetLabel;
+    });
+    
+    if (matched.length > 0) {
+        displayData = matched;
+    } else {
+        // fallback
+        displayData = selected.filter(function(d) { return d.label === 'Today'; });
+    }
+    
+    var container = document.getElementById('conversionStats');
+    if (!container) return;
+    
+    var html = '';
+    for (var i = 0; i < selected.length; i++) {
+        var d = selected[i];
+        var isActive = false;
+        if (days === -1 && d.label === 'All Time') isActive = true;
+        else if (d.label === targetLabel) isActive = true;
+        
+        html += '<div style="display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid rgba(180,180,200,0.03);">' +
+            '<span style="font-size: 12px; color: ' + (isActive ? '#d8dff0' : '#6a7a92') + '; font-weight: ' + (isActive ? '600' : '400') + ';">' + d.label + '</span>' +
+            '<span style="font-size: 12px; color: #8892a8;">' + d.register + ' / ' + d.converted + '</span>' +
+            '<span style="font-size: 12px; font-weight: 600; color: ' + (d.rate >= 50 ? '#7ad0b0' : d.rate >= 20 ? '#d4c09a' : '#e88080') + ';">' + d.rate + '%</span>' +
+            '</div>';
+    }
+    
+    container.innerHTML = html;
+    
+    // 更新中间的百分比显示
+    var percentEl = document.getElementById('conversionPercent');
+    var registerEl = document.getElementById('conversionRegister');
+    var convertedEl = document.getElementById('conversionConverted');
+    
+    if (displayData.length > 0) {
+        var data = displayData[0];
+        if (percentEl) percentEl.innerText = data.rate + '%';
+        if (registerEl) registerEl.innerText = data.register;
+        if (convertedEl) convertedEl.innerText = data.converted;
+    }
 }
 
 async function loadActivityTimeline(force) {
@@ -320,7 +445,7 @@ async function refreshDashboard(days, force) {
         loadQuickCards(),
         loadStatsData(days, force),
         loadChartData(days, force),
-        loadRingData(),
+        loadConversionData(days, force),
         loadActivityTimeline(force)
     ]);
 }
@@ -404,44 +529,6 @@ function initTrendChart() {
     }, 200);
 }
 
-function initRingChart() {
-    var dom = document.getElementById('ringChart');
-    if (!dom) {
-        console.error('ringChart容器不存在');
-        return;
-    }
-    
-    dom.innerHTML = '';
-    dom.style.height = '220px';
-    dom.style.width = '100%';
-    
-    if (ringChart) {
-        try {
-            ringChart.dispose();
-        } catch(e) {}
-        ringChart = null;
-    }
-    
-    ringChart = echarts.init(dom);
-    ringChart.setOption({
-        tooltip: { show: false },
-        series: [{
-            type: 'pie',
-            radius: ['55%', '75%'],
-            center: ['50%', '50%'],
-            data: [
-                { value: 0, name: '完成', itemStyle: { color: '#8ab4f0', borderRadius: 8 } },
-                { value: 100, name: '剩余', itemStyle: { color: 'rgba(180,180,200,0.03)', borderRadius: 8 } }
-            ],
-            label: { show: false },
-            startAngle: 90,
-            animation: true
-        }]
-    });
-    
-    console.log('环形图初始化成功');
-}
-
 function bindDateFilters() {
     var handleFilterChange = debounce(function(btn) {
         document.querySelectorAll('.date-filter-btn').forEach(function(b) { b.classList.remove('active'); });
@@ -484,7 +571,6 @@ function loadDashboardPage(days) {
                 <i class="fas fa-id-card" style="font-size: 22px; color: #c8b090; margin-bottom: 6px; display: block; position: relative; z-index: 1;"></i>
                 <div id="kycPendingCount" style="font-size: 26px; font-weight: 700; color: #ffffff; margin: 2px 0; position: relative; z-index: 1;">0</div>
                 <div style="font-size: 11px; color: #8892a8; text-transform: uppercase; letter-spacing: 0.5px; position: relative; z-index: 1;">Pending KYC</div>
-                <div style="position: absolute; bottom: 8px; right: 12px; font-size: 48px; color: rgba(180,180,200,0.02); pointer-events: none;"><i class="fas fa-id-card"></i></div>
             </div>
             <div onclick="showPage('withdrawals')" style="background: linear-gradient(145deg, rgba(20,24,40,0.85), rgba(10,12,24,0.6)); border-radius: 16px; padding: 18px 16px; border: 1px solid rgba(180,180,200,0.06); cursor: pointer; transition: all 0.3s; position: relative; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.04);">
                 <div style="position: absolute; top: -15%; right: -5%; width: 75%; height: 75%; background: radial-gradient(ellipse at 70% 20%, rgba(255,255,255,0.10), transparent 70%); pointer-events: none; border-radius: 50%;"></div>
@@ -492,7 +578,6 @@ function loadDashboardPage(days) {
                 <i class="fas fa-money-bill-wave" style="font-size: 22px; color: #c8b090; margin-bottom: 6px; display: block; position: relative; z-index: 1;"></i>
                 <div id="withdrawalPendingCount" style="font-size: 26px; font-weight: 700; color: #ffffff; margin: 2px 0; position: relative; z-index: 1;">0</div>
                 <div style="font-size: 11px; color: #8892a8; text-transform: uppercase; letter-spacing: 0.5px; position: relative; z-index: 1;">Pending Withdrawals</div>
-                <div style="position: absolute; bottom: 8px; right: 12px; font-size: 48px; color: rgba(180,180,200,0.02); pointer-events: none;"><i class="fas fa-money-bill-wave"></i></div>
             </div>
             <div onclick="showPage('emailverify')" style="background: linear-gradient(145deg, rgba(20,24,40,0.85), rgba(10,12,24,0.6)); border-radius: 16px; padding: 18px 16px; border: 1px solid rgba(180,180,200,0.06); cursor: pointer; transition: all 0.3s; position: relative; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.04);">
                 <div style="position: absolute; top: -15%; right: -5%; width: 75%; height: 75%; background: radial-gradient(ellipse at 70% 20%, rgba(255,255,255,0.10), transparent 70%); pointer-events: none; border-radius: 50%;"></div>
@@ -500,7 +585,6 @@ function loadDashboardPage(days) {
                 <i class="fas fa-envelope" style="font-size: 22px; color: #c8b090; margin-bottom: 6px; display: block; position: relative; z-index: 1;"></i>
                 <div id="emailPendingCount" style="font-size: 26px; font-weight: 700; color: #ffffff; margin: 2px 0; position: relative; z-index: 1;">0</div>
                 <div style="font-size: 11px; color: #8892a8; text-transform: uppercase; letter-spacing: 0.5px; position: relative; z-index: 1;">Pending Email</div>
-                <div style="position: absolute; bottom: 8px; right: 12px; font-size: 48px; color: rgba(180,180,200,0.02); pointer-events: none;"><i class="fas fa-envelope"></i></div>
             </div>
             <div onclick="showPage('orderpool')" style="background: linear-gradient(145deg, rgba(20,24,40,0.85), rgba(10,12,24,0.6)); border-radius: 16px; padding: 18px 16px; border: 1px solid rgba(180,180,200,0.06); cursor: pointer; transition: all 0.3s; position: relative; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.04);">
                 <div style="position: absolute; top: -15%; right: -5%; width: 75%; height: 75%; background: radial-gradient(ellipse at 70% 20%, rgba(255,255,255,0.10), transparent 70%); pointer-events: none; border-radius: 50%;"></div>
@@ -508,7 +592,6 @@ function loadDashboardPage(days) {
                 <i class="fas fa-hotel" style="font-size: 22px; color: #c8b090; margin-bottom: 6px; display: block; position: relative; z-index: 1;"></i>
                 <div id="orderPoolCount" style="font-size: 26px; font-weight: 700; color: #ffffff; margin: 2px 0; position: relative; z-index: 1;">0</div>
                 <div style="font-size: 11px; color: #8892a8; text-transform: uppercase; letter-spacing: 0.5px; position: relative; z-index: 1;">Hotel Orders Count</div>
-                <div style="position: absolute; bottom: 8px; right: 12px; font-size: 48px; color: rgba(180,180,200,0.02); pointer-events: none;"><i class="fas fa-hotel"></i></div>
             </div>
         </div>
         
@@ -521,7 +604,6 @@ function loadDashboardPage(days) {
                 <div id="newUsersCount" style="font-size: 28px; font-weight: 700; color: #ffffff; letter-spacing: -0.5px; position: relative; z-index: 1;">0</div>
                 <div style="font-size: 11px; color: #8892a8; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 2px; position: relative; z-index: 1;">New Registered Today</div>
                 <div id="newUsersTrend" style="font-size: 10px; margin-top: 4px; position: relative; z-index: 1;"></div>
-                <div style="position: absolute; bottom: 8px; right: 12px; font-size: 48px; color: rgba(180,180,200,0.02); pointer-events: none;"><i class="fas fa-user-plus"></i></div>
             </div>
             <div style="background: linear-gradient(145deg, rgba(20,24,40,0.85), rgba(10,12,24,0.6)); border-radius: 16px; padding: 18px 20px; border: 1px solid rgba(180,180,200,0.06); transition: all 0.3s; position: relative; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.04);">
                 <div style="position: absolute; top: -15%; right: -5%; width: 75%; height: 75%; background: radial-gradient(ellipse at 70% 20%, rgba(255,255,255,0.10), transparent 70%); pointer-events: none; border-radius: 50%;"></div>
@@ -530,7 +612,6 @@ function loadDashboardPage(days) {
                 <div id="totalUsersCount" style="font-size: 28px; font-weight: 700; color: #ffffff; letter-spacing: -0.5px; position: relative; z-index: 1;">0</div>
                 <div style="font-size: 11px; color: #8892a8; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 2px; position: relative; z-index: 1;">Total Users</div>
                 <div id="totalUsersTrend" style="font-size: 10px; margin-top: 4px; position: relative; z-index: 1;"></div>
-                <div style="position: absolute; bottom: 8px; right: 12px; font-size: 48px; color: rgba(180,180,200,0.02); pointer-events: none;"><i class="fas fa-users"></i></div>
             </div>
             <div style="background: linear-gradient(145deg, rgba(20,24,40,0.85), rgba(10,12,24,0.6)); border-radius: 16px; padding: 18px 20px; border: 1px solid rgba(180,180,200,0.06); transition: all 0.3s; position: relative; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.04);">
                 <div style="position: absolute; top: -15%; right: -5%; width: 75%; height: 75%; background: radial-gradient(ellipse at 70% 20%, rgba(255,255,255,0.10), transparent 70%); pointer-events: none; border-radius: 50%;"></div>
@@ -539,7 +620,6 @@ function loadDashboardPage(days) {
                 <div id="totalDepositCount" style="font-size: 28px; font-weight: 700; color: #ffffff; letter-spacing: -0.5px; position: relative; z-index: 1;">€0</div>
                 <div style="font-size: 11px; color: #8892a8; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 2px; position: relative; z-index: 1;">Total Deposits</div>
                 <div id="totalDepositTrend" style="font-size: 10px; margin-top: 4px; position: relative; z-index: 1;"></div>
-                <div style="position: absolute; bottom: 8px; right: 12px; font-size: 48px; color: rgba(180,180,200,0.02); pointer-events: none;"><i class="fas fa-arrow-down"></i></div>
             </div>
             <div style="background: linear-gradient(145deg, rgba(20,24,40,0.85), rgba(10,12,24,0.6)); border-radius: 16px; padding: 18px 20px; border: 1px solid rgba(180,180,200,0.06); transition: all 0.3s; position: relative; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.04);">
                 <div style="position: absolute; top: -15%; right: -5%; width: 75%; height: 75%; background: radial-gradient(ellipse at 70% 20%, rgba(255,255,255,0.10), transparent 70%); pointer-events: none; border-radius: 50%;"></div>
@@ -548,12 +628,12 @@ function loadDashboardPage(days) {
                 <div id="totalWithdrawCount" style="font-size: 28px; font-weight: 700; color: #ffffff; letter-spacing: -0.5px; position: relative; z-index: 1;">€0</div>
                 <div style="font-size: 11px; color: #8892a8; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 2px; position: relative; z-index: 1;">Total Withdrawals</div>
                 <div id="totalWithdrawTrend" style="font-size: 10px; margin-top: 4px; position: relative; z-index: 1;"></div>
-                <div style="position: absolute; bottom: 8px; right: 12px; font-size: 48px; color: rgba(180,180,200,0.02); pointer-events: none;"><i class="fas fa-arrow-up"></i></div>
             </div>
         </div>
         
         <!-- 图表区域 -->
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 28px;">
+            <!-- 趋势图 -->
             <div style="background: linear-gradient(145deg, rgba(20,24,40,0.85), rgba(10,12,24,0.6)); backdrop-filter: blur(8px); border-radius: 20px; padding: 20px; border: 1px solid rgba(180,180,200,0.06); box-shadow: 0 4px 20px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.04); position: relative; overflow: hidden;">
                 <div style="position: absolute; top: -15%; right: -5%; width: 75%; height: 75%; background: radial-gradient(ellipse at 70% 20%, rgba(255,255,255,0.06), transparent 70%); pointer-events: none; border-radius: 50%;"></div>
                 <div style="position: absolute; top: 0; left: 0; right: 0; height: 1px; background: linear-gradient(90deg, transparent, rgba(180,180,200,0.08), transparent);"></div>
@@ -563,16 +643,30 @@ function loadDashboardPage(days) {
                 </div>
                 <div id="trendChart" style="height: 320px; width: 100%; position: relative; z-index: 1;"></div>
             </div>
-            <div style="background: linear-gradient(145deg, rgba(20,24,40,0.85), rgba(10,12,24,0.6)); backdrop-filter: blur(8px); border-radius: 20px; padding: 20px; border: 1px solid rgba(180,180,200,0.06); box-shadow: 0 4px 20px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.04); position: relative; overflow: hidden; text-align: center;">
+            
+            <!-- 转化率卡片 - 替换原来的环形图 -->
+            <div style="background: linear-gradient(145deg, rgba(20,24,40,0.85), rgba(10,12,24,0.6)); backdrop-filter: blur(8px); border-radius: 20px; padding: 20px; border: 1px solid rgba(180,180,200,0.06); box-shadow: 0 4px 20px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.04); position: relative; overflow: hidden;">
                 <div style="position: absolute; top: -15%; right: -5%; width: 75%; height: 75%; background: radial-gradient(ellipse at 70% 20%, rgba(255,255,255,0.06), transparent 70%); pointer-events: none; border-radius: 50%;"></div>
                 <div style="position: absolute; top: 0; left: 0; right: 0; height: 1px; background: linear-gradient(90deg, transparent, rgba(180,180,200,0.08), transparent);"></div>
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; position: relative; z-index: 1;">
-                    <div style="font-size: 16px; font-weight: 600; color: #d8dff0;">📊 Users Analytics</div>
-                    <div style="display: flex; gap: 16px; font-size: 12px; color: #8892a8;"><span><span style="display: inline-block; width: 12px; height: 12px; background: #8ab4f0; border-radius: 2px; margin-right: 6px;"></span>Complete Tasks</span></div>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; position: relative; z-index: 1;">
+                    <div style="font-size: 16px; font-weight: 600; color: #d8dff0;">📈 New Orders Conversion Rate</div>
+                    <div style="font-size: 11px; color: #6a7a92;">Total New Orders: <span id="conversionRegister" style="color: #d8dff0; font-weight: 600;">0</span></div>
                 </div>
-                <div id="ringChart" style="height: 220px; width: 100%; position: relative; z-index: 1;"></div>
-                <div id="ringPercent" style="font-size: 24px; font-weight: 700; color: #ffffff; margin-top: 8px; position: relative; z-index: 1;">0%</div>
-                <div style="font-size: 11px; color: #8892a8; position: relative; z-index: 1;">Percentage Completed Tasks</div>
+                
+                <!-- 百分比显示 -->
+                <div style="text-align: center; position: relative; z-index: 1; padding: 8px 0 4px 0;">
+                    <div id="conversionPercent" style="font-size: 48px; font-weight: 700; color: #8ab4f0; letter-spacing: -2px;">0%</div>
+                    <div style="font-size: 12px; color: #8892a8; margin-top: -2px;">Percentage of New Order Conversion Rate</div>
+                </div>
+                
+                <!-- 统计列表 -->
+                <div id="conversionStats" style="margin-top: 12px; position: relative; z-index: 1; padding: 0 4px;">
+                    <div style="display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid rgba(180,180,200,0.03);">
+                        <span style="font-size: 12px; color: #6a7a92;">Loading...</span>
+                        <span style="font-size: 12px; color: #6a7a92;">-</span>
+                        <span style="font-size: 12px; color: #6a7a92;">-</span>
+                    </div>
+                </div>
             </div>
         </div>
         
@@ -612,14 +706,6 @@ function loadDashboardPage(days) {
         [onclick] > div[style*="linear-gradient"]:hover > div:first-child {
             background: radial-gradient(ellipse at 70% 20%, rgba(255,255,255,0.15), transparent 70%) !important;
         }
-        .stat-card-hover:hover {
-            border-color: rgba(180,180,200,0.12) !important;
-            transform: translateY(-3px);
-            box-shadow: 0 8px 30px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.06) !important;
-        }
-        .stat-card-hover:hover > div:first-child {
-            background: radial-gradient(ellipse at 70% 20%, rgba(255,255,255,0.15), transparent 70%) !important;
-        }
         .trend-up { color: #7ad0b0; }
         .trend-down { color: #e88080; }
         #activityList::-webkit-scrollbar { width: 3px; }
@@ -630,7 +716,6 @@ function loadDashboardPage(days) {
     
     setTimeout(function() {
         initTrendChart();
-        initRingChart();
         bindDateFilters();
         refreshDashboard(days, true);
     }, 200);
