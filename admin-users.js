@@ -1192,100 +1192,118 @@ async function deleteUser(uid, username) {
     );
 }
 
-// ========== 打开编辑用户弹窗（含 Credit Score） ==========
+// ========== 打开编辑用户弹窗（新设计 - 卡片式布局） ==========
 function openEditUserModal(uid, username, phone, pin, currency, address, creditScore) {
+    // 移除已存在的弹窗
+    const existingModal = document.getElementById('editUserModal');
+    if (existingModal) existingModal.remove();
+
+    // 构建弹窗HTML - 新设计
     const modalHtml = `
-        <div id="editUserModal" class="modal-overlay" style="visibility: visible; opacity: 1;">
-            <div class="modal-card" style="width: 520px; max-width: 95%; max-height: 90vh; overflow-y: auto;">
-                <h3 style="color: #4a7cff; margin-bottom: 8px;"><i class="fas fa-user-edit"></i> Edit User - ${escapeHtml(username)}</h3>
-                <p style="color: #8a9abb; font-size: 12px; margin-bottom: 20px;">UID: ${escapeHtml(uid)}</p>
+        <div id="editUserModal" class="modal-overlay" style="visibility: visible; opacity: 1; display: flex; align-items: center; justify-content: center; z-index: 9999;">
+            <div class="modal-card" style="width: 750px; max-width: 95%; max-height: 90vh; overflow-y: auto; background: linear-gradient(145deg, #0E1A3A, #0A122B); border: 1px solid rgba(201, 176, 149, 0.2); border-radius: 28px; padding: 30px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8);">
                 
-                <div style="margin-bottom: 14px;">
-                    <label style="display: block; font-size: 12px; color: #8a9abb; margin-bottom: 4px;"><i class="fas fa-phone"></i> Phone Number</label>
-                    <input type="tel" id="editPhone" value="${escapeHtml(phone || '')}" placeholder="Enter phone number" style="width:100%; padding:10px 14px; background:#0f172a; border:1px solid #1e2a3a; border-radius:8px; color:#fff; font-size:14px;">
+                <!-- 弹窗头部 -->
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 24px;">
+                    <div>
+                        <h2 style="color: #C9B095; font-size: 22px; font-weight: 700; margin: 0;">Edit User</h2>
+                        <div style="display: flex; gap: 24px; margin-top: 8px; font-size: 13px; flex-wrap: wrap;">
+                            <span style="color: #8a9abb;"><i class="fas fa-phone" style="color: #C9B095; width: 18px;"></i> ${escapeHtml(phone || 'Not Set')}</span>
+                            <span style="color: #8a9abb;"><i class="fas fa-shield-alt" style="color: #C9B095; width: 18px;"></i> Credit Scores: <strong style="color: #fff;" id="creditScoreDisplayHeader">${creditScore || 100}</strong></span>
+                        </div>
+                    </div>
+                    <button onclick="closeEditUserModal()" style="background: none; border: none; color: #5a6a8a; font-size: 24px; cursor: pointer; padding: 0 8px;">&times;</button>
                 </div>
-                
-                <div style="margin-bottom: 14px;">
-                    <label style="display: block; font-size: 12px; color: #8a9abb; margin-bottom: 4px;"><i class="fas fa-lock"></i> Account Password</label>
-                    <input type="password" id="editPassword" placeholder="Leave blank to keep current password" style="width:100%; padding:10px 14px; background:#0f172a; border:1px solid #1e2a3a; border-radius:8px; color:#fff; font-size:14px;">
-                    <div style="font-size: 10px; color: #6a7a9a; margin-top: 4px;">Leave blank to keep current password</div>
+
+                <hr style="border: none; border-top: 1px solid rgba(201, 176, 149, 0.15); margin: 0 0 24px 0;">
+
+                <!-- 四张小卡片 -->
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 28px;">
+                    <!-- 卡片1: User ID -->
+                    <div style="background: rgba(0, 0, 0, 0.3); border-radius: 16px; padding: 16px 20px; border: 1px solid rgba(201, 176, 149, 0.08);">
+                        <div style="font-size: 12px; font-weight: 700; color: #C9B095; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px;">User ID</div>
+                        <div style="font-size: 18px; font-weight: 700; color: #ffffff; font-family: monospace;">${escapeHtml(uid)}</div>
+                    </div>
+                    <!-- 卡片2: Withdrawal Status -->
+                    <div style="background: rgba(0, 0, 0, 0.3); border-radius: 16px; padding: 16px 20px; border: 1px solid rgba(201, 176, 149, 0.08);">
+                        <div style="font-size: 12px; font-weight: 700; color: #C9B095; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px;">Withdrawal Status</div>
+                        <div style="font-size: 18px; font-weight: 700; color: #4ade80;">
+                            Active
+                            <span style="font-size: 12px; font-weight: 400; color: #8a9abb; margin-left: 8px;">(Default: Active)</span>
+                        </div>
+                    </div>
+                    <!-- 卡片3: Total Deposit -->
+                    <div style="background: rgba(0, 0, 0, 0.3); border-radius: 16px; padding: 16px 20px; border: 1px solid rgba(201, 176, 149, 0.08);">
+                        <div style="font-size: 12px; font-weight: 700; color: #C9B095; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px;">Total Deposit</div>
+                        <div style="font-size: 18px; font-weight: 700; color: #4ade80;" id="totalDepositDisplay">€0.00</div>
+                    </div>
+                    <!-- 卡片4: Total Withdrawal -->
+                    <div style="background: rgba(0, 0, 0, 0.3); border-radius: 16px; padding: 16px 20px; border: 1px solid rgba(201, 176, 149, 0.08);">
+                        <div style="font-size: 12px; font-weight: 700; color: #C9B095; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px;">Total Withdrawal</div>
+                        <div style="font-size: 18px; font-weight: 700; color: #ffb84d;" id="totalWithdrawalDisplay">€0.00</div>
+                    </div>
                 </div>
-                
-                <div style="margin-bottom: 14px;">
-                    <label style="display: block; font-size: 12px; color: #8a9abb; margin-bottom: 4px;"><i class="fas fa-key"></i> Withdrawal PIN (4 digits)</label>
-                    <input type="password" id="editPin" maxlength="4" placeholder="4-digit PIN" value="${escapeHtml(pin || '')}" style="width:100%; padding:10px 14px; background:#0f172a; border:1px solid #1e2a3a; border-radius:8px; color:#fff; font-size:14px;">
+
+                <!-- Account Actions -->
+                <div style="margin-bottom: 28px;">
+                    <div style="font-size: 13px; font-weight: 600; color: #8a9abb; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 16px;">Account Actions</div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                        <div style="background: rgba(0, 0, 0, 0.2); border-radius: 12px; padding: 14px 18px; border: 1px solid rgba(255, 255, 255, 0.04); cursor: pointer; transition: 0.2s;" onclick="resetWithdrawalPin('${uid}')">
+                            <div style="font-weight: 600; color: #ffffff; font-size: 14px;">Reset Withdrawal PIN</div>
+                            <div style="font-size: 11px; color: #6a7a9a; margin-top: 2px;">Reset user's withdrawal pin</div>
+                        </div>
+                        <div style="background: rgba(0, 0, 0, 0.2); border-radius: 12px; padding: 14px 18px; border: 1px solid rgba(255, 255, 255, 0.04); cursor: pointer; transition: 0.2s;" onclick="resetUserPassword('${uid}')">
+                            <div style="font-weight: 600; color: #ffffff; font-size: 14px;">Reset Password</div>
+                            <div style="font-size: 11px; color: #6a7a9a; margin-top: 2px;">Reset user's account password</div>
+                        </div>
+                        <div style="background: rgba(0, 0, 0, 0.2); border-radius: 12px; padding: 14px 18px; border: 1px solid rgba(255, 255, 255, 0.04); cursor: pointer; transition: 0.2s;" onclick="resetUserPhone('${uid}')">
+                            <div style="font-weight: 600; color: #ffffff; font-size: 14px;">Reset Phone Number</div>
+                            <div style="font-size: 11px; color: #6a7a9a; margin-top: 2px;">Reset user's phone number</div>
+                        </div>
+                        <div style="background: rgba(0, 0, 0, 0.2); border-radius: 12px; padding: 14px 18px; border: 1px solid rgba(255, 255, 255, 0.04); cursor: pointer; transition: 0.2s;" onclick="promoteToAdmin('${uid}')">
+                            <div style="font-weight: 600; color: #ffffff; font-size: 14px;">Promote Admin</div>
+                            <div style="font-size: 11px; color: #6a7a9a; margin-top: 2px;">Allow user to view downline's data</div>
+                        </div>
+                        <div style="background: rgba(0, 0, 0, 0.2); border-radius: 12px; padding: 14px 18px; border: 1px solid rgba(255, 255, 255, 0.04); cursor: pointer; transition: 0.2s;" onclick="freezeUserWithdrawal('${uid}')">
+                            <div style="font-weight: 600; color: #ffb84d; font-size: 14px;">Freeze Withdrawal</div>
+                            <div style="font-size: 11px; color: #6a7a9a; margin-top: 2px;">Block this user from withdrawing</div>
+                        </div>
+                        <div style="background: rgba(0, 0, 0, 0.2); border-radius: 12px; padding: 14px 18px; border: 1px solid rgba(255, 255, 255, 0.04); cursor: pointer; transition: 0.2s;" onclick="banUser('${uid}')">
+                            <div style="font-weight: 600; color: #ff5a5a; font-size: 14px;">Ban User</div>
+                            <div style="font-size: 11px; color: #6a7a9a; margin-top: 2px;">Disable user's working account</div>
+                        </div>
+                    </div>
                 </div>
-                
-                <div style="margin-bottom: 14px;">
-                    <label style="display: block; font-size: 12px; color: #8a9abb; margin-bottom: 4px;"><i class="fas fa-coins"></i> Wallet Currency</label>
-                    <select id="editCurrency" style="width:100%; padding:10px 14px; background:#0f172a; border:1px solid #1e2a3a; border-radius:8px; color:#fff; font-size:14px;">
-                        <option value="USDT" ${currency === 'USDT' ? 'selected' : ''}>USDT</option>
-                        <option value="BTC" ${currency === 'BTC' ? 'selected' : ''}>BTC</option>
-                        <option value="ETH" ${currency === 'ETH' ? 'selected' : ''}>ETH</option>
-                        <option value="USDC" ${currency === 'USDC' ? 'selected' : ''}>USDC</option>
-                    </select>
+
+                <!-- Credit Scores (进度条拖拽) -->
+                <div style="margin-bottom: 28px; background: rgba(0, 0, 0, 0.2); border-radius: 16px; padding: 20px 24px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                        <span style="font-weight: 600; color: #C9B095; font-size: 14px;">Credit Scores</span>
+                        <span style="font-size: 22px; font-weight: 700; color: #ffffff;" id="creditScoreValue">${creditScore || 100}</span>
+                    </div>
+                    <input type="range" min="0" max="100" value="${creditScore || 100}" 
+                           style="width: 100%; height: 6px; -webkit-appearance: none; background: linear-gradient(90deg, #ff5a5a, #ffb84d, #4ade80); border-radius: 4px; outline: none;"
+                           id="creditScoreSlider"
+                           oninput="document.getElementById('creditScoreValue').innerText = this.value; document.getElementById('creditScoreDisplayHeader').innerText = this.value;">
+                    <div style="display: flex; justify-content: space-between; font-size: 11px; color: #6a7a9a; margin-top: 4px;">
+                        <span>0</span>
+                        <span>100</span>
+                    </div>
                 </div>
-                
-                <div style="margin-bottom: 14px;">
-                    <label style="display: block; font-size: 12px; color: #8a9abb; margin-bottom: 4px;"><i class="fas fa-wallet"></i> Wallet Address</label>
-                    <textarea id="editAddress" rows="2" placeholder="Enter wallet address" style="width:100%; padding:10px 14px; background:#0f172a; border:1px solid #1e2a3a; border-radius:8px; color:#fff; font-size:13px; font-family: monospace; resize: vertical;">${escapeHtml(address || '')}</textarea>
-                </div>
-                
-                <!-- 🔥 Credit Score 字段 -->
-                <div style="margin-bottom: 20px; padding-top: 10px; border-top: 1px solid rgba(74,124,255,0.1);">
-                    <label style="display: block; font-size: 12px; color: #8a9abb; margin-bottom: 4px;"><i class="fas fa-shield-alt"></i> Credit Score</label>
-                    <input type="number" id="editCreditScore" value="${creditScore || 100}" min="0" max="999" style="width:100%; padding:10px 14px; background:#0f172a; border:1px solid #1e2a3a; border-radius:8px; color:#fff; font-size:14px;">
-                    <div style="font-size: 10px; color: #6a7a9a; margin-top: 4px;">Score range: 0 - 999</div>
-                </div>
-                
-                <div style="display: flex; gap: 12px; margin-top: 8px;">
-                    <button id="confirmEditBtn" class="success" style="flex:1; padding:12px; border:none; border-radius:8px; background:#2f6b3a; color:#fff; font-weight:600; cursor:pointer;"><i class="fas fa-save"></i> Save Changes</button>
-                    <button id="cancelEditBtn" style="flex:1; padding:12px; border:none; border-radius:8px; background:#7a2f2f; color:#fff; font-weight:600; cursor:pointer;"><i class="fas fa-times"></i> Cancel</button>
+
+                <!-- 底部按钮 -->
+                <div style="display: flex; gap: 16px; justify-content: flex-end; border-top: 1px solid rgba(201, 176, 149, 0.1); padding-top: 20px;">
+                    <button onclick="closeEditUserModal()" style="background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.08); padding: 10px 32px; border-radius: 40px; color: #8a9abb; font-weight: 500; cursor: pointer; transition: 0.2s;">Close</button>
+                    <button onclick="saveEditUser('${uid}')" style="background: #C9B095; border: none; padding: 10px 32px; border-radius: 40px; color: #0A122B; font-weight: 700; cursor: pointer; transition: 0.2s;">Save Changes</button>
                 </div>
             </div>
         </div>
     `;
-    const existing = document.getElementById('editUserModal');
-    if (existing) existing.remove();
+
     document.body.insertAdjacentHTML('beforeend', modalHtml);
-    
-    document.getElementById('confirmEditBtn').onclick = async () => {
-        const newPhone = document.getElementById('editPhone').value.trim();
-        const newPassword = document.getElementById('editPassword').value;
-        const newPin = document.getElementById('editPin').value.trim();
-        const newCurrency = document.getElementById('editCurrency').value;
-        const newAddress = document.getElementById('editAddress').value.trim();
-        const newCreditScore = parseInt(document.getElementById('editCreditScore').value) || 100;
-        
-        const updateData = {};
-        if (newPhone) updateData.phone = newPhone;
-        if (newPassword && newPassword.length >= 4) updateData.password = newPassword;
-        if (newPin && newPin.length === 4 && !isNaN(newPin)) updateData.pin = newPin;
-        if (newCurrency) updateData.withdrawal_address_type = newCurrency;
-        if (newAddress) updateData.withdrawal_address = newAddress;
-        if (newCreditScore >= 0 && newCreditScore <= 999) updateData.credit_score = newCreditScore;
-        
-        if (Object.keys(updateData).length === 0) {
-            showToast('No changes made', 'warning');
-            document.getElementById('editUserModal').remove();
-            return;
-        }
-        try {
-            const { error } = await sb
-                .from('users')
-                .update(updateData)
-                .eq('uid', uid);
-            if (error) throw error;
-            showToast('✅ User information updated', 'success');
-            document.getElementById('editUserModal').remove();
-            loadUsers();
-        } catch (e) {
-            showToast('Update failed: ' + e.message, 'error');
-        }
-    };
-    document.getElementById('cancelEditBtn').onclick = () => {
-        document.getElementById('editUserModal').remove();
-    };
+
+    // 🔥 异步获取用户的 Total Deposit 和 Total Withdrawal
+    fetchUserFinancialStats(uid);
 }
 
 // ========== 分页渲染 ==========
@@ -1412,4 +1430,180 @@ function dismissDuplicateIpAlert() {
     }
     // 关闭所有琥珀通知
     document.querySelectorAll('.notification-amber').forEach(el => el.remove());
+}
+
+// ============================================================
+// 获取用户的财务统计数据 (Total Deposit & Total Withdrawal)
+// ============================================================
+async function fetchUserFinancialStats(uid) {
+    try {
+        // 获取总入金 (从 deposits 表)
+        const { data: deposits, error: depositError } = await sb
+            .from('deposits')
+            .select('amount')
+            .eq('uid', uid);
+
+        if (depositError) throw depositError;
+        const totalDeposit = deposits.reduce((sum, d) => sum + (d.amount || 0), 0);
+
+        // 获取总出金 (从 withdrawals 表，只统计已批准的)
+        const { data: withdrawals, error: withdrawalError } = await sb
+            .from('withdrawals')
+            .select('amount')
+            .eq('uid', uid)
+            .eq('status', 'approved');
+
+        if (withdrawalError) throw withdrawalError;
+        const totalWithdrawal = withdrawals.reduce((sum, w) => sum + (w.amount || 0), 0);
+
+        // 更新UI
+        const depositDisplay = document.getElementById('totalDepositDisplay');
+        const withdrawalDisplay = document.getElementById('totalWithdrawalDisplay');
+        if (depositDisplay) depositDisplay.textContent = `€${totalDeposit.toFixed(2)}`;
+        if (withdrawalDisplay) withdrawalDisplay.textContent = `€${totalWithdrawal.toFixed(2)}`;
+
+    } catch (error) {
+        console.error('获取用户财务数据失败:', error);
+    }
+}
+
+// ============================================================
+// 关闭弹窗
+// ============================================================
+function closeEditUserModal() {
+    const modal = document.getElementById('editUserModal');
+    if (modal) modal.remove();
+}
+
+// ============================================================
+// 保存编辑 (更新 Credit Score)
+// ============================================================
+async function saveEditUser(uid) {
+    const creditScore = document.getElementById('creditScoreSlider').value;
+    
+    try {
+        const { error } = await sb
+            .from('users')
+            .update({ credit_score: parseInt(creditScore) })
+            .eq('uid', uid);
+        
+        if (error) throw error;
+        showToast(`用户 ${uid} 的信誉分已更新为 ${creditScore}`, 'success');
+        closeEditUserModal();
+        loadUsers();
+    } catch (e) {
+        showToast('保存失败: ' + e.message, 'error');
+    }
+}
+
+// ============================================================
+// Account Actions 函数
+// ============================================================
+
+async function resetWithdrawalPin(uid) {
+    showConfirm('Reset Withdrawal PIN', `确定要重置用户 ${uid} 的提现PIN吗？`, async () => {
+        try {
+            const { error } = await sb
+                .from('users')
+                .update({ pin: '0000' })
+                .eq('uid', uid);
+            if (error) throw error;
+            showToast('提现PIN已重置为 0000', 'success');
+            closeEditUserModal();
+            loadUsers();
+        } catch (e) {
+            showToast('重置失败: ' + e.message, 'error');
+        }
+    });
+}
+
+async function resetUserPassword(uid) {
+    showPrompt('Reset Password', '请输入新密码 (至少4位):', async (newPassword) => {
+        if (!newPassword) return;
+        if (newPassword.length < 4) {
+            showToast('密码至少需要4位', 'error');
+            return;
+        }
+        try {
+            const { error } = await sb
+                .from('users')
+                .update({ password: newPassword })
+                .eq('uid', uid);
+            if (error) throw error;
+            showToast('密码已重置', 'success');
+            closeEditUserModal();
+            loadUsers();
+        } catch (e) {
+            showToast('重置失败: ' + e.message, 'error');
+        }
+    });
+}
+
+async function resetUserPhone(uid) {
+    showPrompt('Reset Phone Number', '请输入新的手机号:', async (newPhone) => {
+        if (!newPhone) return;
+        try {
+            const { error } = await sb
+                .from('users')
+                .update({ phone: newPhone })
+                .eq('uid', uid);
+            if (error) throw error;
+            showToast('手机号已更新', 'success');
+            closeEditUserModal();
+            loadUsers();
+        } catch (e) {
+            showToast('更新失败: ' + e.message, 'error');
+        }
+    });
+}
+
+async function promoteToAdmin(uid) {
+    showConfirm('Promote Admin', `确定要提升用户 ${uid} 为管理员吗？`, async () => {
+        try {
+            const { error } = await sb
+                .from('users')
+                .update({ is_admin: true })
+                .eq('uid', uid);
+            if (error) throw error;
+            showToast('用户已提升为管理员', 'success');
+            closeEditUserModal();
+            loadUsers();
+        } catch (e) {
+            showToast('操作失败: ' + e.message, 'error');
+        }
+    });
+}
+
+async function freezeUserWithdrawal(uid) {
+    showConfirm('Freeze Withdrawal', `确定要冻结用户 ${uid} 的提现权限吗？`, async () => {
+        try {
+            const { error } = await sb
+                .from('users')
+                .update({ withdrawal_frozen: true })
+                .eq('uid', uid);
+            if (error) throw error;
+            showToast('提现权限已冻结', 'success');
+            closeEditUserModal();
+            loadUsers();
+        } catch (e) {
+            showToast('操作失败: ' + e.message, 'error');
+        }
+    });
+}
+
+async function banUser(uid) {
+    showConfirm('Ban User', `确定要封禁用户 ${uid} 吗？此操作将禁用该用户的工作账户。`, async () => {
+        try {
+            const { error } = await sb
+                .from('users')
+                .update({ is_active: false, is_banned: true })
+                .eq('uid', uid);
+            if (error) throw error;
+            showToast('用户已被封禁', 'success');
+            closeEditUserModal();
+            loadUsers();
+        } catch (e) {
+            showToast('操作失败: ' + e.message, 'error');
+        }
+    });
 }
