@@ -1,4 +1,4 @@
-// admin-dashboard.js - 金属拉丝质感 + 暗金波浪环形图 + All Time + 用户注册表格
+// admin-dashboard.js - 完整版
 let trendChart = null;
 let ringChart = null;
 let breatheInterval = null;
@@ -233,19 +233,11 @@ function applyConversionData(data, days) {
     var matched = selected.filter(function(d) { return d.label === targetLabel; });
     var displayData = matched.length > 0 ? matched[0] : selected[0];
     
-    // 更新环形图百分比
-    var percentEl = document.getElementById('conversionPercent');
-    if (percentEl) {
-        percentEl.innerText = displayData.rate + '%';
-    }
-    
-    // 更新环形图中心文字
     var ringPercent = document.getElementById('ringPercent');
     if (ringPercent) {
         ringPercent.innerText = displayData.rate + '%';
     }
     
-    // 更新 Today Register / Today Conversion
     var registerEl = document.getElementById('conversionRegister');
     var convertedEl = document.getElementById('conversionConverted');
     var labelEl = document.getElementById('conversionLabel');
@@ -262,7 +254,6 @@ function applyConversionData(data, days) {
         labelEl.innerText = labelMap[displayData.label] || 'Today Register';
     }
     
-    // 更新所有时间线的数据显示
     var allLabels = document.querySelectorAll('.conversion-stat-label');
     var allRegisters = document.querySelectorAll('.conversion-stat-register');
     var allConverteds = document.querySelectorAll('.conversion-stat-converted');
@@ -286,7 +277,6 @@ function applyConversionData(data, days) {
         }
     }
     
-    // 高亮当前选中的行
     var allRows = document.querySelectorAll('.conversion-stat-row');
     for (var j = 0; j < allRows.length; j++) {
         var row = allRows[j];
@@ -307,24 +297,21 @@ function initWaveRing() {
     var container = document.getElementById('waveRingContainer');
     if (!container) return;
     
-    // 清空容器
     container.innerHTML = '';
-    container.style.width = '200px';
-    container.style.height = '200px';
+    container.style.width = '220px';
+    container.style.height = '220px';
     container.style.position = 'relative';
     container.style.margin = '0 auto';
     
-    // 创建 canvas - 波浪层（最底层）
     var canvas = document.createElement('canvas');
-    canvas.width = 200;
-    canvas.height = 200;
+    canvas.width = 220;
+    canvas.height = 220;
     canvas.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;border-radius:50%;z-index:1;';
     canvas.id = 'waveCanvas';
     container.appendChild(canvas);
     
-    // 创建 SVG - 进度条层（中间层）
     var svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-    svg.setAttribute('viewBox', '0 0 200 200');
+    svg.setAttribute('viewBox', '0 0 220 220');
     svg.style.cssText = 'width:100%;height:100%;transform:rotate(-90deg);position:relative;z-index:2;';
     svg.innerHTML = `
         <defs>
@@ -344,29 +331,26 @@ function initWaveRing() {
                 <stop offset="100%" stop-color="#c8b090"/>
             </linearGradient>
         </defs>
-        <circle cx="100" cy="100" r="85" fill="none" stroke="rgba(255,255,255,0.03)" stroke-width="12"/>
-        <circle cx="100" cy="100" r="85" fill="none" stroke="url(#grad)" stroke-width="12" stroke-linecap="round" stroke-dasharray="534.07" stroke-dashoffset="534.07" filter="drop-shadow(0 0 20px rgba(200,176,144,0.3))" class="progress-ring"/>
+        <circle cx="110" cy="110" r="95" fill="none" stroke="rgba(255,255,255,0.03)" stroke-width="12"/>
+        <circle cx="110" cy="110" r="95" fill="none" stroke="url(#grad)" stroke-width="12" stroke-linecap="round" stroke-dasharray="596.9" stroke-dashoffset="596.9" filter="drop-shadow(0 0 20px rgba(200,176,144,0.3))" class="progress-ring"/>
     `;
     container.appendChild(svg);
     
-    // 创建中心文字（最上层）
     var centerText = document.createElement('div');
     centerText.style.cssText = 'position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;pointer-events:none;z-index:10;';
     centerText.innerHTML = `
-        <div id="ringPercent" style="font-size:42px;font-weight:700;color:#c8b090;letter-spacing:-1px;line-height:1.1;text-shadow:0 0 40px rgba(200,176,144,0.2);">78%</div>
+        <div id="ringPercent" style="font-size:44px;font-weight:700;color:#c8b090;letter-spacing:-1px;line-height:1.1;text-shadow:0 0 40px rgba(200,176,144,0.2);">78%</div>
         <div style="font-size:9px;color:#6a5a3a;letter-spacing:1.5px;text-transform:uppercase;margin-top:2px;">Conversion Rate</div>
     `;
     container.appendChild(centerText);
     
-    // 启动波浪动画
     startWaveAnimation(canvas);
     
-    // 进度条加载动画
     setTimeout(function() {
         var progressRing = container.querySelector('.progress-ring');
         if (progressRing) {
             var rate = parseInt(document.getElementById('ringPercent')?.innerText || '78');
-            var circumference = 534.07;
+            var circumference = 596.9;
             var offset = circumference - (circumference * rate / 100);
             progressRing.style.transition = 'stroke-dashoffset 2.2s cubic-bezier(0.22,1,0.36,1)';
             progressRing.style.strokeDashoffset = offset;
@@ -377,12 +361,12 @@ function initWaveRing() {
 // ========== 波浪动画引擎 ==========
 function startWaveAnimation(canvas) {
     var ctx = canvas.getContext('2d');
-    var w = 200, h = 200;
-    var cx = 100, cy = 100;
+    var w = 220, h = 220;
+    var cx = 110, cy = 110;
     
     var waves = [];
     for (var layer = 0; layer < 6; layer++) {
-        var baseRadius = 10 + layer * 14;
+        var baseRadius = 12 + layer * 15;
         var speed = 0.8 + layer * 0.15;
         var amplitude = 6 + layer * 2.5;
         var count = 8 + layer * 2;
@@ -398,7 +382,7 @@ function startWaveAnimation(canvas) {
         });
     }
     for (var layer = 0; layer < 5; layer++) {
-        var baseRadius = 70 + layer * 16;
+        var baseRadius = 75 + layer * 18;
         var speed = 0.15 + layer * 0.06;
         var amplitude = 8 + layer * 3;
         var count = 5 + layer * 2;
@@ -414,7 +398,7 @@ function startWaveAnimation(canvas) {
         });
     }
     for (var layer = 0; layer < 4; layer++) {
-        var baseRadius = 110 + layer * 18;
+        var baseRadius = 120 + layer * 20;
         var speed = 0.08 + layer * 0.04;
         var amplitude = 6 + layer * 2;
         var count = 3 + layer * 1;
@@ -494,7 +478,7 @@ function startWaveAnimation(canvas) {
     draw();
 }
 
-// ========== 加载最近注册用户数据 ==========
+// ========== 加载最近注册用户数据（最多5条） ==========
 async function loadRecentRegistrations() {
     var tbody = document.getElementById('recentRegistrationsBody');
     if (!tbody) return;
@@ -503,12 +487,12 @@ async function loadRecentRegistrations() {
         var usersRes = await sb.from('users')
             .select('uid, username, invited_by_username, created_at, balance')
             .order('created_at', { ascending: false })
-            .limit(10);
+            .limit(5);
         
         var users = usersRes.data || [];
         
         if (users.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; padding: 16px; color: #4a5a72; font-size: 12px;">No users yet</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; padding: 20px; color: #4a5a72; font-size: 12px;">No users yet</td></tr>';
             return;
         }
         
@@ -708,7 +692,7 @@ async function refreshDashboard(days, force) {
             if (container) {
                 var progressRing = container.querySelector('.progress-ring');
                 if (progressRing) {
-                    var circumference = 534.07;
+                    var circumference = 596.9;
                     var offset = circumference - (circumference * rate / 100);
                     progressRing.style.strokeDashoffset = offset;
                 }
@@ -908,46 +892,53 @@ function loadDashboardPage(days) {
                 <div id="trendChart" style="height: 320px; width: 100%; position: relative; z-index: 1;"></div>
             </div>
             
-            <!-- 转化率卡片 -->
+            <!-- 转化率卡片 - 左环右数据 + 底部表格 -->
             <div style="background: linear-gradient(145deg, rgba(20,24,40,0.85), rgba(10,12,24,0.6)); backdrop-filter: blur(8px); border-radius: 20px; padding: 20px; border: 1px solid rgba(180,180,200,0.06); box-shadow: 0 4px 20px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.04); position: relative; overflow: hidden;">
                 <div style="position: absolute; top: -15%; right: -5%; width: 75%; height: 75%; background: radial-gradient(ellipse at 70% 20%, rgba(255,255,255,0.06), transparent 70%); pointer-events: none; border-radius: 50%;"></div>
                 <div style="position: absolute; top: 0; left: 0; right: 0; height: 1px; background: linear-gradient(90deg, transparent, rgba(180,180,200,0.08), transparent);"></div>
                 
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; position: relative; z-index: 1;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; position: relative; z-index: 1;">
                     <div style="font-size: 15px; font-weight: 600; color: #d8dff0;">📈 New Orders Conversion Rate</div>
                 </div>
                 
-                <div style="display: flex; align-items: center; gap: 16px; position: relative; z-index: 1; padding: 4px 0;">
-                    <div id="waveRingContainer" style="width: 200px; height: 200px; flex-shrink: 0; position: relative;"></div>
+                <!-- 左环 + 右数据 -->
+                <div style="display: flex; align-items: stretch; gap: 12px; position: relative; z-index: 1; min-height: 220px;">
+                    <!-- 左侧环形图 -->
+                    <div id="waveRingContainer" style="width: 200px; height: 200px; flex-shrink: 0; position: relative; margin: 0;"></div>
                     
-                    <div style="flex: 1; min-width: 0;">
-                        <div style="font-size: 11px; color: #6a5a3a; letter-spacing: 0.5px; margin-bottom: 6px;">
-                            <span id="conversionLabel" style="color: #8892a8;">Today Register</span>
-                        </div>
-                        <div style="display: flex; align-items: baseline; gap: 6px; margin-bottom: 10px;">
-                            <span id="conversionRegister" style="font-size: 28px; font-weight: 700; color: #c8b090;">0</span>
-                            <span style="font-size: 14px; color: #6a5a3a;">/</span>
-                            <span id="conversionConverted" style="font-size: 20px; font-weight: 600; color: #d4af37;">0</span>
-                            <span style="font-size: 11px; color: #5a4a2a;">converted</span>
+                    <!-- 右侧数据 -->
+                    <div style="flex: 1; min-width: 0; display: flex; flex-direction: column; justify-content: space-between;">
+                        <!-- 顶部：Today Register + 数据 -->
+                        <div>
+                            <div style="font-size: 11px; color: #6a5a3a; letter-spacing: 0.5px; margin-bottom: 2px;">
+                                <span id="conversionLabel" style="color: #8892a8;">Today Register</span>
+                            </div>
+                            <div style="display: flex; align-items: baseline; gap: 6px;">
+                                <span id="conversionRegister" style="font-size: 28px; font-weight: 700; color: #c8b090;">0</span>
+                                <span style="font-size: 14px; color: #6a5a3a;">/</span>
+                                <span id="conversionConverted" style="font-size: 20px; font-weight: 600; color: #d4af37;">0</span>
+                                <span style="font-size: 11px; color: #5a4a2a;">converted</span>
+                            </div>
                         </div>
                         
-                        <div style="margin-top: 4px; border-top: 1px solid rgba(200,176,144,0.06); padding-top: 6px;">
-                            <div class="conversion-stat-row" style="display: flex; justify-content: space-between; padding: 3px 0; font-size: 11px; color: #6a7a92;">
+                        <!-- 中间：4行统计数据 -->
+                        <div style="margin-top: 6px; border-top: 1px solid rgba(200,176,144,0.06); padding-top: 4px;">
+                            <div class="conversion-stat-row" style="display: flex; justify-content: space-between; padding: 2px 0; font-size: 11px; color: #6a7a92;">
                                 <span class="conversion-stat-label">Today</span>
                                 <span><span class="conversion-stat-register">0</span> / <span class="conversion-stat-converted">0</span></span>
                                 <span class="conversion-stat-rate" style="font-weight: 600;">0%</span>
                             </div>
-                            <div class="conversion-stat-row" style="display: flex; justify-content: space-between; padding: 3px 0; font-size: 11px; color: #6a7a92;">
+                            <div class="conversion-stat-row" style="display: flex; justify-content: space-between; padding: 2px 0; font-size: 11px; color: #6a7a92;">
                                 <span class="conversion-stat-label">7 Days</span>
                                 <span><span class="conversion-stat-register">0</span> / <span class="conversion-stat-converted">0</span></span>
                                 <span class="conversion-stat-rate" style="font-weight: 600;">0%</span>
                             </div>
-                            <div class="conversion-stat-row" style="display: flex; justify-content: space-between; padding: 3px 0; font-size: 11px; color: #6a7a92;">
+                            <div class="conversion-stat-row" style="display: flex; justify-content: space-between; padding: 2px 0; font-size: 11px; color: #6a7a92;">
                                 <span class="conversion-stat-label">30 Days</span>
                                 <span><span class="conversion-stat-register">0</span> / <span class="conversion-stat-converted">0</span></span>
                                 <span class="conversion-stat-rate" style="font-weight: 600;">0%</span>
                             </div>
-                            <div class="conversion-stat-row" style="display: flex; justify-content: space-between; padding: 3px 0; font-size: 11px; color: #6a7a92;">
+                            <div class="conversion-stat-row" style="display: flex; justify-content: space-between; padding: 2px 0; font-size: 11px; color: #6a7a92;">
                                 <span class="conversion-stat-label">All Time</span>
                                 <span><span class="conversion-stat-register">0</span> / <span class="conversion-stat-converted">0</span></span>
                                 <span class="conversion-stat-rate" style="font-weight: 600;">0%</span>
@@ -956,26 +947,26 @@ function loadDashboardPage(days) {
                     </div>
                 </div>
                 
-                <!-- 用户注册数据表格 -->
-                <div style="margin-top: 16px; padding-top: 14px; border-top: 1px solid rgba(200,176,144,0.08); position: relative; z-index: 1;">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-                        <div style="font-size: 12px; color: #8892a8; font-weight: 500; letter-spacing: 0.5px;">
+                <!-- 底部表格 - 5条可滚动 -->
+                <div style="margin-top: 12px; padding-top: 10px; border-top: 1px solid rgba(200,176,144,0.08); position: relative; z-index: 1;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                        <div style="font-size: 11px; color: #8892a8; font-weight: 500; letter-spacing: 0.5px;">
                             <i class="fas fa-users" style="color: #c8b090; margin-right: 6px;"></i>Recent Registrations
                         </div>
                         <a href="#" onclick="showPage('users'); return false;" style="font-size: 10px; color: #5a4a2a; text-decoration: none; transition: 0.2s;" onmouseover="this.style.color='#c8b090'" onmouseout="this.style.color='#5a4a2a'">View All →</a>
                     </div>
-                    <div style="overflow-x: auto;">
-                        <table style="width: 100%; border-collapse: collapse; font-size: 12px;">
+                    <div style="overflow-y: auto; max-height: 140px;">
+                        <table style="width: 100%; border-collapse: collapse; font-size: 11px;">
                             <thead>
-                                <tr style="border-bottom: 1px solid rgba(200,176,144,0.06);">
-                                    <th style="text-align: left; padding: 6px 8px; color: #5a4a2a; font-weight: 500; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px;">User</th>
-                                    <th style="text-align: left; padding: 6px 8px; color: #5a4a2a; font-weight: 500; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px;">Referrer</th>
-                                    <th style="text-align: center; padding: 6px 8px; color: #5a4a2a; font-weight: 500; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px;">Joined Membership</th>
-                                    <th style="text-align: right; padding: 6px 8px; color: #5a4a2a; font-weight: 500; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px;">Amount</th>
+                                <tr style="border-bottom: 1px solid rgba(200,176,144,0.06); position: sticky; top: 0; background: rgba(20,24,40,0.9); z-index: 2;">
+                                    <th style="text-align: left; padding: 4px 6px; color: #5a4a2a; font-weight: 500; font-size: 9px; text-transform: uppercase; letter-spacing: 0.5px;">User</th>
+                                    <th style="text-align: left; padding: 4px 6px; color: #5a4a2a; font-weight: 500; font-size: 9px; text-transform: uppercase; letter-spacing: 0.5px;">Referrer</th>
+                                    <th style="text-align: center; padding: 4px 6px; color: #5a4a2a; font-weight: 500; font-size: 9px; text-transform: uppercase; letter-spacing: 0.5px;">Joined</th>
+                                    <th style="text-align: right; padding: 4px 6px; color: #5a4a2a; font-weight: 500; font-size: 9px; text-transform: uppercase; letter-spacing: 0.5px;">Amount</th>
                                 </tr>
                             </thead>
                             <tbody id="recentRegistrationsBody">
-                                <tr><td colspan="4" style="text-align: center; padding: 16px; color: #4a5a72; font-size: 12px;">Loading...</td></tr>
+                                <tr><td colspan="4" style="text-align: center; padding: 16px; color: #4a5a72; font-size: 11px;">Loading...</td></tr>
                             </tbody>
                         </table>
                     </div>
@@ -1030,8 +1021,10 @@ function loadDashboardPage(days) {
             background: rgba(200,176,144,0.04);
         }
         #recentRegistrationsBody td {
-            padding: 6px 8px;
+            padding: 4px 6px;
         }
+        #recentRegistrationsBody::-webkit-scrollbar { width: 3px; }
+        #recentRegistrationsBody::-webkit-scrollbar-thumb { background: rgba(200,176,144,0.15); border-radius: 4px; }
     `;
     document.head.appendChild(style);
     
