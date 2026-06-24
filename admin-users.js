@@ -408,10 +408,21 @@ async function loadUsersPage() {
             font-size: 11px;
         }
         @media (max-width: 1400px) {
-            .table-container { overflow-x: auto; }
-            .data-table { min-width: 1400px; }
-        }
-    `;
+    .table-container { overflow-x: auto; }
+    .data-table { min-width: 1400px; }
+}
+
+/* 性能优化：弹窗动画使用GPU加速 */
+.modal-overlay {
+    will-change: opacity, visibility;
+}
+.modal-card {
+    will-change: transform, opacity;
+}
+#creditScoreFill {
+    will-change: width, background;
+}
+`;
     document.head.appendChild(style);
     
     window.userCurrentPage = 1;
@@ -1194,6 +1205,13 @@ async function deleteUser(uid, username) {
 
 // ========== 打开编辑用户弹窗（深空金属 - 优化版） ==========
 function openEditUserModal(uid, username, phone, pin, currency, address, creditScore) {
+    // 防止多次快速点击
+    if (document.getElementById('editUserModal')) {
+        return;
+    }
+    
+    // 锁定body滚动，减少重排
+    document.body.style.overflow = 'hidden';
     const existingModal = document.getElementById('editUserModal');
     if (existingModal) existingModal.remove();
 
@@ -1287,28 +1305,26 @@ function openEditUserModal(uid, username, phone, pin, currency, address, creditS
                     </div>
                 </div>
 
-                <!-- Credit Scores -->
-                <div style="margin-bottom: 14px; background: rgba(255, 255, 255, 0.02); border-radius: 10px; padding: 12px 16px; border: 1px solid rgba(180, 180, 200, 0.05); position: relative; z-index: 1;">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-                        <span style="font-weight: 500; color: #6a6a80; font-size: 12px;">Credit Scores</span>
-                        <span style="font-size: 18px; font-weight: 700; color: #e8e8f0;" id="creditScoreValue">${initialScore}</span>
-                    </div>
-                    <div style="position: relative; width: 100%; height: 5px; border-radius: 4px; background: rgba(255, 255, 255, 0.06); overflow: hidden;">
-                        <div id="creditScoreFill" style="width: ${initialScore}%; height: 100%; border-radius: 4px; background: ${initialScore >= 95 ? '#4ade80' : '#ff5a5a'}; transition: width 0.15s ease, background 0.3s ease;"></div>
-                    </div>
-                    <input type="range" min="0" max="100" value="${initialScore}" 
-                           style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; z-index: 2;"
-                           id="creditScoreSlider"
-                           oninput="updateCreditScore(this.value)">
-                    <div style="display: flex; justify-content: space-between; font-size: 8px; color: #4a4a5a; margin-top: 3px;">
-                        <span>0</span>
-                        <span>100</span>
-                    </div>
-                    <div style="display: flex; gap: 12px; margin-top: 4px; font-size: 9px;">
-                        <span style="color: #4ade80;">● ≥95 Active</span>
-                        <span style="color: #ff5a5a;">● &lt;95 Restricted</span>
-                    </div>
-                </div>
+                <!-- Credit Scores (进度条 - 双色) 优化版 -->
+<div style="margin-bottom: 14px; background: rgba(255,255,255,0.02); border-radius: 8px; padding: 10px 14px; border: 1px solid rgba(180,180,200,0.05); position:relative; z-index:1;">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+        <span style="font-weight:500; color:#6a6a80; font-size:11px;">Credit Scores</span>
+        <span style="font-size:16px; font-weight:700; color:#e8e8f0;" id="creditScoreValue">${initialScore}</span>
+    </div>
+    <div style="width:100%; height:4px; border-radius:3px; background:rgba(255,255,255,0.06); overflow:hidden;">
+        <div id="creditScoreFill" style="width:${initialScore}%; height:100%; border-radius:3px; background:${initialScore >= 95 ? '#4ade80' : '#ff5a5a'};"></div>
+    </div>
+    <input type="range" min="0" max="100" value="${initialScore}" 
+           style="position:absolute; top:0; left:0; width:100%; height:100%; opacity:0; cursor:pointer; z-index:2;"
+           id="creditScoreSlider" oninput="updateCreditScore(this.value)">
+    <div style="display:flex; justify-content:space-between; font-size:7px; color:#4a4a5a; margin-top:2px;">
+        <span>0</span><span>100</span>
+    </div>
+    <div style="display:flex; gap:10px; margin-top:2px; font-size:8px;">
+        <span style="color:#4ade80;">● ≥95</span>
+        <span style="color:#ff5a5a;">● &lt;95</span>
+    </div>
+</div>
 
                 <!-- 底部按钮 -->
                 <div style="display: flex; gap: 10px; justify-content: flex-end; border-top: 1px solid rgba(180, 180, 200, 0.06); padding-top: 12px; position: relative; z-index: 1;">
@@ -1326,21 +1342,34 @@ function openEditUserModal(uid, username, phone, pin, currency, address, creditS
 // ============================================================
 // 更新信用分 - 进度条双色切换
 // ============================================================
+// ============================================================
+// 更新信用分 - 双色切换（性能优化版）
+// ============================================================
+let creditScoreUpdatePending = false;
+let pendingScoreValue = 0;
+
 function updateCreditScore(value) {
     const score = parseInt(value);
-    const fill = document.getElementById('creditScoreFill');
+    pendingScoreValue = score;
+    
+    // 立即更新显示的数字（轻量操作）
     const display = document.getElementById('creditScoreValue');
     const headerDisplay = document.getElementById('creditScoreDisplayHeader');
-    
-    // 更新显示
     if (display) display.textContent = score;
     if (headerDisplay) headerDisplay.textContent = score;
     
-    // 更新进度条宽度和颜色
-    if (fill) {
-        fill.style.width = score + '%';
-        // 95以上青色，95以下红色
-        fill.style.background = score >= 95 ? '#4ade80' : '#ff5a5a';
+    // 使用 requestAnimationFrame 批量更新样式（避免布局抖动）
+    if (!creditScoreUpdatePending) {
+        creditScoreUpdatePending = true;
+        requestAnimationFrame(function() {
+            const fill = document.getElementById('creditScoreFill');
+            if (fill) {
+                const currentScore = pendingScoreValue;
+                fill.style.width = currentScore + '%';
+                fill.style.background = currentScore >= 95 ? '#4ade80' : '#ff5a5a';
+            }
+            creditScoreUpdatePending = false;
+        });
     }
 }
 
@@ -1471,38 +1500,43 @@ function dismissDuplicateIpAlert() {
 }
 
 // ============================================================
-// 获取用户的财务统计数据 (Total Deposit & Total Withdrawal)
+// 获取用户的财务统计数据（带防抖）
 // ============================================================
+let financialStatsTimeout = null;
+
 async function fetchUserFinancialStats(uid) {
-    try {
-        // 获取总入金 (从 deposits 表)
-        const { data: deposits, error: depositError } = await sb
-            .from('deposits')
-            .select('amount')
-            .eq('uid', uid);
-
-        if (depositError) throw depositError;
-        const totalDeposit = deposits.reduce((sum, d) => sum + (d.amount || 0), 0);
-
-        // 获取总出金 (从 withdrawals 表，只统计已批准的)
-        const { data: withdrawals, error: withdrawalError } = await sb
-            .from('withdrawals')
-            .select('amount')
-            .eq('uid', uid)
-            .eq('status', 'approved');
-
-        if (withdrawalError) throw withdrawalError;
-        const totalWithdrawal = withdrawals.reduce((sum, w) => sum + (w.amount || 0), 0);
-
-        // 更新UI
-        const depositDisplay = document.getElementById('totalDepositDisplay');
-        const withdrawalDisplay = document.getElementById('totalWithdrawalDisplay');
-        if (depositDisplay) depositDisplay.textContent = `€${totalDeposit.toFixed(2)}`;
-        if (withdrawalDisplay) withdrawalDisplay.textContent = `€${totalWithdrawal.toFixed(2)}`;
-
-    } catch (error) {
-        console.error('获取用户财务数据失败:', error);
+    // 取消之前的请求
+    if (financialStatsTimeout) {
+        clearTimeout(financialStatsTimeout);
+        financialStatsTimeout = null;
     }
+    
+    // 延迟200ms执行，避免快速切换用户时频繁请求
+    financialStatsTimeout = setTimeout(async () => {
+        try {
+            // 使用 Promise.all 并行查询
+            const [depositsResult, withdrawalsResult] = await Promise.all([
+                sb.from('deposits').select('amount').eq('uid', uid),
+                sb.from('withdrawals').select('amount').eq('uid', uid).eq('status', 'approved')
+            ]);
+            
+            if (depositsResult.error) throw depositsResult.error;
+            if (withdrawalsResult.error) throw withdrawalsResult.error;
+            
+            const totalDeposit = depositsResult.data.reduce((sum, d) => sum + (d.amount || 0), 0);
+            const totalWithdrawal = withdrawalsResult.data.reduce((sum, w) => sum + (w.amount || 0), 0);
+            
+            const depositDisplay = document.getElementById('totalDepositDisplay');
+            const withdrawalDisplay = document.getElementById('totalWithdrawalDisplay');
+            if (depositDisplay) depositDisplay.textContent = `€${totalDeposit.toFixed(2)}`;
+            if (withdrawalDisplay) withdrawalDisplay.textContent = `€${totalWithdrawal.toFixed(2)}`;
+            
+        } catch (error) {
+            console.error('获取用户财务数据失败:', error);
+        } finally {
+            financialStatsTimeout = null;
+        }
+    }, 200);
 }
 
 // ============================================================
@@ -1511,6 +1545,7 @@ async function fetchUserFinancialStats(uid) {
 function closeEditUserModal() {
     const modal = document.getElementById('editUserModal');
     if (modal) modal.remove();
+    document.body.style.overflow = '';
 }
 
 // ============================================================
