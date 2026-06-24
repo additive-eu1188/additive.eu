@@ -44,9 +44,10 @@ body {
     z-index: 10;
     padding: 22px 16px 18px 16px;
     overflow-y: auto;
-    background: rgba(10, 14, 30, 0.15);
-    backdrop-filter: blur(4px) saturate(1.1);
-    -webkit-backdrop-filter: blur(4px) saturate(1.1);
+    /* ★ 轻微打朦毛玻璃 + 透明镜片 */
+    background: rgba(10, 14, 30, 0.18) !important;
+    backdrop-filter: blur(5px) saturate(1.15) !important;
+    -webkit-backdrop-filter: blur(5px) saturate(1.15) !important;
     border-right: 1px solid rgba(214, 178, 94, 0.06);
     display: flex;
     flex-direction: column;
@@ -54,7 +55,7 @@ body {
     transition: all 0.3s;
 }
 
-/* 粒子网络 Canvas 容器 */
+/* 粒子网络 Canvas 容器 - 最下层 */
 .sidebar-canvas {
     position: absolute;
     top: 0;
