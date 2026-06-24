@@ -1,4 +1,4 @@
-// admin-dashboard.js - 金属拉丝质感风格
+// admin-dashboard.js - 金属拉丝质感 + 右上角光晕
 let trendChart = null;
 let ringChart = null;
 let breatheInterval = null;
@@ -165,7 +165,6 @@ async function loadRingData() {
     } catch (e) { console.error('加载环形图数据失败:', e); }
 }
 
-// ========== 实时活动加载函数 ==========
 async function loadActivityTimeline(force) {
     force = force || false;
     var now = Date.now();
@@ -227,7 +226,7 @@ async function loadActivityTimeline(force) {
                 amount: '€' + (item.amount || 0).toFixed(2),
                 time: item.request_date,
                 icon: 'fas fa-money-bill-wave',
-                color: '#8ab4f0'
+                color: '#c8b090'
             });
         }
         
@@ -239,7 +238,7 @@ async function loadActivityTimeline(force) {
                 user: item.username,
                 time: item.created_at,
                 icon: 'fas fa-user-plus',
-                color: '#7ad0b0'
+                color: '#c8b090'
             });
         }
         
@@ -304,7 +303,6 @@ function renderActivityList(activities) {
     activityList.innerHTML = html;
 }
 
-// ===== 点击活动跳转 =====
 window.handleActivityClick = function(type) {
     if (type === 'kyc') {
         showPage('kyc');
@@ -478,104 +476,115 @@ function loadDashboardPage(days) {
             <button class="date-filter-btn" data-days="30" style="background: linear-gradient(145deg, rgba(20,24,40,0.6), rgba(10,12,24,0.4)); border: 1px solid rgba(180,180,200,0.06); border-radius: 30px; padding: 8px 20px; color: #8892a8; cursor: pointer; transition: all 0.3s; font-size: 13px; font-weight: 500; font-family: 'Inter', sans-serif; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">30 Days</button>
         </div>
         
-        <!-- 快捷卡片 - 金属拉丝质感 -->
+        <!-- 快捷卡片 - 金属拉丝质感 + 右上角光晕 -->
         <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px;">
             <div onclick="showPage('kyc')" style="background: linear-gradient(145deg, rgba(20,24,40,0.85), rgba(10,12,24,0.6)); border-radius: 16px; padding: 18px 16px; border: 1px solid rgba(180,180,200,0.06); cursor: pointer; transition: all 0.3s; position: relative; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.04);">
+                <div style="position: absolute; top: -15%; right: -5%; width: 75%; height: 75%; background: radial-gradient(ellipse at 70% 20%, rgba(255,255,255,0.10), transparent 70%); pointer-events: none; border-radius: 50%;"></div>
                 <div style="position: absolute; top: 0; left: 0; right: 0; height: 1px; background: linear-gradient(90deg, transparent, rgba(180,180,200,0.08), transparent);"></div>
-                <i class="fas fa-id-card" style="font-size: 22px; color: #c8b090; margin-bottom: 6px; display: block;"></i>
-                <div id="kycPendingCount" style="font-size: 26px; font-weight: 700; color: #ffffff; margin: 2px 0;">0</div>
-                <div style="font-size: 11px; color: #8892a8; text-transform: uppercase; letter-spacing: 0.5px;">Pending KYC</div>
-                <div style="position: absolute; top: 16px; right: 16px; font-size: 28px; color: rgba(180,180,200,0.03); pointer-events: none;"><i class="fas fa-id-card"></i></div>
+                <i class="fas fa-id-card" style="font-size: 22px; color: #c8b090; margin-bottom: 6px; display: block; position: relative; z-index: 1;"></i>
+                <div id="kycPendingCount" style="font-size: 26px; font-weight: 700; color: #ffffff; margin: 2px 0; position: relative; z-index: 1;">0</div>
+                <div style="font-size: 11px; color: #8892a8; text-transform: uppercase; letter-spacing: 0.5px; position: relative; z-index: 1;">Pending KYC</div>
+                <div style="position: absolute; bottom: 8px; right: 12px; font-size: 48px; color: rgba(180,180,200,0.02); pointer-events: none;"><i class="fas fa-id-card"></i></div>
             </div>
             <div onclick="showPage('withdrawals')" style="background: linear-gradient(145deg, rgba(20,24,40,0.85), rgba(10,12,24,0.6)); border-radius: 16px; padding: 18px 16px; border: 1px solid rgba(180,180,200,0.06); cursor: pointer; transition: all 0.3s; position: relative; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.04);">
+                <div style="position: absolute; top: -15%; right: -5%; width: 75%; height: 75%; background: radial-gradient(ellipse at 70% 20%, rgba(255,255,255,0.10), transparent 70%); pointer-events: none; border-radius: 50%;"></div>
                 <div style="position: absolute; top: 0; left: 0; right: 0; height: 1px; background: linear-gradient(90deg, transparent, rgba(180,180,200,0.08), transparent);"></div>
-                <i class="fas fa-money-bill-wave" style="font-size: 22px; color: #8ab4f0; margin-bottom: 6px; display: block;"></i>
-                <div id="withdrawalPendingCount" style="font-size: 26px; font-weight: 700; color: #ffffff; margin: 2px 0;">0</div>
-                <div style="font-size: 11px; color: #8892a8; text-transform: uppercase; letter-spacing: 0.5px;">Pending Withdrawals</div>
-                <div style="position: absolute; top: 16px; right: 16px; font-size: 28px; color: rgba(180,180,200,0.03); pointer-events: none;"><i class="fas fa-money-bill-wave"></i></div>
+                <i class="fas fa-money-bill-wave" style="font-size: 22px; color: #c8b090; margin-bottom: 6px; display: block; position: relative; z-index: 1;"></i>
+                <div id="withdrawalPendingCount" style="font-size: 26px; font-weight: 700; color: #ffffff; margin: 2px 0; position: relative; z-index: 1;">0</div>
+                <div style="font-size: 11px; color: #8892a8; text-transform: uppercase; letter-spacing: 0.5px; position: relative; z-index: 1;">Pending Withdrawals</div>
+                <div style="position: absolute; bottom: 8px; right: 12px; font-size: 48px; color: rgba(180,180,200,0.02); pointer-events: none;"><i class="fas fa-money-bill-wave"></i></div>
             </div>
             <div onclick="showPage('emailverify')" style="background: linear-gradient(145deg, rgba(20,24,40,0.85), rgba(10,12,24,0.6)); border-radius: 16px; padding: 18px 16px; border: 1px solid rgba(180,180,200,0.06); cursor: pointer; transition: all 0.3s; position: relative; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.04);">
+                <div style="position: absolute; top: -15%; right: -5%; width: 75%; height: 75%; background: radial-gradient(ellipse at 70% 20%, rgba(255,255,255,0.10), transparent 70%); pointer-events: none; border-radius: 50%;"></div>
                 <div style="position: absolute; top: 0; left: 0; right: 0; height: 1px; background: linear-gradient(90deg, transparent, rgba(180,180,200,0.08), transparent);"></div>
-                <i class="fas fa-envelope" style="font-size: 22px; color: #c8b090; margin-bottom: 6px; display: block;"></i>
-                <div id="emailPendingCount" style="font-size: 26px; font-weight: 700; color: #ffffff; margin: 2px 0;">0</div>
-                <div style="font-size: 11px; color: #8892a8; text-transform: uppercase; letter-spacing: 0.5px;">Pending Email</div>
-                <div style="position: absolute; top: 16px; right: 16px; font-size: 28px; color: rgba(180,180,200,0.03); pointer-events: none;"><i class="fas fa-envelope"></i></div>
+                <i class="fas fa-envelope" style="font-size: 22px; color: #c8b090; margin-bottom: 6px; display: block; position: relative; z-index: 1;"></i>
+                <div id="emailPendingCount" style="font-size: 26px; font-weight: 700; color: #ffffff; margin: 2px 0; position: relative; z-index: 1;">0</div>
+                <div style="font-size: 11px; color: #8892a8; text-transform: uppercase; letter-spacing: 0.5px; position: relative; z-index: 1;">Pending Email</div>
+                <div style="position: absolute; bottom: 8px; right: 12px; font-size: 48px; color: rgba(180,180,200,0.02); pointer-events: none;"><i class="fas fa-envelope"></i></div>
             </div>
             <div onclick="showPage('orderpool')" style="background: linear-gradient(145deg, rgba(20,24,40,0.85), rgba(10,12,24,0.6)); border-radius: 16px; padding: 18px 16px; border: 1px solid rgba(180,180,200,0.06); cursor: pointer; transition: all 0.3s; position: relative; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.04);">
+                <div style="position: absolute; top: -15%; right: -5%; width: 75%; height: 75%; background: radial-gradient(ellipse at 70% 20%, rgba(255,255,255,0.10), transparent 70%); pointer-events: none; border-radius: 50%;"></div>
                 <div style="position: absolute; top: 0; left: 0; right: 0; height: 1px; background: linear-gradient(90deg, transparent, rgba(180,180,200,0.08), transparent);"></div>
-                <i class="fas fa-hotel" style="font-size: 22px; color: #7ad0b0; margin-bottom: 6px; display: block;"></i>
-                <div id="orderPoolCount" style="font-size: 26px; font-weight: 700; color: #ffffff; margin: 2px 0;">0</div>
-                <div style="font-size: 11px; color: #8892a8; text-transform: uppercase; letter-spacing: 0.5px;">Hotel Orders Count</div>
-                <div style="position: absolute; top: 16px; right: 16px; font-size: 28px; color: rgba(180,180,200,0.03); pointer-events: none;"><i class="fas fa-hotel"></i></div>
+                <i class="fas fa-hotel" style="font-size: 22px; color: #c8b090; margin-bottom: 6px; display: block; position: relative; z-index: 1;"></i>
+                <div id="orderPoolCount" style="font-size: 26px; font-weight: 700; color: #ffffff; margin: 2px 0; position: relative; z-index: 1;">0</div>
+                <div style="font-size: 11px; color: #8892a8; text-transform: uppercase; letter-spacing: 0.5px; position: relative; z-index: 1;">Hotel Orders Count</div>
+                <div style="position: absolute; bottom: 8px; right: 12px; font-size: 48px; color: rgba(180,180,200,0.02); pointer-events: none;"><i class="fas fa-hotel"></i></div>
             </div>
         </div>
         
-        <!-- 统计卡片 - 金属拉丝质感 -->
+        <!-- 统计卡片 - 金属拉丝质感 + 右上角光晕 -->
         <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px;">
             <div style="background: linear-gradient(145deg, rgba(20,24,40,0.85), rgba(10,12,24,0.6)); border-radius: 16px; padding: 18px 20px; border: 1px solid rgba(180,180,200,0.06); transition: all 0.3s; position: relative; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.04);">
+                <div style="position: absolute; top: -15%; right: -5%; width: 75%; height: 75%; background: radial-gradient(ellipse at 70% 20%, rgba(255,255,255,0.10), transparent 70%); pointer-events: none; border-radius: 50%;"></div>
                 <div style="position: absolute; top: 0; left: 0; right: 0; height: 1px; background: linear-gradient(90deg, transparent, rgba(180,180,200,0.08), transparent);"></div>
-                <i class="fas fa-user-plus" style="font-size: 20px; color: #c8b090; margin-bottom: 4px; display: block;"></i>
-                <div id="newUsersCount" style="font-size: 28px; font-weight: 700; color: #ffffff; letter-spacing: -0.5px;">0</div>
-                <div style="font-size: 11px; color: #8892a8; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 2px;">New Registered Today</div>
-                <div id="newUsersTrend" style="font-size: 10px; margin-top: 4px;"></div>
-                <div style="position: absolute; bottom: 12px; right: 16px; font-size: 40px; color: rgba(180,180,200,0.02); pointer-events: none;"><i class="fas fa-user-plus"></i></div>
+                <i class="fas fa-user-plus" style="font-size: 20px; color: #c8b090; margin-bottom: 4px; display: block; position: relative; z-index: 1;"></i>
+                <div id="newUsersCount" style="font-size: 28px; font-weight: 700; color: #ffffff; letter-spacing: -0.5px; position: relative; z-index: 1;">0</div>
+                <div style="font-size: 11px; color: #8892a8; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 2px; position: relative; z-index: 1;">New Registered Today</div>
+                <div id="newUsersTrend" style="font-size: 10px; margin-top: 4px; position: relative; z-index: 1;"></div>
+                <div style="position: absolute; bottom: 8px; right: 12px; font-size: 48px; color: rgba(180,180,200,0.02); pointer-events: none;"><i class="fas fa-user-plus"></i></div>
             </div>
             <div style="background: linear-gradient(145deg, rgba(20,24,40,0.85), rgba(10,12,24,0.6)); border-radius: 16px; padding: 18px 20px; border: 1px solid rgba(180,180,200,0.06); transition: all 0.3s; position: relative; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.04);">
+                <div style="position: absolute; top: -15%; right: -5%; width: 75%; height: 75%; background: radial-gradient(ellipse at 70% 20%, rgba(255,255,255,0.10), transparent 70%); pointer-events: none; border-radius: 50%;"></div>
                 <div style="position: absolute; top: 0; left: 0; right: 0; height: 1px; background: linear-gradient(90deg, transparent, rgba(180,180,200,0.08), transparent);"></div>
-                <i class="fas fa-users" style="font-size: 20px; color: #8ab4f0; margin-bottom: 4px; display: block;"></i>
-                <div id="totalUsersCount" style="font-size: 28px; font-weight: 700; color: #ffffff; letter-spacing: -0.5px;">0</div>
-                <div style="font-size: 11px; color: #8892a8; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 2px;">Total Users</div>
-                <div id="totalUsersTrend" style="font-size: 10px; margin-top: 4px;"></div>
-                <div style="position: absolute; bottom: 12px; right: 16px; font-size: 40px; color: rgba(180,180,200,0.02); pointer-events: none;"><i class="fas fa-users"></i></div>
+                <i class="fas fa-users" style="font-size: 20px; color: #c8b090; margin-bottom: 4px; display: block; position: relative; z-index: 1;"></i>
+                <div id="totalUsersCount" style="font-size: 28px; font-weight: 700; color: #ffffff; letter-spacing: -0.5px; position: relative; z-index: 1;">0</div>
+                <div style="font-size: 11px; color: #8892a8; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 2px; position: relative; z-index: 1;">Total Users</div>
+                <div id="totalUsersTrend" style="font-size: 10px; margin-top: 4px; position: relative; z-index: 1;"></div>
+                <div style="position: absolute; bottom: 8px; right: 12px; font-size: 48px; color: rgba(180,180,200,0.02); pointer-events: none;"><i class="fas fa-users"></i></div>
             </div>
             <div style="background: linear-gradient(145deg, rgba(20,24,40,0.85), rgba(10,12,24,0.6)); border-radius: 16px; padding: 18px 20px; border: 1px solid rgba(180,180,200,0.06); transition: all 0.3s; position: relative; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.04);">
+                <div style="position: absolute; top: -15%; right: -5%; width: 75%; height: 75%; background: radial-gradient(ellipse at 70% 20%, rgba(255,255,255,0.10), transparent 70%); pointer-events: none; border-radius: 50%;"></div>
                 <div style="position: absolute; top: 0; left: 0; right: 0; height: 1px; background: linear-gradient(90deg, transparent, rgba(180,180,200,0.08), transparent);"></div>
-                <i class="fas fa-arrow-down" style="font-size: 20px; color: #7ad0b0; margin-bottom: 4px; display: block;"></i>
-                <div id="totalDepositCount" style="font-size: 28px; font-weight: 700; color: #ffffff; letter-spacing: -0.5px;">€0</div>
-                <div style="font-size: 11px; color: #8892a8; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 2px;">Total Deposits</div>
-                <div id="totalDepositTrend" style="font-size: 10px; margin-top: 4px;"></div>
-                <div style="position: absolute; bottom: 12px; right: 16px; font-size: 40px; color: rgba(180,180,200,0.02); pointer-events: none;"><i class="fas fa-arrow-down"></i></div>
+                <i class="fas fa-arrow-down" style="font-size: 20px; color: #c8b090; margin-bottom: 4px; display: block; position: relative; z-index: 1;"></i>
+                <div id="totalDepositCount" style="font-size: 28px; font-weight: 700; color: #ffffff; letter-spacing: -0.5px; position: relative; z-index: 1;">€0</div>
+                <div style="font-size: 11px; color: #8892a8; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 2px; position: relative; z-index: 1;">Total Deposits</div>
+                <div id="totalDepositTrend" style="font-size: 10px; margin-top: 4px; position: relative; z-index: 1;"></div>
+                <div style="position: absolute; bottom: 8px; right: 12px; font-size: 48px; color: rgba(180,180,200,0.02); pointer-events: none;"><i class="fas fa-arrow-down"></i></div>
             </div>
             <div style="background: linear-gradient(145deg, rgba(20,24,40,0.85), rgba(10,12,24,0.6)); border-radius: 16px; padding: 18px 20px; border: 1px solid rgba(180,180,200,0.06); transition: all 0.3s; position: relative; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.04);">
+                <div style="position: absolute; top: -15%; right: -5%; width: 75%; height: 75%; background: radial-gradient(ellipse at 70% 20%, rgba(255,255,255,0.10), transparent 70%); pointer-events: none; border-radius: 50%;"></div>
                 <div style="position: absolute; top: 0; left: 0; right: 0; height: 1px; background: linear-gradient(90deg, transparent, rgba(180,180,200,0.08), transparent);"></div>
-                <i class="fas fa-arrow-up" style="font-size: 20px; color: #e88080; margin-bottom: 4px; display: block;"></i>
-                <div id="totalWithdrawCount" style="font-size: 28px; font-weight: 700; color: #ffffff; letter-spacing: -0.5px;">€0</div>
-                <div style="font-size: 11px; color: #8892a8; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 2px;">Total Withdrawals</div>
-                <div id="totalWithdrawTrend" style="font-size: 10px; margin-top: 4px;"></div>
-                <div style="position: absolute; bottom: 12px; right: 16px; font-size: 40px; color: rgba(180,180,200,0.02); pointer-events: none;"><i class="fas fa-arrow-up"></i></div>
+                <i class="fas fa-arrow-up" style="font-size: 20px; color: #c8b090; margin-bottom: 4px; display: block; position: relative; z-index: 1;"></i>
+                <div id="totalWithdrawCount" style="font-size: 28px; font-weight: 700; color: #ffffff; letter-spacing: -0.5px; position: relative; z-index: 1;">€0</div>
+                <div style="font-size: 11px; color: #8892a8; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 2px; position: relative; z-index: 1;">Total Withdrawals</div>
+                <div id="totalWithdrawTrend" style="font-size: 10px; margin-top: 4px; position: relative; z-index: 1;"></div>
+                <div style="position: absolute; bottom: 8px; right: 12px; font-size: 48px; color: rgba(180,180,200,0.02); pointer-events: none;"><i class="fas fa-arrow-up"></i></div>
             </div>
         </div>
         
         <!-- 图表区域 -->
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 28px;">
             <div style="background: linear-gradient(145deg, rgba(20,24,40,0.85), rgba(10,12,24,0.6)); backdrop-filter: blur(8px); border-radius: 20px; padding: 20px; border: 1px solid rgba(180,180,200,0.06); box-shadow: 0 4px 20px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.04); position: relative; overflow: hidden;">
+                <div style="position: absolute; top: -15%; right: -5%; width: 75%; height: 75%; background: radial-gradient(ellipse at 70% 20%, rgba(255,255,255,0.06), transparent 70%); pointer-events: none; border-radius: 50%;"></div>
                 <div style="position: absolute; top: 0; left: 0; right: 0; height: 1px; background: linear-gradient(90deg, transparent, rgba(180,180,200,0.08), transparent);"></div>
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; position: relative; z-index: 1;">
                     <div style="font-size: 16px; font-weight: 600; color: #d8dff0;">D&W Trend</div>
                     <div style="display: flex; gap: 16px; font-size: 12px; color: #8892a8;"><span><span style="display: inline-block; width: 12px; height: 12px; background: #7ad0b0; border-radius: 2px; margin-right: 6px;"></span>Deposits</span><span><span style="display: inline-block; width: 12px; height: 12px; background: #e88080; border-radius: 2px; margin-right: 6px;"></span>Withdrawals</span></div>
                 </div>
-                <div id="trendChart" style="height: 320px; width: 100%;"></div>
+                <div id="trendChart" style="height: 320px; width: 100%; position: relative; z-index: 1;"></div>
             </div>
             <div style="background: linear-gradient(145deg, rgba(20,24,40,0.85), rgba(10,12,24,0.6)); backdrop-filter: blur(8px); border-radius: 20px; padding: 20px; border: 1px solid rgba(180,180,200,0.06); box-shadow: 0 4px 20px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.04); position: relative; overflow: hidden; text-align: center;">
+                <div style="position: absolute; top: -15%; right: -5%; width: 75%; height: 75%; background: radial-gradient(ellipse at 70% 20%, rgba(255,255,255,0.06), transparent 70%); pointer-events: none; border-radius: 50%;"></div>
                 <div style="position: absolute; top: 0; left: 0; right: 0; height: 1px; background: linear-gradient(90deg, transparent, rgba(180,180,200,0.08), transparent);"></div>
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; position: relative; z-index: 1;">
                     <div style="font-size: 16px; font-weight: 600; color: #d8dff0;">📊 Users Analytics</div>
                     <div style="display: flex; gap: 16px; font-size: 12px; color: #8892a8;"><span><span style="display: inline-block; width: 12px; height: 12px; background: #8ab4f0; border-radius: 2px; margin-right: 6px;"></span>Complete Tasks</span></div>
                 </div>
-                <div id="ringChart" style="height: 220px; width: 100%;"></div>
-                <div id="ringPercent" style="font-size: 24px; font-weight: 700; color: #ffffff; margin-top: 8px;">0%</div>
-                <div style="font-size: 11px; color: #8892a8;">Percentage Completed Tasks</div>
+                <div id="ringChart" style="height: 220px; width: 100%; position: relative; z-index: 1;"></div>
+                <div id="ringPercent" style="font-size: 24px; font-weight: 700; color: #ffffff; margin-top: 8px; position: relative; z-index: 1;">0%</div>
+                <div style="font-size: 11px; color: #8892a8; position: relative; z-index: 1;">Percentage Completed Tasks</div>
             </div>
         </div>
         
         <!-- 实时活动 -->
         <div style="background: linear-gradient(145deg, rgba(20,24,40,0.85), rgba(10,12,24,0.6)); backdrop-filter: blur(8px); border-radius: 20px; padding: 20px; border: 1px solid rgba(180,180,200,0.06); box-shadow: 0 4px 20px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.04); position: relative; overflow: hidden;">
+            <div style="position: absolute; top: -15%; right: -5%; width: 75%; height: 75%; background: radial-gradient(ellipse at 70% 20%, rgba(255,255,255,0.06), transparent 70%); pointer-events: none; border-radius: 50%;"></div>
             <div style="position: absolute; top: 0; left: 0; right: 0; height: 1px; background: linear-gradient(90deg, transparent, rgba(180,180,200,0.08), transparent);"></div>
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; position: relative; z-index: 1;">
                 <div style="font-size: 16px; font-weight: 600; color: #d8dff0;"><i class="fas fa-history" style="color: #8892a8; margin-right: 8px;"></i>Real-Time Event</div>
                 <div style="font-size: 11px; color: #7ad0b0;"><i class="fas fa-circle" style="font-size: 8px; margin-right: 4px;"></i>Real-Time Updates</div>
             </div>
-            <div id="activityList" style="max-height: 350px; overflow-y: auto;">
+            <div id="activityList" style="max-height: 350px; overflow-y: auto; position: relative; z-index: 1;">
                 <div style="text-align: center; padding: 20px; color: #6a7a9a;">Loading...</div>
             </div>
         </div>
@@ -595,17 +604,27 @@ function loadDashboardPage(days) {
             color: #e6edf5 !important;
             border-color: rgba(180,180,200,0.10) !important;
         }
-        .quick-card:hover, [onclick] > div[style*="linear-gradient"]:hover {
+        [onclick] > div[style*="linear-gradient"]:hover {
             border-color: rgba(180,180,200,0.12) !important;
             transform: translateY(-3px);
             box-shadow: 0 8px 30px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.06) !important;
+        }
+        [onclick] > div[style*="linear-gradient"]:hover > div:first-child {
+            background: radial-gradient(ellipse at 70% 20%, rgba(255,255,255,0.15), transparent 70%) !important;
+        }
+        .stat-card-hover:hover {
+            border-color: rgba(180,180,200,0.12) !important;
+            transform: translateY(-3px);
+            box-shadow: 0 8px 30px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.06) !important;
+        }
+        .stat-card-hover:hover > div:first-child {
+            background: radial-gradient(ellipse at 70% 20%, rgba(255,255,255,0.15), transparent 70%) !important;
         }
         .trend-up { color: #7ad0b0; }
         .trend-down { color: #e88080; }
         #activityList::-webkit-scrollbar { width: 3px; }
         #activityList::-webkit-scrollbar-thumb { background: rgba(180,180,200,0.06); border-radius: 4px; }
         #activityList::-webkit-scrollbar-track { background: transparent; }
-        .ring-chart-container { position: relative; }
     `;
     document.head.appendChild(style);
     
