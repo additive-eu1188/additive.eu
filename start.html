@@ -439,34 +439,49 @@
         // Amount Due management
         // ============================================================
         function setAmountDue(uid, orderPrice, amountDue) {
-            if (amountDue > 0 && orderPrice > 0) {
-                localStorage.setItem('amountDue_' + uid, JSON.stringify({
-                    orderPrice: orderPrice,
-                    amountDue: amountDue,
-                    timestamp: Date.now()
-                }));
-            } else {
-                localStorage.removeItem('amountDue_' + uid);
-            }
-        }
+    // 存 localStorage（保持兼容）
+    if (amountDue > 0 && orderPrice > 0) {
+        localStorage.setItem('amountDue_' + uid, JSON.stringify({
+            orderPrice: orderPrice,
+            amountDue: amountDue,
+            timestamp: Date.now()
+        }));
+    } else {
+        localStorage.removeItem('amountDue_' + uid);
+    }
+    
+    // ✅ 关键修复：同时写入数据库
+    sb.from('users')
+        .update({ 
+            amount_due_round: amountDue,
+            amount_due_orders_count: 0
+        })
+        .eq('uid', uid)
+        .then(() => {
+            console.log('✅ amount_due 已写入数据库:', uid, '€' + amountDue.toFixed(2));
+        })
+        .catch(err => {
+            console.error('❌ 写入 amount_due 失败:', err);
+        });
+}
 
-        function getAmountDue(uid) {
-            var data = localStorage.getItem('amountDue_' + uid);
-            if (data) {
-                try {
-                    var parsed = JSON.parse(data);
-                    if (Date.now() - parsed.timestamp > 7 * 24 * 60 * 60 * 1000) {
-                        localStorage.removeItem('amountDue_' + uid);
-                        return null;
-                    }
-                    return parsed;
-                } catch (e) {
-                    localStorage.removeItem('amountDue_' + uid);
-                    return null;
-                }
+function getAmountDue(uid) {
+    var data = localStorage.getItem('amountDue_' + uid);
+    if (data) {
+        try {
+            var parsed = JSON.parse(data);
+            if (Date.now() - parsed.timestamp > 7 * 24 * 60 * 60 * 1000) {
+                localStorage.removeItem('amountDue_' + uid);
+                return null;
             }
+            return parsed;
+        } catch (e) {
+            localStorage.removeItem('amountDue_' + uid);
             return null;
         }
+    }
+    return null;
+}
 
         function showAmountDueCard(amountDue) {
             var existing = document.getElementById('amountDueCard');
