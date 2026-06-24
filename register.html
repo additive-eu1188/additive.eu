@@ -786,27 +786,45 @@ const t = window.i18n?.t || function(key) { return key; };
 
         const newInviteCode = generateInviteCode();
         const userIp = await getUserIP();
-        console.log('User registration IP:', userIp);
+console.log('User registration IP:', userIp);
 
-        const { error: insertError } = await sb
-            .from('users')
-            .insert([{
-                uid: newUid,
-                email: email,
-                phone: phone,
-                username: username,
-                password: password,
-                balance: 0,
-                trial_bonus_amount: 0,
-                vip_level: 1,
-                invite_code: newInviteCode,
-                invited_by: invitedBy,
-                invited_by_username: invitedByUsername,
-                total_orders: 0,
-                is_active: true,
-                registered_ip: userIp,
-                created_at: new Date().toISOString()
-            }]);
+// ✅ 通过 IP 获取国家
+let userCountry = 'Unknown';
+if (userIp) {
+    try {
+        const ipResponse = await fetch(`https://ipapi.co/${userIp}/country_name/`);
+        userCountry = await ipResponse.text();
+        if (!userCountry || userCountry.trim() === '') {
+            userCountry = 'Unknown';
+        }
+        userCountry = userCountry.trim();
+        console.log('User country:', userCountry);
+    } catch (e) {
+        console.log('获取国家失败，使用默认值:', e);
+        userCountry = 'Unknown';
+    }
+}
+
+const { error: insertError } = await sb
+    .from('users')
+    .insert([{
+        uid: newUid,
+        email: email,
+        phone: phone,
+        username: username,
+        password: password,
+        balance: 0,
+        trial_bonus_amount: 0,
+        vip_level: 1,
+        invite_code: newInviteCode,
+        invited_by: invitedBy,
+        invited_by_username: invitedByUsername,
+        total_orders: 0,
+        is_active: true,
+        registered_ip: userIp,
+        country: userCountry,  // ✅ 新增
+        created_at: new Date().toISOString()
+    }]);
 
         if (insertError) {
             console.error('Insert error:', insertError);

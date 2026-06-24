@@ -629,18 +629,43 @@ async function loadUsers() {
             // 3. Referrer
             row.insertCell(2).innerHTML = `<span style="font-size: 12px; color: #8a9abb;">${escapeHtml(u.invited_by_username || '-')}</span>`;
             
-            // 4. Country
-            const countryCode = u.phone ? u.phone.replace(/[^0-9+]/g, '').substring(0, 6) : '';
-            const flagUrl = getCountryFlagUrl(countryCode);
-            const countryName = getCountryName(countryCode);
-            
-            let countryHtml = '';
-            if (flagUrl) {
-                countryHtml = `<img src="${flagUrl}" class="country-flag-img" onerror="this.style.display='none'" alt=""> <span class="country-name">${countryName}</span>`;
-            } else {
-                countryHtml = `<span style="font-size: 12px; color: #8a9abb;">Unknown</span>`;
-            }
-            row.insertCell(3).innerHTML = countryHtml;
+            // 4. Country（直接从数据库读取 country 字段）
+const countryName = u.country || 'Unknown';
+
+// 国旗映射（覆盖大部分国家）
+const flagMap = {
+    'Germany': 'de', 'United States': 'us', 'United Kingdom': 'gb',
+    'Italy': 'it', 'China': 'cn', 'France': 'fr', 'Spain': 'es',
+    'Switzerland': 'ch', 'Austria': 'at', 'Netherlands': 'nl',
+    'Belgium': 'be', 'Denmark': 'dk', 'Sweden': 'se', 'Norway': 'no',
+    'Finland': 'fi', 'Portugal': 'pt', 'Greece': 'gr', 'Turkey': 'tr',
+    'Russia': 'ru', 'Japan': 'jp', 'South Korea': 'kr', 'India': 'in',
+    'Brazil': 'br', 'Mexico': 'mx', 'Australia': 'au', 'New Zealand': 'nz',
+    'South Africa': 'za', 'UAE': 'ae', 'Saudi Arabia': 'sa', 'Singapore': 'sg',
+    'Malaysia': 'my', 'Philippines': 'ph', 'Indonesia': 'id', 'Thailand': 'th',
+    'Vietnam': 'vn', 'Taiwan': 'tw', 'Hong Kong': 'hk', 'Macau': 'mo',
+    'Ireland': 'ie', 'Poland': 'pl', 'Czech Republic': 'cz', 'Hungary': 'hu',
+    'Croatia': 'hr', 'Malta': 'mt', 'Cyprus': 'cy', 'Estonia': 'ee',
+    'Latvia': 'lv', 'Lithuania': 'lt', 'Moldova': 'md', 'Monaco': 'mc',
+    'Liechtenstein': 'li', 'Greenland': 'gl', 'Faroe Islands': 'fo',
+    'Iceland': 'is', 'Luxembourg': 'lu', 'Andorra': 'ad', 'Gibraltar': 'gi',
+    'Canada': 'ca', 'Argentina': 'ar', 'Chile': 'cl', 'Colombia': 'co',
+    'Peru': 'pe', 'Venezuela': 've', 'Egypt': 'eg', 'Nigeria': 'ng',
+    'Kenya': 'ke', 'Israel': 'il', 'Pakistan': 'pk', 'Bangladesh': 'bd',
+    'Sri Lanka': 'lk', 'Nepal': 'np', 'Afghanistan': 'af', 'Iraq': 'iq',
+    'Iran': 'ir', 'Saudi Arabia': 'sa', 'Kuwait': 'kw', 'Qatar': 'qa',
+    'Oman': 'om', 'Bahrain': 'bh', 'Lebanon': 'lb', 'Jordan': 'jo'
+};
+const countryCode = flagMap[countryName] || 'unknown';
+const flagUrl = countryCode !== 'unknown' ? `https://flagcdn.com/w40/${countryCode}.png` : null;
+
+let countryHtml = '';
+if (flagUrl && countryName !== 'Unknown') {
+    countryHtml = `<img src="${flagUrl}" class="country-flag-img" onerror="this.style.display='none'" alt=""> <span class="country-name">${countryName}</span>`;
+} else {
+    countryHtml = `<span style="font-size: 12px; color: #8a9abb;">${countryName}</span>`;
+}
+row.insertCell(3).innerHTML = countryHtml;
             
             // 5. VIP Level
             const vipCell = row.insertCell(4);
