@@ -1192,7 +1192,7 @@ async function deleteUser(uid, username) {
     );
 }
 
-// ========== 打开编辑用户弹窗（深空金属 - 超紧凑版） ==========
+// ========== 打开编辑用户弹窗（深空金属 - 窄版） ==========
 function openEditUserModal(uid, username, phone, pin, currency, address, creditScore) {
     const existingModal = document.getElementById('editUserModal');
     if (existingModal) existingModal.remove();
@@ -1202,14 +1202,14 @@ function openEditUserModal(uid, username, phone, pin, currency, address, creditS
     const modalHtml = `
         <div id="editUserModal" class="modal-overlay" style="visibility: visible; opacity: 1; display: flex; align-items: center; justify-content: center; z-index: 9999;">
             <div class="modal-card" style="
-                width: 480px; 
+                width: 400px; 
                 max-width: 94%; 
                 max-height: 80vh; 
                 overflow-y: auto; 
                 background: linear-gradient(145deg, #0a0a0f, #1a1a2e);
                 border: 1px solid rgba(180, 180, 200, 0.08);
                 border-radius: 14px; 
-                padding: 14px 18px; 
+                padding: 14px 16px; 
                 box-shadow: 0 30px 80px rgba(0, 0, 0, 0.7), inset 0 0 60px rgba(180, 180, 200, 0.02);
                 position: relative;
                 overflow: hidden;
@@ -1226,9 +1226,9 @@ function openEditUserModal(uid, username, phone, pin, currency, address, creditS
                             <span style="display: inline-block; width: 3px; height: 14px; background: linear-gradient(180deg, #8a8aa0, #4a4a5a); border-radius: 2px;"></span>
                             <h2 style="color: #e8e8f0; font-size: 14px; font-weight: 600; margin: 0; letter-spacing: 0.3px;">Edit User</h2>
                         </div>
-                        <div style="display: flex; gap: 12px; margin-top: 2px; font-size: 10px; flex-wrap: wrap;">
-                            <span style="color: #6a6a80;"><i class="fas fa-phone" style="color: #6a6a80; width: 14px; font-size: 10px;"></i> ${escapeHtml(phone || 'Not Set')}</span>
-                            <span style="color: #6a6a80;"><i class="fas fa-shield-alt" style="color: #6a6a80; width: 14px; font-size: 10px;"></i> Credit: <strong style="color: #e8e8f0;" id="creditScoreDisplayHeader">${initialScore}</strong></span>
+                        <div style="display: flex; gap: 10px; margin-top: 2px; font-size: 10px; flex-wrap: wrap;">
+                            <span style="color: #6a6a80;"><i class="fas fa-phone" style="color: #6a6a80; width: 12px; font-size: 10px;"></i> ${escapeHtml(phone || 'Not Set')}</span>
+                            <span style="color: #6a6a80;"><i class="fas fa-shield-alt" style="color: #6a6a80; width: 12px; font-size: 10px;"></i> Credit: <strong style="color: #e8e8f0;" id="creditScoreDisplayHeader">${initialScore}</strong></span>
                         </div>
                     </div>
                     <button onclick="closeEditUserModal()" style="background: rgba(255,255,255,0.03); border: 1px solid rgba(180,180,200,0.06); color: #5a5a6a; font-size: 14px; cursor: pointer; padding: 0 6px; border-radius: 4px;">&times;</button>
@@ -1236,53 +1236,53 @@ function openEditUserModal(uid, username, phone, pin, currency, address, creditS
 
                 <hr style="border: none; border-top: 1px solid rgba(180, 180, 200, 0.06); margin: 0 0 8px 0;">
 
-                <!-- 四张卡片 - 改为2x2网格 -->
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-bottom: 10px; position: relative; z-index: 1;">
-                    <div style="background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(180, 180, 200, 0.06); border-radius: 8px; padding: 6px 10px;">
-                        <div style="font-size: 8px; font-weight: 600; color: #6a6a80; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 0px;">User ID</div>
-                        <div style="font-size: 12px; font-weight: 600; color: #e8e8f0; font-family: monospace;">${escapeHtml(uid)}</div>
+                <!-- 四张卡片 - 2列 -->
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 5px; margin-bottom: 10px; position: relative; z-index: 1;">
+                    <div style="background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(180, 180, 200, 0.06); border-radius: 8px; padding: 5px 8px;">
+                        <div style="font-size: 7px; font-weight: 600; color: #6a6a80; text-transform: uppercase; letter-spacing: 0.5px;">User ID</div>
+                        <div style="font-size: 11px; font-weight: 600; color: #e8e8f0; font-family: monospace;">${escapeHtml(uid)}</div>
                     </div>
-                    <div style="background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(180, 180, 200, 0.06); border-radius: 8px; padding: 6px 10px;">
-                        <div style="font-size: 8px; font-weight: 600; color: #6a6a80; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 0px;">Withdrawal Status</div>
-                        <div style="font-size: 12px; font-weight: 600; color: #4ade80;">Active</div>
+                    <div style="background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(180, 180, 200, 0.06); border-radius: 8px; padding: 5px 8px;">
+                        <div style="font-size: 7px; font-weight: 600; color: #6a6a80; text-transform: uppercase; letter-spacing: 0.5px;">Withdrawal Status</div>
+                        <div style="font-size: 11px; font-weight: 600; color: #4ade80;">Active</div>
                     </div>
-                    <div style="background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(180, 180, 200, 0.06); border-radius: 8px; padding: 6px 10px;">
-                        <div style="font-size: 8px; font-weight: 600; color: #6a6a80; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 0px;">Total Deposit</div>
-                        <div style="font-size: 12px; font-weight: 600; color: #ffffff;" id="totalDepositDisplay">€0.00</div>
+                    <div style="background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(180, 180, 200, 0.06); border-radius: 8px; padding: 5px 8px;">
+                        <div style="font-size: 7px; font-weight: 600; color: #6a6a80; text-transform: uppercase; letter-spacing: 0.5px;">Total Deposit</div>
+                        <div style="font-size: 11px; font-weight: 600; color: #ffffff;" id="totalDepositDisplay">€0.00</div>
                     </div>
-                    <div style="background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(180, 180, 200, 0.06); border-radius: 8px; padding: 6px 10px;">
-                        <div style="font-size: 8px; font-weight: 600; color: #6a6a80; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 0px;">Total Withdrawal</div>
-                        <div style="font-size: 12px; font-weight: 600; color: #ffffff;" id="totalWithdrawalDisplay">€0.00</div>
+                    <div style="background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(180, 180, 200, 0.06); border-radius: 8px; padding: 5px 8px;">
+                        <div style="font-size: 7px; font-weight: 600; color: #6a6a80; text-transform: uppercase; letter-spacing: 0.5px;">Total Withdrawal</div>
+                        <div style="font-size: 11px; font-weight: 600; color: #ffffff;" id="totalWithdrawalDisplay">€0.00</div>
                     </div>
                 </div>
 
-                <!-- Account Actions - 改为2列 -->
+                <!-- Account Actions - 2列 -->
                 <div style="margin-bottom: 10px; position: relative; z-index: 1;">
-                    <div style="font-size: 8px; font-weight: 600; color: #5a5a6a; text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 4px;">Account Actions</div>
+                    <div style="font-size: 7px; font-weight: 600; color: #5a5a6a; text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 4px;">Account Actions</div>
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 4px;">
-                        <div onclick="resetWithdrawalPin('${uid}')" style="background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(180, 180, 200, 0.05); border-radius: 6px; padding: 5px 8px; cursor: pointer; transition: 0.2s;">
-                            <div style="font-weight: 500; color: #e8e8f0; font-size: 10px;">Reset PIN</div>
-                            <div style="font-size: 7px; color: #5a5a6a;">Reset withdrawal pin</div>
+                        <div onclick="resetWithdrawalPin('${uid}')" style="background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(180, 180, 200, 0.05); border-radius: 6px; padding: 4px 6px; cursor: pointer; transition: 0.2s;">
+                            <div style="font-weight: 500; color: #e8e8f0; font-size: 9px;">Reset PIN</div>
+                            <div style="font-size: 6px; color: #5a5a6a;">Reset withdrawal pin</div>
                         </div>
-                        <div onclick="resetUserPassword('${uid}')" style="background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(180, 180, 200, 0.05); border-radius: 6px; padding: 5px 8px; cursor: pointer; transition: 0.2s;">
-                            <div style="font-weight: 500; color: #e8e8f0; font-size: 10px;">Reset Password</div>
-                            <div style="font-size: 7px; color: #5a5a6a;">Reset account password</div>
+                        <div onclick="resetUserPassword('${uid}')" style="background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(180, 180, 200, 0.05); border-radius: 6px; padding: 4px 6px; cursor: pointer; transition: 0.2s;">
+                            <div style="font-weight: 500; color: #e8e8f0; font-size: 9px;">Reset Password</div>
+                            <div style="font-size: 6px; color: #5a5a6a;">Reset account password</div>
                         </div>
-                        <div onclick="resetUserPhone('${uid}')" style="background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(180, 180, 200, 0.05); border-radius: 6px; padding: 5px 8px; cursor: pointer; transition: 0.2s;">
-                            <div style="font-weight: 500; color: #e8e8f0; font-size: 10px;">Reset Phone</div>
-                            <div style="font-size: 7px; color: #5a5a6a;">Reset phone number</div>
+                        <div onclick="resetUserPhone('${uid}')" style="background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(180, 180, 200, 0.05); border-radius: 6px; padding: 4px 6px; cursor: pointer; transition: 0.2s;">
+                            <div style="font-weight: 500; color: #e8e8f0; font-size: 9px;">Reset Phone</div>
+                            <div style="font-size: 6px; color: #5a5a6a;">Reset phone number</div>
                         </div>
-                        <div onclick="promoteToAdmin('${uid}')" style="background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(180, 180, 200, 0.05); border-radius: 6px; padding: 5px 8px; cursor: pointer; transition: 0.2s;">
-                            <div style="font-weight: 500; color: #e8e8f0; font-size: 10px;">Promote Admin</div>
-                            <div style="font-size: 7px; color: #5a5a6a;">View downline data</div>
+                        <div onclick="promoteToAdmin('${uid}')" style="background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(180, 180, 200, 0.05); border-radius: 6px; padding: 4px 6px; cursor: pointer; transition: 0.2s;">
+                            <div style="font-weight: 500; color: #e8e8f0; font-size: 9px;">Promote Admin</div>
+                            <div style="font-size: 6px; color: #5a5a6a;">View downline data</div>
                         </div>
-                        <div onclick="freezeUserWithdrawal('${uid}')" style="background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(180, 180, 200, 0.05); border-radius: 6px; padding: 5px 8px; cursor: pointer; transition: 0.2s;">
-                            <div style="font-weight: 500; color: #e8e8f0; font-size: 10px;">Freeze Withdrawal</div>
-                            <div style="font-size: 7px; color: #5a5a6a;">Block from withdrawing</div>
+                        <div onclick="freezeUserWithdrawal('${uid}')" style="background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(180, 180, 200, 0.05); border-radius: 6px; padding: 4px 6px; cursor: pointer; transition: 0.2s;">
+                            <div style="font-weight: 500; color: #e8e8f0; font-size: 9px;">Freeze Withdrawal</div>
+                            <div style="font-size: 6px; color: #5a5a6a;">Block from withdrawing</div>
                         </div>
-                        <div onclick="banUser('${uid}')" style="background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(180, 180, 200, 0.05); border-radius: 6px; padding: 5px 8px; cursor: pointer; transition: 0.2s;">
-                            <div style="font-weight: 500; color: #ff6b6b; font-size: 10px;">Ban User</div>
-                            <div style="font-size: 7px; color: #5a5a6a;">Disable account</div>
+                        <div onclick="banUser('${uid}')" style="background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(180, 180, 200, 0.05); border-radius: 6px; padding: 4px 6px; cursor: pointer; transition: 0.2s;">
+                            <div style="font-weight: 500; color: #ff6b6b; font-size: 9px;">Ban User</div>
+                            <div style="font-size: 6px; color: #5a5a6a;">Disable account</div>
                         </div>
                     </div>
                 </div>
@@ -1300,11 +1300,11 @@ function openEditUserModal(uid, username, phone, pin, currency, address, creditS
                            style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; z-index: 2;"
                            id="creditScoreSlider"
                            oninput="updateCreditScore(this.value)">
-                    <div style="display: flex; justify-content: space-between; font-size: 8px; color: #4a4a5a; margin-top: 2px;">
+                    <div style="display: flex; justify-content: space-between; font-size: 7px; color: #4a4a5a; margin-top: 2px;">
                         <span>0</span>
                         <span>100</span>
                     </div>
-                    <div style="display: flex; gap: 10px; margin-top: 2px; font-size: 8px;">
+                    <div style="display: flex; gap: 10px; margin-top: 2px; font-size: 7px;">
                         <span style="color: #4ade80;">● ≥95 Active</span>
                         <span style="color: #ff5a5a;">● &lt;95 Restricted</span>
                     </div>
@@ -1312,8 +1312,8 @@ function openEditUserModal(uid, username, phone, pin, currency, address, creditS
 
                 <!-- 底部按钮 -->
                 <div style="display: flex; gap: 8px; justify-content: flex-end; border-top: 1px solid rgba(180, 180, 200, 0.06); padding-top: 8px; position: relative; z-index: 1;">
-                    <button onclick="closeEditUserModal()" style="background: rgba(255,255,255,0.03); border: 1px solid rgba(180,180,200,0.06); padding: 4px 16px; border-radius: 30px; color: #6a6a80; font-weight: 500; cursor: pointer; font-size: 11px;">Close</button>
-                    <button onclick="saveEditUser('${uid}')" style="background: linear-gradient(145deg, #3a3a5a, #2a2a4a); border: none; padding: 4px 16px; border-radius: 30px; color: #e8e8f0; font-weight: 600; cursor: pointer; font-size: 11px;">Save</button>
+                    <button onclick="closeEditUserModal()" style="background: rgba(255,255,255,0.03); border: 1px solid rgba(180,180,200,0.06); padding: 4px 14px; border-radius: 30px; color: #6a6a80; font-weight: 500; cursor: pointer; font-size: 10px;">Close</button>
+                    <button onclick="saveEditUser('${uid}')" style="background: linear-gradient(145deg, #3a3a5a, #2a2a4a); border: none; padding: 4px 14px; border-radius: 30px; color: #e8e8f0; font-weight: 600; cursor: pointer; font-size: 10px;">Save</button>
                 </div>
             </div>
         </div>
