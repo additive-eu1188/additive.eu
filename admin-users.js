@@ -270,7 +270,7 @@ async function loadUsersPage() {
 .data-table td:nth-child(5) { width: 55px !important; min-width: 55px !important; } /* Country */
 
 .data-table th:nth-child(6),
-.data-table td:nth-child(6) { width: 75px !important; min-width: 75px !important; } /* VIP RANK - 加宽 */
+.data-table td:nth-child(6) { width: 85px !important; min-width: 85px !important; } /* VIP RANK - 从82px改为85px，拉长 */
 
 /* 在列宽定义中修改第7列 */
 .data-table th:nth-child(7),
@@ -392,17 +392,17 @@ async function loadUsersPage() {
     vertical-align: middle !important;
 }
 
-        /* ===== VIP 下拉框 - 紧凑版 ===== */
+        /* ===== VIP 下拉框 - 无动画版 ===== */
 .vip-wrapper {
     position: relative;
     display: inline-block;
-    width: 72px;
+    width: 85px;
 }
 
 .vip-select {
-    width: 72px !important;
-    min-width: 72px !important;
-    max-width: 72px !important;
+    width: 85px !important;
+    min-width: 85px !important;
+    max-width: 85px !important;
     height: 24px !important;
     padding: 0 16px 0 22px !important;
     border-radius: 14px !important;
@@ -415,7 +415,6 @@ async function loadUsersPage() {
     appearance: none !important;
     -webkit-appearance: none !important;
     font-family: 'Inter', sans-serif !important;
-    transition: all 0.25s ease !important;
     text-align: center !important;
     text-overflow: clip !important;
     white-space: nowrap !important;
@@ -426,49 +425,20 @@ async function loadUsersPage() {
     background-repeat: no-repeat !important;
     background-position: right 8px center !important;
     background-size: 8px 5px !important;
+    /* 删除 transition */
 }
 
+/* 删除 :hover 动画效果 */
 .vip-select:hover {
     border-color: rgba(200, 176, 144, 0.4) !important;
     background: rgba(255, 255, 255, 0.08) !important;
+    /* 删除了 transform 和 box-shadow */
 }
 
 .vip-select:focus {
     outline: none !important;
     border-color: rgba(200, 176, 144, 0.5) !important;
 }
-
-/* 各等级边框颜色 */
-.vip-select[data-level="1"] { border-color: rgba(106, 122, 138, 0.3) !important; }
-.vip-select[data-level="2"] { border-color: rgba(200, 176, 144, 0.4) !important; }
-.vip-select[data-level="3"] { border-color: rgba(255, 215, 0, 0.4) !important; }
-
-/* VIP 展开后的选项 */
-.vip-select option {
-    background: linear-gradient(160deg, #0e1228, #1a1a3a) !important;
-    color: #e6edf5 !important;
-    padding: 6px 12px !important;
-    font-size: 11px !important;
-    font-weight: 500 !important;
-    border-bottom: 1px solid rgba(255,255,255,0.04) !important;
-    font-family: 'Inter', sans-serif !important;
-    min-height: 32px !important;
-}
-
-.vip-select option:hover {
-    background: rgba(200,176,144,0.12) !important;
-}
-
-.vip-select option:checked {
-    background: linear-gradient(135deg, rgba(200,176,144,0.15), rgba(200,176,144,0.05)) !important;
-    color: #c8b090 !important;
-    font-weight: 700 !important;
-}
-
-/* 各等级颜色 */
-.vip-select option[value="1"] { color: #8a9aaa !important; }
-.vip-select option[value="2"] { color: #c8b090 !important; }
-.vip-select option[value="3"] { color: #ffd700 !important; }
 
 /* ===== Round/Orders 列 - 字体亮一些 ===== */
 .orders-wrapper {
@@ -874,18 +844,18 @@ vipLevels.forEach(v => {
 });
 
 vipCell.innerHTML = `
-    <div class="vip-wrapper" style="position:relative; display:inline-block; width:72px;">
+    <div class="vip-wrapper" style="position:relative; display:inline-block; width:85px;">
         <select class="vip-select vip-change-select" data-uid="${u.uid}" data-username="${escapeHtml(u.username)}" data-level="${u.vip_level}"
-                style="width:72px; min-width:72px; max-width:72px; height:24px; padding:0 16px 0 22px; border-radius:14px; 
+                style="width:85px; min-width:85px; max-width:85px; height:24px; padding:0 16px 0 22px; border-radius:14px; 
                        border:1px solid ${currentColor}40; background:rgba(255,255,255,0.03); color:${currentColor}; 
                        font-size:10px; font-weight:600; cursor:pointer; appearance:none; -webkit-appearance:none;
-                       font-family:'Inter',sans-serif; transition:all 0.25s ease; text-align:center; letter-spacing:0.2px;
+                       font-family:'Inter',sans-serif; text-align:center; letter-spacing:0.2px;
                        line-height:24px; box-sizing:border-box;
                        background-image: url('data:image/svg+xml,%3Csvg xmlns=\\'http://www.w3.org/2000/svg\\' width=\\'8\\' height=\\'5\\'%3E%3Cpath d=\\'M0 0l4 5 4-5z\\' fill=\\'${encodeURIComponent(currentColor)}60\\'/%3E%3C/svg%3E');
                        background-repeat:no-repeat; background-position:right 8px center; background-size:8px 5px;">
             ${optionsHtml}
         </select>
-        <!-- 会变色发亮的图标 - 左侧居中，与文字保持间距 -->
+        <!-- 会变色发亮的图标 -->
         <span style="position:absolute; left:6px; top:50%; transform:translateY(-50%); font-size:9px; pointer-events:none; color:${currentColor}; text-shadow: 0 0 8px ${currentColor}40; line-height:1; display:flex; align-items:center; justify-content:center; width:12px; height:12px;">
             ${symbol}
         </span>
