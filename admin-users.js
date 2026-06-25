@@ -274,11 +274,11 @@ async function loadUsersPage() {
 
 /* 在列宽定义中修改第7列 */
 .data-table th:nth-child(7),
-.data-table td:nth-child(7) { width: 85px !important; min-width: 85px !important; } /* Pending - 从65px改为85px，拉长 */
+.data-table td:nth-child(7) { width: 95px !important; min-width: 95px !important; } /* Pending - 从85px改为95px */
 
 /* 在列宽定义中修改第8列 */
 .data-table th:nth-child(8),
-.data-table td:nth-child(8) { width: 115px !important; min-width: 115px !important; } /* Balance - 从95px改为115px，拉长 */
+.data-table td:nth-child(8) { width: 135px !important; min-width: 135px !important; } /* Balance - 从115px改为135px */
 
 .data-table th:nth-child(9),
 .data-table td:nth-child(9) { width: 260px !important; min-width: 260px !important; } /* Round / Orders - 稍微缩小，给Balance腾空间 */
@@ -500,36 +500,44 @@ async function loadUsersPage() {
             font-size: 13px !important;
         }
 
-        /* ===== Balance ===== */
-        .balance-amount {
-            font-weight: 700 !important;
-            font-size: 14px !important;
-            color: #7ad0b0 !important;
-        }
-        .balance-wrapper {
-            display: flex;
-            align-items: center;
-            gap: 4px !important;
-            flex-wrap: nowrap;
-        }
-        .balance-wrapper .btn-sm {
-            font-size: 8px !important;
-            padding: 2px 5px !important;
-            border: none !important;
-            border-radius: 4px !important;
-            cursor: pointer !important;
-            transition: 0.2s !important;
-            color: #e6edf5 !important;
-        }
-        .balance-wrapper .btn-sm:hover {
-            opacity: 0.8 !important;
-        }
-        .btn-deposit {
-            background: rgba(74,222,128,0.08) !important;
-        }
-        .btn-deduct {
-            background: rgba(232,128,128,0.08) !important;
-        }
+        /* ===== Balance - + - 按钮在左侧 ===== */
+.balance-amount {
+    font-weight: 700 !important;
+    font-size: 14px !important;
+    color: #7ad0b0 !important;
+}
+.balance-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 3px !important;
+    flex-wrap: nowrap;
+}
+.balance-wrapper .btn-sm {
+    font-size: 9px !important;
+    padding: 2px 6px !important;
+    white-space: nowrap !important;
+    flex-shrink: 0 !important;
+    border: none !important;
+    border-radius: 4px !important;
+    cursor: pointer !important;
+    transition: 0.2s !important;
+    font-weight: 600 !important;
+    min-width: 18px !important;
+    text-align: center !important;
+    font-family: 'Inter', sans-serif !important;
+}
+.balance-wrapper .btn-sm:hover {
+    opacity: 0.75 !important;
+}
+.balance-wrapper .btn-deposit {
+    background: rgba(74,222,128,0.12) !important;
+    color: #4ade80 !important;
+}
+.balance-wrapper .btn-deduct {
+    background: rgba(232,128,128,0.12) !important;
+    color: #e88080 !important;
+    margin-right: 4px !important;
+}
 
         /* ===== Last Online ===== */
         .last-online-text {
@@ -881,15 +889,15 @@ vipCell.innerHTML = `
         ${isNegative ? '<div style="font-size: 8px; color: #e88080; opacity: 0.5; margin-top: 1px;">Due</div>' : ''}
     `;
     
-    // ===== 8. Balance (索引 7) =====
-    const balanceCell = row.insertCell(7);
-    balanceCell.innerHTML = `
-        <div class="balance-wrapper">
-            <span class="balance-amount">€${(u.balance || 0).toFixed(2)}</span>
-            <button class="btn-sm btn-deposit deposit-btn" data-uid="${u.uid}" data-username="${escapeHtml(u.username)}" title="Deposit"><i class="fas fa-plus-circle"></i></button>
-            <button class="btn-sm btn-deduct deduct-btn" data-uid="${u.uid}" data-username="${escapeHtml(u.username)}" title="Deduct"><i class="fas fa-minus-circle"></i></button>
-        </div>
-    `;
+    // ===== 8. Balance (索引 7) - + - 按钮在金额左侧 =====
+const balanceCell = row.insertCell(7);
+balanceCell.innerHTML = `
+    <div class="balance-wrapper">
+        <button class="btn-sm btn-deposit deposit-btn" data-uid="${u.uid}" data-username="${escapeHtml(u.username)}" title="Deposit" style="font-size:9px; padding:2px 6px; white-space:nowrap; flex-shrink:0; border:none; border-radius:4px; cursor:pointer; transition:0.2s; background:rgba(74,222,128,0.12); color:#4ade80; font-weight:600; min-width:18px; text-align:center;">+</button>
+        <button class="btn-sm btn-deduct deduct-btn" data-uid="${u.uid}" data-username="${escapeHtml(u.username)}" title="Deduct" style="font-size:9px; padding:2px 6px; white-space:nowrap; flex-shrink:0; border:none; border-radius:4px; cursor:pointer; transition:0.2s; background:rgba(232,128,128,0.12); color:#e88080; font-weight:600; min-width:18px; text-align:center; margin-right:4px;">−</button>
+        <span class="balance-amount" style="font-weight:700; font-size:14px; color:#7ad0b0;">€${(u.balance || 0).toFixed(2)}</span>
+    </div>
+`;
     
     // ===== 9. Round / Orders (索引 8) =====
     const ordersCell = row.insertCell(8);
