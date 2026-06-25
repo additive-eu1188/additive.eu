@@ -905,15 +905,18 @@ vipCell.innerHTML = `
 `;
     
     // ===== 7. Pending (索引 6) - 与 start.html 的 pending 卡片逻辑一致 =====
-const userBalance = u.balance || 0;
-const amountDueValue = amountDueMap[u.uid] || 0;
-const triggerCommission = pendingTriggerMap[u.uid] || 0;
+const currentBal = u.balance || 0;
+const amountDueVal = amountDueMap[u.uid] || 0;
+const triggerComm = pendingTriggerMap[u.uid] || 0;
+const pendingWithdrawAmt = pendingMap[u.uid] || 0;
 
 let totalPendingValue;
-if (amountDueValue > 0) {
-    totalPendingValue = userBalance + amountDueValue + triggerCommission;
+if (amountDueVal > 0) {
+    // 有 amount due 时：balance + amountDue + triggerCommission
+    totalPendingValue = currentBal + amountDueVal + triggerComm;
 } else {
-    totalPendingValue = pendingWithdrawMap[u.uid] || 0;
+    // 没有 amount due 时：显示 pending 提现
+    totalPendingValue = pendingWithdrawAmt;
 }
 
 const pendingCell = row.insertCell(6);
