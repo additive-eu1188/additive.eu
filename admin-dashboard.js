@@ -233,11 +233,13 @@ function applyConversionData(data, days) {
     var matched = selected.filter(function(d) { return d.label === targetLabel; });
     var displayData = matched.length > 0 ? matched[0] : selected[0];
     
+    // 更新环形图百分比
     var ringPercent = document.getElementById('ringPercent');
     if (ringPercent) {
         ringPercent.innerText = displayData.rate + '%';
     }
     
+    // 更新 Today Register / Today Conversion
     var registerEl = document.getElementById('conversionRegister');
     var convertedEl = document.getElementById('conversionConverted');
     var labelEl = document.getElementById('conversionLabel');
@@ -254,6 +256,7 @@ function applyConversionData(data, days) {
         labelEl.innerText = labelMap[displayData.label] || 'Today Register';
     }
     
+    // 更新所有时间线的数据显示
     var allLabels = document.querySelectorAll('.conversion-stat-label');
     var allRegisters = document.querySelectorAll('.conversion-stat-register');
     var allConverteds = document.querySelectorAll('.conversion-stat-converted');
@@ -277,6 +280,7 @@ function applyConversionData(data, days) {
         }
     }
     
+    // 高亮当前选中的行
     var allRows = document.querySelectorAll('.conversion-stat-row');
     for (var j = 0; j < allRows.length; j++) {
         var row = allRows[j];
@@ -504,10 +508,10 @@ async function loadRecentRegistrations() {
             var amount = u.balance > 0 ? '€' + u.balance.toFixed(2) : '€0.00';
             
             html += '<tr style="border-bottom: 1px solid rgba(200,176,144,0.03);">' +
-                '<td style="padding: 6px 8px; color: #d8dff0; font-weight: 500;">' + escapeHtml(u.username) + '</td>' +
-                '<td style="padding: 6px 8px; color: #8892a8;">' + escapeHtml(referrer) + '</td>' +
-                '<td style="padding: 6px 8px; text-align: center; color: ' + (u.balance > 0 ? '#7ad0b0' : '#5a4a2a') + ';">' + joinedMembership + '</td>' +
-                '<td style="padding: 6px 8px; text-align: right; color: ' + (u.balance > 0 ? '#c8b090' : '#4a5a72') + '; font-weight: 600;">' + amount + '</td>' +
+                '<td style="padding: 4px 6px; color: #d8dff0; font-weight: 500;">' + escapeHtml(u.username) + '</td>' +
+                '<td style="padding: 4px 6px; color: #8892a8;">' + escapeHtml(referrer) + '</td>' +
+                '<td style="padding: 4px 6px; text-align: center; color: ' + (u.balance > 0 ? '#7ad0b0' : '#5a4a2a') + ';">' + joinedMembership + '</td>' +
+                '<td style="padding: 4px 6px; text-align: right; color: ' + (u.balance > 0 ? '#c8b090' : '#4a5a72') + '; font-weight: 600;">' + amount + '</td>' +
                 '</tr>';
         }
         tbody.innerHTML = html;
@@ -815,6 +819,7 @@ function loadDashboardPage(days) {
             <button class="date-filter-btn" data-days="-1" style="background: linear-gradient(145deg, rgba(20,24,40,0.6), rgba(10,12,24,0.4)); border: 1px solid rgba(180,180,200,0.06); border-radius: 30px; padding: 8px 20px; color: #8892a8; cursor: pointer; transition: all 0.3s; font-size: 13px; font-weight: 500; font-family: 'Inter', sans-serif; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">All Time</button>
         </div>
         
+        <!-- 快捷卡片 -->
         <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px;">
             <div onclick="showPage('kyc')" style="background: linear-gradient(145deg, rgba(20,24,40,0.85), rgba(10,12,24,0.6)); border-radius: 16px; padding: 18px 16px; border: 1px solid rgba(180,180,200,0.06); cursor: pointer; transition: all 0.3s; position: relative; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.04);">
                 <div style="position: absolute; top: -15%; right: -5%; width: 75%; height: 75%; background: radial-gradient(ellipse at 70% 20%, rgba(255,255,255,0.10), transparent 70%); pointer-events: none; border-radius: 50%;"></div>
@@ -846,6 +851,7 @@ function loadDashboardPage(days) {
             </div>
         </div>
         
+        <!-- 统计卡片 -->
         <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px;">
             <div style="background: linear-gradient(145deg, rgba(20,24,40,0.85), rgba(10,12,24,0.6)); border-radius: 16px; padding: 18px 20px; border: 1px solid rgba(180,180,200,0.06); transition: all 0.3s; position: relative; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.04);">
                 <div style="position: absolute; top: -15%; right: -5%; width: 75%; height: 75%; background: radial-gradient(ellipse at 70% 20%, rgba(255,255,255,0.10), transparent 70%); pointer-events: none; border-radius: 50%;"></div>
@@ -881,7 +887,9 @@ function loadDashboardPage(days) {
             </div>
         </div>
         
+        <!-- 图表区域 -->
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 28px;">
+            <!-- 趋势图 -->
             <div style="background: linear-gradient(145deg, rgba(20,24,40,0.85), rgba(10,12,24,0.6)); backdrop-filter: blur(8px); border-radius: 20px; padding: 20px; border: 1px solid rgba(180,180,200,0.06); box-shadow: 0 4px 20px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.04); position: relative; overflow: hidden;">
                 <div style="position: absolute; top: -15%; right: -5%; width: 75%; height: 75%; background: radial-gradient(ellipse at 70% 20%, rgba(255,255,255,0.06), transparent 70%); pointer-events: none; border-radius: 50%;"></div>
                 <div style="position: absolute; top: 0; left: 0; right: 0; height: 1px; background: linear-gradient(90deg, transparent, rgba(180,180,200,0.08), transparent);"></div>
@@ -892,37 +900,37 @@ function loadDashboardPage(days) {
                 <div id="trendChart" style="height: 320px; width: 100%; position: relative; z-index: 1;"></div>
             </div>
             
-            <!-- 转化率卡片 - 左环右数据 + 底部表格 -->
+            <!-- 转化率卡片 - 左环占满左边，右数据紧凑排列 -->
             <div style="background: linear-gradient(145deg, rgba(20,24,40,0.85), rgba(10,12,24,0.6)); backdrop-filter: blur(8px); border-radius: 20px; padding: 20px; border: 1px solid rgba(180,180,200,0.06); box-shadow: 0 4px 20px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.04); position: relative; overflow: hidden;">
                 <div style="position: absolute; top: -15%; right: -5%; width: 75%; height: 75%; background: radial-gradient(ellipse at 70% 20%, rgba(255,255,255,0.06), transparent 70%); pointer-events: none; border-radius: 50%;"></div>
                 <div style="position: absolute; top: 0; left: 0; right: 0; height: 1px; background: linear-gradient(90deg, transparent, rgba(180,180,200,0.08), transparent);"></div>
                 
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; position: relative; z-index: 1;">
+                <!-- 标题行：左标题 + 右 Today Register -->
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 6px; position: relative; z-index: 1;">
                     <div style="font-size: 15px; font-weight: 600; color: #d8dff0;">📈 New Orders Conversion Rate</div>
+                    <div style="text-align: right;">
+                        <div style="font-size: 10px; color: #6a5a3a; letter-spacing: 0.5px;">
+                            <span style="color: #8892a8;">Today Register</span>
+                        </div>
+                        <div style="display: flex; align-items: baseline; gap: 4px; justify-content: flex-end;">
+                            <span id="conversionRegister" style="font-size: 22px; font-weight: 700; color: #c8b090;">0</span>
+                            <span style="font-size: 12px; color: #6a5a3a;">/</span>
+                            <span id="conversionConverted" style="font-size: 16px; font-weight: 600; color: #d4af37;">0</span>
+                            <span style="font-size: 10px; color: #5a4a2a;">converted</span>
+                        </div>
+                    </div>
                 </div>
                 
-                <!-- 左环 + 右数据 -->
-                <div style="display: flex; align-items: stretch; gap: 12px; position: relative; z-index: 1; min-height: 220px;">
-                    <!-- 左侧环形图 -->
-                    <div id="waveRingContainer" style="width: 200px; height: 200px; flex-shrink: 0; position: relative; margin: 0;"></div>
+                <!-- 主体：左环占满 + 右数据紧凑 -->
+                <div style="display: flex; align-items: stretch; gap: 12px; position: relative; z-index: 1; min-height: 210px;">
                     
-                    <!-- 右侧数据 -->
-                    <div style="flex: 1; min-width: 0; display: flex; flex-direction: column; justify-content: space-between;">
-                        <!-- 顶部：Today Register + 数据 -->
-                        <div>
-                            <div style="font-size: 11px; color: #6a5a3a; letter-spacing: 0.5px; margin-bottom: 2px;">
-                                <span id="conversionLabel" style="color: #8892a8;">Today Register</span>
-                            </div>
-                            <div style="display: flex; align-items: baseline; gap: 6px;">
-                                <span id="conversionRegister" style="font-size: 28px; font-weight: 700; color: #c8b090;">0</span>
-                                <span style="font-size: 14px; color: #6a5a3a;">/</span>
-                                <span id="conversionConverted" style="font-size: 20px; font-weight: 600; color: #d4af37;">0</span>
-                                <span style="font-size: 11px; color: #5a4a2a;">converted</span>
-                            </div>
-                        </div>
-                        
-                        <!-- 中间：4行统计数据 -->
-                        <div style="margin-top: 6px; border-top: 1px solid rgba(200,176,144,0.06); padding-top: 4px;">
+                    <!-- 左侧环形图 - 占左边大部分空间 -->
+                    <div id="waveRingContainer" style="width: 220px; height: 210px; flex-shrink: 0; position: relative;"></div>
+                    
+                    <!-- 右侧数据 - 紧凑排列 -->
+                    <div style="flex: 1; min-width: 0; display: flex; flex-direction: column; justify-content: center; gap: 2px;">
+                        <!-- 4行统计数据 -->
+                        <div style="border-top: 1px solid rgba(200,176,144,0.06); padding-top: 4px;">
                             <div class="conversion-stat-row" style="display: flex; justify-content: space-between; padding: 2px 0; font-size: 11px; color: #6a7a92;">
                                 <span class="conversion-stat-label">Today</span>
                                 <span><span class="conversion-stat-register">0</span> / <span class="conversion-stat-converted">0</span></span>
@@ -944,36 +952,37 @@ function loadDashboardPage(days) {
                                 <span class="conversion-stat-rate" style="font-weight: 600;">0%</span>
                             </div>
                         </div>
-                    </div>
-                </div>
-                
-                <!-- 底部表格 - 5条可滚动 -->
-                <div style="margin-top: 12px; padding-top: 10px; border-top: 1px solid rgba(200,176,144,0.08); position: relative; z-index: 1;">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-                        <div style="font-size: 11px; color: #8892a8; font-weight: 500; letter-spacing: 0.5px;">
-                            <i class="fas fa-users" style="color: #c8b090; margin-right: 6px;"></i>Recent Registrations
+                        
+                        <!-- 表格：User / Referrer / Joined / Amount - 紧凑 -->
+                        <div style="margin-top: 4px; padding-top: 4px; border-top: 1px solid rgba(200,176,144,0.06);">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2px;">
+                                <div style="font-size: 9px; color: #5a4a2a; font-weight: 500; letter-spacing: 0.5px; text-transform: uppercase;">
+                                    <i class="fas fa-users" style="color: #c8b090; margin-right: 4px; font-size: 9px;"></i>Recent
+                                </div>
+                                <a href="#" onclick="showPage('users'); return false;" style="font-size: 8px; color: #4a3a2a; text-decoration: none; transition: 0.2s;" onmouseover="this.style.color='#c8b090'" onmouseout="this.style.color='#4a3a2a'">View All →</a>
+                            </div>
+                            <div style="overflow-y: auto; max-height: 85px;">
+                                <table style="width: 100%; border-collapse: collapse; font-size: 10px;">
+                                    <thead>
+                                        <tr style="border-bottom: 1px solid rgba(200,176,144,0.04); position: sticky; top: 0; background: rgba(20,24,40,0.9); z-index: 2;">
+                                            <th style="text-align: left; padding: 2px 4px; color: #4a3a2a; font-weight: 500; font-size: 8px; text-transform: uppercase; letter-spacing: 0.3px;">User</th>
+                                            <th style="text-align: left; padding: 2px 4px; color: #4a3a2a; font-weight: 500; font-size: 8px; text-transform: uppercase; letter-spacing: 0.3px;">Ref</th>
+                                            <th style="text-align: center; padding: 2px 4px; color: #4a3a2a; font-weight: 500; font-size: 8px; text-transform: uppercase; letter-spacing: 0.3px;">Joined</th>
+                                            <th style="text-align: right; padding: 2px 4px; color: #4a3a2a; font-weight: 500; font-size: 8px; text-transform: uppercase; letter-spacing: 0.3px;">Amount</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="recentRegistrationsBody">
+                                        <tr><td colspan="4" style="text-align: center; padding: 8px; color: #4a5a72; font-size: 10px;">Loading...</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
-                        <a href="#" onclick="showPage('users'); return false;" style="font-size: 10px; color: #5a4a2a; text-decoration: none; transition: 0.2s;" onmouseover="this.style.color='#c8b090'" onmouseout="this.style.color='#5a4a2a'">View All →</a>
-                    </div>
-                    <div style="overflow-y: auto; max-height: 140px;">
-                        <table style="width: 100%; border-collapse: collapse; font-size: 11px;">
-                            <thead>
-                                <tr style="border-bottom: 1px solid rgba(200,176,144,0.06); position: sticky; top: 0; background: rgba(20,24,40,0.9); z-index: 2;">
-                                    <th style="text-align: left; padding: 4px 6px; color: #5a4a2a; font-weight: 500; font-size: 9px; text-transform: uppercase; letter-spacing: 0.5px;">User</th>
-                                    <th style="text-align: left; padding: 4px 6px; color: #5a4a2a; font-weight: 500; font-size: 9px; text-transform: uppercase; letter-spacing: 0.5px;">Referrer</th>
-                                    <th style="text-align: center; padding: 4px 6px; color: #5a4a2a; font-weight: 500; font-size: 9px; text-transform: uppercase; letter-spacing: 0.5px;">Joined</th>
-                                    <th style="text-align: right; padding: 4px 6px; color: #5a4a2a; font-weight: 500; font-size: 9px; text-transform: uppercase; letter-spacing: 0.5px;">Amount</th>
-                                </tr>
-                            </thead>
-                            <tbody id="recentRegistrationsBody">
-                                <tr><td colspan="4" style="text-align: center; padding: 16px; color: #4a5a72; font-size: 11px;">Loading...</td></tr>
-                            </tbody>
-                        </table>
                     </div>
                 </div>
             </div>
         </div>
         
+        <!-- 实时活动 -->
         <div style="background: linear-gradient(145deg, rgba(20,24,40,0.85), rgba(10,12,24,0.6)); backdrop-filter: blur(8px); border-radius: 20px; padding: 20px; border: 1px solid rgba(180,180,200,0.06); box-shadow: 0 4px 20px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.04); position: relative; overflow: hidden;">
             <div style="position: absolute; top: -15%; right: -5%; width: 75%; height: 75%; background: radial-gradient(ellipse at 70% 20%, rgba(255,255,255,0.06), transparent 70%); pointer-events: none; border-radius: 50%;"></div>
             <div style="position: absolute; top: 0; left: 0; right: 0; height: 1px; background: linear-gradient(90deg, transparent, rgba(180,180,200,0.08), transparent);"></div>
@@ -1017,14 +1026,14 @@ function loadDashboardPage(days) {
             background: rgba(200,176,144,0.04);
             border-radius: 6px;
         }
-        #recentRegistrationsBody tr:hover {
+        #recentRegistrationsBody tr:hover td {
             background: rgba(200,176,144,0.04);
         }
         #recentRegistrationsBody td {
-            padding: 4px 6px;
+            padding: 2px 4px;
         }
         #recentRegistrationsBody::-webkit-scrollbar { width: 3px; }
-        #recentRegistrationsBody::-webkit-scrollbar-thumb { background: rgba(200,176,144,0.15); border-radius: 4px; }
+        #recentRegistrationsBody::-webkit-scrollbar-thumb { background: rgba(200,176,144,0.12); border-radius: 4px; }
     `;
     document.head.appendChild(style);
     
