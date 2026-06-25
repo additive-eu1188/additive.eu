@@ -1,4 +1,4 @@
-// admin-withdrawals.js - Complete Version
+// admin-withdrawals.js - 完整版（标签切换 + 搜索功能）
 let currentWithdrawTab = 'pending';
 let withdrawSearchKeyword = '';
 
@@ -9,43 +9,43 @@ async function loadWithdrawalsPage() {
         <div class="card">
             <div class="search-bar" style="justify-content: space-between; flex-wrap: wrap; gap: 12px;">
                 <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-                    <button id="tabPending" class="tab-withdraw-btn active" data-tab="pending"><i class="fas fa-clock"></i> Pending</button>
-                    <button id="tabHistory" class="tab-withdraw-btn" data-tab="history"><i class="fas fa-history"></i> History</button>
+                    <button id="tabPending" class="tab-withdraw-btn active" data-tab="pending"><i class="fas fa-clock"></i> 待处理</button>
+                    <button id="tabHistory" class="tab-withdraw-btn" data-tab="history"><i class="fas fa-history"></i> 提现记录</button>
                 </div>
                 <div style="display: flex; gap: 10px; flex-wrap: wrap; align-items: center;">
-                    <button id="refreshWithdrawBtn" class="btn-primary"><i class="fas fa-sync-alt"></i> Refresh</button>
+                    <button id="refreshWithdrawBtn" class="btn-primary"><i class="fas fa-sync-alt"></i> 刷新</button>
                 </div>
             </div>
             
-            <!-- Pending Panel -->
+            <!-- 待处理面板 -->
             <div id="pendingPanel" class="withdraw-panel">
                 <div class="table-container" style="max-height: 500px; overflow-y: auto;">
                     <table class="data-table">
-                        <thead><tr><th>UID</th><th>Username</th><th>Amount</th><th>Remaining Balance</th><th>Currency</th><th>Wallet Address</th><th>Request Time</th><th>Actions</th></tr></thead>
-                        <tbody id="withdrawalsTableBody"><tr><td colspan="8" style="text-align:center; padding:30px; color:#6a7a9a;">Loading...</td></tr></tbody>
+                        <thead><tr><th>UID</th><th>Username</th><th>Amount</th><th>Remaining Balance</th><th>Crypto Type</th><th>Wallet Address</th><th>Submitted Time</th><th>Actions</th></tr></thead>
+                        <tbody id="withdrawalsTableBody"><tr><td colspan="7" style="text-align:center; padding:30px; color:#6a7a9a;">Loading...</td></tr></tbody>
                     </table>
                 </div>
             </div>
             
-            <!-- History Panel -->
+            <!-- 历史记录面板 -->
             <div id="historyPanel" class="withdraw-panel" style="display: none;">
                 <div class="search-bar" style="margin-bottom: 16px;">
-                    <input type="text" id="historySearchInput" class="search-input" placeholder="🔍 Search UID or Username..." style="max-width: 300px;">
-                    <button id="historySearchBtn" class="btn-primary"><i class="fas fa-search"></i> Search</button>
-                    <button id="historyClearBtn" class="btn-primary"><i class="fas fa-times"></i> Clear</button>
-                    <button id="clearHistoryBtn" class="danger" style="background:#7a2f2f; border:none; padding:8px 16px; border-radius:20px; color:#fff; cursor:pointer; margin-left: auto;"><i class="fas fa-trash"></i> Clear All</button>
+                    <input type="text" id="historySearchInput" class="search-input" placeholder="🔍 搜索 UID 或用户名..." style="max-width: 300px;">
+                    <button id="historySearchBtn" class="btn-primary"><i class="fas fa-search"></i> 搜索</button>
+                    <button id="historyClearBtn" class="btn-primary"><i class="fas fa-times"></i> 清除</button>
+                    <button id="clearHistoryBtn" class="danger" style="background:#7a2f2f; border:none; padding:8px 16px; border-radius:20px; color:#fff; cursor:pointer; margin-left: auto;"><i class="fas fa-trash"></i> 清空记录</button>
                 </div>
                 <div class="table-container" style="max-height: 500px; overflow-y: auto;">
                     <table class="data-table">
-                        <thead><tr><th>UID</th><th>Username</th><th>Amount</th><th>Currency</th><th>Wallet Address</th><th>Status</th><th>Request Time</th><th>Processed Time</th></tr></thead>
-                        <tbody id="withdrawalHistoryBody"><tr><td colspan="8" style="text-align:center; padding:30px; color:#6a7a9a;">Loading...</td></tr></tbody>
+                        <thead><tr><th>UID</th><th>用户名</th><th>金额</th><th>币种</th><th>钱包地址</th><th>状态</th><th>申请时间</th><th>处理时间</th></tr></thead>
+                        <tbody id="withdrawalHistoryBody"><tr><td colspan="8" style="text-align:center; padding:30px; color:#6a7a9a;">加载中...</td></tr></tbody>
                     </table>
                 </div>
             </div>
         </div>
     `;
     
-    // Add styles
+    // 添加样式
     const style = document.createElement('style');
     style.textContent = `
         .tab-withdraw-btn {
@@ -165,14 +165,14 @@ async function loadWithdrawalsPage() {
     `;
     document.head.appendChild(style);
     
-    // Bind tab switching
+    // 绑定标签切换
     document.getElementById('tabPending')?.addEventListener('click', () => switchWithdrawTab('pending'));
     document.getElementById('tabHistory')?.addEventListener('click', () => switchWithdrawTab('history'));
     
-    // Bind refresh button
+    // 绑定刷新按钮
     document.getElementById('refreshWithdrawBtn')?.addEventListener('click', refreshWithdrawData);
     
-    // Bind history search
+    // 绑定历史搜索
     document.getElementById('historySearchBtn')?.addEventListener('click', () => {
         withdrawSearchKeyword = document.getElementById('historySearchInput').value.trim();
         loadWithdrawalHistory();
@@ -183,10 +183,10 @@ async function loadWithdrawalsPage() {
         loadWithdrawalHistory();
     });
     
-    // Bind clear history
+    // 绑定清空记录
     document.getElementById('clearHistoryBtn')?.addEventListener('click', clearWithdrawalHistory);
     
-    // Enter key search
+    // 回车搜索
     document.getElementById('historySearchInput')?.addEventListener('keypress', (e) => {
         if (e.key === 'Enter') {
             withdrawSearchKeyword = document.getElementById('historySearchInput').value.trim();
@@ -194,12 +194,12 @@ async function loadWithdrawalsPage() {
         }
     });
     
-    // Load data
+    // 加载数据
     await loadWithdrawals();
     await loadWithdrawalHistory();
 }
 
-// ========== Tab Switch ==========
+// ========== 标签切换 ==========
 function switchWithdrawTab(tab) {
     currentWithdrawTab = tab;
     document.getElementById('tabPending').classList.toggle('active', tab === 'pending');
@@ -214,12 +214,12 @@ function switchWithdrawTab(tab) {
     }
 }
 
-// ========== Refresh All Data ==========
+// ========== 刷新所有数据 ==========
 async function refreshWithdrawData() {
     const btn = document.getElementById('refreshWithdrawBtn');
     if (btn) {
         btn.disabled = true;
-        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Refreshing...';
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 刷新中...';
     }
     
     try {
@@ -228,19 +228,19 @@ async function refreshWithdrawData() {
             loadWithdrawalHistory()
         ]);
         if (window.loadDashboardPage) window.loadDashboardPage(currentDays);
-        showToast('Data refreshed', 'success');
+        showToast('数据已刷新', 'success');
     } catch (e) {
-        console.error('Refresh failed:', e);
-        showToast('Refresh failed: ' + e.message, 'error');
+        console.error('刷新失败:', e);
+        showToast('刷新失败: ' + e.message, 'error');
     } finally {
         if (btn) {
             btn.disabled = false;
-            btn.innerHTML = '<i class="fas fa-sync-alt"></i> Refresh';
+            btn.innerHTML = '<i class="fas fa-sync-alt"></i> 刷新';
         }
     }
 }
 
-// ========== Load Pending Withdrawals ==========
+// ========== 加载待处理提现 ==========
 async function loadWithdrawals() {
     const tbody = document.getElementById('withdrawalsTableBody');
     if (!tbody) return;
@@ -255,7 +255,7 @@ async function loadWithdrawals() {
         if (error) throw error;
         
         if (!wd || wd.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="8" style="text-align:center; padding:30px; color:#6a7a9a;">No pending withdrawals</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="8" style="text-align:center; padding:30px; color:#6a7a9a;">暂无待处理提现</td></tr>';
             return;
         }
         
@@ -265,7 +265,7 @@ async function loadWithdrawals() {
             const currency = w.currency || w.withdrawal_address_type || 'USDT';
             const currencyClass = currency.toLowerCase();
             
-            // Get user balance and calculate remaining balance after withdrawal
+            // 获取用户余额并计算提现后余额
             let remainingBalance = 0;
             try {
                 const { data: userData } = await sb
@@ -277,7 +277,7 @@ async function loadWithdrawals() {
                     remainingBalance = (userData.balance || 0) - (w.amount || 0);
                 }
             } catch (e) {
-                console.error('Failed to get user balance:', e);
+                console.error('获取用户余额失败:', e);
             }
             
             // 1. UID
@@ -289,10 +289,10 @@ async function loadWithdrawals() {
             // 3. Amount
             row.insertCell(2).innerHTML = `<span class="text-gold">€${(w.amount || 0).toFixed(2)}</span>`;
             
-            // 4. Remaining Balance (after withdrawal) - Grey color
+            // 4. Remaining Balance (灰色)
             row.insertCell(3).innerHTML = `<span style="color: #8a9abb; font-weight: 500;">€${remainingBalance.toFixed(2)}</span>`;
             
-            // 5. Currency
+            // 5. Crypto Type (原币种列)
             row.insertCell(4).innerHTML = `<span class="currency-badge ${currencyClass}">${escapeHtml(currency)}</span>`;
             
             // 6. Wallet Address
@@ -306,17 +306,17 @@ async function loadWithdrawals() {
                 </div>
             `;
             
-            // 7. Request Time
+            // 7. Submitted Time
             row.insertCell(6).innerText = new Date(w.request_date).toLocaleString();
             
             // 8. Actions
             row.insertCell(7).innerHTML = `
-                <button class="btn-sm-action btn-approve approve-withdraw" data-id="${w.id}" data-uid="${w.uid}" data-amt="${w.amount}"><i class="fas fa-check"></i> Approve</button>
-                <button class="btn-sm-action btn-reject reject-withdraw" data-id="${w.id}" data-uid="${w.uid}" data-amt="${w.amount}"><i class="fas fa-times"></i> Reject</button>
+                <button class="btn-sm-action btn-approve approve-withdraw" data-id="${w.id}" data-uid="${w.uid}" data-amt="${w.amount}"><i class="fas fa-check"></i> 批准</button>
+                <button class="btn-sm-action btn-reject reject-withdraw" data-id="${w.id}" data-uid="${w.uid}" data-amt="${w.amount}"><i class="fas fa-times"></i> 拒绝</button>
             `;
         }
         
-        // Bind copy buttons
+        // 绑定复制按钮
         document.querySelectorAll('#withdrawalsTableBody .copy-address-btn').forEach(btn => {
             btn.addEventListener('click', (e) => {
                 e.stopPropagation();
@@ -324,7 +324,7 @@ async function loadWithdrawals() {
             });
         });
         
-        // Bind approve/reject
+        // 绑定批准/拒绝
         document.querySelectorAll('.approve-withdraw').forEach(btn => {
             btn.addEventListener('click', () => handleApproveWithdraw(btn.dataset.id, btn.dataset.uid, btn.dataset.amt));
         });
@@ -333,12 +333,12 @@ async function loadWithdrawals() {
         });
         
     } catch (e) {
-        console.error('Failed to load withdrawals:', e);
-        tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; padding:30px; color:#ff8888;">Failed to load: ${escapeHtml(e.message)}</td></tr>`;
+        console.error('加载提现失败:', e);
+        tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; padding:30px; color:#ff8888;">加载失败: ${escapeHtml(e.message)}</td></tr>`;
     }
 }
 
-// ========== Load Withdrawal History ==========
+// ========== 加载提现历史 ==========
 async function loadWithdrawalHistory() {
     const tbody = document.getElementById('withdrawalHistoryBody');
     if (!tbody) return;
@@ -360,7 +360,7 @@ async function loadWithdrawalHistory() {
         if (error) throw error;
         
         if (!history || history.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="8" style="text-align:center; padding:30px; color:#6a7a9a;">No withdrawal records</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="8" style="text-align:center; padding:30px; color:#6a7a9a;">暂无提现记录</td></tr>';
             return;
         }
         
@@ -375,7 +375,7 @@ async function loadWithdrawalHistory() {
             row.insertCell(2).innerHTML = `<span class="${w.status === 'approved' ? 'text-green' : 'text-red'}">€${(w.amount || 0).toFixed(2)}</span>`;
             row.insertCell(3).innerHTML = `<span class="currency-badge ${currencyClass}">${escapeHtml(currency)}</span>`;
             
-            // Wallet address
+            // 钱包地址
             const address = w.wallet_address || '-';
             const addressCell = row.insertCell(4);
             addressCell.className = 'wallet-address-cell';
@@ -386,12 +386,12 @@ async function loadWithdrawalHistory() {
                 </div>
             `;
             
-            row.insertCell(5).innerHTML = `<span class="status-badge-${w.status}">${w.status === 'approved' ? '✅ Approved' : '❌ Rejected'}</span>`;
+            row.insertCell(5).innerHTML = `<span class="status-badge-${w.status}">${w.status === 'approved' ? '✅ 已批准' : '❌ 已拒绝'}</span>`;
             row.insertCell(6).innerText = new Date(w.request_date).toLocaleString();
             row.insertCell(7).innerText = w.processed_at ? new Date(w.processed_at).toLocaleString() : '-';
         }
         
-        // Bind copy buttons
+        // 绑定复制按钮
         document.querySelectorAll('#withdrawalHistoryBody .copy-address-btn').forEach(btn => {
             btn.addEventListener('click', (e) => {
                 e.stopPropagation();
@@ -400,16 +400,16 @@ async function loadWithdrawalHistory() {
         });
         
     } catch (e) {
-        console.error('Failed to load history:', e);
-        tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; padding:30px; color:#ff8888;">Failed to load: ${escapeHtml(e.message)}</td></tr>`;
+        console.error('加载历史记录失败:', e);
+        tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; padding:30px; color:#ff8888;">加载失败: ${escapeHtml(e.message)}</td></tr>`;
     }
 }
 
-// ========== Copy Function ==========
+// ========== 复制功能 ==========
 function copyToClipboard(text) {
     if (navigator.clipboard && navigator.clipboard.writeText) {
         navigator.clipboard.writeText(text).then(() => {
-            showToast('Address copied!', 'success');
+            showToast('地址已复制！', 'success');
         }).catch(() => {
             fallbackCopy(text);
         });
@@ -428,16 +428,16 @@ function fallbackCopy(text) {
     textarea.select();
     try {
         document.execCommand('copy');
-        showToast('Address copied!', 'success');
+        showToast('地址已复制！', 'success');
     } catch (e) {
-        showToast('Copy failed, please copy manually', 'error');
+        showToast('复制失败，请手动复制', 'error');
     }
     textarea.remove();
 }
 
-// ========== Approve Withdrawal ==========
+// ========== 批准提现 ==========
 async function handleApproveWithdraw(id, uid, amount) {
-    showConfirm('Approve Withdrawal', `Confirm approve withdrawal of €${parseFloat(amount).toFixed(2)} for user ${uid}?`, async () => {
+    showConfirm('批准提现', `确认批准用户 ${uid} 的提现申请 €${parseFloat(amount).toFixed(2)}？`, async () => {
         try {
             const { error } = await sb
                 .from('withdrawals')
@@ -451,18 +451,18 @@ async function handleApproveWithdraw(id, uid, amount) {
             
             await refreshWithdrawData();
             if (window.loadDashboardPage) window.loadDashboardPage(currentDays);
-            showToast('✅ Withdrawal approved', 'success');
+            showToast('✅ 提现已批准', 'success');
         } catch (e) {
-            showToast('Approval failed: ' + e.message, 'error');
+            showToast('批准失败: ' + e.message, 'error');
         }
     });
 }
 
-// ========== Reject Withdrawal ==========
+// ========== 拒绝提现 ==========
 async function handleRejectWithdraw(id, uid, amount) {
-    showConfirm('Reject Withdrawal', `Confirm reject withdrawal of €${parseFloat(amount).toFixed(2)} for user ${uid}? Amount will be returned to user.`, async () => {
+    showConfirm('拒绝提现', `确认拒绝用户 ${uid} 的提现申请？金额 €${parseFloat(amount).toFixed(2)} 将退回用户账户。`, async () => {
         try {
-            // Get user current balance
+            // 获取用户当前余额
             const { data: user, error: userError } = await sb
                 .from('users')
                 .select('balance')
@@ -471,7 +471,7 @@ async function handleRejectWithdraw(id, uid, amount) {
             
             if (userError) throw userError;
             
-            // Refund amount
+            // 退回金额
             const { error: balanceError } = await sb
                 .from('users')
                 .update({ balance: (user.balance || 0) + parseFloat(amount) })
@@ -479,7 +479,7 @@ async function handleRejectWithdraw(id, uid, amount) {
             
             if (balanceError) throw balanceError;
             
-            // Update withdrawal status
+            // 更新提现状态
             const { error } = await sb
                 .from('withdrawals')
                 .update({ 
@@ -492,16 +492,16 @@ async function handleRejectWithdraw(id, uid, amount) {
             
             await refreshWithdrawData();
             if (window.loadDashboardPage) window.loadDashboardPage(currentDays);
-            showToast('❌ Withdrawal rejected, amount refunded', 'success');
+            showToast('❌ 已拒绝，金额已退回', 'success');
         } catch (e) {
-            showToast('Rejection failed: ' + e.message, 'error');
+            showToast('拒绝失败: ' + e.message, 'error');
         }
     });
 }
 
-// ========== Clear History ==========
+// ========== 清空历史记录 ==========
 async function clearWithdrawalHistory() {
-    showConfirm('⚠️ Clear Records', 'Are you sure you want to clear all withdrawal history? This action cannot be undone!', async () => {
+    showConfirm('⚠️ 清空记录', '确定要清空所有提现历史记录吗？此操作不可恢复！', async () => {
         try {
             const { error } = await sb
                 .from('withdrawals')
@@ -510,15 +510,15 @@ async function clearWithdrawalHistory() {
             
             if (error) throw error;
             
-            showToast('All withdrawal records cleared', 'success');
+            showToast('已清空所有提现记录', 'success');
             loadWithdrawalHistory();
         } catch (e) {
-            showToast('Clear failed: ' + e.message, 'error');
+            showToast('清空失败: ' + e.message, 'error');
         }
     });
 }
 
-// ========== Utility Functions ==========
+// ========== 工具函数 ==========
 function escapeHtml(str) {
     if (!str) return '';
     return String(str).replace(/[&<>]/g, function(m) {
