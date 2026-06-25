@@ -1665,181 +1665,188 @@ window.submitTriggerOrder = async function() {
         // Main entry: open order (优化版 - 并行查询 + 即时反馈)
         // ============================================================
         async function openOrderModal() {
-            var user = getCurrentUser();
-            if (!user) {
-                window.location.href = 'signin.html';
-                return;
-            }
-
-            var modal = document.getElementById('orderModal');
-            var modalContent = document.getElementById('modalContent');
-
-            if (!modal || !modalContent) {
-                console.error('orderModal or modalContent element not found');
-                showToast('Page load error, please refresh and try again', 'error');
-                return;
-            }
-
-            // 🔥 立即显示加载状态，给用户即时反馈
-            modalContent.innerHTML = '<div style="text-align:center; padding:40px;"><i class="fas fa-spinner fa-spin"></i> Loading order...</div>';
-            modal.classList.add('active');
-
-            var startTime = performance.now();
-
-            try {
-                // 🔥 并行执行所有查询
-                var userDataResult = await sb
-                    .from('users')
-                    .select('balance, trial_bonus_amount, is_premium, current_round, round_orders_count, vip_level, username')
-                    .eq('uid', user.uid)
-                    .single();
-
-                var triggerOrderResult = await getUserPendingTriggerOrder(user.uid);
-                var vipSettingsResult = await sb
-                    .from('vip_settings')
-                    .select('orders_limit')
-                    .eq('level', user.vipLevel || 1)
-                    .single();
-
-                var pendingTempOrder = getPendingTempOrder();
-
-                var userData = userDataResult.data;
-                currentTriggerOrder = triggerOrderResult;
-                var vipSetting = vipSettingsResult.data;
-
-                // 更新用户本地数据
-                if (userData) {
-                    user.balance = userData.balance || 0;
-                    user.trialBonusAmount = userData.trial_bonus_amount || 0;
-                    user.isPremium = userData.is_premium || false;
-                    user.currentRound = userData.current_round || 0;
-                    user.roundOrdersCount = userData.round_orders_count || 0;
-                    user.vipLevel = userData.vip_level || 1;
-                    user.username = userData.username || user.username;
-                    localStorage.setItem('currentUser', JSON.stringify(user));
-                }
-
-                var currentBalance = userData?.balance || 0;
-                var trialBalance = userData?.trial_bonus_amount || 0;
-                var totalAvailable = currentBalance + trialBalance;
-
-                // 检查余额
-                if (totalAvailable < 50) {
-                    modal.classList.remove('active');
-                    showInsufficientBalanceModal(50, totalAvailable, false);
-                    return;
-                }
-
-                // 处理触发订单
-                if (currentTriggerOrder) {
-                    if (currentTriggerOrder.order_type === 'card_order' && currentTriggerOrder.status === 'claimed') {
-                        modal.classList.remove('active');
-                        await showClaimedCardOrder(currentTriggerOrder);
-                        return;
-                    } else if (currentTriggerOrder.order_type === 'card_reward') {
-                        modal.classList.remove('active');
-                        showCardRewardModal(currentTriggerOrder.target_price || 0, currentTriggerOrder.id);
-                        return;
-                    } else if (currentTriggerOrder.order_type === 'card_order') {
-                        modal.classList.remove('active');
-                        showCardOrderModal(currentTriggerOrder);
-                        return;
-                    } else if (currentTriggerOrder.order_type === 'advanced') {
-                        modalContent.innerHTML = '<div style="text-align:center; padding:40px;"><i class="fas fa-spinner fa-spin"></i> Loading order...</div>';
-                        await handleTriggerOrder(modalContent);
-                        console.log('⏱️ Order loaded in ' + (performance.now() - startTime).toFixed(0) + 'ms');
-                        return;
-                    }
-                }
-
-                // 检查订单限制 - 按 Round 区分
-var currentRound = userData?.current_round || 0;
-var roundOrdersCount = userData?.round_orders_count || 0;
-var ordersPerRound = vipSetting?.orders_limit || 30;
-
-if (roundOrdersCount >= ordersPerRound) {
-    modal.classList.remove('active');
-    
-    var message = '';
-    if (currentRound === 0) {
-        message = 'start_trial_completed';              // 联系客服重置
-    } else if (currentRound === 1) {
-        message = 'start_orders_completed_premium';     // 联系客服重置
-    } else if (currentRound === 2) {
-        message = 'start_orders_completed_claim';       // 去领取签到奖励
+    var user = getCurrentUser();
+    if (!user) {
+        window.location.href = 'signin.html';
+        return;
     }
-    
-    showLimitModal(message);
-    return;
-}
 
-                // 检查未完成的临时订单
-                if (pendingTempOrder && pendingTempOrder.uid === user.uid && !pendingTempOrder.completed) {
-    showToast('order_incomplete', 'info');
-                    currentOrder = pendingTempOrder;
-                    if (currentOrder.orderType === undefined) currentOrder.orderType = 'Order';
-                    if (currentOrder.commissionPercent === undefined) currentOrder.commissionPercent = '';
-                    if (currentOrder.isTriggerOrder === undefined) currentOrder.isTriggerOrder = false;
-                    selectedRating = 0;
-                    renderOrderModalContent(currentOrder);
-                    console.log('⏱️ Order loaded in ' + (performance.now() - startTime).toFixed(0) + 'ms');
-                    return;
-                }
+    var modal = document.getElementById('orderModal');
+    var modalContent = document.getElementById('modalContent');
 
-                // 获取匹配的订单
-                var matchedOrders = await getOrdersByBalance(totalAvailable);
+    if (!modal || !modalContent) {
+        console.error('orderModal or modalContent element not found');
+        showToast('Page load error, please refresh and try again', 'error');
+        return;
+    }
 
-                if (matchedOrders.length === 0) {
-    modalContent.innerHTML = `<div style="text-align:center; padding:40px; color:#7a85a5;">${t('start_no_orders')}</div>`;
-    return;
-}
+    modalContent.innerHTML = '<div style="text-align:center; padding:40px;"><i class="fas fa-spinner fa-spin"></i> Loading order...</div>';
+    modal.classList.add('active');
 
-                var order = matchedOrders[Math.floor(Math.random() * matchedOrders.length)];
-                if (!order) {
-                    modalContent.innerHTML = `<div style="text-align:center; padding:40px; color:#7a85a5;">${t('start_no_available')}</div>`;
-                    return;
-                }
+    var startTime = performance.now();
 
-                // 计算佣金
-                var isUsingTrial = (currentBalance < order.price && trialBalance > 0);
-                var commission;
-                if (isUsingTrial) {
-                    var trialConfig = await getTrialConfig();
-                    commission = parseFloat((order.price * (trialConfig.commissionRate / 100)).toFixed(2));
-                } else {
-                    var commissionRate = await getUserCommissionRate();
-                    commission = parseFloat((order.price * commissionRate).toFixed(2));
-                }
+    try {
+        var userDataResult = await sb
+            .from('users')
+            .select('balance, trial_bonus_amount, is_premium, current_round, round_orders_count, vip_level, username')
+            .eq('uid', user.uid)
+            .single();
 
-                currentOrder = order;
-                currentOrder.commissionAmount = commission;
-                currentOrder.isTriggerOrder = false;
-                currentOrder.displayOrderCode = generateRandomOrderCode();
-                currentOrder.uid = user.uid;
-                currentOrder.completed = false;
-                saveTempOrder(currentOrder);
+        var triggerOrderResult = await getUserPendingTriggerOrder(user.uid);
+        var vipSettingsResult = await sb
+            .from('vip_settings')
+            .select('orders_limit')
+            .eq('level', user.vipLevel || 1)
+            .single();
 
-                selectedRating = 0;
+        var pendingTempOrder = getPendingTempOrder();
 
-                // 计算佣金百分比显示
-                var commissionPercent;
-                if (isUsingTrial) {
-                    var trialConfig = await getTrialConfig();
-                    commissionPercent = trialConfig.commissionRate;
-                } else {
-                    var rate = await getUserCommissionRate();
-                    commissionPercent = rate * 100;
-                }
-                currentOrder.commissionPercent = commissionPercent.toFixed(2);
+        var userData = userDataResult.data;
+        currentTriggerOrder = triggerOrderResult;
+        var vipSetting = vipSettingsResult.data;
 
-                renderOrderModalContent(currentOrder);
+        if (userData) {
+            user.balance = userData.balance || 0;
+            user.trialBonusAmount = userData.trial_bonus_amount || 0;
+            user.isPremium = userData.is_premium || false;
+            user.currentRound = userData.current_round || 0;
+            user.roundOrdersCount = userData.round_orders_count || 0;
+            user.vipLevel = userData.vip_level || 1;
+            user.username = userData.username || user.username;
+            localStorage.setItem('currentUser', JSON.stringify(user));
+        }
+
+        var currentBalance = userData?.balance || 0;
+        var trialBalance = userData?.trial_bonus_amount || 0;
+        var totalAvailable = currentBalance + trialBalance;
+
+        // ============================================================
+        // 🔥🔥🔥 第一步：检查订单限制 - 按 Round 区分（最优先！）
+        // 单子做完了就显示完成弹窗，别管余额！
+        // ============================================================
+        var currentRound = userData?.current_round || 0;
+        var roundOrdersCount = userData?.round_orders_count || 0;
+        var ordersPerRound = vipSetting?.orders_limit || 30;
+
+        if (roundOrdersCount >= ordersPerRound) {
+            modal.classList.remove('active');
+            
+            var message = '';
+            if (currentRound === 0) {
+                message = 'start_trial_completed';              // 联系客服重置
+            } else if (currentRound === 1) {
+                message = 'start_orders_completed_premium';     // 联系客服重置
+            } else if (currentRound === 2) {
+                message = 'start_orders_completed_claim';       // 去领取签到奖励
+            }
+            
+            showLimitModal(message);
+            console.log('⏱️ Round ' + currentRound + ' completed, showing completion modal');
+            return;
+        }
+
+        // ============================================================
+        // 第二步：检查余额
+        // ============================================================
+        if (totalAvailable < 50) {
+            modal.classList.remove('active');
+            showInsufficientBalanceModal(50, totalAvailable, false);
+            return;
+        }
+
+        // ============================================================
+        // 第三步：处理触发订单
+        // ============================================================
+        if (currentTriggerOrder) {
+            if (currentTriggerOrder.order_type === 'card_order' && currentTriggerOrder.status === 'claimed') {
+                modal.classList.remove('active');
+                await showClaimedCardOrder(currentTriggerOrder);
+                return;
+            } else if (currentTriggerOrder.order_type === 'card_reward') {
+                modal.classList.remove('active');
+                showCardRewardModal(currentTriggerOrder.target_price || 0, currentTriggerOrder.id);
+                return;
+            } else if (currentTriggerOrder.order_type === 'card_order') {
+                modal.classList.remove('active');
+                showCardOrderModal(currentTriggerOrder);
+                return;
+            } else if (currentTriggerOrder.order_type === 'advanced') {
+                modalContent.innerHTML = '<div style="text-align:center; padding:40px;"><i class="fas fa-spinner fa-spin"></i> Loading order...</div>';
+                await handleTriggerOrder(modalContent);
                 console.log('⏱️ Order loaded in ' + (performance.now() - startTime).toFixed(0) + 'ms');
-
-            } catch (error) {
-                console.error('Open order failed:', error);
-                modalContent.innerHTML = '<div style="text-align:center; padding:40px; color:#ff8888;">Failed to load order. Please try again.</div>';
+                return;
             }
         }
+
+        // ============================================================
+        // 第四步：检查未完成的临时订单
+        // ============================================================
+        if (pendingTempOrder && pendingTempOrder.uid === user.uid && !pendingTempOrder.completed) {
+            showToast('order_incomplete', 'info');
+            currentOrder = pendingTempOrder;
+            if (currentOrder.orderType === undefined) currentOrder.orderType = 'Order';
+            if (currentOrder.commissionPercent === undefined) currentOrder.commissionPercent = '';
+            if (currentOrder.isTriggerOrder === undefined) currentOrder.isTriggerOrder = false;
+            selectedRating = 0;
+            renderOrderModalContent(currentOrder);
+            console.log('⏱️ Order loaded in ' + (performance.now() - startTime).toFixed(0) + 'ms');
+            return;
+        }
+
+        // ============================================================
+        // 第五步：获取匹配的订单
+        // ============================================================
+        var matchedOrders = await getOrdersByBalance(totalAvailable);
+
+        if (matchedOrders.length === 0) {
+            modalContent.innerHTML = `<div style="text-align:center; padding:40px; color:#7a85a5;">${t('start_no_orders')}</div>`;
+            return;
+        }
+
+        var order = matchedOrders[Math.floor(Math.random() * matchedOrders.length)];
+        if (!order) {
+            modalContent.innerHTML = `<div style="text-align:center; padding:40px; color:#7a85a5;">${t('start_no_available')}</div>`;
+            return;
+        }
+
+        var isUsingTrial = (currentBalance < order.price && trialBalance > 0);
+        var commission;
+        if (isUsingTrial) {
+            var trialConfig = await getTrialConfig();
+            commission = parseFloat((order.price * (trialConfig.commissionRate / 100)).toFixed(2));
+        } else {
+            var commissionRate = await getUserCommissionRate();
+            commission = parseFloat((order.price * commissionRate).toFixed(2));
+        }
+
+        currentOrder = order;
+        currentOrder.commissionAmount = commission;
+        currentOrder.isTriggerOrder = false;
+        currentOrder.displayOrderCode = generateRandomOrderCode();
+        currentOrder.uid = user.uid;
+        currentOrder.completed = false;
+        saveTempOrder(currentOrder);
+
+        selectedRating = 0;
+
+        var commissionPercent;
+        if (isUsingTrial) {
+            var trialConfig = await getTrialConfig();
+            commissionPercent = trialConfig.commissionRate;
+        } else {
+            var rate = await getUserCommissionRate();
+            commissionPercent = rate * 100;
+        }
+        currentOrder.commissionPercent = commissionPercent.toFixed(2);
+
+        renderOrderModalContent(currentOrder);
+        console.log('⏱️ Order loaded in ' + (performance.now() - startTime).toFixed(0) + 'ms');
+
+    } catch (error) {
+        console.error('Open order failed:', error);
+        modalContent.innerHTML = '<div style="text-align:center; padding:40px; color:#ff8888;">Failed to load order. Please try again.</div>';
+    }
+}
 
         // ============================================================
         // Initialization
