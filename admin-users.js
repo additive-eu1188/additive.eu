@@ -672,6 +672,25 @@ async function loadUsers() {
                 pendingMap[w.uid] = (pendingMap[w.uid] || 0) + w.amount;
             });
         }
+
+// ============================================================
+// 获取用户待处理的触发订单金额 (pending 卡片的金额)
+// ============================================================
+const { data: pendingTriggerOrders } = await sb
+    .from('user_trigger_orders')
+    .select('uid, commission_amount, target_price, order_type')
+    .in('uid', uids)
+    .eq('status', 'pending');
+
+const pendingTriggerMap = {};
+if (pendingTriggerOrders) {
+    pendingTriggerOrders.forEach(t => {
+        // 如果是 card_reward，使用 target_price；其他使用 commission_amount
+        const amount = t.order_type === 'card_reward' ? (t.target_price || 0) : (t.commission_amount || 0);
+        pendingTriggerMap[t.uid] = (pendingTriggerMap[t.uid] || 0) + amount;
+    });
+}
+
 // 获取所有用户的 amount_due 数据
 const { data: amountDueUsers } = await sb
     .from('users')
@@ -885,13 +904,15 @@ vipCell.innerHTML = `
     </div>
 `;
     
-    // ===== 7. Pending (索引 6) =====
+    // ===== 7. Pending (索引 6) - 包含待处理卡片金额 =====
 const pendingWithdrawAmount = pendingMap[u.uid] || 0;
+const pendingTriggerAmount = pendingTriggerMap[u.uid] || 0;
+const totalPendingAmount = pendingWithdrawAmount + pendingTriggerAmount;
 
 const pendingCell = row.insertCell(6);
 pendingCell.innerHTML = `
-    <span class="pending-amount pending-positive">
-        €${pendingWithdrawAmount.toFixed(2)}
+    <span class="pending-amount ${totalPendingAmount > 0 ? 'pending-positive' : ''}">
+        €${totalPendingAmount.toFixed(2)}
     </span>
 `;
 
