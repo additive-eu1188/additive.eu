@@ -429,3 +429,160 @@ if (document.readyState === 'loading') {
 } else {
     initNavClickClose();
 }
+
+// ============================================================
+// 全局 Last Online 自动更新（无需每个页面添加）
+// ============================================================
+
+let lastOnlineUpdateTime = 0;
+const ONLINE_UPDATE_INTERVAL = 60000; // 60秒内不重复更新
+let onlineUpdatePending = false;
+
+async function updateUserLastOnline(uid) {
+    if (!uid) return;
+    
+    const now = Date.now();
+    if (now - lastOnlineUpdateTime < ONLINE_UPDATE_INTERVAL) {
+        return;
+    }
+    if (onlineUpdatePending) {
+        return;
+    }
+    
+    onlineUpdatePending = true;
+    
+    try {
+        await sb
+            .from('users')
+            .update({ last_online: new Date().toISOString() })
+            .eq('uid', uid);
+        lastOnlineUpdateTime = now;
+    } catch (e) {
+        // 静默失败
+        console.debug('更新 last_online 失败:', e);
+    } finally {
+        onlineUpdatePending = false;
+    }
+}
+
+// ============================================================
+// 方法1: 监听页面可见性变化（用户切换到当前标签页时更新）
+// ============================================================
+document.addEventListener('visibilitychange', function() {
+    if (document.visibilityState === 'visible') {
+        const user = getCurrentUser();
+        if (user && user.uid) {
+            updateUserLastOnline(user.uid);
+        }
+    }
+});
+
+// ============================================================
+// 方法2: 监听路由变化（SPA 页面切换）
+// ============================================================
+if (window.history && window.history.pushState) {
+    const originalPushState = window.history.pushState;
+    const originalReplaceState = window.history.replaceState;
+    
+    window.history.pushState = function() {
+        originalPushState.apply(this, arguments);
+        triggerOnlineUpdate();
+    };
+    
+    window.history.replaceState = function() {
+        originalReplaceState.apply(this, arguments);
+        triggerOnlineUpdate();
+    };
+    
+    window.addEventListener('popstate', function() {
+        triggerOnlineUpdate();
+    });
+}
+
+function triggerOnlineUpdate() {
+    const user = getCurrentUser();
+    if (user && user.uid) {
+        // 延迟200ms，等待页面加载完成
+        setTimeout(function() {
+            updateUserLastOnline(user.uid);
+        }, 200);
+    }
+}
+
+// ============================================================
+// 方法3: 监听用户点击（任何点击都视为活跃）
+// ============================================================
+let clickTimer = null;
+
+document.addEventListener('click', function() {
+    const user = getCurrentUser();
+    if (!user || !user.uid) return;
+    
+    // 防抖：点击后延迟更新，避免频繁请求
+    if (clickTimer) {
+        clearTimeout(clickTimer);
+    }
+    clickTimer = setTimeout(function() {
+        updateUserLastOnline(user.uid);
+        clickTimer = null;
+    }, 1000);
+});
+
+// ============================================================
+// 方法4: 监听键盘输入（任何键盘操作都视为活跃）
+// ============================================================
+let keyTimer = null;
+
+document.addEventListener('keydown', function() {
+    const user = getCurrentUser();
+    if (!user || !user.uid) return;
+    
+    if (keyTimer) {
+        clearTimeout(keyTimer);
+    }
+    keyTimer = setTimeout(function() {
+        updateUserLastOnline(user.uid);
+        keyTimer = null;
+    }, 1000);
+});
+
+// ============================================================
+// 方法5: 页面加载时自动更新
+// ============================================================
+if (document.readyState === 'complete') {
+    triggerOnlineUpdate();
+} else {
+    document.addEventListener('DOMContentLoaded', function() {
+        triggerOnlineUpdate();
+    });
+}
+
+// ============================================================
+// 方法6: 页面关闭/刷新前更新一次
+// ============================================================
+window.addEventListener('beforeunload', function() {
+    const user = getCurrentUser();
+    if (user && user.uid) {
+        // 使用同步方式发送（navigator.sendBeacon 更可靠）
+        if (navigator.sendBeacon) {
+            const data = JSON.stringify({ 
+                uid: user.uid, 
+                last_online: new Date().toISOString() 
+            });
+            // 注意：sendBeacon 需要后端支持，这里用 Supabase 的 REST API
+            fetch(`${SUPABASE_URL}/rest/v1/users?uid=eq.${user.uid}`, {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'apikey': SUPABASE_KEY,
+                    'Authorization': `Bearer ${SUPABASE_KEY}`
+                },
+                body: JSON.stringify({ last_online: new Date().toISOString() }),
+                keepalive: true
+            }).catch(function() {});
+        }
+    }
+});
+
+console.log('✅ 全局 Last Online 自动更新已启用');
+console.log('   触发条件: 页面切换、点击、键盘输入、标签页切换');

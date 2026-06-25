@@ -251,6 +251,7 @@ async function loadUsersPage() {
                             <th style="min-width: 110px;">Balance (€)</th>
                             <th style="min-width: 200px;">Round / Orders</th>
                             <th style="min-width: 130px;">Registered IP</th>
+                            <th style="min-width: 130px;">Last Online</th>
                             <th style="min-width: 150px;">Time Registered</th>
                             <th style="min-width: 180px;">Actions</th>
                         </tr>
@@ -460,7 +461,7 @@ async function loadUsers() {
     const tbody = document.getElementById('usersTableBody');
     if (!tbody) return;
     
-    tbody.innerHTML = '<tr><td colspan="12" style="text-align:center; padding:40px;"><i class="fas fa-spinner fa-spin"></i> Loading...</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="13" style="text-align:center; padding:40px;"><i class="fas fa-spinner fa-spin"></i> Loading...</td></tr>';
     
     try {
         const { data: vipSettings } = await sb.from('vip_settings').select('*');
@@ -488,7 +489,7 @@ async function loadUsers() {
         window.userTotalCount = count || 0;
         
         if (!users || users.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="12" style="text-align:center; padding:40px; color:#6a7a9a;">No users</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="13" style="text-align:center; padding:40px; color:#6a7a9a;">No users</td></tr>';
             renderUserPagination();
             return;
         }
@@ -638,7 +639,7 @@ async function loadUsers() {
     // 2. User ID (UID) (索引 1)
     row.insertCell(1).innerHTML = `<span class="badge" style="font-size: 11px;">${escapeHtml(u.uid)}</span>`;
 
-    // 3. Position (索引 2) - 新增
+    // 3. Position (索引 2)
     const roleCell = row.insertCell(2);
     const userRole = u.user_role || 'User';
     const roleBadgeColor = userRole === 'Agent' ? '#ffb84d' : '#6a7a9a';
@@ -682,7 +683,7 @@ async function loadUsers() {
     }
     row.insertCell(4).innerHTML = countryHtml;
     
-    // 6. VIP Level (索引 5)
+    // 6. VIP Level (索引 5) - 只显示下拉，移除标签
     const vipCell = row.insertCell(5);
     const vipLevels = [
         { level: 1, name: 'Normal' },
@@ -695,12 +696,9 @@ async function loadUsers() {
         optionsHtml += `<option value="${v.level}" ${selected}>${v.name}</option>`;
     });
     vipCell.innerHTML = `
-        <div class="vip-wrapper">
-            <span class="vip-badge level${u.vip_level || 1}">${vipName}</span>
-            <select class="vip-select vip-change-select" data-uid="${u.uid}" data-username="${escapeHtml(u.username)}">
-                ${optionsHtml}
-            </select>
-        </div>
+        <select class="vip-select vip-change-select" data-uid="${u.uid}" data-username="${escapeHtml(u.username)}" style="width:80px; background:#0f172a; border:1px solid #1e2a3a; border-radius:6px; padding:4px 6px; color:#fff; font-size:12px; cursor:pointer;">
+            ${optionsHtml}
+        </select>
     `;
     
     // 7. Pending (索引 6)
@@ -759,12 +757,37 @@ async function loadUsers() {
     // 10. Registered IP (索引 9)
     row.insertCell(9).innerHTML = `<span style="font-size: 11px; color: #8a9abb; font-family: monospace;">${escapeHtml(u.registered_ip || '-')}</span>`;
     
-    // 11. Time Registered (索引 10)
-    const registerTime = u.created_at ? new Date(u.created_at) : null;
-    row.insertCell(10).innerHTML = `<span style="font-size: 11px; color: #8a9abb;">${registerTime ? registerTime.toLocaleString() : '-'}</span>`;
+    // 11. Last Online (索引 10) - 全部灰色细字体
+const lastOnline = u.last_online || u.updated_at || u.created_at;
+let lastOnlineDisplay = '-';
+if (lastOnline) {
+    const lastDate = new Date(lastOnline);
+    const now = new Date();
+    const diffMins = Math.floor((now - lastDate) / 60000);
+    const diffHours = Math.floor(diffMins / 60);
+    const diffDays = Math.floor(diffHours / 24);
     
-    // 12. Actions (索引 11)
-    const actionsCell = row.insertCell(11);
+    if (diffMins < 1) {
+        lastOnlineDisplay = 'Just now';
+    } else if (diffMins < 60) {
+        lastOnlineDisplay = `${diffMins}m ago`;
+    } else if (diffHours < 24) {
+        lastOnlineDisplay = `${diffHours}h ago`;
+    } else if (diffDays < 7) {
+        lastOnlineDisplay = `${diffDays}d ago`;
+    } else {
+        lastOnlineDisplay = lastDate.toLocaleDateString();
+    }
+}
+// 全部灰色，细字体
+row.insertCell(10).innerHTML = `<span style="font-size: 11px; color: #8a9abb; font-weight: 300;">${lastOnlineDisplay}</span>`;
+    
+    // 12. Time Registered (索引 11) - 只显示日期
+    const registerTime = u.created_at ? new Date(u.created_at) : null;
+    row.insertCell(11).innerHTML = `<span style="font-size: 11px; color: #8a9abb;">${registerTime ? registerTime.toLocaleDateString() : '-'}</span>`;
+    
+    // 13. Actions (索引 12)
+    const actionsCell = row.insertCell(12);
     actionsCell.innerHTML = `
         <div class="actions-wrapper">
             <button class="btn-sm btn-edit-user edit-user-btn" 
@@ -886,7 +909,7 @@ document.querySelectorAll('.edit-user-btn').forEach(btn => {
         
     } catch (e) {
         console.error('加载用户失败:', e);
-        tbody.innerHTML = `<tr><td colspan="12" style="text-align:center; padding:40px; color:#ff8888;">加载失败: ${escapeHtml(e.message)}</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="13" style="text-align:center; padding:40px; color:#ff8888;">加载失败: ${escapeHtml(e.message)}</td></tr>`;
     }
 }
 
