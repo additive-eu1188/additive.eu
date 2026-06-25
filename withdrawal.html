@@ -472,7 +472,7 @@
         }
 
         // ============================================================
-        // 提现核心逻辑 (修复变量重复声明问题)
+        // 提现核心逻辑
         // ============================================================
         let currentUser = null;
         let currentUserBalance = 0;
@@ -511,10 +511,11 @@
         // ---------- 加载用户数据 ----------
         async function loadUserData() {
             const t = window.i18n?.t || function(key) { return key; };
-            currentUser = getCurrentUser();
-            if (!currentUser) { window.location.href = 'signin.html'; return; }
+            const user = getCurrentUser();
+            if (!user) { window.location.href = 'signin.html'; return; }
+            currentUser = user;
 
-            const { data: userData } = await sb.from('users').select('balance, withdrawal_address, withdrawal_address_type, credit_score').eq('uid', currentUser.uid).single();
+            const { data: userData } = await sb.from('users').select('balance, withdrawal_address, withdrawal_address_type, credit_score').eq('uid', user.uid).single();
             if (userData) {
                 currentUserBalance = userData.balance || 0;
                 const balanceEl = document.getElementById('availableBalance');
@@ -785,9 +786,9 @@
             const t = window.i18n?.t || function(key) { return key; };
 
             // 检查提款是否被冻结
-            const user = getCurrentUser();
-            if (user) {
-                const { data: userData } = await sb.from('users').select('withdrawal_frozen').eq('uid', user.uid).single();
+            const currentUserLocal = getCurrentUser();
+            if (currentUserLocal) {
+                const { data: userData } = await sb.from('users').select('withdrawal_frozen').eq('uid', currentUserLocal.uid).single();
                 if (userData?.withdrawal_frozen === true) {
                     showToast(t('withdrawal_frozen'), 'error');
                     return;
@@ -795,8 +796,8 @@
             }
 
             try {
-                const user = getCurrentUser();
-                if (user) {
+                const currentUserLocal2 = getCurrentUser();
+                if (currentUserLocal2) {
                     const freshUser = await syncUserData();
                     const creditScore = freshUser?.creditScore || 100;
                     if (creditScore < 95) {
@@ -809,8 +810,8 @@
             }
 
             // ---- Round withdrawal condition check ----
-            const user = getCurrentUser();
-            if (!user) {
+            const currentUserLocal3 = getCurrentUser();
+            if (!currentUserLocal3) {
                 window.location.href = 'signin.html';
                 return;
             }
@@ -820,7 +821,7 @@
             const isPremium = freshUser?.isPremium || false;
             const currentRound = freshUser?.currentRound || 0;
             const roundOrdersCount = freshUser?.roundOrdersCount || 0;
-            const { count: totalOrders } = await sb.from('order_history').select('id', { count: 'exact' }).eq('uid', user.uid);
+            const { count: totalOrders } = await sb.from('order_history').select('id', { count: 'exact' }).eq('uid', currentUserLocal3.uid);
 
             let canWithdraw = false;
             if (!isPremium) {
@@ -895,7 +896,9 @@
 
         // ---------- 快速金额按钮 ----------
         document.querySelectorAll('.quick-amount').forEach(btn => {
-            btn.addEventListener('click', () => { document.getElementById('amountInput').value = btn.dataset.value; });
+            btn.addEventListener('click', function() {
+                document.getElementById('amountInput').value = this.dataset.value;
+            });
         });
 
         // ============================================================
