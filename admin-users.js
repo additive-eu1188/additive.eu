@@ -253,39 +253,39 @@ async function loadUsersPage() {
             background: rgba(200,176,144,0.03) !important;
         }
 
-        /* ===== 列宽定义 - 紧凑布局 ===== */
+        /* ===== 列宽定义 - 让表格自动分配 ===== */
 .data-table th:nth-child(1),
-.data-table td:nth-child(1) { width: 80px !important; min-width: 80px !important; max-width: 80px !important; } /* Actions */
+.data-table td:nth-child(1) { width: 85px !important; min-width: 85px !important; } /* Actions */
 
 .data-table th:nth-child(2),
-.data-table td:nth-child(2) { width: 65px !important; min-width: 65px !important; max-width: 65px !important; } /* Phone */
+.data-table td:nth-child(2) { width: 70px !important; min-width: 70px !important; } /* Phone */
 
 .data-table th:nth-child(3),
-.data-table td:nth-child(3) { width: 80px !important; min-width: 80px !important; max-width: 80px !important; } /* User ID + Position */
+.data-table td:nth-child(3) { width: 85px !important; min-width: 85px !important; } /* User ID + Position */
 
 .data-table th:nth-child(4),
-.data-table td:nth-child(4) { width: 70px !important; min-width: 70px !important; max-width: 70px !important; } /* Referrer */
+.data-table td:nth-child(4) { width: 75px !important; min-width: 75px !important; } /* Referrer */
 
 .data-table th:nth-child(5),
-.data-table td:nth-child(5) { width: 50px !important; min-width: 50px !important; max-width: 50px !important; } /* Country */
+.data-table td:nth-child(5) { width: 55px !important; min-width: 55px !important; } /* Country */
 
 .data-table th:nth-child(6),
-.data-table td:nth-child(6) { width: 55px !important; min-width: 55px !important; max-width: 55px !important; } /* VIP */
+.data-table td:nth-child(6) { width: 60px !important; min-width: 60px !important; } /* VIP */
 
 .data-table th:nth-child(7),
-.data-table td:nth-child(7) { width: 60px !important; min-width: 60px !important; max-width: 60px !important; } /* Pending */
+.data-table td:nth-child(7) { width: 65px !important; min-width: 65px !important; } /* Pending */
 
 .data-table th:nth-child(8),
-.data-table td:nth-child(8) { width: 65px !important; min-width: 65px !important; max-width: 65px !important; } /* Balance */
+.data-table td:nth-child(8) { width: 70px !important; min-width: 70px !important; } /* Balance */
 
 .data-table th:nth-child(9),
-.data-table td:nth-child(9) { min-width: 320px !important; } /* Round / Orders - 给足空间 */
+.data-table td:nth-child(9) { width: 300px !important; min-width: 300px !important; } /* Round / Orders */
 
 .data-table th:nth-child(10),
-.data-table td:nth-child(10) { width: 80px !important; min-width: 80px !important; max-width: 80px !important; } /* Registered IP */
+.data-table td:nth-child(10) { width: 85px !important; min-width: 85px !important; } /* Registered IP */
 
 .data-table th:nth-child(11),
-.data-table td:nth-child(11) { width: 80px !important; min-width: 80px !important; max-width: 80px !important; } /* Last Online */
+.data-table td:nth-child(11) { width: 85px !important; min-width: 85px !important; } /* Last Online */
 
         /* ===== Actions 列 ===== */
         .actions-wrapper {
@@ -507,7 +507,7 @@ async function loadUsersPage() {
 
         @media (max-width: 1400px) {
     .table-container { overflow-x: auto; }
-    .data-table { min-width: 1400px; }  /* 从 1450px 改为 1400px */
+    .data-table { min-width: 1200px; }  /* 减小到 1200px */
 }
     `;
     document.head.appendChild(style);
