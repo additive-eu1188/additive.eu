@@ -264,7 +264,7 @@ async function loadUsersPage() {
 .data-table td:nth-child(3) { width: 80px !important; min-width: 80px !important; } /* User ID + Position - 稍微缩小 */
 
 .data-table th:nth-child(4),
-.data-table td:nth-child(4) { width: 50px !important; min-width: 50px !important; } /* Referrer - 大幅缩小，减少缝隙 */
+.data-table td:nth-child(4) { width: 70px !important; min-width: 70px !important; } /* Referrer - 从50px改为70px，拉长 */
 
 .data-table th:nth-child(5),
 .data-table td:nth-child(5) { width: 55px !important; min-width: 55px !important; } /* Country */
@@ -313,52 +313,74 @@ async function loadUsersPage() {
             transform: translateX(2px) !important;
         }
 
-        /* ===== Phone 细字 ===== */
-        .phone-text {
-            font-size: 11px !important;
-            font-weight: 300 !important;
-            color: rgba(255,255,255,0.5) !important;
-        }
-
-        /* ===== User ID 细字 ===== */
-        .uid-text {
-            font-size: 11px !important;
-            font-weight: 300 !important;
-            color: rgba(255,255,255,0.4) !important;
-            font-family: monospace !important;
-        }
-
-        /* ===== Referrer 细字 ===== */
-        .referrer-text {
-            font-size: 12px !important;
-            font-weight: 300 !important;
-            color: rgba(255,255,255,0.35) !important;
-        }
-
-        /* ===== Country ===== */
-        .country-flag-sm {
-            width: 20px;
-            height: 14px;
-            border-radius: 2px;
-            object-fit: cover;
-            vertical-align: middle;
-            border: 1px solid rgba(255,255,255,0.04);
-            margin-right: 4px;
-        }
-        .country-name-text {
-            font-size: 12px;
-            font-weight: 500;
-            color: rgba(255,255,255,0.55);
-            letter-spacing: 0.3px;
-            vertical-align: middle;
-        }
-
-        /* ===== VIP 下拉框 - 高级样式 ===== */
-.vip-wrapper {
-    position: relative;
-    display: inline-block;
+        /* ===== Phone 细字 - 调亮 ===== */
+.phone-text {
+    font-size: 11px !important;
+    font-weight: 400 !important;
+    color: rgba(255,255,255,0.65) !important;  /* 从0.5 -> 0.65 */
 }
 
+/* ===== User ID 细字 - 调亮 ===== */
+.uid-text {
+    font-size: 11px !important;
+    font-weight: 400 !important;
+    color: rgba(255,255,255,0.55) !important;  /* 从0.4 -> 0.55 */
+    font-family: monospace !important;
+}
+
+/* ===== Referrer 细字 - 调亮 ===== */
+.referrer-text {
+    font-size: 12px !important;
+    font-weight: 400 !important;
+    color: rgba(255,255,255,0.50) !important;  /* 从0.35 -> 0.50 */
+}
+
+/* ===== Country ===== */
+.country-name-text {
+    font-size: 12px;
+    font-weight: 500;
+    color: rgba(255,255,255,0.65) !important;  /* 从0.55 -> 0.65 */
+    letter-spacing: 0.3px;
+    vertical-align: middle;
+}
+
+/* ===== Last Online - 调亮 ===== */
+.last-online-text {
+    font-size: 11px !important;
+    font-weight: 400 !important;
+    color: rgba(255,255,255,0.40) !important;  /* 从0.2 -> 0.40 */
+}
+
+/* ===== Registered IP - 调亮 ===== */
+.ip-text {
+    font-size: 11px !important;
+    font-weight: 400 !important;
+    color: rgba(255,255,255,0.45) !important;  /* 从0.25 -> 0.45 */
+    font-family: monospace !important;
+}
+
+/* ===== 表头 - 调亮 ===== */
+.data-table th {
+    color: rgba(255,255,255,0.45) !important;  /* 从0.25 -> 0.45 */
+    font-weight: 600 !important;
+    font-size: 10px !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.8px !important;
+    padding: 10px 10px !important;
+    border-bottom: 1px solid rgba(255,255,255,0.04) !important;
+    background: rgba(10,14,28,0.3) !important;
+}
+
+/* ===== 表格数据 - 调亮 ===== */
+.data-table td {
+    padding: 8px 10px !important;
+    border-bottom: 1px solid rgba(255,255,255,0.03) !important;
+    color: rgba(255,255,255,0.80) !important;  /* 从0.7 -> 0.80 */
+    font-size: 12px !important;
+    vertical-align: middle !important;
+}
+
+        /* VIP 下拉选项 - 展开后的样式优化 */
 .vip-select {
     width: 82px !important;
     min-width: 82px !important;
@@ -398,32 +420,53 @@ async function loadUsersPage() {
     box-shadow: 0 0 30px rgba(200, 176, 144, 0.08), inset 0 1px 0 rgba(255,255,255,0.04) !important;
 }
 
-/* VIP 下拉选项 - 高级卡片样式 */
+/* ===== VIP 展开后的选项框 - 整体样式 ===== */
 .vip-select option {
     background: linear-gradient(160deg, #0e1228, #1a1a3a) !important;
     color: #e6edf5 !important;
     padding: 10px 16px !important;
-    font-size: 12px !important;
+    font-size: 13px !important;
     font-weight: 500 !important;
-    border-bottom: 1px solid rgba(255,255,255,0.03) !important;
+    border-bottom: 1px solid rgba(255,255,255,0.05) !important;
     font-family: 'Inter', sans-serif !important;
     letter-spacing: 0.5px !important;
+    min-height: 40px !important;
 }
 
+/* 选项悬停效果 */
+.vip-select option:hover {
+    background: rgba(200,176,144,0.12) !important;
+}
+
+/* 选中项高亮 */
 .vip-select option:checked {
-    background: linear-gradient(135deg, rgba(200,176,144,0.15), rgba(200,176,144,0.05)) !important;
+    background: linear-gradient(135deg, rgba(200,176,144,0.18), rgba(200,176,144,0.06)) !important;
     color: #c8b090 !important;
+    font-weight: 700 !important;
 }
 
+/* 各等级颜色 */
 .vip-select option[value="1"] { 
     color: #8a9aaa !important; 
     font-weight: 500 !important;
 }
+.vip-select option[value="1"]:checked { 
+    color: #8a9aaa !important; 
+    font-weight: 700 !important;
+}
 .vip-select option[value="2"] { 
     color: #c8b090 !important; 
-    font-weight: 600 !important;
+    font-weight: 500 !important;
+}
+.vip-select option[value="2"]:checked { 
+    color: #c8b090 !important; 
+    font-weight: 700 !important;
 }
 .vip-select option[value="3"] { 
+    color: #ffd700 !important; 
+    font-weight: 500 !important;
+}
+.vip-select option[value="3"]:checked { 
     color: #ffd700 !important; 
     font-weight: 700 !important;
 }
@@ -432,20 +475,6 @@ async function loadUsersPage() {
 .vip-select[data-level="1"] { border-color: rgba(106, 122, 138, 0.3) !important; }
 .vip-select[data-level="2"] { border-color: rgba(200, 176, 144, 0.4) !important; }
 .vip-select[data-level="3"] { border-color: rgba(255, 215, 0, 0.4) !important; }
-
-/* 等级指示小点 */
-.vip-dot {
-    display: inline-block;
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-    margin-right: 6px;
-    vertical-align: middle;
-    flex-shrink: 0;
-}
-.vip-dot.level-1 { background: #6a7a8a; }
-.vip-dot.level-2 { background: #c8b090; }
-.vip-dot.level-3 { background: #ffd700; box-shadow: 0 0 8px rgba(255,215,0,0.3); }
 
         /* ===== Round/Orders 列 ===== */
 .orders-wrapper {
@@ -823,10 +852,10 @@ actionsCell.innerHTML = `
     }
     countryCell.innerHTML = countryHtml;
     
-    // ===== 6. VIP RANK (索引 5) =====
+    // ===== 6. VIP RANK (索引 5) - 优化展开选项样式 =====
 const vipCell = row.insertCell(5);
 const vipLevels = [
-    { level: 1, name: 'Normal', icon: 'fa-user', color: '#6a7a8a' },
+    { level: 1, name: 'Normal', icon: 'fa-user', color: '#8a9aaa' },
     { level: 2, name: 'VIP', icon: 'fa-crown', color: '#c8b090' },
     { level: 3, name: 'SVIP', icon: 'fa-crown', color: '#ffd700' }
 ];
@@ -835,16 +864,23 @@ const vipLevels = [
 const currentVip = vipLevels.find(v => v.level === u.vip_level) || vipLevels[0];
 const currentColor = currentVip.color;
 
-// 生成带图标和颜色的选项
+// 生成选项 - 每个选项带颜色和符号，优化展开后的显示
 let optionsHtml = '';
 vipLevels.forEach(v => {
     const selected = v.level === u.vip_level ? 'selected' : '';
-    const icon = v.icon;
-    const color = v.color;
-    optionsHtml += `<option value="${v.level}" ${selected} style="background:#0a0e1c; color:#e6edf5; padding:8px 12px; display:flex; align-items:center; gap:8px;">${v.name}</option>`;
+    const dotColor = v.color;
+    // 用 ◆ 符号表示等级
+    const symbol = v.level === 1 ? '●' : v.level === 2 ? '◆' : '★';
+    optionsHtml += `<option value="${v.level}" ${selected} 
+        style="background:#0e1228; color:${v.color}; padding:10px 16px; 
+               font-size:13px; font-weight:${v.level === u.vip_level ? '700' : '500'}; 
+               border-bottom:1px solid rgba(255,255,255,0.04); 
+               font-family:'Inter',sans-serif; letter-spacing:0.5px;
+               display:flex; align-items:center; gap:10px;">
+        ${symbol} ${v.name}
+    </option>`;
 });
 
-// 创建自定义样式的下拉框
 vipCell.innerHTML = `
     <div class="vip-wrapper" style="position:relative; display:inline-block;">
         <select class="vip-select vip-change-select" data-uid="${u.uid}" data-username="${escapeHtml(u.username)}" 
@@ -856,7 +892,7 @@ vipCell.innerHTML = `
                        background-repeat:no-repeat; background-position:right 10px center; background-size:10px 6px;">
             ${optionsHtml}
         </select>
-        <span class="vip-indicator" style="position:absolute; left:8px; top:50%; transform:translateY(-50%); font-size:10px; pointer-events:none; color:${currentColor};">◆</span>
+        <span style="position:absolute; left:8px; top:50%; transform:translateY(-50%); font-size:9px; pointer-events:none; color:${currentColor};">${currentVip.level === 1 ? '●' : currentVip.level === 2 ? '◆' : '★'}</span>
     </div>
 `;
     
