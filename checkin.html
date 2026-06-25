@@ -18,7 +18,6 @@
         .left-column { flex: 1.2; }
         .right-column { flex: 0.8; }
 
-        /* ===== Day card grid ===== */
         .days-grid {
             display: grid;
             grid-template-columns: repeat(6, 1fr);
@@ -26,7 +25,6 @@
             margin-bottom: 24px;
         }
 
-        /* ===== Card design (particle container) ===== */
         .day-card {
             border-radius: 16px;
             padding: 14px 6px;
@@ -263,6 +261,96 @@
             color: #C9B095; font-weight: 600; font-size: 14px; display: inline-flex; align-items: center; gap: 8px;
             border: 1px solid rgba(201, 176, 149, 0.3); }
 
+        /* ===== 自定义确认弹窗样式（内联） ===== */
+        .custom-confirm-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(8px);
+            z-index: 99999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            visibility: hidden;
+            opacity: 0;
+            transition: all 0.3s ease;
+        }
+        .custom-confirm-overlay.active {
+            visibility: visible;
+            opacity: 1;
+        }
+        .custom-confirm-box {
+            background: linear-gradient(145deg, #1a1508, #0f0c06);
+            border-radius: 24px;
+            padding: 32px 28px;
+            width: 380px;
+            max-width: 90%;
+            text-align: center;
+            border: 1px solid rgba(255, 184, 77, 0.3);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+            transform: scale(0.9);
+            transition: transform 0.3s cubic-bezier(0.2, 0.9, 0.4, 1.1);
+        }
+        .custom-confirm-overlay.active .custom-confirm-box {
+            transform: scale(1);
+        }
+        .custom-confirm-box .icon {
+            font-size: 48px;
+            color: #C9B095;
+            margin-bottom: 16px;
+            display: block;
+        }
+        .custom-confirm-box .title {
+            font-size: 20px;
+            font-weight: 700;
+            color: #ffb84d;
+            margin-bottom: 12px;
+        }
+        .custom-confirm-box .message {
+            font-size: 14px;
+            color: #d4c8a0;
+            line-height: 1.6;
+            margin-bottom: 24px;
+        }
+        .custom-confirm-box .buttons {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+        }
+        .custom-confirm-box .btn-cancel {
+            background: rgba(255, 255, 255, 0.08);
+            border: none;
+            padding: 10px 24px;
+            border-radius: 40px;
+            color: #aaa;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            font-family: 'Inter', sans-serif;
+            transition: 0.2s;
+        }
+        .custom-confirm-box .btn-cancel:hover {
+            background: rgba(255, 255, 255, 0.15);
+        }
+        .custom-confirm-box .btn-confirm {
+            background: linear-gradient(135deg, #ffb84d, #cc8822);
+            border: none;
+            padding: 10px 24px;
+            border-radius: 40px;
+            color: #0a0806;
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            font-family: 'Inter', sans-serif;
+            transition: 0.2s;
+        }
+        .custom-confirm-box .btn-confirm:hover {
+            transform: scale(1.03);
+        }
+
         @media (max-width: 1000px) { .days-grid { grid-template-columns: repeat(3, 1fr); }
             .two-columns { flex-direction: column; } }
         @media (max-width: 700px) { .days-grid { grid-template-columns: repeat(3, 1fr); } }
@@ -351,6 +439,19 @@
         </main>
     </div>
 
+    <!-- ===== 自定义确认弹窗 HTML ===== -->
+    <div id="customConfirmOverlay" class="custom-confirm-overlay">
+        <div class="custom-confirm-box">
+            <span class="icon"><i class="fas fa-gift"></i></span>
+            <div class="title" id="confirmTitle">💰 Claim Reward</div>
+            <div class="message" id="confirmMessage">Are you sure you want to claim this reward?</div>
+            <div class="buttons">
+                <button class="btn-cancel" id="confirmCancelBtn">Cancel</button>
+                <button class="btn-confirm" id="confirmOkBtn">Confirm</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         // ============================================================
         // Menu control
@@ -374,13 +475,76 @@
         }
 
         // ============================================================
+        // 自定义确认弹窗函数（内联，不依赖 toast.js）
+        // ============================================================
+        let confirmCallback = null;
+        let confirmCancelCallback = null;
+
+        function showCustomConfirm(title, message, onConfirm, onCancel) {
+            const overlay = document.getElementById('customConfirmOverlay');
+            const titleEl = document.getElementById('confirmTitle');
+            const msgEl = document.getElementById('confirmMessage');
+            
+            titleEl.textContent = title;
+            msgEl.textContent = message;
+            
+            confirmCallback = onConfirm || null;
+            confirmCancelCallback = onCancel || null;
+            
+            overlay.classList.add('active');
+        }
+
+        // 绑定确认弹窗按钮事件
+        document.addEventListener('DOMContentLoaded', function() {
+            const overlay = document.getElementById('customConfirmOverlay');
+            const cancelBtn = document.getElementById('confirmCancelBtn');
+            const okBtn = document.getElementById('confirmOkBtn');
+            
+            if (cancelBtn) {
+                cancelBtn.addEventListener('click', function() {
+                    overlay.classList.remove('active');
+                    if (typeof confirmCancelCallback === 'function') {
+                        confirmCancelCallback();
+                    }
+                    confirmCallback = null;
+                    confirmCancelCallback = null;
+                });
+            }
+            
+            if (okBtn) {
+                okBtn.addEventListener('click', function() {
+                    overlay.classList.remove('active');
+                    if (typeof confirmCallback === 'function') {
+                        confirmCallback();
+                    }
+                    confirmCallback = null;
+                    confirmCancelCallback = null;
+                });
+            }
+            
+            // 点击遮罩层关闭
+            if (overlay) {
+                overlay.addEventListener('click', function(e) {
+                    if (e.target === this) {
+                        overlay.classList.remove('active');
+                        if (typeof confirmCancelCallback === 'function') {
+                            confirmCancelCallback();
+                        }
+                        confirmCallback = null;
+                        confirmCancelCallback = null;
+                    }
+                });
+            }
+        });
+
+        // ============================================================
         // Data
         // ============================================================
         let signInRewards = [];
         let userOrderCount = 0;
 
         // ============================================================
-        // Particle engine (Gold × Emerald mix)
+        // Particle engine
         // ============================================================
         const particleAnimators = {};
 
@@ -466,7 +630,6 @@
                 particles.push(new MixParticle(w, h));
             }
             let animId = null;
-            let startTime = performance.now();
 
             function animate(time) {
                 ctx.clearRect(0, 0, w, h);
@@ -496,7 +659,7 @@
         }
 
         // ============================================================
-        // Render cards
+        // Data functions
         // ============================================================
         async function loadRewards() {
             const { data, error } = await sb
@@ -555,7 +718,7 @@
         }
 
         // ============================================================
-        // 🔥 修复：直接更新余额，不依赖 updateUserBalance
+        // 直接更新余额
         // ============================================================
         async function addReward(amount) {
             const user = getCurrentUser();
@@ -579,7 +742,6 @@
                 
                 if (updateError) throw updateError;
                 
-                // 更新本地 localStorage
                 user.balance = newBalance;
                 localStorage.setItem('currentUser', JSON.stringify(user));
                 
@@ -590,6 +752,9 @@
             }
         }
 
+        // ============================================================
+        // Render
+        // ============================================================
         async function render() {
             const { streak, lastClaimDate, claimedDays } = loadData();
             const hasClaimed = hasClaimedToday(lastClaimDate);
@@ -674,13 +839,17 @@
         }
 
         // ============================================================
-        // 🔥 修复：handleClaim - 使用自定义弹窗，不用浏览器 alert
+        // 🔥 核心修复：handleClaim - 使用内联自定义弹窗
         // ============================================================
         async function handleClaim() {
+            console.log('🔔 handleClaim 被调用');
+            
             const t = window.i18n?.t || function(key) { return key; };
             const { streak, lastClaimDate, claimedDays } = loadData();
             const hasClaimed = hasClaimedToday(lastClaimDate);
             const nextDay = streak + 1;
+
+            console.log('📊 Streak:', streak, 'NextDay:', nextDay, 'HasClaimed:', hasClaimed);
 
             if (hasClaimed) {
                 showToast(t('checkin_claimed_today_msg'), 'warning');
@@ -702,7 +871,8 @@
             const currentRound = freshUser?.currentRound || 0;
             const roundOrdersCount = freshUser?.roundOrdersCount || 0;
 
-            // 再次验证资格
+            console.log('👤 User:', user.uid, 'Premium:', isPremium, 'Round:', currentRound, 'Orders:', roundOrdersCount);
+
             if (!isPremium) {
                 showToast('Please recharge your account first to become a premium member', 'warning');
                 return;
@@ -729,36 +899,31 @@
                 claimDay = nextDay;
             }
 
-            // ============================================================
-            // 🔥 使用自定义确认弹窗（不是浏览器 alert）
-            // ============================================================
-            // 检查 showConfirm 是否可用
-            if (typeof showConfirm !== 'function') {
-                console.error('❌ showConfirm is not defined!');
-                // 如果 toast.js 没有加载，使用备用的自定义弹窗
-                if (confirm(`Claim Day ${claimDay} reward of €${amount}?`)) {
-                    await processClaim(user, amount, claimDay, isReset, streak, claimedDays);
-                }
-                return;
-            }
+            console.log('💰 Claim Day:', claimDay, 'Amount:', amount);
 
-            // 使用自定义弹窗
-            showConfirm(
+            // ============================================================
+            // 🔥 使用内联自定义弹窗
+            // ============================================================
+            showCustomConfirm(
                 '💰 Claim Reward',
                 `Are you sure you want to claim Day ${claimDay} reward of €${amount}?`,
                 async function() {
+                    console.log('✅ 用户确认 Claim');
                     await processClaim(user, amount, claimDay, isReset, streak, claimedDays);
                 },
                 function() {
+                    console.log('❌ 用户取消 Claim');
                     showToast('Claim cancelled', 'info');
                 }
             );
         }
 
         // ============================================================
-        // 🔥 提取处理 Claim 的逻辑为独立函数
+        // 处理 Claim 逻辑
         // ============================================================
         async function processClaim(user, amount, claimDay, isReset, streak, claimedDays) {
+            console.log('🔄 开始处理 Claim...');
+            
             try {
                 // 添加奖励到余额
                 const success = await addReward(amount);
@@ -766,6 +931,7 @@
                     showToast('Failed to add reward, please try again', 'error');
                     return;
                 }
+                console.log('✅ 余额更新成功');
 
                 // 保存签到记录到数据库
                 const { error: insertError } = await sb
@@ -783,8 +949,7 @@
                     showToast('Check-in failed: ' + insertError.message, 'error');
                     return;
                 }
-
-                console.log(`✅ Check-in record saved: Day ${claimDay}, €${amount}`);
+                console.log('✅ 数据库记录保存成功');
 
                 // 更新本地存储
                 if (isReset) {
@@ -792,12 +957,14 @@
                 } else {
                     saveData(streak + 1, new Date().toISOString(), [...claimedDays, claimDay]);
                 }
+                console.log('✅ 本地存储更新成功');
 
                 // 刷新页面
                 await render();
                 
-                // 显示成功消息（使用自定义 Toast）
+                // 显示成功消息
                 showToast(`🎉 Day ${claimDay} claimed! +€${amount}`, 'success');
+                console.log('🎉 Claim 完成!');
                 
             } catch (err) {
                 console.error('processClaim error:', err);
@@ -812,6 +979,7 @@
         (async function init() {
             await loadRewards();
             await render();
+            console.log('✅ checkin.html 初始化完成');
         })();
 
         // ============================================================
@@ -832,9 +1000,8 @@
             }, 300);
         });
 
-        console.log('✅ checkin.html loaded — Gold × Emerald mixed particles');
-        console.log('💡 Claimed cards activate particle animation');
-        console.log('🔧 使用自定义 showConfirm 弹窗，不是浏览器 alert');
+        console.log('✅ checkin.html loaded — 使用内联自定义弹窗');
+        console.log('💡 点击 Claim now 会显示自定义弹窗，不是浏览器 alert');
     </script>
     <script src="i18n.js"></script>
     <script>
