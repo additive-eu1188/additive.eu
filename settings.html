@@ -1149,89 +1149,94 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         function logout() {
-            showConfirm('Logout', 'Are you sure you want to logout?', () => {
-                localStorage.removeItem('currentUser');
-                window.location.href = 'signin.html';
-            });
-        }
+    showConfirm('settings_logout_confirm', 'settings_logout_msg', () => {
+        localStorage.removeItem('currentUser');
+        window.location.href = 'signin.html';
+    });
+}
 
-        function copyUID() {
-            const uid = document.getElementById('displayUid').innerText;
-            navigator.clipboard.writeText(uid);
-            showToast('UID copied: ' + uid, 'success');
-        }
+        // ===== copyUID 函数 =====
+function copyUID() {
+    const uid = document.getElementById('displayUid').innerText;
+    navigator.clipboard.writeText(uid);
+    showToast('settings_uid_copied', 'success');
+}
 
-        function copyInviteCode() {
-            const inviteCode = document.getElementById('displayInviteCode').innerText;
-            navigator.clipboard.writeText(inviteCode);
-            showToast('Invitation code copied: ' + inviteCode, 'success');
-        }
+// ===== copyInviteCode 函数 =====
+function copyInviteCode() {
+    const inviteCode = document.getElementById('displayInviteCode').innerText;
+    navigator.clipboard.writeText(inviteCode);
+    showToast('settings_invite_copied', 'success');
+}
 
-        async function changePassword() {
-            showPrompt('Change Password', 'Enter new password (min 4 characters):', async (newPwd) => {
-                if (!newPwd) { showToast('Password change cancelled', 'info'); return; }
-                if (newPwd.length < 4) { showToast('Password must be at least 4 characters', 'error'); return; }
-                const user = getCurrentUser();
-                if (user) {
-                    const { error } = await sb
-                        .from('users')
-                        .update({ password: newPwd })
-                        .eq('uid', user.uid);
-                    if (error) {
-                        showToast('Password change failed: ' + error.message, 'error');
-                        return;
-                    }
-                    showToast('Password changed! Please login again.', 'success');
-                    setTimeout(() => { logout(); }, 1500);
-                }
-            });
-        }
-
-        async function setWithdrawalPin() {
-            const user = getCurrentUser();
-            if (user) {
-                const { data: userData } = await sb
-                    .from('users')
-                    .select('pin')
-                    .eq('uid', user.uid)
-                    .single();
-                if (userData && userData.pin && userData.pin !== '0000' && userData.pin !== '') {
-                    showToast('PIN already set. Use "Change Withdrawal PIN" instead.', 'warning');
-                    return;
-                }
-                showPrompt('Set Withdrawal PIN', 'Enter 4-digit PIN:', (pin) => {
-                    if (!pin) { showToast('PIN setup cancelled', 'info'); return; }
-                    if (pin && pin.length === 4 && !isNaN(pin)) {
-                        sb.from('users').update({ pin: pin }).eq('uid', user.uid)
-                            .then(() => { showToast('PIN set successfully!', 'success'); })
-                            .catch(err => { showToast('Failed to set PIN: ' + err.message, 'error'); });
-                    } else { showToast('PIN must be exactly 4 digits', 'error'); }
-                });
+// ===== changePassword 函数 =====
+async function changePassword() {
+    showPrompt('Change Password', 'Enter new password (min 4 characters):', async (newPwd) => {
+        if (!newPwd) { showToast('settings_cancelled', 'info'); return; }
+        if (newPwd.length < 4) { showToast('settings_password_min', 'error'); return; }
+        const user = getCurrentUser();
+        if (user) {
+            const { error } = await sb
+                .from('users')
+                .update({ password: newPwd })
+                .eq('uid', user.uid);
+            if (error) {
+                showToast('settings_password_failed', 'error');
+                return;
             }
+            showToast('settings_password_changed', 'success');
+            setTimeout(() => { logout(); }, 1500);
         }
+    });
+}
 
-        async function changeWithdrawalPin() {
-            const user = getCurrentUser();
-            if (user) {
-                showPrompt('Change Withdrawal PIN', 'Enter current PIN:', async (oldPin) => {
-                    if (!oldPin) { showToast('PIN change cancelled', 'info'); return; }
-                    const { data: userData } = await sb
-                        .from('users')
-                        .select('pin')
-                        .eq('uid', user.uid)
-                        .single();
-                    if (userData && userData.pin !== oldPin) { showToast('Wrong current PIN', 'error'); return; }
-                    showPrompt('Change Withdrawal PIN', 'Enter new 4-digit PIN:', (newPin) => {
-                        if (!newPin) { showToast('PIN change cancelled', 'info'); return; }
-                        if (newPin && newPin.length === 4 && !isNaN(newPin)) {
-                            sb.from('users').update({ pin: newPin }).eq('uid', user.uid)
-                                .then(() => { showToast('PIN changed successfully!', 'success'); })
-                                .catch(err => { showToast('Failed to change PIN: ' + err.message, 'error'); });
-                        } else { showToast('PIN must be exactly 4 digits', 'error'); }
-                    });
-                });
-            }
+// ===== setWithdrawalPin 函数 =====
+async function setWithdrawalPin() {
+    const user = getCurrentUser();
+    if (user) {
+        const { data: userData } = await sb
+            .from('users')
+            .select('pin')
+            .eq('uid', user.uid)
+            .single();
+        if (userData && userData.pin && userData.pin !== '0000' && userData.pin !== '') {
+            showToast('settings_pin_already_set', 'warning');
+            return;
         }
+        showPrompt('Set Withdrawal PIN', 'Enter 4-digit PIN:', (pin) => {
+            if (!pin) { showToast('settings_cancelled', 'info'); return; }
+            if (pin && pin.length === 4 && !isNaN(pin)) {
+                sb.from('users').update({ pin: pin }).eq('uid', user.uid)
+                    .then(() => { showToast('settings_pin_set_success', 'success'); })
+                    .catch(err => { showToast('settings_pin_set_failed', 'error'); });
+            } else { showToast('settings_pin_invalid', 'error'); }
+        });
+    }
+}
+
+// ===== changeWithdrawalPin 函数 =====
+async function changeWithdrawalPin() {
+    const user = getCurrentUser();
+    if (user) {
+        showPrompt('Change Withdrawal PIN', 'Enter current PIN:', async (oldPin) => {
+            if (!oldPin) { showToast('settings_cancelled', 'info'); return; }
+            const { data: userData } = await sb
+                .from('users')
+                .select('pin')
+                .eq('uid', user.uid)
+                .single();
+            if (userData && userData.pin !== oldPin) { showToast('settings_pin_wrong', 'error'); return; }
+            showPrompt('Change Withdrawal PIN', 'Enter new 4-digit PIN:', (newPin) => {
+                if (!newPin) { showToast('settings_cancelled', 'info'); return; }
+                if (newPin && newPin.length === 4 && !isNaN(newPin)) {
+                    sb.from('users').update({ pin: newPin }).eq('uid', user.uid)
+                        .then(() => { showToast('settings_pin_changed', 'success'); })
+                        .catch(err => { showToast('settings_pin_change_failed', 'error'); });
+                } else { showToast('settings_pin_invalid', 'error'); }
+            });
+        });
+    }
+}
 
         function contactSupport() { window.location.href = 'chat.html'; }
 

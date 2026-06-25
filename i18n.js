@@ -260,7 +260,7 @@ const TRANSLATIONS = {
 'checkin_claimed_today_msg': 'Already claimed today',
 'checkin_all_completed': 'Completed all days!',
 'checkin_need_orders_claim': 'Need 30 orders to claim rewards. You have {count}/30.',
-'checkin_claim_success': 'Day {day} claimed! +€{amount}',
+'checkin_claim_success': '🎉 Day {day} claimed! +€{amount}',
         
         // ==================== Event ====================
         'event_title': 'EVENTS',
@@ -524,6 +524,19 @@ const TRANSLATIONS = {
         'toast_no_luck': 'No luck this time, try again next time!',
         'toast_card_reward': 'Cash Reward',
         'toast_trigger_unlocked': 'x30 Commissions Order unlocked!',
+
+// ===== 新增：弹窗翻译 =====
+'signin_required_login': 'Please login first',
+'checkin_premium_required': 'Please recharge your account first to become a premium member',
+'checkin_round2_required': 'Complete Round 2 (30 orders) to claim Sign In Bonus',
+'checkin_orders_required': 'Complete 30 orders in Round 2 to claim Sign In Bonus',
+'checkin_cancelled': 'Claim cancelled',
+'checkin_failed_add_reward': 'Failed to add reward, please try again',
+'checkin_failed_db': 'Check-in failed: {error}',
+'checkin_claim_success': '🎉 Day {day} claimed! +€{amount}',
+'settings_cancelled': 'Operation cancelled',
+'settings_uid_copied': 'UID copied: {uid}',
+'settings_invite_copied': 'Invitation code copied: {code}',
         
         // ==================== Credit Score ====================
         'credit_score': 'Credit Score',
@@ -1092,6 +1105,19 @@ const TRANSLATIONS = {
         'toast_card_reward': 'Geldbelohnung',
         'toast_trigger_unlocked': 'x30 Provisionsauftrag freigeschaltet!',
         
+// 添加到 de 对象中
+'signin_required_login': 'Bitte zuerst anmelden',
+'checkin_premium_required': 'Bitte laden Sie Ihr Konto auf, um Premium-Mitglied zu werden',
+'checkin_round2_required': 'Schließen Sie Runde 2 (30 Aufträge) ab, um den Anmeldebonus zu beanspruchen',
+'checkin_orders_required': 'Schließen Sie 30 Aufträge in Runde 2 ab, um den Anmeldebonus zu beanspruchen',
+'checkin_cancelled': 'Beanspruchung abgebrochen',
+'checkin_failed_add_reward': 'Belohnung konnte nicht hinzugefügt werden, bitte versuchen Sie es erneut',
+'checkin_failed_db': 'Check-in fehlgeschlagen: {error}',
+'checkin_claim_success': '🎉 Tag {day} beansprucht! +€{amount}',
+'settings_cancelled': 'Vorgang abgebrochen',
+'settings_uid_copied': 'UID kopiert: {uid}',
+'settings_invite_copied': 'Einladungscode kopiert: {code}',
+
         // Credit Score
         'credit_score': 'Kredit-Score',
         'credit_required': 'Erforderlich',
@@ -1658,6 +1684,19 @@ const TRANSLATIONS = {
         'toast_no_luck': 'Nessuna fortuna questa volta, riprova!',
         'toast_card_reward': 'Ricompensa in denaro',
         'toast_trigger_unlocked': 'Ordine x30 Commissioni sbloccato!',
+
+// 添加到 it 对象中
+'signin_required_login': 'Effettua il login prima',
+'checkin_premium_required': 'Ricarica il tuo account per diventare un membro premium',
+'checkin_round2_required': 'Completa il Round 2 (30 ordini) per riscuotere il bonus di registrazione',
+'checkin_orders_required': 'Completa 30 ordini nel Round 2 per riscuotere il bonus di registrazione',
+'checkin_cancelled': 'Riscossione annullata',
+'checkin_failed_add_reward': 'Impossibile aggiungere la ricompensa, riprova',
+'checkin_failed_db': 'Check-in fallito: {error}',
+'checkin_claim_success': '🎉 Giorno {day} riscosso! +€{amount}',
+'settings_cancelled': 'Operazione annullata',
+'settings_uid_copied': 'UID copiato: {uid}',
+'settings_invite_copied': 'Codice di invito copiato: {code}',
         
         // Credit Score
         'credit_score': 'Punteggio di credito',

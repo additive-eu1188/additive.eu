@@ -1768,7 +1768,7 @@ window.submitTriggerOrder = async function() {
 
                 // 检查未完成的临时订单
                 if (pendingTempOrder && pendingTempOrder.uid === user.uid && !pendingTempOrder.completed) {
-                    showToast('You have an incomplete order, please complete it first', 'info');
+    showToast('order_incomplete', 'info');
                     currentOrder = pendingTempOrder;
                     if (currentOrder.orderType === undefined) currentOrder.orderType = 'Order';
                     if (currentOrder.commissionPercent === undefined) currentOrder.commissionPercent = '';
@@ -1783,13 +1783,13 @@ window.submitTriggerOrder = async function() {
                 var matchedOrders = await getOrdersByBalance(totalAvailable);
 
                 if (matchedOrders.length === 0) {
-                    modalContent.innerHTML = '<div style="text-align:center; padding:40px;">No matching orders found, please recharge and try again</div>';
-                    return;
-                }
+    modalContent.innerHTML = `<div style="text-align:center; padding:40px; color:#7a85a5;">${t('start_no_orders')}</div>`;
+    return;
+}
 
                 var order = matchedOrders[Math.floor(Math.random() * matchedOrders.length)];
                 if (!order) {
-                    modalContent.innerHTML = '<div style="text-align:center; padding:40px;">No available orders</div>';
+                    modalContent.innerHTML = `<div style="text-align:center; padding:40px; color:#7a85a5;">${t('start_no_available')}</div>`;
                     return;
                 }
 

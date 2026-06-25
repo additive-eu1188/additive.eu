@@ -1,40 +1,41 @@
-// toast.js - Custom in-page toast notifications + global alert interceptor
+// toast.js - Custom in-page toast notifications + global alert interceptor (支持 i18n)
 
 // ========== Toast Notification ==========
 function showToast(message, type = 'success') {
-    // Remove existing toast
+    // 如果 message 是翻译 key，尝试翻译
+    const t = window.i18n?.t || function(key) { return key; };
+    const translatedMessage = t(message);
+    
     const existingToast = document.querySelector('.custom-toast');
     if (existingToast) existingToast.remove();
     
-    // Create toast element
     const toast = document.createElement('div');
     toast.className = `custom-toast custom-toast-${type}`;
     
-    // Icon
     const icon = type === 'success' ? 'fa-check-circle' : 
                  type === 'error' ? 'fa-exclamation-circle' : 
                  type === 'warning' ? 'fa-exclamation-triangle' : 'fa-info-circle';
     
     toast.innerHTML = `
         <div class="toast-icon"><i class="fas ${icon}"></i></div>
-        <div class="toast-message">${message}</div>
+        <div class="toast-message">${translatedMessage}</div>
         <div class="toast-progress"></div>
     `;
     
     document.body.appendChild(toast);
-    
-    // Show animation
     setTimeout(() => toast.classList.add('show'), 10);
-    
-    // Auto dismiss after 3 seconds
     setTimeout(() => {
         toast.classList.remove('show');
         setTimeout(() => toast.remove(), 300);
     }, 3000);
 }
 
-// ========== Confirm Dialog (kept for manual calls) ==========
+// ========== Confirm Dialog ==========
 function showConfirm(title, message, onConfirm, onCancel) {
+    const t = window.i18n?.t || function(key) { return key; };
+    const translatedTitle = t(title);
+    const translatedMessage = t(message);
+    
     const existingModal = document.querySelector('.custom-confirm');
     if (existingModal) existingModal.remove();
     
@@ -43,11 +44,11 @@ function showConfirm(title, message, onConfirm, onCancel) {
     modal.innerHTML = `
         <div class="confirm-overlay"></div>
         <div class="confirm-content">
-            <div class="confirm-title">${title}</div>
-            <div class="confirm-message">${message}</div>
+            <div class="confirm-title">${translatedTitle}</div>
+            <div class="confirm-message">${translatedMessage}</div>
             <div class="confirm-buttons">
-                <button class="confirm-btn confirm-cancel">Cancel</button>
-                <button class="confirm-btn confirm-ok">Confirm</button>
+                <button class="confirm-btn confirm-cancel">${t('cancel')}</button>
+                <button class="confirm-btn confirm-ok">${t('confirm')}</button>
             </div>
         </div>
     `;
@@ -74,8 +75,12 @@ function showConfirm(title, message, onConfirm, onCancel) {
     };
 }
 
-// ========== Prompt Dialog (kept for manual calls) ==========
+// ========== Prompt Dialog ==========
 function showPrompt(title, placeholder, callback) {
+    const t = window.i18n?.t || function(key) { return key; };
+    const translatedTitle = t(title);
+    const translatedPlaceholder = t(placeholder);
+    
     const existingModal = document.querySelector('.custom-prompt');
     if (existingModal) existingModal.remove();
     
@@ -84,11 +89,11 @@ function showPrompt(title, placeholder, callback) {
     modal.innerHTML = `
         <div class="prompt-overlay"></div>
         <div class="prompt-content">
-            <div class="prompt-title">${title}</div>
-            <input type="text" class="prompt-input" placeholder="${placeholder}">
+            <div class="prompt-title">${translatedTitle}</div>
+            <input type="text" class="prompt-input" placeholder="${translatedPlaceholder}">
             <div class="prompt-buttons">
-                <button class="prompt-btn prompt-cancel">Cancel</button>
-                <button class="prompt-btn prompt-ok">Confirm</button>
+                <button class="prompt-btn prompt-cancel">${t('cancel')}</button>
+                <button class="prompt-btn prompt-ok">${t('confirm')}</button>
             </div>
         </div>
     `;
@@ -125,7 +130,7 @@ function showPrompt(title, placeholder, callback) {
     });
 }
 
-// ========== Global alert interceptor (replace with custom Toast) ==========
+// ========== Global alert interceptor ==========
 window.originalAlert = window.alert;
 window.alert = function(message) {
     showToast(message, 'info');
