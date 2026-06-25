@@ -924,13 +924,13 @@ function loadDashboardPage(days) {
                 <!-- 主体：左环占满 + 右数据紧凑 -->
                 <div style="display: flex; align-items: stretch; gap: 12px; position: relative; z-index: 1; min-height: 210px;">
                     
-                    <!-- 左侧环形图 - 占左边大部分空间 -->
-                    <div id="waveRingContainer" style="width: 220px; height: 210px; flex-shrink: 0; position: relative;"></div>
+                    <!-- 左侧环形图 -->
+<div id="waveRingContainer" style="width: 220px; height: 280px; flex-shrink: 0; position: relative; align-self: center;"></div>
                     
-                    <!-- 右侧数据 - 紧凑排列 -->
-                    <div style="flex: 1; min-width: 0; display: flex; flex-direction: column; justify-content: center; gap: 2px;">
-                        <!-- 4行统计数据 -->
-                        <div style="border-top: 1px solid rgba(200,176,144,0.06); padding-top: 4px;">
+                    <!-- 右侧数据 -->
+<div style="flex: 1; min-width: 0; display: flex; flex-direction: column; justify-content: space-between; gap: 0px;">
+                        <!-- A: 4行统计数据 -->
+<div style="border-top: 1px solid rgba(200,176,144,0.06); padding-top: 8px;">
                             <div class="conversion-stat-row" style="display: flex; justify-content: space-between; padding: 2px 0; font-size: 11px; color: #6a7a92;">
                                 <span class="conversion-stat-label">Today</span>
                                 <span><span class="conversion-stat-register">0</span> / <span class="conversion-stat-converted">0</span></span>
@@ -953,15 +953,15 @@ function loadDashboardPage(days) {
                             </div>
                         </div>
                         
-                        <!-- 表格：User / Referrer / Joined / Amount - 紧凑 -->
-                        <div style="margin-top: 4px; padding-top: 4px; border-top: 1px solid rgba(200,176,144,0.06);">
+                        <!-- B: 用户表格 -->
+<div style="margin-top: 8px; padding-top: 8px; border-top: 1px solid rgba(200,176,144,0.06);">
                             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2px;">
                                 <div style="font-size: 9px; color: #5a4a2a; font-weight: 500; letter-spacing: 0.5px; text-transform: uppercase;">
                                     <i class="fas fa-users" style="color: #c8b090; margin-right: 4px; font-size: 9px;"></i>Recent
                                 </div>
                                 <a href="#" onclick="showPage('users'); return false;" style="font-size: 8px; color: #4a3a2a; text-decoration: none; transition: 0.2s;" onmouseover="this.style.color='#c8b090'" onmouseout="this.style.color='#4a3a2a'">View All →</a>
                             </div>
-                            <div style="overflow-y: auto; max-height: 85px;">
+                            <div style="overflow-y: auto; max-height: 110px;">
                                 <table style="width: 100%; border-collapse: collapse; font-size: 10px;">
                                     <thead>
                                         <tr style="border-bottom: 1px solid rgba(200,176,144,0.04); position: sticky; top: 0; background: rgba(20,24,40,0.9); z-index: 2;">
