@@ -822,7 +822,7 @@ if (flagUrl) {
 }
 countryCell.innerHTML = countryHtml;
     
-    // ===== 6. VIP RANK (索引 5) - 只保留会变色发亮的图标 =====
+    // ===== 6. VIP RANK (索引 5) - 只保留左边会变色发亮的图标 =====
 const vipCell = row.insertCell(5);
 const vipLevels = [
     { level: 1, name: 'Normal', color: '#8a9aaa' },
@@ -835,33 +835,32 @@ const currentVip = vipLevels.find(v => v.level === u.vip_level) || vipLevels[0];
 const currentColor = currentVip.color;
 const symbol = currentVip.level === 1 ? '●' : currentVip.level === 2 ? '◆' : '★';
 
-// 生成选项
+// 生成选项 - 只显示文字，不带符号（这样未展开时也只显示文字，不会出现第二个◆）
 let optionsHtml = '';
 vipLevels.forEach(v => {
     const selected = v.level === u.vip_level ? 'selected' : '';
-    const sym = v.level === 1 ? '●' : v.level === 2 ? '◆' : '★';
     optionsHtml += `<option value="${v.level}" ${selected} 
         style="background:#0e1228; color:${v.color}; padding:6px 12px; 
                font-size:11px; font-weight:${v.level === u.vip_level ? '700' : '500'}; 
                border-bottom:1px solid rgba(255,255,255,0.04); 
                font-family:'Inter',sans-serif;">
-        ${sym} ${v.name}
+        ${v.name}
     </option>`;
 });
 
 vipCell.innerHTML = `
     <div class="vip-wrapper" style="position:relative; display:inline-block;">
         <select class="vip-select vip-change-select" data-uid="${u.uid}" data-username="${escapeHtml(u.username)}" data-level="${u.vip_level}"
-                style="width:76px; min-width:76px; max-width:76px; padding:3px 22px 3px 6px; border-radius:14px; 
+                style="width:62px; min-width:62px; max-width:62px; padding:3px 16px 3px 20px; border-radius:14px; 
                        border:1px solid ${currentColor}40; background:rgba(255,255,255,0.03); color:${currentColor}; 
                        font-size:10px; font-weight:600; cursor:pointer; appearance:none; -webkit-appearance:none;
                        font-family:'Inter',sans-serif; transition:all 0.25s ease; text-align:center; letter-spacing:0.2px;
                        background-image: url('data:image/svg+xml,%3Csvg xmlns=\\'http://www.w3.org/2000/svg\\' width=\\'8\\' height=\\'5\\'%3E%3Cpath d=\\'M0 0l4 5 4-5z\\' fill=\\'${encodeURIComponent(currentColor)}60\\'/%3E%3C/svg%3E');
-                       background-repeat:no-repeat; background-position:right 8px center; background-size:8px 5px;">
+                       background-repeat:no-repeat; background-position:right 6px center; background-size:8px 5px;">
             ${optionsHtml}
         </select>
-        <!-- 只保留这个会变色发亮的图标，删除了另一个 -->
-        <span style="position:absolute; left:6px; top:50%; transform:translateY(-50%); font-size:8px; pointer-events:none; color:${currentColor}; text-shadow: 0 0 6px ${currentColor}30;">
+        <!-- 只保留这个会变色发亮的图标（左边这个） -->
+        <span style="position:absolute; left:4px; top:50%; transform:translateY(-50%); font-size:8px; pointer-events:none; color:${currentColor}; text-shadow: 0 0 6px ${currentColor}30;">
             ${symbol}
         </span>
     </div>
