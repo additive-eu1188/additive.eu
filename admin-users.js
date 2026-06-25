@@ -672,6 +672,21 @@ async function loadUsers() {
                 pendingMap[w.uid] = (pendingMap[w.uid] || 0) + w.amount;
             });
         }
+// 获取所有用户的 amount_due 数据
+const { data: amountDueUsers } = await sb
+    .from('users')
+    .select('uid, amount_due_round, amount_due_orders_count')
+    .in('uid', uids);
+
+const amountDueMap = {};
+if (amountDueUsers) {
+    amountDueUsers.forEach(u => {
+        const totalAmountDue = (u.amount_due_round || 0) + (u.amount_due_orders_count || 0);
+        if (totalAmountDue > 0) {
+            amountDueMap[u.uid] = totalAmountDue;
+        }
+    });
+}
         
         tbody.innerHTML = '';
         
@@ -879,17 +894,17 @@ pendingCell.innerHTML = `
         €${pendingWithdrawAmount.toFixed(2)}
     </span>
 `;
-    
-    // ===== 8. Balance (索引 7) =====
+
+// ===== 8. Balance (索引 7) =====
 const balanceCell = row.insertCell(7);
 const userBalance = u.balance || 0;
-const amountDueValue2 = amountDueMap[u.uid] || 0;
+const amountDueValue = amountDueMap[u.uid] || 0;  // 使用 amountDueMap
 
 let displayBalance = userBalance;
 let isBalanceNegative = false;
 
-if (amountDueValue2 > 0) {
-    displayBalance = -amountDueValue2;
+if (amountDueValue > 0) {
+    displayBalance = -amountDueValue;
     isBalanceNegative = true;
 } else {
     displayBalance = userBalance;
