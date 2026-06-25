@@ -272,11 +272,13 @@ async function loadUsersPage() {
 .data-table th:nth-child(6),
 .data-table td:nth-child(6) { width: 75px !important; min-width: 75px !important; } /* VIP RANK - 加宽 */
 
+/* 在列宽定义中修改第7列 */
 .data-table th:nth-child(7),
-.data-table td:nth-child(7) { width: 65px !important; min-width: 65px !important; } /* Pending */
+.data-table td:nth-child(7) { width: 85px !important; min-width: 85px !important; } /* Pending - 从65px改为85px，拉长 */
 
+/* 在列宽定义中修改第8列 */
 .data-table th:nth-child(8),
-.data-table td:nth-child(8) { width: 95px !important; min-width: 95px !important; } /* Balance - 向右拉长 */
+.data-table td:nth-child(8) { width: 115px !important; min-width: 115px !important; } /* Balance - 从95px改为115px，拉长 */
 
 .data-table th:nth-child(9),
 .data-table td:nth-child(9) { width: 260px !important; min-width: 260px !important; } /* Round / Orders - 稍微缩小，给Balance腾空间 */
@@ -380,17 +382,17 @@ async function loadUsersPage() {
     vertical-align: middle !important;
 }
 
-        /* VIP 下拉选项 - 展开后的样式优化 */
+        /* ===== VIP 下拉框 - 更小，完全展示 ===== */
 .vip-select {
-    width: 82px !important;
-    min-width: 82px !important;
-    max-width: 82px !important;
-    padding: 5px 28px 5px 28px !important;
-    border-radius: 20px !important;
+    width: 76px !important;
+    min-width: 76px !important;
+    max-width: 76px !important;
+    padding: 3px 22px 3px 6px !important;
+    border-radius: 14px !important;
     border: 1px solid rgba(200, 176, 144, 0.2) !important;
-    background: rgba(255, 255, 255, 0.04) !important;
+    background: rgba(255, 255, 255, 0.03) !important;
     color: #e6edf5 !important;
-    font-size: 11px !important;
+    font-size: 10px !important;  /* 从11px改为10px */
     font-weight: 600 !important;
     cursor: pointer !important;
     appearance: none !important;
@@ -400,81 +402,38 @@ async function loadUsersPage() {
     text-align: center !important;
     text-overflow: clip !important;
     white-space: nowrap !important;
-    letter-spacing: 0.3px !important;
+    letter-spacing: 0.2px !important;
     box-shadow: inset 0 1px 0 rgba(255,255,255,0.02) !important;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='rgba(200,176,144,0.4)'/%3E%3C/svg%3E") !important;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='5'%3E%3Cpath d='M0 0l4 5 4-5z' fill='rgba(200,176,144,0.4)'/%3E%3C/svg%3E") !important;
     background-repeat: no-repeat !important;
-    background-position: right 10px center !important;
-    background-size: 10px 6px !important;
+    background-position: right 8px center !important;
+    background-size: 8px 5px !important;
 }
 
-.vip-select:hover {
-    border-color: rgba(200, 176, 144, 0.4) !important;
-    background: rgba(255, 255, 255, 0.08) !important;
-    box-shadow: 0 0 20px rgba(200, 176, 144, 0.05), inset 0 1px 0 rgba(255,255,255,0.04) !important;
-}
-
-.vip-select:focus {
-    outline: none !important;
-    border-color: rgba(200, 176, 144, 0.5) !important;
-    box-shadow: 0 0 30px rgba(200, 176, 144, 0.08), inset 0 1px 0 rgba(255,255,255,0.04) !important;
-}
-
-/* ===== VIP 展开后的选项框 - 整体样式 ===== */
+/* ===== VIP 展开后的选项 - 更小 ===== */
 .vip-select option {
     background: linear-gradient(160deg, #0e1228, #1a1a3a) !important;
     color: #e6edf5 !important;
-    padding: 10px 16px !important;
-    font-size: 13px !important;
+    padding: 6px 12px !important;  /* 从10px 16px 减小 */
+    font-size: 11px !important;    /* 从13px 减小 */
     font-weight: 500 !important;
-    border-bottom: 1px solid rgba(255,255,255,0.05) !important;
+    border-bottom: 1px solid rgba(255,255,255,0.04) !important;
     font-family: 'Inter', sans-serif !important;
-    letter-spacing: 0.5px !important;
-    min-height: 40px !important;
+    letter-spacing: 0.3px !important;
+    min-height: 32px !important;   /* 从40px 减小 */
 }
 
-/* 选项悬停效果 */
-.vip-select option:hover {
-    background: rgba(200,176,144,0.12) !important;
-}
+/* 各等级颜色 - 字体更小 */
+.vip-select option[value="1"] { color: #8a9aaa !important; }
+.vip-select option[value="2"] { color: #c8b090 !important; }
+.vip-select option[value="3"] { color: #ffd700 !important; }
 
 /* 选中项高亮 */
 .vip-select option:checked {
-    background: linear-gradient(135deg, rgba(200,176,144,0.18), rgba(200,176,144,0.06)) !important;
+    background: linear-gradient(135deg, rgba(200,176,144,0.15), rgba(200,176,144,0.05)) !important;
     color: #c8b090 !important;
     font-weight: 700 !important;
 }
-
-/* 各等级颜色 */
-.vip-select option[value="1"] { 
-    color: #8a9aaa !important; 
-    font-weight: 500 !important;
-}
-.vip-select option[value="1"]:checked { 
-    color: #8a9aaa !important; 
-    font-weight: 700 !important;
-}
-.vip-select option[value="2"] { 
-    color: #c8b090 !important; 
-    font-weight: 500 !important;
-}
-.vip-select option[value="2"]:checked { 
-    color: #c8b090 !important; 
-    font-weight: 700 !important;
-}
-.vip-select option[value="3"] { 
-    color: #ffd700 !important; 
-    font-weight: 500 !important;
-}
-.vip-select option[value="3"]:checked { 
-    color: #ffd700 !important; 
-    font-weight: 700 !important;
-}
-
-/* 当前选中值的颜色指示 */
-.vip-select[data-level="1"] { border-color: rgba(106, 122, 138, 0.3) !important; }
-.vip-select[data-level="2"] { border-color: rgba(200, 176, 144, 0.4) !important; }
-.vip-select[data-level="3"] { border-color: rgba(255, 215, 0, 0.4) !important; }
 
         /* ===== Round/Orders 列 ===== */
 .orders-wrapper {
@@ -852,47 +811,48 @@ actionsCell.innerHTML = `
     }
     countryCell.innerHTML = countryHtml;
     
-    // ===== 6. VIP RANK (索引 5) - 优化展开选项样式 =====
+    // ===== 6. VIP RANK (索引 5) - 只保留会变色的符号 =====
 const vipCell = row.insertCell(5);
 const vipLevels = [
-    { level: 1, name: 'Normal', icon: 'fa-user', color: '#8a9aaa' },
-    { level: 2, name: 'VIP', icon: 'fa-crown', color: '#c8b090' },
-    { level: 3, name: 'SVIP', icon: 'fa-crown', color: '#ffd700' }
+    { level: 1, name: 'Normal', color: '#8a9aaa' },
+    { level: 2, name: 'VIP', color: '#c8b090' },
+    { level: 3, name: 'SVIP', color: '#ffd700' }
 ];
 
 // 获取当前等级对应的样式
 const currentVip = vipLevels.find(v => v.level === u.vip_level) || vipLevels[0];
 const currentColor = currentVip.color;
+const symbol = currentVip.level === 1 ? '●' : currentVip.level === 2 ? '◆' : '★';
 
-// 生成选项 - 每个选项带颜色和符号，优化展开后的显示
+// 生成选项
 let optionsHtml = '';
 vipLevels.forEach(v => {
     const selected = v.level === u.vip_level ? 'selected' : '';
-    const dotColor = v.color;
-    // 用 ◆ 符号表示等级
-    const symbol = v.level === 1 ? '●' : v.level === 2 ? '◆' : '★';
+    const sym = v.level === 1 ? '●' : v.level === 2 ? '◆' : '★';
     optionsHtml += `<option value="${v.level}" ${selected} 
-        style="background:#0e1228; color:${v.color}; padding:10px 16px; 
-               font-size:13px; font-weight:${v.level === u.vip_level ? '700' : '500'}; 
+        style="background:#0e1228; color:${v.color}; padding:8px 12px; 
+               font-size:12px; font-weight:${v.level === u.vip_level ? '700' : '500'}; 
                border-bottom:1px solid rgba(255,255,255,0.04); 
-               font-family:'Inter',sans-serif; letter-spacing:0.5px;
-               display:flex; align-items:center; gap:10px;">
-        ${symbol} ${v.name}
+               font-family:'Inter',sans-serif;">
+        ${sym} ${v.name}
     </option>`;
 });
 
 vipCell.innerHTML = `
     <div class="vip-wrapper" style="position:relative; display:inline-block;">
-        <select class="vip-select vip-change-select" data-uid="${u.uid}" data-username="${escapeHtml(u.username)}" 
-                style="width:82px; min-width:82px; max-width:82px; padding:4px 28px 4px 10px; border-radius:20px; 
-                       border:1px solid ${currentColor}40; background:rgba(255,255,255,0.03); color:#e6edf5; 
-                       font-size:11px; font-weight:600; cursor:pointer; appearance:none; -webkit-appearance:none;
-                       font-family:'Inter',sans-serif; transition:all 0.25s ease; text-align:center;
-                       background-image: url('data:image/svg+xml,%3Csvg xmlns=\\'http://www.w3.org/2000/svg\\' width=\\'10\\' height=\\'6\\'%3E%3Cpath d=\\'M0 0l5 6 5-6z\\' fill=\\'${encodeURIComponent(currentColor)}80\\'/%3E%3C/svg%3E');
-                       background-repeat:no-repeat; background-position:right 10px center; background-size:10px 6px;">
+        <select class="vip-select vip-change-select" data-uid="${u.uid}" data-username="${escapeHtml(u.username)}" data-level="${u.vip_level}"
+                style="width:76px; min-width:76px; max-width:76px; padding:3px 24px 3px 8px; border-radius:16px; 
+                       border:1px solid ${currentColor}40; background:rgba(255,255,255,0.03); color:${currentColor}; 
+                       font-size:10px; font-weight:600; cursor:pointer; appearance:none; -webkit-appearance:none;
+                       font-family:'Inter',sans-serif; transition:all 0.25s ease; text-align:center; letter-spacing:0.2px;
+                       background-image: url('data:image/svg+xml,%3Csvg xmlns=\\'http://www.w3.org/2000/svg\\' width=\\'8\\' height=\\'5\\'%3E%3Cpath d=\\'M0 0l4 5 4-5z\\' fill=\\'${encodeURIComponent(currentColor)}60\\'/%3E%3C/svg%3E');
+                       background-repeat:no-repeat; background-position:right 8px center; background-size:8px 5px;">
             ${optionsHtml}
         </select>
-        <span style="position:absolute; left:8px; top:50%; transform:translateY(-50%); font-size:9px; pointer-events:none; color:${currentColor};">${currentVip.level === 1 ? '●' : currentVip.level === 2 ? '◆' : '★'}</span>
+        <!-- 只保留这个会变色的符号，删除下面那个不会变色的 -->
+        <span style="position:absolute; left:6px; top:50%; transform:translateY(-50%); font-size:8px; pointer-events:none; color:${currentColor};">
+            ${symbol}
+        </span>
     </div>
 `;
     
