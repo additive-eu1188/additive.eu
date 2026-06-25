@@ -1752,25 +1752,26 @@ window.submitTriggerOrder = async function() {
                     }
                 }
 
-                // 检查订单限制
-                var isPremium = userData?.is_premium || false;
-                var currentRound = userData?.current_round || 0;
-                var roundOrdersCount = userData?.round_orders_count || 0;
-                var ordersPerRound = vipSetting?.orders_limit || 30;
+                // 检查订单限制 - 按 Round 区分
+var currentRound = userData?.current_round || 0;
+var roundOrdersCount = userData?.round_orders_count || 0;
+var ordersPerRound = vipSetting?.orders_limit || 30;
 
-                if (roundOrdersCount >= ordersPerRound) {
-                    modal.classList.remove('active');
-                    var message = '';
-                    if (!isPremium && roundOrdersCount >= ordersPerRound) {
-                        message = 'start_trial_completed';
-                    } else if (isPremium && currentRound === 1 && roundOrdersCount >= ordersPerRound) {
-                        message = 'start_orders_completed_premium';
-                    } else if (isPremium && currentRound === 2 && roundOrdersCount >= ordersPerRound) {
-                        message = 'start_orders_completed_claim';
-                    }
-                    showLimitModal(message);
-                    return;
-                }
+if (roundOrdersCount >= ordersPerRound) {
+    modal.classList.remove('active');
+    
+    var message = '';
+    if (currentRound === 0) {
+        message = 'start_trial_completed';              // 联系客服重置
+    } else if (currentRound === 1) {
+        message = 'start_orders_completed_premium';     // 联系客服重置
+    } else if (currentRound === 2) {
+        message = 'start_orders_completed_claim';       // 去领取签到奖励
+    }
+    
+    showLimitModal(message);
+    return;
+}
 
                 // 检查未完成的临时订单
                 if (pendingTempOrder && pendingTempOrder.uid === user.uid && !pendingTempOrder.completed) {
