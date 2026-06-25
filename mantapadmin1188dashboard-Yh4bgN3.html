@@ -293,7 +293,20 @@
     </div>
 </div>
 
+<!-- ============================================================ -->
+<!-- ⚠️ 重要: 脚本加载顺序                                         -->
+<!-- 1. admin-common.js (核心)                                     -->
+<!-- 2. admin-performance.js (性能优化, 依赖 common)                -->
+<!-- 3. 各页面模块 (依赖 common 和 performance)                     -->
+<!-- ============================================================ -->
+
+<!-- 1. 核心 -->
 <script src="admin-common.js"></script>
+
+<!-- 2. 性能优化 -->
+<script src="admin-performance.js"></script>
+
+<!-- 3. 页面模块 -->
 <script src="admin-dashboard.js"></script>
 <script src="admin-users.js"></script>
 <script src="admin-kyc.js"></script>
@@ -310,15 +323,15 @@
 
 <script>
     // 导航点击事件
-    document.querySelectorAll('.nav-item').forEach(item => {
-        item.addEventListener('click', () => {
-            const page = item.getAttribute('data-page');
+    document.querySelectorAll('.nav-item').forEach(function(item) {
+        item.addEventListener('click', function() {
+            var page = this.getAttribute('data-page');
             if (page) showPage(page);
         });
     });
     
-    // 退出登录 - 使用 .footer-item
-    document.querySelector('.footer-item')?.addEventListener('click', () => { 
+    // 退出登录
+    document.querySelector('.footer-item')?.addEventListener('click', function() { 
         localStorage.removeItem('admin_logged_in');
         localStorage.removeItem('admin_login_time');
         localStorage.removeItem('admin_username');

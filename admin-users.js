@@ -971,6 +971,16 @@ document.querySelectorAll('.edit-user-btn').forEach(btn => {
         });
         
         renderUserPagination();
+
+// 🔥 添加虚拟滚动优化
+    if (window.PerformanceOptimizer) {
+        const container = document.querySelector('.table-container');
+        if (container) {
+            setTimeout(function() {
+                window.PerformanceOptimizer.enableVirtualScroll(container);
+            }, 100);
+        }
+    }
         
     } catch (e) {
         console.error('加载用户失败:', e);
