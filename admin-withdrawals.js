@@ -169,7 +169,8 @@ async function loadWithdrawalsPage() {
                             <tr>
                                 <th style="padding: 14px 14px; color: #a8b4d0; font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid rgba(255,255,255,0.04); background: rgba(10,14,28,0.3); text-align: left;">User ID</th>
                                 <th style="padding: 14px 14px; color: #a8b4d0; font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid rgba(255,255,255,0.04); background: rgba(10,14,28,0.3); text-align: left;">Username</th>
-                                <th style="padding: 14px 14px; color: #a8b4d0; font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid rgba(255,255,255,0.04); background: rgba(10,14,28,0.3); text-align: left;">Amount</th>
+                                <th style="padding: 14px 14px; min-width: 80px; color: #a8b4d0; font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid rgba(255,255,255,0.04); background: rgba(10,14,28,0.3); text-align: left;">Amount</th>
+<th style="padding: 14px 14px; min-width: 100px; color: #a8b4d0; font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid rgba(255,255,255,0.04); background: rgba(10,14,28,0.3); text-align: left;">Remaining Balance</th>
                                 <th style="padding: 14px 14px; color: #a8b4d0; font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid rgba(255,255,255,0.04); background: rgba(10,14,28,0.3); text-align: left;">Crypto Type</th>
                                 <th style="padding: 14px 14px; min-width: 220px; color: #a8b4d0; font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid rgba(255,255,255,0.04); background: rgba(10,14,28,0.3); text-align: left;">Wallet Address</th>
                                 <th style="padding: 14px 14px; color: #a8b4d0; font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid rgba(255,255,255,0.04); background: rgba(10,14,28,0.3); text-align: left;">User IP</th>
@@ -266,8 +267,8 @@ style.textContent = `
     border-color: #3a5a7a;
 }
 .wallet-address-cell {
-    max-width: 280px !important;
-    min-width: 180px !important;
+    max-width: 320px !important;
+    min-width: 200px !important;
     word-break: break-all;
 }
 .wallet-address-wrapper {
@@ -652,7 +653,7 @@ async function loadWithdrawals() {
         document.getElementById('statRejectedWithdraw').innerHTML = '€0.00';
         
         if (!filtered || filtered.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="8" style="text-align:center; padding:30px; color:#6a7a9a;">No pending withdrawals</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="9" style="text-align:center; padding:30px; color:#6a7a9a;">No pending withdrawals</td></tr>';
             return;
         }
         
@@ -691,41 +692,44 @@ async function loadWithdrawals() {
                 }
             } catch (e) { /* ignore */ }
             
+            // ===== User ID (索引 0) =====
             row.insertCell(0).innerHTML = '<span class="badge" style="background: rgba(255,255,255,0.08); padding: 2px 12px; border-radius: 20px; font-size: 11px; color: #c8d2e8; border: 1px solid rgba(255,255,255,0.06);">' + escapeHtml(w.uid) + '</span>';
+            
+            // ===== Username (索引 1) =====
             row.insertCell(1).innerText = w.username || w.uid;
             
-            // ===== Amount + Remaining Balance (索引 2) =====
-            var amountCell = row.insertCell(2);
+            // ===== Amount (索引 2) =====
+            row.insertCell(2).innerHTML = '<span style="color: #d4c09a; font-weight: 600; font-size:13px;">€' + (w.amount || 0).toFixed(2) + '</span>';
+            
+            // ===== Remaining Balance (索引 3) - 新增列 =====
             var userBalance = userBalances[w.uid] || 0;
             var withdrawAmount = w.amount || 0;
             var remainingBalance = userBalance - withdrawAmount;
+            var remainingCell = row.insertCell(3);
+            remainingCell.innerHTML = '<span style="font-size:12px; font-weight:600; color:' + (remainingBalance >= 0 ? '#7ad0b0' : '#e88080') + ';">€' + remainingBalance.toFixed(2) + '</span>';
             
-            amountCell.innerHTML = `
-                <div style="display:flex; flex-direction:column; gap:1px;">
-                    <span style="color: #d4c09a; font-weight: 600; font-size:14px;">€${withdrawAmount.toFixed(2)}</span>
-                    <span style="font-size: 9px; color: rgba(255,255,255,0.30);">
-                        Remaining: <span style="color: ${remainingBalance >= 0 ? '#7ad0b0' : '#e88080'}; font-weight: 500;">€${remainingBalance.toFixed(2)}</span>
-                    </span>
-                </div>
-            `;
+            // ===== Crypto Type (索引 4) =====
+            row.insertCell(4).innerHTML = '<span class="currency-badge ' + currencyClass + '">' + iconHtml + escapeHtml(currencyDisplay) + '</span>';
             
-            row.insertCell(3).innerHTML = '<span class="currency-badge ' + currencyClass + '">' + iconHtml + escapeHtml(currencyDisplay) + '</span>';
-            
-            // ===== Wallet Address (索引 4) - 已拉长 =====
+            // ===== Wallet Address (索引 5) =====
             var address = w.wallet_address || '-';
-            var addressCell = row.insertCell(4);
+            var addressCell = row.insertCell(5);
             addressCell.className = 'wallet-address-cell';
             addressCell.innerHTML = '<div class="wallet-address-wrapper"><span class="wallet-address-text">' + escapeHtml(address) + '</span>' + (address !== '-' ? '<button class="copy-address-btn" data-address="' + escapeHtml(address) + '"><i class="fas fa-copy"></i></button>' : '') + '</div>';
             
-            var ipCell = row.insertCell(5);
+            // ===== User IP / Country (索引 6) =====
+            var ipCell = row.insertCell(6);
             if (flagUrl && countryName !== 'Unknown') {
                 ipCell.innerHTML = '<img src="' + flagUrl + '" class="country-flag-img" onerror="this.style.display=\'none\'" alt=""> <span class="country-name">' + escapeHtml(countryName) + '</span>';
             } else {
                 ipCell.innerHTML = '<span style="font-size: 12px; color: #6a7a9a;">' + escapeHtml(w.user_ip || '-') + '</span>';
             }
             
-            row.insertCell(6).innerText = w.request_date ? new Date(w.request_date).toLocaleString() : '-';
-            row.insertCell(7).innerHTML = '<button class="btn-sm-action btn-approve approve-withdraw" data-id="' + w.id + '" data-uid="' + w.uid + '" data-amt="' + w.amount + '"><i class="fas fa-check"></i> Approve</button><button class="btn-sm-action btn-reject reject-withdraw" data-id="' + w.id + '" data-uid="' + w.uid + '" data-amt="' + w.amount + '"><i class="fas fa-times"></i> Reject</button>';
+            // ===== Withdrawal Time (索引 7) =====
+            row.insertCell(7).innerText = w.request_date ? new Date(w.request_date).toLocaleString() : '-';
+            
+            // ===== Actions (索引 8) =====
+            row.insertCell(8).innerHTML = '<button class="btn-sm-action btn-approve approve-withdraw" data-id="' + w.id + '" data-uid="' + w.uid + '" data-amt="' + w.amount + '"><i class="fas fa-check"></i> Approve</button><button class="btn-sm-action btn-reject reject-withdraw" data-id="' + w.id + '" data-uid="' + w.uid + '" data-amt="' + w.amount + '"><i class="fas fa-times"></i> Reject</button>';
         }
         
         document.querySelectorAll('#withdrawalsTableBody .copy-address-btn').forEach(function(btn) {
@@ -748,7 +752,7 @@ async function loadWithdrawals() {
         
     } catch (e) {
         console.error('加载提现失败:', e);
-        tbody.innerHTML = '<tr><td colspan="8" style="text-align:center; padding:30px; color:#ff8888;">加载失败: ' + escapeHtml(e.message) + '</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="9" style="text-align:center; padding:30px; color:#ff8888;">加载失败: ' + escapeHtml(e.message) + '</td></tr>';
     }
 }
 

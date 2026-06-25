@@ -539,12 +539,12 @@ async function loadUsersPage() {
     margin-right: 4px !important;
 }
 
-        /* ===== Last Online ===== */
-        .last-online-text {
-            font-size: 11px !important;
-            font-weight: 300 !important;
-            color: rgba(255,255,255,0.2) !important;
-        }
+        /* ===== Last Online - 调亮 ===== */
+.last-online-text {
+    font-size: 11px !important;
+    font-weight: 400 !important;
+    color: rgba(255, 255, 255, 0.70) !important;  /* 从0.40 -> 0.55 -> 0.70 */
+}
 
         /* ===== Registered IP - 字体亮一些 ===== */
 .ip-text {
