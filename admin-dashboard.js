@@ -341,11 +341,12 @@ function initWaveRing() {
     container.appendChild(svg);
     
     // 创建中心文字（最上层）- 金属质感
+// 创建中心文字（最上层）- 白金高级感
 var centerText = document.createElement('div');
 centerText.style.cssText = 'position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;pointer-events:none;z-index:10;';
 centerText.innerHTML = `
-    <div id="ringPercent" style="font-size:48px;font-weight:900;letter-spacing:-1px;line-height:1;background:linear-gradient(180deg,#f0e8d0 0%,#d4c09a 35%,#b8942a 65%,#e8d5c0 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;filter:drop-shadow(0 0 30px rgba(200,176,144,0.15)) drop-shadow(0 4px 8px rgba(0,0,0,0.3));">78%</div>
-    <div style="font-size:13px;font-weight:700;letter-spacing:3px;text-transform:uppercase;margin-top:6px;background:linear-gradient(180deg,#d4c09a 0%,#b8942a 50%,#8a7020 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;filter:drop-shadow(0 0 20px rgba(200,176,144,0.08)) drop-shadow(0 2px 4px rgba(0,0,0,0.2));">Conversion Rate</div>
+    <div id="ringPercent" style="font-size:48px;font-weight:900;letter-spacing:-1px;line-height:1;background:linear-gradient(180deg,#ffffff 0%,#d0d8e8 35%,#8892a8 65%,#c0c8d8 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;filter:drop-shadow(0 0 30px rgba(200,210,230,0.12)) drop-shadow(0 4px 8px rgba(0,0,0,0.3));">78%</div>
+    <div style="font-size:13px;font-weight:700;letter-spacing:2px;text-transform:uppercase;margin-top:6px;background:linear-gradient(180deg,#d0d8e8 0%,#8892a8 50%,#5a6a82 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;filter:drop-shadow(0 0 20px rgba(200,210,230,0.08)) drop-shadow(0 2px 4px rgba(0,0,0,0.2));">Conversion Rate</div>
 `;
 container.appendChild(centerText);
     
