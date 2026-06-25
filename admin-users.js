@@ -153,7 +153,6 @@ async function loadUsersPage() {
                             <th style="min-width: 90px;">Actions</th>
                             <th style="min-width: 80px;">Phone</th>
                             <th style="min-width: 70px;">User ID</th>
-                            <th style="min-width: 55px;">Position</th>
                             <th style="min-width: 80px;">Referrer</th>
                             <th style="min-width: 60px;">Country</th>
                             <th style="min-width: 65px;">VIP</th>
@@ -254,31 +253,29 @@ async function loadUsersPage() {
             background: rgba(200,176,144,0.03) !important;
         }
 
-        /* ===== 列宽定义 - 压缩其他列，给 Round/Orders 让路 ===== */
+        /* ===== 列宽定义 ===== */
 .data-table th:nth-child(1),
 .data-table td:nth-child(1) { min-width: 85px !important; max-width: 85px !important; } /* Actions */
 .data-table th:nth-child(2),
 .data-table td:nth-child(2) { min-width: 70px !important; max-width: 70px !important; } /* Phone */
 .data-table th:nth-child(3),
-.data-table td:nth-child(3) { min-width: 65px !important; max-width: 65px !important; } /* User ID */
+.data-table td:nth-child(3) { min-width: 85px !important; max-width: 85px !important; } /* User ID + Position */
 .data-table th:nth-child(4),
-.data-table td:nth-child(4) { min-width: 55px !important; max-width: 55px !important; } /* Position */
+.data-table td:nth-child(4) { min-width: 75px !important; max-width: 75px !important; } /* Referrer */
 .data-table th:nth-child(5),
-.data-table td:nth-child(5) { min-width: 75px !important; max-width: 75px !important; } /* Referrer */
+.data-table td:nth-child(5) { min-width: 55px !important; max-width: 55px !important; } /* Country */
 .data-table th:nth-child(6),
-.data-table td:nth-child(6) { min-width: 55px !important; max-width: 55px !important; } /* Country */
+.data-table td:nth-child(6) { min-width: 60px !important; max-width: 60px !important; } /* VIP */
 .data-table th:nth-child(7),
-.data-table td:nth-child(7) { min-width: 60px !important; max-width: 60px !important; } /* VIP */
+.data-table td:nth-child(7) { min-width: 65px !important; max-width: 65px !important; } /* Pending */
 .data-table th:nth-child(8),
-.data-table td:nth-child(8) { min-width: 65px !important; max-width: 65px !important; } /* Pending */
+.data-table td:nth-child(8) { min-width: 70px !important; max-width: 70px !important; } /* Balance */
 .data-table th:nth-child(9),
-.data-table td:nth-child(9) { min-width: 70px !important; max-width: 70px !important; } /* Balance */
+.data-table td:nth-child(9) { min-width: 320px !important; } /* Round / Orders */
 .data-table th:nth-child(10),
-.data-table td:nth-child(10) { min-width: 300px !important; } /* Round / Orders ← 给足空间 */
+.data-table td:nth-child(10) { min-width: 85px !important; max-width: 85px !important; } /* Registered IP */
 .data-table th:nth-child(11),
-.data-table td:nth-child(11) { min-width: 85px !important; max-width: 85px !important; } /* Registered IP */
-.data-table th:nth-child(12),
-.data-table td:nth-child(12) { min-width: 85px !important; max-width: 85px !important; } /* Last Online */
+.data-table td:nth-child(11) { min-width: 85px !important; max-width: 85px !important; } /* Last Online */
 
         /* ===== Actions 列 ===== */
         .actions-wrapper {
@@ -544,7 +541,7 @@ async function loadUsers() {
     const tbody = document.getElementById('usersTableBody');
     if (!tbody) return;
     
-    tbody.innerHTML = '<tr><td colspan="12" style="text-align:center; padding:40px; color:rgba(255,255,255,0.2);"><i class="fas fa-spinner fa-spin"></i> Loading...</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="11" style="text-align:center; padding:40px; color:rgba(255,255,255,0.2);"><i class="fas fa-spinner fa-spin"></i> Loading...</td></tr>';
     
     try {
         const { data: vipSettings } = await sb.from('vip_settings').select('*');
@@ -572,7 +569,7 @@ async function loadUsers() {
         window.userTotalCount = count || 0;
         
         if (!users || users.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="12" style="text-align:center; padding:40px; color:rgba(255,255,255,0.15);">No users</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="11" style="text-align:center; padding:40px; color:rgba(255,255,255,0.15);">No users</td></tr>';
             renderUserPagination();
             return;
         }
@@ -729,14 +726,16 @@ actionsCell.innerHTML = `
             // ===== 2. Phone (第二列) =====
             row.insertCell(1).innerHTML = `<span class="phone-text">${escapeHtml(u.phone || '-')}</span>`;
             
-            // ===== 3. User ID (第三列) =====
-            row.insertCell(2).innerHTML = `<span class="uid-text">${escapeHtml(u.uid)}</span>`;
-            
-            // ===== 4. Position (第四列) =====
-            const roleCell = row.insertCell(3);
-            const userRole = u.user_role || 'User';
-            const roleBadgeColor = userRole === 'Agent' ? '#c8b090' : 'rgba(255,255,255,0.15)';
-            roleCell.innerHTML = `<span class="position-text" style="color: ${roleBadgeColor};">${userRole}</span>`;
+            // ===== 3. User ID + Position (第三列) =====
+const userRole = u.user_role || 'User';
+const roleColor = userRole === 'Agent' ? '#c8b090' : 'rgba(255,255,255,0.25)';
+const roleDisplay = userRole === 'Agent' ? 'Agent' : 'User';
+row.insertCell(2).innerHTML = `
+    <div style="display:flex; flex-direction:column; align-items:flex-start; gap:1px;">
+        <span class="uid-text">${escapeHtml(u.uid)}</span>
+        <span style="font-size:9px; font-weight:500; color:${roleColor}; background:rgba(255,255,255,0.03); padding:0px 6px; border-radius:8px; letter-spacing:0.3px;">${roleDisplay}</span>
+    </div>
+`;
             
             // ===== 5. Referrer (第五列) =====
             row.insertCell(4).innerHTML = `<span class="referrer-text">${escapeHtml(u.invited_by_username || '-')}</span>`;
@@ -955,7 +954,7 @@ document.querySelectorAll('.edit-user-btn').forEach(btn => {
         
     } catch (e) {
         console.error('加载用户失败:', e);
-        tbody.innerHTML = `<tr><td colspan="12" style="text-align:center; padding:40px; color:#e88080;">加载失败: ${escapeHtml(e.message)}</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="11" style="text-align:center; padding:40px; color:#e88080;">加载失败: ${escapeHtml(e.message)}</td></tr>`;
     }
 }
 
