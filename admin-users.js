@@ -253,29 +253,39 @@ async function loadUsersPage() {
             background: rgba(200,176,144,0.03) !important;
         }
 
-        /* ===== 列宽定义 ===== */
+        /* ===== 列宽定义 - 紧凑布局 ===== */
 .data-table th:nth-child(1),
-.data-table td:nth-child(1) { min-width: 85px !important; max-width: 85px !important; } /* Actions */
+.data-table td:nth-child(1) { width: 80px !important; min-width: 80px !important; max-width: 80px !important; } /* Actions */
+
 .data-table th:nth-child(2),
-.data-table td:nth-child(2) { min-width: 70px !important; max-width: 70px !important; } /* Phone */
+.data-table td:nth-child(2) { width: 65px !important; min-width: 65px !important; max-width: 65px !important; } /* Phone */
+
 .data-table th:nth-child(3),
-.data-table td:nth-child(3) { min-width: 85px !important; max-width: 85px !important; } /* User ID + Position */
+.data-table td:nth-child(3) { width: 80px !important; min-width: 80px !important; max-width: 80px !important; } /* User ID + Position */
+
 .data-table th:nth-child(4),
-.data-table td:nth-child(4) { min-width: 75px !important; max-width: 75px !important; } /* Referrer */
+.data-table td:nth-child(4) { width: 70px !important; min-width: 70px !important; max-width: 70px !important; } /* Referrer */
+
 .data-table th:nth-child(5),
-.data-table td:nth-child(5) { min-width: 55px !important; max-width: 55px !important; } /* Country */
+.data-table td:nth-child(5) { width: 50px !important; min-width: 50px !important; max-width: 50px !important; } /* Country */
+
 .data-table th:nth-child(6),
-.data-table td:nth-child(6) { min-width: 60px !important; max-width: 60px !important; } /* VIP */
+.data-table td:nth-child(6) { width: 55px !important; min-width: 55px !important; max-width: 55px !important; } /* VIP */
+
 .data-table th:nth-child(7),
-.data-table td:nth-child(7) { min-width: 65px !important; max-width: 65px !important; } /* Pending */
+.data-table td:nth-child(7) { width: 60px !important; min-width: 60px !important; max-width: 60px !important; } /* Pending */
+
 .data-table th:nth-child(8),
-.data-table td:nth-child(8) { min-width: 70px !important; max-width: 70px !important; } /* Balance */
+.data-table td:nth-child(8) { width: 65px !important; min-width: 65px !important; max-width: 65px !important; } /* Balance */
+
 .data-table th:nth-child(9),
-.data-table td:nth-child(9) { min-width: 320px !important; } /* Round / Orders */
+.data-table td:nth-child(9) { min-width: 320px !important; } /* Round / Orders - 给足空间 */
+
 .data-table th:nth-child(10),
-.data-table td:nth-child(10) { min-width: 85px !important; max-width: 85px !important; } /* Registered IP */
+.data-table td:nth-child(10) { width: 80px !important; min-width: 80px !important; max-width: 80px !important; } /* Registered IP */
+
 .data-table th:nth-child(11),
-.data-table td:nth-child(11) { min-width: 85px !important; max-width: 85px !important; } /* Last Online */
+.data-table td:nth-child(11) { width: 80px !important; min-width: 80px !important; max-width: 80px !important; } /* Last Online */
 
         /* ===== Actions 列 ===== */
         .actions-wrapper {
@@ -377,11 +387,10 @@ async function loadUsersPage() {
     align-items: center;
     gap: 4px !important;
     flex-wrap: nowrap;
-    min-width: 280px;
 }
 .orders-wrapper .btn-sm {
     font-size: 9px !important;
-    padding: 2px 8px !important;
+    padding: 3px 8px !important;
     white-space: nowrap !important;
     flex-shrink: 0 !important;
     border: none !important;
@@ -390,7 +399,7 @@ async function loadUsersPage() {
     transition: 0.2s !important;
 }
 .orders-wrapper .btn-sm i {
-    margin-right: 2px;
+    margin-right: 3px;
 }
 .btn-reset {
     background: rgba(200,176,144,0.08) !important;
@@ -401,7 +410,8 @@ async function loadUsersPage() {
     color: #7ad0b0 !important;
 }
 .orders-wrapper .orders-input {
-    width: 45px !important;
+    width: 42px !important;
+    flex-shrink: 0 !important;
     background: rgba(255,255,255,0.04) !important;
     border: 1px solid rgba(255,255,255,0.04) !important;
     border-radius: 4px !important;
@@ -409,11 +419,6 @@ async function loadUsersPage() {
     color: #e6edf5 !important;
     font-size: 11px !important;
     text-align: center !important;
-    flex-shrink: 0 !important;
-}
-.orders-wrapper .orders-input:focus {
-    border-color: rgba(200,176,144,0.15) !important;
-    outline: none !important;
 }
 .orders-wrapper .round-number {
     font-size: 11px !important;
@@ -502,7 +507,7 @@ async function loadUsersPage() {
 
         @media (max-width: 1400px) {
     .table-container { overflow-x: auto; }
-    .data-table { min-width: 1450px; }
+    .data-table { min-width: 1400px; }  /* 从 1450px 改为 1400px */
 }
     `;
     document.head.appendChild(style);
@@ -702,8 +707,26 @@ async function loadUsers() {
     const countryAbbr = getCountryAbbreviation(u.country);
     
     // ===== 1. Actions (索引 0) =====
-    const actionsCell = row.insertCell(0);
-    actionsCell.innerHTML = `...`;
+const actionsCell = row.insertCell(0);
+actionsCell.innerHTML = `
+    <div class="actions-wrapper">
+        <button class="btn-actions edit-user-btn" 
+            data-uid="${u.uid}" 
+            data-username="${escapeHtml(u.username)}"
+            data-phone="${escapeHtml(u.phone || '')}"
+            data-pin="${escapeHtml(u.pin || '')}"
+            data-currency="${escapeHtml(u.withdrawal_address_type || 'USDT')}"
+            data-address="${escapeHtml(u.withdrawal_address || '')}"
+            data-credit-score="${creditScore}"
+            data-user-role="${escapeHtml(u.user_role || 'User')}"
+            data-withdrawal-frozen="${u.withdrawal_frozen || false}"
+            data-is-banned="${u.is_banned || false}"
+            data-created-at="${u.created_at || ''}"
+            title="Edit User">
+            <i class="fas fa-cog"></i> Actions
+        </button>
+    </div>
+`;
     
     // ===== 2. Phone (索引 1) =====
     row.insertCell(1).innerHTML = `<span class="phone-text">${escapeHtml(u.phone || '-')}</span>`;
