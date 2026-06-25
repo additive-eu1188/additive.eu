@@ -308,8 +308,8 @@ function initWaveRing() {
     container.style.margin = '0 auto';
     
     var canvas = document.createElement('canvas');
-    canvas.width = 300;
-    canvas.height = 300;
+    canvas.width = 220;
+    canvas.height = 220;
     canvas.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;border-radius:50%;z-index:1;';
     canvas.id = 'waveCanvas';
     container.appendChild(canvas);
@@ -374,21 +374,21 @@ function startWaveAnimation(canvas) {
     var ringSpawnCounter = 0;
     
     function spawnExpandingRing() {
-        var radius = 5 + Math.random() * 6;
-        var speed = 0.5 + Math.random() * 0.4;
-        var maxRadius = 65 + Math.random() * 15;
-        var alpha = 0.2 + Math.random() * 0.15;
-        var color = Math.random() > 0.5 ? '#c8b090' : '#d4af37';
-        var width = 1.5 + Math.random() * 1.5;
-        expandingRings.push({
-            radius: radius,
-            maxRadius: maxRadius,
-            speed: speed,
-            alpha: alpha,
-            color: color,
-            width: width
-        });
-    }
+    var radius = 5 + Math.random() * 6;
+    var speed = 0.5 + Math.random() * 0.4;
+    var maxRadius = 110 + Math.random() * 15;  // 扩散到110-125
+    var alpha = 0.2 + Math.random() * 0.15;
+    var color = Math.random() > 0.5 ? '#c8b090' : '#d4af37';
+    var width = 1.5 + Math.random() * 1.5;
+    expandingRings.push({
+        radius: radius,
+        maxRadius: maxRadius,
+        speed: speed,
+        alpha: alpha,
+        color: color,
+        width: width
+    });
+}
     
     var time = 0;
     
