@@ -691,6 +691,21 @@ if (pendingTriggerOrders) {
     });
 }
 
+// ============================================================
+// 🔥 新增：获取用户订单总佣金
+// ============================================================
+const { data: userCommissions } = await sb
+    .from('order_history')
+    .select('uid, commission')
+    .in('uid', uids);
+
+const commissionMap = {};
+if (userCommissions) {
+    userCommissions.forEach(o => {
+        commissionMap[o.uid] = (commissionMap[o.uid] || 0) + (o.commission || 0);
+    });
+}
+
 // 获取所有用户的 amount_due 数据
 const { data: amountDueUsers } = await sb
     .from('users')
@@ -904,19 +919,17 @@ vipCell.innerHTML = `
     </div>
 `;
     
-    // ===== 7. Pending (索引 6) - 与 start.html 的 pending 卡片逻辑一致 =====
+    // ===== 7. Pending (索引 6) =====
 const currentBal = u.balance || 0;
 const amountDueVal = amountDueMap[u.uid] || 0;
 const triggerComm = pendingTriggerMap[u.uid] || 0;
 const pendingWithdrawAmt = pendingMap[u.uid] || 0;
-const orderCommissions = commissionMap[u.uid] || 0;  // 🔥 加上订单佣金
+const orderCommissions = commissionMap[u.uid] || 0;  // ✅ 现在有定义了
 
 let totalPendingValue;
 if (amountDueVal > 0) {
-    // 有 amount due 时：balance + amountDue + triggerCommission + 订单佣金
     totalPendingValue = currentBal + amountDueVal + triggerComm + orderCommissions;
 } else {
-    // 没有 amount due 时：显示 pending 提现
     totalPendingValue = pendingWithdrawAmt;
 }
 
