@@ -409,6 +409,71 @@ async function loadUsersPage() {
             min-width: 35px;
             font-size: 11px;
         }
+
+/* ===== 标题调小 ===== */
+.card h3 {
+    font-size: 14px !important;
+}
+
+/* ===== 表格紧凑，Actions 完整显示 ===== */
+.data-table th,
+.data-table td {
+    padding: 5px 6px !important;
+    font-size: 11px !important;
+}
+
+/* Actions 列 */
+.data-table th:last-child,
+.data-table td:last-child {
+    min-width: 130px !important;
+    white-space: nowrap;
+}
+
+/* 各列宽度优化 */
+.data-table th:nth-child(1),
+.data-table td:nth-child(1) { min-width: 70px !important; max-width: 90px !important; } /* Phone */
+.data-table th:nth-child(2),
+.data-table td:nth-child(2) { min-width: 60px !important; max-width: 80px !important; } /* User ID */
+.data-table th:nth-child(3),
+.data-table td:nth-child(3) { min-width: 55px !important; max-width: 70px !important; } /* Position */
+.data-table th:nth-child(4),
+.data-table td:nth-child(4) { min-width: 70px !important; max-width: 100px !important; } /* Referrer */
+.data-table th:nth-child(5),
+.data-table td:nth-child(5) { min-width: 80px !important; max-width: 110px !important; } /* Country */
+.data-table th:nth-child(6),
+.data-table td:nth-child(6) { min-width: 65px !important; max-width: 80px !important; } /* VIP Level */
+.data-table th:nth-child(7),
+.data-table td:nth-child(7) { min-width: 70px !important; max-width: 90px !important; } /* Pending */
+.data-table th:nth-child(8),
+.data-table td:nth-child(8) { min-width: 75px !important; max-width: 95px !important; } /* Balance */
+.data-table th:nth-child(9),
+.data-table td:nth-child(9) { min-width: 120px !important; } /* Round / Orders */
+.data-table th:nth-child(10),
+.data-table td:nth-child(10) { min-width: 90px !important; max-width: 120px !important; } /* Registered IP */
+.data-table th:nth-child(11),
+.data-table td:nth-child(11) { min-width: 70px !important; max-width: 90px !important; } /* Last Online */
+.data-table th:nth-child(12),
+.data-table td:nth-child(12) { min-width: 70px !important; max-width: 90px !important; } /* Time Registered */
+.data-table th:nth-child(13),
+.data-table td:nth-child(13) { min-width: 120px !important; } /* Actions */
+
+/* Actions 按钮紧凑 */
+.actions-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 2px !important;
+    flex-wrap: nowrap;
+}
+.actions-wrapper .btn-sm {
+    font-size: 8px !important;
+    padding: 2px 5px !important;
+}
+
+/* 表头字体 */
+.data-table th {
+    font-size: 10px !important;
+    padding: 5px 6px !important;
+}
         @media (max-width: 1400px) {
     .table-container { overflow-x: auto; }
     .data-table { min-width: 1400px; }
