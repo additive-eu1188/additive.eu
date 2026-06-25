@@ -562,6 +562,8 @@ const TRANSLATIONS = {
         'amount_due': 'Amount Due',
         'amount_due_desc': 'Amount due for order',
         'amount_due_recharge': 'Please recharge your account to complete this order.',
+'amount_due_required': 'Required',
+'amount_due_your_balance': 'Your Balance',
         
         // ==================== Card Reveal ====================
         'card_select': 'Select one diamond reward',
@@ -1142,6 +1144,8 @@ const TRANSLATIONS = {
         'amount_due': 'Fälliger Betrag',
         'amount_due_desc': 'Fälliger Betrag für Auftrag',
         'amount_due_recharge': 'Bitte laden Sie Ihr Konto auf, um diesen Auftrag abzuschließen.',
+'amount_due_required': 'Erforderlich',
+'amount_due_your_balance': 'Ihr Guthaben',
         
         // Card Reveal
         'card_select': 'Wählen Sie eine Diamant-Belohnung',
@@ -1722,6 +1726,8 @@ const TRANSLATIONS = {
         'amount_due': 'Importo dovuto',
         'amount_due_desc': 'Importo dovuto per l\'ordine',
         'amount_due_recharge': 'Ricarica il tuo account per completare questo ordine.',
+'amount_due_required': 'Richiesto',
+'amount_due_your_balance': 'Il tuo saldo',
         
         // Card Reveal
         'card_select': 'Seleziona una ricompensa diamante',

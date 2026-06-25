@@ -944,6 +944,7 @@ if (/Mobi|Android|iPhone/i.test(navigator.userAgent)) {
         // Unified popup functions
         // ============================================================
         function showInsufficientBalanceModal(requiredAmount, currentBalance, showAmountDue) {
+            const t = window.i18n?.t || function(key) { return key; };
             showAmountDue = showAmountDue || false;
             closeOrderModal();
 
@@ -968,18 +969,18 @@ if (/Mobi|Android|iPhone/i.test(navigator.userAgent)) {
                         <div style="font-size:48px;color:#ff6a00;margin-bottom:16px;display:block;">
                             <i class="fas fa-exclamation-triangle"></i>
                         </div>
-                        <h3 style="font-size:20px;font-weight:700;color:#e8d5c0;margin-bottom:12px;">Insufficient Balance</h3>
+                        <h3 style="font-size:20px;font-weight:700;color:#e8d5c0;margin-bottom:12px;">${t('start_insufficient')}</h3>
                         <p style="margin-bottom:16px;color:#c0c8e0;line-height:1.6;font-size:14px;">
-                            Required: <strong style="color:#ffdd99;">€${requiredAmount.toFixed(2)}</strong><br>
-                            Your Balance: <strong style="color:#ff6a00;">€${currentBalance.toFixed(2)}</strong><br><br>
-                            Please recharge your account to complete this order.
+                            ${t('amount_due_required')}: <strong style="color:#ffdd99;">€${requiredAmount.toFixed(2)}</strong><br>
+                            ${t('amount_due_your_balance')}: <strong style="color:#ff6a00;">€${currentBalance.toFixed(2)}</strong><br><br>
+                            ${t('amount_due_recharge')}
                         </p>
                         <div style="display:flex;gap:12px;justify-content:center;margin-top:16px;">
                             <button onclick="contactSupportFromModal()" style="background:rgba(204,178,153,0.08);border:1px solid rgba(204,178,153,0.2);padding:10px 24px;border-radius:40px;color:#CCB299;font-weight:500;font-size:13px;cursor:pointer;font-family:'Inter',sans-serif;transition:0.25s;">
-                                <i class="fas fa-headset"></i> Contact Support
+                                <i class="fas fa-headset"></i> ${t('start_contact_support')}
                             </button>
                             <button onclick="closeInsufficientModal()" style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.06);padding:10px 24px;border-radius:40px;color:#5a4a6a;font-size:13px;cursor:pointer;font-family:'Inter',sans-serif;transition:0.25s;">
-                                Close
+                                ${t('close')}
                             </button>
                         </div>
                     </div>
@@ -1001,23 +1002,28 @@ if (/Mobi|Android|iPhone/i.test(navigator.userAgent)) {
             window.location.href = 'chat.html';
         }
 
+        // ============================================================
+        // showLimitModal 函数
+        // ============================================================
         function showLimitModal(message) {
+            const t = window.i18n?.t || function(key) { return key; };
+            
             var modalHtml = `
                 <div id="limitModal" style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(7,11,26,0.92);backdrop-filter:blur(14px);z-index:30001;display:flex;align-items:center;justify-content:center;visibility:visible;opacity:1;">
                     <div style="background:linear-gradient(160deg,#1a1428,#0e0a1a);border-radius:32px;padding:40px 36px;max-width:440px;width:100%;border:1px solid rgba(201,176,149,0.06);box-shadow:0 24px 60px rgba(0,0,0,0.6);text-align:center;transform:scale(1);">
                         <div style="font-size:48px;color:#4ade80;margin-bottom:16px;display:block;">
                             <i class="fas fa-check-circle"></i>
                         </div>
-                        <h3 style="font-size:20px;font-weight:700;color:#e8d5c0;margin-bottom:12px;">Orders Completed</h3>
+                        <h3 style="font-size:20px;font-weight:700;color:#e8d5c0;margin-bottom:12px;">${t('start_orders_completed')}</h3>
                         <p style="margin-bottom:16px;color:#c0c8e0;line-height:1.6;font-size:14px;">
-                            ${message}
+                            ${t(message)}
                         </p>
                         <div style="display:flex;gap:12px;justify-content:center;margin-top:16px;">
                             <button onclick="contactSupportFromLimitModal()" style="background:rgba(204,178,153,0.08);border:1px solid rgba(204,178,153,0.2);padding:10px 24px;border-radius:40px;color:#CCB299;font-weight:500;font-size:13px;cursor:pointer;font-family:'Inter',sans-serif;transition:0.25s;">
-                                <i class="fas fa-headset"></i> Contact Support
+                                <i class="fas fa-headset"></i> ${t('start_contact_support')}
                             </button>
                             <button onclick="closeLimitModal()" style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.06);padding:10px 24px;border-radius:40px;color:#5a4a6a;font-size:13px;cursor:pointer;font-family:'Inter',sans-serif;transition:0.25s;">
-                                Close
+                                ${t('close')}
                             </button>
                         </div>
                     </div>
@@ -1756,11 +1762,11 @@ window.submitTriggerOrder = async function() {
                     modal.classList.remove('active');
                     var message = '';
                     if (!isPremium && roundOrdersCount >= ordersPerRound) {
-                        message = 'Your trial is completed, please contact user support to reset your working account.';
+                        message = 'start_trial_completed';
                     } else if (isPremium && currentRound === 1 && roundOrdersCount >= ordersPerRound) {
-                        message = 'Your orders are completed, please contact user support to reset your working account.';
+                        message = 'start_orders_completed_premium';
                     } else if (isPremium && currentRound === 2 && roundOrdersCount >= ordersPerRound) {
-                        message = 'Your orders are completed, please proceed to claim your sign in reward.';
+                        message = 'start_orders_completed_claim';
                     }
                     showLimitModal(message);
                     return;
