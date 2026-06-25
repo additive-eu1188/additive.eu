@@ -274,11 +274,11 @@ async function loadUsersPage() {
 .data-table th:nth-child(9),
 .data-table td:nth-child(9) { min-width: 75px !important; max-width: 95px !important; } /* Balance */
 .data-table th:nth-child(10),
-.data-table td:nth-child(10) { min-width: 200px !important; } /* Round / Orders */
+.data-table td:nth-child(10) { min-width: 280px !important; max-width: 350px !important; } /* Round / Orders ← 大幅加宽 */
 .data-table th:nth-child(11),
 .data-table td:nth-child(11) { min-width: 90px !important; max-width: 120px !important; } /* Registered IP */
 .data-table th:nth-child(12),
-.data-table td:nth-child(12) { min-width: 70px !important; } /* Last Online */
+.data-table td:nth-child(12) { min-width: 90px !important; } /* Last Online ← 稍微加宽 */
 
         /* ===== Actions 列 ===== */
         .actions-wrapper {
@@ -375,23 +375,23 @@ async function loadUsersPage() {
         }
 
         /* ===== Round/Orders 列 ===== */
-        .orders-wrapper {
-            display: flex;
-            align-items: center;
-            gap: 4px !important;
-            flex-wrap: nowrap;
-            min-width: 190px;
-        }
-        .orders-wrapper .btn-sm {
-            font-size: 8px !important;
-            padding: 2px 6px !important;
-            white-space: nowrap !important;
-            flex-shrink: 0 !important;
-            border: none !important;
-            border-radius: 4px !important;
-            cursor: pointer !important;
-            transition: 0.2s !important;
-        }
+.orders-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 6px !important;
+    flex-wrap: nowrap;
+    min-width: 250px;
+}
+.orders-wrapper .btn-sm {
+    font-size: 9px !important;
+    padding: 3px 8px !important;
+    white-space: nowrap !important;
+    flex-shrink: 0 !important;
+    border: none !important;
+    border-radius: 4px !important;
+    cursor: pointer !important;
+    transition: 0.2s !important;
+}
         .orders-wrapper .btn-sm:hover {
             opacity: 0.8 !important;
         }
@@ -504,9 +504,9 @@ async function loadUsersPage() {
         .table-container::-webkit-scrollbar-track { background: transparent; }
 
         @media (max-width: 1400px) {
-            .table-container { overflow-x: auto; }
-            .data-table { min-width: 1450px; }
-        }
+    .table-container { overflow-x: auto; }
+    .data-table { min-width: 1500px; }  /* 从 1450px 改为 1500px */
+}
     `;
     document.head.appendChild(style);
     
@@ -801,28 +801,32 @@ countryCell.innerHTML = countryHtml;
             `;
             
             // ===== 10. Round / Orders (第十列) =====
-            const ordersCell = row.insertCell(9);
-            const isPremium = u.is_premium || false;
-            const currentRound = u.current_round || 0;
-            const roundOrdersCount = u.round_orders_count || 0;
-            let roundDisplay = 0;
-            let displayCount = 0;
-            if (!isPremium) {
-                roundDisplay = 0;
-                displayCount = orderCount;
-            } else {
-                roundDisplay = currentRound;
-                displayCount = roundOrdersCount;
-            }
-            ordersCell.innerHTML = `
-                <div class="orders-wrapper">
-                    <span class="round-number">(${roundDisplay})</span>
-                    <input type="number" class="orders-input round-edit-input" data-uid="${u.uid}" value="${displayCount}" min="0" step="1" title="Edit orders in current round">
-                    <span class="orders-slash">/30</span>
-                    <button class="btn-sm btn-reset reset-orders-btn" data-uid="${u.uid}" data-username="${escapeHtml(u.username)}" title="Reset Orders" ${!isPremium ? 'disabled style="opacity:0.2;cursor:not-allowed;"' : ''}><i class="fas fa-undo-alt"></i></button>
-                    <button class="btn-sm btn-save-orders save-round-orders-btn" data-uid="${u.uid}" data-username="${escapeHtml(u.username)}" title="Save Orders"><i class="fas fa-save"></i></button>
-                </div>
-            `;
+const ordersCell = row.insertCell(9);
+const isPremium = u.is_premium || false;
+const currentRound = u.current_round || 0;
+const roundOrdersCount = u.round_orders_count || 0;
+let roundDisplay = 0;
+let displayCount = 0;
+if (!isPremium) {
+    roundDisplay = 0;
+    displayCount = orderCount;
+} else {
+    roundDisplay = currentRound;
+    displayCount = roundOrdersCount;
+}
+ordersCell.innerHTML = `
+    <div class="orders-wrapper">
+        <span class="round-number" style="font-size:11px; color:rgba(255,255,255,0.2); min-width:32px; flex-shrink:0;">(${roundDisplay})</span>
+        <input type="number" class="orders-input round-edit-input" data-uid="${u.uid}" value="${displayCount}" min="0" step="1" title="Edit orders in current round" style="width:50px; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.04); border-radius:4px; padding:2px 4px; color:#e6edf5; font-size:11px; text-align:center; flex-shrink:0;">
+        <span class="orders-slash" style="font-size:10px; color:rgba(255,255,255,0.12); flex-shrink:0;">/30</span>
+        <button class="btn-sm btn-reset reset-orders-btn" data-uid="${u.uid}" data-username="${escapeHtml(u.username)}" title="Reset Orders" ${!isPremium ? 'disabled style="opacity:0.2;cursor:not-allowed;"' : ''} style="font-size:9px; padding:3px 10px; white-space:nowrap; flex-shrink:0; border:none; border-radius:4px; cursor:pointer; background:rgba(200,176,144,0.08); color:#c8b090; transition:0.2s;">
+            <i class="fas fa-undo-alt"></i> Reset
+        </button>
+        <button class="btn-sm btn-save-orders save-round-orders-btn" data-uid="${u.uid}" data-username="${escapeHtml(u.username)}" title="Save Orders" style="font-size:9px; padding:3px 10px; white-space:nowrap; flex-shrink:0; border:none; border-radius:4px; cursor:pointer; background:rgba(74,222,128,0.08); color:#7ad0b0; transition:0.2s;">
+            <i class="fas fa-save"></i> Save
+        </button>
+    </div>
+`;
             
             // ===== 11. Registered IP (第十一列) =====
             row.insertCell(10).innerHTML = `<span class="ip-text">${escapeHtml(u.registered_ip || '-')}</span>`;
