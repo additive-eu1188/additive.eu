@@ -447,7 +447,7 @@ async function loadUsersPage() {
 .data-table th:nth-child(8),
 .data-table td:nth-child(8) { min-width: 75px !important; max-width: 95px !important; } /* Balance */
 .data-table th:nth-child(9),
-.data-table td:nth-child(9) { min-width: 120px !important; } /* Round / Orders */
+.data-table td:nth-child(9) { min-width: 200px !important; } /* Round / Orders ← 改大 */
 .data-table th:nth-child(10),
 .data-table td:nth-child(10) { min-width: 90px !important; max-width: 120px !important; } /* Registered IP */
 .data-table th:nth-child(11),
@@ -455,7 +455,7 @@ async function loadUsersPage() {
 .data-table th:nth-child(12),
 .data-table td:nth-child(12) { min-width: 70px !important; max-width: 90px !important; } /* Time Registered */
 .data-table th:nth-child(13),
-.data-table td:nth-child(13) { min-width: 120px !important; } /* Actions */
+.data-table td:nth-child(13) { min-width: 140px !important; } /* Actions ← 也加宽一点 */
 
 /* Actions 按钮紧凑 */
 .actions-wrapper {
@@ -469,14 +469,39 @@ async function loadUsersPage() {
     padding: 2px 5px !important;
 }
 
+/* ===== 新增：Round/Orders 列内元素不换行 ===== */
+.orders-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 3px !important;
+    flex-wrap: nowrap;
+    min-width: 180px;
+}
+.orders-wrapper .btn-sm {
+    font-size: 8px !important;
+    padding: 2px 5px !important;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+.orders-wrapper .orders-input {
+    width: 45px;
+    flex-shrink: 0;
+}
+.orders-wrapper .round-number {
+    font-size: 11px;
+    color: #8a9abb;
+    min-width: 32px;
+    flex-shrink: 0;
+}
+
 /* 表头字体 */
 .data-table th {
     font-size: 10px !important;
     padding: 5px 6px !important;
 }
-        @media (max-width: 1400px) {
+@media (max-width: 1400px) {
     .table-container { overflow-x: auto; }
-    .data-table { min-width: 1400px; }
+    .data-table { min-width: 1450px; }  /* 从 1400px 改为 1450px 确保列宽足够 */
 }
 
 /* 性能优化：弹窗动画使用GPU加速 */
@@ -795,29 +820,29 @@ async function loadUsers() {
         </div>
     `;
     
-    // 9. Round / Orders (索引 8)
-    const ordersCell = row.insertCell(8);
-    const isPremium = u.is_premium || false;
-    const currentRound = u.current_round || 0;
-    const roundOrdersCount = u.round_orders_count || 0;
-    let roundDisplay = 0;
-    let displayCount = 0;
-    if (!isPremium) {
-        roundDisplay = 0;
-        displayCount = orderCount;
-    } else {
-        roundDisplay = currentRound;
-        displayCount = roundOrdersCount;
-    }
-    ordersCell.innerHTML = `
-        <div class="orders-wrapper">
-            <span class="round-number">(${roundDisplay})</span>
-            <input type="number" class="orders-input round-edit-input" data-uid="${u.uid}" value="${displayCount}" min="0" step="1" title="Edit orders in current round">
-            <span style="color: #6a7a9a; font-size: 10px;">/30</span>
-            <button class="btn-sm btn-reset reset-orders-btn" data-uid="${u.uid}" data-username="${escapeHtml(u.username)}" title="Reset Orders" ${!isPremium ? 'disabled' : ''}><i class="fas fa-undo-alt"></i></button>
-            <button class="btn-sm btn-save-orders save-round-orders-btn" data-uid="${u.uid}" data-username="${escapeHtml(u.username)}" title="Save Orders"><i class="fas fa-save"></i></button>
-        </div>
-    `;
+    // 9. Round / Orders (索引 8) - 修复按钮被遮挡
+const ordersCell = row.insertCell(8);
+const isPremium = u.is_premium || false;
+const currentRound = u.current_round || 0;
+const roundOrdersCount = u.round_orders_count || 0;
+let roundDisplay = 0;
+let displayCount = 0;
+if (!isPremium) {
+    roundDisplay = 0;
+    displayCount = orderCount;
+} else {
+    roundDisplay = currentRound;
+    displayCount = roundOrdersCount;
+}
+ordersCell.innerHTML = `
+    <div class="orders-wrapper" style="display:flex; align-items:center; gap:3px; flex-wrap:nowrap; min-width:170px;">
+        <span class="round-number" style="font-size:11px; color:#8a9abb; min-width:32px; flex-shrink:0;">(${roundDisplay})</span>
+        <input type="number" class="orders-input round-edit-input" data-uid="${u.uid}" value="${displayCount}" min="0" step="1" title="Edit orders in current round" style="width:45px; background:#0f172a; border:1px solid #1e2a3a; border-radius:4px; padding:2px 4px; color:#fff; font-size:11px; text-align:center; flex-shrink:0;">
+        <span style="color:#6a7a9a; font-size:10px; flex-shrink:0;">/30</span>
+        <button class="btn-sm btn-reset reset-orders-btn" data-uid="${u.uid}" data-username="${escapeHtml(u.username)}" title="Reset Orders" ${!isPremium ? 'disabled' : ''} style="font-size:8px !important; padding:2px 5px !important; white-space:nowrap; flex-shrink:0; background:#7a5f2f; border:none; border-radius:4px; color:#fff; cursor:pointer;"><i class="fas fa-undo-alt"></i></button>
+        <button class="btn-sm btn-save-orders save-round-orders-btn" data-uid="${u.uid}" data-username="${escapeHtml(u.username)}" title="Save Orders" style="font-size:8px !important; padding:2px 5px !important; white-space:nowrap; flex-shrink:0; background:#2f6b3a; border:none; border-radius:4px; color:#fff; cursor:pointer;"><i class="fas fa-save"></i></button>
+    </div>
+`;
     
     // 10. Registered IP (索引 9)
     row.insertCell(9).innerHTML = `<span style="font-size: 11px; color: #8a9abb; font-family: monospace;">${escapeHtml(u.registered_ip || '-')}</span>`;
