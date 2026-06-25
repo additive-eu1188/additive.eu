@@ -905,12 +905,11 @@ vipCell.innerHTML = `
 `;
     
     // ===== 7. Pending (索引 6) - current balance + order commissions + amount due =====
-const userBalance = u.balance || 0;
-const amountDueValue = amountDueMap[u.uid] || 0;
-const totalCommissions = orderCountMap[u.uid] || 0;  // 用户总订单数作为佣金参考
+const currentUserBal = u.balance || 0;
+const amountDueVal = amountDueMap[u.uid] || 0;
+const totalCommissions = orderCountMap[u.uid] || 0;  // 订单数量
 
-// 实际应该从 deposits 或 order_history 获取总佣金
-const totalPendingValue = userBalance + totalCommissions + amountDueValue;
+const totalPendingValue = currentUserBal + totalCommissions + amountDueVal;
 
 const pendingCell = row.insertCell(6);
 pendingCell.innerHTML = `
