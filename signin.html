@@ -143,10 +143,96 @@
         }
         .error-message { text-align: center; margin-top: 18px; font-size: 13px; min-height: 40px; }
 
+        /* ===== 自定义确认弹窗（与后台风格一致） ===== */
+        .custom-confirm {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 10002;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            visibility: hidden;
+            opacity: 0;
+            transition: all 0.2s ease;
+        }
+        .custom-confirm.active {
+            visibility: visible;
+            opacity: 1;
+        }
+        .confirm-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.7);
+            backdrop-filter: blur(5px);
+        }
+        .confirm-content {
+            position: relative;
+            background: linear-gradient(145deg, #1a1508, #0f0c06);
+            border-radius: 24px;
+            padding: 32px 28px;
+            width: 380px;
+            max-width: 90%;
+            text-align: center;
+            border: 1px solid rgba(255,184,77,0.3);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+            transform: scale(0.9);
+            transition: transform 0.2s ease;
+        }
+        .custom-confirm.active .confirm-content {
+            transform: scale(1);
+        }
+        .confirm-icon {
+            font-size: 48px;
+            color: #ff6a00;
+            margin-bottom: 16px;
+            display: block;
+        }
+        .confirm-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: #ffb84d;
+            margin-bottom: 12px;
+        }
+        .confirm-message {
+            font-size: 14px;
+            color: #d4c8a0;
+            line-height: 1.6;
+            margin-bottom: 24px;
+        }
+        .confirm-buttons {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+        }
+        .confirm-btn {
+            padding: 10px 28px;
+            border-radius: 40px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: none;
+            font-family: 'Inter', sans-serif;
+            font-size: 14px;
+        }
+        .confirm-ok {
+            background: linear-gradient(135deg, #ffb84d, #cc8822);
+            color: #0a0806;
+        }
+        .confirm-ok:hover {
+            transform: scale(1.02);
+        }
+
         @media (max-width: 480px) {
             .login-card { padding: 32px 24px; }
             .login-card .logo img { height: 34px; }
             .login-card .subtitle { font-size: 12px; }
+            .confirm-content { padding: 24px 20px; }
         }
     </style>
 </head>
@@ -162,20 +248,35 @@
 
             <div class="form-group">
                 <label><i class="fas fa-user" style="margin-right: 6px;"></i> <span data-i18n="signin_username">Username</span></label>
-<input type="text" id="loginUsername" placeholder="Enter your username" data-i18n-placeholder="signin_username_placeholder">
-<label><i class="fas fa-lock" style="margin-right: 6px;"></i> <span data-i18n="signin_password">Password</span></label>
-<input type="password" id="loginPassword" placeholder="Enter your password" data-i18n-placeholder="signin_password_placeholder">
+                <input type="text" id="loginUsername" placeholder="Enter your username" data-i18n-placeholder="signin_username_placeholder">
+            </div>
+            <div class="form-group">
+                <label><i class="fas fa-lock" style="margin-right: 6px;"></i> <span data-i18n="signin_password">Password</span></label>
+                <input type="password" id="loginPassword" placeholder="Enter your password" data-i18n-placeholder="signin_password_placeholder">
             </div>
 
             <button class="login-btn" onclick="handleSignIn()">
-    <i class="fas fa-sign-in-alt"></i> <span data-i18n="signin_btn">Sign In</span>
-</button>
+                <i class="fas fa-sign-in-alt"></i> <span data-i18n="signin_btn">Sign In</span>
+            </button>
 
             <div id="loginError" class="error-message"></div>
 
             <div class="register-link">
-    <span data-i18n="signin_no_account">Don't have an account?</span> <a href="register.html"><span data-i18n="signin_register_now">Register now</span> <i class="fas fa-arrow-right"></i></a>
-</div>
+                <span data-i18n="signin_no_account">Don't have an account?</span> <a href="register.html"><span data-i18n="signin_register_now">Register now</span> <i class="fas fa-arrow-right"></i></a>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== 封禁弹窗 ===== -->
+    <div id="bannedModal" class="custom-confirm">
+        <div class="confirm-overlay"></div>
+        <div class="confirm-content">
+            <span class="confirm-icon"><i class="fas fa-exclamation-triangle"></i></span>
+            <div class="confirm-title">Account Suspended</div>
+            <div class="confirm-message" id="bannedMessage">Your account has been temporarily suspended due to system verification requirements.</div>
+            <div class="confirm-buttons">
+                <button class="confirm-btn confirm-ok" onclick="handleBannedClose()">Close</button>
+            </div>
         </div>
     </div>
 
@@ -185,59 +286,114 @@
             const SUPABASE_KEY = 'sb_publishable_zsJFjfNUO7NKp8ZH5KrXFQ_WZ8Q2Kym';
             const _supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
             
+            // ===== i18n 翻译函数 =====
+            function t(key, params) {
+                if (window.i18n && typeof window.i18n.t === 'function') {
+                    return window.i18n.t(key, params);
+                }
+                // fallback
+                let text = key;
+                if (params) {
+                    for (var p in params) {
+                        text = text.replace(new RegExp('\\{' + p + '\\}', 'g'), params[p]);
+                    }
+                }
+                return text;
+            }
+
+            // ===== 显示封禁弹窗 =====
+            function showBannedModal(message) {
+                const modal = document.getElementById('bannedModal');
+                const msgEl = document.getElementById('bannedMessage');
+                if (msgEl) msgEl.textContent = message || t('account_banned');
+                if (modal) modal.classList.add('active');
+            }
+
+            // ===== 关闭封禁弹窗 =====
+            window.handleBannedClose = function() {
+                const modal = document.getElementById('bannedModal');
+                if (modal) modal.classList.remove('active');
+                // 清除 localStorage
+                localStorage.removeItem('currentUser');
+                // 跳转到登录页（刷新）
+                window.location.href = 'signin.html';
+            };
+
+            // ===== 登录处理 =====
             window.handleSignIn = async function() {
-    const t = window.i18n?.t || function(key) { return key; };
-    const username = document.getElementById('loginUsername').value.trim();
-    const password = document.getElementById('loginPassword').value;
-    const errorDiv = document.getElementById('loginError');
-    
-    if (!username || !password) {
-        errorDiv.innerHTML = '<span style="color: #ff8080;">' + t('signin_required') + '</span>';
-        return;
-    }
-    
-    errorDiv.innerHTML = '<span style="color: #C9B095;">' + t('signin_checking') + '</span>';
-    
-    try {
-        const { data: users, error } = await _supabase
-            .from('users')
-            .select('*')
-            .eq('username', username)
-            .eq('password', password);
-        
-        if (error) {
-            errorDiv.innerHTML = '<span style="color: #ff8080;">' + t('signin_error') + error.message + '</span>';
-            return;
-        }
-        
-        if (!users || users.length === 0) {
-            errorDiv.innerHTML = '<span style="color: #ff8080;">' + t('signin_invalid') + '</span>';
-            return;
-        }
-        
-        const user = users[0];
-        
-        localStorage.setItem('currentUser', JSON.stringify({
-            uid: user.uid,
-            username: user.username,
-            balance: user.balance || 0,
-            trialBonusAmount: user.trial_bonus_amount || 0,
-            commissionRate: user.commission_rate || 5,
-            vipLevel: user.vip_level || 1,
-            inviteCode: user.invite_code,
-            pin: user.pin,
-            isLoggedIn: true,
-            loginTime: Date.now()
-        }));
-        
-        errorDiv.innerHTML = '<span style="color: #4ade80;">' + t('signin_success') + '</span>';
-        setTimeout(() => { window.location.href = 'dashboard.html'; }, 800);
-    } catch(err) {
-        errorDiv.innerHTML = '<span style="color: #ff8080;">' + t('signin_error') + err.message + '</span>';
-    }
-};
+                const t = window.i18n?.t || function(key) { return key; };
+                const username = document.getElementById('loginUsername').value.trim();
+                const password = document.getElementById('loginPassword').value;
+                const errorDiv = document.getElementById('loginError');
+                
+                if (!username || !password) {
+                    errorDiv.innerHTML = '<span style="color: #ff8080;">' + t('signin_required') + '</span>';
+                    return;
+                }
+                
+                errorDiv.innerHTML = '<span style="color: #C9B095;">' + t('signin_checking') + '</span>';
+                
+                try {
+                    const { data: users, error } = await _supabase
+                        .from('users')
+                        .select('*')
+                        .eq('username', username)
+                        .eq('password', password);
+                    
+                    if (error) {
+                        errorDiv.innerHTML = '<span style="color: #ff8080;">' + t('signin_error') + error.message + '</span>';
+                        return;
+                    }
+                    
+                    if (!users || users.length === 0) {
+                        errorDiv.innerHTML = '<span style="color: #ff8080;">' + t('signin_invalid') + '</span>';
+                        return;
+                    }
+                    
+                    const user = users[0];
+                    
+                    // ============================================================
+                    // 🔥 检查账号是否被封禁
+                    // ============================================================
+                    if (user.is_banned === true) {
+                        // 显示封禁弹窗
+                        const bannedMsg = t('account_banned');
+                        showBannedModal(bannedMsg);
+                        errorDiv.innerHTML = '';
+                        return;
+                    }
+                    
+                    // ============================================================
+                    // 登录成功
+                    // ============================================================
+                    localStorage.setItem('currentUser', JSON.stringify({
+                        uid: user.uid,
+                        username: user.username,
+                        balance: user.balance || 0,
+                        trialBonusAmount: user.trial_bonus_amount || 0,
+                        commissionRate: user.commission_rate || 5,
+                        vipLevel: user.vip_level || 1,
+                        inviteCode: user.invite_code,
+                        pin: user.pin,
+                        creditScore: user.credit_score || 100,
+                        isPremium: user.is_premium || false,
+                        currentRound: user.current_round || 0,
+                        roundOrdersCount: user.round_orders_count || 0,
+                        userRole: user.user_role || 'User',
+                        isLoggedIn: true,
+                        loginTime: Date.now()
+                    }));
+                    
+                    errorDiv.innerHTML = '<span style="color: #4ade80;">' + t('signin_success') + '</span>';
+                    setTimeout(() => { window.location.href = 'dashboard.html'; }, 800);
+                    
+                } catch(err) {
+                    errorDiv.innerHTML = '<span style="color: #ff8080;">' + t('signin_error') + err.message + '</span>';
+                }
+            };
         })();
         
+        // 检查是否已登录
         const currentUser = localStorage.getItem('currentUser');
         if (currentUser) {
             try {
@@ -246,9 +402,11 @@
             } catch(e) {}
         }
         
+        // 回车键登录
         document.addEventListener('keypress', e => { if (e.key === 'Enter') window.handleSignIn(); });
     </script>
 
+    <!-- ===== 波浪背景 ===== -->
     <script>
     (function() {
         const canvas = document.getElementById('wavesBg');
@@ -289,13 +447,14 @@
         animate();
     })();
     </script>
-<script src="i18n.js"></script>
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        if (window.i18n) {
-            window.i18n.applyTranslations();
-        }
-    });
-</script>
+    
+    <script src="i18n.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            if (window.i18n) {
+                window.i18n.applyTranslations();
+            }
+        });
+    </script>
 </body>
 </html>

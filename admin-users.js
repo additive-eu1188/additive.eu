@@ -243,6 +243,7 @@ async function loadUsersPage() {
                         <tr>
                             <th style="min-width: 100px;">Phone</th>
                             <th style="min-width: 80px;">User ID</th>
+                            <th style="min-width: 80px;">Position</th>
                             <th style="min-width: 100px;">Referrer</th>
                             <th style="min-width: 120px;">Country</th>
                             <th style="min-width: 100px;">VIP Level</th>
@@ -459,7 +460,7 @@ async function loadUsers() {
     const tbody = document.getElementById('usersTableBody');
     if (!tbody) return;
     
-    tbody.innerHTML = '<tr><td colspan="11" style="text-align:center; padding:40px;"><i class="fas fa-spinner fa-spin"></i> 加载中...</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="12" style="text-align:center; padding:40px;"><i class="fas fa-spinner fa-spin"></i> Loading...</td></tr>';
     
     try {
         const { data: vipSettings } = await sb.from('vip_settings').select('*');
@@ -487,7 +488,7 @@ async function loadUsers() {
         window.userTotalCount = count || 0;
         
         if (!users || users.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="11" style="text-align:center; padding:40px; color:#6a7a9a;">暂无用户</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="12" style="text-align:center; padding:40px; color:#6a7a9a;">No users</td></tr>';
             renderUserPagination();
             return;
         }
@@ -622,180 +623,173 @@ async function loadUsers() {
         }
         
         for (let u of users) {
-            const row = tbody.insertRow();
-            row.className = 'user-row';
-            
-            const orderCount = orderCountMap[u.uid] || 0;
-            const ordersLimit = vipLimitMap[u.vip_level] || 30;
-            const vipName = vipNameMap[u.vip_level] || (u.vip_level === 1 ? 'Normal' : u.vip_level === 2 ? 'VIP' : 'SVIP');
-            const pendingAmount = pendingMap[u.uid] || 0;
-            const creditScore = u.credit_score !== undefined && u.credit_score !== null ? u.credit_score : 100;
-            
-            // 1. Phone
-            row.insertCell(0).innerHTML = `<span style="font-size: 12px;">${escapeHtml(u.phone || '-')}</span>`;
-            
-            // 2. User ID (UID)
-            row.insertCell(1).innerHTML = `<span class="badge" style="font-size: 11px;">${escapeHtml(u.uid)}</span>`;
-            
-            // 3. Referrer
-            row.insertCell(2).innerHTML = `<span style="font-size: 12px; color: #8a9abb;">${escapeHtml(u.invited_by_username || '-')}</span>`;
-            
-            // 4. Country（直接从数据库读取 country 字段）
-const countryName = u.country || 'Unknown';
+    const row = tbody.insertRow();
+    row.className = 'user-row';
+    
+    const orderCount = orderCountMap[u.uid] || 0;
+    const ordersLimit = vipLimitMap[u.vip_level] || 30;
+    const vipName = vipNameMap[u.vip_level] || (u.vip_level === 1 ? 'Normal' : u.vip_level === 2 ? 'VIP' : 'SVIP');
+    const pendingAmount = pendingMap[u.uid] || 0;
+    const creditScore = u.credit_score !== undefined && u.credit_score !== null ? u.credit_score : 100;
+    
+    // 1. Phone (索引 0)
+    row.insertCell(0).innerHTML = `<span style="font-size: 12px;">${escapeHtml(u.phone || '-')}</span>`;
+    
+    // 2. User ID (UID) (索引 1)
+    row.insertCell(1).innerHTML = `<span class="badge" style="font-size: 11px;">${escapeHtml(u.uid)}</span>`;
 
-// 国旗映射（覆盖大部分国家）
-const flagMap = {
-    'Germany': 'de', 'United States': 'us', 'United Kingdom': 'gb',
-    'Italy': 'it', 'China': 'cn', 'France': 'fr', 'Spain': 'es',
-    'Switzerland': 'ch', 'Austria': 'at', 'Netherlands': 'nl',
-    'Belgium': 'be', 'Denmark': 'dk', 'Sweden': 'se', 'Norway': 'no',
-    'Finland': 'fi', 'Portugal': 'pt', 'Greece': 'gr', 'Turkey': 'tr',
-    'Russia': 'ru', 'Japan': 'jp', 'South Korea': 'kr', 'India': 'in',
-    'Brazil': 'br', 'Mexico': 'mx', 'Australia': 'au', 'New Zealand': 'nz',
-    'South Africa': 'za', 'UAE': 'ae', 'Saudi Arabia': 'sa', 'Singapore': 'sg',
-    'Malaysia': 'my', 'Philippines': 'ph', 'Indonesia': 'id', 'Thailand': 'th',
-    'Vietnam': 'vn', 'Taiwan': 'tw', 'Hong Kong': 'hk', 'Macau': 'mo',
-    'Ireland': 'ie', 'Poland': 'pl', 'Czech Republic': 'cz', 'Hungary': 'hu',
-    'Croatia': 'hr', 'Malta': 'mt', 'Cyprus': 'cy', 'Estonia': 'ee',
-    'Latvia': 'lv', 'Lithuania': 'lt', 'Moldova': 'md', 'Monaco': 'mc',
-    'Liechtenstein': 'li', 'Greenland': 'gl', 'Faroe Islands': 'fo',
-    'Iceland': 'is', 'Luxembourg': 'lu', 'Andorra': 'ad', 'Gibraltar': 'gi',
-    'Canada': 'ca', 'Argentina': 'ar', 'Chile': 'cl', 'Colombia': 'co',
-    'Peru': 'pe', 'Venezuela': 've', 'Egypt': 'eg', 'Nigeria': 'ng',
-    'Kenya': 'ke', 'Israel': 'il', 'Pakistan': 'pk', 'Bangladesh': 'bd',
-    'Sri Lanka': 'lk', 'Nepal': 'np', 'Afghanistan': 'af', 'Iraq': 'iq',
-    'Iran': 'ir', 'Saudi Arabia': 'sa', 'Kuwait': 'kw', 'Qatar': 'qa',
-    'Oman': 'om', 'Bahrain': 'bh', 'Lebanon': 'lb', 'Jordan': 'jo'
-};
-const countryCode = flagMap[countryName] || 'unknown';
-const flagUrl = countryCode !== 'unknown' ? `https://flagcdn.com/w40/${countryCode}.png` : null;
-
-let countryHtml = '';
-if (flagUrl && countryName !== 'Unknown') {
-    countryHtml = `<img src="${flagUrl}" class="country-flag-img" onerror="this.style.display='none'" alt=""> <span class="country-name">${countryName}</span>`;
-} else {
-    countryHtml = `<span style="font-size: 12px; color: #8a9abb;">${countryName}</span>`;
+    // 3. Position (索引 2) - 新增
+    const roleCell = row.insertCell(2);
+    const userRole = u.user_role || 'User';
+    const roleBadgeColor = userRole === 'Agent' ? '#ffb84d' : '#6a7a9a';
+    roleCell.innerHTML = `<span style="font-size: 11px; color: ${roleBadgeColor}; font-weight: 600;">${userRole}</span>`;
+    
+    // 4. Referrer (索引 3)
+    row.insertCell(3).innerHTML = `<span style="font-size: 12px; color: #8a9abb;">${escapeHtml(u.invited_by_username || '-')}</span>`;
+    
+    // 5. Country（索引 4）
+    const countryName = u.country || 'Unknown';
+    const flagMap = {
+        'Germany': 'de', 'United States': 'us', 'United Kingdom': 'gb',
+        'Italy': 'it', 'China': 'cn', 'France': 'fr', 'Spain': 'es',
+        'Switzerland': 'ch', 'Austria': 'at', 'Netherlands': 'nl',
+        'Belgium': 'be', 'Denmark': 'dk', 'Sweden': 'se', 'Norway': 'no',
+        'Finland': 'fi', 'Portugal': 'pt', 'Greece': 'gr', 'Turkey': 'tr',
+        'Russia': 'ru', 'Japan': 'jp', 'South Korea': 'kr', 'India': 'in',
+        'Brazil': 'br', 'Mexico': 'mx', 'Australia': 'au', 'New Zealand': 'nz',
+        'South Africa': 'za', 'UAE': 'ae', 'Saudi Arabia': 'sa', 'Singapore': 'sg',
+        'Malaysia': 'my', 'Philippines': 'ph', 'Indonesia': 'id', 'Thailand': 'th',
+        'Vietnam': 'vn', 'Taiwan': 'tw', 'Hong Kong': 'hk', 'Macau': 'mo',
+        'Ireland': 'ie', 'Poland': 'pl', 'Czech Republic': 'cz', 'Hungary': 'hu',
+        'Croatia': 'hr', 'Malta': 'mt', 'Cyprus': 'cy', 'Estonia': 'ee',
+        'Latvia': 'lv', 'Lithuania': 'lt', 'Moldova': 'md', 'Monaco': 'mc',
+        'Liechtenstein': 'li', 'Greenland': 'gl', 'Faroe Islands': 'fo',
+        'Iceland': 'is', 'Luxembourg': 'lu', 'Andorra': 'ad', 'Gibraltar': 'gi',
+        'Canada': 'ca', 'Argentina': 'ar', 'Chile': 'cl', 'Colombia': 'co',
+        'Peru': 'pe', 'Venezuela': 've', 'Egypt': 'eg', 'Nigeria': 'ng',
+        'Kenya': 'ke', 'Israel': 'il', 'Pakistan': 'pk', 'Bangladesh': 'bd',
+        'Sri Lanka': 'lk', 'Nepal': 'np', 'Afghanistan': 'af', 'Iraq': 'iq',
+        'Iran': 'ir', 'Saudi Arabia': 'sa', 'Kuwait': 'kw', 'Qatar': 'qa',
+        'Oman': 'om', 'Bahrain': 'bh', 'Lebanon': 'lb', 'Jordan': 'jo'
+    };
+    const countryCode = flagMap[countryName] || 'unknown';
+    const flagUrl = countryCode !== 'unknown' ? `https://flagcdn.com/w40/${countryCode}.png` : null;
+    let countryHtml = '';
+    if (flagUrl && countryName !== 'Unknown') {
+        countryHtml = `<img src="${flagUrl}" class="country-flag-img" onerror="this.style.display='none'" alt=""> <span class="country-name">${countryName}</span>`;
+    } else {
+        countryHtml = `<span style="font-size: 12px; color: #8a9abb;">${countryName}</span>`;
+    }
+    row.insertCell(4).innerHTML = countryHtml;
+    
+    // 6. VIP Level (索引 5)
+    const vipCell = row.insertCell(5);
+    const vipLevels = [
+        { level: 1, name: 'Normal' },
+        { level: 2, name: 'VIP' },
+        { level: 3, name: 'SVIP' }
+    ];
+    let optionsHtml = '';
+    vipLevels.forEach(v => {
+        const selected = v.level === u.vip_level ? 'selected' : '';
+        optionsHtml += `<option value="${v.level}" ${selected}>${v.name}</option>`;
+    });
+    vipCell.innerHTML = `
+        <div class="vip-wrapper">
+            <span class="vip-badge level${u.vip_level || 1}">${vipName}</span>
+            <select class="vip-select vip-change-select" data-uid="${u.uid}" data-username="${escapeHtml(u.username)}">
+                ${optionsHtml}
+            </select>
+        </div>
+    `;
+    
+    // 7. Pending (索引 6)
+    const pendingWithdrawAmount = pendingMap[u.uid] || 0;
+    const amountDue = parseFloat(u.amount_due) || 0;
+    const amountDueRound = parseFloat(u.amount_due_round) || 0;
+    const amountDueOrdersCount = parseFloat(u.amount_due_orders_count) || 0;
+    let totalAmountDue = amountDue + amountDueRound + amountDueOrdersCount;
+    let displayPending = pendingWithdrawAmount;
+    if (totalAmountDue > 0) {
+        displayPending = -totalAmountDue;
+    }
+    const pendingCell = row.insertCell(6);
+    const isNegative = displayPending < 0;
+    pendingCell.innerHTML = `
+        <span style="font-weight: 700; ${isNegative ? 'color: #ff5a5a;' : 'color: #ffb84d;'}">
+            ${isNegative ? '-' : ''}€${Math.abs(displayPending).toFixed(2)}
+        </span>
+        ${isNegative ? '<div style="font-size: 9px; color: #ff5a5a; opacity: 0.7;">Amount Due</div>' : ''}
+    `;
+    
+    // 8. Balance + Deposit + Deduct (索引 7)
+    const balanceCell = row.insertCell(7);
+    balanceCell.innerHTML = `
+        <div class="balance-wrapper">
+            <span class="balance-amount">€${(u.balance || 0).toFixed(2)}</span>
+            <button class="btn-sm btn-deposit deposit-btn" data-uid="${u.uid}" data-username="${escapeHtml(u.username)}" title="Deposit"><i class="fas fa-plus-circle"></i></button>
+            <button class="btn-sm btn-deduct deduct-btn" data-uid="${u.uid}" data-username="${escapeHtml(u.username)}" title="Deduct"><i class="fas fa-minus-circle"></i></button>
+        </div>
+    `;
+    
+    // 9. Round / Orders (索引 8)
+    const ordersCell = row.insertCell(8);
+    const isPremium = u.is_premium || false;
+    const currentRound = u.current_round || 0;
+    const roundOrdersCount = u.round_orders_count || 0;
+    let roundDisplay = 0;
+    let displayCount = 0;
+    if (!isPremium) {
+        roundDisplay = 0;
+        displayCount = orderCount;
+    } else {
+        roundDisplay = currentRound;
+        displayCount = roundOrdersCount;
+    }
+    ordersCell.innerHTML = `
+        <div class="orders-wrapper">
+            <span class="round-number">(${roundDisplay})</span>
+            <input type="number" class="orders-input round-edit-input" data-uid="${u.uid}" value="${displayCount}" min="0" step="1" title="Edit orders in current round">
+            <span style="color: #6a7a9a; font-size: 10px;">/30</span>
+            <button class="btn-sm btn-reset reset-orders-btn" data-uid="${u.uid}" data-username="${escapeHtml(u.username)}" title="Reset Orders" ${!isPremium ? 'disabled' : ''}><i class="fas fa-undo-alt"></i></button>
+            <button class="btn-sm btn-save-orders save-round-orders-btn" data-uid="${u.uid}" data-username="${escapeHtml(u.username)}" title="Save Orders"><i class="fas fa-save"></i></button>
+        </div>
+    `;
+    
+    // 10. Registered IP (索引 9)
+    row.insertCell(9).innerHTML = `<span style="font-size: 11px; color: #8a9abb; font-family: monospace;">${escapeHtml(u.registered_ip || '-')}</span>`;
+    
+    // 11. Time Registered (索引 10)
+    const registerTime = u.created_at ? new Date(u.created_at) : null;
+    row.insertCell(10).innerHTML = `<span style="font-size: 11px; color: #8a9abb;">${registerTime ? registerTime.toLocaleString() : '-'}</span>`;
+    
+    // 12. Actions (索引 11)
+    const actionsCell = row.insertCell(11);
+    actionsCell.innerHTML = `
+        <div class="actions-wrapper">
+            <button class="btn-sm btn-edit-user edit-user-btn" 
+                data-uid="${u.uid}" 
+                data-username="${escapeHtml(u.username)}"
+                data-phone="${escapeHtml(u.phone || '')}"
+                data-pin="${escapeHtml(u.pin || '')}"
+                data-currency="${escapeHtml(u.withdrawal_address_type || 'USDT')}"
+                data-address="${escapeHtml(u.withdrawal_address || '')}"
+                data-credit-score="${creditScore}"
+                data-user-role="${escapeHtml(u.user_role || 'User')}"
+                data-withdrawal-frozen="${u.withdrawal_frozen || false}"
+                data-is-banned="${u.is_banned || false}"
+                title="Edit User">
+                <i class="fas fa-edit"></i>
+            </button>
+            <button class="btn-sm btn-delete-user delete-user-btn" 
+                data-uid="${u.uid}" 
+                data-username="${escapeHtml(u.username)}"
+                title="Delete User">
+                <i class="fas fa-trash"></i>
+            </button>
+        </div>
+    `;
 }
-row.insertCell(3).innerHTML = countryHtml;
-            
-            // 5. VIP Level
-            const vipCell = row.insertCell(4);
-            const vipLevels = [
-                { level: 1, name: 'Normal' },
-                { level: 2, name: 'VIP' },
-                { level: 3, name: 'SVIP' }
-            ];
-            let optionsHtml = '';
-            vipLevels.forEach(v => {
-                const selected = v.level === u.vip_level ? 'selected' : '';
-                optionsHtml += `<option value="${v.level}" ${selected}>${v.name}</option>`;
-            });
-            vipCell.innerHTML = `
-                <div class="vip-wrapper">
-                    <span class="vip-badge level${u.vip_level || 1}">${vipName}</span>
-                    <select class="vip-select vip-change-select" data-uid="${u.uid}" data-username="${escapeHtml(u.username)}">
-                        ${optionsHtml}
-                    </select>
-                </div>
-            `;
-            
-            // 6. Pending - 修复显示负数（兼容字段不存在的情况）
-const pendingWithdrawAmount = pendingMap[u.uid] || 0;
-
-// 从用户数据中读取 amount_due
-const amountDue = parseFloat(u.amount_due) || 0;
-const amountDueRound = parseFloat(u.amount_due_round) || 0;
-const amountDueOrdersCount = parseFloat(u.amount_due_orders_count) || 0;
-let totalAmountDue = amountDue + amountDueRound + amountDueOrdersCount;
-
-// 如果有 amount_due，显示为负数
-let displayPending = pendingWithdrawAmount;
-if (totalAmountDue > 0) {
-    displayPending = -totalAmountDue;
-}
-
-const pendingCell = row.insertCell(5);
-const isNegative = displayPending < 0;
-pendingCell.innerHTML = `
-    <span style="font-weight: 700; ${isNegative ? 'color: #ff5a5a;' : 'color: #ffb84d;'}">
-        ${isNegative ? '-' : ''}€${Math.abs(displayPending).toFixed(2)}
-    </span>
-    ${isNegative ? '<div style="font-size: 9px; color: #ff5a5a; opacity: 0.7;">Amount Due</div>' : ''}
-`;
-            
-            // 7. Balance + Deposit + Deduct
-const balanceCell = row.insertCell(6);
-balanceCell.innerHTML = `
-    <div class="balance-wrapper">
-        <span class="balance-amount">€${(u.balance || 0).toFixed(2)}</span>
-        <button class="btn-sm btn-deposit deposit-btn" data-uid="${u.uid}" data-username="${escapeHtml(u.username)}" title="Deposit"><i class="fas fa-plus-circle"></i></button>
-        <button class="btn-sm btn-deduct deduct-btn" data-uid="${u.uid}" data-username="${escapeHtml(u.username)}" title="Deduct"><i class="fas fa-minus-circle"></i></button>
-    </div>
-`;
-            
-            // 8. Round / Orders（修复：移除 amount_due 干扰）
-            const ordersCell = row.insertCell(7);
-            
-            // 从用户数据读取 Round 信息
-            const isPremium = u.is_premium || false;
-            const currentRound = u.current_round || 0;
-            const roundOrdersCount = u.round_orders_count || 0;
-            
-            let roundDisplay = 0;
-            let displayCount = 0;
-            
-            if (!isPremium) {
-                // Trial 用户：显示 0，订单数用 orderCount
-                roundDisplay = 0;
-                displayCount = orderCount;
-            } else {
-                // 正式用户：显示实际的 round
-                roundDisplay = currentRound;
-                displayCount = roundOrdersCount;
-            }
-            
-            ordersCell.innerHTML = `
-                <div class="orders-wrapper">
-                    <span class="round-number">(${roundDisplay})</span>
-                    <input type="number" class="orders-input round-edit-input" data-uid="${u.uid}" value="${displayCount}" min="0" step="1" title="Edit orders in current round">
-                    <span style="color: #6a7a9a; font-size: 10px;">/30</span>
-                    <button class="btn-sm btn-reset reset-orders-btn" data-uid="${u.uid}" data-username="${escapeHtml(u.username)}" title="Reset Orders" ${!isPremium ? 'disabled' : ''}><i class="fas fa-undo-alt"></i></button>
-                    <button class="btn-sm btn-save-orders save-round-orders-btn" data-uid="${u.uid}" data-username="${escapeHtml(u.username)}" title="Save Orders"><i class="fas fa-save"></i></button>
-                </div>
-            `;
-            
-            // 9. Registered IP
-            row.insertCell(8).innerHTML = `<span style="font-size: 11px; color: #8a9abb; font-family: monospace;">${escapeHtml(u.registered_ip || '-')}</span>`;
-            
-            // 10. Time Registered
-            const registerTime = u.created_at ? new Date(u.created_at) : null;
-            row.insertCell(9).innerHTML = `<span style="font-size: 11px; color: #8a9abb;">${registerTime ? registerTime.toLocaleString() : '-'}</span>`;
-            
-            // 11. Actions (Edit + Delete only - Credit Score moved to Edit User modal)
-            const actionsCell = row.insertCell(10);
-            actionsCell.innerHTML = `
-                <div class="actions-wrapper">
-                    <button class="btn-sm btn-edit-user edit-user-btn" 
-                        data-uid="${u.uid}" 
-                        data-username="${escapeHtml(u.username)}"
-                        data-phone="${escapeHtml(u.phone || '')}"
-                        data-pin="${escapeHtml(u.pin || '')}"
-                        data-currency="${escapeHtml(u.withdrawal_address_type || 'USDT')}"
-                        data-address="${escapeHtml(u.withdrawal_address || '')}"
-                        data-credit-score="${creditScore}"
-                        data-password=""
-                        title="Edit User">
-                        <i class="fas fa-edit"></i>
-                    </button>
-                    <button class="btn-sm btn-delete-user delete-user-btn" 
-                        data-uid="${u.uid}" 
-                        data-username="${escapeHtml(u.username)}"
-                        title="Delete User">
-                        <i class="fas fa-trash"></i>
-                    </button>
-                </div>
-            `;
-        }
         
         // ========== 绑定事件 - VIP 下拉 ==========
         document.querySelectorAll('.vip-change-select').forEach(sel => {
@@ -862,19 +856,22 @@ document.querySelectorAll('.deduct-btn').forEach(btn => {
             });
         });
         
-        // ========== 绑定事件 - Edit Users（含 Credit Score） ==========
-        document.querySelectorAll('.edit-user-btn').forEach(btn => {
-            btn.addEventListener('click', () => {
-                const uid = btn.dataset.uid;
-                const username = btn.dataset.username;
-                const phone = btn.dataset.phone;
-                const pin = btn.dataset.pin;
-                const currency = btn.dataset.currency;
-                const address = btn.dataset.address;
-                const creditScore = btn.dataset.creditScore || 100;
-                openEditUserModal(uid, username, phone, pin, currency, address, creditScore);
-            });
-        });
+        // ========== 绑定事件 - Edit Users ==========
+document.querySelectorAll('.edit-user-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+        const uid = btn.dataset.uid;
+        const username = btn.dataset.username;
+        const phone = btn.dataset.phone;
+        const pin = btn.dataset.pin;
+        const currency = btn.dataset.currency;
+        const address = btn.dataset.address;
+        const creditScore = btn.dataset.creditScore || 100;
+        const userRole = btn.dataset.userRole || 'User';
+        const withdrawalFrozen = btn.dataset.withdrawalFrozen === 'true';
+        const isBanned = btn.dataset.isBanned === 'true';
+        openEditUserModal(uid, username, phone, pin, currency, address, creditScore, userRole, withdrawalFrozen, isBanned);
+    });
+});
         
         // ========== 绑定事件 - Delete User ==========
         document.querySelectorAll('.delete-user-btn').forEach(btn => {
@@ -889,7 +886,7 @@ document.querySelectorAll('.deduct-btn').forEach(btn => {
         
     } catch (e) {
         console.error('加载用户失败:', e);
-        tbody.innerHTML = `<tr><td colspan="11" style="text-align:center; padding:40px; color:#ff8888;">加载失败: ${escapeHtml(e.message)}</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="12" style="text-align:center; padding:40px; color:#ff8888;">加载失败: ${escapeHtml(e.message)}</td></tr>`;
     }
 }
 
@@ -1203,19 +1200,23 @@ async function deleteUser(uid, username) {
     );
 }
 
-// ========== 打开编辑用户弹窗（深空金属 - 优化版） ==========
-function openEditUserModal(uid, username, phone, pin, currency, address, creditScore) {
+// ========== 打开编辑用户弹窗（深空金属 - 完整功能版） ==========
+function openEditUserModal(uid, username, phone, pin, currency, address, creditScore, userRole, withdrawalFrozen, isBanned) {
     // 防止多次快速点击
     if (document.getElementById('editUserModal')) {
         return;
     }
     
-    // 锁定body滚动，减少重排
     document.body.style.overflow = 'hidden';
     const existingModal = document.getElementById('editUserModal');
     if (existingModal) existingModal.remove();
 
     const initialScore = creditScore || 100;
+    const roleDisplay = userRole || 'User';
+    const statusText = withdrawalFrozen ? 'Freeze' : 'Active';
+    const statusColor = withdrawalFrozen ? '#ff5a5a' : '#4ade80';
+    const banButtonText = isBanned ? 'Release Ban User' : 'Ban User';
+    const banButtonColor = isBanned ? '#4ade80' : '#ff6b6b';
 
     const modalHtml = `
         <div id="editUserModal" class="modal-overlay" style="visibility: visible; opacity: 1; display: flex; align-items: center; justify-content: center; z-index: 9999;">
@@ -1247,6 +1248,7 @@ function openEditUserModal(uid, username, phone, pin, currency, address, creditS
                         <div style="display: flex; gap: 16px; margin-top: 4px; font-size: 11px; flex-wrap: wrap;">
                             <span style="color: #6a6a80;"><i class="fas fa-phone" style="color: #6a6a80; width: 14px; font-size: 11px;"></i> ${escapeHtml(phone || 'Not Set')}</span>
                             <span style="color: #6a6a80;"><i class="fas fa-shield-alt" style="color: #6a6a80; width: 14px; font-size: 11px;"></i> Credit: <strong style="color: #e8e8f0;" id="creditScoreDisplayHeader">${initialScore}</strong></span>
+                            <span style="color: #6a6a80;"><i class="fas fa-user-tag" style="color: #6a6a80; width: 14px; font-size: 11px;"></i> Position: <strong style="color: ${roleDisplay === 'Agent' ? '#ffb84d' : '#6a6a80'};">${roleDisplay}</strong></span>
                         </div>
                     </div>
                     <button onclick="closeEditUserModal()" style="background: rgba(255,255,255,0.03); border: 1px solid rgba(180,180,200,0.06); color: #5a5a6a; font-size: 16px; cursor: pointer; padding: 2px 8px; border-radius: 6px;">&times;</button>
@@ -1254,7 +1256,7 @@ function openEditUserModal(uid, username, phone, pin, currency, address, creditS
 
                 <hr style="border: none; border-top: 1px solid rgba(180, 180, 200, 0.06); margin: 0 0 12px 0;">
 
-                <!-- 四张卡片 - 改为每行2列，撑满宽度 -->
+                <!-- 四张卡片 -->
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 14px; position: relative; z-index: 1;">
                     <div style="background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(180, 180, 200, 0.06); border-radius: 10px; padding: 10px 14px;">
                         <div style="font-size: 9px; font-weight: 600; color: #6a6a80; text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 1px;">User ID</div>
@@ -1262,7 +1264,7 @@ function openEditUserModal(uid, username, phone, pin, currency, address, creditS
                     </div>
                     <div style="background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(180, 180, 200, 0.06); border-radius: 10px; padding: 10px 14px;">
                         <div style="font-size: 9px; font-weight: 600; color: #6a6a80; text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 1px;">Withdrawal Status</div>
-                        <div style="font-size: 14px; font-weight: 600; color: #4ade80;">Active</div>
+                        <div style="font-size: 14px; font-weight: 600; color: ${statusColor};">${statusText}</div>
                     </div>
                     <div style="background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(180, 180, 200, 0.06); border-radius: 10px; padding: 10px 14px;">
                         <div style="font-size: 9px; font-weight: 600; color: #6a6a80; text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 1px;">Total Deposit</div>
@@ -1274,7 +1276,7 @@ function openEditUserModal(uid, username, phone, pin, currency, address, creditS
                     </div>
                 </div>
 
-                <!-- Account Actions - 每行2列，撑满宽度 -->
+                <!-- Account Actions -->
                 <div style="margin-bottom: 14px; position: relative; z-index: 1;">
                     <div style="font-size: 9px; font-weight: 600; color: #5a5a6a; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px;">Account Actions</div>
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px;">
@@ -1291,40 +1293,40 @@ function openEditUserModal(uid, username, phone, pin, currency, address, creditS
                             <div style="font-size: 9px; color: #5a5a6a;">Reset user's phone number</div>
                         </div>
                         <div onclick="promoteToAdmin('${uid}')" style="background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(180, 180, 200, 0.05); border-radius: 8px; padding: 8px 12px; cursor: pointer; transition: 0.2s;">
-                            <div style="font-weight: 500; color: #e8e8f0; font-size: 12px;">Promote Admin</div>
-                            <div style="font-size: 9px; color: #5a5a6a;">Allow user to view downline's data</div>
+                            <div style="font-weight: 500; color: #ffb84d; font-size: 12px;">${roleDisplay === 'Agent' ? 'Demote to User' : 'Promote Admin'}</div>
+                            <div style="font-size: 9px; color: #5a5a6a;">${roleDisplay === 'Agent' ? 'Remove admin privileges' : 'Allow user to view downline data'}</div>
                         </div>
                         <div onclick="freezeUserWithdrawal('${uid}')" style="background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(180, 180, 200, 0.05); border-radius: 8px; padding: 8px 12px; cursor: pointer; transition: 0.2s;">
-                            <div style="font-weight: 500; color: #e8e8f0; font-size: 12px;">Freeze Withdrawal</div>
-                            <div style="font-size: 9px; color: #5a5a6a;">Block this user from withdrawing</div>
+                            <div style="font-weight: 500; color: ${withdrawalFrozen ? '#4ade80' : '#e8e8f0'}; font-size: 12px;">${withdrawalFrozen ? 'Unfreeze Withdrawal' : 'Freeze Withdrawal'}</div>
+                            <div style="font-size: 9px; color: #5a5a6a;">${withdrawalFrozen ? 'Restore withdrawal access' : 'Block this user from withdrawing'}</div>
                         </div>
-                        <div onclick="banUser('${uid}')" style="background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(180, 180, 200, 0.05); border-radius: 8px; padding: 8px 12px; cursor: pointer; transition: 0.2s;">
-                            <div style="font-weight: 500; color: #ff6b6b; font-size: 12px;">Ban User</div>
-                            <div style="font-size: 9px; color: #5a5a6a;">Disable user's working account</div>
+                        <div onclick="toggleBanUser('${uid}')" style="background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(180, 180, 200, 0.05); border-radius: 8px; padding: 8px 12px; cursor: pointer; transition: 0.2s;">
+                            <div style="font-weight: 500; color: ${banButtonColor}; font-size: 12px;">${banButtonText}</div>
+                            <div style="font-size: 9px; color: #5a5a6a;">${isBanned ? 'Restore user access' : 'Disable user account'}</div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Credit Scores (进度条 - 双色) 优化版 -->
-<div style="margin-bottom: 14px; background: rgba(255,255,255,0.02); border-radius: 8px; padding: 10px 14px; border: 1px solid rgba(180,180,200,0.05); position:relative; z-index:1;">
-    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
-        <span style="font-weight:500; color:#6a6a80; font-size:11px;">Credit Scores</span>
-        <span style="font-size:16px; font-weight:700; color:#e8e8f0;" id="creditScoreValue">${initialScore}</span>
-    </div>
-    <div style="width:100%; height:4px; border-radius:3px; background:rgba(255,255,255,0.06); overflow:hidden;">
-        <div id="creditScoreFill" style="width:${initialScore}%; height:100%; border-radius:3px; background:${initialScore >= 95 ? '#4ade80' : '#ff5a5a'};"></div>
-    </div>
-    <input type="range" min="0" max="100" value="${initialScore}" 
-           style="position:absolute; top:0; left:0; width:100%; height:100%; opacity:0; cursor:pointer; z-index:2;"
-           id="creditScoreSlider" oninput="updateCreditScore(this.value)">
-    <div style="display:flex; justify-content:space-between; font-size:7px; color:#4a4a5a; margin-top:2px;">
-        <span>0</span><span>100</span>
-    </div>
-    <div style="display:flex; gap:10px; margin-top:2px; font-size:8px;">
-        <span style="color:#4ade80;">● ≥95</span>
-        <span style="color:#ff5a5a;">● &lt;95</span>
-    </div>
-</div>
+                <!-- Credit Scores -->
+                <div style="margin-bottom: 14px; background: rgba(255,255,255,0.02); border-radius: 8px; padding: 10px 14px; border: 1px solid rgba(180,180,200,0.05); position:relative; z-index:1;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+                        <span style="font-weight:500; color:#6a6a80; font-size:11px;">Credit Scores</span>
+                        <span style="font-size:16px; font-weight:700; color:#e8e8f0;" id="creditScoreValue">${initialScore}</span>
+                    </div>
+                    <div style="width:100%; height:4px; border-radius:3px; background:rgba(255,255,255,0.06); overflow:hidden;">
+                        <div id="creditScoreFill" style="width:${initialScore}%; height:100%; border-radius:3px; background:${initialScore >= 95 ? '#4ade80' : '#ff5a5a'};"></div>
+                    </div>
+                    <input type="range" min="0" max="100" value="${initialScore}" 
+                           style="position:absolute; top:0; left:0; width:100%; height:100%; opacity:0; cursor:pointer; z-index:2;"
+                           id="creditScoreSlider" oninput="updateCreditScore(this.value)">
+                    <div style="display:flex; justify-content:space-between; font-size:7px; color:#4a4a5a; margin-top:2px;">
+                        <span>0</span><span>100</span>
+                    </div>
+                    <div style="display:flex; gap:10px; margin-top:2px; font-size:8px;">
+                        <span style="color:#4ade80;">● ≥95</span>
+                        <span style="color:#ff5a5a;">● &lt;95</span>
+                    </div>
+                </div>
 
                 <!-- 底部按钮 -->
                 <div style="display: flex; gap: 10px; justify-content: flex-end; border-top: 1px solid rgba(180, 180, 200, 0.06); padding-top: 12px; position: relative; z-index: 1;">
@@ -1630,15 +1632,24 @@ async function resetUserPhone(uid) {
     });
 }
 
+// ============================================================
+// Promote Admin / Demote to User
+// ============================================================
 async function promoteToAdmin(uid) {
-    showConfirm('Promote Admin', `确定要提升用户 ${uid} 为管理员吗？`, async () => {
+    // 先获取当前用户角色
+    const { data: user } = await sb.from('users').select('user_role').eq('uid', uid).single();
+    const currentRole = user?.user_role || 'User';
+    const newRole = currentRole === 'Agent' ? 'User' : 'Agent';
+    const actionText = newRole === 'Agent' ? 'Promote to Admin' : 'Downgrade to User';
+    
+    showConfirm('Promote Admin', `确定要${actionText}用户 ${uid} 吗？`, async () => {
         try {
             const { error } = await sb
                 .from('users')
-                .update({ is_admin: true })
+                .update({ user_role: newRole })
                 .eq('uid', uid);
             if (error) throw error;
-            showToast('用户已提升为管理员', 'success');
+            showToast(`✅ 用户已${actionText}`, 'success');
             closeEditUserModal();
             loadUsers();
         } catch (e) {
@@ -1647,15 +1658,23 @@ async function promoteToAdmin(uid) {
     });
 }
 
+// ============================================================
+// Freeze / Unfreeze Withdrawal
+// ============================================================
 async function freezeUserWithdrawal(uid) {
-    showConfirm('Freeze Withdrawal', `确定要冻结用户 ${uid} 的提现权限吗？`, async () => {
+    // 获取当前状态
+    const { data: user } = await sb.from('users').select('withdrawal_frozen').eq('uid', uid).single();
+    const currentStatus = user?.withdrawal_frozen || false;
+    const actionText = currentStatus ? 'Unfreeze' : 'Freeze';
+    
+    showConfirm('Freeze Withdrawal', `确定要${actionText}用户 ${uid} 的提款权限吗？`, async () => {
         try {
             const { error } = await sb
                 .from('users')
-                .update({ withdrawal_frozen: true })
+                .update({ withdrawal_frozen: !currentStatus })
                 .eq('uid', uid);
             if (error) throw error;
-            showToast('提现权限已冻结', 'success');
+            showToast(`✅ 提款权限已${actionText}`, 'success');
             closeEditUserModal();
             loadUsers();
         } catch (e) {
@@ -1664,19 +1683,29 @@ async function freezeUserWithdrawal(uid) {
     });
 }
 
-async function banUser(uid) {
-    showConfirm('Ban User', `确定要封禁用户 ${uid} 吗？此操作将禁用该用户的工作账户。`, async () => {
-        try {
-            const { error } = await sb
-                .from('users')
-                .update({ is_active: false, is_banned: true })
-                .eq('uid', uid);
-            if (error) throw error;
-            showToast('用户已被封禁', 'success');
-            closeEditUserModal();
-            loadUsers();
-        } catch (e) {
-            showToast('操作失败: ' + e.message, 'error');
+// ============================================================
+// Toggle Ban User (Ban / Release Ban)
+// ============================================================
+async function toggleBanUser(uid) {
+    const { data: user } = await sb.from('users').select('is_banned').eq('uid', uid).single();
+    const isBanned = user?.is_banned || false;
+    const actionText = isBanned ? 'Ban User' : 'Release User';
+    
+    showConfirm(isBanned ? 'Release Ban User' : 'Ban User', 
+        isBanned ? `确定要解封用户 ${uid} 吗？` : `Are you sure to ban user ${uid} ？此操作将禁用该用户的登录。`, 
+        async () => {
+            try {
+                const { error } = await sb
+                    .from('users')
+                    .update({ is_banned: !isBanned })
+                    .eq('uid', uid);
+                if (error) throw error;
+                showToast(`✅ 用户已${actionText}`, 'success');
+                closeEditUserModal();
+                loadUsers();
+            } catch (e) {
+                showToast('操作失败: ' + e.message, 'error');
+            }
         }
-    });
+    );
 }

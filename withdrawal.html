@@ -765,8 +765,17 @@ const t = window.i18n?.t || function(key) { return key; };
         // Modified withdrawal function (with credit score check)
         // ============================================================
         async function requestWithdrawal() {
-    // ---- Credit score check ----
     const t = window.i18n?.t || function(key) { return key; };
+    
+    // 🔥 检查提款是否被冻结
+    const user = getCurrentUser();
+    if (user) {
+        const { data: userData } = await sb.from('users').select('withdrawal_frozen').eq('uid', user.uid).single();
+        if (userData?.withdrawal_frozen === true) {
+            showToast(t('withdrawal_frozen'), 'error');
+            return;
+        }
+    }
     try {
         const user = getCurrentUser();
         if (user) {

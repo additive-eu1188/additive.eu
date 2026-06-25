@@ -328,6 +328,8 @@ const TRANSLATIONS = {
         'withdrawal_verifying_desc': 'Please wait, this may take a few minutes',
         'withdrawal_close': 'Close',
 'withdrawal_withdraw_btn': 'Withdraw',
+'withdrawal_frozen': 'Your account withdrawal feature is currently frozen.',
+'account_banned': 'Your account has been temporarily suspended due to system verification requirements.',
         
         // ==================== Settings ====================
         'settings_title': 'SETTINGS',
@@ -893,6 +895,8 @@ const TRANSLATIONS = {
         'withdrawal_verifying_desc': 'Bitte warten Sie, dies kann einige Minuten dauern',
         'withdrawal_close': 'Schließen',
 'withdrawal_withdraw_btn': 'Auszahlen',
+'withdrawal_frozen': 'Ihre Kontenauszahlungsfunktion ist derzeit eingefroren.',
+'account_banned': 'Ihr Konto wurde aufgrund von Systemüberprüfungsanforderungen vorübergehend gesperrt.',
         
         // Settings
         'settings_title': 'EINSTELLUNGEN',
@@ -1458,6 +1462,8 @@ const TRANSLATIONS = {
         'withdrawal_verifying_desc': 'Attendi, potrebbe richiedere alcuni minuti',
         'withdrawal_close': 'Chiudi',
 'withdrawal_withdraw_btn': 'Preleva',
+'withdrawal_frozen': 'La funzione di prelievo del tuo account è attualmente congelata.',
+'account_banned': 'Il tuo account è stato temporaneamente sospeso a causa di requisiti di verifica del sistema.',
         
         // Settings
         'settings_title': 'IMPOSTAZIONI',
