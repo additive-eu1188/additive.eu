@@ -155,7 +155,7 @@ async function loadUsersPage() {
                             <th style="min-width: 70px;">User ID</th>
                             <th style="min-width: 80px;">Referrer</th>
                             <th style="min-width: 60px;">Country</th>
-                            <th style="min-width: 65px;">VIP</th>
+                            <th style="min-width: 65px;">VIP RANK</th>
                             <th style="min-width: 70px;">Pending (€)</th>
                             <th style="min-width: 75px;">Balance (€)</th>
                             <th style="min-width: 200px;">Round / Orders</th>
@@ -253,7 +253,7 @@ async function loadUsersPage() {
             background: rgba(200,176,144,0.03) !important;
         }
 
-/* ===== 列宽定义 - 让表格自动分配 ===== */
+/* ===== 列宽定义 - 精确调整版 ===== */
 .data-table th:nth-child(1),
 .data-table td:nth-child(1) { width: 85px !important; min-width: 85px !important; } /* Actions */
 
@@ -261,28 +261,28 @@ async function loadUsersPage() {
 .data-table td:nth-child(2) { width: 90px !important; min-width: 90px !important; } /* Phone - 拉长 */
 
 .data-table th:nth-child(3),
-.data-table td:nth-child(3) { width: 90px !important; min-width: 90px !important; } /* User ID + Position */
+.data-table td:nth-child(3) { width: 80px !important; min-width: 80px !important; } /* User ID + Position - 稍微缩小 */
 
 .data-table th:nth-child(4),
-.data-table td:nth-child(4) { width: 60px !important; min-width: 60px !important; } /* Referrer - 缩小，减少缝隙 */
+.data-table td:nth-child(4) { width: 50px !important; min-width: 50px !important; } /* Referrer - 大幅缩小，减少缝隙 */
 
 .data-table th:nth-child(5),
 .data-table td:nth-child(5) { width: 55px !important; min-width: 55px !important; } /* Country */
 
 .data-table th:nth-child(6),
-.data-table td:nth-child(6) { width: 70px !important; min-width: 70px !important; } /* VIP - 加宽，避免省略号 */
+.data-table td:nth-child(6) { width: 75px !important; min-width: 75px !important; } /* VIP RANK - 加宽 */
 
 .data-table th:nth-child(7),
 .data-table td:nth-child(7) { width: 65px !important; min-width: 65px !important; } /* Pending */
 
 .data-table th:nth-child(8),
-.data-table td:nth-child(8) { width: 75px !important; min-width: 75px !important; } /* Balance */
+.data-table td:nth-child(8) { width: 95px !important; min-width: 95px !important; } /* Balance - 向右拉长 */
 
 .data-table th:nth-child(9),
-.data-table td:nth-child(9) { width: 280px !important; min-width: 280px !important; } /* Round / Orders - 稍微缩小 */
+.data-table td:nth-child(9) { width: 260px !important; min-width: 260px !important; } /* Round / Orders - 稍微缩小，给Balance腾空间 */
 
 .data-table th:nth-child(10),
-.data-table td:nth-child(10) { width: 90px !important; min-width: 90px !important; } /* Registered IP - 加宽，填补缝隙 */
+.data-table td:nth-child(10) { width: 100px !important; min-width: 100px !important; } /* Registered IP - 加宽，填补缝隙 */
 
 .data-table th:nth-child(11),
 .data-table td:nth-child(11) { width: 85px !important; min-width: 85px !important; } /* Last Online */
@@ -353,30 +353,99 @@ async function loadUsersPage() {
             vertical-align: middle;
         }
 
-        /* VIP 下拉框 - 确保完整显示 */
+        /* ===== VIP 下拉框 - 高级样式 ===== */
+.vip-wrapper {
+    position: relative;
+    display: inline-block;
+}
+
 .vip-select {
-    background: rgba(255,255,255,0.04) !important;
-    border: 1px solid rgba(255,255,255,0.04) !important;
-    border-radius: 30px !important;
-    padding: 3px 10px !important;
+    width: 82px !important;
+    min-width: 82px !important;
+    max-width: 82px !important;
+    padding: 5px 28px 5px 28px !important;
+    border-radius: 20px !important;
+    border: 1px solid rgba(200, 176, 144, 0.2) !important;
+    background: rgba(255, 255, 255, 0.04) !important;
     color: #e6edf5 !important;
-    font-size: 10px !important;
+    font-size: 11px !important;
+    font-weight: 600 !important;
     cursor: pointer !important;
-    width: 70px !important;  /* 从60px改为70px */
-    min-width: 70px !important;  /* 确保最小宽度 */
-    max-width: 70px !important;  /* 确保固定宽度，不出现省略号 */
-    font-family: 'Inter', sans-serif !important;
-    font-weight: 500 !important;
     appearance: none !important;
     -webkit-appearance: none !important;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='6'%3E%3Cpath d='M0 0l4 6 4-6z' fill='rgba(255,255,255,0.15)'/%3E%3C/svg%3E") !important;
-    background-repeat: no-repeat !important;
-    background-position: right 8px center !important;
-    padding-right: 24px !important;
-    overflow: hidden !important;
-    text-overflow: clip !important;  /* 改为 clip，不显示省略号 */
+    font-family: 'Inter', sans-serif !important;
+    transition: all 0.25s ease !important;
+    text-align: center !important;
+    text-overflow: clip !important;
     white-space: nowrap !important;
+    letter-spacing: 0.3px !important;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.02) !important;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='rgba(200,176,144,0.4)'/%3E%3C/svg%3E") !important;
+    background-repeat: no-repeat !important;
+    background-position: right 10px center !important;
+    background-size: 10px 6px !important;
 }
+
+.vip-select:hover {
+    border-color: rgba(200, 176, 144, 0.4) !important;
+    background: rgba(255, 255, 255, 0.08) !important;
+    box-shadow: 0 0 20px rgba(200, 176, 144, 0.05), inset 0 1px 0 rgba(255,255,255,0.04) !important;
+}
+
+.vip-select:focus {
+    outline: none !important;
+    border-color: rgba(200, 176, 144, 0.5) !important;
+    box-shadow: 0 0 30px rgba(200, 176, 144, 0.08), inset 0 1px 0 rgba(255,255,255,0.04) !important;
+}
+
+/* VIP 下拉选项 - 高级卡片样式 */
+.vip-select option {
+    background: linear-gradient(160deg, #0e1228, #1a1a3a) !important;
+    color: #e6edf5 !important;
+    padding: 10px 16px !important;
+    font-size: 12px !important;
+    font-weight: 500 !important;
+    border-bottom: 1px solid rgba(255,255,255,0.03) !important;
+    font-family: 'Inter', sans-serif !important;
+    letter-spacing: 0.5px !important;
+}
+
+.vip-select option:checked {
+    background: linear-gradient(135deg, rgba(200,176,144,0.15), rgba(200,176,144,0.05)) !important;
+    color: #c8b090 !important;
+}
+
+.vip-select option[value="1"] { 
+    color: #8a9aaa !important; 
+    font-weight: 500 !important;
+}
+.vip-select option[value="2"] { 
+    color: #c8b090 !important; 
+    font-weight: 600 !important;
+}
+.vip-select option[value="3"] { 
+    color: #ffd700 !important; 
+    font-weight: 700 !important;
+}
+
+/* 当前选中值的颜色指示 */
+.vip-select[data-level="1"] { border-color: rgba(106, 122, 138, 0.3) !important; }
+.vip-select[data-level="2"] { border-color: rgba(200, 176, 144, 0.4) !important; }
+.vip-select[data-level="3"] { border-color: rgba(255, 215, 0, 0.4) !important; }
+
+/* 等级指示小点 */
+.vip-dot {
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    margin-right: 6px;
+    vertical-align: middle;
+    flex-shrink: 0;
+}
+.vip-dot.level-1 { background: #6a7a8a; }
+.vip-dot.level-2 { background: #c8b090; }
+.vip-dot.level-3 { background: #ffd700; box-shadow: 0 0 8px rgba(255,215,0,0.3); }
 
         /* ===== Round/Orders 列 ===== */
 .orders-wrapper {
@@ -754,23 +823,42 @@ actionsCell.innerHTML = `
     }
     countryCell.innerHTML = countryHtml;
     
-    // ===== 6. VIP (索引 5) =====
-    const vipCell = row.insertCell(5);
-    const vipLevels = [
-        { level: 1, name: 'Normal' },
-        { level: 2, name: 'VIP' },
-        { level: 3, name: 'SVIP' }
-    ];
-    let optionsHtml = '';
-    vipLevels.forEach(v => {
-        const selected = v.level === u.vip_level ? 'selected' : '';
-        optionsHtml += `<option value="${v.level}" ${selected}>${v.name}</option>`;
-    });
-    vipCell.innerHTML = `
-        <select class="vip-select vip-change-select" data-uid="${u.uid}" data-username="${escapeHtml(u.username)}">
+    // ===== 6. VIP RANK (索引 5) =====
+const vipCell = row.insertCell(5);
+const vipLevels = [
+    { level: 1, name: 'Normal', icon: 'fa-user', color: '#6a7a8a' },
+    { level: 2, name: 'VIP', icon: 'fa-crown', color: '#c8b090' },
+    { level: 3, name: 'SVIP', icon: 'fa-crown', color: '#ffd700' }
+];
+
+// 获取当前等级对应的样式
+const currentVip = vipLevels.find(v => v.level === u.vip_level) || vipLevels[0];
+const currentColor = currentVip.color;
+
+// 生成带图标和颜色的选项
+let optionsHtml = '';
+vipLevels.forEach(v => {
+    const selected = v.level === u.vip_level ? 'selected' : '';
+    const icon = v.icon;
+    const color = v.color;
+    optionsHtml += `<option value="${v.level}" ${selected} style="background:#0a0e1c; color:#e6edf5; padding:8px 12px; display:flex; align-items:center; gap:8px;">${v.name}</option>`;
+});
+
+// 创建自定义样式的下拉框
+vipCell.innerHTML = `
+    <div class="vip-wrapper" style="position:relative; display:inline-block;">
+        <select class="vip-select vip-change-select" data-uid="${u.uid}" data-username="${escapeHtml(u.username)}" 
+                style="width:82px; min-width:82px; max-width:82px; padding:4px 28px 4px 10px; border-radius:20px; 
+                       border:1px solid ${currentColor}40; background:rgba(255,255,255,0.03); color:#e6edf5; 
+                       font-size:11px; font-weight:600; cursor:pointer; appearance:none; -webkit-appearance:none;
+                       font-family:'Inter',sans-serif; transition:all 0.25s ease; text-align:center;
+                       background-image: url('data:image/svg+xml,%3Csvg xmlns=\\'http://www.w3.org/2000/svg\\' width=\\'10\\' height=\\'6\\'%3E%3Cpath d=\\'M0 0l5 6 5-6z\\' fill=\\'${encodeURIComponent(currentColor)}80\\'/%3E%3C/svg%3E');
+                       background-repeat:no-repeat; background-position:right 10px center; background-size:10px 6px;">
             ${optionsHtml}
         </select>
-    `;
+        <span class="vip-indicator" style="position:absolute; left:8px; top:50%; transform:translateY(-50%); font-size:10px; pointer-events:none; color:${currentColor};">◆</span>
+    </div>
+`;
     
     // ===== 7. Pending (索引 6) =====
     const pendingWithdrawAmount = pendingMap[u.uid] || 0;
