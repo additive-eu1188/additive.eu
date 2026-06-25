@@ -253,36 +253,36 @@ async function loadUsersPage() {
             background: rgba(200,176,144,0.03) !important;
         }
 
-        /* ===== 列宽定义 - 让表格自动分配 ===== */
+/* ===== 列宽定义 - 让表格自动分配 ===== */
 .data-table th:nth-child(1),
 .data-table td:nth-child(1) { width: 85px !important; min-width: 85px !important; } /* Actions */
 
 .data-table th:nth-child(2),
-.data-table td:nth-child(2) { width: 70px !important; min-width: 70px !important; } /* Phone */
+.data-table td:nth-child(2) { width: 90px !important; min-width: 90px !important; } /* Phone - 拉长 */
 
 .data-table th:nth-child(3),
-.data-table td:nth-child(3) { width: 85px !important; min-width: 85px !important; } /* User ID + Position */
+.data-table td:nth-child(3) { width: 90px !important; min-width: 90px !important; } /* User ID + Position */
 
 .data-table th:nth-child(4),
-.data-table td:nth-child(4) { width: 75px !important; min-width: 75px !important; } /* Referrer */
+.data-table td:nth-child(4) { width: 60px !important; min-width: 60px !important; } /* Referrer - 缩小，减少缝隙 */
 
 .data-table th:nth-child(5),
 .data-table td:nth-child(5) { width: 55px !important; min-width: 55px !important; } /* Country */
 
 .data-table th:nth-child(6),
-.data-table td:nth-child(6) { width: 60px !important; min-width: 60px !important; } /* VIP */
+.data-table td:nth-child(6) { width: 70px !important; min-width: 70px !important; } /* VIP - 加宽，避免省略号 */
 
 .data-table th:nth-child(7),
 .data-table td:nth-child(7) { width: 65px !important; min-width: 65px !important; } /* Pending */
 
 .data-table th:nth-child(8),
-.data-table td:nth-child(8) { width: 70px !important; min-width: 70px !important; } /* Balance */
+.data-table td:nth-child(8) { width: 75px !important; min-width: 75px !important; } /* Balance */
 
 .data-table th:nth-child(9),
-.data-table td:nth-child(9) { width: 300px !important; min-width: 300px !important; } /* Round / Orders */
+.data-table td:nth-child(9) { width: 280px !important; min-width: 280px !important; } /* Round / Orders - 稍微缩小 */
 
 .data-table th:nth-child(10),
-.data-table td:nth-child(10) { width: 85px !important; min-width: 85px !important; } /* Registered IP */
+.data-table td:nth-child(10) { width: 90px !important; min-width: 90px !important; } /* Registered IP - 加宽，填补缝隙 */
 
 .data-table th:nth-child(11),
 .data-table td:nth-child(11) { width: 85px !important; min-width: 85px !important; } /* Last Online */
@@ -353,33 +353,30 @@ async function loadUsersPage() {
             vertical-align: middle;
         }
 
-        /* ===== VIP 标签 ===== */
-        .vip-select {
-            background: rgba(255,255,255,0.04) !important;
-            border: 1px solid rgba(255,255,255,0.04) !important;
-            border-radius: 30px !important;
-            padding: 3px 10px !important;
-            color: #e6edf5 !important;
-            font-size: 10px !important;
-            cursor: pointer !important;
-            width: 70px !important;
-            font-family: 'Inter', sans-serif !important;
-            font-weight: 500 !important;
-            appearance: none !important;
-            -webkit-appearance: none !important;
-            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='6'%3E%3Cpath d='M0 0l4 6 4-6z' fill='rgba(255,255,255,0.15)'/%3E%3C/svg%3E") !important;
-            background-repeat: no-repeat !important;
-            background-position: right 8px center !important;
-            padding-right: 24px !important;
-        }
-        .vip-select:focus {
-            border-color: rgba(200,176,144,0.2) !important;
-            outline: none !important;
-        }
-        .vip-select option {
-            background: #0a0e1c !important;
-            color: #e6edf5 !important;
-        }
+        /* VIP 下拉框 - 确保完整显示 */
+.vip-select {
+    background: rgba(255,255,255,0.04) !important;
+    border: 1px solid rgba(255,255,255,0.04) !important;
+    border-radius: 30px !important;
+    padding: 3px 10px !important;
+    color: #e6edf5 !important;
+    font-size: 10px !important;
+    cursor: pointer !important;
+    width: 70px !important;  /* 从60px改为70px */
+    min-width: 70px !important;  /* 确保最小宽度 */
+    max-width: 70px !important;  /* 确保固定宽度，不出现省略号 */
+    font-family: 'Inter', sans-serif !important;
+    font-weight: 500 !important;
+    appearance: none !important;
+    -webkit-appearance: none !important;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='6'%3E%3Cpath d='M0 0l4 6 4-6z' fill='rgba(255,255,255,0.15)'/%3E%3C/svg%3E") !important;
+    background-repeat: no-repeat !important;
+    background-position: right 8px center !important;
+    padding-right: 24px !important;
+    overflow: hidden !important;
+    text-overflow: clip !important;  /* 改为 clip，不显示省略号 */
+    white-space: nowrap !important;
+}
 
         /* ===== Round/Orders 列 ===== */
 .orders-wrapper {
