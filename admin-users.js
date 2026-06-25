@@ -904,15 +904,18 @@ vipCell.innerHTML = `
     </div>
 `;
     
-    // ===== 7. Pending (索引 6) - 包含待处理卡片金额 =====
-const pendingWithdrawAmount = pendingMap[u.uid] || 0;
-const pendingTriggerAmount = pendingTriggerMap[u.uid] || 0;
-const totalPendingAmount = pendingWithdrawAmount + pendingTriggerAmount;
+    // ===== 7. Pending (索引 6) - current balance + order commissions + amount due =====
+const userBalance = u.balance || 0;
+const amountDueValue = amountDueMap[u.uid] || 0;
+const totalCommissions = orderCountMap[u.uid] || 0;  // 用户总订单数作为佣金参考
+
+// 实际应该从 deposits 或 order_history 获取总佣金
+const totalPendingValue = userBalance + totalCommissions + amountDueValue;
 
 const pendingCell = row.insertCell(6);
 pendingCell.innerHTML = `
-    <span class="pending-amount ${totalPendingAmount > 0 ? 'pending-positive' : ''}">
-        €${totalPendingAmount.toFixed(2)}
+    <span class="pending-amount ${totalPendingValue > 0 ? 'pending-positive' : ''}">
+        €${totalPendingValue.toFixed(2)}
     </span>
 `;
 
@@ -936,7 +939,7 @@ balanceCell.innerHTML = `
     <div class="balance-wrapper">
         <button class="btn-sm btn-deposit deposit-btn" data-uid="${u.uid}" data-username="${escapeHtml(u.username)}" title="Deposit" style="font-size:9px; padding:2px 6px; white-space:nowrap; flex-shrink:0; border:none; border-radius:4px; cursor:pointer; transition:0.2s; background:rgba(74,222,128,0.12); color:#4ade80; font-weight:600; min-width:18px; text-align:center;">+</button>
         <button class="btn-sm btn-deduct deduct-btn" data-uid="${u.uid}" data-username="${escapeHtml(u.username)}" title="Deduct" style="font-size:9px; padding:2px 6px; white-space:nowrap; flex-shrink:0; border:none; border-radius:4px; cursor:pointer; transition:0.2s; background:rgba(232,128,128,0.12); color:#e88080; font-weight:600; min-width:18px; text-align:center; margin-right:4px;">−</button>
-        <span class="balance-amount" style="font-weight:700; font-size:14px; ${isBalanceNegative ? 'color:#e88080;' : 'color:#7ad0b0;'}">
+        <span class="balance-amount" style="font-weight:700; font-size:14px; ${isBalanceNegative ? 'color:#e88080 !important;' : 'color:#7ad0b0 !important;'}">
             ${isBalanceNegative ? '-' : ''}€${Math.abs(displayBalance).toFixed(2)}
         </span>
         ${isBalanceNegative ? '<div style="font-size: 8px; color: #e88080; opacity: 0.5; margin-top: 1px;">Due</div>' : ''}
