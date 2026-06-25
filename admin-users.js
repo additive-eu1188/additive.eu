@@ -1,229 +1,95 @@
-// admin-users.js - 完整版（用户管理表格重新设计 + Round / Orders + Edit Orders合并 + Credit Score移入弹窗）
+// admin-users.js - 完整版（表格重构：Actions移到第一列，VIP改标题，国家缩写，REG/DATE）
 let searchKeyword = '';
 
-// ========== 国家代码到国旗图片 URL 映射 ==========
-function getCountryFlagUrl(phoneCode) {
-    const flagMap = {
-        '+1': 'us',
-        '+44': 'gb',
-        '+49': 'de',
-        '+33': 'fr',
-        '+39': 'it',
-        '+34': 'es',
-        '+41': 'ch',
-        '+43': 'at',
-        '+31': 'nl',
-        '+32': 'be',
-        '+45': 'dk',
-        '+46': 'se',
-        '+47': 'no',
-        '+358': 'fi',
-        '+351': 'pt',
-        '+30': 'gr',
-        '+90': 'tr',
-        '+7': 'ru',
-        '+86': 'cn',
-        '+81': 'jp',
-        '+82': 'kr',
-        '+91': 'in',
-        '+55': 'br',
-        '+52': 'mx',
-        '+61': 'au',
-        '+64': 'nz',
-        '+27': 'za',
-        '+971': 'ae',
-        '+966': 'sa',
-        '+65': 'sg',
-        '+60': 'my',
-        '+63': 'ph',
-        '+62': 'id',
-        '+66': 'th',
-        '+84': 'vn',
-        '+886': 'tw',
-        '+852': 'hk',
-        '+853': 'mo',
-        '+353': 'ie',
-        '+48': 'pl',
-        '+420': 'cz',
-        '+36': 'hu',
-        '+385': 'hr',
-        '+356': 'mt',
-        '+357': 'cy',
-        '+372': 'ee',
-        '+371': 'lv',
-        '+370': 'lt',
-        '+373': 'md',
-        '+377': 'mc',
-        '+423': 'li',
-        '+299': 'gl',
-        '+298': 'fo',
-        '+354': 'is',
-        '+352': 'lu',
-        '+376': 'ad',
-        '+350': 'gi',
-        '+590': 'gp',
-        '+596': 'mq',
-        '+262': 're',
-        '+687': 'nc',
-        '+689': 'pf',
-        '+680': 'pw',
-        '+691': 'fm',
-        '+692': 'mh',
-        '+674': 'nr',
-        '+676': 'to',
-        '+677': 'sb',
-        '+678': 'vu',
-        '+679': 'fj',
-        '+682': 'ck',
-        '+683': 'nu',
-        '+685': 'ws',
-        '+686': 'ki',
-        '+688': 'tv',
-        '+690': 'tk',
-        '+691': 'fm',
-        '+692': 'mh',
-        '+856': 'la',
-        '+880': 'bd',
-        '+855': 'kh',
-        '+94': 'lk',
-        '+92': 'pk',
-        '+93': 'af',
-        '+94': 'lk',
-        '+95': 'mm',
-        '+98': 'ir',
-        '+211': 'ss',
-        '+212': 'ma',
-        '+213': 'dz',
-        '+216': 'tn',
-        '+218': 'ly',
-        '+220': 'gm',
-        '+221': 'sn',
-        '+222': 'mr',
-        '+223': 'ml',
-        '+224': 'gn',
-        '+225': 'ci',
-        '+226': 'bf',
-        '+227': 'ne',
-        '+228': 'tg',
-        '+229': 'bj',
-        '+230': 'mu',
-        '+231': 'lr',
-        '+232': 'sl',
-        '+233': 'gh',
-        '+234': 'ng',
-        '+235': 'td',
-        '+236': 'cf',
-        '+237': 'cm',
-        '+238': 'cv',
-        '+239': 'st',
-        '+240': 'gq',
-        '+241': 'ga',
-        '+242': 'cg',
-        '+243': 'cd',
-        '+244': 'ao',
-        '+245': 'gw',
-        '+246': 'io',
-        '+247': 'ac',
-        '+248': 'sc',
-        '+249': 'sd',
-        '+250': 'rw',
-        '+251': 'et',
-        '+252': 'so',
-        '+253': 'dj',
-        '+254': 'ke',
-        '+255': 'tz',
-        '+256': 'ug',
-        '+257': 'bi',
-        '+258': 'mz',
-        '+259': 'zm',
-        '+260': 'zm',
-        '+261': 'mg',
-        '+262': 're',
-        '+263': 'zw',
-        '+264': 'na',
-        '+265': 'mw',
-        '+266': 'ls',
-        '+267': 'bw',
-        '+268': 'sz',
-        '+269': 'km',
-        '+290': 'sh',
-        '+291': 'er',
-        '+297': 'aw',
-        '+298': 'fo',
-        '+299': 'gl'
-    };
-    
-    for (const [code, country] of Object.entries(flagMap)) {
-        if (phoneCode.startsWith(code)) {
-            return `https://flagcdn.com/w40/${country}.png`;
-        }
-    }
-    return null;
-}
-
-function getCountryName(phoneCode) {
+// ========== 国家代码到缩写映射 ==========
+function getCountryAbbreviation(countryName) {
     const countryMap = {
-        '+1': 'United States',
-        '+44': 'United Kingdom',
-        '+49': 'Germany',
-        '+33': 'France',
-        '+39': 'Italy',
-        '+34': 'Spain',
-        '+41': 'Switzerland',
-        '+43': 'Austria',
-        '+31': 'Netherlands',
-        '+32': 'Belgium',
-        '+45': 'Denmark',
-        '+46': 'Sweden',
-        '+47': 'Norway',
-        '+358': 'Finland',
-        '+351': 'Portugal',
-        '+30': 'Greece',
-        '+90': 'Turkey',
-        '+7': 'Russia',
-        '+86': 'China',
-        '+81': 'Japan',
-        '+82': 'South Korea',
-        '+91': 'India',
-        '+55': 'Brazil',
-        '+52': 'Mexico',
-        '+61': 'Australia',
-        '+64': 'New Zealand',
-        '+27': 'South Africa',
-        '+971': 'UAE',
-        '+966': 'Saudi Arabia',
-        '+65': 'Singapore',
-        '+60': 'Malaysia',
-        '+63': 'Philippines',
-        '+62': 'Indonesia',
-        '+66': 'Thailand',
-        '+84': 'Vietnam',
-        '+886': 'Taiwan',
-        '+852': 'Hong Kong',
-        '+853': 'Macau',
-        '+353': 'Ireland',
-        '+48': 'Poland',
-        '+420': 'Czech Republic',
-        '+36': 'Hungary',
-        '+385': 'Croatia',
-        '+356': 'Malta',
-        '+357': 'Cyprus',
-        '+372': 'Estonia',
-        '+371': 'Latvia',
-        '+370': 'Lithuania',
-        '+373': 'Moldova',
-        '+377': 'Monaco',
-        '+423': 'Liechtenstein',
-        '+299': 'Greenland',
-        '+298': 'Faroe Islands'
+        'Germany': 'DE',
+        'United States': 'US',
+        'United Kingdom': 'GB',
+        'Italy': 'IT',
+        'China': 'CN',
+        'France': 'FR',
+        'Spain': 'ES',
+        'Switzerland': 'CH',
+        'Austria': 'AT',
+        'Netherlands': 'NL',
+        'Belgium': 'BE',
+        'Denmark': 'DK',
+        'Sweden': 'SE',
+        'Norway': 'NO',
+        'Finland': 'FI',
+        'Portugal': 'PT',
+        'Greece': 'GR',
+        'Turkey': 'TR',
+        'Russia': 'RU',
+        'Japan': 'JP',
+        'South Korea': 'KR',
+        'India': 'IN',
+        'Brazil': 'BR',
+        'Mexico': 'MX',
+        'Australia': 'AU',
+        'New Zealand': 'NZ',
+        'South Africa': 'ZA',
+        'UAE': 'AE',
+        'Saudi Arabia': 'SA',
+        'Singapore': 'SG',
+        'Malaysia': 'MY',
+        'Philippines': 'PH',
+        'Indonesia': 'ID',
+        'Thailand': 'TH',
+        'Vietnam': 'VN',
+        'Taiwan': 'TW',
+        'Hong Kong': 'HK',
+        'Macau': 'MO',
+        'Ireland': 'IE',
+        'Poland': 'PL',
+        'Czech Republic': 'CZ',
+        'Hungary': 'HU',
+        'Croatia': 'HR',
+        'Malta': 'MT',
+        'Cyprus': 'CY',
+        'Estonia': 'EE',
+        'Latvia': 'LV',
+        'Lithuania': 'LT',
+        'Moldova': 'MD',
+        'Monaco': 'MC',
+        'Liechtenstein': 'LI',
+        'Greenland': 'GL',
+        'Faroe Islands': 'FO',
+        'Iceland': 'IS',
+        'Luxembourg': 'LU',
+        'Andorra': 'AD',
+        'Gibraltar': 'GI',
+        'Canada': 'CA',
+        'Argentina': 'AR',
+        'Chile': 'CL',
+        'Colombia': 'CO',
+        'Peru': 'PE',
+        'Venezuela': 'VE',
+        'Egypt': 'EG',
+        'Nigeria': 'NG',
+        'Kenya': 'KE',
+        'Israel': 'IL',
+        'Pakistan': 'PK',
+        'Bangladesh': 'BD',
+        'Sri Lanka': 'LK',
+        'Nepal': 'NP',
+        'Afghanistan': 'AF',
+        'Iraq': 'IQ',
+        'Iran': 'IR',
+        'Saudi Arabia': 'SA',
+        'Kuwait': 'KW',
+        'Qatar': 'QA',
+        'Oman': 'OM',
+        'Bahrain': 'BH',
+        'Lebanon': 'LB',
+        'Jordan': 'JO'
     };
-    
-    for (const [code, name] of Object.entries(countryMap)) {
-        if (phoneCode.startsWith(code)) {
-            return name;
-        }
-    }
-    return 'Unknown';
+    // 如果找不到缩写，返回前两个字母大写
+    if (countryMap[countryName]) return countryMap[countryName];
+    if (countryName && countryName.length >= 2) return countryName.substring(0, 2).toUpperCase();
+    return '--';
 }
 
 async function loadUsersPage() {
@@ -241,19 +107,19 @@ async function loadUsersPage() {
                 <table class="data-table" style="font-size: 12px;">
                     <thead>
                         <tr>
-                            <th style="min-width: 100px;">Phone</th>
-                            <th style="min-width: 80px;">User ID</th>
-                            <th style="min-width: 80px;">Position</th>
-                            <th style="min-width: 100px;">Referrer</th>
-                            <th style="min-width: 120px;">Country</th>
-                            <th style="min-width: 100px;">VIP Level</th>
-                            <th style="min-width: 90px;">Pending (€)</th>
-                            <th style="min-width: 110px;">Balance (€)</th>
+                            <th style="min-width: 90px;">Actions</th>
+                            <th style="min-width: 80px;">Phone</th>
+                            <th style="min-width: 70px;">User ID</th>
+                            <th style="min-width: 55px;">Position</th>
+                            <th style="min-width: 80px;">Referrer</th>
+                            <th style="min-width: 60px;">Country</th>
+                            <th style="min-width: 65px;">VIP</th>
+                            <th style="min-width: 70px;">Pending (€)</th>
+                            <th style="min-width: 75px;">Balance (€)</th>
                             <th style="min-width: 200px;">Round / Orders</th>
-                            <th style="min-width: 130px;">Registered IP</th>
-                            <th style="min-width: 130px;">Last Online</th>
-                            <th style="min-width: 150px;">Time Registered</th>
-                            <th style="min-width: 180px;">Actions</th>
+                            <th style="min-width: 90px;">Registered IP</th>
+                            <th style="min-width: 70px;">Last Online</th>
+                            <th style="min-width: 70px;">REG/DATE</th>
                         </tr>
                     </thead>
                     <tbody id="usersTableBody"></tbody>
@@ -265,256 +131,341 @@ async function loadUsersPage() {
     
     const style = document.createElement('style');
     style.textContent = `
-        .users-table-cell {
+        /* ===== 高级暗色面板样式（与Withdrawal页面一致） ===== */
+        .card {
+            background: rgba(12, 16, 28, 0.6) !important;
+            backdrop-filter: blur(16px) saturate(1.4) !important;
+            -webkit-backdrop-filter: blur(16px) saturate(1.4) !important;
+            border: 1px solid rgba(255,255,255,0.04) !important;
+            border-radius: 20px !important;
+            padding: 22px 24px !important;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.03) !important;
+        }
+        
+        .search-bar input.search-input {
+            background: rgba(255,255,255,0.06) !important;
+            border: 1px solid rgba(255,255,255,0.06) !important;
+            border-radius: 40px !important;
+            padding: 8px 18px !important;
+            color: #e6edf5 !important;
+            font-size: 13px !important;
+        }
+        .search-bar input.search-input:focus {
+            border-color: rgba(200,176,144,0.2) !important;
+            background: rgba(255,255,255,0.08) !important;
+        }
+        .search-bar input.search-input::placeholder {
+            color: rgba(255,255,255,0.15) !important;
+        }
+
+        .btn-primary {
+            background: rgba(200,176,144,0.06) !important;
+            border: 1px solid rgba(200,176,144,0.08) !important;
+            border-radius: 40px !important;
+            padding: 8px 20px !important;
+            color: #c8b090 !important;
+            font-weight: 600 !important;
+            font-size: 13px !important;
+            transition: all 0.3s !important;
+        }
+        .btn-primary:hover {
+            background: rgba(200,176,144,0.1) !important;
+            transform: translateY(-1px) !important;
+        }
+        button.success {
+            background: rgba(74,222,128,0.06) !important;
+            border: 1px solid rgba(74,222,128,0.08) !important;
+            color: #7ad0b0 !important;
+            padding: 8px 20px !important;
+            border-radius: 40px !important;
+            font-weight: 600 !important;
+            font-size: 13px !important;
+            transition: all 0.3s !important;
+        }
+        button.success:hover {
+            background: rgba(74,222,128,0.1) !important;
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12px;
+        }
+        .data-table th {
+            color: rgba(255,255,255,0.25) !important;
+            font-weight: 600 !important;
+            font-size: 10px !important;
+            text-transform: uppercase !important;
+            letter-spacing: 0.8px !important;
+            padding: 10px 10px !important;
+            border-bottom: 1px solid rgba(255,255,255,0.04) !important;
+            background: rgba(10,14,28,0.3) !important;
+        }
+        .data-table td {
             padding: 8px 10px !important;
-            vertical-align: middle;
-            font-size: 12px;
+            border-bottom: 1px solid rgba(255,255,255,0.03) !important;
+            color: rgba(255,255,255,0.7) !important;
+            font-size: 12px !important;
+            vertical-align: middle !important;
         }
-        .orders-badge {
-            display: inline-block;
-            background: rgba(74,124,255,0.15);
-            padding: 2px 10px;
-            border-radius: 12px;
-            font-size: 12px;
-            font-weight: 600;
-            color: #4a7cff;
-            min-width: 50px;
-            text-align: center;
+        .data-table tr:hover td {
+            background: rgba(200,176,144,0.03) !important;
         }
-        .orders-badge.completed {
-            background: rgba(46,209,90,0.15);
-            color: #2ed15a;
-        }
-        .orders-input {
-            width: 55px;
-            background: #0f172a;
-            border: 1px solid #1e2a3a;
-            border-radius: 4px;
-            padding: 2px 4px;
-            color: #fff;
-            font-size: 11px;
-            text-align: center;
-        }
-        .orders-input:focus {
-            border-color: #4a7cff;
-            outline: none;
-        }
-        .btn-sm {
-            padding: 3px 8px;
-            font-size: 10px;
-            border: none;
-            border-radius: 4px;
-            color: #fff;
-            cursor: pointer;
-            transition: 0.2s;
-            margin: 0 1px;
-            white-space: nowrap;
-        }
-        .btn-sm:hover {
-            opacity: 0.85;
-        }
-        .btn-sm:disabled {
-            opacity: 0.3;
-            cursor: not-allowed;
-        }
-        .btn-reset { background: #7a5f2f; }
-        .btn-save-orders { background: #2f6b3a; }
-        .btn-deposit { background: #2f6b3a; }
-        .btn-deduct { background: #7a2f2f; }       
-        .btn-deduct:hover { background: #9b3f3f; }
-        .btn-edit-user { background: #2f5f7a; }
-        .btn-edit-user:hover { background: #3f7f9a; }
-        .btn-delete-user { background: #7a2f2f; }
-        .btn-delete-user:hover { background: #9b3f3f; }
-        .vip-select {
-            background: #0f172a;
-            border: 1px solid #1e2a3a;
-            border-radius: 4px;
-            padding: 2px 4px;
-            color: #fff;
-            font-size: 10px;
-            cursor: pointer;
-            width: 65px;
-        }
-        .vip-select:focus { border-color: #4a7cff; outline: none; }
-        .vip-select option { background: #0f172a; color: #fff; }
-        .vip-badge {
-            display: inline-block;
-            padding: 2px 10px;
-            border-radius: 12px;
-            font-size: 10px;
-            font-weight: 600;
-        }
-        .vip-badge.level1 { background: rgba(74,124,255,0.15); color: #4a7cff; }
-        .vip-badge.level2 { background: rgba(255,184,77,0.15); color: #ffb84d; }
-        .vip-badge.level3 { background: rgba(255,215,0,0.2); color: #ffd700; }
-        .country-flag-img {
-            width: 22px;
-            height: 16px;
-            border-radius: 2px;
-            vertical-align: middle;
-            margin-right: 6px;
-            object-fit: cover;
-        }
-        .country-name { font-size: 12px; color: #c0c8e0; vertical-align: middle; }
-        .pending-negative { color: #ff5a5a !important; }
-        .pending-positive { color: #ffb84d !important; }
-        .user-row:hover { background: rgba(74,124,255,0.03); }
+
+        /* ===== 列宽定义 ===== */
+        .data-table th:nth-child(1),
+        .data-table td:nth-child(1) { min-width: 90px !important; max-width: 110px !important; } /* Actions */
+        .data-table th:nth-child(2),
+        .data-table td:nth-child(2) { min-width: 80px !important; max-width: 100px !important; } /* Phone */
+        .data-table th:nth-child(3),
+        .data-table td:nth-child(3) { min-width: 70px !important; max-width: 85px !important; } /* User ID */
+        .data-table th:nth-child(4),
+        .data-table td:nth-child(4) { min-width: 55px !important; max-width: 70px !important; } /* Position */
+        .data-table th:nth-child(5),
+        .data-table td:nth-child(5) { min-width: 80px !important; max-width: 110px !important; } /* Referrer */
+        .data-table th:nth-child(6),
+        .data-table td:nth-child(6) { min-width: 60px !important; max-width: 75px !important; } /* Country */
+        .data-table th:nth-child(7),
+        .data-table td:nth-child(7) { min-width: 65px !important; max-width: 80px !important; } /* VIP */
+        .data-table th:nth-child(8),
+        .data-table td:nth-child(8) { min-width: 70px !important; max-width: 90px !important; } /* Pending */
+        .data-table th:nth-child(9),
+        .data-table td:nth-child(9) { min-width: 75px !important; max-width: 95px !important; } /* Balance */
+        .data-table th:nth-child(10),
+        .data-table td:nth-child(10) { min-width: 200px !important; } /* Round / Orders */
+        .data-table th:nth-child(11),
+        .data-table td:nth-child(11) { min-width: 90px !important; max-width: 120px !important; } /* Registered IP */
+        .data-table th:nth-child(12),
+        .data-table td:nth-child(12) { min-width: 70px !important; max-width: 90px !important; } /* Last Online */
+        .data-table th:nth-child(13),
+        .data-table td:nth-child(13) { min-width: 70px !important; max-width: 90px !important; } /* REG/DATE */
+
+        /* ===== Actions 列 ===== */
         .actions-wrapper {
             display: flex;
             align-items: center;
-            gap: 3px;
+            gap: 0 !important;
             flex-wrap: nowrap;
         }
-        .actions-wrapper .btn-sm { font-size: 9px; padding: 2px 6px; }
-        .balance-wrapper {
-            display: flex;
-            align-items: center;
-            gap: 4px;
-            flex-wrap: nowrap;
+        .btn-actions {
+            background: rgba(200,176,144,0.06) !important;
+            border: 1px solid rgba(200,176,144,0.08) !important;
+            border-radius: 30px !important;
+            padding: 4px 14px !important;
+            color: #c8b090 !important;
+            font-size: 10px !important;
+            font-weight: 600 !important;
+            cursor: pointer !important;
+            transition: all 0.2s !important;
+            white-space: nowrap !important;
+            font-family: 'Inter', sans-serif !important;
+            letter-spacing: 0.5px !important;
         }
-        .balance-wrapper .balance-amount {
-            font-weight: 600;
-            font-size: 13px;
-            color: #2ed15a;
+        .btn-actions:hover {
+            background: rgba(200,176,144,0.12) !important;
+            transform: translateX(2px) !important;
         }
-        .vip-wrapper { display: flex; align-items: center; gap: 4px; flex-wrap: nowrap; }
+
+        /* ===== Phone 细字 ===== */
+        .phone-text {
+            font-size: 11px !important;
+            font-weight: 300 !important;
+            color: rgba(255,255,255,0.5) !important;
+        }
+
+        /* ===== User ID 细字 ===== */
+        .uid-text {
+            font-size: 11px !important;
+            font-weight: 300 !important;
+            color: rgba(255,255,255,0.4) !important;
+            font-family: monospace !important;
+        }
+
+        /* ===== Referrer 细字 ===== */
+        .referrer-text {
+            font-size: 12px !important;
+            font-weight: 300 !important;
+            color: rgba(255,255,255,0.35) !important;
+        }
+
+        /* ===== Country 缩写 ===== */
+        .country-abbr {
+            font-size: 12px !important;
+            font-weight: 600 !important;
+            color: rgba(255,255,255,0.4) !important;
+            letter-spacing: 0.5px !important;
+            font-family: monospace !important;
+        }
+
+        /* ===== VIP 标签 ===== */
+        .vip-select {
+            background: rgba(255,255,255,0.04) !important;
+            border: 1px solid rgba(255,255,255,0.04) !important;
+            border-radius: 30px !important;
+            padding: 3px 10px !important;
+            color: #e6edf5 !important;
+            font-size: 10px !important;
+            cursor: pointer !important;
+            width: 70px !important;
+            font-family: 'Inter', sans-serif !important;
+            font-weight: 500 !important;
+            appearance: none !important;
+            -webkit-appearance: none !important;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='6'%3E%3Cpath d='M0 0l4 6 4-6z' fill='rgba(255,255,255,0.15)'/%3E%3C/svg%3E") !important;
+            background-repeat: no-repeat !important;
+            background-position: right 8px center !important;
+            padding-right: 24px !important;
+        }
+        .vip-select:focus {
+            border-color: rgba(200,176,144,0.2) !important;
+            outline: none !important;
+        }
+        .vip-select option {
+            background: #0a0e1c !important;
+            color: #e6edf5 !important;
+        }
+
+        /* ===== Round/Orders 列 ===== */
         .orders-wrapper {
             display: flex;
             align-items: center;
-            gap: 4px;
+            gap: 4px !important;
             flex-wrap: nowrap;
+            min-width: 190px;
         }
-        .orders-wrapper .round-number {
-            font-size: 11px;
-            color: #8a9abb;
-            min-width: 28px;
+        .orders-wrapper .btn-sm {
+            font-size: 8px !important;
+            padding: 2px 6px !important;
+            white-space: nowrap !important;
+            flex-shrink: 0 !important;
+            border: none !important;
+            border-radius: 4px !important;
+            cursor: pointer !important;
+            transition: 0.2s !important;
+        }
+        .orders-wrapper .btn-sm:hover {
+            opacity: 0.8 !important;
+        }
+        .btn-reset {
+            background: rgba(200,176,144,0.08) !important;
+            color: #c8b090 !important;
+        }
+        .btn-save-orders {
+            background: rgba(74,222,128,0.08) !important;
+            color: #7ad0b0 !important;
         }
         .orders-wrapper .orders-input {
-            width: 45px;
-            background: #0f172a;
-            border: 1px solid #1e2a3a;
-            border-radius: 4px;
-            padding: 2px 4px;
-            color: #fff;
-            font-size: 11px;
-            text-align: center;
-            flex-shrink: 0;
+            width: 42px !important;
+            background: rgba(255,255,255,0.04) !important;
+            border: 1px solid rgba(255,255,255,0.04) !important;
+            border-radius: 4px !important;
+            padding: 2px 4px !important;
+            color: #e6edf5 !important;
+            font-size: 11px !important;
+            text-align: center !important;
+            flex-shrink: 0 !important;
         }
         .orders-wrapper .orders-input:focus {
-            border-color: #4a7cff;
-            outline: none;
+            border-color: rgba(200,176,144,0.15) !important;
+            outline: none !important;
         }
-        .orders-wrapper .orders-badge {
-            min-width: 35px;
-            font-size: 11px;
+        .orders-wrapper .round-number {
+            font-size: 11px !important;
+            color: rgba(255,255,255,0.2) !important;
+            min-width: 32px !important;
+            flex-shrink: 0 !important;
+        }
+        .orders-wrapper .orders-slash {
+            font-size: 10px !important;
+            color: rgba(255,255,255,0.12) !important;
+            flex-shrink: 0 !important;
         }
 
-/* ===== 标题调小 ===== */
-.card h3 {
-    font-size: 14px !important;
-}
+        /* ===== Pending ===== */
+        .pending-negative { color: #e88080 !important; }
+        .pending-positive { color: #c8b090 !important; }
+        .pending-amount {
+            font-weight: 700 !important;
+            font-size: 13px !important;
+        }
 
-/* ===== 表格紧凑，Actions 完整显示 ===== */
-.data-table th,
-.data-table td {
-    padding: 5px 6px !important;
-    font-size: 11px !important;
-}
+        /* ===== Balance ===== */
+        .balance-amount {
+            font-weight: 700 !important;
+            font-size: 14px !important;
+            color: #7ad0b0 !important;
+        }
+        .balance-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 4px !important;
+            flex-wrap: nowrap;
+        }
+        .balance-wrapper .btn-sm {
+            font-size: 8px !important;
+            padding: 2px 5px !important;
+            border: none !important;
+            border-radius: 4px !important;
+            cursor: pointer !important;
+            transition: 0.2s !important;
+            color: #e6edf5 !important;
+        }
+        .balance-wrapper .btn-sm:hover {
+            opacity: 0.8 !important;
+        }
+        .btn-deposit {
+            background: rgba(74,222,128,0.08) !important;
+        }
+        .btn-deduct {
+            background: rgba(232,128,128,0.08) !important;
+        }
 
-/* Actions 列 */
-.data-table th:last-child,
-.data-table td:last-child {
-    min-width: 130px !important;
-    white-space: nowrap;
-}
+        /* ===== REG/DATE ===== */
+        .reg-date-text {
+            font-size: 11px !important;
+            font-weight: 300 !important;
+            color: rgba(255,255,255,0.25) !important;
+        }
 
-/* 各列宽度优化 */
-.data-table th:nth-child(1),
-.data-table td:nth-child(1) { min-width: 70px !important; max-width: 90px !important; } /* Phone */
-.data-table th:nth-child(2),
-.data-table td:nth-child(2) { min-width: 60px !important; max-width: 80px !important; } /* User ID */
-.data-table th:nth-child(3),
-.data-table td:nth-child(3) { min-width: 55px !important; max-width: 70px !important; } /* Position */
-.data-table th:nth-child(4),
-.data-table td:nth-child(4) { min-width: 70px !important; max-width: 100px !important; } /* Referrer */
-.data-table th:nth-child(5),
-.data-table td:nth-child(5) { min-width: 80px !important; max-width: 110px !important; } /* Country */
-.data-table th:nth-child(6),
-.data-table td:nth-child(6) { min-width: 65px !important; max-width: 80px !important; } /* VIP Level */
-.data-table th:nth-child(7),
-.data-table td:nth-child(7) { min-width: 70px !important; max-width: 90px !important; } /* Pending */
-.data-table th:nth-child(8),
-.data-table td:nth-child(8) { min-width: 75px !important; max-width: 95px !important; } /* Balance */
-.data-table th:nth-child(9),
-.data-table td:nth-child(9) { min-width: 200px !important; } /* Round / Orders ← 改大 */
-.data-table th:nth-child(10),
-.data-table td:nth-child(10) { min-width: 90px !important; max-width: 120px !important; } /* Registered IP */
-.data-table th:nth-child(11),
-.data-table td:nth-child(11) { min-width: 70px !important; max-width: 90px !important; } /* Last Online */
-.data-table th:nth-child(12),
-.data-table td:nth-child(12) { min-width: 70px !important; max-width: 90px !important; } /* Time Registered */
-.data-table th:nth-child(13),
-.data-table td:nth-child(13) { min-width: 140px !important; } /* Actions ← 也加宽一点 */
+        /* ===== Last Online ===== */
+        .last-online-text {
+            font-size: 11px !important;
+            font-weight: 300 !important;
+            color: rgba(255,255,255,0.2) !important;
+        }
 
-/* Actions 按钮紧凑 */
-.actions-wrapper {
-    display: flex;
-    align-items: center;
-    gap: 2px !important;
-    flex-wrap: nowrap;
-}
-.actions-wrapper .btn-sm {
-    font-size: 8px !important;
-    padding: 2px 5px !important;
-}
+        /* ===== Registered IP ===== */
+        .ip-text {
+            font-size: 11px !important;
+            font-weight: 300 !important;
+            color: rgba(255,255,255,0.25) !important;
+            font-family: monospace !important;
+        }
 
-/* ===== 新增：Round/Orders 列内元素不换行 ===== */
-.orders-wrapper {
-    display: flex;
-    align-items: center;
-    gap: 3px !important;
-    flex-wrap: nowrap;
-    min-width: 180px;
-}
-.orders-wrapper .btn-sm {
-    font-size: 8px !important;
-    padding: 2px 5px !important;
-    white-space: nowrap;
-    flex-shrink: 0;
-}
-.orders-wrapper .orders-input {
-    width: 45px;
-    flex-shrink: 0;
-}
-.orders-wrapper .round-number {
-    font-size: 11px;
-    color: #8a9abb;
-    min-width: 32px;
-    flex-shrink: 0;
-}
+        /* ===== Position ===== */
+        .position-text {
+            font-size: 11px !important;
+            font-weight: 600 !important;
+        }
 
-/* 表头字体 */
-.data-table th {
-    font-size: 10px !important;
-    padding: 5px 6px !important;
-}
-@media (max-width: 1400px) {
-    .table-container { overflow-x: auto; }
-    .data-table { min-width: 1450px; }  /* 从 1400px 改为 1450px 确保列宽足够 */
-}
+        .badge {
+            background: rgba(255,255,255,0.03) !important;
+            padding: 2px 8px !important;
+            border-radius: 20px !important;
+            font-size: 10px !important;
+            color: rgba(255,255,255,0.15) !important;
+            border: 1px solid rgba(255,255,255,0.02) !important;
+        }
 
-/* 性能优化：弹窗动画使用GPU加速 */
-.modal-overlay {
-    will-change: opacity, visibility;
-}
-.modal-card {
-    will-change: transform, opacity;
-}
-#creditScoreFill {
-    will-change: width, background;
-}
-`;
+        .table-container::-webkit-scrollbar { width: 3px; height: 3px; }
+        .table-container::-webkit-scrollbar-thumb { background: rgba(200,176,144,0.06); border-radius: 4px; }
+        .table-container::-webkit-scrollbar-track { background: transparent; }
+
+        @media (max-width: 1400px) {
+            .table-container { overflow-x: auto; }
+            .data-table { min-width: 1450px; }
+        }
+    `;
     document.head.appendChild(style);
     
     window.userCurrentPage = 1;
@@ -551,7 +502,7 @@ async function loadUsers() {
     const tbody = document.getElementById('usersTableBody');
     if (!tbody) return;
     
-    tbody.innerHTML = '<tr><td colspan="13" style="text-align:center; padding:40px;"><i class="fas fa-spinner fa-spin"></i> Loading...</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="13" style="text-align:center; padding:40px; color:rgba(255,255,255,0.2);"><i class="fas fa-spinner fa-spin"></i> Loading...</td></tr>';
     
     try {
         const { data: vipSettings } = await sb.from('vip_settings').select('*');
@@ -579,7 +530,7 @@ async function loadUsers() {
         window.userTotalCount = count || 0;
         
         if (!users || users.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="13" style="text-align:center; padding:40px; color:#6a7a9a;">No users</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="13" style="text-align:center; padding:40px; color:rgba(255,255,255,0.15);">No users</td></tr>';
             renderUserPagination();
             return;
         }
@@ -610,9 +561,9 @@ async function loadUsers() {
             });
         }
         
-                tbody.innerHTML = '';
+        tbody.innerHTML = '';
         
-                // ========== IP 重复检测（新增） ==========
+        // ========== IP 重复检测 ==========
         const ipMap = {};
         const duplicateIps = [];
         for (const u of users) {
@@ -627,14 +578,12 @@ async function loadUsers() {
             }
         }
         
-        // 如果有重复 IP，检查是否需要通知
         if (duplicateIps.length > 0) {
             const sortedIps = [...duplicateIps].sort();
             const currentKey = sortedIps.join('|');
             const ignoredKey = localStorage.getItem('duplicate_ip_ignored');
             
             if (ignoredKey !== currentKey) {
-                // 构建显示消息（用 HTML 换行）
                 let htmlMessage = '';
                 for (const ip of duplicateIps) {
                     const usersWithIp = users.filter(u => u.registered_ip === ip);
@@ -643,13 +592,9 @@ async function loadUsers() {
                     htmlMessage += `📌 IP: ${displayIp}<br>${userList}<br><br>`;
                 }
                 htmlMessage += 'Please check abnormal users registration activity.';
-                
-                // 存储当前重复 IP 标识到全局变量
                 window._duplicateIpKey = currentKey;
                 
-                // 延迟显示通知
                 setTimeout(() => {
-                    // 先显示纯文本通知（用 \n 作为占位）
                     const plainText = htmlMessage.replace(/<br>/g, '\n');
                     showAmberNotification(
                         '⚠️ Multiple Registered IP Detected',
@@ -657,29 +602,22 @@ async function loadUsers() {
                         'warning'
                     );
                     
-                    // 等待通知出现后，用 HTML 替换内容
                     setTimeout(() => {
                         const notifications = document.querySelectorAll('.notification-amber');
                         if (notifications.length > 0) {
                             const latestNotification = notifications[notifications.length - 1];
-                            // 找到消息区域
                             const messageDiv = latestNotification.querySelector('div[style*="flex: 1"]');
                             if (messageDiv) {
-                                // 找到消息文本所在的元素
                                 const messageTextEl = messageDiv.querySelector('div[style*="font-size: 12px"]');
                                 if (messageTextEl) {
-                                    // 用 innerHTML 替换，显示 HTML 格式
                                     messageTextEl.innerHTML = htmlMessage;
                                 } else {
-                                    // 如果找不到精确的元素，直接替换整个消息区域的内容
                                     const allDivs = messageDiv.querySelectorAll('div');
                                     if (allDivs.length >= 2) {
-                                        // 第二个 div 通常是消息内容
                                         allDivs[1].innerHTML = htmlMessage;
                                     }
                                 }
                                 
-                                // 创建 "Don't show again" 按钮
                                 const btn = document.createElement('button');
                                 btn.textContent = 'Don\'t show again';
                                 btn.style.cssText = `
@@ -714,197 +652,178 @@ async function loadUsers() {
         }
         
         for (let u of users) {
-    const row = tbody.insertRow();
-    row.className = 'user-row';
-    
-    const orderCount = orderCountMap[u.uid] || 0;
-    const ordersLimit = vipLimitMap[u.vip_level] || 30;
-    const vipName = vipNameMap[u.vip_level] || (u.vip_level === 1 ? 'Normal' : u.vip_level === 2 ? 'VIP' : 'SVIP');
-    const pendingAmount = pendingMap[u.uid] || 0;
-    const creditScore = u.credit_score !== undefined && u.credit_score !== null ? u.credit_score : 100;
-    
-    // 1. Phone (索引 0)
-    row.insertCell(0).innerHTML = `<span style="font-size: 12px;">${escapeHtml(u.phone || '-')}</span>`;
-    
-    // 2. User ID (UID) (索引 1)
-    row.insertCell(1).innerHTML = `<span class="badge" style="font-size: 11px;">${escapeHtml(u.uid)}</span>`;
-
-    // 3. Position (索引 2)
-    const roleCell = row.insertCell(2);
-    const userRole = u.user_role || 'User';
-    const roleBadgeColor = userRole === 'Agent' ? '#ffb84d' : '#6a7a9a';
-    roleCell.innerHTML = `<span style="font-size: 11px; color: ${roleBadgeColor}; font-weight: 600;">${userRole}</span>`;
-    
-    // 4. Referrer (索引 3)
-    row.insertCell(3).innerHTML = `<span style="font-size: 12px; color: #8a9abb;">${escapeHtml(u.invited_by_username || '-')}</span>`;
-    
-    // 5. Country（索引 4）
-    const countryName = u.country || 'Unknown';
-    const flagMap = {
-        'Germany': 'de', 'United States': 'us', 'United Kingdom': 'gb',
-        'Italy': 'it', 'China': 'cn', 'France': 'fr', 'Spain': 'es',
-        'Switzerland': 'ch', 'Austria': 'at', 'Netherlands': 'nl',
-        'Belgium': 'be', 'Denmark': 'dk', 'Sweden': 'se', 'Norway': 'no',
-        'Finland': 'fi', 'Portugal': 'pt', 'Greece': 'gr', 'Turkey': 'tr',
-        'Russia': 'ru', 'Japan': 'jp', 'South Korea': 'kr', 'India': 'in',
-        'Brazil': 'br', 'Mexico': 'mx', 'Australia': 'au', 'New Zealand': 'nz',
-        'South Africa': 'za', 'UAE': 'ae', 'Saudi Arabia': 'sa', 'Singapore': 'sg',
-        'Malaysia': 'my', 'Philippines': 'ph', 'Indonesia': 'id', 'Thailand': 'th',
-        'Vietnam': 'vn', 'Taiwan': 'tw', 'Hong Kong': 'hk', 'Macau': 'mo',
-        'Ireland': 'ie', 'Poland': 'pl', 'Czech Republic': 'cz', 'Hungary': 'hu',
-        'Croatia': 'hr', 'Malta': 'mt', 'Cyprus': 'cy', 'Estonia': 'ee',
-        'Latvia': 'lv', 'Lithuania': 'lt', 'Moldova': 'md', 'Monaco': 'mc',
-        'Liechtenstein': 'li', 'Greenland': 'gl', 'Faroe Islands': 'fo',
-        'Iceland': 'is', 'Luxembourg': 'lu', 'Andorra': 'ad', 'Gibraltar': 'gi',
-        'Canada': 'ca', 'Argentina': 'ar', 'Chile': 'cl', 'Colombia': 'co',
-        'Peru': 'pe', 'Venezuela': 've', 'Egypt': 'eg', 'Nigeria': 'ng',
-        'Kenya': 'ke', 'Israel': 'il', 'Pakistan': 'pk', 'Bangladesh': 'bd',
-        'Sri Lanka': 'lk', 'Nepal': 'np', 'Afghanistan': 'af', 'Iraq': 'iq',
-        'Iran': 'ir', 'Saudi Arabia': 'sa', 'Kuwait': 'kw', 'Qatar': 'qa',
-        'Oman': 'om', 'Bahrain': 'bh', 'Lebanon': 'lb', 'Jordan': 'jo'
-    };
-    const countryCode = flagMap[countryName] || 'unknown';
-    const flagUrl = countryCode !== 'unknown' ? `https://flagcdn.com/w40/${countryCode}.png` : null;
-    let countryHtml = '';
-    if (flagUrl && countryName !== 'Unknown') {
-        countryHtml = `<img src="${flagUrl}" class="country-flag-img" onerror="this.style.display='none'" alt=""> <span class="country-name">${countryName}</span>`;
-    } else {
-        countryHtml = `<span style="font-size: 12px; color: #8a9abb;">${countryName}</span>`;
-    }
-    row.insertCell(4).innerHTML = countryHtml;
-    
-    // 6. VIP Level (索引 5) - 只显示下拉，移除标签
-    const vipCell = row.insertCell(5);
-    const vipLevels = [
-        { level: 1, name: 'Normal' },
-        { level: 2, name: 'VIP' },
-        { level: 3, name: 'SVIP' }
-    ];
-    let optionsHtml = '';
-    vipLevels.forEach(v => {
-        const selected = v.level === u.vip_level ? 'selected' : '';
-        optionsHtml += `<option value="${v.level}" ${selected}>${v.name}</option>`;
-    });
-    vipCell.innerHTML = `
-        <select class="vip-select vip-change-select" data-uid="${u.uid}" data-username="${escapeHtml(u.username)}" style="width:80px; background:#0f172a; border:1px solid #1e2a3a; border-radius:6px; padding:4px 6px; color:#fff; font-size:12px; cursor:pointer;">
-            ${optionsHtml}
-        </select>
-    `;
-    
-    // 7. Pending (索引 6)
-    const pendingWithdrawAmount = pendingMap[u.uid] || 0;
-    const amountDue = parseFloat(u.amount_due) || 0;
-    const amountDueRound = parseFloat(u.amount_due_round) || 0;
-    const amountDueOrdersCount = parseFloat(u.amount_due_orders_count) || 0;
-    let totalAmountDue = amountDue + amountDueRound + amountDueOrdersCount;
-    let displayPending = pendingWithdrawAmount;
-    if (totalAmountDue > 0) {
-        displayPending = -totalAmountDue;
-    }
-    const pendingCell = row.insertCell(6);
-    const isNegative = displayPending < 0;
-    pendingCell.innerHTML = `
-        <span style="font-weight: 700; ${isNegative ? 'color: #ff5a5a;' : 'color: #ffb84d;'}">
-            ${isNegative ? '-' : ''}€${Math.abs(displayPending).toFixed(2)}
-        </span>
-        ${isNegative ? '<div style="font-size: 9px; color: #ff5a5a; opacity: 0.7;">Amount Due</div>' : ''}
-    `;
-    
-    // 8. Balance + Deposit + Deduct (索引 7)
-    const balanceCell = row.insertCell(7);
-    balanceCell.innerHTML = `
-        <div class="balance-wrapper">
-            <span class="balance-amount">€${(u.balance || 0).toFixed(2)}</span>
-            <button class="btn-sm btn-deposit deposit-btn" data-uid="${u.uid}" data-username="${escapeHtml(u.username)}" title="Deposit"><i class="fas fa-plus-circle"></i></button>
-            <button class="btn-sm btn-deduct deduct-btn" data-uid="${u.uid}" data-username="${escapeHtml(u.username)}" title="Deduct"><i class="fas fa-minus-circle"></i></button>
-        </div>
-    `;
-    
-    // 9. Round / Orders (索引 8) - 修复按钮被遮挡
-const ordersCell = row.insertCell(8);
-const isPremium = u.is_premium || false;
-const currentRound = u.current_round || 0;
-const roundOrdersCount = u.round_orders_count || 0;
-let roundDisplay = 0;
-let displayCount = 0;
-if (!isPremium) {
-    roundDisplay = 0;
-    displayCount = orderCount;
-} else {
-    roundDisplay = currentRound;
-    displayCount = roundOrdersCount;
-}
-ordersCell.innerHTML = `
-    <div class="orders-wrapper" style="display:flex; align-items:center; gap:3px; flex-wrap:nowrap; min-width:170px;">
-        <span class="round-number" style="font-size:11px; color:#8a9abb; min-width:32px; flex-shrink:0;">(${roundDisplay})</span>
-        <input type="number" class="orders-input round-edit-input" data-uid="${u.uid}" value="${displayCount}" min="0" step="1" title="Edit orders in current round" style="width:45px; background:#0f172a; border:1px solid #1e2a3a; border-radius:4px; padding:2px 4px; color:#fff; font-size:11px; text-align:center; flex-shrink:0;">
-        <span style="color:#6a7a9a; font-size:10px; flex-shrink:0;">/30</span>
-        <button class="btn-sm btn-reset reset-orders-btn" data-uid="${u.uid}" data-username="${escapeHtml(u.username)}" title="Reset Orders" ${!isPremium ? 'disabled' : ''} style="font-size:8px !important; padding:2px 5px !important; white-space:nowrap; flex-shrink:0; background:#7a5f2f; border:none; border-radius:4px; color:#fff; cursor:pointer;"><i class="fas fa-undo-alt"></i></button>
-        <button class="btn-sm btn-save-orders save-round-orders-btn" data-uid="${u.uid}" data-username="${escapeHtml(u.username)}" title="Save Orders" style="font-size:8px !important; padding:2px 5px !important; white-space:nowrap; flex-shrink:0; background:#2f6b3a; border:none; border-radius:4px; color:#fff; cursor:pointer;"><i class="fas fa-save"></i></button>
-    </div>
-`;
-    
-    // 10. Registered IP (索引 9)
-    row.insertCell(9).innerHTML = `<span style="font-size: 11px; color: #8a9abb; font-family: monospace;">${escapeHtml(u.registered_ip || '-')}</span>`;
-    
-    // 11. Last Online (索引 10) - 全部灰色细字体
-const lastOnline = u.last_online || u.updated_at || u.created_at;
-let lastOnlineDisplay = '-';
-if (lastOnline) {
-    const lastDate = new Date(lastOnline);
-    const now = new Date();
-    const diffMins = Math.floor((now - lastDate) / 60000);
-    const diffHours = Math.floor(diffMins / 60);
-    const diffDays = Math.floor(diffHours / 24);
-    
-    if (diffMins < 1) {
-        lastOnlineDisplay = 'Just now';
-    } else if (diffMins < 60) {
-        lastOnlineDisplay = `${diffMins}m ago`;
-    } else if (diffHours < 24) {
-        lastOnlineDisplay = `${diffHours}h ago`;
-    } else if (diffDays < 7) {
-        lastOnlineDisplay = `${diffDays}d ago`;
-    } else {
-        lastOnlineDisplay = lastDate.toLocaleDateString();
-    }
-}
-// 全部灰色，细字体
-row.insertCell(10).innerHTML = `<span style="font-size: 11px; color: #8a9abb; font-weight: 300;">${lastOnlineDisplay}</span>`;
-    
-    // 12. Time Registered (索引 11) - 只显示日期
-    const registerTime = u.created_at ? new Date(u.created_at) : null;
-    row.insertCell(11).innerHTML = `<span style="font-size: 11px; color: #8a9abb;">${registerTime ? registerTime.toLocaleDateString() : '-'}</span>`;
-    
-    // 13. Actions (索引 12)
-    const actionsCell = row.insertCell(12);
-    actionsCell.innerHTML = `
-        <div class="actions-wrapper">
-            <button class="btn-sm btn-edit-user edit-user-btn" 
-                data-uid="${u.uid}" 
-                data-username="${escapeHtml(u.username)}"
-                data-phone="${escapeHtml(u.phone || '')}"
-                data-pin="${escapeHtml(u.pin || '')}"
-                data-currency="${escapeHtml(u.withdrawal_address_type || 'USDT')}"
-                data-address="${escapeHtml(u.withdrawal_address || '')}"
-                data-credit-score="${creditScore}"
-                data-user-role="${escapeHtml(u.user_role || 'User')}"
-                data-withdrawal-frozen="${u.withdrawal_frozen || false}"
-                data-is-banned="${u.is_banned || false}"
-                title="Edit User">
-                <i class="fas fa-edit"></i>
-            </button>
-            <button class="btn-sm btn-delete-user delete-user-btn" 
-                data-uid="${u.uid}" 
-                data-username="${escapeHtml(u.username)}"
-                title="Delete User">
-                <i class="fas fa-trash"></i>
-            </button>
-        </div>
-    `;
-}
+            const row = tbody.insertRow();
+            row.className = 'user-row';
+            
+            const orderCount = orderCountMap[u.uid] || 0;
+            const ordersLimit = vipLimitMap[u.vip_level] || 30;
+            const vipName = vipNameMap[u.vip_level] || (u.vip_level === 1 ? 'Normal' : u.vip_level === 2 ? 'VIP' : 'SVIP');
+            const pendingAmount = pendingMap[u.uid] || 0;
+            const creditScore = u.credit_score !== undefined && u.credit_score !== null ? u.credit_score : 100;
+            const countryAbbr = getCountryAbbreviation(u.country);
+            
+            // ===== 1. Actions (第一列) =====
+            const actionsCell = row.insertCell(0);
+            actionsCell.innerHTML = `
+                <div class="actions-wrapper">
+                    <button class="btn-actions edit-user-btn" 
+                        data-uid="${u.uid}" 
+                        data-username="${escapeHtml(u.username)}"
+                        data-phone="${escapeHtml(u.phone || '')}"
+                        data-pin="${escapeHtml(u.pin || '')}"
+                        data-currency="${escapeHtml(u.withdrawal_address_type || 'USDT')}"
+                        data-address="${escapeHtml(u.withdrawal_address || '')}"
+                        data-credit-score="${creditScore}"
+                        data-user-role="${escapeHtml(u.user_role || 'User')}"
+                        data-withdrawal-frozen="${u.withdrawal_frozen || false}"
+                        data-is-banned="${u.is_banned || false}"
+                        title="Edit User">
+                        <i class="fas fa-cog"></i> Actions
+                    </button>
+                </div>
+            `;
+            
+            // ===== 2. Phone (第二列) =====
+            row.insertCell(1).innerHTML = `<span class="phone-text">${escapeHtml(u.phone || '-')}</span>`;
+            
+            // ===== 3. User ID (第三列) =====
+            row.insertCell(2).innerHTML = `<span class="uid-text">${escapeHtml(u.uid)}</span>`;
+            
+            // ===== 4. Position (第四列) =====
+            const roleCell = row.insertCell(3);
+            const userRole = u.user_role || 'User';
+            const roleBadgeColor = userRole === 'Agent' ? '#c8b090' : 'rgba(255,255,255,0.15)';
+            roleCell.innerHTML = `<span class="position-text" style="color: ${roleBadgeColor};">${userRole}</span>`;
+            
+            // ===== 5. Referrer (第五列) =====
+            row.insertCell(4).innerHTML = `<span class="referrer-text">${escapeHtml(u.invited_by_username || '-')}</span>`;
+            
+            // ===== 6. Country (第六列) =====
+            row.insertCell(5).innerHTML = `<span class="country-abbr">${countryAbbr}</span>`;
+            
+            // ===== 7. VIP (第七列) =====
+            const vipCell = row.insertCell(6);
+            const vipLevels = [
+                { level: 1, name: 'Normal' },
+                { level: 2, name: 'VIP' },
+                { level: 3, name: 'SVIP' }
+            ];
+            let optionsHtml = '';
+            vipLevels.forEach(v => {
+                const selected = v.level === u.vip_level ? 'selected' : '';
+                optionsHtml += `<option value="${v.level}" ${selected}>${v.name}</option>`;
+            });
+            vipCell.innerHTML = `
+                <select class="vip-select vip-change-select" data-uid="${u.uid}" data-username="${escapeHtml(u.username)}">
+                    ${optionsHtml}
+                </select>
+            `;
+            
+            // ===== 8. Pending (第八列) =====
+            const pendingWithdrawAmount = pendingMap[u.uid] || 0;
+            const amountDue = parseFloat(u.amount_due) || 0;
+            const amountDueRound = parseFloat(u.amount_due_round) || 0;
+            const amountDueOrdersCount = parseFloat(u.amount_due_orders_count) || 0;
+            let totalAmountDue = amountDue + amountDueRound + amountDueOrdersCount;
+            let displayPending = pendingWithdrawAmount;
+            if (totalAmountDue > 0) {
+                displayPending = -totalAmountDue;
+            }
+            const pendingCell = row.insertCell(7);
+            const isNegative = displayPending < 0;
+            pendingCell.innerHTML = `
+                <span class="pending-amount ${isNegative ? 'pending-negative' : 'pending-positive'}">
+                    ${isNegative ? '-' : ''}€${Math.abs(displayPending).toFixed(2)}
+                </span>
+                ${isNegative ? '<div style="font-size: 8px; color: #e88080; opacity: 0.5; margin-top: 1px;">Due</div>' : ''}
+            `;
+            
+            // ===== 9. Balance (第九列) =====
+            const balanceCell = row.insertCell(8);
+            balanceCell.innerHTML = `
+                <div class="balance-wrapper">
+                    <span class="balance-amount">€${(u.balance || 0).toFixed(2)}</span>
+                    <button class="btn-sm btn-deposit deposit-btn" data-uid="${u.uid}" data-username="${escapeHtml(u.username)}" title="Deposit"><i class="fas fa-plus-circle"></i></button>
+                    <button class="btn-sm btn-deduct deduct-btn" data-uid="${u.uid}" data-username="${escapeHtml(u.username)}" title="Deduct"><i class="fas fa-minus-circle"></i></button>
+                </div>
+            `;
+            
+            // ===== 10. Round / Orders (第十列) =====
+            const ordersCell = row.insertCell(9);
+            const isPremium = u.is_premium || false;
+            const currentRound = u.current_round || 0;
+            const roundOrdersCount = u.round_orders_count || 0;
+            let roundDisplay = 0;
+            let displayCount = 0;
+            if (!isPremium) {
+                roundDisplay = 0;
+                displayCount = orderCount;
+            } else {
+                roundDisplay = currentRound;
+                displayCount = roundOrdersCount;
+            }
+            ordersCell.innerHTML = `
+                <div class="orders-wrapper">
+                    <span class="round-number">(${roundDisplay})</span>
+                    <input type="number" class="orders-input round-edit-input" data-uid="${u.uid}" value="${displayCount}" min="0" step="1" title="Edit orders in current round">
+                    <span class="orders-slash">/30</span>
+                    <button class="btn-sm btn-reset reset-orders-btn" data-uid="${u.uid}" data-username="${escapeHtml(u.username)}" title="Reset Orders" ${!isPremium ? 'disabled style="opacity:0.2;cursor:not-allowed;"' : ''}><i class="fas fa-undo-alt"></i></button>
+                    <button class="btn-sm btn-save-orders save-round-orders-btn" data-uid="${u.uid}" data-username="${escapeHtml(u.username)}" title="Save Orders"><i class="fas fa-save"></i></button>
+                </div>
+            `;
+            
+            // ===== 11. Registered IP (第十一列) =====
+            row.insertCell(10).innerHTML = `<span class="ip-text">${escapeHtml(u.registered_ip || '-')}</span>`;
+            
+            // ===== 12. Last Online (第十二列) =====
+            const lastOnline = u.last_online || u.updated_at || u.created_at;
+            let lastOnlineDisplay = '-';
+            if (lastOnline) {
+                const lastDate = new Date(lastOnline);
+                const now = new Date();
+                const diffMins = Math.floor((now - lastDate) / 60000);
+                const diffHours = Math.floor(diffMins / 60);
+                const diffDays = Math.floor(diffHours / 24);
+                
+                if (diffMins < 1) {
+                    lastOnlineDisplay = 'Just now';
+                } else if (diffMins < 60) {
+                    lastOnlineDisplay = `${diffMins}m ago`;
+                } else if (diffHours < 24) {
+                    lastOnlineDisplay = `${diffHours}h ago`;
+                } else if (diffDays < 7) {
+                    lastOnlineDisplay = `${diffDays}d ago`;
+                } else {
+                    lastOnlineDisplay = lastDate.toLocaleDateString();
+                }
+            }
+            row.insertCell(11).innerHTML = `<span class="last-online-text">${lastOnlineDisplay}</span>`;
+            
+            // ===== 13. REG/DATE (第十三列) =====
+            const registerTime = u.created_at ? new Date(u.created_at) : null;
+            row.insertCell(12).innerHTML = `<span class="reg-date-text">${registerTime ? registerTime.toLocaleDateString() : '-'}</span>`;
+        }
         
-        // ========== 绑定事件 - VIP 下拉 ==========
+        // ========== 绑定事件 ==========
+        
+        // Actions 按钮 -> 打开 Edit User 弹窗
+        document.querySelectorAll('.edit-user-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const uid = btn.dataset.uid;
+                const username = btn.dataset.username;
+                const phone = btn.dataset.phone;
+                const pin = btn.dataset.pin;
+                const currency = btn.dataset.currency;
+                const address = btn.dataset.address;
+                const creditScore = btn.dataset.creditScore || 100;
+                const userRole = btn.dataset.userRole || 'User';
+                const withdrawalFrozen = btn.dataset.withdrawalFrozen === 'true';
+                const isBanned = btn.dataset.isBanned === 'true';
+                openEditUserModal(uid, username, phone, pin, currency, address, creditScore, userRole, withdrawalFrozen, isBanned);
+            });
+        });
+        
+        // VIP 下拉
         document.querySelectorAll('.vip-change-select').forEach(sel => {
             sel.addEventListener('change', () => {
                 const uid = sel.dataset.uid;
@@ -914,7 +833,7 @@ row.insertCell(10).innerHTML = `<span style="font-size: 11px; color: #8a9abb; fo
             });
         });
         
-        // ========== 绑定事件 - Deposit 按钮 ==========
+        // Deposit
         document.querySelectorAll('.deposit-btn').forEach(btn => {
             btn.addEventListener('click', () => {
                 const uid = btn.dataset.uid;
@@ -922,17 +841,17 @@ row.insertCell(10).innerHTML = `<span style="font-size: 11px; color: #8a9abb; fo
                 depositBalance(uid, username);
             });
         });
-
-// ========== 绑定事件 - Deduct 按钮 ==========
-document.querySelectorAll('.deduct-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-        const uid = btn.dataset.uid;
-        const username = btn.dataset.username;
-        deductBalance(uid, username);
-    });
-});
         
-        // ========== 绑定事件 - Reset Orders 按钮（递进 Round） ==========
+        // Deduct
+        document.querySelectorAll('.deduct-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const uid = btn.dataset.uid;
+                const username = btn.dataset.username;
+                deductBalance(uid, username);
+            });
+        });
+        
+        // Reset Orders
         document.querySelectorAll('.reset-orders-btn').forEach(btn => {
             btn.addEventListener('click', () => {
                 const uid = btn.dataset.uid;
@@ -941,7 +860,7 @@ document.querySelectorAll('.deduct-btn').forEach(btn => {
             });
         });
         
-        // ========== 绑定事件 - Save Round Orders 按钮 ==========
+        // Save Round Orders
         document.querySelectorAll('.save-round-orders-btn').forEach(btn => {
             btn.addEventListener('click', () => {
                 const uid = btn.dataset.uid;
@@ -952,13 +871,13 @@ document.querySelectorAll('.deduct-btn').forEach(btn => {
                     if (!isNaN(newValue) && newValue >= 0 && newValue <= 30) {
                         saveRoundOrders(uid, username, newValue);
                     } else {
-                        showToast('请输入 0-30 之间的有效数字', 'error');
+                        showToast('Please enter a valid number between 0-30', 'error');
                     }
                 }
             });
         });
         
-        // ========== 绑定事件 - Round Edit Input Enter ==========
+        // Round Edit Input Enter
         document.querySelectorAll('.round-edit-input').forEach(input => {
             input.addEventListener('keypress', function(e) {
                 if (e.key === 'Enter') {
@@ -969,47 +888,21 @@ document.querySelectorAll('.deduct-btn').forEach(btn => {
             });
         });
         
-        // ========== 绑定事件 - Edit Users ==========
-document.querySelectorAll('.edit-user-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-        const uid = btn.dataset.uid;
-        const username = btn.dataset.username;
-        const phone = btn.dataset.phone;
-        const pin = btn.dataset.pin;
-        const currency = btn.dataset.currency;
-        const address = btn.dataset.address;
-        const creditScore = btn.dataset.creditScore || 100;
-        const userRole = btn.dataset.userRole || 'User';
-        const withdrawalFrozen = btn.dataset.withdrawalFrozen === 'true';
-        const isBanned = btn.dataset.isBanned === 'true';
-        openEditUserModal(uid, username, phone, pin, currency, address, creditScore, userRole, withdrawalFrozen, isBanned);
-    });
-});
-        
-        // ========== 绑定事件 - Delete User ==========
-        document.querySelectorAll('.delete-user-btn').forEach(btn => {
-            btn.addEventListener('click', () => {
-                const uid = btn.dataset.uid;
-                const username = btn.dataset.username;
-                deleteUser(uid, username);
-            });
-        });
-        
         renderUserPagination();
-
-// 🔥 添加虚拟滚动优化
-    if (window.PerformanceOptimizer) {
-        const container = document.querySelector('.table-container');
-        if (container) {
-            setTimeout(function() {
-                window.PerformanceOptimizer.enableVirtualScroll(container);
-            }, 100);
+        
+        // Virtual scroll
+        if (window.PerformanceOptimizer) {
+            const container = document.querySelector('.table-container');
+            if (container) {
+                setTimeout(function() {
+                    window.PerformanceOptimizer.enableVirtualScroll(container);
+                }, 100);
+            }
         }
-    }
         
     } catch (e) {
         console.error('加载用户失败:', e);
-        tbody.innerHTML = `<tr><td colspan="13" style="text-align:center; padding:40px; color:#ff8888;">加载失败: ${escapeHtml(e.message)}</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="13" style="text-align:center; padding:40px; color:#e88080;">加载失败: ${escapeHtml(e.message)}</td></tr>`;
     }
 }
 
@@ -1076,7 +969,6 @@ async function deductBalance(uid, username) {
                 .update({ balance: newBalance })
                 .eq('uid', uid);
             
-            // 记录扣除记录
             await sb.from('deposits').insert([{ 
                 uid: uid, 
                 username: username, 
@@ -1151,11 +1043,9 @@ async function processDeposit(uid, username, depositAmount, rewardAmount, reward
         
         showToast(`✅ Success! ${message} Current balance: €${newBalance.toFixed(2)}`, 'success');
         
-        // 刷新后台数据
         loadUsers();
         if (window.loadDashboardPage) window.loadDashboardPage(currentDays);
         
-        // 🔥 触发 start.html 刷新（通过 localStorage 事件）
         localStorage.setItem('refresh_start_page', Date.now().toString());
         console.log('✅ 已触发 start.html 刷新');
         
@@ -1164,10 +1054,9 @@ async function processDeposit(uid, username, depositAmount, rewardAmount, reward
     }
 }
 
-// ========== 保存 Round Orders（直接修改 order_history） ==========
+// ========== 保存 Round Orders ==========
 async function saveRoundOrders(uid, username, newCount) {
     try {
-        // 获取当前 order_history 中的订单数
         const { data: currentOrders, error: countError } = await sb
             .from('order_history')
             .select('id')
@@ -1178,7 +1067,6 @@ async function saveRoundOrders(uid, username, newCount) {
         
         const currentCount = currentOrders?.length || 0;
         
-        // 如果新数量大于当前数量，添加订单
         if (newCount > currentCount) {
             const diff = newCount - currentCount;
             const inserts = [];
@@ -1201,7 +1089,6 @@ async function saveRoundOrders(uid, username, newCount) {
             if (insertError) throw insertError;
             showToast(`✅ 添加了 ${diff} 个订单，当前共 ${newCount} 单`, 'success');
         }
-        // 如果新数量小于当前数量，删除最旧的订单
         else if (newCount < currentCount) {
             const diff = currentCount - newCount;
             const { data: ordersToDelete } = await sb
@@ -1225,7 +1112,6 @@ async function saveRoundOrders(uid, username, newCount) {
             return;
         }
         
-        // 同步更新 round_orders_count
         await sb
             .from('users')
             .update({ round_orders_count: newCount })
@@ -1239,7 +1125,7 @@ async function saveRoundOrders(uid, username, newCount) {
     }
 }
 
-// ========== 重置用户订单（Reset Round） ==========
+// ========== 重置用户订单 ==========
 async function resetUserOrders(uid, username) {
     const { data: user } = await sb
         .from('users')
@@ -1265,11 +1151,8 @@ async function resetUserOrders(uid, username) {
         return;
     }
     
-    // ✅ 删除 Round 2 提前返回的逻辑
-    
     showConfirm('⚠️ Confirm Reset', `确定要重置用户 ${username} (UID: ${uid}) 到下一轮吗？\n\n当前 Round: ${currentRound}\n当前轮订单数: ${roundOrdersCount}/30`, async () => {
         try {
-            // 🔥 Round 2 → Round 1（循环）
             let nextRound;
             if (currentRound === 2) {
                 nextRound = 1;
@@ -1293,39 +1176,8 @@ async function resetUserOrders(uid, username) {
     });
 }
 
-// ========== 删除用户 ==========
-async function deleteUser(uid, username) {
-    showConfirm(
-        '⚠️ Delete User', 
-        `Are you sure you want to permanently delete user <strong>${escapeHtml(username)}</strong> (UID: ${uid})?<br><br>This will also delete:<br>• Account information<br>• Order history<br>• Deposit records<br>• Withdrawal records<br>• KYC verification records<br><br><span style="color: #ff5a5a;">This action cannot be undone!</span>`,
-        async () => {
-            try {
-                showToast('Deleting user data...', 'info');
-                await sb.from('order_history').delete().eq('uid', uid);
-                await sb.from('deposits').delete().eq('uid', uid);
-                await sb.from('withdrawals').delete().eq('uid', uid);
-                await sb.from('kyc_verifications').delete().eq('uid', uid);
-                await sb.from('user_kyc_status').delete().eq('uid', uid);
-                await sb.from('user_trigger_orders').delete().eq('uid', uid);
-                const { error: userError } = await sb
-                    .from('users')
-                    .delete()
-                    .eq('uid', uid);
-                if (userError) throw userError;
-                showToast(`✅ User ${username} has been permanently deleted`, 'success');
-                loadUsers();
-                if (window.loadDashboardPage) window.loadDashboardPage(currentDays);
-            } catch (e) {
-                console.error('Delete user failed:', e);
-                showToast('Delete failed: ' + e.message, 'error');
-            }
-        }
-    );
-}
-
-// ========== 打开编辑用户弹窗（深空金属 - 完整功能版） ==========
+// ========== 打开编辑用户弹窗 ==========
 function openEditUserModal(uid, username, phone, pin, currency, address, creditScore, userRole, withdrawalFrozen, isBanned) {
-    // 防止多次快速点击
     if (document.getElementById('editUserModal')) {
         return;
     }
@@ -1337,9 +1189,9 @@ function openEditUserModal(uid, username, phone, pin, currency, address, creditS
     const initialScore = creditScore || 100;
     const roleDisplay = userRole || 'User';
     const statusText = withdrawalFrozen ? 'Freeze' : 'Active';
-    const statusColor = withdrawalFrozen ? '#ff5a5a' : '#4ade80';
+    const statusColor = withdrawalFrozen ? '#e88080' : '#7ad0b0';
     const banButtonText = isBanned ? 'Release Ban User' : 'Ban User';
-    const banButtonColor = isBanned ? '#4ade80' : '#ff6b6b';
+    const banButtonColor = isBanned ? '#7ad0b0' : '#e88080';
 
     const modalHtml = `
         <div id="editUserModal" class="modal-overlay" style="visibility: visible; opacity: 1; display: flex; align-items: center; justify-content: center; z-index: 9999;">
@@ -1371,7 +1223,7 @@ function openEditUserModal(uid, username, phone, pin, currency, address, creditS
                         <div style="display: flex; gap: 16px; margin-top: 4px; font-size: 11px; flex-wrap: wrap;">
                             <span style="color: #6a6a80;"><i class="fas fa-phone" style="color: #6a6a80; width: 14px; font-size: 11px;"></i> ${escapeHtml(phone || 'Not Set')}</span>
                             <span style="color: #6a6a80;"><i class="fas fa-shield-alt" style="color: #6a6a80; width: 14px; font-size: 11px;"></i> Credit: <strong style="color: #e8e8f0;" id="creditScoreDisplayHeader">${initialScore}</strong></span>
-                            <span style="color: #6a6a80;"><i class="fas fa-user-tag" style="color: #6a6a80; width: 14px; font-size: 11px;"></i> Position: <strong style="color: ${roleDisplay === 'Agent' ? '#ffb84d' : '#6a6a80'};">${roleDisplay}</strong></span>
+                            <span style="color: #6a6a80;"><i class="fas fa-user-tag" style="color: #6a6a80; width: 14px; font-size: 11px;"></i> Position: <strong style="color: ${roleDisplay === 'Agent' ? '#c8b090' : '#6a6a80'};">${roleDisplay}</strong></span>
                         </div>
                     </div>
                     <button onclick="closeEditUserModal()" style="background: rgba(255,255,255,0.03); border: 1px solid rgba(180,180,200,0.06); color: #5a5a6a; font-size: 16px; cursor: pointer; padding: 2px 8px; border-radius: 6px;">&times;</button>
@@ -1416,11 +1268,11 @@ function openEditUserModal(uid, username, phone, pin, currency, address, creditS
                             <div style="font-size: 9px; color: #5a5a6a;">Reset user's phone number</div>
                         </div>
                         <div onclick="promoteToAdmin('${uid}')" style="background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(180, 180, 200, 0.05); border-radius: 8px; padding: 8px 12px; cursor: pointer; transition: 0.2s;">
-                            <div style="font-weight: 500; color: #ffb84d; font-size: 12px;">${roleDisplay === 'Agent' ? 'Demote to User' : 'Promote Admin'}</div>
+                            <div style="font-weight: 500; color: #c8b090; font-size: 12px;">${roleDisplay === 'Agent' ? 'Demote to User' : 'Promote Admin'}</div>
                             <div style="font-size: 9px; color: #5a5a6a;">${roleDisplay === 'Agent' ? 'Remove admin privileges' : 'Allow user to view downline data'}</div>
                         </div>
                         <div onclick="freezeUserWithdrawal('${uid}')" style="background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(180, 180, 200, 0.05); border-radius: 8px; padding: 8px 12px; cursor: pointer; transition: 0.2s;">
-                            <div style="font-weight: 500; color: ${withdrawalFrozen ? '#4ade80' : '#e8e8f0'}; font-size: 12px;">${withdrawalFrozen ? 'Unfreeze Withdrawal' : 'Freeze Withdrawal'}</div>
+                            <div style="font-weight: 500; color: ${withdrawalFrozen ? '#7ad0b0' : '#e8e8f0'}; font-size: 12px;">${withdrawalFrozen ? 'Unfreeze Withdrawal' : 'Freeze Withdrawal'}</div>
                             <div style="font-size: 9px; color: #5a5a6a;">${withdrawalFrozen ? 'Restore withdrawal access' : 'Block this user from withdrawing'}</div>
                         </div>
                         <div onclick="toggleBanUser('${uid}')" style="background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(180, 180, 200, 0.05); border-radius: 8px; padding: 8px 12px; cursor: pointer; transition: 0.2s;">
@@ -1437,7 +1289,7 @@ function openEditUserModal(uid, username, phone, pin, currency, address, creditS
                         <span style="font-size:16px; font-weight:700; color:#e8e8f0;" id="creditScoreValue">${initialScore}</span>
                     </div>
                     <div style="width:100%; height:4px; border-radius:3px; background:rgba(255,255,255,0.06); overflow:hidden;">
-                        <div id="creditScoreFill" style="width:${initialScore}%; height:100%; border-radius:3px; background:${initialScore >= 95 ? '#4ade80' : '#ff5a5a'};"></div>
+                        <div id="creditScoreFill" style="width:${initialScore}%; height:100%; border-radius:3px; background:${initialScore >= 95 ? '#7ad0b0' : '#e88080'};"></div>
                     </div>
                     <input type="range" min="0" max="100" value="${initialScore}" 
                            style="position:absolute; top:0; left:0; width:100%; height:100%; opacity:0; cursor:pointer; z-index:2;"
@@ -1446,15 +1298,18 @@ function openEditUserModal(uid, username, phone, pin, currency, address, creditS
                         <span>0</span><span>100</span>
                     </div>
                     <div style="display:flex; gap:10px; margin-top:2px; font-size:8px;">
-                        <span style="color:#4ade80;">● ≥95</span>
-                        <span style="color:#ff5a5a;">● &lt;95</span>
+                        <span style="color:#7ad0b0;">● ≥95</span>
+                        <span style="color:#e88080;">● &lt;95</span>
                     </div>
                 </div>
 
-                <!-- 底部按钮 -->
+                <!-- 底部按钮：Delete User 放在 Save Changes 左侧 -->
                 <div style="display: flex; gap: 10px; justify-content: flex-end; border-top: 1px solid rgba(180, 180, 200, 0.06); padding-top: 12px; position: relative; z-index: 1;">
-                    <button onclick="closeEditUserModal()" style="background: rgba(255,255,255,0.03); border: 1px solid rgba(180,180,200,0.06); padding: 6px 22px; border-radius: 40px; color: #6a6a80; font-weight: 500; cursor: pointer; font-size: 12px; transition: 0.2s;">Close</button>
-                    <button onclick="saveEditUser('${uid}')" style="background: linear-gradient(145deg, #3a3a5a, #2a2a4a); border: none; padding: 6px 22px; border-radius: 40px; color: #e8e8f0; font-weight: 600; cursor: pointer; font-size: 12px; transition: 0.2s;">Save Changes</button>
+                    <button onclick="deleteUserFromModal('${uid}', '${escapeHtml(username)}')" style="background: rgba(232,128,128,0.08); border: 1px solid rgba(232,128,128,0.1); padding: 6px 18px; border-radius: 40px; color: #e88080; font-weight: 500; cursor: pointer; font-size: 11px; transition: 0.2s; font-family: 'Inter', sans-serif;">
+                        <i class="fas fa-trash"></i> Delete User
+                    </button>
+                    <button onclick="closeEditUserModal()" style="background: rgba(255,255,255,0.03); border: 1px solid rgba(180,180,200,0.06); padding: 6px 22px; border-radius: 40px; color: #6a6a80; font-weight: 500; cursor: pointer; font-size: 12px; transition: 0.2s; font-family: 'Inter', sans-serif;">Close</button>
+                    <button onclick="saveEditUser('${uid}')" style="background: linear-gradient(145deg, #3a3a5a, #2a2a4a); border: none; padding: 6px 22px; border-radius: 40px; color: #e8e8f0; font-weight: 600; cursor: pointer; font-size: 12px; transition: 0.2s; font-family: 'Inter', sans-serif;">Save Changes</button>
                 </div>
             </div>
         </div>
@@ -1464,12 +1319,38 @@ function openEditUserModal(uid, username, phone, pin, currency, address, creditS
     fetchUserFinancialStats(uid);
 }
 
-// ============================================================
-// 更新信用分 - 进度条双色切换
-// ============================================================
-// ============================================================
-// 更新信用分 - 双色切换（性能优化版）
-// ============================================================
+// ===== Delete User from Modal =====
+async function deleteUserFromModal(uid, username) {
+    closeEditUserModal();
+    showConfirm(
+        '⚠️ Delete User', 
+        `Are you sure you want to permanently delete user <strong>${escapeHtml(username)}</strong> (UID: ${uid})?<br><br>This will also delete:<br>• Account information<br>• Order history<br>• Deposit records<br>• Withdrawal records<br>• KYC verification records<br><br><span style="color: #e88080;">This action cannot be undone!</span>`,
+        async () => {
+            try {
+                showToast('Deleting user data...', 'info');
+                await sb.from('order_history').delete().eq('uid', uid);
+                await sb.from('deposits').delete().eq('uid', uid);
+                await sb.from('withdrawals').delete().eq('uid', uid);
+                await sb.from('kyc_verifications').delete().eq('uid', uid);
+                await sb.from('user_kyc_status').delete().eq('uid', uid);
+                await sb.from('user_trigger_orders').delete().eq('uid', uid);
+                const { error: userError } = await sb
+                    .from('users')
+                    .delete()
+                    .eq('uid', uid);
+                if (userError) throw userError;
+                showToast(`✅ User ${username} has been permanently deleted`, 'success');
+                loadUsers();
+                if (window.loadDashboardPage) window.loadDashboardPage(currentDays);
+            } catch (e) {
+                console.error('Delete user failed:', e);
+                showToast('Delete failed: ' + e.message, 'error');
+            }
+        }
+    );
+}
+
+// ===== Credit Score Update =====
 let creditScoreUpdatePending = false;
 let pendingScoreValue = 0;
 
@@ -1477,13 +1358,11 @@ function updateCreditScore(value) {
     const score = parseInt(value);
     pendingScoreValue = score;
     
-    // 立即更新显示的数字（轻量操作）
     const display = document.getElementById('creditScoreValue');
     const headerDisplay = document.getElementById('creditScoreDisplayHeader');
     if (display) display.textContent = score;
     if (headerDisplay) headerDisplay.textContent = score;
     
-    // 使用 requestAnimationFrame 批量更新样式（避免布局抖动）
     if (!creditScoreUpdatePending) {
         creditScoreUpdatePending = true;
         requestAnimationFrame(function() {
@@ -1491,14 +1370,210 @@ function updateCreditScore(value) {
             if (fill) {
                 const currentScore = pendingScoreValue;
                 fill.style.width = currentScore + '%';
-                fill.style.background = currentScore >= 95 ? '#4ade80' : '#ff5a5a';
+                fill.style.background = currentScore >= 95 ? '#7ad0b0' : '#e88080';
             }
             creditScoreUpdatePending = false;
         });
     }
 }
 
-// ========== 分页渲染 ==========
+// ===== Save Edit User =====
+async function saveEditUser(uid) {
+    const creditScore = document.getElementById('creditScoreSlider').value;
+    
+    try {
+        const { error } = await sb
+            .from('users')
+            .update({ credit_score: parseInt(creditScore) })
+            .eq('uid', uid);
+        
+        if (error) throw error;
+        showToast(`用户 ${uid} 的信誉分已更新为 ${creditScore}`, 'success');
+        closeEditUserModal();
+        loadUsers();
+    } catch (e) {
+        showToast('保存失败: ' + e.message, 'error');
+    }
+}
+
+// ===== Close Edit User Modal =====
+function closeEditUserModal() {
+    const modal = document.getElementById('editUserModal');
+    if (modal) modal.remove();
+    document.body.style.overflow = '';
+}
+
+// ===== Fetch User Financial Stats =====
+let financialStatsTimeout = null;
+
+async function fetchUserFinancialStats(uid) {
+    if (financialStatsTimeout) {
+        clearTimeout(financialStatsTimeout);
+        financialStatsTimeout = null;
+    }
+    
+    financialStatsTimeout = setTimeout(async () => {
+        try {
+            const [depositsResult, withdrawalsResult] = await Promise.all([
+                sb.from('deposits').select('amount').eq('uid', uid),
+                sb.from('withdrawals').select('amount').eq('uid', uid).eq('status', 'approved')
+            ]);
+            
+            if (depositsResult.error) throw depositsResult.error;
+            if (withdrawalsResult.error) throw withdrawalsResult.error;
+            
+            const totalDeposit = depositsResult.data.reduce((sum, d) => sum + (d.amount || 0), 0);
+            const totalWithdrawal = withdrawalsResult.data.reduce((sum, w) => sum + (w.amount || 0), 0);
+            
+            const depositDisplay = document.getElementById('totalDepositDisplay');
+            const withdrawalDisplay = document.getElementById('totalWithdrawalDisplay');
+            if (depositDisplay) depositDisplay.textContent = `€${totalDeposit.toFixed(2)}`;
+            if (withdrawalDisplay) withdrawalDisplay.textContent = `€${totalWithdrawal.toFixed(2)}`;
+            
+        } catch (error) {
+            console.error('获取用户财务数据失败:', error);
+        } finally {
+            financialStatsTimeout = null;
+        }
+    }, 200);
+}
+
+// ===== Account Actions =====
+async function resetWithdrawalPin(uid) {
+    showConfirm('Reset Withdrawal PIN', `确定要重置用户 ${uid} 的提现PIN吗？`, async () => {
+        try {
+            const { error } = await sb
+                .from('users')
+                .update({ pin: '0000' })
+                .eq('uid', uid);
+            if (error) throw error;
+            showToast('提现PIN已重置为 0000', 'success');
+            closeEditUserModal();
+            loadUsers();
+        } catch (e) {
+            showToast('重置失败: ' + e.message, 'error');
+        }
+    });
+}
+
+async function resetUserPassword(uid) {
+    showPrompt('Reset Password', '请输入新密码 (至少4位):', async (newPassword) => {
+        if (!newPassword) return;
+        if (newPassword.length < 4) {
+            showToast('密码至少需要4位', 'error');
+            return;
+        }
+        try {
+            const { error } = await sb
+                .from('users')
+                .update({ password: newPassword })
+                .eq('uid', uid);
+            if (error) throw error;
+            showToast('密码已重置', 'success');
+            closeEditUserModal();
+            loadUsers();
+        } catch (e) {
+            showToast('重置失败: ' + e.message, 'error');
+        }
+    });
+}
+
+async function resetUserPhone(uid) {
+    showPrompt('Reset Phone Number', '请输入新的手机号:', async (newPhone) => {
+        if (!newPhone) return;
+        try {
+            const { error } = await sb
+                .from('users')
+                .update({ phone: newPhone })
+                .eq('uid', uid);
+            if (error) throw error;
+            showToast('手机号已更新', 'success');
+            closeEditUserModal();
+            loadUsers();
+        } catch (e) {
+            showToast('更新失败: ' + e.message, 'error');
+        }
+    });
+}
+
+async function promoteToAdmin(uid) {
+    const { data: user } = await sb.from('users').select('user_role').eq('uid', uid).single();
+    const currentRole = user?.user_role || 'User';
+    const newRole = currentRole === 'Agent' ? 'User' : 'Agent';
+    const actionText = newRole === 'Agent' ? 'Promote to Admin' : 'Downgrade to User';
+    
+    showConfirm('Promote Admin', `确定要${actionText}用户 ${uid} 吗？`, async () => {
+        try {
+            const { error } = await sb
+                .from('users')
+                .update({ user_role: newRole })
+                .eq('uid', uid);
+            if (error) throw error;
+            showToast(`✅ 用户已${actionText}`, 'success');
+            closeEditUserModal();
+            loadUsers();
+        } catch (e) {
+            showToast('操作失败: ' + e.message, 'error');
+        }
+    });
+}
+
+async function freezeUserWithdrawal(uid) {
+    const { data: user } = await sb.from('users').select('withdrawal_frozen').eq('uid', uid).single();
+    const currentStatus = user?.withdrawal_frozen || false;
+    const actionText = currentStatus ? 'Unfreeze' : 'Freeze';
+    
+    showConfirm('Freeze Withdrawal', `确定要${actionText}用户 ${uid} 的提款权限吗？`, async () => {
+        try {
+            const { error } = await sb
+                .from('users')
+                .update({ withdrawal_frozen: !currentStatus })
+                .eq('uid', uid);
+            if (error) throw error;
+            showToast(`✅ 提款权限已${actionText}`, 'success');
+            closeEditUserModal();
+            loadUsers();
+        } catch (e) {
+            showToast('操作失败: ' + e.message, 'error');
+        }
+    });
+}
+
+async function toggleBanUser(uid) {
+    const { data: user } = await sb.from('users').select('is_banned').eq('uid', uid).single();
+    const isBanned = user?.is_banned || false;
+    const actionText = isBanned ? 'Ban User' : 'Release User';
+    
+    showConfirm(isBanned ? 'Release Ban User' : 'Ban User', 
+        isBanned ? `确定要解封用户 ${uid} 吗？` : `Are you sure to ban user ${uid} ？此操作将禁用该用户的登录。`, 
+        async () => {
+            try {
+                const { error } = await sb
+                    .from('users')
+                    .update({ is_banned: !isBanned })
+                    .eq('uid', uid);
+                if (error) throw error;
+                showToast(`✅ 用户已${actionText}`, 'success');
+                closeEditUserModal();
+                loadUsers();
+            } catch (e) {
+                showToast('操作失败: ' + e.message, 'error');
+            }
+        }
+    );
+}
+
+// ===== IP 重复检测 - Don't show again =====
+function dismissDuplicateIpAlert() {
+    const key = window._duplicateIpKey;
+    if (key) {
+        localStorage.setItem('duplicate_ip_ignored', key);
+        console.log('✅ IP 重复检测已忽略，当前标识:', key);
+    }
+    document.querySelectorAll('.notification-amber').forEach(el => el.remove());
+}
+
+// ===== 分页渲染 =====
 function renderUserPagination() {
     const container = document.getElementById('userPagination');
     if (!container) return;
@@ -1549,7 +1624,7 @@ function escapeHtml(str) {
     });
 }
 
-// ========== 创建用户 ==========
+// ===== 创建用户 =====
 document.getElementById('createUserBtn')?.addEventListener('click', async () => {
     const phone = document.getElementById('newPhone').value.trim();
     const username = document.getElementById('newUsername').value.trim();
@@ -1612,223 +1687,3 @@ document.getElementById('closeUserModalBtn')?.addEventListener('click', () => {
 });
 
 window.loadUsersPage = loadUsersPage;
-
-// ========== IP 重复检测 - Don't show again ==========
-function dismissDuplicateIpAlert() {
-    const key = window._duplicateIpKey;
-    if (key) {
-        localStorage.setItem('duplicate_ip_ignored', key);
-        console.log('✅ IP 重复检测已忽略，当前标识:', key);
-    }
-    // 关闭所有琥珀通知
-    document.querySelectorAll('.notification-amber').forEach(el => el.remove());
-}
-
-// ============================================================
-// 获取用户的财务统计数据（带防抖）
-// ============================================================
-let financialStatsTimeout = null;
-
-async function fetchUserFinancialStats(uid) {
-    // 取消之前的请求
-    if (financialStatsTimeout) {
-        clearTimeout(financialStatsTimeout);
-        financialStatsTimeout = null;
-    }
-    
-    // 延迟200ms执行，避免快速切换用户时频繁请求
-    financialStatsTimeout = setTimeout(async () => {
-        try {
-            // 使用 Promise.all 并行查询
-            const [depositsResult, withdrawalsResult] = await Promise.all([
-                sb.from('deposits').select('amount').eq('uid', uid),
-                sb.from('withdrawals').select('amount').eq('uid', uid).eq('status', 'approved')
-            ]);
-            
-            if (depositsResult.error) throw depositsResult.error;
-            if (withdrawalsResult.error) throw withdrawalsResult.error;
-            
-            const totalDeposit = depositsResult.data.reduce((sum, d) => sum + (d.amount || 0), 0);
-            const totalWithdrawal = withdrawalsResult.data.reduce((sum, w) => sum + (w.amount || 0), 0);
-            
-            const depositDisplay = document.getElementById('totalDepositDisplay');
-            const withdrawalDisplay = document.getElementById('totalWithdrawalDisplay');
-            if (depositDisplay) depositDisplay.textContent = `€${totalDeposit.toFixed(2)}`;
-            if (withdrawalDisplay) withdrawalDisplay.textContent = `€${totalWithdrawal.toFixed(2)}`;
-            
-        } catch (error) {
-            console.error('获取用户财务数据失败:', error);
-        } finally {
-            financialStatsTimeout = null;
-        }
-    }, 200);
-}
-
-// ============================================================
-// 关闭弹窗
-// ============================================================
-function closeEditUserModal() {
-    const modal = document.getElementById('editUserModal');
-    if (modal) modal.remove();
-    document.body.style.overflow = '';
-}
-
-// ============================================================
-// 保存编辑 (更新 Credit Score)
-// ============================================================
-async function saveEditUser(uid) {
-    const creditScore = document.getElementById('creditScoreSlider').value;
-    
-    try {
-        const { error } = await sb
-            .from('users')
-            .update({ credit_score: parseInt(creditScore) })
-            .eq('uid', uid);
-        
-        if (error) throw error;
-        showToast(`用户 ${uid} 的信誉分已更新为 ${creditScore}`, 'success');
-        closeEditUserModal();
-        loadUsers();
-    } catch (e) {
-        showToast('保存失败: ' + e.message, 'error');
-    }
-}
-
-// ============================================================
-// Account Actions 函数
-// ============================================================
-
-async function resetWithdrawalPin(uid) {
-    showConfirm('Reset Withdrawal PIN', `确定要重置用户 ${uid} 的提现PIN吗？`, async () => {
-        try {
-            const { error } = await sb
-                .from('users')
-                .update({ pin: '0000' })
-                .eq('uid', uid);
-            if (error) throw error;
-            showToast('提现PIN已重置为 0000', 'success');
-            closeEditUserModal();
-            loadUsers();
-        } catch (e) {
-            showToast('重置失败: ' + e.message, 'error');
-        }
-    });
-}
-
-async function resetUserPassword(uid) {
-    showPrompt('Reset Password', '请输入新密码 (至少4位):', async (newPassword) => {
-        if (!newPassword) return;
-        if (newPassword.length < 4) {
-            showToast('密码至少需要4位', 'error');
-            return;
-        }
-        try {
-            const { error } = await sb
-                .from('users')
-                .update({ password: newPassword })
-                .eq('uid', uid);
-            if (error) throw error;
-            showToast('密码已重置', 'success');
-            closeEditUserModal();
-            loadUsers();
-        } catch (e) {
-            showToast('重置失败: ' + e.message, 'error');
-        }
-    });
-}
-
-async function resetUserPhone(uid) {
-    showPrompt('Reset Phone Number', '请输入新的手机号:', async (newPhone) => {
-        if (!newPhone) return;
-        try {
-            const { error } = await sb
-                .from('users')
-                .update({ phone: newPhone })
-                .eq('uid', uid);
-            if (error) throw error;
-            showToast('手机号已更新', 'success');
-            closeEditUserModal();
-            loadUsers();
-        } catch (e) {
-            showToast('更新失败: ' + e.message, 'error');
-        }
-    });
-}
-
-// ============================================================
-// Promote Admin / Demote to User
-// ============================================================
-async function promoteToAdmin(uid) {
-    // 先获取当前用户角色
-    const { data: user } = await sb.from('users').select('user_role').eq('uid', uid).single();
-    const currentRole = user?.user_role || 'User';
-    const newRole = currentRole === 'Agent' ? 'User' : 'Agent';
-    const actionText = newRole === 'Agent' ? 'Promote to Admin' : 'Downgrade to User';
-    
-    showConfirm('Promote Admin', `确定要${actionText}用户 ${uid} 吗？`, async () => {
-        try {
-            const { error } = await sb
-                .from('users')
-                .update({ user_role: newRole })
-                .eq('uid', uid);
-            if (error) throw error;
-            showToast(`✅ 用户已${actionText}`, 'success');
-            closeEditUserModal();
-            loadUsers();
-        } catch (e) {
-            showToast('操作失败: ' + e.message, 'error');
-        }
-    });
-}
-
-// ============================================================
-// Freeze / Unfreeze Withdrawal
-// ============================================================
-async function freezeUserWithdrawal(uid) {
-    // 获取当前状态
-    const { data: user } = await sb.from('users').select('withdrawal_frozen').eq('uid', uid).single();
-    const currentStatus = user?.withdrawal_frozen || false;
-    const actionText = currentStatus ? 'Unfreeze' : 'Freeze';
-    
-    showConfirm('Freeze Withdrawal', `确定要${actionText}用户 ${uid} 的提款权限吗？`, async () => {
-        try {
-            const { error } = await sb
-                .from('users')
-                .update({ withdrawal_frozen: !currentStatus })
-                .eq('uid', uid);
-            if (error) throw error;
-            showToast(`✅ 提款权限已${actionText}`, 'success');
-            closeEditUserModal();
-            loadUsers();
-        } catch (e) {
-            showToast('操作失败: ' + e.message, 'error');
-        }
-    });
-}
-
-// ============================================================
-// Toggle Ban User (Ban / Release Ban)
-// ============================================================
-async function toggleBanUser(uid) {
-    const { data: user } = await sb.from('users').select('is_banned').eq('uid', uid).single();
-    const isBanned = user?.is_banned || false;
-    const actionText = isBanned ? 'Ban User' : 'Release User';
-    
-    showConfirm(isBanned ? 'Release Ban User' : 'Ban User', 
-        isBanned ? `确定要解封用户 ${uid} 吗？` : `Are you sure to ban user ${uid} ？此操作将禁用该用户的登录。`, 
-        async () => {
-            try {
-                const { error } = await sb
-                    .from('users')
-                    .update({ is_banned: !isBanned })
-                    .eq('uid', uid);
-                if (error) throw error;
-                showToast(`✅ 用户已${actionText}`, 'success');
-                closeEditUserModal();
-                loadUsers();
-            } catch (e) {
-                showToast('操作失败: ' + e.message, 'error');
-            }
-        }
-    );
-}
