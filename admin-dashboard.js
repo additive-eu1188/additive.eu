@@ -340,13 +340,14 @@ function initWaveRing() {
     `;
     container.appendChild(svg);
     
-    var centerText = document.createElement('div');
-    centerText.style.cssText = 'position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;pointer-events:none;z-index:10;';
-    centerText.innerHTML = `
-        <div id="ringPercent" style="font-size:44px;font-weight:700;color:#c8b090;letter-spacing:-1px;line-height:1.1;text-shadow:0 0 40px rgba(200,176,144,0.2);">78%</div>
-        <div style="font-size:9px;color:#6a5a3a;letter-spacing:1.5px;text-transform:uppercase;margin-top:2px;">Conversion Rate</div>
-    `;
-    container.appendChild(centerText);
+    // 创建中心文字（最上层）- 金属质感
+var centerText = document.createElement('div');
+centerText.style.cssText = 'position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;pointer-events:none;z-index:10;';
+centerText.innerHTML = `
+    <div id="ringPercent" style="font-size:48px;font-weight:900;letter-spacing:-1px;line-height:1;background:linear-gradient(180deg,#f0e8d0 0%,#d4c09a 35%,#b8942a 65%,#e8d5c0 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;filter:drop-shadow(0 0 30px rgba(200,176,144,0.15)) drop-shadow(0 4px 8px rgba(0,0,0,0.3));">78%</div>
+    <div style="font-size:13px;font-weight:700;letter-spacing:3px;text-transform:uppercase;margin-top:6px;background:linear-gradient(180deg,#d4c09a 0%,#b8942a 50%,#8a7020 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;filter:drop-shadow(0 0 20px rgba(200,176,144,0.08)) drop-shadow(0 2px 4px rgba(0,0,0,0.2));">Conversion Rate</div>
+`;
+container.appendChild(centerText);
     
     startWaveAnimation(canvas);
     
@@ -368,53 +369,24 @@ function startWaveAnimation(canvas) {
     var w = 220, h = 220;
     var cx = 110, cy = 110;
     
-    var waves = [];
-    for (var layer = 0; layer < 6; layer++) {
-        var baseRadius = 12 + layer * 15;
-        var speed = 0.8 + layer * 0.15;
-        var amplitude = 6 + layer * 2.5;
-        var count = 8 + layer * 2;
-        var alpha = 0.12 - layer * 0.012;
-        waves.push({
-            baseRadius: baseRadius,
+    // ===== 扩散圆圈 =====
+    var expandingRings = [];
+    var ringSpawnCounter = 0;
+    
+    function spawnExpandingRing() {
+        var radius = 5 + Math.random() * 6;
+        var speed = 0.5 + Math.random() * 0.4;
+        var maxRadius = 65 + Math.random() * 15;
+        var alpha = 0.2 + Math.random() * 0.15;
+        var color = Math.random() > 0.5 ? '#c8b090' : '#d4af37';
+        var width = 1.5 + Math.random() * 1.5;
+        expandingRings.push({
+            radius: radius,
+            maxRadius: maxRadius,
             speed: speed,
-            amplitude: amplitude,
-            count: count,
-            alpha: Math.max(alpha, 0.02),
-            phaseOffset: layer * 0.7 + 0.5,
-            color: layer % 2 === 0 ? '#c8b090' : '#d4af37'
-        });
-    }
-    for (var layer = 0; layer < 5; layer++) {
-        var baseRadius = 75 + layer * 18;
-        var speed = 0.15 + layer * 0.06;
-        var amplitude = 8 + layer * 3;
-        var count = 5 + layer * 2;
-        var alpha = 0.05 - layer * 0.007;
-        waves.push({
-            baseRadius: baseRadius,
-            speed: speed,
-            amplitude: amplitude,
-            count: count,
-            alpha: Math.max(alpha, 0.005),
-            phaseOffset: layer * 1.0 + 1.2,
-            color: '#c8b090'
-        });
-    }
-    for (var layer = 0; layer < 4; layer++) {
-        var baseRadius = 120 + layer * 20;
-        var speed = 0.08 + layer * 0.04;
-        var amplitude = 6 + layer * 2;
-        var count = 3 + layer * 1;
-        var alpha = 0.025 - layer * 0.004;
-        waves.push({
-            baseRadius: baseRadius,
-            speed: speed,
-            amplitude: amplitude,
-            count: count,
-            alpha: Math.max(alpha, 0.003),
-            phaseOffset: layer * 1.4 + 2.0,
-            color: '#b8942a'
+            alpha: alpha,
+            color: color,
+            width: width
         });
     }
     
@@ -424,59 +396,45 @@ function startWaveAnimation(canvas) {
         time++;
         ctx.clearRect(0, 0, w, h);
         
-        waves.forEach(function(wave) {
-            var radius = wave.baseRadius + Math.sin(time * 0.018 + wave.phaseOffset) * 2.5;
+        // ===== 生成声波圈 =====
+        ringSpawnCounter++;
+        if (ringSpawnCounter % 20 === 0) {
+            spawnExpandingRing();
+        }
+        
+        // ===== 绘制声波圈 =====
+        for (var r = expandingRings.length - 1; r >= 0; r--) {
+            var ring = expandingRings[r];
+            ring.radius += 0.5 * ring.speed;
+            
+            var fade = ring.alpha * (1 - ring.radius / ring.maxRadius);
+            
+            if (ring.radius > ring.maxRadius || fade < 0.005) {
+                expandingRings.splice(r, 1);
+                continue;
+            }
+            
             ctx.beginPath();
-            ctx.arc(cx, cy, radius, 0, Math.PI * 2);
-            ctx.strokeStyle = wave.color;
-            ctx.lineWidth = 2 + Math.sin(time * 0.025 + wave.phaseOffset) * 0.8;
-            ctx.globalAlpha = wave.alpha * (0.8 + 0.2 * Math.sin(time * 0.012 + wave.phaseOffset));
-            ctx.shadowColor = wave.color;
-            ctx.shadowBlur = 12 + Math.sin(time * 0.018 + wave.phaseOffset) * 6;
+            ctx.arc(cx, cy, ring.radius, 0, Math.PI * 2);
+            ctx.strokeStyle = ring.color;
+            ctx.lineWidth = ring.width * (1 - ring.radius / ring.maxRadius * 0.5);
+            ctx.globalAlpha = Math.max(0, fade);
+            ctx.shadowColor = ring.color;
+            ctx.shadowBlur = 6;
             ctx.stroke();
             ctx.shadowBlur = 0;
-            
-            var pointCount = wave.count + 2;
-            for (var i = 0; i < pointCount; i++) {
-                var angle = (i / pointCount) * Math.PI * 2 + time * 0.015 * wave.speed + wave.phaseOffset;
-                var waveRadius = radius + Math.sin(time * 0.03 * wave.speed + angle * 2.5 + wave.phaseOffset) * wave.amplitude;
-                var x = cx + Math.cos(angle) * waveRadius;
-                var y = cy + Math.sin(angle) * waveRadius;
-                var pulse = 0.4 + 0.6 * Math.sin(time * 0.035 * wave.speed + angle * 1.5 + wave.phaseOffset);
-                var dotRadius = 1.5 + pulse * 3.5;
-                var grad = ctx.createRadialGradient(x, y, 0, x, y, dotRadius * 4);
-                grad.addColorStop(0, 'rgba(255, 215, 180, ' + (0.8 * wave.alpha * 2.5) + ')');
-                grad.addColorStop(0.3, 'rgba(200, 176, 144, ' + (0.4 * wave.alpha * 2.5) + ')');
-                grad.addColorStop(1, 'transparent');
-                ctx.fillStyle = grad;
-                ctx.beginPath();
-                ctx.arc(x, y, dotRadius * 4, 0, Math.PI * 2);
-                ctx.fill();
-                ctx.beginPath();
-                ctx.arc(x, y, dotRadius * 0.6, 0, Math.PI * 2);
-                ctx.fillStyle = 'rgba(255, 240, 220, ' + (0.9 * wave.alpha * 2.5) + ')';
-                ctx.fill();
-            }
-        });
+        }
         
-        var centerGlow = ctx.createRadialGradient(cx, cy, 0, cx, cy, 70);
-        centerGlow.addColorStop(0, 'rgba(200, 176, 144, 0.04)');
-        centerGlow.addColorStop(0.5, 'rgba(200, 176, 144, 0.02)');
+        // ===== 中心光晕 =====
+        var centerGlow = ctx.createRadialGradient(cx, cy, 0, cx, cy, 60);
+        centerGlow.addColorStop(0, 'rgba(200,176,144,0.03)');
         centerGlow.addColorStop(1, 'transparent');
         ctx.fillStyle = centerGlow;
-        ctx.beginPath();
-        ctx.arc(cx, cy, 70, 0, Math.PI * 2);
-        ctx.fill();
-        
-        var innerGlow = ctx.createRadialGradient(cx, cy, 0, cx, cy, 25);
-        innerGlow.addColorStop(0, 'rgba(200, 176, 144, 0.03)');
-        innerGlow.addColorStop(1, 'transparent');
-        ctx.fillStyle = innerGlow;
-        ctx.beginPath();
-        ctx.arc(cx, cy, 25, 0, Math.PI * 2);
-        ctx.fill();
-        
         ctx.globalAlpha = 1;
+        ctx.beginPath();
+        ctx.arc(cx, cy, 60, 0, Math.PI * 2);
+        ctx.fill();
+        
         requestAnimationFrame(draw);
     }
     draw();
@@ -491,7 +449,7 @@ async function loadRecentRegistrations() {
         var usersRes = await sb.from('users')
             .select('uid, username, invited_by_username, created_at, balance')
             .order('created_at', { ascending: false })
-            .limit(5);
+            .limit(9);
         
         var users = usersRes.data || [];
         
@@ -961,7 +919,7 @@ function loadDashboardPage(days) {
                                 </div>
                                 <a href="#" onclick="showPage('users'); return false;" style="font-size: 8px; color: #4a3a2a; text-decoration: none; transition: 0.2s;" onmouseover="this.style.color='#c8b090'" onmouseout="this.style.color='#4a3a2a'">View All →</a>
                             </div>
-                            <div style="overflow-y: auto; max-height: 110px;">
+                            <div style="overflow-y: auto; max-height: 155px;">
                                 <table style="width: 100%; border-collapse: collapse; font-size: 10px;">
                                     <thead>
                                         <tr style="border-bottom: 1px solid rgba(200,176,144,0.04); position: sticky; top: 0; background: rgba(20,24,40,0.9); z-index: 2;">
