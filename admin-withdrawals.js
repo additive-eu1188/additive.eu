@@ -242,251 +242,217 @@ async function loadWithdrawalsPage() {
     `;
     
     // 添加样式
-    var style = document.createElement('style');
-    style.textContent = `
-        .tab-withdraw-btn {
-            background: rgba(255,255,255,0.04);
-            border: 1px solid rgba(255,255,255,0.06);
-            border-radius: 30px;
-            padding: 8px 20px;
-            color: #8892a8;
-            cursor: pointer;
-            transition: all 0.2s;
-            font-size: 14px;
-            font-weight: 500;
-            font-family: 'Inter', sans-serif;
-        }
-        .tab-withdraw-btn:hover {
-            background: rgba(255,255,255,0.08);
-            color: #e6edf5;
-        }
-        .tab-withdraw-btn.active {
-            background: #2a3a5a;
-            color: #e6edf5;
-            border-color: #3a5a7a;
-        }
-        .wallet-address-cell {
-            max-width: 200px;
-            word-break: break-all;
-        }
-        .wallet-address-wrapper {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-        .wallet-address-text {
-            font-size: 11px;
-            font-family: 'Courier New', monospace;
-            color: #b0c0da;
-            word-break: break-all;
-            line-height: 1.4;
-        }
-        .copy-address-btn {
-            background: rgba(255,255,255,0.04);
-            border: none;
-            padding: 2px 8px;
-            border-radius: 4px;
-            color: #6a7a92;
-            cursor: pointer;
-            font-size: 11px;
-            transition: 0.2s;
-            flex-shrink: 0;
-        }
-        .copy-address-btn:hover {
-            background: rgba(255,255,255,0.08);
-            color: #b0c0da;
-        }
-        .currency-badge {
-            display: inline-block;
-            padding: 4px 14px 4px 10px;
-            border-radius: 40px;
-            font-size: 12px;
-            font-weight: 500;
-            background: rgba(255,255,255,0.04);
-            color: #b8c4de;
-            display: flex;
-            align-items: center;
-            gap: 4px;
-            width: fit-content;
-        }
-        .currency-badge.usdt { background: rgba(38, 161, 123, 0.12); color: #26a17b; }
-        .currency-badge.eth { background: rgba(98, 126, 234, 0.12); color: #627eea; }
-        .currency-badge.btc { background: rgba(247, 147, 26, 0.12); color: #f7931a; }
-        .currency-badge.usdc { background: rgba(39, 117, 202, 0.12); color: #2775ca; }
-        .currency-badge i { font-size: 14px; }
-        .status-badge-approved { background: rgba(122, 208, 176, 0.10); color: #7ad0b0; padding: 2px 12px; border-radius: 40px; font-size: 11px; display: inline-block; }
-        .status-badge-rejected { background: rgba(232, 128, 128, 0.10); color: #e88080; padding: 2px 12px; border-radius: 40px; font-size: 11px; display: inline-block; }
-        .status-badge-pending { background: rgba(212, 192, 154, 0.10); color: #d4c09a; padding: 2px 12px; border-radius: 40px; font-size: 11px; display: inline-block; }
-        .btn-sm-action {
-            padding: 4px 12px;
-            font-size: 11px;
-            border: none;
-            border-radius: 40px;
-            color: #fff;
-            cursor: pointer;
-            transition: 0.2s;
-            margin-right: 4px;
-            font-weight: 600;
-        }
-        .btn-sm-action:hover {
-            opacity: 0.85;
-        }
-        .btn-approve { background: rgba(122, 208, 176, 0.15); color: #7ad0b0; }
-        .btn-approve:hover { background: rgba(122, 208, 176, 0.25); }
-        .btn-reject { background: rgba(232, 128, 128, 0.15); color: #e88080; }
-        .btn-reject:hover { background: rgba(232, 128, 128, 0.25); }
-        .withdraw-panel {
-            animation: fadeIn 0.3s ease;
-        }
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(8px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        .country-flag-img {
-            width: 22px;
-            height: 16px;
-            border-radius: 2px;
-            vertical-align: middle;
-            margin-right: 6px;
-            object-fit: cover;
-            border: 1px solid rgba(255,255,255,0.04);
-        }
-        .country-name {
-            font-size: 12px;
-            color: #c8d2e8;
-            vertical-align: middle;
-        }
-        
-        /* ===== 自定义下拉样式 ===== */
-        .custom-select-wrapper {
-            position: relative;
-            width: 100%;
-            min-width: 160px;
-        }
-        .custom-select-display {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 8px 14px 8px 16px;
-            background: rgba(255,255,255,0.08);
-            border: 1px solid rgba(255,255,255,0.10);
-            border-radius: 40px;
-            cursor: pointer;
-            color: #e6edf5;
-            font-size: 13px;
-            font-weight: 500;
-            transition: 0.25s ease;
-            min-height: 38px;
-            user-select: none;
-        }
-        .custom-select-display:hover {
-            border-color: rgba(255,255,255,0.18);
-            background: rgba(255,255,255,0.10);
-        }
-        .custom-select-display i {
-            color: #5a6a82;
-            font-size: 11px;
-            transition: 0.25s ease;
-            margin-left: 6px;
-            flex-shrink: 0;
-        }
-        .custom-select-display i.fa-chevron-down {
-            color: #5a6a82;
-            font-size: 11px;
-            margin-left: 6px;
-        }
-        .custom-select-dropdown {
-            position: absolute;
-            top: calc(100% + 6px);
-            left: 0;
-            right: 0;
-            background: rgba(14, 18, 30, 0.98);
-            backdrop-filter: blur(16px);
-            border: 1px solid rgba(255,255,255,0.06);
-            border-radius: 12px;
-            padding: 6px 0;
-            opacity: 0;
-            visibility: hidden;
-            transform: translateY(-6px) scale(0.98);
-            transition: all 0.2s ease;
-            z-index: 100;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
-            overflow: hidden;
-            max-height: 0;
-            overflow-y: auto;
-        }
-        .custom-select-dropdown.open {
-            opacity: 1;
-            visibility: visible;
-            transform: translateY(0) scale(1);
-            max-height: 240px;
-        }
-        .custom-select-dropdown::-webkit-scrollbar {
-            width: 3px;
-        }
-        .custom-select-dropdown::-webkit-scrollbar-thumb {
-            background: rgba(255,255,255,0.08);
-            border-radius: 4px;
-        }
-        .custom-select-options {
-            padding: 4px 0;
-        }
-        .custom-select-option {
-            padding: 10px 18px;
-            cursor: pointer;
-            transition: 0.15s ease;
-            color: #b8c4de;
-            font-size: 13px;
-            font-weight: 500;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        .custom-select-option:hover {
-            background: rgba(255,255,255,0.04);
-            color: #e6edf5;
-        }
-        .custom-select-option.selected {
-            background: rgba(255,255,255,0.02);
-            color: #e6edf5;
-        }
-        .custom-select-option.selected::after {
-            content: ' ✓';
-            color: #6a8af0;
-        }
-        .custom-select-option i {
-            font-size: 16px;
-        }
-        
-        @media (max-width: 768px) {
-            .wallet-address-cell {
-                max-width: 120px;
-            }
-            .wallet-address-text {
-                font-size: 10px;
-            }
-            .stats-grid {
-                grid-template-columns: repeat(2, 1fr) !important;
-            }
-            .tab-withdraw-btn {
-                font-size: 12px;
-                padding: 6px 14px;
-            }
-            .search-bar {
-                flex-direction: column;
-                align-items: stretch;
-            }
-            .search-bar input, .search-bar .custom-select-wrapper {
-                width: 100% !important;
-                min-width: unset;
-                flex: 1 1 auto !important;
-            }
-            .custom-select-wrapper {
-                min-width: unset !important;
-            }
-        }
-    `;
-    document.head.appendChild(style);
+var style = document.createElement('style');
+style.textContent = `
+.tab-withdraw-btn {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 30px;
+    padding: 8px 20px;
+    color: #8892a8;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-size: 14px;
+    font-weight: 500;
+    font-family: 'Inter', sans-serif;
+}
+.tab-withdraw-btn:hover {
+    background: rgba(255,255,255,0.08);
+    color: #e6edf5;
+}
+.tab-withdraw-btn.active {
+    background: #2a3a5a;
+    color: #e6edf5;
+    border-color: #3a5a7a;
+}
+.wallet-address-cell {
+    max-width: 200px;
+    word-break: break-all;
+}
+.wallet-address-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+.wallet-address-text {
+    font-size: 11px;
+    font-family: 'Courier New', monospace;
+    color: #b0c0da;
+    word-break: break-all;
+    line-height: 1.4;
+}
+.copy-address-btn {
+    background: rgba(255,255,255,0.04);
+    border: none;
+    padding: 2px 8px;
+    border-radius: 4px;
+    color: #6a7a92;
+    cursor: pointer;
+    font-size: 11px;
+    transition: 0.2s;
+    flex-shrink: 0;
+}
+.copy-address-btn:hover {
+    background: rgba(255,255,255,0.08);
+    color: #b0c0da;
+}
+.currency-badge {
+    display: inline-block;
+    padding: 4px 14px 4px 10px;
+    border-radius: 40px;
+    font-size: 12px;
+    font-weight: 500;
+    background: rgba(255,255,255,0.04);
+    color: #b8c4de;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    width: fit-content;
+}
+.currency-badge.usdt { background: rgba(38, 161, 123, 0.12); color: #26a17b; }
+.currency-badge.eth { background: rgba(98, 126, 234, 0.12); color: #627eea; }
+.currency-badge.btc { background: rgba(247, 147, 26, 0.12); color: #f7931a; }
+.currency-badge.usdc { background: rgba(39, 117, 202, 0.12); color: #2775ca; }
+.currency-badge i { font-size: 14px; }
+.status-badge-approved { background: rgba(122, 208, 176, 0.10); color: #7ad0b0; padding: 2px 12px; border-radius: 40px; font-size: 11px; display: inline-block; }
+.status-badge-rejected { background: rgba(232, 128, 128, 0.10); color: #e88080; padding: 2px 12px; border-radius: 40px; font-size: 11px; display: inline-block; }
+.status-badge-pending { background: rgba(212, 192, 154, 0.10); color: #d4c09a; padding: 2px 12px; border-radius: 40px; font-size: 11px; display: inline-block; }
+.btn-sm-action {
+    padding: 4px 12px;
+    font-size: 11px;
+    border: none;
+    border-radius: 40px;
+    color: #fff;
+    cursor: pointer;
+    transition: 0.2s;
+    margin-right: 4px;
+    font-weight: 600;
+}
+.btn-sm-action:hover { opacity: 0.85; }
+.btn-approve { background: rgba(122, 208, 176, 0.15); color: #7ad0b0; }
+.btn-approve:hover { background: rgba(122, 208, 176, 0.25); }
+.btn-reject { background: rgba(232, 128, 128, 0.15); color: #e88080; }
+.btn-reject:hover { background: rgba(232, 128, 128, 0.25); }
+.withdraw-panel { animation: fadeIn 0.3s ease; }
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+.country-flag-img {
+    width: 22px;
+    height: 16px;
+    border-radius: 2px;
+    vertical-align: middle;
+    margin-right: 6px;
+    object-fit: cover;
+    border: 1px solid rgba(255,255,255,0.04);
+}
+.country-name {
+    font-size: 12px;
+    color: #c8d2e8;
+    vertical-align: middle;
+}
+.custom-select-wrapper {
+    position: relative;
+    width: 100%;
+    min-width: 160px;
+}
+.custom-select-display {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 14px 8px 16px;
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.10);
+    border-radius: 40px;
+    cursor: pointer;
+    color: #e6edf5;
+    font-size: 13px;
+    font-weight: 500;
+    transition: 0.25s ease;
+    min-height: 38px;
+    user-select: none;
+}
+.custom-select-display:hover {
+    border-color: rgba(255,255,255,0.18);
+    background: rgba(255,255,255,0.10);
+}
+.custom-select-display i {
+    color: #5a6a82;
+    font-size: 11px;
+    transition: 0.25s ease;
+    margin-left: 6px;
+    flex-shrink: 0;
+}
+.custom-select-display i.fa-chevron-down {
+    color: #5a6a82;
+    font-size: 11px;
+    margin-left: 6px;
+}
+.custom-select-dropdown {
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 0;
+    right: 0;
+    background: rgba(14, 18, 30, 0.98);
+    backdrop-filter: blur(16px);
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 12px;
+    padding: 6px 0;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-6px) scale(0.98);
+    transition: all 0.2s ease;
+    z-index: 100;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+    overflow: hidden;
+    max-height: 0;
+    overflow-y: auto;
+}
+.custom-select-dropdown.open {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0) scale(1);
+    max-height: 240px;
+}
+.custom-select-dropdown::-webkit-scrollbar { width: 3px; }
+.custom-select-dropdown::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 4px; }
+.custom-select-options { padding: 4px 0; }
+.custom-select-option {
+    padding: 10px 18px;
+    cursor: pointer;
+    transition: 0.15s ease;
+    color: #b8c4de;
+    font-size: 13px;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.custom-select-option:hover {
+    background: rgba(255,255,255,0.04);
+    color: #e6edf5;
+}
+.custom-select-option.selected {
+    background: rgba(255,255,255,0.02);
+    color: #e6edf5;
+}
+.custom-select-option.selected::after {
+    content: ' ✓';
+    color: #6a8af0;
+}
+.custom-select-option i { font-size: 16px; }
+@media (max-width: 768px) {
+    .wallet-address-cell { max-width: 120px; }
+    .wallet-address-text { font-size: 10px; }
+    .stats-grid { grid-template-columns: repeat(2, 1fr) !important; }
+    .tab-withdraw-btn { font-size: 12px; padding: 6px 14px; }
+    .search-bar { flex-direction: column; align-items: stretch; }
+    .search-bar input, .search-bar .custom-select-wrapper { width: 100% !important; min-width: unset; flex: 1 1 auto !important; }
+    .custom-select-wrapper { min-width: unset !important; }
+}
+`;
+document.head.appendChild(style);
     
     // 绑定标签切换
     document.getElementById('tabPending')?.addEventListener('click', function() { switchWithdrawTab('pending'); });
