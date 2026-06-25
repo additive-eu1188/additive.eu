@@ -691,169 +691,151 @@ async function loadUsers() {
         }
         
         for (let u of users) {
-            const row = tbody.insertRow();
-            row.className = 'user-row';
-            
-            const orderCount = orderCountMap[u.uid] || 0;
-            const ordersLimit = vipLimitMap[u.vip_level] || 30;
-            const vipName = vipNameMap[u.vip_level] || (u.vip_level === 1 ? 'Normal' : u.vip_level === 2 ? 'VIP' : 'SVIP');
-            const pendingAmount = pendingMap[u.uid] || 0;
-            const creditScore = u.credit_score !== undefined && u.credit_score !== null ? u.credit_score : 100;
-            const countryAbbr = getCountryAbbreviation(u.country);
-            
-            // ===== 1. Actions (第一列) =====
-const actionsCell = row.insertCell(0);
-actionsCell.innerHTML = `
-    <div class="actions-wrapper">
-        <button class="btn-actions edit-user-btn" 
-            data-uid="${u.uid}" 
-            data-username="${escapeHtml(u.username)}"
-            data-phone="${escapeHtml(u.phone || '')}"
-            data-pin="${escapeHtml(u.pin || '')}"
-            data-currency="${escapeHtml(u.withdrawal_address_type || 'USDT')}"
-            data-address="${escapeHtml(u.withdrawal_address || '')}"
-            data-credit-score="${creditScore}"
-            data-user-role="${escapeHtml(u.user_role || 'User')}"
-            data-withdrawal-frozen="${u.withdrawal_frozen || false}"
-            data-is-banned="${u.is_banned || false}"
-            data-created-at="${u.created_at || ''}"
-            title="Edit User">
-            <i class="fas fa-cog"></i> Actions
-        </button>
-    </div>
-`;
-            
-            // ===== 2. Phone (第二列) =====
-            row.insertCell(1).innerHTML = `<span class="phone-text">${escapeHtml(u.phone || '-')}</span>`;
-            
-            // ===== 3. User ID + Position (第三列) =====
-const userRole = u.user_role || 'User';
-const roleColor = userRole === 'Agent' ? '#c8b090' : 'rgba(255,255,255,0.25)';
-const roleDisplay = userRole === 'Agent' ? 'Agent' : 'User';
-row.insertCell(2).innerHTML = `
-    <div style="display:flex; flex-direction:column; align-items:flex-start; gap:1px;">
-        <span class="uid-text">${escapeHtml(u.uid)}</span>
-        <span style="font-size:9px; font-weight:500; color:${roleColor}; background:rgba(255,255,255,0.03); padding:0px 6px; border-radius:8px; letter-spacing:0.3px;">${roleDisplay}</span>
-    </div>
-`;
-            
-            // ===== 5. Referrer (第五列) =====
-            row.insertCell(4).innerHTML = `<span class="referrer-text">${escapeHtml(u.invited_by_username || '-')}</span>`;
-            
-            // ===== 6. Country (第六列) =====
-const countryCell = row.insertCell(5);
-const countryData = getCountryData(u.country);
-const flagUrl = countryData.flag ? `https://flagcdn.com/w40/${countryData.flag}.png` : null;
-let countryHtml = '';
-if (flagUrl) {
-    countryHtml = `<img src="${flagUrl}" class="country-flag-sm" onerror="this.style.display='none'" alt=""> <span class="country-name-text">${countryData.abbr}</span>`;
-} else {
-    countryHtml = `<span class="country-name-text">${countryData.abbr}</span>`;
-}
-countryCell.innerHTML = countryHtml;
-            
-            // ===== 7. VIP (第七列) =====
-            const vipCell = row.insertCell(6);
-            const vipLevels = [
-                { level: 1, name: 'Normal' },
-                { level: 2, name: 'VIP' },
-                { level: 3, name: 'SVIP' }
-            ];
-            let optionsHtml = '';
-            vipLevels.forEach(v => {
-                const selected = v.level === u.vip_level ? 'selected' : '';
-                optionsHtml += `<option value="${v.level}" ${selected}>${v.name}</option>`;
-            });
-            vipCell.innerHTML = `
-                <select class="vip-select vip-change-select" data-uid="${u.uid}" data-username="${escapeHtml(u.username)}">
-                    ${optionsHtml}
-                </select>
-            `;
-            
-            // ===== 8. Pending (第八列) =====
-            const pendingWithdrawAmount = pendingMap[u.uid] || 0;
-            const amountDue = parseFloat(u.amount_due) || 0;
-            const amountDueRound = parseFloat(u.amount_due_round) || 0;
-            const amountDueOrdersCount = parseFloat(u.amount_due_orders_count) || 0;
-            let totalAmountDue = amountDue + amountDueRound + amountDueOrdersCount;
-            let displayPending = pendingWithdrawAmount;
-            if (totalAmountDue > 0) {
-                displayPending = -totalAmountDue;
-            }
-            const pendingCell = row.insertCell(7);
-            const isNegative = displayPending < 0;
-            pendingCell.innerHTML = `
-                <span class="pending-amount ${isNegative ? 'pending-negative' : 'pending-positive'}">
-                    ${isNegative ? '-' : ''}€${Math.abs(displayPending).toFixed(2)}
-                </span>
-                ${isNegative ? '<div style="font-size: 8px; color: #e88080; opacity: 0.5; margin-top: 1px;">Due</div>' : ''}
-            `;
-            
-            // ===== 9. Balance (第九列) =====
-            const balanceCell = row.insertCell(8);
-            balanceCell.innerHTML = `
-                <div class="balance-wrapper">
-                    <span class="balance-amount">€${(u.balance || 0).toFixed(2)}</span>
-                    <button class="btn-sm btn-deposit deposit-btn" data-uid="${u.uid}" data-username="${escapeHtml(u.username)}" title="Deposit"><i class="fas fa-plus-circle"></i></button>
-                    <button class="btn-sm btn-deduct deduct-btn" data-uid="${u.uid}" data-username="${escapeHtml(u.username)}" title="Deduct"><i class="fas fa-minus-circle"></i></button>
-                </div>
-            `;
-            
-            // ===== 10. Round / Orders (第十列) =====
-const ordersCell = row.insertCell(9);
-const isPremium = u.is_premium || false;
-const currentRound = u.current_round || 0;
-const roundOrdersCount = u.round_orders_count || 0;
-let roundDisplay = 0;
-let displayCount = 0;
-if (!isPremium) {
-    roundDisplay = 0;
-    displayCount = orderCount;
-} else {
-    roundDisplay = currentRound;
-    displayCount = roundOrdersCount;
-}
-ordersCell.innerHTML = `
-    <div class="orders-wrapper">
-        <span class="round-number" style="font-size:11px; color:rgba(255,255,255,0.2); min-width:32px; flex-shrink:0;">(${roundDisplay})</span>
-        <input type="number" class="orders-input round-edit-input" data-uid="${u.uid}" value="${displayCount}" min="0" step="1" title="Edit orders in current round" style="width:50px; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.04); border-radius:4px; padding:2px 4px; color:#e6edf5; font-size:11px; text-align:center; flex-shrink:0;">
-        <span class="orders-slash" style="font-size:10px; color:rgba(255,255,255,0.12); flex-shrink:0;">/30</span>
-        <button class="btn-sm btn-reset reset-orders-btn" data-uid="${u.uid}" data-username="${escapeHtml(u.username)}" title="Reset Orders" ${!isPremium ? 'disabled style="opacity:0.2;cursor:not-allowed;"' : ''} style="font-size:9px; padding:3px 10px; white-space:nowrap; flex-shrink:0; border:none; border-radius:4px; cursor:pointer; background:rgba(200,176,144,0.08); color:#c8b090; transition:0.2s;">
-            <i class="fas fa-undo-alt"></i> Reset
-        </button>
-        <button class="btn-sm btn-save-orders save-round-orders-btn" data-uid="${u.uid}" data-username="${escapeHtml(u.username)}" title="Save Orders" style="font-size:9px; padding:3px 10px; white-space:nowrap; flex-shrink:0; border:none; border-radius:4px; cursor:pointer; background:rgba(74,222,128,0.08); color:#7ad0b0; transition:0.2s;">
-            <i class="fas fa-save"></i> Save
-        </button>
-    </div>
-`;
-            
-            // ===== 11. Registered IP (第十一列) =====
-            row.insertCell(10).innerHTML = `<span class="ip-text">${escapeHtml(u.registered_ip || '-')}</span>`;
-            
-            // ===== 12. Last Online (第十二列) =====
-            const lastOnline = u.last_online || u.updated_at || u.created_at;
-            let lastOnlineDisplay = '-';
-            if (lastOnline) {
-                const lastDate = new Date(lastOnline);
-                const now = new Date();
-                const diffMins = Math.floor((now - lastDate) / 60000);
-                const diffHours = Math.floor(diffMins / 60);
-                const diffDays = Math.floor(diffHours / 24);
-                
-                if (diffMins < 1) {
-                    lastOnlineDisplay = 'Just now';
-                } else if (diffMins < 60) {
-                    lastOnlineDisplay = `${diffMins}m ago`;
-                } else if (diffHours < 24) {
-                    lastOnlineDisplay = `${diffHours}h ago`;
-                } else if (diffDays < 7) {
-                    lastOnlineDisplay = `${diffDays}d ago`;
-                } else {
-                    lastOnlineDisplay = lastDate.toLocaleDateString();
-                }
-            }
-            row.insertCell(11).innerHTML = `<span class="last-online-text">${lastOnlineDisplay}</span>`;
+    const row = tbody.insertRow();
+    row.className = 'user-row';
+    
+    const orderCount = orderCountMap[u.uid] || 0;
+    const ordersLimit = vipLimitMap[u.vip_level] || 30;
+    const vipName = vipNameMap[u.vip_level] || (u.vip_level === 1 ? 'Normal' : u.vip_level === 2 ? 'VIP' : 'SVIP');
+    const pendingAmount = pendingMap[u.uid] || 0;
+    const creditScore = u.credit_score !== undefined && u.credit_score !== null ? u.credit_score : 100;
+    const countryAbbr = getCountryAbbreviation(u.country);
+    
+    // ===== 1. Actions (索引 0) =====
+    const actionsCell = row.insertCell(0);
+    actionsCell.innerHTML = `...`;
+    
+    // ===== 2. Phone (索引 1) =====
+    row.insertCell(1).innerHTML = `<span class="phone-text">${escapeHtml(u.phone || '-')}</span>`;
+    
+    // ===== 3. User ID + Position (索引 2) =====
+    const userRole = u.user_role || 'User';
+    const roleColor = userRole === 'Agent' ? '#c8b090' : 'rgba(255,255,255,0.25)';
+    const roleDisplay = userRole === 'Agent' ? 'Agent' : 'User';
+    row.insertCell(2).innerHTML = `
+        <div style="display:flex; flex-direction:column; align-items:flex-start; gap:1px;">
+            <span class="uid-text">${escapeHtml(u.uid)}</span>
+            <span style="font-size:9px; font-weight:500; color:${roleColor}; background:rgba(255,255,255,0.03); padding:0px 6px; border-radius:8px; letter-spacing:0.3px;">${roleDisplay}</span>
+        </div>
+    `;
+    
+    // ===== 4. Referrer (索引 3) =====
+    row.insertCell(3).innerHTML = `<span class="referrer-text">${escapeHtml(u.invited_by_username || '-')}</span>`;
+    
+    // ===== 5. Country (索引 4) =====
+    const countryCell = row.insertCell(4);
+    const countryData = getCountryData(u.country);
+    const flagUrl = countryData.flag ? `https://flagcdn.com/w40/${countryData.flag}.png` : null;
+    let countryHtml = '';
+    if (flagUrl) {
+        countryHtml = `<img src="${flagUrl}" class="country-flag-sm" onerror="this.style.display='none'" alt=""> <span class="country-name-text">${countryData.abbr}</span>`;
+    } else {
+        countryHtml = `<span class="country-name-text">${countryData.abbr}</span>`;
+    }
+    countryCell.innerHTML = countryHtml;
+    
+    // ===== 6. VIP (索引 5) =====
+    const vipCell = row.insertCell(5);
+    const vipLevels = [
+        { level: 1, name: 'Normal' },
+        { level: 2, name: 'VIP' },
+        { level: 3, name: 'SVIP' }
+    ];
+    let optionsHtml = '';
+    vipLevels.forEach(v => {
+        const selected = v.level === u.vip_level ? 'selected' : '';
+        optionsHtml += `<option value="${v.level}" ${selected}>${v.name}</option>`;
+    });
+    vipCell.innerHTML = `
+        <select class="vip-select vip-change-select" data-uid="${u.uid}" data-username="${escapeHtml(u.username)}">
+            ${optionsHtml}
+        </select>
+    `;
+    
+    // ===== 7. Pending (索引 6) =====
+    const pendingWithdrawAmount = pendingMap[u.uid] || 0;
+    const amountDue = parseFloat(u.amount_due) || 0;
+    const amountDueRound = parseFloat(u.amount_due_round) || 0;
+    const amountDueOrdersCount = parseFloat(u.amount_due_orders_count) || 0;
+    let totalAmountDue = amountDue + amountDueRound + amountDueOrdersCount;
+    let displayPending = pendingWithdrawAmount;
+    if (totalAmountDue > 0) {
+        displayPending = -totalAmountDue;
+    }
+    const pendingCell = row.insertCell(6);
+    const isNegative = displayPending < 0;
+    pendingCell.innerHTML = `
+        <span class="pending-amount ${isNegative ? 'pending-negative' : 'pending-positive'}">
+            ${isNegative ? '-' : ''}€${Math.abs(displayPending).toFixed(2)}
+        </span>
+        ${isNegative ? '<div style="font-size: 8px; color: #e88080; opacity: 0.5; margin-top: 1px;">Due</div>' : ''}
+    `;
+    
+    // ===== 8. Balance (索引 7) =====
+    const balanceCell = row.insertCell(7);
+    balanceCell.innerHTML = `
+        <div class="balance-wrapper">
+            <span class="balance-amount">€${(u.balance || 0).toFixed(2)}</span>
+            <button class="btn-sm btn-deposit deposit-btn" data-uid="${u.uid}" data-username="${escapeHtml(u.username)}" title="Deposit"><i class="fas fa-plus-circle"></i></button>
+            <button class="btn-sm btn-deduct deduct-btn" data-uid="${u.uid}" data-username="${escapeHtml(u.username)}" title="Deduct"><i class="fas fa-minus-circle"></i></button>
+        </div>
+    `;
+    
+    // ===== 9. Round / Orders (索引 8) =====
+    const ordersCell = row.insertCell(8);
+    const isPremium = u.is_premium || false;
+    const currentRound = u.current_round || 0;
+    const roundOrdersCount = u.round_orders_count || 0;
+    let roundDisplay = 0;
+    let displayCount = 0;
+    if (!isPremium) {
+        roundDisplay = 0;
+        displayCount = orderCount;
+    } else {
+        roundDisplay = currentRound;
+        displayCount = roundOrdersCount;
+    }
+    ordersCell.innerHTML = `
+        <div class="orders-wrapper">
+            <span class="round-number" style="font-size:11px; color:rgba(255,255,255,0.2); min-width:32px; flex-shrink:0;">(${roundDisplay})</span>
+            <input type="number" class="orders-input round-edit-input" data-uid="${u.uid}" value="${displayCount}" min="0" step="1" title="Edit orders in current round" style="width:50px; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.04); border-radius:4px; padding:2px 4px; color:#e6edf5; font-size:11px; text-align:center; flex-shrink:0;">
+            <span class="orders-slash" style="font-size:10px; color:rgba(255,255,255,0.12); flex-shrink:0;">/30</span>
+            <button class="btn-sm btn-reset reset-orders-btn" data-uid="${u.uid}" data-username="${escapeHtml(u.username)}" title="Reset Orders" ${!isPremium ? 'disabled style="opacity:0.2;cursor:not-allowed;"' : ''} style="font-size:9px; padding:3px 10px; white-space:nowrap; flex-shrink:0; border:none; border-radius:4px; cursor:pointer; background:rgba(200,176,144,0.08); color:#c8b090; transition:0.2s;">
+                <i class="fas fa-undo-alt"></i> Reset
+            </button>
+            <button class="btn-sm btn-save-orders save-round-orders-btn" data-uid="${u.uid}" data-username="${escapeHtml(u.username)}" title="Save Orders" style="font-size:9px; padding:3px 10px; white-space:nowrap; flex-shrink:0; border:none; border-radius:4px; cursor:pointer; background:rgba(74,222,128,0.08); color:#7ad0b0; transition:0.2s;">
+                <i class="fas fa-save"></i> Save
+            </button>
+        </div>
+    `;
+    
+    // ===== 10. Registered IP (索引 9) =====
+    row.insertCell(9).innerHTML = `<span class="ip-text">${escapeHtml(u.registered_ip || '-')}</span>`;
+    
+    // ===== 11. Last Online (索引 10) =====
+    const lastOnline = u.last_online || u.updated_at || u.created_at;
+    let lastOnlineDisplay = '-';
+    if (lastOnline) {
+        const lastDate = new Date(lastOnline);
+        const now = new Date();
+        const diffMins = Math.floor((now - lastDate) / 60000);
+        const diffHours = Math.floor(diffMins / 60);
+        const diffDays = Math.floor(diffHours / 24);
+        
+        if (diffMins < 1) {
+            lastOnlineDisplay = 'Just now';
+        } else if (diffMins < 60) {
+            lastOnlineDisplay = `${diffMins}m ago`;
+        } else if (diffHours < 24) {
+            lastOnlineDisplay = `${diffHours}h ago`;
+        } else if (diffDays < 7) {
+            lastOnlineDisplay = `${diffDays}d ago`;
+        } else {
+            lastOnlineDisplay = lastDate.toLocaleDateString();
         }
+    }
+    row.insertCell(10).innerHTML = `<span class="last-online-text">${lastOnlineDisplay}</span>`;
+}
         
         // ========== 绑定事件 ==========
         
