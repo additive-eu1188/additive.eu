@@ -691,70 +691,75 @@ async function loadWithdrawals() {
         
         tbody.innerHTML = '';
         for (var i = 0; i < filtered.length; i++) {
-            var w = filtered[i];
-            var row = tbody.insertRow();
-            
-            // ========== Crypto Type 大写 + 图标 ==========
-            var currency = w.currency || w.withdrawal_address_type || 'USDT';
-            var currencyDisplay = currency.toUpperCase();
-            var currencyClass = currency.toLowerCase();
-            var iconHtml = getCryptoIcon(currency);
-            
-            var countryName = 'Unknown';
-            var flagUrl = null;
-            try {
-                var userResult = await sb.from('users').select('country').eq('uid', w.uid).single();
-                var userData = userResult.data;
-                if (userData) {
-                    countryName = userData.country || 'Unknown';
-                    flagUrl = getCountryFlag(countryName);
-                }
-            } catch (e) { /* ignore */ }
-            
-            // User ID (索引 0)
-var cell0 = row.insertCell(0);
-cell0.style.padding = '6px 16px';
-cell0.innerHTML = '<span class="badge" ...>' + escapeHtml(w.uid) + '</span>';
-
-// Username (索引 1)
-var cell1 = row.insertCell(1);
-cell1.style.padding = '6px 16px';
-cell1.innerText = w.username || w.uid;
-
-// Amount (索引 2)
-var cell2 = row.insertCell(2);
-cell2.style.padding = '6px 16px';
-cell2.innerHTML = '<span style="color: #d4c09a; font-weight: 600; font-size:12px;">€' + (w.amount || 0).toFixed(2) + '</span>';
-
-// Remaining Balance (索引 3)
-var cell3 = row.insertCell(3);
-cell3.style.padding = '6px 16px';
-cell3.innerHTML = '<span style="font-size:11px; font-weight:500; color:rgba(255,255,255,0.50);">€' + userBalance.toFixed(2) + '</span>';
-
-// Crypto Type (索引 4) - padding 保持较小
-var cell4 = row.insertCell(4);
-cell4.style.padding = '6px 12px';
-cell4.innerHTML = '<span class="currency-badge ' + currencyClass + '">' + iconHtml + escapeHtml(currencyDisplay) + '</span>';
-
-// Wallet Address (索引 5) - padding 保持较小
-var addressCell = row.insertCell(5);
-addressCell.style.padding = '6px 12px';
-addressCell.className = 'wallet-address-cell';
-            
-            // ===== User IP / Country (索引 6) =====
-            var ipCell = row.insertCell(6);
-            if (flagUrl && countryName !== 'Unknown') {
-                ipCell.innerHTML = '<img src="' + flagUrl + '" class="country-flag-img" onerror="this.style.display=\'none\'" alt=""> <span class="country-name">' + escapeHtml(countryName) + '</span>';
-            } else {
-                ipCell.innerHTML = '<span style="font-size: 12px; color: #6a7a9a;">' + escapeHtml(w.user_ip || '-') + '</span>';
-            }
-            
-            // ===== Withdrawal Time (索引 7) =====
-            row.insertCell(7).innerText = w.request_date ? new Date(w.request_date).toLocaleString() : '-';
-            
-            // ===== Actions (索引 8) =====
-            row.insertCell(8).innerHTML = '<button class="btn-sm-action btn-approve approve-withdraw" data-id="' + w.id + '" data-uid="' + w.uid + '" data-amt="' + w.amount + '"><i class="fas fa-check"></i> Approve</button><button class="btn-sm-action btn-reject reject-withdraw" data-id="' + w.id + '" data-uid="' + w.uid + '" data-amt="' + w.amount + '"><i class="fas fa-times"></i> Reject</button>';
+    var w = filtered[i];
+    var row = tbody.insertRow();
+    
+    // ========== Crypto Type 大写 + 图标 ==========
+    var currency = w.currency || w.withdrawal_address_type || 'USDT';
+    var currencyDisplay = currency.toUpperCase();
+    var currencyClass = currency.toLowerCase();
+    var iconHtml = getCryptoIcon(currency);
+    
+    var countryName = 'Unknown';
+    var flagUrl = null;
+    try {
+        var userResult = await sb.from('users').select('country').eq('uid', w.uid).single();
+        var userData = userResult.data;
+        if (userData) {
+            countryName = userData.country || 'Unknown';
+            flagUrl = getCountryFlag(countryName);
         }
+    } catch (e) { /* ignore */ }
+    
+    // 获取用户余额（在 cell3 之前定义）
+    var userBalance = userBalances[w.uid] || 0;
+    
+    // User ID (索引 0)
+    var cell0 = row.insertCell(0);
+    cell0.style.padding = '6px 16px';
+    cell0.innerHTML = '<span class="badge" style="background: rgba(255,255,255,0.08); padding: 2px 12px; border-radius: 20px; font-size: 11px; color: #c8d2e8; border: 1px solid rgba(255,255,255,0.06);">' + escapeHtml(w.uid) + '</span>';
+    
+    // Username (索引 1)
+    var cell1 = row.insertCell(1);
+    cell1.style.padding = '6px 16px';
+    cell1.innerText = w.username || w.uid;
+    
+    // Amount (索引 2)
+    var cell2 = row.insertCell(2);
+    cell2.style.padding = '6px 16px';
+    cell2.innerHTML = '<span style="color: #d4c09a; font-weight: 600; font-size:12px;">€' + (w.amount || 0).toFixed(2) + '</span>';
+    
+    // Remaining Balance (索引 3)
+    var cell3 = row.insertCell(3);
+    cell3.style.padding = '6px 16px';
+    cell3.innerHTML = '<span style="font-size:11px; font-weight:500; color:rgba(255,255,255,0.50);">€' + userBalance.toFixed(2) + '</span>';
+    
+    // Crypto Type (索引 4)
+    var cell4 = row.insertCell(4);
+    cell4.style.padding = '6px 12px';
+    cell4.innerHTML = '<span class="currency-badge ' + currencyClass + '">' + iconHtml + escapeHtml(currencyDisplay) + '</span>';
+    
+    // Wallet Address (索引 5)
+    var address = w.wallet_address || '-';
+    var addressCell = row.insertCell(5);
+    addressCell.style.padding = '6px 12px';
+    addressCell.className = 'wallet-address-cell';
+    addressCell.innerHTML = '<div class="wallet-address-wrapper"><span class="wallet-address-text">' + escapeHtml(address) + '</span>' + (address !== '-' ? '<button class="copy-address-btn" data-address="' + escapeHtml(address) + '"><i class="fas fa-copy"></i></button>' : '') + '</div>';
+    
+    // ===== User IP / Country (索引 6) =====
+    var ipCell = row.insertCell(6);
+    if (flagUrl && countryName !== 'Unknown') {
+        ipCell.innerHTML = '<img src="' + flagUrl + '" class="country-flag-img" onerror="this.style.display=\'none\'" alt=""> <span class="country-name">' + escapeHtml(countryName) + '</span>';
+    } else {
+        ipCell.innerHTML = '<span style="font-size: 12px; color: #6a7a9a;">' + escapeHtml(w.user_ip || '-') + '</span>';
+    }
+    
+    // ===== Withdrawal Time (索引 7) =====
+    row.insertCell(7).innerText = w.request_date ? new Date(w.request_date).toLocaleString() : '-';
+    
+    // ===== Actions (索引 8) =====
+    row.insertCell(8).innerHTML = '<button class="btn-sm-action btn-approve approve-withdraw" data-id="' + w.id + '" data-uid="' + w.uid + '" data-amt="' + w.amount + '"><i class="fas fa-check"></i> Approve</button><button class="btn-sm-action btn-reject reject-withdraw" data-id="' + w.id + '" data-uid="' + w.uid + '" data-amt="' + w.amount + '"><i class="fas fa-times"></i> Reject</button>';
+}
         
         document.querySelectorAll('#withdrawalsTableBody .copy-address-btn').forEach(function(btn) {
             btn.addEventListener('click', function(e) {
