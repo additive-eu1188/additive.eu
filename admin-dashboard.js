@@ -399,7 +399,7 @@ function startWaveAnimation(canvas) {
         
         // ===== 生成声波圈 =====
         ringSpawnCounter++;
-        if (ringSpawnCounter % 20 === 0) {
+        if (ringSpawnCounter % 40 === 0) {
             spawnExpandingRing();
         }
         
