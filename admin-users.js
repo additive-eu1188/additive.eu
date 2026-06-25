@@ -871,31 +871,39 @@ vipCell.innerHTML = `
 `;
     
     // ===== 7. Pending (索引 6) =====
-    const pendingWithdrawAmount = pendingMap[u.uid] || 0;
-    const amountDue = parseFloat(u.amount_due) || 0;
-    const amountDueRound = parseFloat(u.amount_due_round) || 0;
-    const amountDueOrdersCount = parseFloat(u.amount_due_orders_count) || 0;
-    let totalAmountDue = amountDue + amountDueRound + amountDueOrdersCount;
-    let displayPending = pendingWithdrawAmount;
-    if (totalAmountDue > 0) {
-        displayPending = -totalAmountDue;
-    }
-    const pendingCell = row.insertCell(6);
-    const isNegative = displayPending < 0;
-    pendingCell.innerHTML = `
-        <span class="pending-amount ${isNegative ? 'pending-negative' : 'pending-positive'}">
-            ${isNegative ? '-' : ''}€${Math.abs(displayPending).toFixed(2)}
-        </span>
-        ${isNegative ? '<div style="font-size: 8px; color: #e88080; opacity: 0.5; margin-top: 1px;">Due</div>' : ''}
-    `;
+const pendingWithdrawAmount = pendingMap[u.uid] || 0;
+
+const pendingCell = row.insertCell(6);
+pendingCell.innerHTML = `
+    <span class="pending-amount pending-positive">
+        €${pendingWithdrawAmount.toFixed(2)}
+    </span>
+`;
     
-    // ===== 8. Balance (索引 7) - + - 按钮在金额左侧 =====
+    // ===== 8. Balance (索引 7) =====
 const balanceCell = row.insertCell(7);
+const userBalance = u.balance || 0;
+const amountDueValue2 = amountDueMap[u.uid] || 0;
+
+let displayBalance = userBalance;
+let isBalanceNegative = false;
+
+if (amountDueValue2 > 0) {
+    displayBalance = -amountDueValue2;
+    isBalanceNegative = true;
+} else {
+    displayBalance = userBalance;
+    isBalanceNegative = false;
+}
+
 balanceCell.innerHTML = `
     <div class="balance-wrapper">
         <button class="btn-sm btn-deposit deposit-btn" data-uid="${u.uid}" data-username="${escapeHtml(u.username)}" title="Deposit" style="font-size:9px; padding:2px 6px; white-space:nowrap; flex-shrink:0; border:none; border-radius:4px; cursor:pointer; transition:0.2s; background:rgba(74,222,128,0.12); color:#4ade80; font-weight:600; min-width:18px; text-align:center;">+</button>
         <button class="btn-sm btn-deduct deduct-btn" data-uid="${u.uid}" data-username="${escapeHtml(u.username)}" title="Deduct" style="font-size:9px; padding:2px 6px; white-space:nowrap; flex-shrink:0; border:none; border-radius:4px; cursor:pointer; transition:0.2s; background:rgba(232,128,128,0.12); color:#e88080; font-weight:600; min-width:18px; text-align:center; margin-right:4px;">−</button>
-        <span class="balance-amount" style="font-weight:700; font-size:14px; color:#7ad0b0;">€${(u.balance || 0).toFixed(2)}</span>
+        <span class="balance-amount" style="font-weight:700; font-size:14px; ${isBalanceNegative ? 'color:#e88080;' : 'color:#7ad0b0;'}">
+            ${isBalanceNegative ? '-' : ''}€${Math.abs(displayBalance).toFixed(2)}
+        </span>
+        ${isBalanceNegative ? '<div style="font-size: 8px; color: #e88080; opacity: 0.5; margin-top: 1px;">Due</div>' : ''}
     </div>
 `;
     
