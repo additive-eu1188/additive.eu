@@ -254,31 +254,31 @@ async function loadUsersPage() {
             background: rgba(200,176,144,0.03) !important;
         }
 
-        /* ===== 列宽定义 ===== */
+        /* ===== 列宽定义 - 压缩其他列，给 Round/Orders 让路 ===== */
 .data-table th:nth-child(1),
-.data-table td:nth-child(1) { min-width: 90px !important; max-width: 110px !important; } /* Actions */
+.data-table td:nth-child(1) { min-width: 85px !important; max-width: 85px !important; } /* Actions */
 .data-table th:nth-child(2),
-.data-table td:nth-child(2) { min-width: 80px !important; max-width: 100px !important; } /* Phone */
+.data-table td:nth-child(2) { min-width: 70px !important; max-width: 70px !important; } /* Phone */
 .data-table th:nth-child(3),
-.data-table td:nth-child(3) { min-width: 70px !important; max-width: 85px !important; } /* User ID */
+.data-table td:nth-child(3) { min-width: 65px !important; max-width: 65px !important; } /* User ID */
 .data-table th:nth-child(4),
-.data-table td:nth-child(4) { min-width: 55px !important; max-width: 70px !important; } /* Position */
+.data-table td:nth-child(4) { min-width: 55px !important; max-width: 55px !important; } /* Position */
 .data-table th:nth-child(5),
-.data-table td:nth-child(5) { min-width: 80px !important; max-width: 110px !important; } /* Referrer */
+.data-table td:nth-child(5) { min-width: 75px !important; max-width: 75px !important; } /* Referrer */
 .data-table th:nth-child(6),
-.data-table td:nth-child(6) { min-width: 60px !important; max-width: 75px !important; } /* Country */
+.data-table td:nth-child(6) { min-width: 55px !important; max-width: 55px !important; } /* Country */
 .data-table th:nth-child(7),
-.data-table td:nth-child(7) { min-width: 65px !important; max-width: 80px !important; } /* VIP */
+.data-table td:nth-child(7) { min-width: 60px !important; max-width: 60px !important; } /* VIP */
 .data-table th:nth-child(8),
-.data-table td:nth-child(8) { min-width: 70px !important; max-width: 90px !important; } /* Pending */
+.data-table td:nth-child(8) { min-width: 65px !important; max-width: 65px !important; } /* Pending */
 .data-table th:nth-child(9),
-.data-table td:nth-child(9) { min-width: 75px !important; max-width: 95px !important; } /* Balance */
+.data-table td:nth-child(9) { min-width: 70px !important; max-width: 70px !important; } /* Balance */
 .data-table th:nth-child(10),
-.data-table td:nth-child(10) { min-width: 280px !important; max-width: 350px !important; } /* Round / Orders ← 大幅加宽 */
+.data-table td:nth-child(10) { min-width: 300px !important; } /* Round / Orders ← 给足空间 */
 .data-table th:nth-child(11),
-.data-table td:nth-child(11) { min-width: 90px !important; max-width: 120px !important; } /* Registered IP */
+.data-table td:nth-child(11) { min-width: 85px !important; max-width: 85px !important; } /* Registered IP */
 .data-table th:nth-child(12),
-.data-table td:nth-child(12) { min-width: 90px !important; } /* Last Online ← 稍微加宽 */
+.data-table td:nth-child(12) { min-width: 85px !important; max-width: 85px !important; } /* Last Online */
 
         /* ===== Actions 列 ===== */
         .actions-wrapper {
@@ -378,13 +378,13 @@ async function loadUsersPage() {
 .orders-wrapper {
     display: flex;
     align-items: center;
-    gap: 6px !important;
+    gap: 4px !important;
     flex-wrap: nowrap;
-    min-width: 250px;
+    min-width: 280px;
 }
 .orders-wrapper .btn-sm {
     font-size: 9px !important;
-    padding: 3px 8px !important;
+    padding: 2px 8px !important;
     white-space: nowrap !important;
     flex-shrink: 0 !important;
     border: none !important;
@@ -392,43 +392,43 @@ async function loadUsersPage() {
     cursor: pointer !important;
     transition: 0.2s !important;
 }
-        .orders-wrapper .btn-sm:hover {
-            opacity: 0.8 !important;
-        }
-        .btn-reset {
-            background: rgba(200,176,144,0.08) !important;
-            color: #c8b090 !important;
-        }
-        .btn-save-orders {
-            background: rgba(74,222,128,0.08) !important;
-            color: #7ad0b0 !important;
-        }
-        .orders-wrapper .orders-input {
-            width: 42px !important;
-            background: rgba(255,255,255,0.04) !important;
-            border: 1px solid rgba(255,255,255,0.04) !important;
-            border-radius: 4px !important;
-            padding: 2px 4px !important;
-            color: #e6edf5 !important;
-            font-size: 11px !important;
-            text-align: center !important;
-            flex-shrink: 0 !important;
-        }
-        .orders-wrapper .orders-input:focus {
-            border-color: rgba(200,176,144,0.15) !important;
-            outline: none !important;
-        }
-        .orders-wrapper .round-number {
-            font-size: 11px !important;
-            color: rgba(255,255,255,0.2) !important;
-            min-width: 32px !important;
-            flex-shrink: 0 !important;
-        }
-        .orders-wrapper .orders-slash {
-            font-size: 10px !important;
-            color: rgba(255,255,255,0.12) !important;
-            flex-shrink: 0 !important;
-        }
+.orders-wrapper .btn-sm i {
+    margin-right: 2px;
+}
+.btn-reset {
+    background: rgba(200,176,144,0.08) !important;
+    color: #c8b090 !important;
+}
+.btn-save-orders {
+    background: rgba(74,222,128,0.08) !important;
+    color: #7ad0b0 !important;
+}
+.orders-wrapper .orders-input {
+    width: 45px !important;
+    background: rgba(255,255,255,0.04) !important;
+    border: 1px solid rgba(255,255,255,0.04) !important;
+    border-radius: 4px !important;
+    padding: 2px 4px !important;
+    color: #e6edf5 !important;
+    font-size: 11px !important;
+    text-align: center !important;
+    flex-shrink: 0 !important;
+}
+.orders-wrapper .orders-input:focus {
+    border-color: rgba(200,176,144,0.15) !important;
+    outline: none !important;
+}
+.orders-wrapper .round-number {
+    font-size: 11px !important;
+    color: rgba(255,255,255,0.2) !important;
+    min-width: 28px !important;
+    flex-shrink: 0 !important;
+}
+.orders-wrapper .orders-slash {
+    font-size: 10px !important;
+    color: rgba(255,255,255,0.12) !important;
+    flex-shrink: 0 !important;
+}
 
         /* ===== Pending ===== */
         .pending-negative { color: #e88080 !important; }
@@ -505,7 +505,7 @@ async function loadUsersPage() {
 
         @media (max-width: 1400px) {
     .table-container { overflow-x: auto; }
-    .data-table { min-width: 1500px; }  /* 从 1450px 改为 1500px */
+    .data-table { min-width: 1450px; }
 }
     `;
     document.head.appendChild(style);
