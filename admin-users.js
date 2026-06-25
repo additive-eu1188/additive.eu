@@ -909,11 +909,12 @@ const currentBal = u.balance || 0;
 const amountDueVal = amountDueMap[u.uid] || 0;
 const triggerComm = pendingTriggerMap[u.uid] || 0;
 const pendingWithdrawAmt = pendingMap[u.uid] || 0;
+const orderCommissions = commissionMap[u.uid] || 0;  // 🔥 加上订单佣金
 
 let totalPendingValue;
 if (amountDueVal > 0) {
-    // 有 amount due 时：balance + amountDue + triggerCommission
-    totalPendingValue = currentBal + amountDueVal + triggerComm;
+    // 有 amount due 时：balance + amountDue + triggerCommission + 订单佣金
+    totalPendingValue = currentBal + amountDueVal + triggerComm + orderCommissions;
 } else {
     // 没有 amount due 时：显示 pending 提现
     totalPendingValue = pendingWithdrawAmt;
