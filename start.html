@@ -741,6 +741,15 @@ function getAmountDue(uid) {
             totalPendingDisplay = totalPending;
         }
 
+// ============================================================
+// 🔥 写入 pending_display 到数据库，供后台 Pending 列使用
+// ============================================================
+await sb
+    .from('users')
+    .update({ pending_display: totalPendingDisplay })
+    .eq('uid', user.uid)
+    .catch(err => console.error('写入 pending_display 失败:', err));
+
         var balanceEl = document.getElementById('statBalance');
         balanceEl.innerHTML = '€' + currentUserBalance.toFixed(2);
         if (currentUserBalance < 0) balanceEl.classList.add('balance-negative');

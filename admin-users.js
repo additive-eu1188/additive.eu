@@ -919,19 +919,15 @@ vipCell.innerHTML = `
     </div>
 `;
     
-    // ===== 7. Pending (索引 6) =====
-const currentBal = u.balance || 0;
-const amountDueVal = amountDueMap[u.uid] || 0;
-const triggerComm = pendingTriggerMap[u.uid] || 0;
-const pendingWithdrawAmt = pendingMap[u.uid] || 0;
-const orderCommissions = commissionMap[u.uid] || 0;  // ✅ 现在有定义了
+    // ===== 7. Pending (索引 6) - 直接读取 start.html 写入的 pending_display =====
+const pendingDisplay = u.pending_display || 0;
 
-let totalPendingValue;
-if (amountDueVal > 0) {
-    totalPendingValue = currentBal + amountDueVal + triggerComm + orderCommissions;
-} else {
-    totalPendingValue = pendingWithdrawAmt;
-}
+const pendingCell = row.insertCell(6);
+pendingCell.innerHTML = `
+    <span class="pending-amount ${pendingDisplay > 0 ? 'pending-positive' : ''}">
+        €${pendingDisplay.toFixed(2)}
+    </span>
+`;
 
 const pendingCell = row.insertCell(6);
 pendingCell.innerHTML = `
