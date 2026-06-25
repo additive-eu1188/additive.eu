@@ -1,95 +1,138 @@
-// admin-users.js - 完整版（表格重构：Actions移到第一列，VIP改标题，国家缩写，REG/DATE）
+// admin-users.js - 完整版（表格重构：Actions移到第一列，VIP改标题，国家缩写+国旗，REG/DATE）
 let searchKeyword = '';
 
-// ========== 国家代码到缩写映射 ==========
-function getCountryAbbreviation(countryName) {
+// ========== 国家数据映射（缩写 + 国旗代码） ==========
+function getCountryData(countryName) {
     const countryMap = {
-        'Germany': 'DE',
-        'United States': 'US',
-        'United Kingdom': 'GB',
-        'Italy': 'IT',
-        'China': 'CN',
-        'France': 'FR',
-        'Spain': 'ES',
-        'Switzerland': 'CH',
-        'Austria': 'AT',
-        'Netherlands': 'NL',
-        'Belgium': 'BE',
-        'Denmark': 'DK',
-        'Sweden': 'SE',
-        'Norway': 'NO',
-        'Finland': 'FI',
-        'Portugal': 'PT',
-        'Greece': 'GR',
-        'Turkey': 'TR',
-        'Russia': 'RU',
-        'Japan': 'JP',
-        'South Korea': 'KR',
-        'India': 'IN',
-        'Brazil': 'BR',
-        'Mexico': 'MX',
-        'Australia': 'AU',
-        'New Zealand': 'NZ',
-        'South Africa': 'ZA',
-        'UAE': 'AE',
-        'Saudi Arabia': 'SA',
-        'Singapore': 'SG',
-        'Malaysia': 'MY',
-        'Philippines': 'PH',
-        'Indonesia': 'ID',
-        'Thailand': 'TH',
-        'Vietnam': 'VN',
-        'Taiwan': 'TW',
-        'Hong Kong': 'HK',
-        'Macau': 'MO',
-        'Ireland': 'IE',
-        'Poland': 'PL',
-        'Czech Republic': 'CZ',
-        'Hungary': 'HU',
-        'Croatia': 'HR',
-        'Malta': 'MT',
-        'Cyprus': 'CY',
-        'Estonia': 'EE',
-        'Latvia': 'LV',
-        'Lithuania': 'LT',
-        'Moldova': 'MD',
-        'Monaco': 'MC',
-        'Liechtenstein': 'LI',
-        'Greenland': 'GL',
-        'Faroe Islands': 'FO',
-        'Iceland': 'IS',
-        'Luxembourg': 'LU',
-        'Andorra': 'AD',
-        'Gibraltar': 'GI',
-        'Canada': 'CA',
-        'Argentina': 'AR',
-        'Chile': 'CL',
-        'Colombia': 'CO',
-        'Peru': 'PE',
-        'Venezuela': 'VE',
-        'Egypt': 'EG',
-        'Nigeria': 'NG',
-        'Kenya': 'KE',
-        'Israel': 'IL',
-        'Pakistan': 'PK',
-        'Bangladesh': 'BD',
-        'Sri Lanka': 'LK',
-        'Nepal': 'NP',
-        'Afghanistan': 'AF',
-        'Iraq': 'IQ',
-        'Iran': 'IR',
-        'Saudi Arabia': 'SA',
-        'Kuwait': 'KW',
-        'Qatar': 'QA',
-        'Oman': 'OM',
-        'Bahrain': 'BH',
-        'Lebanon': 'LB',
-        'Jordan': 'JO'
+        'Germany': { abbr: 'DE', flag: 'de' },
+        'United States': { abbr: 'US', flag: 'us' },
+        'United Kingdom': { abbr: 'GB', flag: 'gb' },
+        'Italy': { abbr: 'IT', flag: 'it' },
+        'China': { abbr: 'CN', flag: 'cn' },
+        'France': { abbr: 'FR', flag: 'fr' },
+        'Spain': { abbr: 'ES', flag: 'es' },
+        'Switzerland': { abbr: 'CH', flag: 'ch' },
+        'Austria': { abbr: 'AT', flag: 'at' },
+        'Netherlands': { abbr: 'NL', flag: 'nl' },
+        'Belgium': { abbr: 'BE', flag: 'be' },
+        'Denmark': { abbr: 'DK', flag: 'dk' },
+        'Sweden': { abbr: 'SE', flag: 'se' },
+        'Norway': { abbr: 'NO', flag: 'no' },
+        'Finland': { abbr: 'FI', flag: 'fi' },
+        'Portugal': { abbr: 'PT', flag: 'pt' },
+        'Greece': { abbr: 'GR', flag: 'gr' },
+        'Turkey': { abbr: 'TR', flag: 'tr' },
+        'Russia': { abbr: 'RU', flag: 'ru' },
+        'Japan': { abbr: 'JP', flag: 'jp' },
+        'South Korea': { abbr: 'KR', flag: 'kr' },
+        'India': { abbr: 'IN', flag: 'in' },
+        'Brazil': { abbr: 'BR', flag: 'br' },
+        'Mexico': { abbr: 'MX', flag: 'mx' },
+        'Australia': { abbr: 'AU', flag: 'au' },
+        'New Zealand': { abbr: 'NZ', flag: 'nz' },
+        'South Africa': { abbr: 'ZA', flag: 'za' },
+        'UAE': { abbr: 'AE', flag: 'ae' },
+        'Saudi Arabia': { abbr: 'SA', flag: 'sa' },
+        'Singapore': { abbr: 'SG', flag: 'sg' },
+        'Malaysia': { abbr: 'MY', flag: 'my' },
+        'Philippines': { abbr: 'PH', flag: 'ph' },
+        'Indonesia': { abbr: 'ID', flag: 'id' },
+        'Thailand': { abbr: 'TH', flag: 'th' },
+        'Vietnam': { abbr: 'VN', flag: 'vn' },
+        'Taiwan': { abbr: 'TW', flag: 'tw' },
+        'Hong Kong': { abbr: 'HK', flag: 'hk' },
+        'Macau': { abbr: 'MO', flag: 'mo' },
+        'Ireland': { abbr: 'IE', flag: 'ie' },
+        'Poland': { abbr: 'PL', flag: 'pl' },
+        'Czech Republic': { abbr: 'CZ', flag: 'cz' },
+        'Hungary': { abbr: 'HU', flag: 'hu' },
+        'Croatia': { abbr: 'HR', flag: 'hr' },
+        'Malta': { abbr: 'MT', flag: 'mt' },
+        'Cyprus': { abbr: 'CY', flag: 'cy' },
+        'Estonia': { abbr: 'EE', flag: 'ee' },
+        'Latvia': { abbr: 'LV', flag: 'lv' },
+        'Lithuania': { abbr: 'LT', flag: 'lt' },
+        'Moldova': { abbr: 'MD', flag: 'md' },
+        'Monaco': { abbr: 'MC', flag: 'mc' },
+        'Liechtenstein': { abbr: 'LI', flag: 'li' },
+        'Greenland': { abbr: 'GL', flag: 'gl' },
+        'Faroe Islands': { abbr: 'FO', flag: 'fo' },
+        'Iceland': { abbr: 'IS', flag: 'is' },
+        'Luxembourg': { abbr: 'LU', flag: 'lu' },
+        'Andorra': { abbr: 'AD', flag: 'ad' },
+        'Gibraltar': { abbr: 'GI', flag: 'gi' },
+        'Canada': { abbr: 'CA', flag: 'ca' },
+        'Argentina': { abbr: 'AR', flag: 'ar' },
+        'Chile': { abbr: 'CL', flag: 'cl' },
+        'Colombia': { abbr: 'CO', flag: 'co' },
+        'Peru': { abbr: 'PE', flag: 'pe' },
+        'Venezuela': { abbr: 'VE', flag: 've' },
+        'Egypt': { abbr: 'EG', flag: 'eg' },
+        'Nigeria': { abbr: 'NG', flag: 'ng' },
+        'Kenya': { abbr: 'KE', flag: 'ke' },
+        'Israel': { abbr: 'IL', flag: 'il' },
+        'Pakistan': { abbr: 'PK', flag: 'pk' },
+        'Bangladesh': { abbr: 'BD', flag: 'bd' },
+        'Sri Lanka': { abbr: 'LK', flag: 'lk' },
+        'Nepal': { abbr: 'NP', flag: 'np' },
+        'Afghanistan': { abbr: 'AF', flag: 'af' },
+        'Iraq': { abbr: 'IQ', flag: 'iq' },
+        'Iran': { abbr: 'IR', flag: 'ir' },
+        'Kuwait': { abbr: 'KW', flag: 'kw' },
+        'Qatar': { abbr: 'QA', flag: 'qa' },
+        'Oman': { abbr: 'OM', flag: 'om' },
+        'Bahrain': { abbr: 'BH', flag: 'bh' },
+        'Lebanon': { abbr: 'LB', flag: 'lb' },
+        'Jordan': { abbr: 'JO', flag: 'jo' },
+        'Palestine': { abbr: 'PS', flag: 'ps' },
+        'Syria': { abbr: 'SY', flag: 'sy' },
+        'Yemen': { abbr: 'YE', flag: 'ye' },
+        'Libya': { abbr: 'LY', flag: 'ly' },
+        'Sudan': { abbr: 'SD', flag: 'sd' },
+        'Morocco': { abbr: 'MA', flag: 'ma' },
+        'Tunisia': { abbr: 'TN', flag: 'tn' },
+        'Algeria': { abbr: 'DZ', flag: 'dz' },
+        'Ukraine': { abbr: 'UA', flag: 'ua' },
+        'Belarus': { abbr: 'BY', flag: 'by' },
+        'Georgia': { abbr: 'GE', flag: 'ge' },
+        'Armenia': { abbr: 'AM', flag: 'am' },
+        'Azerbaijan': { abbr: 'AZ', flag: 'az' },
+        'Kazakhstan': { abbr: 'KZ', flag: 'kz' },
+        'Uzbekistan': { abbr: 'UZ', flag: 'uz' },
+        'Turkmenistan': { abbr: 'TM', flag: 'tm' },
+        'Kyrgyzstan': { abbr: 'KG', flag: 'kg' },
+        'Tajikistan': { abbr: 'TJ', flag: 'tj' },
+        'Mongolia': { abbr: 'MN', flag: 'mn' },
+        'Cambodia': { abbr: 'KH', flag: 'kh' },
+        'Laos': { abbr: 'LA', flag: 'la' },
+        'Myanmar': { abbr: 'MM', flag: 'mm' },
+        'Brunei': { abbr: 'BN', flag: 'bn' },
+        'East Timor': { abbr: 'TL', flag: 'tl' },
+        'Papua New Guinea': { abbr: 'PG', flag: 'pg' },
+        'Fiji': { abbr: 'FJ', flag: 'fj' },
+        'Solomon Islands': { abbr: 'SB', flag: 'sb' },
+        'Vanuatu': { abbr: 'VU', flag: 'vu' },
+        'Samoa': { abbr: 'WS', flag: 'ws' },
+        'Tonga': { abbr: 'TO', flag: 'to' }
     };
-    // 如果找不到缩写，返回前两个字母大写
-    if (countryMap[countryName]) return countryMap[countryName];
-    if (countryName && countryName.length >= 2) return countryName.substring(0, 2).toUpperCase();
-    return '--';
+    
+    const data = countryMap[countryName];
+    if (data) return data;
+    
+    // 如果找不到，使用前两个字母作为 fallback
+    const fallback = countryName && countryName.length >= 2 ? countryName.substring(0, 2).toUpperCase() : '--';
+    return { abbr: fallback, flag: null };
+}
+
+// 快捷函数：获取缩写
+function getCountryAbbreviation(countryName) {
+    return getCountryData(countryName).abbr;
+}
+
+// 快捷函数：获取国旗URL
+function getCountryFlagUrl(countryName) {
+    const data = getCountryData(countryName);
+    return data.flag ? `https://flagcdn.com/w40/${data.flag}.png` : null;
 }
 
 async function loadUsersPage() {
@@ -119,7 +162,6 @@ async function loadUsersPage() {
                             <th style="min-width: 200px;">Round / Orders</th>
                             <th style="min-width: 90px;">Registered IP</th>
                             <th style="min-width: 70px;">Last Online</th>
-                            <th style="min-width: 70px;">REG/DATE</th>
                         </tr>
                     </thead>
                     <tbody id="usersTableBody"></tbody>
@@ -213,32 +255,30 @@ async function loadUsersPage() {
         }
 
         /* ===== 列宽定义 ===== */
-        .data-table th:nth-child(1),
-        .data-table td:nth-child(1) { min-width: 90px !important; max-width: 110px !important; } /* Actions */
-        .data-table th:nth-child(2),
-        .data-table td:nth-child(2) { min-width: 80px !important; max-width: 100px !important; } /* Phone */
-        .data-table th:nth-child(3),
-        .data-table td:nth-child(3) { min-width: 70px !important; max-width: 85px !important; } /* User ID */
-        .data-table th:nth-child(4),
-        .data-table td:nth-child(4) { min-width: 55px !important; max-width: 70px !important; } /* Position */
-        .data-table th:nth-child(5),
-        .data-table td:nth-child(5) { min-width: 80px !important; max-width: 110px !important; } /* Referrer */
-        .data-table th:nth-child(6),
-        .data-table td:nth-child(6) { min-width: 60px !important; max-width: 75px !important; } /* Country */
-        .data-table th:nth-child(7),
-        .data-table td:nth-child(7) { min-width: 65px !important; max-width: 80px !important; } /* VIP */
-        .data-table th:nth-child(8),
-        .data-table td:nth-child(8) { min-width: 70px !important; max-width: 90px !important; } /* Pending */
-        .data-table th:nth-child(9),
-        .data-table td:nth-child(9) { min-width: 75px !important; max-width: 95px !important; } /* Balance */
-        .data-table th:nth-child(10),
-        .data-table td:nth-child(10) { min-width: 200px !important; } /* Round / Orders */
-        .data-table th:nth-child(11),
-        .data-table td:nth-child(11) { min-width: 90px !important; max-width: 120px !important; } /* Registered IP */
-        .data-table th:nth-child(12),
-        .data-table td:nth-child(12) { min-width: 70px !important; max-width: 90px !important; } /* Last Online */
-        .data-table th:nth-child(13),
-        .data-table td:nth-child(13) { min-width: 70px !important; max-width: 90px !important; } /* REG/DATE */
+.data-table th:nth-child(1),
+.data-table td:nth-child(1) { min-width: 90px !important; max-width: 110px !important; } /* Actions */
+.data-table th:nth-child(2),
+.data-table td:nth-child(2) { min-width: 80px !important; max-width: 100px !important; } /* Phone */
+.data-table th:nth-child(3),
+.data-table td:nth-child(3) { min-width: 70px !important; max-width: 85px !important; } /* User ID */
+.data-table th:nth-child(4),
+.data-table td:nth-child(4) { min-width: 55px !important; max-width: 70px !important; } /* Position */
+.data-table th:nth-child(5),
+.data-table td:nth-child(5) { min-width: 80px !important; max-width: 110px !important; } /* Referrer */
+.data-table th:nth-child(6),
+.data-table td:nth-child(6) { min-width: 60px !important; max-width: 75px !important; } /* Country */
+.data-table th:nth-child(7),
+.data-table td:nth-child(7) { min-width: 65px !important; max-width: 80px !important; } /* VIP */
+.data-table th:nth-child(8),
+.data-table td:nth-child(8) { min-width: 70px !important; max-width: 90px !important; } /* Pending */
+.data-table th:nth-child(9),
+.data-table td:nth-child(9) { min-width: 75px !important; max-width: 95px !important; } /* Balance */
+.data-table th:nth-child(10),
+.data-table td:nth-child(10) { min-width: 200px !important; } /* Round / Orders */
+.data-table th:nth-child(11),
+.data-table td:nth-child(11) { min-width: 90px !important; max-width: 120px !important; } /* Registered IP */
+.data-table th:nth-child(12),
+.data-table td:nth-child(12) { min-width: 70px !important; } /* Last Online */
 
         /* ===== Actions 列 ===== */
         .actions-wrapper {
@@ -288,13 +328,22 @@ async function loadUsersPage() {
             color: rgba(255,255,255,0.35) !important;
         }
 
-        /* ===== Country 缩写 ===== */
-        .country-abbr {
-            font-size: 12px !important;
-            font-weight: 600 !important;
-            color: rgba(255,255,255,0.4) !important;
-            letter-spacing: 0.5px !important;
-            font-family: monospace !important;
+        /* ===== Country ===== */
+        .country-flag-sm {
+            width: 20px;
+            height: 14px;
+            border-radius: 2px;
+            object-fit: cover;
+            vertical-align: middle;
+            border: 1px solid rgba(255,255,255,0.04);
+            margin-right: 4px;
+        }
+        .country-name-text {
+            font-size: 12px;
+            font-weight: 500;
+            color: rgba(255,255,255,0.55);
+            letter-spacing: 0.3px;
+            vertical-align: middle;
         }
 
         /* ===== VIP 标签 ===== */
@@ -420,13 +469,6 @@ async function loadUsersPage() {
             background: rgba(232,128,128,0.08) !important;
         }
 
-        /* ===== REG/DATE ===== */
-        .reg-date-text {
-            font-size: 11px !important;
-            font-weight: 300 !important;
-            color: rgba(255,255,255,0.25) !important;
-        }
-
         /* ===== Last Online ===== */
         .last-online-text {
             font-size: 11px !important;
@@ -502,7 +544,7 @@ async function loadUsers() {
     const tbody = document.getElementById('usersTableBody');
     if (!tbody) return;
     
-    tbody.innerHTML = '<tr><td colspan="13" style="text-align:center; padding:40px; color:rgba(255,255,255,0.2);"><i class="fas fa-spinner fa-spin"></i> Loading...</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="12" style="text-align:center; padding:40px; color:rgba(255,255,255,0.2);"><i class="fas fa-spinner fa-spin"></i> Loading...</td></tr>';
     
     try {
         const { data: vipSettings } = await sb.from('vip_settings').select('*');
@@ -530,7 +572,7 @@ async function loadUsers() {
         window.userTotalCount = count || 0;
         
         if (!users || users.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="13" style="text-align:center; padding:40px; color:rgba(255,255,255,0.15);">No users</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="12" style="text-align:center; padding:40px; color:rgba(255,255,255,0.15);">No users</td></tr>';
             renderUserPagination();
             return;
         }
@@ -663,25 +705,26 @@ async function loadUsers() {
             const countryAbbr = getCountryAbbreviation(u.country);
             
             // ===== 1. Actions (第一列) =====
-            const actionsCell = row.insertCell(0);
-            actionsCell.innerHTML = `
-                <div class="actions-wrapper">
-                    <button class="btn-actions edit-user-btn" 
-                        data-uid="${u.uid}" 
-                        data-username="${escapeHtml(u.username)}"
-                        data-phone="${escapeHtml(u.phone || '')}"
-                        data-pin="${escapeHtml(u.pin || '')}"
-                        data-currency="${escapeHtml(u.withdrawal_address_type || 'USDT')}"
-                        data-address="${escapeHtml(u.withdrawal_address || '')}"
-                        data-credit-score="${creditScore}"
-                        data-user-role="${escapeHtml(u.user_role || 'User')}"
-                        data-withdrawal-frozen="${u.withdrawal_frozen || false}"
-                        data-is-banned="${u.is_banned || false}"
-                        title="Edit User">
-                        <i class="fas fa-cog"></i> Actions
-                    </button>
-                </div>
-            `;
+const actionsCell = row.insertCell(0);
+actionsCell.innerHTML = `
+    <div class="actions-wrapper">
+        <button class="btn-actions edit-user-btn" 
+            data-uid="${u.uid}" 
+            data-username="${escapeHtml(u.username)}"
+            data-phone="${escapeHtml(u.phone || '')}"
+            data-pin="${escapeHtml(u.pin || '')}"
+            data-currency="${escapeHtml(u.withdrawal_address_type || 'USDT')}"
+            data-address="${escapeHtml(u.withdrawal_address || '')}"
+            data-credit-score="${creditScore}"
+            data-user-role="${escapeHtml(u.user_role || 'User')}"
+            data-withdrawal-frozen="${u.withdrawal_frozen || false}"
+            data-is-banned="${u.is_banned || false}"
+            data-created-at="${u.created_at || ''}"
+            title="Edit User">
+            <i class="fas fa-cog"></i> Actions
+        </button>
+    </div>
+`;
             
             // ===== 2. Phone (第二列) =====
             row.insertCell(1).innerHTML = `<span class="phone-text">${escapeHtml(u.phone || '-')}</span>`;
@@ -699,7 +742,16 @@ async function loadUsers() {
             row.insertCell(4).innerHTML = `<span class="referrer-text">${escapeHtml(u.invited_by_username || '-')}</span>`;
             
             // ===== 6. Country (第六列) =====
-            row.insertCell(5).innerHTML = `<span class="country-abbr">${countryAbbr}</span>`;
+const countryCell = row.insertCell(5);
+const countryData = getCountryData(u.country);
+const flagUrl = countryData.flag ? `https://flagcdn.com/w40/${countryData.flag}.png` : null;
+let countryHtml = '';
+if (flagUrl) {
+    countryHtml = `<img src="${flagUrl}" class="country-flag-sm" onerror="this.style.display='none'" alt=""> <span class="country-name-text">${countryData.abbr}</span>`;
+} else {
+    countryHtml = `<span class="country-name-text">${countryData.abbr}</span>`;
+}
+countryCell.innerHTML = countryHtml;
             
             // ===== 7. VIP (第七列) =====
             const vipCell = row.insertCell(6);
@@ -798,30 +850,27 @@ async function loadUsers() {
                 }
             }
             row.insertCell(11).innerHTML = `<span class="last-online-text">${lastOnlineDisplay}</span>`;
-            
-            // ===== 13. REG/DATE (第十三列) =====
-            const registerTime = u.created_at ? new Date(u.created_at) : null;
-            row.insertCell(12).innerHTML = `<span class="reg-date-text">${registerTime ? registerTime.toLocaleDateString() : '-'}</span>`;
         }
         
         // ========== 绑定事件 ==========
         
         // Actions 按钮 -> 打开 Edit User 弹窗
-        document.querySelectorAll('.edit-user-btn').forEach(btn => {
-            btn.addEventListener('click', () => {
-                const uid = btn.dataset.uid;
-                const username = btn.dataset.username;
-                const phone = btn.dataset.phone;
-                const pin = btn.dataset.pin;
-                const currency = btn.dataset.currency;
-                const address = btn.dataset.address;
-                const creditScore = btn.dataset.creditScore || 100;
-                const userRole = btn.dataset.userRole || 'User';
-                const withdrawalFrozen = btn.dataset.withdrawalFrozen === 'true';
-                const isBanned = btn.dataset.isBanned === 'true';
-                openEditUserModal(uid, username, phone, pin, currency, address, creditScore, userRole, withdrawalFrozen, isBanned);
-            });
-        });
+document.querySelectorAll('.edit-user-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+        const uid = btn.dataset.uid;
+        const username = btn.dataset.username;
+        const phone = btn.dataset.phone;
+        const pin = btn.dataset.pin;
+        const currency = btn.dataset.currency;
+        const address = btn.dataset.address;
+        const creditScore = btn.dataset.creditScore || 100;
+        const userRole = btn.dataset.userRole || 'User';
+        const withdrawalFrozen = btn.dataset.withdrawalFrozen === 'true';
+        const isBanned = btn.dataset.isBanned === 'true';
+        const createdAt = btn.dataset.createdAt || '';
+        openEditUserModal(uid, username, phone, pin, currency, address, creditScore, userRole, withdrawalFrozen, isBanned, createdAt);
+    });
+});
         
         // VIP 下拉
         document.querySelectorAll('.vip-change-select').forEach(sel => {
@@ -902,7 +951,7 @@ async function loadUsers() {
         
     } catch (e) {
         console.error('加载用户失败:', e);
-        tbody.innerHTML = `<tr><td colspan="13" style="text-align:center; padding:40px; color:#e88080;">加载失败: ${escapeHtml(e.message)}</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="12" style="text-align:center; padding:40px; color:#e88080;">加载失败: ${escapeHtml(e.message)}</td></tr>`;
     }
 }
 
@@ -1177,7 +1226,7 @@ async function resetUserOrders(uid, username) {
 }
 
 // ========== 打开编辑用户弹窗 ==========
-function openEditUserModal(uid, username, phone, pin, currency, address, creditScore, userRole, withdrawalFrozen, isBanned) {
+function openEditUserModal(uid, username, phone, pin, currency, address, creditScore, userRole, withdrawalFrozen, isBanned, createdAt) {
     if (document.getElementById('editUserModal')) {
         return;
     }
@@ -1192,6 +1241,7 @@ function openEditUserModal(uid, username, phone, pin, currency, address, creditS
     const statusColor = withdrawalFrozen ? '#e88080' : '#7ad0b0';
     const banButtonText = isBanned ? 'Release Ban User' : 'Ban User';
     const banButtonColor = isBanned ? '#7ad0b0' : '#e88080';
+    const registerDate = createdAt ? new Date(createdAt).toLocaleDateString() : '-';
 
     const modalHtml = `
         <div id="editUserModal" class="modal-overlay" style="visibility: visible; opacity: 1; display: flex; align-items: center; justify-content: center; z-index: 9999;">
@@ -1224,6 +1274,7 @@ function openEditUserModal(uid, username, phone, pin, currency, address, creditS
                             <span style="color: #6a6a80;"><i class="fas fa-phone" style="color: #6a6a80; width: 14px; font-size: 11px;"></i> ${escapeHtml(phone || 'Not Set')}</span>
                             <span style="color: #6a6a80;"><i class="fas fa-shield-alt" style="color: #6a6a80; width: 14px; font-size: 11px;"></i> Credit: <strong style="color: #e8e8f0;" id="creditScoreDisplayHeader">${initialScore}</strong></span>
                             <span style="color: #6a6a80;"><i class="fas fa-user-tag" style="color: #6a6a80; width: 14px; font-size: 11px;"></i> Position: <strong style="color: ${roleDisplay === 'Agent' ? '#c8b090' : '#6a6a80'};">${roleDisplay}</strong></span>
+                            <span style="color: #6a6a80;"><i class="fas fa-calendar-alt" style="color: #6a6a80; width: 14px; font-size: 11px;"></i> Registered: <strong style="color: #e8e8f0;">${registerDate}</strong></span>
                         </div>
                     </div>
                     <button onclick="closeEditUserModal()" style="background: rgba(255,255,255,0.03); border: 1px solid rgba(180,180,200,0.06); color: #5a5a6a; font-size: 16px; cursor: pointer; padding: 2px 8px; border-radius: 6px;">&times;</button>
