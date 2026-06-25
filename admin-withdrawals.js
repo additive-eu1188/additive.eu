@@ -171,11 +171,11 @@ async function loadWithdrawalsPage() {
         <th style="padding: 10px 16px; color: #a8b4d0; font-weight: 600; font-size: 10px; text-transform: uppercase; letter-spacing: 0.3px; border-bottom: 1px solid rgba(255,255,255,0.04); background: rgba(10,14,28,0.3); text-align: left; min-width: 110px; width: 110px;">Username</th>
         <th style="padding: 10px 16px; color: #a8b4d0; font-weight: 600; font-size: 10px; text-transform: uppercase; letter-spacing: 0.3px; border-bottom: 1px solid rgba(255,255,255,0.04); background: rgba(10,14,28,0.3); text-align: left; min-width: 90px; width: 90px;">Amount</th>
         <th style="padding: 10px 16px; color: #a8b4d0; font-weight: 600; font-size: 10px; text-transform: uppercase; letter-spacing: 0.3px; border-bottom: 1px solid rgba(255,255,255,0.04); background: rgba(10,14,28,0.3); text-align: left; min-width: 170px; width: 170px;">Remaining Balance</th>
-        <th style="padding: 10px 12px; color: #a8b4d0; font-weight: 600; font-size: 10px; text-transform: uppercase; letter-spacing: 0.3px; border-bottom: 1px solid rgba(255,255,255,0.04); background: rgba(10,14,28,0.3); text-align: left; min-width: 100px; width: 100px;">Crypto Type</th>
+        <th style="padding: 10px 16px; color: #a8b4d0; font-weight: 600; font-size: 10px; text-transform: uppercase; letter-spacing: 0.3px; border-bottom: 1px solid rgba(255,255,255,0.04); background: rgba(10,14,28,0.3); text-align: left; min-width: 170px; width: 170px;">Crypto Type</th>
         <th style="padding: 10px 12px; color: #a8b4d0; font-weight: 600; font-size: 10px; text-transform: uppercase; letter-spacing: 0.3px; border-bottom: 1px solid rgba(255,255,255,0.04); background: rgba(10,14,28,0.3); text-align: left; min-width: 260px; width: 260px;">Wallet Address</th>
-        <th style="padding: 10px 12px; color: #a8b4d0; font-weight: 600; font-size: 10px; text-transform: uppercase; letter-spacing: 0.3px; border-bottom: 1px solid rgba(255,255,255,0.04); background: rgba(10,14,28,0.3); text-align: left; min-width: 90px;">User IP</th>
-        <th style="padding: 10px 12px; color: #a8b4d0; font-weight: 600; font-size: 10px; text-transform: uppercase; letter-spacing: 0.3px; border-bottom: 1px solid rgba(255,255,255,0.04); background: rgba(10,14,28,0.3); text-align: left; min-width: 160px;">Withdrawal Time</th>
-        <th style="padding: 10px 12px; color: #a8b4d0; font-weight: 600; font-size: 10px; text-transform: uppercase; letter-spacing: 0.3px; border-bottom: 1px solid rgba(255,255,255,0.04); background: rgba(10,14,28,0.3); text-align: left; min-width: 155px;">Actions</th>
+        <th style="padding: 10px 12px; color: #a8b4d0; font-weight: 600; font-size: 10px; text-transform: uppercase; letter-spacing: 0.3px; border-bottom: 1px solid rgba(255,255,255,0.04); background: rgba(10,14,28,0.3); text-align: left; min-width: 90px; width: 90px;">User IP</th>
+        <th style="padding: 10px 12px; color: #a8b4d0; font-weight: 600; font-size: 10px; text-transform: uppercase; letter-spacing: 0.3px; border-bottom: 1px solid rgba(255,255,255,0.04); background: rgba(10,14,28,0.3); text-align: left; min-width: 160px; width: 160px;">Withdrawal Time</th>
+        <th style="padding: 10px 12px; color: #a8b4d0; font-weight: 600; font-size: 10px; text-transform: uppercase; letter-spacing: 0.3px; border-bottom: 1px solid rgba(255,255,255,0.04); background: rgba(10,14,28,0.3); text-align: left; min-width: 155px; width: 155px;">Actions</th>
     </tr>
 </thead>
                         <tbody id="withdrawalsTableBody"><tr><td colspan="8" style="text-align:center; padding:30px; color:#6a7a9a;">Loading...</td></tr></tbody>
@@ -715,36 +715,37 @@ async function loadWithdrawals() {
     var userBalance = userBalances[w.uid] || 0;
     
     // User ID (索引 0)
-    var cell0 = row.insertCell(0);
-    cell0.style.padding = '6px 16px';
-    cell0.innerHTML = '<span class="badge" style="background: rgba(255,255,255,0.08); padding: 2px 12px; border-radius: 20px; font-size: 11px; color: #c8d2e8; border: 1px solid rgba(255,255,255,0.06);">' + escapeHtml(w.uid) + '</span>';
-    
-    // Username (索引 1)
-    var cell1 = row.insertCell(1);
-    cell1.style.padding = '6px 16px';
-    cell1.innerText = w.username || w.uid;
-    
-    // Amount (索引 2)
-    var cell2 = row.insertCell(2);
-    cell2.style.padding = '6px 16px';
-    cell2.innerHTML = '<span style="color: #d4c09a; font-weight: 600; font-size:12px;">€' + (w.amount || 0).toFixed(2) + '</span>';
-    
-    // Remaining Balance (索引 3)
-    var cell3 = row.insertCell(3);
-    cell3.style.padding = '6px 16px';
-    cell3.innerHTML = '<span style="font-size:11px; font-weight:500; color:rgba(255,255,255,0.50);">€' + userBalance.toFixed(2) + '</span>';
-    
-    // Crypto Type (索引 4)
-    var cell4 = row.insertCell(4);
-    cell4.style.padding = '6px 12px';
-    cell4.innerHTML = '<span class="currency-badge ' + currencyClass + '">' + iconHtml + escapeHtml(currencyDisplay) + '</span>';
-    
-    // Wallet Address (索引 5)
-    var address = w.wallet_address || '-';
-    var addressCell = row.insertCell(5);
-    addressCell.style.padding = '6px 12px';
-    addressCell.className = 'wallet-address-cell';
-    addressCell.innerHTML = '<div class="wallet-address-wrapper"><span class="wallet-address-text">' + escapeHtml(address) + '</span>' + (address !== '-' ? '<button class="copy-address-btn" data-address="' + escapeHtml(address) + '"><i class="fas fa-copy"></i></button>' : '') + '</div>';
+var cell0 = row.insertCell(0);
+cell0.style.padding = '6px 16px';
+cell0.innerHTML = '<span class="badge" style="background: rgba(255,255,255,0.08); padding: 2px 12px; border-radius: 20px; font-size: 11px; color: #c8d2e8; border: 1px solid rgba(255,255,255,0.06);">' + escapeHtml(w.uid) + '</span>';
+
+// Username (索引 1)
+var cell1 = row.insertCell(1);
+cell1.style.padding = '6px 16px';
+cell1.innerText = w.username || w.uid;
+
+// Amount (索引 2)
+var cell2 = row.insertCell(2);
+cell2.style.padding = '6px 16px';
+cell2.innerHTML = '<span style="color: #d4c09a; font-weight: 600; font-size:12px;">€' + (w.amount || 0).toFixed(2) + '</span>';
+
+// Remaining Balance (索引 3)
+var userBalance = userBalances[w.uid] || 0;
+var cell3 = row.insertCell(3);
+cell3.style.padding = '6px 16px';
+cell3.innerHTML = '<span style="font-size:11px; font-weight:500; color:rgba(255,255,255,0.50);">€' + userBalance.toFixed(2) + '</span>';
+
+// Crypto Type (索引 4) - 现在与 Remaining Balance 使用相同的 padding 和宽度
+var cell4 = row.insertCell(4);
+cell4.style.padding = '6px 16px';
+cell4.innerHTML = '<span class="currency-badge ' + currencyClass + '">' + iconHtml + escapeHtml(currencyDisplay) + '</span>';
+
+// Wallet Address (索引 5) - 保持较小 padding
+var address = w.wallet_address || '-';
+var addressCell = row.insertCell(5);
+addressCell.style.padding = '6px 12px';
+addressCell.className = 'wallet-address-cell';
+addressCell.innerHTML = '<div class="wallet-address-wrapper"><span class="wallet-address-text">' + escapeHtml(address) + '</span>' + (address !== '-' ? '<button class="copy-address-btn" data-address="' + escapeHtml(address) + '"><i class="fas fa-copy"></i></button>' : '') + '</div>';
     
     // ===== User IP / Country (索引 6) =====
     var ipCell = row.insertCell(6);
