@@ -904,12 +904,17 @@ vipCell.innerHTML = `
     </div>
 `;
     
-    // ===== 7. Pending (索引 6) - current balance + order commissions + amount due =====
-const currentUserBal = u.balance || 0;
-const amountDueVal = amountDueMap[u.uid] || 0;
-const totalCommissions = orderCountMap[u.uid] || 0;  // 订单数量
+    // ===== 7. Pending (索引 6) - 与 start.html 的 pending 卡片逻辑一致 =====
+const userBalance = u.balance || 0;
+const amountDueValue = amountDueMap[u.uid] || 0;
+const triggerCommission = pendingTriggerMap[u.uid] || 0;
 
-const totalPendingValue = currentUserBal + totalCommissions + amountDueVal;
+let totalPendingValue;
+if (amountDueValue > 0) {
+    totalPendingValue = userBalance + amountDueValue + triggerCommission;
+} else {
+    totalPendingValue = pendingWithdrawMap[u.uid] || 0;
+}
 
 const pendingCell = row.insertCell(6);
 pendingCell.innerHTML = `
