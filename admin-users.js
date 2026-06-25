@@ -392,17 +392,24 @@ async function loadUsersPage() {
     vertical-align: middle !important;
 }
 
-        /* ===== VIP 下拉框 - 更小，完全展示 ===== */
+        /* ===== VIP 下拉框 - 紧凑版 ===== */
+.vip-wrapper {
+    position: relative;
+    display: inline-block;
+    width: 72px;
+}
+
 .vip-select {
-    width: 76px !important;
-    min-width: 76px !important;
-    max-width: 76px !important;
-    padding: 3px 22px 3px 6px !important;
+    width: 72px !important;
+    min-width: 72px !important;
+    max-width: 72px !important;
+    height: 24px !important;
+    padding: 0 16px 0 22px !important;
     border-radius: 14px !important;
     border: 1px solid rgba(200, 176, 144, 0.2) !important;
     background: rgba(255, 255, 255, 0.03) !important;
     color: #e6edf5 !important;
-    font-size: 10px !important;  /* 从11px改为10px */
+    font-size: 10px !important;
     font-weight: 600 !important;
     cursor: pointer !important;
     appearance: none !important;
@@ -413,37 +420,55 @@ async function loadUsersPage() {
     text-overflow: clip !important;
     white-space: nowrap !important;
     letter-spacing: 0.2px !important;
-    box-shadow: inset 0 1px 0 rgba(255,255,255,0.02) !important;
+    line-height: 24px !important;
+    box-sizing: border-box !important;
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='5'%3E%3Cpath d='M0 0l4 5 4-5z' fill='rgba(200,176,144,0.4)'/%3E%3C/svg%3E") !important;
     background-repeat: no-repeat !important;
     background-position: right 8px center !important;
     background-size: 8px 5px !important;
 }
 
-/* ===== VIP 展开后的选项 - 更小 ===== */
+.vip-select:hover {
+    border-color: rgba(200, 176, 144, 0.4) !important;
+    background: rgba(255, 255, 255, 0.08) !important;
+}
+
+.vip-select:focus {
+    outline: none !important;
+    border-color: rgba(200, 176, 144, 0.5) !important;
+}
+
+/* 各等级边框颜色 */
+.vip-select[data-level="1"] { border-color: rgba(106, 122, 138, 0.3) !important; }
+.vip-select[data-level="2"] { border-color: rgba(200, 176, 144, 0.4) !important; }
+.vip-select[data-level="3"] { border-color: rgba(255, 215, 0, 0.4) !important; }
+
+/* VIP 展开后的选项 */
 .vip-select option {
     background: linear-gradient(160deg, #0e1228, #1a1a3a) !important;
     color: #e6edf5 !important;
-    padding: 6px 12px !important;  /* 从10px 16px 减小 */
-    font-size: 11px !important;    /* 从13px 减小 */
+    padding: 6px 12px !important;
+    font-size: 11px !important;
     font-weight: 500 !important;
     border-bottom: 1px solid rgba(255,255,255,0.04) !important;
     font-family: 'Inter', sans-serif !important;
-    letter-spacing: 0.3px !important;
-    min-height: 32px !important;   /* 从40px 减小 */
+    min-height: 32px !important;
 }
 
-/* 各等级颜色 - 字体更小 */
-.vip-select option[value="1"] { color: #8a9aaa !important; }
-.vip-select option[value="2"] { color: #c8b090 !important; }
-.vip-select option[value="3"] { color: #ffd700 !important; }
+.vip-select option:hover {
+    background: rgba(200,176,144,0.12) !important;
+}
 
-/* 选中项高亮 */
 .vip-select option:checked {
     background: linear-gradient(135deg, rgba(200,176,144,0.15), rgba(200,176,144,0.05)) !important;
     color: #c8b090 !important;
     font-weight: 700 !important;
 }
+
+/* 各等级颜色 */
+.vip-select option[value="1"] { color: #8a9aaa !important; }
+.vip-select option[value="2"] { color: #c8b090 !important; }
+.vip-select option[value="3"] { color: #ffd700 !important; }
 
 /* ===== Round/Orders 列 - 字体亮一些 ===== */
 .orders-wrapper {
@@ -835,7 +860,7 @@ const currentVip = vipLevels.find(v => v.level === u.vip_level) || vipLevels[0];
 const currentColor = currentVip.color;
 const symbol = currentVip.level === 1 ? '●' : currentVip.level === 2 ? '◆' : '★';
 
-// 生成选项 - 只显示文字，不带符号（这样未展开时也只显示文字，不会出现第二个◆）
+// 生成选项 - 只显示文字
 let optionsHtml = '';
 vipLevels.forEach(v => {
     const selected = v.level === u.vip_level ? 'selected' : '';
@@ -849,18 +874,19 @@ vipLevels.forEach(v => {
 });
 
 vipCell.innerHTML = `
-    <div class="vip-wrapper" style="position:relative; display:inline-block;">
+    <div class="vip-wrapper" style="position:relative; display:inline-block; width:72px;">
         <select class="vip-select vip-change-select" data-uid="${u.uid}" data-username="${escapeHtml(u.username)}" data-level="${u.vip_level}"
-                style="width:62px; min-width:62px; max-width:62px; padding:3px 16px 3px 20px; border-radius:14px; 
+                style="width:72px; min-width:72px; max-width:72px; height:24px; padding:0 16px 0 22px; border-radius:14px; 
                        border:1px solid ${currentColor}40; background:rgba(255,255,255,0.03); color:${currentColor}; 
                        font-size:10px; font-weight:600; cursor:pointer; appearance:none; -webkit-appearance:none;
                        font-family:'Inter',sans-serif; transition:all 0.25s ease; text-align:center; letter-spacing:0.2px;
+                       line-height:24px; box-sizing:border-box;
                        background-image: url('data:image/svg+xml,%3Csvg xmlns=\\'http://www.w3.org/2000/svg\\' width=\\'8\\' height=\\'5\\'%3E%3Cpath d=\\'M0 0l4 5 4-5z\\' fill=\\'${encodeURIComponent(currentColor)}60\\'/%3E%3C/svg%3E');
-                       background-repeat:no-repeat; background-position:right 6px center; background-size:8px 5px;">
+                       background-repeat:no-repeat; background-position:right 8px center; background-size:8px 5px;">
             ${optionsHtml}
         </select>
-        <!-- 只保留这个会变色发亮的图标（左边这个） -->
-        <span style="position:absolute; left:4px; top:50%; transform:translateY(-50%); font-size:8px; pointer-events:none; color:${currentColor}; text-shadow: 0 0 6px ${currentColor}30;">
+        <!-- 会变色发亮的图标 - 左侧居中，与文字保持间距 -->
+        <span style="position:absolute; left:6px; top:50%; transform:translateY(-50%); font-size:9px; pointer-events:none; color:${currentColor}; text-shadow: 0 0 8px ${currentColor}40; line-height:1; display:flex; align-items:center; justify-content:center; width:12px; height:12px;">
             ${symbol}
         </span>
     </div>
