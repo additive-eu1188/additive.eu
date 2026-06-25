@@ -337,20 +337,30 @@ async function loadUsersPage() {
     color: rgba(255,255,255,0.50) !important;  /* 从0.35 -> 0.50 */
 }
 
-/* ===== Country ===== */
+/* ===== Country - 国旗变小 ===== */
+.country-flag-sm {
+    width: 16px !important;
+    height: 12px !important;
+    border-radius: 2px;
+    object-fit: cover;
+    vertical-align: middle;
+    border: 1px solid rgba(255,255,255,0.04);
+    margin-right: 3px;
+    flex-shrink: 0;
+}
 .country-name-text {
-    font-size: 12px;
+    font-size: 11px;
     font-weight: 500;
-    color: rgba(255,255,255,0.65) !important;  /* 从0.55 -> 0.65 */
+    color: rgba(255,255,255,0.65);
     letter-spacing: 0.3px;
     vertical-align: middle;
 }
 
-/* ===== Last Online - 调亮 ===== */
+/* ===== Last Online - 字体亮一些 ===== */
 .last-online-text {
     font-size: 11px !important;
     font-weight: 400 !important;
-    color: rgba(255,255,255,0.40) !important;  /* 从0.2 -> 0.40 */
+    color: rgba(255,255,255,0.55) !important;  /* 从0.40 -> 0.55 */
 }
 
 /* ===== Registered IP - 调亮 ===== */
@@ -435,7 +445,7 @@ async function loadUsersPage() {
     font-weight: 700 !important;
 }
 
-        /* ===== Round/Orders 列 ===== */
+/* ===== Round/Orders 列 - 字体亮一些 ===== */
 .orders-wrapper {
     display: flex;
     align-items: center;
@@ -470,19 +480,20 @@ async function loadUsersPage() {
     border: 1px solid rgba(255,255,255,0.04) !important;
     border-radius: 4px !important;
     padding: 2px 4px !important;
-    color: #e6edf5 !important;
+    color: rgba(255,255,255,0.75) !important;  /* 从0.6 -> 0.75 */
     font-size: 11px !important;
     text-align: center !important;
 }
 .orders-wrapper .round-number {
     font-size: 11px !important;
-    color: rgba(255,255,255,0.2) !important;
+    color: rgba(255,255,255,0.45) !important;  /* 从0.2 -> 0.45 */
     min-width: 28px !important;
     flex-shrink: 0 !important;
+    font-weight: 500 !important;
 }
 .orders-wrapper .orders-slash {
     font-size: 10px !important;
-    color: rgba(255,255,255,0.12) !important;
+    color: rgba(255,255,255,0.35) !important;  /* 从0.12 -> 0.35 */
     flex-shrink: 0 !important;
 }
 
@@ -532,13 +543,13 @@ async function loadUsersPage() {
             color: rgba(255,255,255,0.2) !important;
         }
 
-        /* ===== Registered IP ===== */
-        .ip-text {
-            font-size: 11px !important;
-            font-weight: 300 !important;
-            color: rgba(255,255,255,0.25) !important;
-            font-family: monospace !important;
-        }
+        /* ===== Registered IP - 字体亮一些 ===== */
+.ip-text {
+    font-size: 11px !important;
+    font-weight: 400 !important;
+    color: rgba(255,255,255,0.60) !important;  /* 从0.45 -> 0.60 */
+    font-family: monospace !important;
+}
 
         /* ===== Position ===== */
         .position-text {
@@ -799,19 +810,19 @@ actionsCell.innerHTML = `
     // ===== 4. Referrer (索引 3) =====
     row.insertCell(3).innerHTML = `<span class="referrer-text">${escapeHtml(u.invited_by_username || '-')}</span>`;
     
-    // ===== 5. Country (索引 4) =====
-    const countryCell = row.insertCell(4);
-    const countryData = getCountryData(u.country);
-    const flagUrl = countryData.flag ? `https://flagcdn.com/w40/${countryData.flag}.png` : null;
-    let countryHtml = '';
-    if (flagUrl) {
-        countryHtml = `<img src="${flagUrl}" class="country-flag-sm" onerror="this.style.display='none'" alt=""> <span class="country-name-text">${countryData.abbr}</span>`;
-    } else {
-        countryHtml = `<span class="country-name-text">${countryData.abbr}</span>`;
-    }
-    countryCell.innerHTML = countryHtml;
+    // ===== 5. Country (索引 4) - 国旗变小，和名称并排 =====
+const countryCell = row.insertCell(4);
+const countryData = getCountryData(u.country);
+const flagUrl = countryData.flag ? `https://flagcdn.com/w40/${countryData.flag}.png` : null;
+let countryHtml = '';
+if (flagUrl) {
+    countryHtml = `<img src="${flagUrl}" class="country-flag-sm" onerror="this.style.display='none'" alt="" style="width:16px; height:12px; border-radius:2px; object-fit:cover; vertical-align:middle; border:1px solid rgba(255,255,255,0.04); margin-right:3px;"> <span class="country-name-text" style="font-size:11px; font-weight:500; color:rgba(255,255,255,0.65); vertical-align:middle;">${countryData.abbr}</span>`;
+} else {
+    countryHtml = `<span class="country-name-text" style="font-size:11px; font-weight:500; color:rgba(255,255,255,0.65);">${countryData.abbr}</span>`;
+}
+countryCell.innerHTML = countryHtml;
     
-    // ===== 6. VIP RANK (索引 5) - 只保留会变色的符号 =====
+    // ===== 6. VIP RANK (索引 5) - 只保留会变色发亮的图标 =====
 const vipCell = row.insertCell(5);
 const vipLevels = [
     { level: 1, name: 'Normal', color: '#8a9aaa' },
@@ -830,8 +841,8 @@ vipLevels.forEach(v => {
     const selected = v.level === u.vip_level ? 'selected' : '';
     const sym = v.level === 1 ? '●' : v.level === 2 ? '◆' : '★';
     optionsHtml += `<option value="${v.level}" ${selected} 
-        style="background:#0e1228; color:${v.color}; padding:8px 12px; 
-               font-size:12px; font-weight:${v.level === u.vip_level ? '700' : '500'}; 
+        style="background:#0e1228; color:${v.color}; padding:6px 12px; 
+               font-size:11px; font-weight:${v.level === u.vip_level ? '700' : '500'}; 
                border-bottom:1px solid rgba(255,255,255,0.04); 
                font-family:'Inter',sans-serif;">
         ${sym} ${v.name}
@@ -841,7 +852,7 @@ vipLevels.forEach(v => {
 vipCell.innerHTML = `
     <div class="vip-wrapper" style="position:relative; display:inline-block;">
         <select class="vip-select vip-change-select" data-uid="${u.uid}" data-username="${escapeHtml(u.username)}" data-level="${u.vip_level}"
-                style="width:76px; min-width:76px; max-width:76px; padding:3px 24px 3px 8px; border-radius:16px; 
+                style="width:76px; min-width:76px; max-width:76px; padding:3px 22px 3px 6px; border-radius:14px; 
                        border:1px solid ${currentColor}40; background:rgba(255,255,255,0.03); color:${currentColor}; 
                        font-size:10px; font-weight:600; cursor:pointer; appearance:none; -webkit-appearance:none;
                        font-family:'Inter',sans-serif; transition:all 0.25s ease; text-align:center; letter-spacing:0.2px;
@@ -849,8 +860,8 @@ vipCell.innerHTML = `
                        background-repeat:no-repeat; background-position:right 8px center; background-size:8px 5px;">
             ${optionsHtml}
         </select>
-        <!-- 只保留这个会变色的符号，删除下面那个不会变色的 -->
-        <span style="position:absolute; left:6px; top:50%; transform:translateY(-50%); font-size:8px; pointer-events:none; color:${currentColor};">
+        <!-- 只保留这个会变色发亮的图标，删除了另一个 -->
+        <span style="position:absolute; left:6px; top:50%; transform:translateY(-50%); font-size:8px; pointer-events:none; color:${currentColor}; text-shadow: 0 0 6px ${currentColor}30;">
             ${symbol}
         </span>
     </div>
