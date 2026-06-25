@@ -929,13 +929,6 @@ pendingCell.innerHTML = `
     </span>
 `;
 
-const pendingCell = row.insertCell(6);
-pendingCell.innerHTML = `
-    <span class="pending-amount ${totalPendingValue > 0 ? 'pending-positive' : ''}">
-        €${totalPendingValue.toFixed(2)}
-    </span>
-`;
-
 // ===== 8. Balance (索引 7) =====
 const balanceCell = row.insertCell(7);
 const userBalance = u.balance || 0;
