@@ -19,7 +19,7 @@ async function loadVipPage() {
                 </div>
             </div>
             
-            <!-- VIP 等级配置卡片 -->
+            <!-- VIP 等级配置卡片（4个：Trial + Normal + VIP + SVIP） -->
             <div id="vipConfigContainer" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 28px;"></div>
             
             <!-- 用户VIP管理 -->
@@ -251,7 +251,7 @@ async function loadVipPage() {
         }
         
         /* 徽章颜色 */
-        .rank-badge-trial { background: rgba(100,100,120,0.15); color: #8a8aaa; }
+        .rank-badge-trial { background: rgba(255,184,77,0.12); color: #ffb84d; }
         .rank-badge-normal { background: rgba(200,176,144,0.12); color: #c8b090; }
         .rank-badge-vip { background: rgba(74,124,255,0.12); color: #4a7cff; }
         .rank-badge-svip { background: rgba(255,184,77,0.12); color: #ffb84d; }
@@ -286,13 +286,11 @@ async function loadVipPage() {
     
     // ========== 加载数据 ==========
     await loadVipConfig();
-    await loadTrialBonusConfig();
     await loadVipUsers();
     
     // ========== 绑定事件 ==========
     document.getElementById('refreshVipBtn')?.addEventListener('click', function() {
         loadVipConfig();
-        loadTrialBonusConfig();
         loadVipUsers();
     });
     
@@ -374,38 +372,74 @@ async function loadVipConfig() {
     if (!container) return;
     
     try {
+        // 获取 VIP 设置
         const { data: vips, error } = await sb.from('vip_settings').select('*').order('level', { ascending: true });
         if (error) throw error;
         
-        const tierNames = {
-            0: 'Trial',
-            1: 'Normal',
-            2: 'VIP',
-            3: 'SVIP'
-        };
+        // 获取 Trial Bonus 配置
+        const { data: trialData } = await sb
+            .from('trial_bonus_config')
+            .select('*')
+            .eq('id', 1)
+            .single();
         
-        const tierBadges = {
-            0: 'Lv.0',
-            1: 'Lv.1',
-            2: 'Lv.2',
-            3: 'Lv.3'
-        };
+        const trialConfig = trialData || { trial_amount: 250, orders_limit: 30, commission_rate: 0.35 };
         
         const tierColors = {
-            0: '#8a8aaa',
             1: '#c8b090',
             2: '#4a7cff',
             3: '#ffb84d'
         };
         
+        const tierBadges = {
+            1: 'Lv.1',
+            2: 'Lv.2',
+            3: 'Lv.3'
+        };
+        
+        const tierNames = {
+            1: 'Normal',
+            2: 'VIP',
+            3: 'SVIP'
+        };
+        
         container.innerHTML = '';
         
-        for (const vip of vips) {
+        // ========== 1. Trial 卡片（独立，放到 Normal 左侧） ==========
+        const trialCard = document.createElement('div');
+        trialCard.className = 'vip-tier-card';
+        trialCard.style.borderColor = 'rgba(255,184,77,0.15)';
+        trialCard.innerHTML = `
+            <div class="tier-header">
+                <span class="tier-name" style="color: #ffb84d;">Trial Bonus</span>
+                <span class="tier-badge" style="background: rgba(255,184,77,0.12); color: #ffb84d;">Lv.0</span>
+            </div>
+            <div class="tier-field">
+                <label>Trial Amount (€)</label>
+                <input type="number" id="trialAmount" value="${trialConfig.trial_amount || 250}" step="0.01" min="0">
+            </div>
+            <div class="tier-field">
+                <label>Orders Limit</label>
+                <input type="number" id="trialOrdersLimit" value="${trialConfig.orders_limit || 30}" step="1" min="1">
+            </div>
+            <div class="tier-field">
+                <label>Commissions Rate (%)</label>
+                <input type="number" id="trialRate" value="${trialConfig.commission_rate || 0.35}" step="0.01" min="0">
+            </div>
+            <button class="save-tier-btn" id="saveTrialBonusBtn" style="border-color: rgba(255,184,77,0.15); color: #ffb84d;">Save Changes</button>
+        `;
+        container.appendChild(trialCard);
+        
+        // ========== 2. Normal / VIP / SVIP 卡片 ==========
+        // 只处理 level 1, 2, 3
+        const vipLevels = vips.filter(function(v) { return v.level >= 1 && v.level <= 3; });
+        
+        for (const vip of vipLevels) {
+            const level = vip.level;
+            const color = tierColors[level] || '#c8b090';
+            
             const card = document.createElement('div');
             card.className = 'vip-tier-card';
-            const level = vip.level || 0;
-            const color = tierColors[level] || '#8a8aaa';
-            
             card.innerHTML = `
                 <div class="tier-header">
                     <span class="tier-name" style="color: ${color};">${tierNames[level] || 'Level ' + level}</span>
@@ -428,11 +462,14 @@ async function loadVipConfig() {
             container.appendChild(card);
         }
         
+        // ========== 绑定事件 ==========
         document.querySelectorAll('.save-vip-btn').forEach(function(btn) {
             btn.addEventListener('click', function() {
                 saveVipConfig(parseInt(this.dataset.level));
             });
         });
+        
+        document.getElementById('saveTrialBonusBtn')?.addEventListener('click', saveTrialBonusConfig);
         
     } catch (e) {
         console.error('加载VIP配置失败:', e);
@@ -461,94 +498,6 @@ async function saveVipConfig(level) {
     }
 }
 
-// ========== 加载 Trial Bonus 独立配置 ==========
-async function loadTrialBonusConfig() {
-    const container = document.getElementById('vipConfigContainer');
-    if (!container) return;
-    
-    try {
-        const { data, error } = await sb
-            .from('trial_bonus_config')
-            .select('*')
-            .eq('id', 1)
-            .single();
-        
-        if (error && error.code !== 'PGRST116') {
-            console.error('加载 Trial Bonus 配置失败:', error);
-            return;
-        }
-        
-        const config = data || { trial_amount: 250, orders_limit: 30, commission_rate: 0.35 };
-        
-        // 创建 Trial 卡片并插入到 Normal 前面（第一个位置）
-        const trialCard = document.createElement('div');
-        trialCard.className = 'vip-tier-card';
-        trialCard.style.borderColor = 'rgba(255,184,77,0.15)';
-        trialCard.id = 'trialBonusCard';
-        trialCard.innerHTML = `
-            <div class="tier-header">
-                <span class="tier-name" style="color: #ffb84d;">Trial Bonus</span>
-                <span class="tier-badge" style="background: rgba(255,184,77,0.12); color: #ffb84d;">Lv.0</span>
-            </div>
-            <div class="tier-field">
-                <label>Trial Amount (€)</label>
-                <input type="number" id="trialAmount" value="${config.trial_amount || 250}" step="0.01" min="0" style="border-color: rgba(255,184,77,0.15);">
-            </div>
-            <div class="tier-field">
-                <label>Orders Limit</label>
-                <input type="number" id="trialOrdersLimit" value="${config.orders_limit || 30}" step="1" min="1" style="border-color: rgba(255,184,77,0.15);">
-            </div>
-            <div class="tier-field">
-                <label>Commissions Rate (%)</label>
-                <input type="number" id="trialRate" value="${config.commission_rate || 0.35}" step="0.01" min="0" style="border-color: rgba(255,184,77,0.15);">
-            </div>
-            <button class="save-tier-btn" id="saveTrialBonusBtn" style="border-color: rgba(255,184,77,0.15); color: #ffb84d;">Save Changes</button>
-        `;
-        
-        // 插入到第一个位置（Normal 之前）
-        container.insertBefore(trialCard, container.firstChild);
-        
-        // 绑定实时预览 - 更新卡片标题显示
-        ['trialAmount', 'trialOrdersLimit', 'trialRate'].forEach(function(id) {
-            document.getElementById(id)?.addEventListener('input', function() {
-                updateTrialCardPreview();
-            });
-        });
-        
-        // 绑定保存按钮
-        document.getElementById('saveTrialBonusBtn')?.addEventListener('click', saveTrialBonusConfig);
-        
-    } catch (e) {
-        console.error('加载 Trial Bonus 配置失败:', e);
-    }
-}
-
-// ========== 更新 Trial Bonus 卡片预览 ==========
-function updateTrialCardPreview() {
-    const amount = parseFloat(document.getElementById('trialAmount')?.value) || 250;
-    const limit = parseInt(document.getElementById('trialOrdersLimit')?.value) || 30;
-    const rate = parseFloat(document.getElementById('trialRate')?.value) || 0.35;
-    
-    // 更新卡片标题中的数值显示
-    const card = document.getElementById('trialBonusCard');
-    if (card) {
-        const header = card.querySelector('.tier-header');
-        if (header) {
-            // 在标题中添加实时数值显示
-            let infoSpan = header.querySelector('.trial-info');
-            if (!infoSpan) {
-                infoSpan = document.createElement('span');
-                infoSpan.className = 'trial-info';
-                infoSpan.style.cssText = 'font-size: 10px; color: #8892a8; font-weight: 400;';
-                header.appendChild(infoSpan);
-            }
-            const perOrder = (amount * rate / 100);
-            const total = perOrder * limit;
-            infoSpan.textContent = ` €${amount} × ${rate}% = €${total.toFixed(2)} total`;
-        }
-    }
-}
-
 // ========== 保存 Trial Bonus 配置 ==========
 async function saveTrialBonusConfig() {
     const amount = parseFloat(document.getElementById('trialAmount').value) || 250;
@@ -573,8 +522,7 @@ async function saveTrialBonusConfig() {
         
         if (error) throw error;
         showToast('✅ Trial Bonus 配置已保存', 'success');
-        // 重新加载 Trial 配置更新显示
-        await loadTrialBonusConfig();
+        loadVipConfig();
     } catch (e) {
         showToast('保存失败: ' + e.message, 'error');
     }
