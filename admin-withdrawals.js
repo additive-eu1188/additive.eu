@@ -261,7 +261,8 @@ style.textContent = `
 #page_withdrawals .wallet-address-cell {
     max-width: 420px !important;
     min-width: 300px !important;
-    word-break: break-all;
+    word-break: break-word;
+    white-space: normal !important;
 }
 #page_withdrawals .wallet-address-wrapper {
     display: flex;
@@ -272,8 +273,11 @@ style.textContent = `
     font-size: 11px;
     font-family: 'Courier New', monospace;
     color: #b0c0da;
-    word-break: break-all;
-    line-height: 1.4;
+    word-break: break-word;
+    line-height: 1.6;
+    display: block;
+    max-width: 100%;
+    overflow-wrap: break-word;
 }
 #page_withdrawals .copy-address-btn {
     background: rgba(255,255,255,0.04);
@@ -460,7 +464,6 @@ style.textContent = `
     font-size: 12px !important;
     overflow: hidden;
     text-overflow: ellipsis;
-    white-space: nowrap;
 }
 
 /* ===== Pending 页面列宽 ===== */
