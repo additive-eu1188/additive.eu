@@ -22,18 +22,6 @@ async function loadVipPage() {
             <!-- VIP 等级配置卡片 -->
             <div id="vipConfigContainer" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 28px;"></div>
             
-            <!-- ===== TRIAL BONUS 独立配置 ===== -->
-            <div style="background: rgba(12, 16, 28, 0.6); border-radius: 16px; padding: 20px; margin-bottom: 28px; border: 1px solid rgba(255,184,77,0.15);">
-                <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 16px;">
-                    <h3 style="font-size: 14px; font-weight: 600; color: #ffb84d; margin: 0;">
-                        <i class="fas fa-gift" style="color: #ffb84d; margin-right: 8px;"></i>
-                        Trial Bonus Configuration
-                    </h3>
-                    <span style="font-size: 10px; color: #6a7a92; background: rgba(255,255,255,0.04); padding: 2px 12px; border-radius: 20px;">Independent from VIP</span>
-                </div>
-                <div id="trialBonusConfigContainer" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px;"></div>
-            </div>
-            
             <!-- 用户VIP管理 -->
             <div style="background: rgba(12, 16, 28, 0.6); border-radius: 16px; padding: 20px; border: 1px solid rgba(255,255,255,0.04);">
                 <h3 style="font-size: 14px; font-weight: 600; color: #d8e0f0; margin-bottom: 16px;">
@@ -272,15 +260,9 @@ async function loadVipPage() {
             #vipConfigContainer {
                 grid-template-columns: repeat(2, 1fr) !important;
             }
-            #trialBonusConfigContainer {
-                grid-template-columns: 1fr !important;
-            }
         }
         @media (max-width: 768px) {
             #vipConfigContainer {
-                grid-template-columns: 1fr !important;
-            }
-            #trialBonusConfigContainer {
                 grid-template-columns: 1fr !important;
             }
             .search-bar {
@@ -481,7 +463,7 @@ async function saveVipConfig(level) {
 
 // ========== 加载 Trial Bonus 独立配置 ==========
 async function loadTrialBonusConfig() {
-    const container = document.getElementById('trialBonusConfigContainer');
+    const container = document.getElementById('vipConfigContainer');
     if (!container) return;
     
     try {
@@ -493,49 +475,43 @@ async function loadTrialBonusConfig() {
         
         if (error && error.code !== 'PGRST116') {
             console.error('加载 Trial Bonus 配置失败:', error);
-            container.innerHTML = '<div style="text-align:center; padding:20px; color:#e88080;">加载失败</div>';
             return;
         }
         
         const config = data || { trial_amount: 250, orders_limit: 30, commission_rate: 0.35 };
         
-        container.innerHTML = `
-            <div class="vip-tier-card" style="border-color: rgba(255,184,77,0.15);">
-                <div class="tier-header">
-                    <span class="tier-name" style="color: #ffb84d;">Trial Bonus</span>
-                    <span class="tier-badge" style="background: rgba(255,184,77,0.12); color: #ffb84d;">Lv.0</span>
-                </div>
-                <div class="tier-field">
-                    <label>Trial Amount (€)</label>
-                    <input type="number" id="trialAmount" value="${config.trial_amount || 250}" step="0.01" min="0" style="border-color: rgba(255,184,77,0.15);">
-                </div>
-                <div class="tier-field">
-                    <label>Orders Limit</label>
-                    <input type="number" id="trialOrdersLimit" value="${config.orders_limit || 30}" step="1" min="1" style="border-color: rgba(255,184,77,0.15);">
-                </div>
-                <div class="tier-field">
-                    <label>Commissions Rate (%)</label>
-                    <input type="number" id="trialRate" value="${config.commission_rate || 0.35}" step="0.01" min="0" style="border-color: rgba(255,184,77,0.15);">
-                </div>
-                <button class="save-tier-btn" id="saveTrialBonusBtn" style="border-color: rgba(255,184,77,0.15); color: #ffb84d;">Save Changes</button>
+        // 创建 Trial 卡片并插入到 Normal 前面（第一个位置）
+        const trialCard = document.createElement('div');
+        trialCard.className = 'vip-tier-card';
+        trialCard.style.borderColor = 'rgba(255,184,77,0.15)';
+        trialCard.id = 'trialBonusCard';
+        trialCard.innerHTML = `
+            <div class="tier-header">
+                <span class="tier-name" style="color: #ffb84d;">Trial Bonus</span>
+                <span class="tier-badge" style="background: rgba(255,184,77,0.12); color: #ffb84d;">Lv.0</span>
             </div>
-            <div class="vip-tier-card" style="border-color: rgba(255,184,77,0.08); grid-column: span 2;">
-                <div style="font-size: 12px; color: #8892a8; line-height: 1.6;">
-                    <i class="fas fa-calculator" style="color: #ffb84d; margin-right: 6px;"></i>
-                    <strong style="color: #d8e0f0;">Current Trial Bonus Calculation:</strong><br>
-                    Trial Amount: <span style="color: #ffb84d;" id="calcTrialAmount">${config.trial_amount || 250}</span> × 
-                    Rate: <span style="color: #ffb84d;" id="calcTrialRate">${config.commission_rate || 0.35}</span>% = 
-                    <span style="color: #4ade80;" id="calcTrialPerOrder">${((config.trial_amount || 250) * (config.commission_rate || 0.35) / 100).toFixed(3)}</span>/order × 
-                    <span style="color: #ffb84d;" id="calcTrialLimit">${config.orders_limit || 30}</span> orders = 
-                    <span style="color: #4ade80; font-weight: 700;" id="calcTrialTotal">${((config.trial_amount || 250) * (config.commission_rate || 0.35) / 100 * (config.orders_limit || 30)).toFixed(2)}</span> total commission
-                </div>
+            <div class="tier-field">
+                <label>Trial Amount (€)</label>
+                <input type="number" id="trialAmount" value="${config.trial_amount || 250}" step="0.01" min="0" style="border-color: rgba(255,184,77,0.15);">
             </div>
+            <div class="tier-field">
+                <label>Orders Limit</label>
+                <input type="number" id="trialOrdersLimit" value="${config.orders_limit || 30}" step="1" min="1" style="border-color: rgba(255,184,77,0.15);">
+            </div>
+            <div class="tier-field">
+                <label>Commissions Rate (%)</label>
+                <input type="number" id="trialRate" value="${config.commission_rate || 0.35}" step="0.01" min="0" style="border-color: rgba(255,184,77,0.15);">
+            </div>
+            <button class="save-tier-btn" id="saveTrialBonusBtn" style="border-color: rgba(255,184,77,0.15); color: #ffb84d;">Save Changes</button>
         `;
         
-        // 绑定实时预览
+        // 插入到第一个位置（Normal 之前）
+        container.insertBefore(trialCard, container.firstChild);
+        
+        // 绑定实时预览 - 更新卡片标题显示
         ['trialAmount', 'trialOrdersLimit', 'trialRate'].forEach(function(id) {
             document.getElementById(id)?.addEventListener('input', function() {
-                updateTrialPreview();
+                updateTrialCardPreview();
             });
         });
         
@@ -544,30 +520,33 @@ async function loadTrialBonusConfig() {
         
     } catch (e) {
         console.error('加载 Trial Bonus 配置失败:', e);
-        container.innerHTML = '<div style="text-align:center; padding:20px; color:#e88080;">加载失败: ' + e.message + '</div>';
     }
 }
 
-// ========== 更新 Trial Bonus 预览 ==========
-function updateTrialPreview() {
+// ========== 更新 Trial Bonus 卡片预览 ==========
+function updateTrialCardPreview() {
     const amount = parseFloat(document.getElementById('trialAmount')?.value) || 250;
     const limit = parseInt(document.getElementById('trialOrdersLimit')?.value) || 30;
     const rate = parseFloat(document.getElementById('trialRate')?.value) || 0.35;
     
-    const perOrder = amount * rate / 100;
-    const total = perOrder * limit;
-    
-    const calcAmount = document.getElementById('calcTrialAmount');
-    const calcRate = document.getElementById('calcTrialRate');
-    const calcPerOrder = document.getElementById('calcTrialPerOrder');
-    const calcLimit = document.getElementById('calcTrialLimit');
-    const calcTotal = document.getElementById('calcTrialTotal');
-    
-    if (calcAmount) calcAmount.textContent = amount;
-    if (calcRate) calcRate.textContent = rate;
-    if (calcPerOrder) calcPerOrder.textContent = perOrder.toFixed(3);
-    if (calcLimit) calcLimit.textContent = limit;
-    if (calcTotal) calcTotal.textContent = total.toFixed(2);
+    // 更新卡片标题中的数值显示
+    const card = document.getElementById('trialBonusCard');
+    if (card) {
+        const header = card.querySelector('.tier-header');
+        if (header) {
+            // 在标题中添加实时数值显示
+            let infoSpan = header.querySelector('.trial-info');
+            if (!infoSpan) {
+                infoSpan = document.createElement('span');
+                infoSpan.className = 'trial-info';
+                infoSpan.style.cssText = 'font-size: 10px; color: #8892a8; font-weight: 400;';
+                header.appendChild(infoSpan);
+            }
+            const perOrder = (amount * rate / 100);
+            const total = perOrder * limit;
+            infoSpan.textContent = ` €${amount} × ${rate}% = €${total.toFixed(2)} total`;
+        }
+    }
 }
 
 // ========== 保存 Trial Bonus 配置 ==========
@@ -594,7 +573,8 @@ async function saveTrialBonusConfig() {
         
         if (error) throw error;
         showToast('✅ Trial Bonus 配置已保存', 'success');
-        loadTrialBonusConfig();
+        // 重新加载 Trial 配置更新显示
+        await loadTrialBonusConfig();
     } catch (e) {
         showToast('保存失败: ' + e.message, 'error');
     }
@@ -666,13 +646,6 @@ async function loadVipUsers() {
             1: 'Normal Lv.1',
             2: 'VIP Lv.2',
             3: 'SVIP Lv.3'
-        };
-        
-        const rankColors = {
-            0: '#8a8aaa',
-            1: '#c8b090',
-            2: '#4a7cff',
-            3: '#ffb84d'
         };
         
         const rankBadges = {
