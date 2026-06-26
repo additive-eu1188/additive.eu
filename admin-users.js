@@ -808,7 +808,6 @@ if (amountDueUsers) {
     row.className = 'user-row';
     
     const orderCount = orderCountMap[u.uid] || 0;
-    const ordersLimit = vipLimitMap[u.vip_level] || 30;
     const vipName = vipNameMap[u.vip_level] || (u.vip_level === 1 ? 'Normal' : u.vip_level === 2 ? 'VIP' : 'SVIP');
     const pendingAmount = pendingMap[u.uid] || 0;
     const creditScore = u.credit_score !== undefined && u.credit_score !== null ? u.credit_score : 100;
