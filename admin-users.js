@@ -560,15 +560,6 @@ async function loadUsersPage() {
             font-weight: 600 !important;
         }
 
-        .badge {
-            background: rgba(255,255,255,0.03) !important;
-            padding: 2px 8px !important;
-            border-radius: 20px !important;
-            font-size: 10px !important;
-            color: rgba(255,255,255,0.15) !important;
-            border: 1px solid rgba(255,255,255,0.02) !important;
-        }
-
         .table-container::-webkit-scrollbar { width: 3px; height: 3px; }
         .table-container::-webkit-scrollbar-thumb { background: rgba(200,176,144,0.06); border-radius: 4px; }
         .table-container::-webkit-scrollbar-track { background: transparent; }
