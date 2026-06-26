@@ -854,7 +854,7 @@ actionsCell.innerHTML = `
     const roleDisplay = userRole === 'Agent' ? 'Agent' : 'User';
     row.insertCell(2).innerHTML = `
     <div style="display:flex; flex-direction:column; align-items:flex-start; gap:1px;">
-        <span class="badge" style="background: rgba(255,255,255,0.08); padding: 2px 12px; border-radius: 20px; font-size: 11px; color: #c8d2e8; border: 1px solid rgba(255,255,255,0.06);">${escapeHtml(u.uid)}</span>
+        <span class="badge" style="background: rgba(255,255,255,0.12); padding: 2px 12px; border-radius: 20px; font-size: 12px; color: #e8edf5; border: 1px solid rgba(255,255,255,0.12); font-weight: 600; letter-spacing: 0.3px;">${escapeHtml(u.uid)}</span>
         <span style="font-size:9px; font-weight:500; color:${roleColor}; background:rgba(255,255,255,0.03); padding:0px 6px; border-radius:8px; letter-spacing:0.3px;">${roleDisplay}</span>
     </div>
 `;
