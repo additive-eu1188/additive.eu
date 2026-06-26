@@ -261,6 +261,8 @@ const TRANSLATIONS = {
 'checkin_all_completed': 'Completed all days!',
 'checkin_need_orders_claim': 'Need 30 orders to claim rewards. You have {count}/30.',
 'checkin_claim_success': '🎉 Day {day} claimed! +€{amount}',
+'checkin_claim_reward_title': 'Claim Reward',
+'checkin_claim_reward_message': 'Are you sure you want to claim Day {day} reward of €{amount}?',
         
         // ==================== Event ====================
         'event_title': 'EVENTS',
@@ -843,6 +845,8 @@ const TRANSLATIONS = {
 'checkin_all_completed': 'Alle Tage abgeschlossen!',
 'checkin_need_orders_claim': 'Sie benötigen 30 Aufträge, um Belohnungen zu beanspruchen. Sie haben {count}/30.',
 'checkin_claim_success': 'Tag {day} beansprucht! +€{amount}',
+'checkin_claim_reward_title': 'Belohnung beanspruchen',
+'checkin_claim_reward_message': 'Möchten Sie die Belohnung für Tag {day} in Höhe von €{amount} wirklich beanspruchen?',
         
         // Event
         'event_title': 'VERANSTALTUNGEN',
@@ -1425,6 +1429,8 @@ const TRANSLATIONS = {
 'checkin_all_completed': 'Completati tutti i giorni!',
 'checkin_need_orders_claim': 'Servono 30 ordini per riscuotere le ricompense. Ne hai {count}/30.',
 'checkin_claim_success': 'Giorno {day} riscosso! +€{amount}',
+'checkin_claim_reward_title': 'Richiedi Ricompensa',
+'checkin_claim_reward_message': 'Sei sicuro di voler richiedere la ricompensa del Giorno {day} di €{amount}?',
         
         // Event
         'event_title': 'EVENTI',

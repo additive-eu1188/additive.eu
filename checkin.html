@@ -481,18 +481,19 @@
         let confirmCancelCallback = null;
 
         function showCustomConfirm(title, message, onConfirm, onCancel) {
-            const overlay = document.getElementById('customConfirmOverlay');
-            const titleEl = document.getElementById('confirmTitle');
-            const msgEl = document.getElementById('confirmMessage');
-            
-            titleEl.textContent = title;
-            msgEl.textContent = message;
-            
-            confirmCallback = onConfirm || null;
-            confirmCancelCallback = onCancel || null;
-            
-            overlay.classList.add('active');
-        }
+    const overlay = document.getElementById('customConfirmOverlay');
+    const titleEl = document.getElementById('confirmTitle');
+    const msgEl = document.getElementById('confirmMessage');
+    
+    titleEl.textContent = title;
+    // 改用 innerHTML 支持翻译中的 HTML 标签（如 <strong>）
+    msgEl.innerHTML = message;
+    
+    confirmCallback = onConfirm || null;
+    confirmCancelCallback = onCancel || null;
+    
+    overlay.classList.add('active');
+}
 
         // 绑定确认弹窗按钮事件
         document.addEventListener('DOMContentLoaded', function() {
@@ -922,17 +923,17 @@
             console.log('💰 Claim Day:', claimDay, 'Amount:', amount);
 
             showCustomConfirm(
-                '💰 Claim Reward',
-                `Are you sure you want to claim Day ${claimDay} reward of €${amount}?`,
-                async function() {
-                    console.log('✅ 用户确认 Claim');
-                    await processClaim(user, amount, claimDay, isReset, streak, claimedDays);
-                },
-                function() {
-                    console.log('❌ 用户取消 Claim');
-                    showToast('checkin_cancelled', 'info');
-                }
-            );
+    t('checkin_claim_reward_title'),
+    t('checkin_claim_reward_message', { day: claimDay, amount: amount.toFixed(2) }),
+    async function() {
+        console.log('✅ 用户确认 Claim');
+        await processClaim(user, amount, claimDay, isReset, streak, claimedDays);
+    },
+    function() {
+        console.log('❌ 用户取消 Claim');
+        showToast('checkin_cancelled', 'info');
+    }
+);
         }
 
         // ============================================================
