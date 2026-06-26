@@ -682,17 +682,33 @@
         }
 
         function loadData() {
-            const saved = localStorage.getItem('additive_checkin');
-            if (saved) {
-                const data = JSON.parse(saved);
-                return { streak: data.streak || 0, lastClaimDate: data.lastClaimDate || null, claimedDays: data.claimedDays || [] };
-            }
+    const saved = localStorage.getItem('additive_checkin');
+    console.log('📂 loadData - raw saved:', saved);
+    if (saved) {
+        try {
+            const data = JSON.parse(saved);
+            console.log('📂 loadData - parsed:', data);
+            return { 
+                streak: data.streak || 0, 
+                lastClaimDate: data.lastClaimDate || null, 
+                claimedDays: data.claimedDays || [] 
+            };
+        } catch (e) {
+            console.error('❌ loadData parse error:', e);
             return { streak: 0, lastClaimDate: null, claimedDays: [] };
         }
+    }
+    return { streak: 0, lastClaimDate: null, claimedDays: [] };
+}
 
         function saveData(streak, lastClaimDate, claimedDays) {
-            localStorage.setItem('additive_checkin', JSON.stringify({ streak, lastClaimDate, claimedDays }));
-        }
+    const data = { streak, lastClaimDate, claimedDays };
+    console.log('💾 saveData - saving:', data);
+    localStorage.setItem('additive_checkin', JSON.stringify(data));
+    // 验证保存是否成功
+    const verify = localStorage.getItem('additive_checkin');
+    console.log('💾 saveData - verify:', verify);
+}
 
         function hasClaimedToday(last) {
             if (!last) return false;
@@ -768,6 +784,11 @@
         // ============================================================
         async function render() {
             const t = window.i18n?.t || function(key) { return key; };
+
+// 调试：检查 claimedDays
+    const data = loadData();
+    console.log('📊 render - claimedDays:', data.claimedDays);
+    console.log('📊 render - streak:', data.streak);
             
             const user = getCurrentUser();
             if (!user) return;
@@ -849,7 +870,7 @@ if (parseInt(storedRound) !== currentRound) {
             document.getElementById('streakText').innerHTML = `${streak}/${signInRewards.length} ${t('checkin_days')}`;
 
             const claimBtn = document.getElementById('claimBtn');
-            const claimWarning = document.getElementById('claimWarning');
+const claimWarning = document.getElementById('claimWarning');
 
 //============================================================
 // 🔥🔥🔥 核心逻辑：只有 Round 2 且完成 30 单才能签到
@@ -877,6 +898,8 @@ if (canClaim) {
     claimBtn.classList.add('disabled');
     claimBtn.disabled = true;
     claimWarning.innerHTML = t('checkin_need_orders');
+}
+
 }
 
         // ============================================================
@@ -1032,12 +1055,24 @@ async function handleClaim() {
                 console.log('✅ 数据库记录保存成功');
 
                 // 4. 更新本地存储
-                if (isReset) {
-                    saveData(1, new Date().toISOString(), [1]);
-                } else {
-                    saveData(streak + 1, new Date().toISOString(), [...claimedDays, claimDay]);
-                }
-                console.log('✅ 本地存储更新成功');
+if (isReset) {
+    // 重置时，保留已领取的天数，但只添加 Day 1
+    // 但如果 Day 1 已经领取过了，不要重复添加
+    let newClaimedDays = [...claimedDays];
+    if (!newClaimedDays.includes(1)) {
+        newClaimedDays.push(1);
+    }
+    saveData(1, new Date().toISOString(), newClaimedDays);
+    console.log('🔄 Reset: claimedDays preserved:', newClaimedDays);
+} else {
+    // 正常领取
+    let newClaimedDays = [...claimedDays];
+    if (!newClaimedDays.includes(claimDay)) {
+        newClaimedDays.push(claimDay);
+    }
+    saveData(streak + 1, new Date().toISOString(), newClaimedDays);
+    console.log('✅ Claim saved: claimedDays:', newClaimedDays);
+}
 
                 // 5. 更新本地用户对象
                 user.balance = newBalance;
@@ -1058,15 +1093,39 @@ async function handleClaim() {
         }
 
         // ============================================================
-        // Initialization
-        // ============================================================
-        checkLogin();
-        (async function init() {
-            await loadRewards();
-            await render();
-            console.log('✅ checkin.html 初始化完成');
-            console.log('📋 签到规则: 只有 Round 2 且完成 30 单才能签到');
-        })();
+// Initialization
+// ============================================================
+checkLogin();
+
+// 等待 i18n 加载完成
+async function ensureI18n() {
+    let attempts = 0;
+    while (!window.i18n && attempts < 30) {
+        await new Promise(r => setTimeout(r, 100));
+        attempts++;
+    }
+    if (!window.i18n) {
+        console.warn('⚠️ i18n not loaded, using fallback');
+        // 创建一个简单的 fallback
+        window.i18n = {
+            t: function(key) { return key; },
+            applyTranslations: function() {}
+        };
+    }
+    return window.i18n;
+}
+
+(async function init() {
+    await ensureI18n();
+    await loadRewards();
+    await render();
+    // 确保翻译应用
+    if (window.i18n && window.i18n.applyTranslations) {
+        window.i18n.applyTranslations();
+    }
+    console.log('✅ checkin.html 初始化完成');
+    console.log('📋 签到规则: 只有 Round 2 且完成 30 单才能签到');
+})();
 
         // ============================================================
         // Window resize - restart particles
@@ -1092,10 +1151,18 @@ async function handleClaim() {
     <script src="i18n.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            if (window.i18n) {
-                window.i18n.applyTranslations();
-            }
-        });
+    if (window.i18n) {
+        window.i18n.applyTranslations();
+    }
+    // 强制刷新数据
+    const saved = localStorage.getItem('additive_checkin');
+    if (saved) {
+        try {
+            const data = JSON.parse(saved);
+            console.log('📂 DOMContentLoaded - claimedDays:', data.claimedDays);
+        } catch(e) {}
+    }
+});
     </script>
 </body>
 </html>
