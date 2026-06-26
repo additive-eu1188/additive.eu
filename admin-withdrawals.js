@@ -498,9 +498,9 @@ style.textContent = `
 /* Pending: Wallet Address 列 - 缩小宽度，让 User IP 往左移 */
 #page_withdrawals #pendingPanel .withdrawals-table-wrap .data-table th:nth-child(6),
 #page_withdrawals #pendingPanel .withdrawals-table-wrap .data-table td:nth-child(6) {
-    width: 360px !important;
-    min-width: 360px !important;
-    max-width: 360px !important;
+    width: 320px !important;
+    min-width: 320px !important;
+    max-width: 320px !important;
 }
 #page_withdrawals #pendingPanel .withdrawals-table-wrap .data-table th:nth-child(7),
 #page_withdrawals #pendingPanel .withdrawals-table-wrap .data-table td:nth-child(7) {
@@ -525,40 +525,40 @@ style.textContent = `
 #page_withdrawals #historyPanel .withdrawals-table-wrap .data-table th:nth-child(1),
 #page_withdrawals #historyPanel .withdrawals-table-wrap .data-table td:nth-child(1) {
     width: 90px !important;
-    min-width: 90px !important;
-    max-width: 90px !important;
+    min-width:100px !important;
+    max-width:100px !important;
     padding: 6px 6px 6px 12px !important;
 }
 #page_withdrawals #historyPanel .withdrawals-table-wrap .data-table th:nth-child(2),
 #page_withdrawals #historyPanel .withdrawals-table-wrap .data-table td:nth-child(2) {
-    width: 110px !important;
-    min-width: 110px !important;
-    max-width: 110px !important;
+    width:100px !important;
+    min-width:100px !important;
+    max-width:100px !important;
 }
 #page_withdrawals #historyPanel .withdrawals-table-wrap .data-table th:nth-child(3),
 #page_withdrawals #historyPanel .withdrawals-table-wrap .data-table td:nth-child(3) {
     width: 90px !important;
-    min-width: 90px !important;
-    max-width: 90px !important;
+    min-width:100px !important;
+    max-width:100px !important;
 }
 #page_withdrawals #historyPanel .withdrawals-table-wrap .data-table th:nth-child(4),
 #page_withdrawals #historyPanel .withdrawals-table-wrap .data-table td:nth-child(4) {
-    width: 140px !important;
-    min-width: 140px !important;
-    max-width: 140px !important;
+    width: 100px !important;
+    min-width:100px !important;
+    max-width:100px !important;
 }
 #page_withdrawals #historyPanel .withdrawals-table-wrap .data-table th:nth-child(5),
 #page_withdrawals #historyPanel .withdrawals-table-wrap .data-table td:nth-child(5) {
-    width: 100px !important;
-    min-width: 100px !important;
-    max-width: 100px !important;
+    width: 300px !important;
+    min-width: 300px !important;
+    max-width: 300px !important;
 }
 /* History: Wallet Address 列 - 向右伸展，增加宽度 */
 #page_withdrawals #historyPanel .withdrawals-table-wrap .data-table th:nth-child(6),
 #page_withdrawals #historyPanel .withdrawals-table-wrap .data-table td:nth-child(6) {
-    width: 520px !important;
-    min-width: 520px !important;
-    max-width: 520px !important;
+    width: 100px !important;
+    min-width: 100px !important;
+    max-width: 100px !important;
 }
 #page_withdrawals #historyPanel .withdrawals-table-wrap .data-table th:nth-child(7),
 #page_withdrawals #historyPanel .withdrawals-table-wrap .data-table td:nth-child(7) {
@@ -568,9 +568,9 @@ style.textContent = `
 }
 #page_withdrawals #historyPanel .withdrawals-table-wrap .data-table th:nth-child(8),
 #page_withdrawals #historyPanel .withdrawals-table-wrap .data-table td:nth-child(8) {
-    width: 150px !important;
-    min-width: 150px !important;
-    max-width: 150px !important;
+    width: 100px !important;
+    min-width: 100px !important;
+    max-width: 100px !important;
 }
 
 @media (max-width: 768px) {
