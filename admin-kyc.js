@@ -295,7 +295,7 @@ async function loadKycPending() {
     tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:30px; color:#6a7a9a;">Loading...</td></tr>';
     
     try {
-        let query = sb.from('kyc_verifications').select('*').in('status', ['pending', 'rejected']).order('uploaded_at', { ascending: false });
+        let query = sb.from('kyc_verifications').select('*').eq('status', 'pending').order('uploaded_at', { ascending: false });
         
         const keyword = document.getElementById('kycSearchInput')?.value.trim() || '';
         const docType = document.getElementById('kycDocTypeFilter')?.value || '';
