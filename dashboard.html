@@ -560,17 +560,6 @@
                 </div>
 
                 <div class="dashboard-right">
-                    <div class="card">
-                        <div class="card-label"><i class="fas fa-chart-line"></i> QUICK STATS</div>
-                        <div style="display: flex; justify-content: space-between; margin: 20px 0;">
-    <div><div style="font-size: 28px; font-weight: 700;" id="totalOrdersStat">0</div><div style="font-size: 11px; color: var(--text-secondary);" data-i18n="dashboard_stats_orders">Total Orders</div></div>
-    <div><div style="font-size: 28px; font-weight: 700;" id="totalCommissionStat">€0</div><div style="font-size: 11px; color: var(--text-secondary);" data-i18n="dashboard_stats_commission">Commission</div></div>
-</div>
-<div class="membership-info">
-    <span class="membership-badge"><i class="fas fa-chart-simple"></i> <span data-i18n="dashboard_stats_earnings">Lifetime Earnings</span></span>
-    <span id="lifetimeEarnings" style="color: var(--accent-gold); font-weight: 600;">€0</span>
-</div>
-                    </div>
                 </div>
             </div>
 
@@ -1094,9 +1083,6 @@
                     const { data: orders } = await sb.from('order_history').select('commission').eq('uid', user.uid);
                     const total = orders?.reduce((s, o) => s + (o.commission || 0), 0) || 0;
                     document.getElementById('totalEarnings').innerHTML = '€' + total.toFixed(2);
-                    document.getElementById('totalCommissionStat').innerHTML = '€' + total.toFixed(2);
-                    document.getElementById('lifetimeEarnings').innerHTML = '€' + total.toFixed(2);
-                    document.getElementById('totalOrdersStat').innerHTML = orders?.length || 0;
 
                     const { data: events } = await sb.from('events').select('id').eq('status', 'active');
                     const eventCount = events?.length || 0;
