@@ -360,7 +360,7 @@ async function loadTrialUnactivated() {
             
             row.insertCell(0).innerHTML = `<span style="font-size:12px; color:#b0c0da;">${escapeHtml(user.phone || '-')}</span>`;
             row.insertCell(1).innerHTML = `<span style="font-weight:500; color:#d8e0f0;">${escapeHtml(user.username)}</span>`;
-            row.insertCell(2).innerHTML = `<span class="badge" style="background: rgba(255,255,255,0.10); padding: 2px 12px; border-radius: 20px; font-size: 12px; color: #e8edf5; border: 1px solid rgba(255,255,255,0.12); font-weight: 600; letter-spacing: 0.3px;">${escapeHtml(user.uid)}</span>`;
+            row.insertCell(2).innerHTML = `<span class="badge" style="background: rgba(255,255,255,0.08); padding: 2px 12px; border-radius: 20px; font-size: 11px; color: #c8d2e8; border: 1px solid rgba(255,255,255,0.06);">${escapeHtml(user.uid)}</span>`;
             row.insertCell(3).innerHTML = `<span style="font-weight:600; color:#8892a8;">€${(user.trial_bonus_amount || 0).toFixed(2)}</span>`;
             row.insertCell(4).innerHTML = `
                 <input type="number" class="trial-amount-input" id="trial_amount_${user.uid}" placeholder="0.00" step="0.01" min="0" style="width:100px; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.10); border-radius:8px; padding:6px 10px; color:#e6edf5; font-size:13px; text-align:center; outline:none; transition:0.2s;">
