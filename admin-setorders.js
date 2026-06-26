@@ -127,16 +127,17 @@ async function loadSetordersPage() {
                 <div class="table-container" style="max-height: 300px; overflow-y: auto; border-radius: 12px; border: 1px solid rgba(255,255,255,0.03);">
                     <table class="data-table" style="width: 100%; border-collapse: collapse; font-size: 12px; min-width: 700px;">
                         <thead>
-                            <tr>
-                                <th style="padding: 10px 14px; color: #a8b4d0; font-weight: 600; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid rgba(255,255,255,0.04); background: rgba(10,14,28,0.3); text-align: left;">User ID</th>
-                                <th style="padding: 10px 14px; color: #a8b4d0; font-weight: 600; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid rgba(255,255,255,0.04); background: rgba(10,14,28,0.3); text-align: left;">Trigger Type</th>
-                                <th style="padding: 10px 14px; color: #a8b4d0; font-weight: 600; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid rgba(255,255,255,0.04); background: rgba(10,14,28,0.3); text-align: left;">Orders Number</th>
-                                <th style="padding: 10px 14px; color: #a8b4d0; font-weight: 600; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid rgba(255,255,255,0.04); background: rgba(10,14,28,0.3); text-align: left;">Trigger Amount</th>
-                                <th style="padding: 10px 14px; color: #a8b4d0; font-weight: 600; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid rgba(255,255,255,0.04); background: rgba(10,14,28,0.3); text-align: left;">Status</th>
-                                <th style="padding: 10px 14px; color: #a8b4d0; font-weight: 600; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid rgba(255,255,255,0.04); background: rgba(10,14,28,0.3); text-align: left; min-width: 90px;">Action</th>
-                            </tr>
-                        </thead>
-                        <tbody id="triggerHistoryBody"><tr><td colspan="6" style="text-align:center; padding:20px; color:#6a7a9a;">Enter a UID to view trigger history</td></tr></tbody>
+    <tr>
+        <th style="padding: 10px 14px; color: #a8b4d0; font-weight: 600; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid rgba(255,255,255,0.04); background: rgba(10,14,28,0.3); text-align: left;">User ID</th>
+        <th style="padding: 10px 14px; color: #a8b4d0; font-weight: 600; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid rgba(255,255,255,0.04); background: rgba(10,14,28,0.3); text-align: left;">Trigger Type</th>
+        <th style="padding: 10px 14px; color: #a8b4d0; font-weight: 600; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid rgba(255,255,255,0.04); background: rgba(10,14,28,0.3); text-align: left;">Orders Number</th>
+        <th style="padding: 10px 14px; color: #a8b4d0; font-weight: 600; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid rgba(255,255,255,0.04); background: rgba(10,14,28,0.3); text-align: left;">Trigger Amount</th>
+        <th style="padding: 10px 14px; color: #a8b4d0; font-weight: 600; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid rgba(255,255,255,0.04); background: rgba(10,14,28,0.3); text-align: left; min-width: 140px;">Trigger Date</th>
+        <th style="padding: 10px 14px; color: #a8b4d0; font-weight: 600; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid rgba(255,255,255,0.04); background: rgba(10,14,28,0.3); text-align: left;">Status</th>
+        <th style="padding: 10px 14px; color: #a8b4d0; font-weight: 600; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid rgba(255,255,255,0.04); background: rgba(10,14,28,0.3); text-align: left; min-width: 90px;">Action</th>
+    </tr>
+</thead>
+                        <tbody id="triggerHistoryBody"><tr><td colspan="7" style="text-align:center; padding:20px; color:#6a7a9a;">Enter a UID to view trigger history</td></tr></tbody>
                     </table>
                 </div>
             </div>
@@ -308,7 +309,7 @@ async function loadSetordersPage() {
     });
     
     // 初始显示空状态
-    document.getElementById('triggerHistoryBody').innerHTML = '<tr><td colspan="6" style="text-align:center; padding:20px; color:#6a7a9a;">Enter a UID to view trigger history</td></tr>';
+    document.getElementById('triggerHistoryBody').innerHTML = '<tr><td colspan="7" style="text-align:center; padding:20px; color:#6a7a9a;">Enter a UID to view trigger history</td></tr>';
 }
 
 // ========== 根据 UID 选择用户 ==========
@@ -630,11 +631,11 @@ async function loadTriggerHistory() {
     if (!tbody) return;
     
     if (!currentSetUser) {
-        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:20px; color:#6a7a9a;">Enter a UID to view trigger history</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding:20px; color:#6a7a9a;">Enter a UID to view trigger history</td></tr>';
         return;
     }
     
-    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:20px; color:#6a7a9a;">Loading...</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding:20px; color:#6a7a9a;">Loading...</td></tr>';
     
     try {
         const { data: records, error } = await sb
@@ -646,7 +647,7 @@ async function loadTriggerHistory() {
         if (error) throw error;
         
         if (!records || records.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:20px; color:#6a7a9a;">No trigger records for this user</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding:20px; color:#6a7a9a;">No trigger records for this user</td></tr>';
             return;
         }
         
@@ -666,16 +667,21 @@ async function loadTriggerHistory() {
             const amount = record.order_type === 'card_reward' ? record.target_price : (record.matched_price || record.target_price || 0);
             
             row.insertCell(0).innerHTML = '<span class="badge" style="background: rgba(255,255,255,0.08); padding: 2px 12px; border-radius: 20px; font-size: 11px; color: #c8d2e8; border: 1px solid rgba(255,255,255,0.06);">' + escapeHtml(record.uid) + '</span>';
-            row.insertCell(1).innerHTML = '<span style="font-size: 12px; color: #d8e0f0;">' + (typeNames[record.order_type] || record.order_type) + '</span>';
-            row.insertCell(2).innerHTML = '<span style="font-size: 12px; color: #8892a8;">' + record.trigger_order_number + '</span>';
-            row.insertCell(3).innerHTML = '<span style="font-size: 12px; color: #c8b090; font-weight: 600;">€' + (amount || 0).toFixed(2) + '</span>';
-            row.insertCell(4).innerHTML = '<span class="' + statusClass + '">' + statusText + '</span>';
-            
-            if (record.status === 'pending') {
-                row.insertCell(5).innerHTML = `<button class="delete-trigger-btn" data-id="${record.id}"><i class="fas fa-trash"></i> Delete</button>`;
-            } else {
-                row.insertCell(5).innerHTML = '<span style="font-size: 11px; color: #6a7a92;">-</span>';
-            }
+row.insertCell(1).innerHTML = '<span style="font-size: 12px; color: #d8e0f0;">' + (typeNames[record.order_type] || record.order_type) + '</span>';
+row.insertCell(2).innerHTML = '<span style="font-size: 12px; color: #8892a8;">' + record.trigger_order_number + '</span>';
+row.insertCell(3).innerHTML = '<span style="font-size: 12px; color: #c8b090; font-weight: 600;">€' + (amount || 0).toFixed(2) + '</span>';
+
+// Trigger Date
+const triggerDate = record.created_at ? new Date(record.created_at).toLocaleString() : '-';
+row.insertCell(4).innerHTML = '<span style="font-size: 12px; color: #8892a8;">' + triggerDate + '</span>';
+
+row.insertCell(5).innerHTML = '<span class="' + statusClass + '">' + statusText + '</span>';
+
+if (record.status === 'pending') {
+    row.insertCell(6).innerHTML = `<button class="delete-trigger-btn" data-id="${record.id}"><i class="fas fa-trash"></i> Delete</button>`;
+} else {
+    row.insertCell(6).innerHTML = '<span style="font-size: 11px; color: #6a7a92;">-</span>';
+}
         }
         
         document.querySelectorAll('.delete-trigger-btn').forEach(function(btn) {
@@ -695,7 +701,7 @@ async function loadTriggerHistory() {
         
     } catch (e) {
         console.error('加载触发历史失败:', e);
-        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:20px; color:#e88080;">加载失败: ' + escapeHtml(e.message) + '</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding:20px; color:#e88080;">加载失败: ' + escapeHtml(e.message) + '</td></tr>';
     }
 }
 
