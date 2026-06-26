@@ -466,9 +466,9 @@ style.textContent = `
 /* ===== Pending 页面列宽 ===== */
 #page_withdrawals #pendingPanel .withdrawals-table-wrap .data-table th:nth-child(1),
 #page_withdrawals #pendingPanel .withdrawals-table-wrap .data-table td:nth-child(1) {
-    width: 90px !important;
-    min-width: 90px !important;
-    max-width: 90px !important;
+    width: 80px !important;
+    min-width: 80px !important;
+    max-width: 80px !important;
     padding: 6px 6px 6px 12px !important;
 }
 #page_withdrawals #pendingPanel .withdrawals-table-wrap .data-table th:nth-child(2),
@@ -510,9 +510,9 @@ style.textContent = `
 }
 #page_withdrawals #pendingPanel .withdrawals-table-wrap .data-table th:nth-child(8),
 #page_withdrawals #pendingPanel .withdrawals-table-wrap .data-table td:nth-child(8) {
-    width: 150px !important;
-    min-width: 150px !important;
-    max-width: 150px !important;
+    width: 100px !important;
+    min-width: 100px !important;
+    max-width: 100px !important;
 }
 #page_withdrawals #pendingPanel .withdrawals-table-wrap .data-table th:nth-child(9),
 #page_withdrawals #pendingPanel .withdrawals-table-wrap .data-table td:nth-child(9) {
