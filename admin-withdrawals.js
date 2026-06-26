@@ -1,5 +1,15 @@
 // admin-withdrawals.js - 完整版（标签切换 + 搜索功能 + 专业质感样式 + 自定义下拉 + Crypto图标）
 let currentWithdrawTab = 'pending';
+// ========== 地址格式化：每行最多30个字符 ==========
+function formatAddressLines(address) {
+    if (!address || address === '-') return address || '-';
+    var maxCharsPerLine = 30;
+    var result = '';
+    for (var i = 0; i < address.length; i += maxCharsPerLine) {
+        result += address.substring(i, i + maxCharsPerLine) + '\n';
+    }
+    return result.trimEnd();
+}
 let withdrawSearchKeyword = '';
 
 // ========== Crypto 图标映射 ==========
@@ -273,11 +283,9 @@ style.textContent = `
     font-size: 11px;
     font-family: 'Courier New', monospace;
     color: #b0c0da;
-    word-break: break-word;
+    word-break: break-all;
     line-height: 1.6;
-    display: block;
-    max-width: 100%;
-    overflow-wrap: break-word;
+    white-space: pre-wrap;
 }
 #page_withdrawals .copy-address-btn {
     background: rgba(255,255,255,0.04);
@@ -879,12 +887,14 @@ var cell4 = row.insertCell(4);
 cell4.style.padding = '6px 16px';
 cell4.innerHTML = '<span class="currency-badge ' + currencyClass + '">' + iconHtml + escapeHtml(currencyDisplay) + '</span>';
 
-// Wallet Address (索引 5) - 保持较小 padding
+// Wallet Address (索引 5) - 每行最多30字符
 var address = w.wallet_address || '-';
 var addressCell = row.insertCell(5);
 addressCell.style.padding = '6px 12px';
 addressCell.className = 'wallet-address-cell';
-addressCell.innerHTML = '<div class="wallet-address-wrapper"><span class="wallet-address-text">' + escapeHtml(address) + '</span>' + (address !== '-' ? '<button class="copy-address-btn" data-address="' + escapeHtml(address) + '"><i class="fas fa-copy"></i></button>' : '') + '</div>';
+// 格式化地址：每行最多30字符
+var formattedAddress = formatAddressLines(address);
+addressCell.innerHTML = '<div class="wallet-address-wrapper"><span class="wallet-address-text" style="white-space:pre-wrap;word-break:break-all;line-height:1.6;">' + formattedAddress + '</span>' + (address !== '-' ? '<button class="copy-address-btn" data-address="' + escapeHtml(address) + '"><i class="fas fa-copy"></i></button>' : '') + '</div>';
     
     // ===== User IP / Country (索引 6) =====
     var ipCell = row.insertCell(6);
