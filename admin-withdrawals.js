@@ -469,7 +469,7 @@ document.head.appendChild(style);
     
     // 绑定标签切换
     document.getElementById('tabPending')?.addEventListener('click', function() { switchWithdrawTab('pending'); });
-    document.getElementById('tabHistory')?.addEventListener('click', function() { switchWithdrawTab('history'); });
+document.getElementById('tabHistory')?.addEventListener('click', function() { switchWithdrawTab('history'); });
     
     // 绑定刷新按钮
     document.getElementById('refreshWithdrawBtn')?.addEventListener('click', refreshWithdrawData);
@@ -572,10 +572,10 @@ async function switchWithdrawTab(tab) {
     }
     
     // ✅ 重置所有标签和面板的状态
-    document.querySelectorAll('.tab-withdraw-btn').forEach(function(btn) {
+    document.querySelectorAll('#page_withdrawals .tab-withdraw-btn').forEach(function(btn) {
         btn.classList.remove('active');
     });
-    document.querySelectorAll('.withdraw-panel').forEach(function(panel) {
+    document.querySelectorAll('#page_withdrawals .withdraw-panel').forEach(function(panel) {
         panel.style.display = 'none';
     });
     
@@ -583,11 +583,11 @@ async function switchWithdrawTab(tab) {
     if (tab === 'pending') {
         pendingBtn.classList.add('active');
         pendingPanel.style.display = 'block';
-        await loadWithdrawals();  // ✅ 添加 await
+        await loadWithdrawals();
     } else {
         historyBtn.classList.add('active');
         historyPanel.style.display = 'block';
-        await loadWithdrawalHistory();  // ✅ 添加 await
+        await loadWithdrawalHistory();
     }
 }
 
