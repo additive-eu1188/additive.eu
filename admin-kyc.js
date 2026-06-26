@@ -267,15 +267,14 @@ async function updateKycStats() {
         const approvedRes = await sb.from('kyc_verifications').select('id', { count: 'exact', head: true }).eq('status', 'approved');
         const rejectedRes = await sb.from('kyc_verifications').select('id', { count: 'exact', head: true }).eq('status', 'rejected');
         
+        // Pending 页面 - 只有 2 个卡片
         document.getElementById('kycStatTotal').innerText = totalRes.count || 0;
         document.getElementById('kycStatPending').innerText = pendingRes.count || 0;
-        document.getElementById('kycStatApproved').innerText = approvedRes.count || 0;
-        document.getElementById('kycStatRejected').innerText = rejectedRes.count || 0;
         
-        // 已验证面板的统计（显示同样的数据，或者只显示已批准的）
+        // Verification History 页面 - 3 个卡片
         document.getElementById('kycVerifiedStatTotal').innerText = totalRes.count || 0;
-document.getElementById('kycVerifiedStatApproved').innerText = approvedRes.count || 0;
-document.getElementById('kycVerifiedStatRejected').innerText = rejectedRes.count || 0;
+        document.getElementById('kycVerifiedStatApproved').innerText = approvedRes.count || 0;
+        document.getElementById('kycVerifiedStatRejected').innerText = rejectedRes.count || 0;
     } catch (e) {
         console.error('更新KYC统计失败:', e);
     }
