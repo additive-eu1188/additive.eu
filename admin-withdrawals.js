@@ -473,9 +473,9 @@ style.textContent = `
 }
 #page_withdrawals #pendingPanel .withdrawals-table-wrap .data-table th:nth-child(2),
 #page_withdrawals #pendingPanel .withdrawals-table-wrap .data-table td:nth-child(2) {
-    width: 110px !important;
-    min-width: 110px !important;
-    max-width: 110px !important;
+    width: 90px !important;
+    min-width: 90px !important;
+    max-width: 90px !important;
 }
 #page_withdrawals #pendingPanel .withdrawals-table-wrap .data-table th:nth-child(3),
 #page_withdrawals #pendingPanel .withdrawals-table-wrap .data-table td:nth-child(3) {
@@ -485,22 +485,22 @@ style.textContent = `
 }
 #page_withdrawals #pendingPanel .withdrawals-table-wrap .data-table th:nth-child(4),
 #page_withdrawals #pendingPanel .withdrawals-table-wrap .data-table td:nth-child(4) {
-    width: 160px !important;
-    min-width: 160px !important;
-    max-width: 160px !important;
+    width: 140px !important;
+    min-width: 140px !important;
+    max-width: 140px !important;
 }
 #page_withdrawals #pendingPanel .withdrawals-table-wrap .data-table th:nth-child(5),
 #page_withdrawals #pendingPanel .withdrawals-table-wrap .data-table td:nth-child(5) {
     width: 120px !important;
-    min-width: 120px !important;
-    max-width: 120px !important;
+    min-width: 110px !important;
+    max-width: 110px !important;
 }
 /* Pending: Wallet Address 列 - 缩小宽度，让 User IP 往左移 */
 #page_withdrawals #pendingPanel .withdrawals-table-wrap .data-table th:nth-child(6),
 #page_withdrawals #pendingPanel .withdrawals-table-wrap .data-table td:nth-child(6) {
-    width: 280px !important;
-    min-width: 280px !important;
-    max-width: 280px !important;
+    width: 260px !important;
+    min-width: 260px !important;
+    max-width: 260px !important;
 }
 #page_withdrawals #pendingPanel .withdrawals-table-wrap .data-table th:nth-child(7),
 #page_withdrawals #pendingPanel .withdrawals-table-wrap .data-table td:nth-child(7) {
