@@ -37,14 +37,14 @@
             color: #C9B095;
         }
         .history-list {
-            background: rgba(20, 30, 55, 0.4);
-            backdrop-filter: blur(8px);
-            border-radius: 20px;
-            overflow: hidden;
-            border: 1px solid rgba(201, 176, 149, 0.1);
-            max-height: 450px;
-            overflow-y: auto;
-        }
+    background: rgba(20, 30, 55, 0.4);
+    backdrop-filter: blur(8px);
+    border-radius: 20px;
+    overflow: hidden;
+    border: 1px solid rgba(201, 176, 149, 0.1);
+    max-height: 600px;   /* 从 450px 改为 600px */
+    overflow-y: auto;
+}
         .history-item {
             display: flex;
             justify-content: space-between;
@@ -158,6 +158,14 @@
         .rating-stars i {
             font-size: 14px;
         }
+        .footer-note {
+            margin-top: 40px;
+            text-align: center;
+            font-size: 11px;
+            color: #5a6e8a;
+            padding: 16px 0;
+            border-top: 1px solid rgba(204, 178, 153, 0.08);
+        }
     </style>
 </head>
 <body>
@@ -216,6 +224,7 @@
 <div id="ordersHistory" class="history-list" style="display: none;">
     <div class="empty-state"><i class="fas fa-clipboard-list"></i><p data-i18n="history_no_orders">No orders found.</p></div>
 </div>
+<div class="footer-note"><i class="fas fa-lock"></i> <span data-i18n="secure_platform">Secure platform · Protected by ADDITIVE</span></div>
         </main>
     </div>
 
