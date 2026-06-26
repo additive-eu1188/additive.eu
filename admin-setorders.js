@@ -363,11 +363,24 @@ function updateConfirmCards() {
     };
     
     const orderCount = parseInt(document.getElementById('triggerOrderCount').value) || 1;
-    const amount = parseFloat(document.getElementById('triggerAmount').value) || 0;
+    // ✅ 不再从输入框读取金额，而是从选中的订单读取
+    // 如果有选中的订单，使用订单价格；否则显示 "-"
+    let displayAmount = '-';
+    if (selectedAdvancedOrdersList.length > 0) {
+        displayAmount = '€' + selectedAdvancedOrdersList[0].price.toFixed(2);
+    } else {
+        // 如果是 Diamond Reward，使用输入框的值
+        if (currentTriggerTab === 'card_reward') {
+            const amount = parseFloat(document.getElementById('triggerAmount').value) || 0;
+            displayAmount = amount > 0 ? '€' + amount.toFixed(2) : '-';
+        } else {
+            displayAmount = '-';
+        }
+    }
     
     document.getElementById('cardType').innerText = typeNames[currentTriggerTab] || '-';
     document.getElementById('cardNumbers').innerText = orderCount;
-    document.getElementById('cardAmount').innerHTML = amount > 0 ? '€' + amount.toFixed(2) : '-';
+    document.getElementById('cardAmount').innerHTML = displayAmount;
 }
 
 // ========== 搜索触发订单 ==========
@@ -461,23 +474,26 @@ async function searchTriggerOrders() {
             `;
             
             div.addEventListener('click', function() {
-                document.querySelectorAll('.result-item').forEach(function(el) {
-                    el.classList.remove('selected');
-                    const check = el.querySelector('.result-check');
-                    if (check) check.style.display = 'none';
-                });
-                this.classList.add('selected');
-                const check = this.querySelector('.result-check');
-                if (check) check.style.display = 'block';
-                
-                selectedAdvancedOrdersList = [{
-                    id: order.id,
-                    price: order.price,
-                    name: order.accommodation_name,
-                    image_url: order.image_url,
-                    order_code: order.order_code
-                }];
-            });
+    document.querySelectorAll('.result-item').forEach(function(el) {
+        el.classList.remove('selected');
+        const check = el.querySelector('.result-check');
+        if (check) check.style.display = 'none';
+    });
+    this.classList.add('selected');
+    const check = this.querySelector('.result-check');
+    if (check) check.style.display = 'block';
+    
+    selectedAdvancedOrdersList = [{
+        id: order.id,
+        price: order.price,
+        name: order.accommodation_name,
+        image_url: order.image_url,
+        order_code: order.order_code
+    }];
+    
+    // ✅ 新增：更新 Trigger Amount 卡片为选中的订单价格
+    document.getElementById('cardAmount').innerHTML = '€' + order.price.toFixed(2);
+});
             
             container.appendChild(div);
         }
