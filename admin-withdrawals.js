@@ -557,7 +557,7 @@ document.getElementById('historyPanel').style.display = 'none';
 }
 
 // ========== 标签切换 ==========
-function switchWithdrawTab(tab) {
+async function switchWithdrawTab(tab) {
     currentWithdrawTab = tab;
     
     var pendingBtn = document.getElementById('tabPending');
@@ -583,11 +583,11 @@ function switchWithdrawTab(tab) {
     if (tab === 'pending') {
         pendingBtn.classList.add('active');
         pendingPanel.style.display = 'block';
-        loadWithdrawals();
+        await loadWithdrawals();  // ✅ 添加 await
     } else {
         historyBtn.classList.add('active');
         historyPanel.style.display = 'block';
-        loadWithdrawalHistory();
+        await loadWithdrawalHistory();  // ✅ 添加 await
     }
 }
 
