@@ -1054,25 +1054,19 @@ async function handleClaim() {
                 }
                 console.log('✅ 数据库记录保存成功');
 
-                // 4. 更新本地存储
-if (isReset) {
-    // 重置时，保留已领取的天数，但只添加 Day 1
-    // 但如果 Day 1 已经领取过了，不要重复添加
-    let newClaimedDays = [...claimedDays];
-    if (!newClaimedDays.includes(1)) {
-        newClaimedDays.push(1);
-    }
-    saveData(1, new Date().toISOString(), newClaimedDays);
-    console.log('🔄 Reset: claimedDays preserved:', newClaimedDays);
-} else {
-    // 正常领取
-    let newClaimedDays = [...claimedDays];
-    if (!newClaimedDays.includes(claimDay)) {
-        newClaimedDays.push(claimDay);
-    }
-    saveData(streak + 1, new Date().toISOString(), newClaimedDays);
-    console.log('✅ Claim saved: claimedDays:', newClaimedDays);
+                // 4. 更新本地存储 - 修复版
+let newClaimedDays = [...claimedDays];
+if (!newClaimedDays.includes(claimDay)) {
+    newClaimedDays.push(claimDay);
 }
+// 按从小到大排序
+newClaimedDays.sort((a, b) => a - b);
+
+// streak 应该是已领取的总数
+const newStreak = newClaimedDays.length;
+
+saveData(newStreak, new Date().toISOString(), newClaimedDays);
+console.log('✅ Claim saved: claimedDays:', newClaimedDays, 'streak:', newStreak);
 
                 // 5. 更新本地用户对象
                 user.balance = newBalance;
