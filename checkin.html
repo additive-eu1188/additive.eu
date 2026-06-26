@@ -782,15 +782,31 @@
             let { streak, lastClaimDate, claimedDays } = loadData();
             const storedRound = localStorage.getItem('checkin_round') || '0';
             
-            // 如果 Round 变化了，重置签到数据
-            if (parseInt(storedRound) !== currentRound) {
-                saveData(0, null, []);
-                localStorage.setItem('checkin_round', String(currentRound));
-                streak = 0;
-                lastClaimDate = null;
-                claimedDays = [];
-                console.log('🔄 Round changed from', storedRound, 'to', currentRound, '- Checkin reset');
-            }
+            // 如果 Round 变化了，处理签到数据
+if (parseInt(storedRound) !== currentRound) {
+    // 保留已 Claim 的天数列表
+    const existingData = loadData();
+    const preservedClaimedDays = existingData.claimedDays || [];
+    
+    // 只有 Round 2 -> Round 1 时重置 streak 和 lastClaimDate，但保留 claimedDays
+    if (parseInt(storedRound) === 2 && currentRound === 1) {
+        saveData(0, null, preservedClaimedDays);
+        localStorage.setItem('checkin_round', String(currentRound));
+        streak = 0;
+        lastClaimDate = null;
+        claimedDays = preservedClaimedDays;
+        console.log('🔄 Round 2 -> Round 1: Streak reset, claimedDays preserved:', preservedClaimedDays);
+    } else {
+        // 其他 Round 变化（如 0 -> 1, 1 -> 2）只更新存储的 Round
+        localStorage.setItem('checkin_round', String(currentRound));
+        // 保留所有现有数据
+        const currentData = loadData();
+        streak = currentData.streak || 0;
+        lastClaimDate = currentData.lastClaimDate || null;
+        claimedDays = currentData.claimedDays || [];
+        console.log('🔄 Round changed from', storedRound, 'to', currentRound, '- Data preserved');
+    }
+}
             
             const hasClaimed = hasClaimedToday(lastClaimDate);
             const totalOrders = await getUserOrderCountFromDB();
@@ -835,31 +851,33 @@
             const claimBtn = document.getElementById('claimBtn');
             const claimWarning = document.getElementById('claimWarning');
 
-            // ============================================================
-            // 🔥🔥🔥 核心逻辑：只有 Round 2 且完成 30 单才能签到
-            // ============================================================
-            const canClaim = (currentRound === 2 && roundOrdersCount >= 30);
+//============================================================
+// 🔥🔥🔥 核心逻辑：只有 Round 2 且完成 30 单才能签到
+// ============================================================
+const canClaim = (currentRound === 2 && roundOrdersCount >= 30);
 
-            if (canClaim) {
-                if (hasClaimed) {
-                    claimBtn.classList.add('disabled');
-                    claimBtn.disabled = true;
-                    claimWarning.innerHTML = t('checkin_claimed_today');
-                } else if (streak >= signInRewards.length) {
-                    claimBtn.classList.add('disabled');
-                    claimBtn.disabled = true;
-                    claimWarning.innerHTML = t('checkin_all_completed');
-                } else {
-                    claimBtn.classList.remove('disabled');
-                    claimBtn.disabled = false;
-                    claimWarning.innerHTML = '🎉 ' + t('checkin_claim_bonus');
-                }
-            } else {
-                claimBtn.classList.add('disabled');
-                claimBtn.disabled = true;
-                claimWarning.innerHTML = t('checkin_need_orders');
-            }
-        }
+if (canClaim) {
+    // 检查是否所有天数都已 Claim
+    const allClaimed = signInRewards.every(r => claimedDays.includes(r.day));
+    
+    if (hasClaimed) {
+        claimBtn.classList.add('disabled');
+        claimBtn.disabled = true;
+        claimWarning.innerHTML = t('checkin_claimed_today');
+    } else if (allClaimed) {
+        claimBtn.classList.add('disabled');
+        claimBtn.disabled = true;
+        claimWarning.innerHTML = t('checkin_all_completed');
+    } else {
+        claimBtn.classList.remove('disabled');
+        claimBtn.disabled = false;
+        claimWarning.innerHTML = '🎉 ' + t('checkin_claim_bonus');
+    }
+} else {
+    claimBtn.classList.add('disabled');
+    claimBtn.disabled = true;
+    claimWarning.innerHTML = t('checkin_need_orders');
+}
 
         // ============================================================
         // handleClaim - 使用内联自定义弹窗
