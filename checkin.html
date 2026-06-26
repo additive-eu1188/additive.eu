@@ -849,7 +849,7 @@ if (parseInt(storedRound) !== currentRound) {
             document.getElementById('streakText').innerHTML = `${streak}/${signInRewards.length} ${t('checkin_days')}`;
 
             const claimBtn = document.getElementById('claimBtn');
-const claimWarning = document.getElementById('claimWarning');
+            const claimWarning = document.getElementById('claimWarning');
 
 //============================================================
 // 🔥🔥🔥 核心逻辑：只有 Round 2 且完成 30 单才能签到
@@ -877,8 +877,6 @@ if (canClaim) {
     claimBtn.classList.add('disabled');
     claimBtn.disabled = true;
     claimWarning.innerHTML = t('checkin_need_orders');
-}
-
 }
 
         // ============================================================
