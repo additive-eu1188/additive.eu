@@ -314,18 +314,30 @@ async function loadEmailPending() {
             return;
         }
         
+        // ✅ 优化：批量获取所有用户信息（一次查询）
+        const emails = emailList.map(item => item.email);
+        const { data: users } = await sb
+            .from('users')
+            .select('email, phone')
+            .in('email', emails);
+        
+        // 创建 email -> phone 的映射表
+        const phoneMap = {};
+        if (users) {
+            users.forEach(user => {
+                phoneMap[user.email] = user.phone || '-';
+            });
+        }
+        
         tbody.innerHTML = '';
         for (const item of emailList) {
             const row = tbody.insertRow();
             
-            // 获取用户信息
-            const user = await getUserByEmail(item.email);
-            const phone = user?.phone || '-';
+            // ✅ 从内存中获取手机号，不再查询数据库
+            const phone = phoneMap[item.email] || '-';
             
             const requestTime = item.requested_at ? new Date(item.requested_at).toLocaleString() : '-';
             const expireTime = item.expires_at ? new Date(item.expires_at).toLocaleString() : '-';
-            
-            // 检查是否过期
             const isExpired = item.expires_at ? new Date(item.expires_at) < new Date() : false;
             
             row.insertCell(0).innerHTML = `<span style="font-size:12px; color:#b0c0da;">${escapeHtml(phone)}</span>`;
@@ -344,7 +356,7 @@ async function loadEmailPending() {
             `;
         }
         
-        // 绑定 SET TAC 事件
+        // 绑定 SET TAC 事件（保持不变）
         document.querySelectorAll('.set-tac-btn').forEach(btn => {
             btn.addEventListener('click', async function() {
                 const id = this.dataset.id;
@@ -361,7 +373,6 @@ async function loadEmailPending() {
                     return;
                 }
                 
-                // 更新验证码
                 const { error: updateError } = await sb
                     .from('email_verification_requests')
                     .update({ 
@@ -422,12 +433,29 @@ async function loadEmailHistory() {
             return;
         }
         
+        // ============================================================
+        // ✅ 优化：批量获取所有用户信息（一次查询）
+        // ============================================================
+        const emails = historyList.map(item => item.email);
+        const { data: users } = await sb
+            .from('users')
+            .select('email, uid, phone')
+            .in('email', emails);
+        
+        // 创建 email -> user 的映射表
+        const userMap = {};
+        if (users) {
+            users.forEach(user => {
+                userMap[user.email] = user;
+            });
+        }
+        
         tbody.innerHTML = '';
         for (const item of historyList) {
             const row = tbody.insertRow();
             
-            // 获取用户信息
-            const user = await getUserByEmail(item.email);
+            // ✅ 从内存中获取用户信息，不再查询数据库
+            const user = userMap[item.email] || null;
             const phone = user?.phone || '-';
             const uid = user?.uid || '-';
             
