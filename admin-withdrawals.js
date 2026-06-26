@@ -186,24 +186,20 @@ async function loadWithdrawalsPage() {
             <!-- 历史记录面板 -->
             <div id="historyPanel" class="withdraw-panel" style="display: none;">
                 <!-- 历史页面的四张统计卡片 -->
-                <div class="stats-grid" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px;">
-                    <div class="stat-item" style="background: rgba(12, 16, 28, 0.6); border-radius: 16px; padding: 16px 20px; text-align: center; border: 1px solid rgba(255,255,255,0.04);">
-                        <div class="label" style="font-size: 11px; color: #8892a8; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">Total Withdrawals</div>
-                        <div class="value" id="historyStatTotal" style="font-size: 28px; font-weight: 700; color: #ffffff;">€0</div>
-                    </div>
-                    <div class="stat-item" style="background: rgba(12, 16, 28, 0.6); border-radius: 16px; padding: 16px 20px; text-align: center; border: 1px solid rgba(255,255,255,0.04);">
-                        <div class="label" style="font-size: 11px; color: #8892a8; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">Pending Withdrawals</div>
-                        <div class="value" id="historyStatPending" style="font-size: 28px; font-weight: 700; color: #ffffff;">€0</div>
-                    </div>
-                    <div class="stat-item" style="background: rgba(12, 16, 28, 0.6); border-radius: 16px; padding: 16px 20px; text-align: center; border: 1px solid rgba(255,255,255,0.04);">
-                        <div class="label" style="font-size: 11px; color: #8892a8; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">Approved</div>
-                        <div class="value" id="historyStatApproved" style="font-size: 28px; font-weight: 700; color: #ffffff;">€0</div>
-                    </div>
-                    <div class="stat-item" style="background: rgba(12, 16, 28, 0.6); border-radius: 16px; padding: 16px 20px; text-align: center; border: 1px solid rgba(255,255,255,0.04);">
-                        <div class="label" style="font-size: 11px; color: #8892a8; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">Rejected</div>
-                        <div class="value" id="historyStatRejected" style="font-size: 28px; font-weight: 700; color: #ffffff;">€0</div>
-                    </div>
-                </div>
+                <div class="stats-grid" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 24px;">
+    <div class="stat-item" style="background: rgba(12, 16, 28, 0.6); border-radius: 16px; padding: 16px 20px; text-align: center; border: 1px solid rgba(255,255,255,0.04);">
+        <div class="label" style="font-size: 11px; color: #8892a8; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">Total Withdrawals</div>
+        <div class="value" id="historyStatTotal" style="font-size: 28px; font-weight: 700; color: #ffffff;">€0</div>
+    </div>
+    <div class="stat-item" style="background: rgba(12, 16, 28, 0.6); border-radius: 16px; padding: 16px 20px; text-align: center; border: 1px solid rgba(255,255,255,0.04);">
+        <div class="label" style="font-size: 11px; color: #8892a8; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">Approved</div>
+        <div class="value" id="historyStatApproved" style="font-size: 28px; font-weight: 700; color: #ffffff;">0</div>
+    </div>
+    <div class="stat-item" style="background: rgba(12, 16, 28, 0.6); border-radius: 16px; padding: 16px 20px; text-align: center; border: 1px solid rgba(255,255,255,0.04);">
+        <div class="label" style="font-size: 11px; color: #8892a8; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">Rejected</div>
+        <div class="value" id="historyStatRejected" style="font-size: 28px; font-weight: 700; color: #ffffff;">0</div>
+    </div>
+</div>
                 
                 <!-- 历史搜索栏 -->
                 <div class="search-bar" style="display: flex; flex-wrap: wrap; gap: 10px; align-items: center; background: rgba(8, 12, 24, 0.5); border-radius: 16px; padding: 12px 16px; margin-bottom: 20px; border: 1px solid rgba(255,255,255,0.03);">
@@ -668,8 +664,8 @@ async function loadWithdrawals() {
         var totalAmount = filtered.reduce(function(sum, w) { return sum + (w.amount || 0); }, 0);
         document.getElementById('statTotalWithdraw').innerHTML = '€' + totalAmount.toFixed(2);
         document.getElementById('statPendingWithdraw').innerHTML = '€' + totalAmount.toFixed(2);
-        document.getElementById('statApprovedWithdraw').innerHTML = '€0.00';
-        document.getElementById('statRejectedWithdraw').innerHTML = '€0.00';
+        document.getElementById('statApprovedWithdraw').innerHTML = '0';
+document.getElementById('statRejectedWithdraw').innerHTML = '0';
         
         if (!filtered || filtered.length === 0) {
             tbody.innerHTML = '<tr><td colspan="9" style="text-align:center; padding:30px; color:#6a7a9a;">No pending withdrawals</td></tr>';
@@ -827,14 +823,12 @@ async function loadWithdrawalHistory() {
         }
         
         var total = filtered.reduce(function(sum, w) { return sum + (w.amount || 0); }, 0);
-        var pending = filtered.filter(function(w) { return w.status === 'pending'; }).length;
-        var approved = filtered.filter(function(w) { return w.status === 'approved'; }).length;
+var approved = filtered.filter(function(w) { return w.status === 'approved'; }).length;
 var rejected = filtered.filter(function(w) { return w.status === 'rejected'; }).length;
-        
-        document.getElementById('historyStatTotal').innerHTML = '€' + total.toFixed(2);
-        document.getElementById('historyStatPending').innerHTML = pending + ' times';
-        document.getElementById('historyStatApproved').innerHTML = approved + ' times';
-document.getElementById('historyStatRejected').innerHTML = rejected + ' times';
+
+document.getElementById('historyStatTotal').innerHTML = '€' + total.toFixed(2);
+document.getElementById('historyStatApproved').innerHTML = approved;
+document.getElementById('historyStatRejected').innerHTML = rejected;
         
         if (!filtered || filtered.length === 0) {
             tbody.innerHTML = '<tr><td colspan="8" style="text-align:center; padding:30px; color:#6a7a9a;">No withdrawal records</td></tr>';
