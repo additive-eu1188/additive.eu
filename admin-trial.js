@@ -249,14 +249,24 @@ async function loadTrialPage() {
 
 function switchTrialTab(tab) {
     activeTrialTab = tab;
-    document.getElementById('trialTabUnactivated').classList.toggle('active', tab === 'unactivated');
-    document.getElementById('trialTabActivated').classList.toggle('active', tab === 'activated');
-    document.getElementById('trialUnactivatedPanel').style.display = tab === 'unactivated' ? 'block' : 'none';
-    document.getElementById('trialActivatedPanel').style.display = tab === 'activated' ? 'block' : 'none';
+    
+    var unactivatedBtn = document.getElementById('trialTabUnactivated');
+    var activatedBtn = document.getElementById('trialTabActivated');
+    var unactivatedPanel = document.getElementById('trialUnactivatedPanel');
+    var activatedPanel = document.getElementById('trialActivatedPanel');
+    
+    unactivatedBtn.classList.remove('active');
+    activatedBtn.classList.remove('active');
     
     if (tab === 'unactivated') {
+        unactivatedBtn.classList.add('active');
+        unactivatedPanel.style.display = 'block';
+        activatedPanel.style.display = 'none';
         loadTrialUnactivated();
     } else {
+        activatedBtn.classList.add('active');
+        unactivatedPanel.style.display = 'none';
+        activatedPanel.style.display = 'block';
         loadTrialActivated();
     }
 }

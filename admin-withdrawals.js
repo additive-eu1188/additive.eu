@@ -553,14 +553,21 @@ document.head.appendChild(style);
 // ========== 标签切换 ==========
 function switchWithdrawTab(tab) {
     currentWithdrawTab = tab;
-    document.getElementById('tabPending').classList.toggle('active', tab === 'pending');
-    document.getElementById('tabHistory').classList.toggle('active', tab === 'history');
-    document.getElementById('pendingPanel').style.display = tab === 'pending' ? 'block' : 'none';
-    document.getElementById('historyPanel').style.display = tab === 'history' ? 'block' : 'none';
     
+    // ✅ 先清除所有标签的 active 类
+    document.getElementById('tabPending').classList.remove('active');
+    document.getElementById('tabHistory').classList.remove('active');
+    
+    // ✅ 然后激活对应的标签
     if (tab === 'pending') {
+        document.getElementById('tabPending').classList.add('active');
+        document.getElementById('pendingPanel').style.display = 'block';
+        document.getElementById('historyPanel').style.display = 'none';
         loadWithdrawals();
     } else {
+        document.getElementById('tabHistory').classList.add('active');
+        document.getElementById('pendingPanel').style.display = 'none';
+        document.getElementById('historyPanel').style.display = 'block';
         loadWithdrawalHistory();
     }
 }

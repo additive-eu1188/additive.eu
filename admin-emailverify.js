@@ -240,14 +240,24 @@ async function loadEmailVerifyPage() {
 
 function switchEmailTab(tab) {
     activeEmailTab = tab;
-    document.getElementById('emailTabPending').classList.toggle('active', tab === 'pending');
-    document.getElementById('emailTabHistory').classList.toggle('active', tab === 'history');
-    document.getElementById('emailPendingPanel').style.display = tab === 'pending' ? 'block' : 'none';
-    document.getElementById('emailHistoryPanel').style.display = tab === 'history' ? 'block' : 'none';
+    
+    var pendingBtn = document.getElementById('emailTabPending');
+    var historyBtn = document.getElementById('emailTabHistory');
+    var pendingPanel = document.getElementById('emailPendingPanel');
+    var historyPanel = document.getElementById('emailHistoryPanel');
+    
+    pendingBtn.classList.remove('active');
+    historyBtn.classList.remove('active');
     
     if (tab === 'pending') {
+        pendingBtn.classList.add('active');
+        pendingPanel.style.display = 'block';
+        historyPanel.style.display = 'none';
         loadEmailPending();
     } else {
+        historyBtn.classList.add('active');
+        pendingPanel.style.display = 'none';
+        historyPanel.style.display = 'block';
         loadEmailHistory();
     }
 }

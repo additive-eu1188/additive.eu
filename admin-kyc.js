@@ -248,14 +248,24 @@ async function loadKycPage() {
 
 function switchKycTab(tab) {
     activeTab = tab;
-    document.getElementById('tabPending').classList.toggle('active', tab === 'pending');
-    document.getElementById('tabVerified').classList.toggle('active', tab === 'verified');
-    document.getElementById('pendingPanel').style.display = tab === 'pending' ? 'block' : 'none';
-    document.getElementById('verifiedPanel').style.display = tab === 'verified' ? 'block' : 'none';
+    
+    var pendingBtn = document.getElementById('tabPending');
+    var verifiedBtn = document.getElementById('tabVerified');
+    var pendingPanel = document.getElementById('pendingPanel');
+    var verifiedPanel = document.getElementById('verifiedPanel');
+    
+    pendingBtn.classList.remove('active');
+    verifiedBtn.classList.remove('active');
     
     if (tab === 'pending') {
+        pendingBtn.classList.add('active');
+        pendingPanel.style.display = 'block';
+        verifiedPanel.style.display = 'none';
         loadKycPending();
     } else {
+        verifiedBtn.classList.add('active');
+        pendingPanel.style.display = 'none';
+        verifiedPanel.style.display = 'block';
         loadKycVerified();
     }
 }
