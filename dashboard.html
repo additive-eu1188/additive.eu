@@ -1138,11 +1138,11 @@ if (certificateStatus) {
     
     if (imageCount > 0) {
         certificateStatus.innerHTML = imageCount;
-        certificateStatus.style.color = '#4ade80';
+        certificateStatus.style.color = '#CCB299';  // 改为金色
         if (certificateTag) certificateTag.innerHTML = imageCount + ' Certificate' + (imageCount > 1 ? 's' : '') + ' Uploaded';
     } else {
         certificateStatus.innerHTML = '0';
-        certificateStatus.style.color = '#ffb84d';
+        certificateStatus.style.color = '#CCB299';  // 改为金色
         if (certificateTag) certificateTag.innerHTML = 'No certificate uploaded';
     }
 }
