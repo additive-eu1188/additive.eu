@@ -14,14 +14,14 @@ async function loadKycPage() {
                     KYC Verification Management
                 </h2>
                 <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-                    <button id="tabPending" class="tab-kyc-btn active" data-tab="pending"><i class="fas fa-list-ul"></i> Pending</button>
-                    <button id="tabVerified" class="tab-kyc-btn" data-tab="verified"><i class="fas fa-history"></i> Verification History</button>
+                    <button id="kycTabPending" class="tab-kyc-btn active" data-tab="pending"><i class="fas fa-list-ul"></i> Pending</button>
+<button id="kycTabVerified" class="tab-kyc-btn" data-tab="verified"><i class="fas fa-history"></i> Verification History</button>
                     <button id="refreshKycBtn" class="btn-primary"><i class="fas fa-sync-alt"></i> Refresh</button>
                 </div>
             </div>
             
             <!-- 待处理面板 -->
-            <div id="pendingPanel" class="kyc-panel">
+            <div id="kycPendingPanel" class="kyc-panel">
                 <!-- 四张统计卡片 -->
                 <div class="stats-grid" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; margin-bottom: 24px;">
     <div class="stat-item" style="background: rgba(12, 16, 28, 0.6); border-radius: 16px; padding: 16px 20px; text-align: center; border: 1px solid rgba(255,255,255,0.04);">
@@ -67,7 +67,7 @@ async function loadKycPage() {
             </div>
             
             <!-- 已验证面板 -->
-            <div id="verifiedPanel" class="kyc-panel" style="display: none;">
+            <div id="kycVerifiedPanel" class="kyc-panel" style="display: none;">
                 <!-- 四张统计卡片（与待处理相同） -->
                 <div class="stats-grid" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 24px;">
     <div class="stat-item" style="background: rgba(12, 16, 28, 0.6); border-radius: 16px; padding: 16px 20px; text-align: center; border: 1px solid rgba(255,255,255,0.04);">
@@ -202,8 +202,8 @@ async function loadKycPage() {
     document.head.appendChild(style);
     
     // 绑定标签切换
-    document.getElementById('tabPending')?.addEventListener('click', function() { switchKycTab('pending'); });
-    document.getElementById('tabVerified')?.addEventListener('click', function() { switchKycTab('verified'); });
+    document.getElementById('kycTabPending')?.addEventListener('click', function() { switchKycTab('pending'); });
+document.getElementById('kycTabVerified')?.addEventListener('click', function() { switchKycTab('verified'); });
     document.getElementById('refreshKycBtn')?.addEventListener('click', function() { 
         loadKycPending(); 
         loadKycVerified(); 
@@ -249,10 +249,10 @@ async function loadKycPage() {
 function switchKycTab(tab) {
     activeTab = tab;
     
-    var pendingBtn = document.getElementById('tabPending');
-    var verifiedBtn = document.getElementById('tabVerified');
-    var pendingPanel = document.getElementById('pendingPanel');
-    var verifiedPanel = document.getElementById('verifiedPanel');
+    var pendingBtn = document.getElementById('kycTabPending');
+    var verifiedBtn = document.getElementById('kycTabVerified');
+    var pendingPanel = document.getElementById('kycPendingPanel');
+    var verifiedPanel = document.getElementById('kycVerifiedPanel');
     
     pendingBtn.classList.remove('active');
     verifiedBtn.classList.remove('active');
