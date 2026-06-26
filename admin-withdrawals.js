@@ -571,18 +571,21 @@ function switchWithdrawTab(tab) {
         return;
     }
     
-    // 先清除所有标签的 active 类
-    pendingBtn.classList.remove('active');
-    historyBtn.classList.remove('active');
+    // ✅ 重置所有标签和面板的状态
+    document.querySelectorAll('.tab-withdraw-btn').forEach(function(btn) {
+        btn.classList.remove('active');
+    });
+    document.querySelectorAll('.withdraw-panel').forEach(function(panel) {
+        panel.style.display = 'none';
+    });
     
+    // 然后激活对应的标签和面板
     if (tab === 'pending') {
         pendingBtn.classList.add('active');
         pendingPanel.style.display = 'block';
-        historyPanel.style.display = 'none';
         loadWithdrawals();
     } else {
         historyBtn.classList.add('active');
-        pendingPanel.style.display = 'none';
         historyPanel.style.display = 'block';
         loadWithdrawalHistory();
     }
