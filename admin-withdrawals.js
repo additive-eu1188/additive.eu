@@ -499,8 +499,8 @@ style.textContent = `
 #page_withdrawals #pendingPanel .withdrawals-table-wrap .data-table th:nth-child(6),
 #page_withdrawals #pendingPanel .withdrawals-table-wrap .data-table td:nth-child(6) {
     width: 320px !important;
-    min-width: 320px !important;
-    max-width: 320px !important;
+    min-width: 280px !important;
+    max-width: 280px !important;
 }
 #page_withdrawals #pendingPanel .withdrawals-table-wrap .data-table th:nth-child(7),
 #page_withdrawals #pendingPanel .withdrawals-table-wrap .data-table td:nth-child(7) {
