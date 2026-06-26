@@ -159,8 +159,8 @@ async function loadWithdrawalsPage() {
                     <button id="pendingClearBtn" class="btn-primary" style="padding: 8px 18px; border-radius: 40px; border: none; background: rgba(255,255,255,0.06); color: #b8c4de; font-weight: 500; cursor: pointer; font-size: 13px; white-space: nowrap;"><i class="fas fa-times"></i> Clear</button>
                 </div>
                 
-                <div class="table-container" style="max-height: 500px; overflow-y: auto; border-radius: 16px; border: 1px solid rgba(255,255,255,0.03);">
-                    <table class="data-table" style="width: 100%; border-collapse: collapse; font-size: 13px; min-width: 1050px;">
+                <div class="table-container withdrawals-table-wrap" style="max-height: 500px; overflow-y: auto; border-radius: 16px; border: 1px solid rgba(255,255,255,0.03);">
+    <table class="data-table" style="width: 100%; border-collapse: collapse; font-size: 13px; min-width: 1050px;">
                         <thead>
     <tr>
         <th style="padding: 10px 16px; color: #a8b4d0; font-weight: 600; font-size: 10px; text-transform: uppercase; letter-spacing: 0.3px; border-bottom: 1px solid rgba(255,255,255,0.04); background: rgba(10,14,28,0.3); text-align: left; min-width: 90px; width: 90px;">User ID</th>
@@ -213,8 +213,8 @@ async function loadWithdrawalsPage() {
                     <button id="clearHistoryBtn" class="danger" style="background:#7a2f2f; border:none; padding:8px 16px; border-radius:40px; color:#fff; cursor:pointer; margin-left: auto; white-space: nowrap;"><i class="fas fa-trash"></i> Clear All</button>
                 </div>
                 
-                <div class="table-container" style="max-height: 500px; overflow-y: auto; border-radius: 16px; border: 1px solid rgba(255,255,255,0.03);">
-                    <table class="data-table" style="width: 100%; border-collapse: collapse; font-size: 13px; min-width: 1050px;">
+                <div class="table-container withdrawals-table-wrap" style="max-height: 500px; overflow-y: auto; border-radius: 16px; border: 1px solid rgba(255,255,255,0.03);">
+    <table class="data-table" style="width: 100%; border-collapse: collapse; font-size: 13px; min-width: 1050px;">
                         <thead>
                             <tr>
                                 <th style="padding: 14px 14px; color: #a8b4d0; font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid rgba(255,255,255,0.04); background: rgba(10,14,28,0.3); text-align: left;">User ID</th>
@@ -437,23 +437,104 @@ style.textContent = `
 }
 #page_withdrawals .custom-select-option i { font-size: 16px; }
 
-/* 数据行紧凑 */
+/* ===== 数据行紧凑 ===== */
 #page_withdrawals .data-table td {
     padding: 6px 12px !important;
     font-size: 12px !important;
 }
+#page_withdrawals .data-table th {
+    padding: 8px 12px !important;
+    font-size: 11px !important;
+}
 
-/* 前四列更紧凑 */
-#page_withdrawals .data-table td:nth-child(1) { padding: 4px 3px !important; }
-#page_withdrawals .data-table td:nth-child(2) { padding: 4px 3px !important; }
-#page_withdrawals .data-table td:nth-child(3) { padding: 4px 3px !important; }
-#page_withdrawals .data-table td:nth-child(4) { padding: 4px 3px !important; }
+/* ===== 提现页面专用 - 列宽定义 (通过父级 .withdrawals-table-wrap 隔离) ===== */
+#page_withdrawals .withdrawals-table-wrap .data-table {
+    table-layout: fixed !important;
+    width: 100% !important;
+    min-width: 1050px !important;
+}
 
-/* 表头前四列更紧凑 */
-#page_withdrawals .data-table th:nth-child(1) { padding: 8px 3px !important; }
-#page_withdrawals .data-table th:nth-child(2) { padding: 8px 3px !important; }
-#page_withdrawals .data-table th:nth-child(3) { padding: 8px 3px !important; }
-#page_withdrawals .data-table th:nth-child(4) { padding: 8px 3px !important; }
+#page_withdrawals .withdrawals-table-wrap .data-table th,
+#page_withdrawals .withdrawals-table-wrap .data-table td {
+    padding: 6px 12px !important;
+    font-size: 12px !important;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* User ID 列 */
+#page_withdrawals .withdrawals-table-wrap .data-table th:nth-child(1),
+#page_withdrawals .withdrawals-table-wrap .data-table td:nth-child(1) {
+    width: 90px !important;
+    min-width: 90px !important;
+    max-width: 90px !important;
+    padding: 6px 6px 6px 12px !important;
+}
+
+/* Username 列 */
+#page_withdrawals .withdrawals-table-wrap .data-table th:nth-child(2),
+#page_withdrawals .withdrawals-table-wrap .data-table td:nth-child(2) {
+    width: 110px !important;
+    min-width: 110px !important;
+    max-width: 110px !important;
+}
+
+/* Amount 列 */
+#page_withdrawals .withdrawals-table-wrap .data-table th:nth-child(3),
+#page_withdrawals .withdrawals-table-wrap .data-table td:nth-child(3) {
+    width: 90px !important;
+    min-width: 90px !important;
+    max-width: 90px !important;
+}
+
+/* Remaining Balance 列 */
+#page_withdrawals .withdrawals-table-wrap .data-table th:nth-child(4),
+#page_withdrawals .withdrawals-table-wrap .data-table td:nth-child(4) {
+    width: 160px !important;
+    min-width: 160px !important;
+    max-width: 160px !important;
+}
+
+/* Crypto Type 列 */
+#page_withdrawals .withdrawals-table-wrap .data-table th:nth-child(5),
+#page_withdrawals .withdrawals-table-wrap .data-table td:nth-child(5) {
+    width: 140px !important;
+    min-width: 140px !important;
+    max-width: 140px !important;
+}
+
+/* Wallet Address 列 */
+#page_withdrawals .withdrawals-table-wrap .data-table th:nth-child(6),
+#page_withdrawals .withdrawals-table-wrap .data-table td:nth-child(6) {
+    width: 400px !important;
+    min-width: 400px !important;
+    max-width: 400px !important;
+}
+
+/* User IP 列 */
+#page_withdrawals .withdrawals-table-wrap .data-table th:nth-child(7),
+#page_withdrawals .withdrawals-table-wrap .data-table td:nth-child(7) {
+    width: 150px !important;
+    min-width: 150px !important;
+    max-width: 150px !important;
+}
+
+/* Withdrawal Time 列 */
+#page_withdrawals .withdrawals-table-wrap .data-table th:nth-child(8),
+#page_withdrawals .withdrawals-table-wrap .data-table td:nth-child(8) {
+    width: 160px !important;
+    min-width: 160px !important;
+    max-width: 160px !important;
+}
+
+/* Actions 列 */
+#page_withdrawals .withdrawals-table-wrap .data-table th:nth-child(9),
+#page_withdrawals .withdrawals-table-wrap .data-table td:nth-child(9) {
+    width: 120px !important;
+    min-width: 120px !important;
+    max-width: 120px !important;
+}
 
 @media (max-width: 768px) {
     #page_withdrawals .wallet-address-cell { max-width: 120px; }
