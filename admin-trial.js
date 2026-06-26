@@ -350,7 +350,7 @@ async function loadTrialUnactivated() {
             
             row.insertCell(0).innerHTML = `<span style="font-size:12px; color:#b0c0da;">${escapeHtml(user.phone || '-')}</span>`;
             row.insertCell(1).innerHTML = `<span style="font-weight:500; color:#d8e0f0;">${escapeHtml(user.username)}</span>`;
-            row.insertCell(2).innerHTML = `<span class="badge" style="background: rgba(255,255,255,0.08); padding: 2px 12px; border-radius: 20px; font-size: 11px; color: #c8d2e8; border: 1px solid rgba(255,255,255,0.06);">${escapeHtml(user.uid)}</span>`;
+            row.insertCell(2).innerHTML = `<span class="badge" style="background: rgba(255,255,255,0.10); padding: 2px 12px; border-radius: 20px; font-size: 12px; color: #e8edf5; border: 1px solid rgba(255,255,255,0.12); font-weight: 600; letter-spacing: 0.3px;">${escapeHtml(user.uid)}</span>`;
             row.insertCell(3).innerHTML = `<span style="font-weight:600; color:#8892a8;">€${(user.trial_bonus_amount || 0).toFixed(2)}</span>`;
             row.insertCell(4).innerHTML = `
                 <input type="number" class="trial-amount-input" id="trial_amount_${user.uid}" placeholder="0.00" step="0.01" min="0" style="width:100px; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.10); border-radius:8px; padding:6px 10px; color:#e6edf5; font-size:13px; text-align:center; outline:none; transition:0.2s;">
@@ -402,7 +402,7 @@ async function loadTrialActivated() {
     tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:30px; color:#6a7a9a;">Loading...</td></tr>';
     
     try {
-        // 🔥 关键修改：查询 trial_bonus_activated = true 的用户
+        // 1. 一次查询获取所有已激活用户
         let query = sb.from('users')
             .select('uid, username, phone, trial_bonus_amount, trial_bonus_activated')
             .eq('trial_bonus_activated', true)
@@ -420,34 +420,43 @@ async function loadTrialActivated() {
             return;
         }
         
+        // ============================================================
+        // ✅ 优化：批量获取所有用户的激活日期（一次查询）
+        // ============================================================
+        const uids = users.map(user => user.uid);
+        const { data: deposits } = await sb
+            .from('deposits')
+            .select('uid, amount, created_at')
+            .in('uid', uids)
+            .eq('type', 'trial_bonus')
+            .order('created_at', { ascending: true });
+        
+        // 创建 uid -> 第一条 trial_bonus 记录的映射
+        const depositMap = {};
+        if (deposits) {
+            deposits.forEach(deposit => {
+                // 只保留每个 uid 的第一条记录（最早的）
+                if (!depositMap[deposit.uid]) {
+                    depositMap[deposit.uid] = {
+                        amount: deposit.amount || 0,
+                        created_at: deposit.created_at
+                    };
+                }
+            });
+        }
+        
         tbody.innerHTML = '';
         for (const user of users) {
             const row = tbody.insertRow();
             
-            // 获取激活日期（从 deposits 表中获取第一条 trial_bonus 记录）
-            let activatedDate = '-';
-            let activatedAmount = user.trial_bonus_amount || 0;
-            try {
-                const { data: deposit } = await sb
-                    .from('deposits')
-                    .select('amount, created_at')
-                    .eq('uid', user.uid)
-                    .eq('type', 'trial_bonus')
-                    .order('created_at', { ascending: true })
-                    .limit(1);
-                
-                if (deposit && deposit.length > 0) {
-                    activatedDate = new Date(deposit[0].created_at).toLocaleString();
-                    activatedAmount = deposit[0].amount || 0;
-                }
-            } catch (e) {
-                activatedDate = '-';
-            }
+            // ✅ 从内存中获取激活日期和金额
+            const depositInfo = depositMap[user.uid] || { amount: 0, created_at: null };
+            const activatedDate = depositInfo.created_at ? new Date(depositInfo.created_at).toLocaleString() : '-';
+            const activatedAmount = depositInfo.amount || 0;
             
             row.insertCell(0).innerHTML = `<span style="font-size:12px; color:#b0c0da;">${escapeHtml(user.phone || '-')}</span>`;
             row.insertCell(1).innerHTML = `<span style="font-weight:500; color:#d8e0f0;">${escapeHtml(user.username)}</span>`;
-            row.insertCell(2).innerHTML = `<span class="badge" style="background: rgba(255,255,255,0.08); padding: 2px 12px; border-radius: 20px; font-size: 11px; color: #c8d2e8; border: 1px solid rgba(255,255,255,0.06);">${escapeHtml(user.uid)}</span>`;
-            // 🔥 显示原始添加金额，不显示当前余额
+            row.insertCell(2).innerHTML = `<span class="badge" style="background: rgba(255,255,255,0.10); padding: 2px 12px; border-radius: 20px; font-size: 12px; color: #e8edf5; border: 1px solid rgba(255,255,255,0.12); font-weight: 600; letter-spacing: 0.3px;">${escapeHtml(user.uid)}</span>`;
             row.insertCell(3).innerHTML = `<span style="font-weight:600; color:#4ade80;">€${activatedAmount.toFixed(2)}</span>`;
             row.insertCell(4).innerHTML = `<span style="font-size:12px; color:#8892a8;">${activatedDate}</span>`;
         }
