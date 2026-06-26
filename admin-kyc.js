@@ -15,7 +15,7 @@ async function loadKycPage() {
                 </h2>
                 <div style="display: flex; gap: 10px; flex-wrap: wrap;">
                     <button id="tabPending" class="tab-kyc-btn active" data-tab="pending"><i class="fas fa-list-ul"></i> Pending</button>
-                    <button id="tabVerified" class="tab-kyc-btn" data-tab="verified"><i class="fas fa-check-circle"></i> Verified</button>
+                    <button id="tabVerified" class="tab-kyc-btn" data-tab="verified"><i class="fas fa-history"></i> Verification History</button>
                     <button id="refreshKycBtn" class="btn-primary"><i class="fas fa-sync-alt"></i> Refresh</button>
                 </div>
             </div>
@@ -23,24 +23,16 @@ async function loadKycPage() {
             <!-- 待处理面板 -->
             <div id="pendingPanel" class="kyc-panel">
                 <!-- 四张统计卡片 -->
-                <div class="stats-grid" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px;">
-                    <div class="stat-item" style="background: rgba(12, 16, 28, 0.6); border-radius: 16px; padding: 16px 20px; text-align: center; border: 1px solid rgba(255,255,255,0.04);">
-                        <div class="label" style="font-size: 11px; color: #8892a8; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">Total KYC</div>
-                        <div class="value" id="kycStatTotal" style="font-size: 28px; font-weight: 700; color: #ffffff;">0</div>
-                    </div>
-                    <div class="stat-item" style="background: rgba(12, 16, 28, 0.6); border-radius: 16px; padding: 16px 20px; text-align: center; border: 1px solid rgba(255,255,255,0.04);">
-                        <div class="label" style="font-size: 11px; color: #8892a8; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">Pending KYC</div>
-                        <div class="value" id="kycStatPending" style="font-size: 28px; font-weight: 700; color: #ffffff;">0</div>
-                    </div>
-                    <div class="stat-item" style="background: rgba(12, 16, 28, 0.6); border-radius: 16px; padding: 16px 20px; text-align: center; border: 1px solid rgba(255,255,255,0.04);">
-                        <div class="label" style="font-size: 11px; color: #8892a8; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">KYC Approved</div>
-                        <div class="value" id="kycStatApproved" style="font-size: 28px; font-weight: 700; color: #ffffff;">0</div>
-                    </div>
-                    <div class="stat-item" style="background: rgba(12, 16, 28, 0.6); border-radius: 16px; padding: 16px 20px; text-align: center; border: 1px solid rgba(255,255,255,0.04);">
-                        <div class="label" style="font-size: 11px; color: #8892a8; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">KYC Rejected</div>
-                        <div class="value" id="kycStatRejected" style="font-size: 28px; font-weight: 700; color: #ffffff;">0</div>
-                    </div>
-                </div>
+                <div class="stats-grid" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; margin-bottom: 24px;">
+    <div class="stat-item" style="background: rgba(12, 16, 28, 0.6); border-radius: 16px; padding: 16px 20px; text-align: center; border: 1px solid rgba(255,255,255,0.04);">
+        <div class="label" style="font-size: 11px; color: #8892a8; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">Total KYC</div>
+        <div class="value" id="kycStatTotal" style="font-size: 28px; font-weight: 700; color: #ffffff;">0</div>
+    </div>
+    <div class="stat-item" style="background: rgba(12, 16, 28, 0.6); border-radius: 16px; padding: 16px 20px; text-align: center; border: 1px solid rgba(255,255,255,0.04);">
+        <div class="label" style="font-size: 11px; color: #8892a8; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">Pending KYC</div>
+        <div class="value" id="kycStatPending" style="font-size: 28px; font-weight: 700; color: #ffffff;">0</div>
+    </div>
+</div>
                 
                 <!-- 搜索栏 -->
                 <div class="search-bar" style="display: flex; flex-wrap: wrap; gap: 10px; align-items: center; background: rgba(8, 12, 24, 0.5); border-radius: 16px; padding: 12px 16px; margin-bottom: 20px; border: 1px solid rgba(255,255,255,0.03);">
@@ -55,7 +47,6 @@ async function loadKycPage() {
                     </select>
                     
                     <button id="kycSearchBtn" class="btn-primary" style="padding: 8px 20px; border-radius: 40px; border: none; background: #2a3a5a; color: #e6edf5; font-weight: 600; cursor: pointer; font-size: 13px; white-space: nowrap;"><i class="fas fa-search"></i> Search</button>
-                    <button id="kycClearBtn" class="btn-primary" style="padding: 8px 18px; border-radius: 40px; border: none; background: rgba(255,255,255,0.06); color: #b8c4de; font-weight: 500; cursor: pointer; font-size: 13px; white-space: nowrap;"><i class="fas fa-times"></i> Clear</button>
                 </div>
                 
                 <div class="table-container" style="max-height: 500px; overflow-y: auto; border-radius: 16px; border: 1px solid rgba(255,255,255,0.03);">
@@ -78,24 +69,20 @@ async function loadKycPage() {
             <!-- 已验证面板 -->
             <div id="verifiedPanel" class="kyc-panel" style="display: none;">
                 <!-- 四张统计卡片（与待处理相同） -->
-                <div class="stats-grid" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px;">
-                    <div class="stat-item" style="background: rgba(12, 16, 28, 0.6); border-radius: 16px; padding: 16px 20px; text-align: center; border: 1px solid rgba(255,255,255,0.04);">
-                        <div class="label" style="font-size: 11px; color: #8892a8; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">Total KYC</div>
-                        <div class="value" id="kycVerifiedStatTotal" style="font-size: 28px; font-weight: 700; color: #ffffff;">0</div>
-                    </div>
-                    <div class="stat-item" style="background: rgba(12, 16, 28, 0.6); border-radius: 16px; padding: 16px 20px; text-align: center; border: 1px solid rgba(255,255,255,0.04);">
-                        <div class="label" style="font-size: 11px; color: #8892a8; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">Pending KYC</div>
-                        <div class="value" id="kycVerifiedStatPending" style="font-size: 28px; font-weight: 700; color: #ffffff;">0</div>
-                    </div>
-                    <div class="stat-item" style="background: rgba(12, 16, 28, 0.6); border-radius: 16px; padding: 16px 20px; text-align: center; border: 1px solid rgba(255,255,255,0.04);">
-                        <div class="label" style="font-size: 11px; color: #8892a8; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">KYC Approved</div>
-                        <div class="value" id="kycVerifiedStatApproved" style="font-size: 28px; font-weight: 700; color: #ffffff;">0</div>
-                    </div>
-                    <div class="stat-item" style="background: rgba(12, 16, 28, 0.6); border-radius: 16px; padding: 16px 20px; text-align: center; border: 1px solid rgba(255,255,255,0.04);">
-                        <div class="label" style="font-size: 11px; color: #8892a8; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">KYC Rejected</div>
-                        <div class="value" id="kycVerifiedStatRejected" style="font-size: 28px; font-weight: 700; color: #ffffff;">0</div>
-                    </div>
-                </div>
+                <div class="stats-grid" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 24px;">
+    <div class="stat-item" style="background: rgba(12, 16, 28, 0.6); border-radius: 16px; padding: 16px 20px; text-align: center; border: 1px solid rgba(255,255,255,0.04);">
+        <div class="label" style="font-size: 11px; color: #8892a8; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">Total KYC</div>
+        <div class="value" id="kycVerifiedStatTotal" style="font-size: 28px; font-weight: 700; color: #ffffff;">0</div>
+    </div>
+    <div class="stat-item" style="background: rgba(12, 16, 28, 0.6); border-radius: 16px; padding: 16px 20px; text-align: center; border: 1px solid rgba(255,255,255,0.04);">
+        <div class="label" style="font-size: 11px; color: #8892a8; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">KYC Approved</div>
+        <div class="value" id="kycVerifiedStatApproved" style="font-size: 28px; font-weight: 700; color: #ffffff;">0</div>
+    </div>
+    <div class="stat-item" style="background: rgba(12, 16, 28, 0.6); border-radius: 16px; padding: 16px 20px; text-align: center; border: 1px solid rgba(255,255,255,0.04);">
+        <div class="label" style="font-size: 11px; color: #8892a8; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">KYC Rejected</div>
+        <div class="value" id="kycVerifiedStatRejected" style="font-size: 28px; font-weight: 700; color: #ffffff;">0</div>
+    </div>
+</div>
                 
                 <!-- 搜索栏 -->
                 <div class="search-bar" style="display: flex; flex-wrap: wrap; gap: 10px; align-items: center; background: rgba(8, 12, 24, 0.5); border-radius: 16px; padding: 12px 16px; margin-bottom: 20px; border: 1px solid rgba(255,255,255,0.03);">
@@ -228,12 +215,6 @@ async function loadKycPage() {
         kycSearchKeyword = document.getElementById('kycSearchInput').value.trim();
         loadKycPending();
     });
-    document.getElementById('kycClearBtn')?.addEventListener('click', function() {
-        document.getElementById('kycSearchInput').value = '';
-        document.getElementById('kycDocTypeFilter').value = '';
-        kycSearchKeyword = '';
-        loadKycPending();
-    });
     document.getElementById('kycSearchInput')?.addEventListener('keypress', function(e) {
         if (e.key === 'Enter') {
             kycSearchKeyword = document.getElementById('kycSearchInput').value.trim();
@@ -293,9 +274,8 @@ async function updateKycStats() {
         
         // 已验证面板的统计（显示同样的数据，或者只显示已批准的）
         document.getElementById('kycVerifiedStatTotal').innerText = totalRes.count || 0;
-        document.getElementById('kycVerifiedStatPending').innerText = pendingRes.count || 0;
-        document.getElementById('kycVerifiedStatApproved').innerText = approvedRes.count || 0;
-        document.getElementById('kycVerifiedStatRejected').innerText = rejectedRes.count || 0;
+document.getElementById('kycVerifiedStatApproved').innerText = approvedRes.count || 0;
+document.getElementById('kycVerifiedStatRejected').innerText = rejectedRes.count || 0;
     } catch (e) {
         console.error('更新KYC统计失败:', e);
     }
@@ -419,28 +399,28 @@ async function loadKycPending() {
         
         // 绑定事件
         document.querySelectorAll('.approve-kyc').forEach(btn => btn.addEventListener('click', async () => {
-            const uid = btn.dataset.uid;
-            showConfirm('Approve KYC', `Confirm to approve KYC for user ${uid}?`, async () => {
-                await sb.from('kyc_verifications').update({ status: 'approved', approved_at: new Date().toISOString() }).eq('uid', uid).eq('status', 'pending');
-                await sb.from('user_kyc_status').upsert({ uid: uid, is_verified: true });
-                await loadKycPending();
-                await loadKycVerified();
-                await updateKycStats();
-                if (window.loadDashboardPage) window.loadDashboardPage(currentDays);
-                showToast(`✅ KYC approved for ${uid}`, 'success');
-            });
-        }));
-        
-        document.querySelectorAll('.reject-kyc').forEach(btn => btn.addEventListener('click', async () => {
-            const uid = btn.dataset.uid;
-            showConfirm('Reject KYC', `Confirm to reject KYC for user ${uid}?`, async () => {
-                await sb.from('kyc_verifications').update({ status: 'rejected' }).eq('uid', uid).eq('status', 'pending');
-                await loadKycPending();
-                await loadKycVerified();
-                await updateKycStats();
-                showToast(`❌ KYC rejected for ${uid}`, 'info');
-            });
-        }));
+    const uid = btn.dataset.uid;
+    showConfirm('Approve KYC', `Confirm to approve KYC for user ${uid}?`, async () => {
+        await sb.from('kyc_verifications').update({ status: 'approved', approved_at: new Date().toISOString() }).eq('uid', uid).eq('status', 'pending');
+        await sb.from('user_kyc_status').upsert({ uid: uid, is_verified: true });
+        await loadKycPending();
+        await loadKycVerified();
+        await updateKycStats();
+        if (window.loadDashboardPage) window.loadDashboardPage(currentDays);
+        showToast(`✅ KYC approved for ${uid}`, 'success');
+    });
+}));
+
+document.querySelectorAll('.reject-kyc').forEach(btn => btn.addEventListener('click', async () => {
+    const uid = btn.dataset.uid;
+    showConfirm('Reject KYC', `Confirm to reject KYC for user ${uid}?`, async () => {
+        await sb.from('kyc_verifications').update({ status: 'rejected' }).eq('uid', uid).eq('status', 'pending');
+        await loadKycPending();
+        await loadKycVerified();
+        await updateKycStats();
+        showToast(`❌ KYC rejected for ${uid}`, 'info');
+    });
+}));
         
     } catch (e) {
         console.error('加载KYC待处理失败:', e);
@@ -454,7 +434,7 @@ async function loadKycVerified() {
     tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:30px; color:#6a7a9a;">Loading...</td></tr>';
     
     try {
-        let query = sb.from('kyc_verifications').select('*').eq('status', 'approved').order('uploaded_at', { ascending: false });
+        let query = sb.from('kyc_verifications').select('*').in('status', ['approved', 'rejected']).order('uploaded_at', { ascending: false });
         
         const keyword = document.getElementById('kycVerifiedSearchInput')?.value.trim() || '';
         const docType = document.getElementById('kycVerifiedDocTypeFilter')?.value || '';
@@ -475,7 +455,7 @@ async function loadKycVerified() {
         const { data: kycList } = await query;
         
         if (!kycList || kycList.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:30px; color:#6a7a9a;">No verified KYC records</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:30px; color:#6a7a9a;">No history records</td></tr>';
             return;
         }
         
@@ -500,11 +480,13 @@ async function loadKycVerified() {
             const passport = items.find(i => i.document_type === 'passport');
             const residentPermit = items.find(i => i.document_type === 'resident_permit');
             
+            // 确定主要文档类型
             let docTypeDisplay = '-';
             if (passport) docTypeDisplay = 'Passport';
             else if (residentPermit) docTypeDisplay = 'Resident Permit';
             else if (nationalIdFront) docTypeDisplay = 'National ID';
             
+            // Front 图片
             let frontHtml = '';
             const frontImg = nationalIdFront || passport || residentPermit;
             if (frontImg && frontImg.image_url) {
@@ -513,6 +495,7 @@ async function loadKycVerified() {
                 frontHtml = '<div class="kyc-doc-placeholder">No Image</div>';
             }
             
+            // Back 图片
             let backHtml = '';
             if (nationalIdBack && nationalIdBack.image_url) {
                 backHtml = `<img src="${nationalIdBack.image_url}" class="kyc-doc-image" onclick="window.open('${nationalIdBack.image_url}','_blank')" onerror="this.outerHTML='<div class=\\'kyc-doc-placeholder\\'>No Image</div>'">`;
@@ -522,16 +505,30 @@ async function loadKycVerified() {
                 backHtml = '<div class="kyc-doc-placeholder">No Back</div>';
             }
             
+            // ✅ 根据实际状态显示
+            const allApproved = items.every(i => i.status === 'approved');
+            const allRejected = items.every(i => i.status === 'rejected');
+            let statusHtml = '';
+            if (allApproved) {
+                statusHtml = '<span class="status-badge-approved">✅ Approved</span>';
+            } else if (allRejected) {
+                statusHtml = '<span class="status-badge-rejected">❌ Rejected</span>';
+            } else {
+                // 混合状态，显示用逗号分隔
+                const statuses = items.map(i => i.status).join(', ');
+                statusHtml = `<span style="font-size: 11px; color: #b0c0da;">${statuses}</span>`;
+            }
+            
             row.insertCell(0).innerHTML = `<span class="badge" style="background: rgba(255,255,255,0.08); padding: 2px 12px; border-radius: 20px; font-size: 11px; color: #c8d2e8; border: 1px solid rgba(255,255,255,0.06);">${escapeHtml(uid)}</span>`;
             row.insertCell(1).innerText = username;
             row.insertCell(2).innerHTML = `<span style="font-size:12px; color:#b0c0da;">${docTypeDisplay}</span>`;
             row.insertCell(3).innerHTML = frontHtml;
             row.insertCell(4).innerHTML = backHtml;
-            row.insertCell(5).innerHTML = `<span class="status-badge-approved">✅ Approved</span>`;
+            row.insertCell(5).innerHTML = statusHtml;
         }
         
     } catch (e) {
-        console.error('加载KYC已验证失败:', e);
+        console.error('加载KYC历史失败:', e);
         tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding:30px; color:#ff8888;">加载失败: ${escapeHtml(e.message)}</td></tr>`;
     }
 }
