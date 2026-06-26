@@ -466,7 +466,7 @@ async function loadTrialActivated() {
             
             row.insertCell(0).innerHTML = `<span style="font-size:12px; color:#b0c0da;">${escapeHtml(user.phone || '-')}</span>`;
             row.insertCell(1).innerHTML = `<span style="font-weight:500; color:#d8e0f0;">${escapeHtml(user.username)}</span>`;
-            row.insertCell(2).innerHTML = `<span class="badge" style="background: rgba(255,255,255,0.12); padding: 2px 12px; border-radius: 20px; font-size: 12px; color: #e8edf5; border: 1px solid rgba(255,255,255,0.12); font-weight: 600; letter-spacing: 0.3px;">${escapeHtml(user.uid)}</span>`;
+            row.insertCell(2).innerHTML = `<span class="badge" style="background: rgba(255,255,255,0.15); padding: 2px 12px; border-radius: 20px; font-size: 12px; color: #f0f4ff; border: 1px solid rgba(255,255,255,0.20); font-weight: 600; letter-spacing: 0.3px;">${escapeHtml(user.uid)}</span>`;
             row.insertCell(3).innerHTML = `<span style="font-weight:600; color:#4ade80;">€${activatedAmount.toFixed(2)}</span>`;
             row.insertCell(4).innerHTML = `<span style="font-size:12px; color:#8892a8;">${activatedDate}</span>`;
         }

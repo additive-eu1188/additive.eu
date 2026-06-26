@@ -735,7 +735,7 @@ document.getElementById('statApprovedWithdraw').innerHTML = '€' + totalAmount.
     // User ID (索引 0)
 var cell0 = row.insertCell(0);
 cell0.style.padding = '6px 16px';
-cell0.innerHTML = '<span class="badge" style="background: rgba(255,255,255,0.12); padding: 2px 12px; border-radius: 20px; font-size: 12px; color: #e8edf5; border: 1px solid rgba(255,255,255,0.12); font-weight: 600; letter-spacing: 0.3px;">' + escapeHtml(w.uid) + '</span>';
+cell0.innerHTML = '<span class="badge" style="background: rgba(255,255,255,0.15); padding: 2px 12px; border-radius: 20px; font-size: 12px; color: #f0f4ff; border: 1px solid rgba(255,255,255,0.20); font-weight: 600; letter-spacing: 0.3px;">' + escapeHtml(w.uid) + '</span>';
 
 // Username (索引 1)
 var cell1 = row.insertCell(1);

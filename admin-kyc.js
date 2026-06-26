@@ -528,7 +528,7 @@ async function loadKycVerified() {
                 statusHtml = `<span style="font-size: 11px; color: #b0c0da;">${statuses}</span>`;
             }
             
-            row.insertCell(0).innerHTML = `<span class="badge" style="background: rgba(255,255,255,0.12); padding: 2px 12px; border-radius: 20px; font-size: 12px; color: #e8edf5; border: 1px solid rgba(255,255,255,0.12); font-weight: 600; letter-spacing: 0.3px;">${escapeHtml(uid)}</span>`;
+            row.insertCell(0).innerHTML = `<span class="badge" style="background: rgba(255,255,255,0.15); padding: 2px 12px; border-radius: 20px; font-size: 12px; color: #f0f4ff; border: 1px solid rgba(255,255,255,0.20); font-weight: 600; letter-spacing: 0.3px;">${escapeHtml(uid)}</span>`;
             row.insertCell(1).innerText = username;
             row.insertCell(2).innerHTML = `<span style="font-size:12px; color:#b0c0da;">${docTypeDisplay}</span>`;
             row.insertCell(3).innerHTML = frontHtml;
