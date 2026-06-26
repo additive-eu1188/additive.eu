@@ -948,32 +948,33 @@ balanceCell.innerHTML = `
 `;
     
     // ===== 9. Round / Orders (索引 8) =====
-    const ordersCell = row.insertCell(8);
-    const isPremium = u.is_premium || false;
-    const currentRound = u.current_round || 0;
-    const roundOrdersCount = u.round_orders_count || 0;
-    let roundDisplay = 0;
-    let displayCount = 0;
-    if (!isPremium) {
-        roundDisplay = 0;
-        displayCount = orderCount;
-    } else {
-        roundDisplay = currentRound;
-        displayCount = roundOrdersCount;
-    }
-    ordersCell.innerHTML = `
-        <div class="orders-wrapper">
-            <span class="round-number" style="font-size:11px; color:rgba(255,255,255,0.2); min-width:32px; flex-shrink:0;">(${roundDisplay})</span>
-            <input type="number" class="orders-input round-edit-input" data-uid="${u.uid}" value="${displayCount}" min="0" step="1" title="Edit orders in current round" style="width:50px; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.04); border-radius:4px; padding:2px 4px; color:#e6edf5; font-size:11px; text-align:center; flex-shrink:0;">
-            <span class="orders-slash" style="font-size:10px; color:rgba(255,255,255,0.12); flex-shrink:0;">/30</span>
-            <button class="btn-sm btn-reset reset-orders-btn" data-uid="${u.uid}" data-username="${escapeHtml(u.username)}" title="Reset Orders" ${!isPremium ? 'disabled style="opacity:0.2;cursor:not-allowed;"' : ''} style="font-size:9px; padding:3px 10px; white-space:nowrap; flex-shrink:0; border:none; border-radius:4px; cursor:pointer; background:rgba(200,176,144,0.08); color:#c8b090; transition:0.2s;">
-                <i class="fas fa-undo-alt"></i> Reset
-            </button>
-            <button class="btn-sm btn-save-orders save-round-orders-btn" data-uid="${u.uid}" data-username="${escapeHtml(u.username)}" title="Save Orders" style="font-size:9px; padding:3px 10px; white-space:nowrap; flex-shrink:0; border:none; border-radius:4px; cursor:pointer; background:rgba(74,222,128,0.08); color:#7ad0b0; transition:0.2s;">
-                <i class="fas fa-save"></i> Save
-            </button>
-        </div>
-    `;
+const ordersCell = row.insertCell(8);
+const isPremium = u.is_premium || false;
+const currentRound = u.current_round || 0;
+const roundOrdersCount = u.round_orders_count || 0;
+const ordersLimit = vipLimitMap[u.vip_level] || 30;  // ✅ 新增：动态获取订单限制
+let roundDisplay = 0;
+let displayCount = 0;
+if (!isPremium) {
+    roundDisplay = 0;
+    displayCount = orderCount;
+} else {
+    roundDisplay = currentRound;
+    displayCount = roundOrdersCount;
+}
+ordersCell.innerHTML = `
+    <div class="orders-wrapper">
+        <span class="round-number" style="font-size:11px; color:rgba(255,255,255,0.2); min-width:32px; flex-shrink:0;">(${roundDisplay})</span>
+        <input type="number" class="orders-input round-edit-input" data-uid="${u.uid}" value="${displayCount}" min="0" step="1" title="Edit orders in current round" style="width:50px; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.04); border-radius:4px; padding:2px 4px; color:#e6edf5; font-size:11px; text-align:center; flex-shrink:0;">
+        <span class="orders-slash" style="font-size:10px; color:rgba(255,255,255,0.12); flex-shrink:0;">/${ordersLimit}</span>
+        <button class="btn-sm btn-reset reset-orders-btn" data-uid="${u.uid}" data-username="${escapeHtml(u.username)}" title="Reset Orders" ${!isPremium ? 'disabled style="opacity:0.2;cursor:not-allowed;"' : ''} style="font-size:9px; padding:3px 10px; white-space:nowrap; flex-shrink:0; border:none; border-radius:4px; cursor:pointer; background:rgba(200,176,144,0.08); color:#c8b090; transition:0.2s;">
+            <i class="fas fa-undo-alt"></i> Reset
+        </button>
+        <button class="btn-sm btn-save-orders save-round-orders-btn" data-uid="${u.uid}" data-username="${escapeHtml(u.username)}" title="Save Orders" style="font-size:9px; padding:3px 10px; white-space:nowrap; flex-shrink:0; border:none; border-radius:4px; cursor:pointer; background:rgba(74,222,128,0.08); color:#7ad0b0; transition:0.2s;">
+            <i class="fas fa-save"></i> Save
+        </button>
+    </div>
+`;
     
     // ===== 10. Registered IP (索引 9) =====
     row.insertCell(9).innerHTML = `<span class="ip-text">${escapeHtml(u.registered_ip || '-')}</span>`;
@@ -1062,20 +1063,28 @@ document.querySelectorAll('.edit-user-btn').forEach(btn => {
         
         // Save Round Orders
         document.querySelectorAll('.save-round-orders-btn').forEach(btn => {
-            btn.addEventListener('click', () => {
-                const uid = btn.dataset.uid;
-                const username = btn.dataset.username;
-                const input = document.querySelector(`.round-edit-input[data-uid="${uid}"]`);
-                if (input) {
-                    const newValue = parseInt(input.value);
-                    if (!isNaN(newValue) && newValue >= 0 && newValue <= 30) {
-                        saveRoundOrders(uid, username, newValue);
-                    } else {
-                        showToast('Please enter a valid number between 0-30', 'error');
-                    }
+    btn.addEventListener('click', async () => {
+        const uid = btn.dataset.uid;
+        const username = btn.dataset.username;
+        const input = document.querySelector(`.round-edit-input[data-uid="${uid}"]`);
+        if (input) {
+            const newValue = parseInt(input.value);
+            // 动态获取该用户的 ordersLimit
+            try {
+                const { data: userData } = await sb.from('users').select('vip_level').eq('uid', uid).single();
+                const { data: vipSetting } = await sb.from('vip_settings').select('orders_limit').eq('level', userData?.vip_level || 1).single();
+                const maxOrders = vipSetting?.orders_limit || 30;
+                if (!isNaN(newValue) && newValue >= 0 && newValue <= maxOrders) {
+                    saveRoundOrders(uid, username, newValue);
+                } else {
+                    showToast(`Please enter a valid number between 0-${maxOrders}`, 'error');
                 }
-            });
-        });
+            } catch (e) {
+                showToast('Failed to get orders limit', 'error');
+            }
+        }
+    });
+});
         
         // Round Edit Input Enter
         document.querySelectorAll('.round-edit-input').forEach(input => {
@@ -1124,32 +1133,274 @@ async function updateUserVip(uid, username, newLevel) {
 }
 
 // ========== Deposit 功能 ==========
-async function depositBalance(uid, username) {
-    showPrompt('💰 Deposit Amount', 'Enter deposit amount (€) - can be 0', async (amount) => {
-        const depositAmount = parseFloat(amount) || 0;
-        showPrompt('🎁 Reward Amount', 'Enter reward amount (€) - can be 0', async (bonusAmount) => {
-            const rewardAmount = parseFloat(bonusAmount) || 0;
-            if (rewardAmount > 0) {
-                showPrompt('🏷️ Reward Name', 'Enter reward name (default: Deposit Bonus)', async (bonusName) => {
-                    const rewardName = bonusName && bonusName.trim() ? bonusName.trim() : 'Deposit Bonus';
-                    await processDeposit(uid, username, depositAmount, rewardAmount, rewardName);
-                });
-            } else {
-                await processDeposit(uid, username, depositAmount, 0, '');
+function depositBalance(uid, username) {
+    // 创建暗色风格弹窗
+    const overlay = document.createElement('div');
+    overlay.id = 'depositModal';
+    overlay.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(7, 11, 26, 0.92);
+        backdrop-filter: blur(14px);
+        -webkit-backdrop-filter: blur(14px);
+        z-index: 30000;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        animation: fadeIn 0.25s ease;
+    `;
+
+    const modal = document.createElement('div');
+    modal.style.cssText = `
+        background: linear-gradient(160deg, #1a1428, #0e0a1a);
+        border-radius: 24px;
+        padding: 32px 36px 28px;
+        max-width: 400px;
+        width: 90%;
+        border: 1px solid rgba(201, 176, 149, 0.08);
+        box-shadow: 0 24px 60px rgba(0, 0, 0, 0.6);
+        animation: scaleIn 0.25s cubic-bezier(0.2, 0.9, 0.4, 1.1) forwards;
+        transform: scale(0.92);
+    `;
+
+    modal.innerHTML = `
+        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 20px;">
+            <span style="display: inline-block; width: 3px; height: 18px; background: linear-gradient(180deg, #4ade80, #2a9a60); border-radius: 2px;"></span>
+            <h3 style="color: #e8e8f0; font-size: 17px; font-weight: 600; margin: 0; letter-spacing: 0.3px;">
+                <i class="fas fa-plus-circle" style="color: #4ade80; margin-right: 8px;"></i>
+                Deposit
+            </h3>
+            <span style="margin-left: auto; font-size: 12px; color: #6a6a80; background: rgba(255,255,255,0.04); padding: 2px 12px; border-radius: 20px;">${escapeHtml(username)}</span>
+        </div>
+
+        <div style="margin-bottom: 14px;">
+            <label style="display: block; font-size: 11px; color: #6a7a92; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">Deposit Amount (€)</label>
+            <input type="number" id="depositAmountInput" class="deposit-input" step="0.01" min="0" placeholder="0.00" style="width: 100%; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06); border-radius: 10px; padding: 10px 14px; color: #e6edf5; font-size: 14px; outline: none; transition: 0.2s; box-sizing: border-box;">
+        </div>
+
+        <div style="margin-bottom: 14px;">
+            <label style="display: block; font-size: 11px; color: #6a7a92; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">Reward Amount (€)</label>
+            <input type="number" id="rewardAmountInput" class="deposit-input" step="0.01" min="0" placeholder="0.00" style="width: 100%; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06); border-radius: 10px; padding: 10px 14px; color: #e6edf5; font-size: 14px; outline: none; transition: 0.2s; box-sizing: border-box;">
+        </div>
+
+        <div style="margin-bottom: 20px;">
+            <label style="display: block; font-size: 11px; color: #6a7a92; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">Reward Name</label>
+            <input type="text" id="rewardNameInput" class="deposit-input" placeholder="Deposit Bonus" style="width: 100%; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06); border-radius: 10px; padding: 10px 14px; color: #e6edf5; font-size: 14px; outline: none; transition: 0.2s; box-sizing: border-box;">
+        </div>
+
+        <div style="display: flex; gap: 10px;">
+            <button id="depositCancelBtn" style="flex: 1; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06); border-radius: 40px; padding: 10px 0; color: #6a6a80; font-weight: 500; font-size: 13px; cursor: pointer; transition: 0.2s; font-family: 'Inter', sans-serif;">
+                Cancel
+            </button>
+            <button id="depositConfirmBtn" style="flex: 1; background: rgba(74,222,128,0.06); border: 1px solid rgba(74,222,128,0.08); border-radius: 40px; padding: 10px 0; color: #4ade80; font-weight: 600; font-size: 13px; cursor: pointer; transition: 0.2s; font-family: 'Inter', sans-serif;">
+                Confirm
+            </button>
+        </div>
+    `;
+
+    overlay.appendChild(modal);
+    document.body.appendChild(overlay);
+
+    // 添加动画样式
+    if (!document.getElementById('depositModalStyles')) {
+        const style = document.createElement('style');
+        style.id = 'depositModalStyles';
+        style.textContent = `
+            @keyframes fadeIn {
+                from { opacity: 0; }
+                to { opacity: 1; }
+            }
+            @keyframes scaleIn {
+                from { transform: scale(0.92); opacity: 0; }
+                to { transform: scale(1); opacity: 1; }
+            }
+            .deposit-input:focus {
+                border-color: rgba(74,222,128,0.25);
+                background: rgba(255,255,255,0.06);
+            }
+            .deposit-input::placeholder {
+                color: rgba(255,255,255,0.12);
+            }
+        `;
+        document.head.appendChild(style);
+    }
+
+    // 聚焦第一个输入框
+    setTimeout(() => {
+        document.getElementById('depositAmountInput')?.focus();
+    }, 100);
+
+    // Cancel 按钮
+    document.getElementById('depositCancelBtn')?.addEventListener('click', function() {
+        overlay.remove();
+    });
+
+    // 点击遮罩层关闭
+    overlay.addEventListener('click', function(e) {
+        if (e.target === this) {
+            overlay.remove();
+        }
+    });
+
+    // ESC 键关闭
+    const escHandler = function(e) {
+        if (e.key === 'Escape') {
+            overlay.remove();
+            document.removeEventListener('keydown', escHandler);
+        }
+    };
+    document.addEventListener('keydown', escHandler);
+
+    // Confirm 按钮
+    document.getElementById('depositConfirmBtn')?.addEventListener('click', async function() {
+        const depositAmount = parseFloat(document.getElementById('depositAmountInput').value) || 0;
+        const rewardAmount = parseFloat(document.getElementById('rewardAmountInput').value) || 0;
+        const rewardName = document.getElementById('rewardNameInput').value.trim() || 'Deposit Bonus';
+
+        if (depositAmount <= 0 && rewardAmount <= 0) {
+            showToast('至少输入一个金额', 'error');
+            return;
+        }
+
+        overlay.remove();
+        await processDeposit(uid, username, depositAmount, rewardAmount, rewardName);
+    });
+
+    // Enter 键提交
+    document.querySelectorAll('.deposit-input').forEach(function(input) {
+        input.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                document.getElementById('depositConfirmBtn')?.click();
             }
         });
     });
 }
 
 // ========== Deduct 功能 ==========
-async function deductBalance(uid, username) {
-    showPrompt('💰 Deduct Amount', 'Enter amount to deduct (€)', async (amount) => {
-        const deductAmount = parseFloat(amount);
+function deductBalance(uid, username) {
+    // 创建暗色风格弹窗
+    const overlay = document.createElement('div');
+    overlay.id = 'deductModal';
+    overlay.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(7, 11, 26, 0.92);
+        backdrop-filter: blur(14px);
+        -webkit-backdrop-filter: blur(14px);
+        z-index: 30000;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        animation: fadeIn 0.25s ease;
+    `;
+
+    const modal = document.createElement('div');
+    modal.style.cssText = `
+        background: linear-gradient(160deg, #1a1428, #0e0a1a);
+        border-radius: 24px;
+        padding: 32px 36px 28px;
+        max-width: 400px;
+        width: 90%;
+        border: 1px solid rgba(201, 176, 149, 0.08);
+        box-shadow: 0 24px 60px rgba(0, 0, 0, 0.6);
+        animation: scaleIn 0.25s cubic-bezier(0.2, 0.9, 0.4, 1.1) forwards;
+        transform: scale(0.92);
+    `;
+
+    modal.innerHTML = `
+        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 20px;">
+            <span style="display: inline-block; width: 3px; height: 18px; background: linear-gradient(180deg, #e88080, #9a4040); border-radius: 2px;"></span>
+            <h3 style="color: #e8e8f0; font-size: 17px; font-weight: 600; margin: 0; letter-spacing: 0.3px;">
+                <i class="fas fa-minus-circle" style="color: #e88080; margin-right: 8px;"></i>
+                Deduct
+            </h3>
+            <span style="margin-left: auto; font-size: 12px; color: #6a6a80; background: rgba(255,255,255,0.04); padding: 2px 12px; border-radius: 20px;">${escapeHtml(username)}</span>
+        </div>
+
+        <div style="margin-bottom: 20px;">
+            <label style="display: block; font-size: 11px; color: #6a7a92; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">Deduct Amount (€)</label>
+            <input type="number" id="deductAmountInput" class="deduct-input" step="0.01" min="0" placeholder="0.00" style="width: 100%; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06); border-radius: 10px; padding: 10px 14px; color: #e6edf5; font-size: 14px; outline: none; transition: 0.2s; box-sizing: border-box;">
+        </div>
+
+        <div style="display: flex; gap: 10px;">
+            <button id="deductCancelBtn" style="flex: 1; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06); border-radius: 40px; padding: 10px 0; color: #6a6a80; font-weight: 500; font-size: 13px; cursor: pointer; transition: 0.2s; font-family: 'Inter', sans-serif;">
+                Cancel
+            </button>
+            <button id="deductConfirmBtn" style="flex: 1; background: rgba(232,128,128,0.06); border: 1px solid rgba(232,128,128,0.08); border-radius: 40px; padding: 10px 0; color: #e88080; font-weight: 600; font-size: 13px; cursor: pointer; transition: 0.2s; font-family: 'Inter', sans-serif;">
+                Confirm
+            </button>
+        </div>
+    `;
+
+    overlay.appendChild(modal);
+    document.body.appendChild(overlay);
+
+    // 添加动画样式（复用已有的，如果没有则添加）
+    if (!document.getElementById('depositModalStyles')) {
+        const style = document.createElement('style');
+        style.id = 'depositModalStyles';
+        style.textContent = `
+            @keyframes fadeIn {
+                from { opacity: 0; }
+                to { opacity: 1; }
+            }
+            @keyframes scaleIn {
+                from { transform: scale(0.92); opacity: 0; }
+                to { transform: scale(1); opacity: 1; }
+            }
+            .deduct-input:focus {
+                border-color: rgba(232,128,128,0.25);
+                background: rgba(255,255,255,0.06);
+            }
+            .deduct-input::placeholder {
+                color: rgba(255,255,255,0.12);
+            }
+        `;
+        document.head.appendChild(style);
+    }
+
+    // 聚焦输入框
+    setTimeout(() => {
+        document.getElementById('deductAmountInput')?.focus();
+    }, 100);
+
+    // Cancel 按钮
+    document.getElementById('deductCancelBtn')?.addEventListener('click', function() {
+        overlay.remove();
+    });
+
+    // 点击遮罩层关闭
+    overlay.addEventListener('click', function(e) {
+        if (e.target === this) {
+            overlay.remove();
+        }
+    });
+
+    // ESC 键关闭
+    const escHandler = function(e) {
+        if (e.key === 'Escape') {
+            overlay.remove();
+            document.removeEventListener('keydown', escHandler);
+        }
+    };
+    document.addEventListener('keydown', escHandler);
+
+    // Confirm 按钮
+    document.getElementById('deductConfirmBtn')?.addEventListener('click', async function() {
+        const deductAmount = parseFloat(document.getElementById('deductAmountInput').value);
         if (isNaN(deductAmount) || deductAmount <= 0) {
             showToast('Please enter a valid amount', 'error');
             return;
         }
-        
+
+        overlay.remove();
+
         try {
             const { data: user, error } = await sb
                 .from('users')
@@ -1157,32 +1408,39 @@ async function deductBalance(uid, username) {
                 .eq('uid', uid)
                 .single();
             if (error) throw error;
-            
+
             if (deductAmount > (user.balance || 0)) {
                 showToast('Insufficient balance', 'error');
                 return;
             }
-            
+
             const newBalance = (user.balance || 0) - deductAmount;
-            
+
             await sb.from('users')
                 .update({ balance: newBalance })
                 .eq('uid', uid);
-            
-            await sb.from('deposits').insert([{ 
-                uid: uid, 
-                username: username, 
-                amount: deductAmount, 
+
+            await sb.from('deposits').insert([{
+                uid: uid,
+                username: username,
+                amount: deductAmount,
                 type: 'manual_deduction',
                 description: 'Manual Deduction',
                 created_at: new Date().toISOString()
             }]);
-            
+
             showToast(`✅ Deducted €${deductAmount.toFixed(2)} from ${username}`, 'success');
             loadUsers();
             if (window.loadDashboardPage) window.loadDashboardPage(currentDays);
         } catch (e) {
             showToast('Operation failed: ' + e.message, 'error');
+        }
+    });
+
+    // Enter 键提交
+    document.getElementById('deductAmountInput')?.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            document.getElementById('deductConfirmBtn')?.click();
         }
     });
 }
@@ -1329,7 +1587,7 @@ async function saveRoundOrders(uid, username, newCount) {
 async function resetUserOrders(uid, username) {
     const { data: user } = await sb
         .from('users')
-        .select('is_premium, current_round, round_orders_count')
+        .select('is_premium, current_round, round_orders_count, vip_level')
         .eq('uid', uid)
         .single();
     
@@ -1346,12 +1604,16 @@ async function resetUserOrders(uid, username) {
     const currentRound = user.current_round || 0;
     const roundOrdersCount = user.round_orders_count || 0;
     
-    if (roundOrdersCount < 30) {
-        showToast(`需要完成 30 单才能进入下一轮 (当前 ${roundOrdersCount}/30)`, 'warning');
+    // 动态获取该用户的 ordersLimit
+    const { data: vipSetting } = await sb.from('vip_settings').select('orders_limit').eq('level', user.vip_level || 1).single();
+    const ordersLimit = vipSetting?.orders_limit || 30;
+    
+    if (roundOrdersCount < ordersLimit) {
+        showToast(`需要完成 ${ordersLimit} 单才能进入下一轮 (当前 ${roundOrdersCount}/${ordersLimit})`, 'warning');
         return;
     }
     
-    showConfirm('⚠️ Confirm Reset', `确定要重置用户 ${username} (UID: ${uid}) 到下一轮吗？\n\n当前 Round: ${currentRound}\n当前轮订单数: ${roundOrdersCount}/30`, async () => {
+    showConfirm('⚠️ Confirm Reset', `确定要重置用户 ${username} (UID: ${uid}) 到下一轮吗？\n\n当前 Round: ${currentRound}\n当前轮订单数: ${roundOrdersCount}/${ordersLimit}`, async () => {
         try {
             let nextRound;
             if (currentRound === 2) {
