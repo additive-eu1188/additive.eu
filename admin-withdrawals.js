@@ -121,7 +121,7 @@ async function loadWithdrawalsPage() {
                 </h2>
                 <div style="display: flex; gap: 10px; flex-wrap: wrap;">
                     <button id="tabPending" class="tab-withdraw-btn active" data-tab="pending"><i class="fas fa-list-ul"></i> Withdrawals</button>
-                    <button id="tabHistory" class="tab-withdraw-btn" data-tab="history"><i class="fas fa-clock-rotate-left"></i> Withdrawals History</button>
+<button id="tabHistory" class="tab-withdraw-btn" data-tab="history"><i class="fas fa-clock-rotate-left"></i> Withdrawals History</button>
                     <button id="refreshWithdrawBtn" class="btn-primary"><i class="fas fa-sync-alt"></i> Refresh</button>
                 </div>
             </div>
@@ -548,26 +548,42 @@ document.head.appendChild(style);
     // 加载数据
     await loadWithdrawals();
     await loadWithdrawalHistory();
+
+// ✅ 强制重置标签状态
+document.getElementById('tabPending').classList.add('active');
+document.getElementById('tabHistory').classList.remove('active');
+document.getElementById('pendingPanel').style.display = 'block';
+document.getElementById('historyPanel').style.display = 'none';
 }
 
 // ========== 标签切换 ==========
 function switchWithdrawTab(tab) {
     currentWithdrawTab = tab;
     
-    // ✅ 先清除所有标签的 active 类
-    document.getElementById('tabPending').classList.remove('active');
-    document.getElementById('tabHistory').classList.remove('active');
+    var pendingBtn = document.getElementById('tabPending');
+    var historyBtn = document.getElementById('tabHistory');
+    var pendingPanel = document.getElementById('pendingPanel');
+    var historyPanel = document.getElementById('historyPanel');
     
-    // ✅ 然后激活对应的标签
+    // 检查元素是否存在
+    if (!pendingBtn || !historyBtn || !pendingPanel || !historyPanel) {
+        console.warn('⚠️ Withdraw tab elements not found');
+        return;
+    }
+    
+    // 先清除所有标签的 active 类
+    pendingBtn.classList.remove('active');
+    historyBtn.classList.remove('active');
+    
     if (tab === 'pending') {
-        document.getElementById('tabPending').classList.add('active');
-        document.getElementById('pendingPanel').style.display = 'block';
-        document.getElementById('historyPanel').style.display = 'none';
+        pendingBtn.classList.add('active');
+        pendingPanel.style.display = 'block';
+        historyPanel.style.display = 'none';
         loadWithdrawals();
     } else {
-        document.getElementById('tabHistory').classList.add('active');
-        document.getElementById('pendingPanel').style.display = 'none';
-        document.getElementById('historyPanel').style.display = 'block';
+        historyBtn.classList.add('active');
+        pendingPanel.style.display = 'none';
+        historyPanel.style.display = 'block';
         loadWithdrawalHistory();
     }
 }
