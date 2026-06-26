@@ -1110,25 +1110,42 @@
                     }
 
                     // ===== Certificate 卡片数据 =====
-                    const { data: companyData } = await sb
-                        .from('system_content')
-                        .select('id, content')
-                        .eq('type', 'company')
-                        .single();
+const { data: companyData } = await sb
+    .from('system_content')
+    .select('id, content, image_url')
+    .eq('type', 'company')
+    .single();
 
-                    const certificateStatus = document.getElementById('certificateStatus');
-                    const certificateTag = document.getElementById('certificateTag');
-                    if (certificateStatus) {
-                        if (companyData && companyData.content && companyData.content.length > 0) {
-                            certificateStatus.innerHTML = '✓ Available';
-                            certificateStatus.style.color = '#4ade80';
-                            if (certificateTag) certificateTag.innerHTML = 'View Certificate →';
-                        } else {
-                            certificateStatus.innerHTML = '⌛ Pending';
-                            certificateStatus.style.color = '#ffb84d';
-                            if (certificateTag) certificateTag.innerHTML = 'Not yet available';
-                        }
-                    }
+const certificateStatus = document.getElementById('certificateStatus');
+const certificateTag = document.getElementById('certificateTag');
+if (certificateStatus) {
+    // 计算图片数量
+    let imageCount = 0;
+    if (companyData && companyData.image_url) {
+        try {
+            const parsed = JSON.parse(companyData.image_url);
+            if (Array.isArray(parsed)) {
+                imageCount = parsed.length;
+            } else if (companyData.image_url) {
+                imageCount = 1;
+            }
+        } catch (e) {
+            if (companyData.image_url) {
+                imageCount = 1;
+            }
+        }
+    }
+    
+    if (imageCount > 0) {
+        certificateStatus.innerHTML = imageCount;
+        certificateStatus.style.color = '#4ade80';
+        if (certificateTag) certificateTag.innerHTML = imageCount + ' Certificate' + (imageCount > 1 ? 's' : '') + ' Uploaded';
+    } else {
+        certificateStatus.innerHTML = '0';
+        certificateStatus.style.color = '#ffb84d';
+        if (certificateTag) certificateTag.innerHTML = 'No certificate uploaded';
+    }
+}
 
                     const { data: recentOrders } = await sb.from('order_history').select('*').eq('uid', user.uid).order('date', { ascending: false }).limit(5);
                     const recentContainer = document.getElementById('recentBookings');
