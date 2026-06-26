@@ -880,79 +880,94 @@ if (canClaim) {
 }
 
         // ============================================================
-        // handleClaim - 使用内联自定义弹窗
-        // ============================================================
-        async function handleClaim() {
-            console.log('🔔 handleClaim 被调用');
-            
-            const t = window.i18n?.t || function(key) { return key; };
-            const { streak, lastClaimDate, claimedDays } = loadData();
-            const hasClaimed = hasClaimedToday(lastClaimDate);
-            const nextDay = streak + 1;
+// handleClaim - 使用内联自定义弹窗
+// ============================================================
+async function handleClaim() {
+    console.log('🔔 handleClaim 被调用');
+    
+    const t = window.i18n?.t || function(key) { return key; };
+    const { streak, lastClaimDate, claimedDays } = loadData();
+    const hasClaimed = hasClaimedToday(lastClaimDate);
 
-            console.log('📊 Streak:', streak, 'NextDay:', nextDay, 'HasClaimed:', hasClaimed);
-
-            if (hasClaimed) {
-                showToast('checkin_claimed_today_msg', 'warning');
-                return;
-            }
-            if (nextDay > signInRewards.length) {
-                showToast('checkin_all_completed', 'success');
-                return;
-            }
-
-            const user = getCurrentUser();
-            if (!user) {
-                showToast('signin_required_login', 'error');
-                return;
-            }
-
-            const freshUser = await syncUserData();
-            const currentRound = freshUser?.currentRound || 0;
-            const roundOrdersCount = freshUser?.roundOrdersCount || 0;
-
-            console.log('👤 User:', user.uid, 'Round:', currentRound, 'Orders:', roundOrdersCount);
-
-            // ============================================================
-            // 🔥 只有 Round 2 且完成 30 单才能签到
-            // ============================================================
-            if (currentRound !== 2) {
-                showToast('checkin_round2_required', 'warning');
-                return;
-            }
-            if (roundOrdersCount < 30) {
-                showToast('checkin_orders_required', 'warning');
-                return;
-            }
-
-            let amount;
-            let claimDay;
-            let isReset = false;
-
-            if (streak > 0 && !isConsecutive(lastClaimDate)) {
-                amount = signInRewards[0].amount;
-                claimDay = 1;
-                isReset = true;
-            } else {
-                amount = signInRewards[nextDay - 1].amount;
-                claimDay = nextDay;
-            }
-
-            console.log('💰 Claim Day:', claimDay, 'Amount:', amount);
-
-            showCustomConfirm(
-    t('checkin_claim_reward_title'),
-    t('checkin_claim_reward_message', { day: claimDay, amount: amount.toFixed(2) }),
-    async function() {
-        console.log('✅ 用户确认 Claim');
-        await processClaim(user, amount, claimDay, isReset, streak, claimedDays);
-    },
-    function() {
-        console.log('❌ 用户取消 Claim');
-        showToast('checkin_cancelled', 'info');
-    }
-);
+    // ============================================================
+    // 🔥 找出第一个未领取的天数
+    // ============================================================
+    let nextDay = 1;
+    let allClaimed = true;
+    for (let i = 1; i <= signInRewards.length; i++) {
+        if (!claimedDays.includes(i)) {
+            nextDay = i;
+            allClaimed = false;
+            break;
         }
+    }
+
+    console.log('📊 Streak:', streak, 'NextDay:', nextDay, 'HasClaimed:', hasClaimed, 'ClaimedDays:', claimedDays);
+
+    if (hasClaimed) {
+        showToast('checkin_claimed_today_msg', 'warning');
+        return;
+    }
+    
+    if (allClaimed) {
+        showToast('checkin_all_completed', 'success');
+        return;
+    }
+
+    const user = getCurrentUser();
+    if (!user) {
+        showToast('signin_required_login', 'error');
+        return;
+    }
+
+    const freshUser = await syncUserData();
+    const currentRound = freshUser?.currentRound || 0;
+    const roundOrdersCount = freshUser?.roundOrdersCount || 0;
+
+    console.log('👤 User:', user.uid, 'Round:', currentRound, 'Orders:', roundOrdersCount);
+
+    // ============================================================
+    // 🔥 只有 Round 2 且完成 30 单才能签到
+    // ============================================================
+    if (currentRound !== 2) {
+        showToast('checkin_round2_required', 'warning');
+        return;
+    }
+    if (roundOrdersCount < 30) {
+        showToast('checkin_orders_required', 'warning');
+        return;
+    }
+
+    let amount;
+    let claimDay;
+    let isReset = false;
+
+    // 如果连续签到中断（不是昨天签到），从 Day 1 重新开始
+    if (streak > 0 && !isConsecutive(lastClaimDate)) {
+        amount = signInRewards[0].amount;
+        claimDay = 1;
+        isReset = true;
+    } else {
+        // 领取下一个未领取的天数
+        amount = signInRewards[nextDay - 1].amount;
+        claimDay = nextDay;
+    }
+
+    console.log('💰 Claim Day:', claimDay, 'Amount:', amount);
+
+    showCustomConfirm(
+        t('checkin_claim_reward_title'),
+        t('checkin_claim_reward_message', { day: claimDay, amount: amount.toFixed(2) }),
+        async function() {
+            console.log('✅ 用户确认 Claim');
+            await processClaim(user, amount, claimDay, isReset, streak, claimedDays);
+        },
+        function() {
+            console.log('❌ 用户取消 Claim');
+            showToast('checkin_cancelled', 'info');
+        }
+    );
+}
 
         // ============================================================
         // 处理 Claim 逻辑
