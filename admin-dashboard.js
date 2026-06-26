@@ -233,13 +233,11 @@ function applyConversionData(data, days) {
     var matched = selected.filter(function(d) { return d.label === targetLabel; });
     var displayData = matched.length > 0 ? matched[0] : selected[0];
     
-    // 更新环形图百分比
     var ringPercent = document.getElementById('ringPercent');
     if (ringPercent) {
         ringPercent.innerText = displayData.rate + '%';
     }
     
-    // 更新 Today Register / Today Conversion
     var registerEl = document.getElementById('conversionRegister');
     var convertedEl = document.getElementById('conversionConverted');
     var labelEl = document.getElementById('conversionLabel');
@@ -256,7 +254,6 @@ function applyConversionData(data, days) {
         labelEl.innerText = labelMap[displayData.label] || 'Today Register';
     }
     
-    // 更新所有时间线的数据显示
     var allLabels = document.querySelectorAll('.conversion-stat-label');
     var allRegisters = document.querySelectorAll('.conversion-stat-register');
     var allConverteds = document.querySelectorAll('.conversion-stat-converted');
@@ -280,7 +277,6 @@ function applyConversionData(data, days) {
         }
     }
     
-    // 高亮当前选中的行
     var allRows = document.querySelectorAll('.conversion-stat-row');
     for (var j = 0; j < allRows.length; j++) {
         var row = allRows[j];
@@ -340,15 +336,13 @@ function initWaveRing() {
     `;
     container.appendChild(svg);
     
-    // 创建中心文字（最上层）- 金属质感
-// 创建中心文字（最上层）- 白金高级感
-var centerText = document.createElement('div');
-centerText.style.cssText = 'position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;pointer-events:none;z-index:10;';
-centerText.innerHTML = `
-    <div id="ringPercent" style="font-size:48px;font-weight:900;letter-spacing:-1px;line-height:1;background:linear-gradient(180deg,#ffffff 0%,#d0d8e8 35%,#8892a8 65%,#c0c8d8 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;filter:drop-shadow(0 0 30px rgba(200,210,230,0.12)) drop-shadow(0 4px 8px rgba(0,0,0,0.3));">78%</div>
-    <div style="font-size:13px;font-weight:700;letter-spacing:2px;text-transform:uppercase;margin-top:6px;background:linear-gradient(180deg,#d0d8e8 0%,#8892a8 50%,#5a6a82 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;filter:drop-shadow(0 0 20px rgba(200,210,230,0.08)) drop-shadow(0 2px 4px rgba(0,0,0,0.2));">Conversion Rate</div>
-`;
-container.appendChild(centerText);
+    var centerText = document.createElement('div');
+    centerText.style.cssText = 'position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;pointer-events:none;z-index:10;';
+    centerText.innerHTML = `
+        <div id="ringPercent" style="font-size:48px;font-weight:900;letter-spacing:-1px;line-height:1;background:linear-gradient(180deg,#ffffff 0%,#d0d8e8 35%,#8892a8 65%,#c0c8d8 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;filter:drop-shadow(0 0 30px rgba(200,210,230,0.12)) drop-shadow(0 4px 8px rgba(0,0,0,0.3));">78%</div>
+        <div style="font-size:13px;font-weight:700;letter-spacing:2px;text-transform:uppercase;margin-top:6px;background:linear-gradient(180deg,#d0d8e8 0%,#8892a8 50%,#5a6a82 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;filter:drop-shadow(0 0 20px rgba(200,210,230,0.08)) drop-shadow(0 2px 4px rgba(0,0,0,0.2));">Conversion Rate</div>
+    `;
+    container.appendChild(centerText);
     
     startWaveAnimation(canvas);
     
@@ -370,26 +364,25 @@ function startWaveAnimation(canvas) {
     var w = 220, h = 220;
     var cx = 110, cy = 110;
     
-    // ===== 扩散圆圈 =====
     var expandingRings = [];
     var ringSpawnCounter = 0;
     
     function spawnExpandingRing() {
-    var radius = 5 + Math.random() * 6;
-    var speed = 0.5 + Math.random() * 0.4;
-    var maxRadius = 110 + Math.random() * 15;  // 扩散到110-125
-    var alpha = 0.2 + Math.random() * 0.15;
-    var color = Math.random() > 0.5 ? '#c8b090' : '#d4af37';
-    var width = 1.5 + Math.random() * 1.5;
-    expandingRings.push({
-        radius: radius,
-        maxRadius: maxRadius,
-        speed: speed,
-        alpha: alpha,
-        color: color,
-        width: width
-    });
-}
+        var radius = 5 + Math.random() * 6;
+        var speed = 0.5 + Math.random() * 0.4;
+        var maxRadius = 110 + Math.random() * 15;
+        var alpha = 0.2 + Math.random() * 0.15;
+        var color = Math.random() > 0.5 ? '#c8b090' : '#d4af37';
+        var width = 1.5 + Math.random() * 1.5;
+        expandingRings.push({
+            radius: radius,
+            maxRadius: maxRadius,
+            speed: speed,
+            alpha: alpha,
+            color: color,
+            width: width
+        });
+    }
     
     var time = 0;
     
@@ -397,13 +390,11 @@ function startWaveAnimation(canvas) {
         time++;
         ctx.clearRect(0, 0, w, h);
         
-        // ===== 生成声波圈 =====
         ringSpawnCounter++;
         if (ringSpawnCounter % 40 === 0) {
             spawnExpandingRing();
         }
         
-        // ===== 绘制声波圈 =====
         for (var r = expandingRings.length - 1; r >= 0; r--) {
             var ring = expandingRings[r];
             ring.radius += 0.5 * ring.speed;
@@ -426,7 +417,6 @@ function startWaveAnimation(canvas) {
             ctx.shadowBlur = 0;
         }
         
-        // ===== 中心光晕 =====
         var centerGlow = ctx.createRadialGradient(cx, cy, 0, cx, cy, 60);
         centerGlow.addColorStop(0, 'rgba(200,176,144,0.03)');
         centerGlow.addColorStop(1, 'transparent');
@@ -441,7 +431,7 @@ function startWaveAnimation(canvas) {
     draw();
 }
 
-// ========== 加载最近注册用户数据（最多5条） ==========
+// ========== 加载最近注册用户数据 ==========
 async function loadRecentRegistrations() {
     var tbody = document.getElementById('recentRegistrationsBody');
     if (!tbody) return;
@@ -771,6 +761,39 @@ function loadDashboardPage(days) {
     dashboardRendered = true;
     
     container.innerHTML = `
+        <!-- ========== Notification 按钮 ========== -->
+        <div class="notification-container" style="display: flex; justify-content: flex-start; margin-bottom: 16px; position: relative;">
+            <div style="position: relative; display: inline-block;">
+                <button id="notificationBellBtn" style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06); border-radius: 50%; width: 44px; height: 44px; color: #d8e0f0; cursor: pointer; position: relative; transition: all 0.3s; font-size: 18px; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 20px rgba(0,0,0,0.2);">
+                    <i class="fas fa-bell"></i>
+                    <span id="notificationBadge" style="position: absolute; top: -4px; right: -4px; background: #e88080; color: #fff; border-radius: 50%; font-size: 10px; font-weight: 700; min-width: 18px; height: 18px; display: none; align-items: center; justify-content: center; padding: 0 4px; border: 2px solid rgba(12, 16, 28, 0.8);">0</span>
+                </button>
+                
+                <!-- Notification Dropdown -->
+                <div id="notificationDropdown" style="display: none; position: absolute; top: 52px; left: 0; width: 400px; max-height: 500px; background: rgba(16, 20, 34, 0.98); border-radius: 16px; border: 1px solid rgba(255,255,255,0.06); box-shadow: 0 20px 60px rgba(0,0,0,0.6); overflow: hidden; z-index: 1000; backdrop-filter: blur(20px);">
+                    <div style="padding: 16px 20px; border-bottom: 1px solid rgba(255,255,255,0.04); display: flex; justify-content: space-between; align-items: center;">
+                        <h4 style="font-size: 14px; font-weight: 600; color: #d8e0f0; margin: 0;">
+                            <i class="fas fa-bell" style="color: #8892a8; margin-right: 8px;"></i>
+                            Notifications
+                        </h4>
+                        <span id="notificationCount" style="font-size: 11px; color: #6a7a92;">0</span>
+                    </div>
+                    <div id="notificationList" style="max-height: 350px; overflow-y: auto; padding: 8px 0;">
+                        <div style="text-align: center; padding: 40px 20px; color: #6a7a92; font-size: 13px;">
+                            <i class="fas fa-inbox" style="display: block; font-size: 28px; color: #4a5a72; margin-bottom: 10px;"></i>
+                            No notifications
+                        </div>
+                    </div>
+                    <div style="padding: 12px 20px; border-top: 1px solid rgba(255,255,255,0.04);">
+                        <button id="clearAllNotificationsBtn" style="width: 100%; background: rgba(232,128,128,0.06); border: 1px solid rgba(232,128,128,0.08); border-radius: 30px; padding: 8px 0; color: #e88080; font-weight: 500; font-size: 12px; cursor: pointer; transition: all 0.2s; font-family: 'Inter', sans-serif;">
+                            <i class="fas fa-trash"></i> Clear All
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 日期过滤器 -->
         <div style="display: flex; justify-content: flex-end; gap: 10px; margin-bottom: 24px; flex-wrap: wrap;">
             <button class="date-filter-btn active" data-days="1" style="background: linear-gradient(145deg, rgba(20,24,40,0.6), rgba(10,12,24,0.4)); border: 1px solid rgba(180,180,200,0.06); border-radius: 30px; padding: 8px 20px; color: #8892a8; cursor: pointer; transition: all 0.3s; font-size: 13px; font-weight: 500; font-family: 'Inter', sans-serif; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">Today</button>
             <button class="date-filter-btn" data-days="7" style="background: linear-gradient(145deg, rgba(20,24,40,0.6), rgba(10,12,24,0.4)); border: 1px solid rgba(180,180,200,0.06); border-radius: 30px; padding: 8px 20px; color: #8892a8; cursor: pointer; transition: all 0.3s; font-size: 13px; font-weight: 500; font-family: 'Inter', sans-serif; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">7 Days</button>
@@ -859,12 +882,11 @@ function loadDashboardPage(days) {
                 <div id="trendChart" style="height: 320px; width: 100%; position: relative; z-index: 1;"></div>
             </div>
             
-            <!-- 转化率卡片 - 左环占满左边，右数据紧凑排列 -->
+            <!-- 转化率卡片 -->
             <div style="background: linear-gradient(145deg, rgba(20,24,40,0.85), rgba(10,12,24,0.6)); backdrop-filter: blur(8px); border-radius: 20px; padding: 20px; border: 1px solid rgba(180,180,200,0.06); box-shadow: 0 4px 20px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.04); position: relative; overflow: hidden;">
                 <div style="position: absolute; top: -15%; right: -5%; width: 75%; height: 75%; background: radial-gradient(ellipse at 70% 20%, rgba(255,255,255,0.06), transparent 70%); pointer-events: none; border-radius: 50%;"></div>
                 <div style="position: absolute; top: 0; left: 0; right: 0; height: 1px; background: linear-gradient(90deg, transparent, rgba(180,180,200,0.08), transparent);"></div>
                 
-                <!-- 标题行：左标题 + 右 Today Register -->
                 <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 6px; position: relative; z-index: 1;">
                     <div style="font-size: 15px; font-weight: 600; color: #d8dff0;">📈 New Orders Conversion Rate</div>
                     <div style="text-align: right;">
@@ -880,16 +902,11 @@ function loadDashboardPage(days) {
                     </div>
                 </div>
                 
-                <!-- 主体：左环占满 + 右数据紧凑 -->
                 <div style="display: flex; align-items: stretch; gap: 12px; position: relative; z-index: 1; min-height: 210px;">
+                    <div id="waveRingContainer" style="width: 220px; height: 280px; flex-shrink: 0; position: relative; align-self: center;"></div>
                     
-                    <!-- 左侧环形图 -->
-<div id="waveRingContainer" style="width: 220px; height: 280px; flex-shrink: 0; position: relative; align-self: center;"></div>
-                    
-                    <!-- 右侧数据 -->
-<div style="flex: 1; min-width: 0; display: flex; flex-direction: column; justify-content: space-between; gap: 0px;">
-                        <!-- A: 4行统计数据 -->
-<div style="border-top: 1px solid rgba(200,176,144,0.06); padding-top: 8px;">
+                    <div style="flex: 1; min-width: 0; display: flex; flex-direction: column; justify-content: space-between; gap: 0px;">
+                        <div style="border-top: 1px solid rgba(200,176,144,0.06); padding-top: 8px;">
                             <div class="conversion-stat-row" style="display: flex; justify-content: space-between; padding: 2px 0; font-size: 11px; color: #6a7a92;">
                                 <span class="conversion-stat-label">Today</span>
                                 <span><span class="conversion-stat-register">0</span> / <span class="conversion-stat-converted">0</span></span>
@@ -912,8 +929,7 @@ function loadDashboardPage(days) {
                             </div>
                         </div>
                         
-                        <!-- B: 用户表格 -->
-<div style="margin-top: 8px; padding-top: 8px; border-top: 1px solid rgba(200,176,144,0.06);">
+                        <div style="margin-top: 8px; padding-top: 8px; border-top: 1px solid rgba(200,176,144,0.06);">
                             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2px;">
                                 <div style="font-size: 9px; color: #5a4a2a; font-weight: 500; letter-spacing: 0.5px; text-transform: uppercase;">
                                     <i class="fas fa-users" style="color: #c8b090; margin-right: 4px; font-size: 9px;"></i>Recent
@@ -993,6 +1009,20 @@ function loadDashboardPage(days) {
         }
         #recentRegistrationsBody::-webkit-scrollbar { width: 3px; }
         #recentRegistrationsBody::-webkit-scrollbar-thumb { background: rgba(200,176,144,0.12); border-radius: 4px; }
+        .notification-item:hover {
+            background: rgba(255,255,255,0.06) !important;
+            border-color: rgba(200,176,144,0.2) !important;
+        }
+        #notificationList::-webkit-scrollbar {
+            width: 4px;
+        }
+        #notificationList::-webkit-scrollbar-thumb {
+            background: rgba(200,176,144,0.15);
+            border-radius: 4px;
+        }
+        #notificationList::-webkit-scrollbar-track {
+            background: transparent;
+        }
     `;
     document.head.appendChild(style);
     
@@ -1001,6 +1031,8 @@ function loadDashboardPage(days) {
         bindDateFilters();
         initWaveRing();
         refreshDashboard(days, true);
+        // 初始化通知
+        initNotificationEvents();
     }, 200);
     
     if (dashboardRefreshInterval) clearInterval(dashboardRefreshInterval);
@@ -1011,3 +1043,326 @@ window.loadDashboardPage = loadDashboardPage;
 window.refreshDashboardData = function(days) {
     refreshDashboard(days || currentDays, true);
 };
+
+// ============================================================
+// 辅助函数（如果不存在则定义）
+// ============================================================
+if (typeof escapeHtml !== 'function') {
+    window.escapeHtml = function(str) {
+        if (!str) return '';
+        return String(str).replace(/[&<>]/g, function(m) {
+            if (m === '&') return '&amp;';
+            if (m === '<') return '&lt;';
+            if (m === '>') return '&gt;';
+            return m;
+        });
+    };
+}
+
+if (typeof formatTime !== 'function') {
+    window.formatTime = function(timestamp) {
+        if (!timestamp) return '-';
+        try {
+            var date = new Date(timestamp);
+            var now = new Date();
+            var diff = Math.floor((now - date) / 1000);
+            
+            if (diff < 60) return 'Just now';
+            if (diff < 3600) return Math.floor(diff / 60) + 'm ago';
+            if (diff < 86400) return Math.floor(diff / 3600) + 'h ago';
+            if (diff < 172800) return 'Yesterday';
+            
+            var month = String(date.getMonth() + 1).padStart(2, '0');
+            var day = String(date.getDate()).padStart(2, '0');
+            var year = date.getFullYear();
+            var hours = String(date.getHours()).padStart(2, '0');
+            var minutes = String(date.getMinutes()).padStart(2, '0');
+            return month + '/' + day + '/' + year + ' ' + hours + ':' + minutes;
+        } catch (e) {
+            return '-';
+        }
+    };
+}
+
+// ============================================================
+// Notification System
+// ============================================================
+var notifications = [];
+var notificationBadgeCount = 0;
+var notificationFetchInterval = null;
+
+var NOTIFICATION_TYPES = {
+    WITHDRAWAL: 'withdrawal',
+    KYC: 'kyc',
+    EMAIL: 'email',
+    IP: 'ip',
+    SYSTEM: 'system'
+};
+
+// 获取所有通知
+async function fetchAllNotifications() {
+    try {
+        var newNotifications = [];
+        var seenIds = new Set();
+
+        // 1. 获取待处理的提现通知
+        var { data: withdrawals, error: wError } = await sb
+            .from('withdrawals')
+            .select('id, uid, username, amount, status, request_date')
+            .eq('status', 'pending')
+            .order('request_date', { ascending: false });
+
+        if (!wError && withdrawals) {
+            for (var i = 0; i < withdrawals.length; i++) {
+                var item = withdrawals[i];
+                var id = 'withdrawal_' + item.id;
+                if (!seenIds.has(id)) {
+                    seenIds.add(id);
+                    newNotifications.push({
+                        id: id,
+                        type: NOTIFICATION_TYPES.WITHDRAWAL,
+                        title: '💳 Withdrawal Request',
+                        message: (item.username || item.uid) + ' requested €' + (item.amount || 0).toFixed(2) + ' withdrawal',
+                        timestamp: item.request_date || new Date().toISOString(),
+                        read: false,
+                        data: item
+                    });
+                }
+            }
+        }
+
+        // 2. 获取待处理的KYC通知
+        var { data: kycs, error: kError } = await sb
+            .from('kyc_verifications')
+            .select('id, uid, username, status, uploaded_at')
+            .eq('status', 'pending')
+            .order('uploaded_at', { ascending: false });
+
+        if (!kError && kycs) {
+            for (var j = 0; j < kycs.length; j++) {
+                var item = kycs[j];
+                var id = 'kyc_' + item.id;
+                if (!seenIds.has(id)) {
+                    seenIds.add(id);
+                    newNotifications.push({
+                        id: id,
+                        type: NOTIFICATION_TYPES.KYC,
+                        title: '🪪 KYC Verification',
+                        message: (item.username || item.uid) + ' submitted KYC verification',
+                        timestamp: item.uploaded_at || new Date().toISOString(),
+                        read: false,
+                        data: item
+                    });
+                }
+            }
+        }
+
+        // 3. 获取待处理的邮件验证通知
+        var { data: emails, error: eError } = await sb
+            .from('email_verification_requests')
+            .select('id, email, uid, username, requested_at, is_verified, code')
+            .is('code', null)
+            .eq('is_verified', false)
+            .order('requested_at', { ascending: false });
+
+        if (!eError && emails) {
+            for (var k = 0; k < emails.length; k++) {
+                var item = emails[k];
+                var id = 'email_' + item.id;
+                if (!seenIds.has(id)) {
+                    seenIds.add(id);
+                    newNotifications.push({
+                        id: id,
+                        type: NOTIFICATION_TYPES.EMAIL,
+                        title: '📧 Email Verification',
+                        message: (item.email || item.uid) + ' needs email verification code',
+                        timestamp: item.requested_at || new Date().toISOString(),
+                        read: false,
+                        data: item
+                    });
+                }
+            }
+        }
+
+        // 4. 获取IP检测通知（只取最新的，去重 - 每个用户只显示一条）
+        var { data: ips, error: iError } = await sb
+            .from('ip_logs')
+            .select('id, uid, username, ip, location, created_at')
+            .order('created_at', { ascending: false })
+            .limit(5);
+
+        if (!iError && ips) {
+            var userIpMap = new Map();
+            for (var m = 0; m < ips.length; m++) {
+                var item = ips[m];
+                if (item.uid && !userIpMap.has(item.uid)) {
+                    userIpMap.set(item.uid, item);
+                }
+            }
+            for (var [uid, item] of userIpMap) {
+                var id = 'ip_' + item.id;
+                if (!seenIds.has(id)) {
+                    seenIds.add(id);
+                    var location = item.location || 'Unknown location';
+                    newNotifications.push({
+                        id: id,
+                        type: NOTIFICATION_TYPES.IP,
+                        title: '🌐 IP Detection',
+                        message: (item.username || uid) + ' logged in from ' + location,
+                        timestamp: item.created_at || new Date().toISOString(),
+                        read: false,
+                        data: item,
+                        ip: item.ip
+                    });
+                }
+            }
+        }
+
+        newNotifications.sort(function(a, b) {
+            return new Date(b.timestamp) - new Date(a.timestamp);
+        });
+
+        notifications = newNotifications;
+        updateNotificationUI();
+
+        return notifications;
+
+    } catch (e) {
+        console.error('获取通知失败:', e);
+        return [];
+    }
+}
+
+// 更新通知UI
+function updateNotificationUI() {
+    var badge = document.getElementById('notificationBadge');
+    var countEl = document.getElementById('notificationCount');
+    var listEl = document.getElementById('notificationList');
+
+    if (!badge || !countEl || !listEl) return;
+
+    var unreadCount = 0;
+    for (var i = 0; i < notifications.length; i++) {
+        if (!notifications[i].read) unreadCount++;
+    }
+    notificationBadgeCount = unreadCount;
+
+    if (unreadCount > 0) {
+        badge.style.display = 'flex';
+        badge.textContent = unreadCount > 99 ? '99+' : unreadCount;
+    } else {
+        badge.style.display = 'none';
+    }
+
+    countEl.textContent = notifications.length + ' notifications';
+
+    if (notifications.length === 0) {
+        listEl.innerHTML = `
+            <div style="text-align: center; padding: 40px 20px; color: #6a7a92; font-size: 13px;">
+                <i class="fas fa-inbox" style="display: block; font-size: 28px; color: #4a5a72; margin-bottom: 10px;"></i>
+                No notifications
+            </div>
+        `;
+        return;
+    }
+
+    var html = '';
+    for (var j = 0; j < notifications.length; j++) {
+        var notif = notifications[j];
+        var timeStr = formatTime(notif.timestamp);
+        var isRead = notif.read;
+        var bgColor = isRead ? 'rgba(255,255,255,0.02)' : 'rgba(200,176,144,0.06)';
+        var borderColor = isRead ? 'rgba(255,255,255,0.03)' : 'rgba(200,176,144,0.12)';
+
+        var typeColor = '#8892a8';
+        if (notif.type === 'withdrawal') typeColor = '#7ad0b0';
+        else if (notif.type === 'kyc') typeColor = '#ffb84d';
+        else if (notif.type === 'email') typeColor = '#4a7cff';
+        else if (notif.type === 'ip') typeColor = '#c084fc';
+
+        html += `
+            <div class="notification-item" data-id="${notif.id}" style="padding: 12px 16px; margin: 0 8px 4px 8px; border-radius: 10px; background: ${bgColor}; border-left: 3px solid ${typeColor}; cursor: pointer; transition: all 0.2s; display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; border: 1px solid ${borderColor};" onclick="markNotificationRead('${notif.id}')">
+                <div style="flex: 1; min-width: 0;">
+                    <div style="font-size: 13px; font-weight: 500; color: #d8e0f0;">${escapeHtml(notif.title)}</div>
+                    <div style="font-size: 12px; color: #8892a8; margin-top: 2px; word-break: break-word;">${escapeHtml(notif.message)}</div>
+                </div>
+                <div style="display: flex; flex-direction: column; align-items: flex-end; flex-shrink: 0; min-width: 60px;">
+                    <div style="font-size: 10px; color: #5a6a82; white-space: nowrap;">${timeStr}</div>
+                    ${!isRead ? '<div style="margin-top: 4px; width: 6px; height: 6px; border-radius: 50%; background: #4a7cff;"></div>' : ''}
+                </div>
+            </div>
+        `;
+    }
+
+    listEl.innerHTML = html;
+}
+
+// 标记通知为已读
+window.markNotificationRead = function(id) {
+    for (var i = 0; i < notifications.length; i++) {
+        if (notifications[i].id === id) {
+            notifications[i].read = true;
+            break;
+        }
+    }
+    updateNotificationUI();
+};
+
+// 清除所有通知
+window.clearAllNotifications = function() {
+    notifications = [];
+    updateNotificationUI();
+    if (typeof showToast === 'function') {
+        showToast('All notifications cleared', 'success');
+    }
+};
+
+// 定期刷新通知
+function startNotificationPolling() {
+    fetchAllNotifications();
+    if (notificationFetchInterval) clearInterval(notificationFetchInterval);
+    notificationFetchInterval = setInterval(function() {
+        fetchAllNotifications();
+    }, 30000);
+}
+
+// 初始化Notification事件绑定
+function initNotificationEvents() {
+    var bellBtn = document.getElementById('notificationBellBtn');
+    var dropdown = document.getElementById('notificationDropdown');
+    var clearBtn = document.getElementById('clearAllNotificationsBtn');
+
+    if (bellBtn) {
+        bellBtn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            if (dropdown.style.display === 'block') {
+                dropdown.style.display = 'none';
+            } else {
+                dropdown.style.display = 'block';
+                fetchAllNotifications();
+            }
+        });
+    }
+
+    document.addEventListener('click', function(e) {
+        var container = document.querySelector('.notification-container');
+        if (container && !container.contains(e.target) && dropdown) {
+            dropdown.style.display = 'none';
+        }
+    });
+
+    if (clearBtn) {
+        clearBtn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            if (typeof showConfirm === 'function') {
+                showConfirm('Clear All Notifications', 'Are you sure you want to clear all notifications?', function() {
+                    window.clearAllNotifications();
+                });
+            } else {
+                window.clearAllNotifications();
+            }
+        });
+    }
+
+    startNotificationPolling();
+}
