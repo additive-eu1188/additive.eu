@@ -92,7 +92,7 @@ async function loadSetordersPage() {
                         <button id="confirmTriggerBtn" class="success" style="flex: 1; background: rgba(74,222,128,0.06); border: 1px solid rgba(74,222,128,0.08); border-radius: 40px; padding: 8px 0; color: #ffffff; font-weight: 600; font-size: 13px; cursor: pointer; transition: all 0.3s; font-family: 'Inter', sans-serif;">
                             <i class="fas fa-check"></i> Confirm Trigger
                         </button>
-                        <button id="cancelTriggerBtn" class="danger" style="flex: 1; background: rgba(232,128,128,0.06); border: 1px solid rgba(232,128,128,0.08); border-radius: 40px; padding: 8px 0; color: #ffffff; font-weight: 600; font-size: 13px; cursor: pointer; transition: all 0.3s; font-family: 'Inter', sans-serif;">
+                        <button id="cancelTriggerBtn" class="danger" style="flex: 1; background: rgba(232,128,128,0.06); border: 1px solid rgba(232,128,128,0.08); border-radius: 40px; padding: 8px 0; color: #ffffff; font-weight: 600; font-size: 13px; cursor: pointer; transition: all 0.3s; font-family: 'Inter', sans-serif; display: flex; align-items: center; justify-content: center; gap: 6px;">
                             <i class="fas fa-times"></i> Cancel
                         </button>
                     </div>
@@ -136,7 +136,7 @@ async function loadSetordersPage() {
                                 <th style="padding: 10px 14px; color: #a8b4d0; font-weight: 600; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid rgba(255,255,255,0.04); background: rgba(10,14,28,0.3); text-align: left; min-width: 90px;">Action</th>
                             </tr>
                         </thead>
-                        <tbody id="triggerHistoryBody"><tr><td colspan="6" style="text-align:center; padding:20px; color:#6a7a9a;">Loading...</td></tr></tbody>
+                        <tbody id="triggerHistoryBody"><tr><td colspan="6" style="text-align:center; padding:20px; color:#6a7a9a;">Enter a UID to view trigger history</td></tr></tbody>
                     </table>
                 </div>
             </div>
@@ -194,6 +194,12 @@ async function loadSetordersPage() {
         }
         .delete-trigger-btn:hover {
             background: rgba(232,128,128,0.12);
+        }
+        .btn-danger-cancel {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
         }
         @media (max-width: 1200px) {
             #setordersMain > div:first-child {
@@ -256,10 +262,8 @@ async function loadSetordersPage() {
                 label.textContent = 'Order Price (€)';
             }
             
-            // 更新卡片
             updateConfirmCards();
             
-            // 清空搜索结果
             document.getElementById('searchResultsContainer').innerHTML = `
                 <div style="text-align: center; padding: 40px 20px; color: #6a7a92; font-size: 13px;">
                     <i class="fas fa-search" style="display: block; font-size: 32px; color: #4a5a72; margin-bottom: 12px;"></i>
@@ -290,13 +294,21 @@ async function loadSetordersPage() {
     
     // 刷新
     document.getElementById('refreshTriggerBtn')?.addEventListener('click', function() {
-        loadTriggerHistory();
+        if (currentSetUser) {
+            loadTriggerHistory();
+        }
         showToast('已刷新', 'success');
     });
-    document.getElementById('refreshHistoryBtn')?.addEventListener('click', loadTriggerHistory);
+    document.getElementById('refreshHistoryBtn')?.addEventListener('click', function() {
+        if (currentSetUser) {
+            loadTriggerHistory();
+        } else {
+            showToast('请先输入 UID', 'warning');
+        }
+    });
     
-    // 加载历史
-    await loadTriggerHistory();
+    // 初始显示空状态
+    document.getElementById('triggerHistoryBody').innerHTML = '<tr><td colspan="6" style="text-align:center; padding:20px; color:#6a7a9a;">Enter a UID to view trigger history</td></tr>';
 }
 
 // ========== 根据 UID 选择用户 ==========
@@ -323,7 +335,6 @@ async function selectUserByUid(uid) {
         document.getElementById('cardUid').innerText = user.uid;
         updateConfirmCards();
         
-        // 清空搜索结果
         document.getElementById('searchResultsContainer').innerHTML = `
             <div style="text-align: center; padding: 40px 20px; color: #6a7a92; font-size: 13px;">
                 <i class="fas fa-search" style="display: block; font-size: 32px; color: #4a5a72; margin-bottom: 12px;"></i>
@@ -332,7 +343,8 @@ async function selectUserByUid(uid) {
         `;
         selectedAdvancedOrdersList = [];
         
-        loadTriggerHistory();
+        // 加载该用户的触发历史
+        await loadTriggerHistory();
         showToast('✅ 用户 ' + user.username + ' 已选择', 'success');
         
     } catch (e) {
@@ -375,7 +387,6 @@ async function searchTriggerOrders() {
     container.innerHTML = '<div style="text-align:center; padding:20px; color:#6a7a9a;"><i class="fas fa-spinner fa-spin"></i> Searching...</div>';
     
     try {
-        // 卡牌奖励：直接显示
         if (currentTriggerTab === 'card_reward') {
             container.innerHTML = `
                 <div style="padding: 14px; background: rgba(255,184,77,0.06); border-radius: 8px; border: 1px solid rgba(255,184,77,0.08);">
@@ -392,7 +403,6 @@ async function searchTriggerOrders() {
             return;
         }
         
-        // 高级订单 / 卡牌订单：搜索订单池
         const priceNum = Math.floor(amount);
         const digitCount = priceNum.toString().length;
         let minPrice = priceNum, maxPrice;
@@ -566,7 +576,6 @@ async function confirmTriggerOrder() {
         
         showToast('✅ ' + typeNames[currentTriggerTab] + ' triggered for ' + currentSetUser.username, 'success');
         
-        // 重置
         document.getElementById('triggerOrderCount').value = '1';
         document.getElementById('triggerAmount').value = '';
         document.getElementById('searchResultsContainer').innerHTML = `
@@ -599,27 +608,29 @@ function cancelTriggerOrder() {
     showToast('已取消', 'info');
 }
 
-// ========== 加载触发历史 ==========
+// ========== 加载触发历史（只加载当前用户） ==========
 async function loadTriggerHistory() {
     const tbody = document.getElementById('triggerHistoryBody');
     if (!tbody) return;
+    
+    if (!currentSetUser) {
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:20px; color:#6a7a9a;">Enter a UID to view trigger history</td></tr>';
+        return;
+    }
+    
     tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:20px; color:#6a7a9a;">Loading...</td></tr>';
     
     try {
-        let query = sb
+        const { data: records, error } = await sb
             .from('user_trigger_orders')
             .select('*')
+            .eq('uid', currentSetUser.uid)
             .order('created_at', { ascending: false });
         
-        if (currentSetUser) {
-            query = query.eq('uid', currentSetUser.uid);
-        }
-        
-        const { data: records, error } = await query;
         if (error) throw error;
         
         if (!records || records.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:20px; color:#6a7a9a;">No trigger records</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:20px; color:#6a7a9a;">No trigger records for this user</td></tr>';
             return;
         }
         
