@@ -463,77 +463,114 @@ style.textContent = `
     white-space: nowrap;
 }
 
-/* User ID 列 */
-#page_withdrawals .withdrawals-table-wrap .data-table th:nth-child(1),
-#page_withdrawals .withdrawals-table-wrap .data-table td:nth-child(1) {
+/* ===== Pending 页面列宽 ===== */
+#page_withdrawals #pendingPanel .withdrawals-table-wrap .data-table th:nth-child(1),
+#page_withdrawals #pendingPanel .withdrawals-table-wrap .data-table td:nth-child(1) {
     width: 90px !important;
     min-width: 90px !important;
     max-width: 90px !important;
     padding: 6px 6px 6px 12px !important;
 }
-
-/* Username 列 */
-#page_withdrawals .withdrawals-table-wrap .data-table th:nth-child(2),
-#page_withdrawals .withdrawals-table-wrap .data-table td:nth-child(2) {
+#page_withdrawals #pendingPanel .withdrawals-table-wrap .data-table th:nth-child(2),
+#page_withdrawals #pendingPanel .withdrawals-table-wrap .data-table td:nth-child(2) {
     width: 110px !important;
     min-width: 110px !important;
     max-width: 110px !important;
 }
-
-/* Amount 列 */
-#page_withdrawals .withdrawals-table-wrap .data-table th:nth-child(3),
-#page_withdrawals .withdrawals-table-wrap .data-table td:nth-child(3) {
+#page_withdrawals #pendingPanel .withdrawals-table-wrap .data-table th:nth-child(3),
+#page_withdrawals #pendingPanel .withdrawals-table-wrap .data-table td:nth-child(3) {
     width: 90px !important;
     min-width: 90px !important;
     max-width: 90px !important;
 }
-
-/* Remaining Balance 列 */
-#page_withdrawals .withdrawals-table-wrap .data-table th:nth-child(4),
-#page_withdrawals .withdrawals-table-wrap .data-table td:nth-child(4) {
+#page_withdrawals #pendingPanel .withdrawals-table-wrap .data-table th:nth-child(4),
+#page_withdrawals #pendingPanel .withdrawals-table-wrap .data-table td:nth-child(4) {
     width: 160px !important;
     min-width: 160px !important;
     max-width: 160px !important;
 }
-
-/* Crypto Type 列 */
-#page_withdrawals .withdrawals-table-wrap .data-table th:nth-child(5),
-#page_withdrawals .withdrawals-table-wrap .data-table td:nth-child(5) {
+#page_withdrawals #pendingPanel .withdrawals-table-wrap .data-table th:nth-child(5),
+#page_withdrawals #pendingPanel .withdrawals-table-wrap .data-table td:nth-child(5) {
     width: 140px !important;
     min-width: 140px !important;
     max-width: 140px !important;
 }
-
-/* Wallet Address 列 */
-#page_withdrawals .withdrawals-table-wrap .data-table th:nth-child(6),
-#page_withdrawals .withdrawals-table-wrap .data-table td:nth-child(6) {
-    width: 400px !important;
-    min-width: 400px !important;
-    max-width: 400px !important;
+/* Pending: Wallet Address 列 - 缩小宽度，让 User IP 往左移 */
+#page_withdrawals #pendingPanel .withdrawals-table-wrap .data-table th:nth-child(6),
+#page_withdrawals #pendingPanel .withdrawals-table-wrap .data-table td:nth-child(6) {
+    width: 350px !important;
+    min-width: 350px !important;
+    max-width: 350px !important;
 }
-
-/* User IP 列 */
-#page_withdrawals .withdrawals-table-wrap .data-table th:nth-child(7),
-#page_withdrawals .withdrawals-table-wrap .data-table td:nth-child(7) {
-    width: 150px !important;
-    min-width: 150px !important;
-    max-width: 150px !important;
-}
-
-/* Withdrawal Time 列 */
-#page_withdrawals .withdrawals-table-wrap .data-table th:nth-child(8),
-#page_withdrawals .withdrawals-table-wrap .data-table td:nth-child(8) {
+#page_withdrawals #pendingPanel .withdrawals-table-wrap .data-table th:nth-child(7),
+#page_withdrawals #pendingPanel .withdrawals-table-wrap .data-table td:nth-child(7) {
     width: 160px !important;
     min-width: 160px !important;
     max-width: 160px !important;
 }
-
-/* Actions 列 */
-#page_withdrawals .withdrawals-table-wrap .data-table th:nth-child(9),
-#page_withdrawals .withdrawals-table-wrap .data-table td:nth-child(9) {
+#page_withdrawals #pendingPanel .withdrawals-table-wrap .data-table th:nth-child(8),
+#page_withdrawals #pendingPanel .withdrawals-table-wrap .data-table td:nth-child(8) {
+    width: 150px !important;
+    min-width: 150px !important;
+    max-width: 150px !important;
+}
+#page_withdrawals #pendingPanel .withdrawals-table-wrap .data-table th:nth-child(9),
+#page_withdrawals #pendingPanel .withdrawals-table-wrap .data-table td:nth-child(9) {
     width: 120px !important;
     min-width: 120px !important;
     max-width: 120px !important;
+}
+
+/* ===== History 页面列宽 ===== */
+#page_withdrawals #historyPanel .withdrawals-table-wrap .data-table th:nth-child(1),
+#page_withdrawals #historyPanel .withdrawals-table-wrap .data-table td:nth-child(1) {
+    width: 90px !important;
+    min-width: 90px !important;
+    max-width: 90px !important;
+    padding: 6px 6px 6px 12px !important;
+}
+#page_withdrawals #historyPanel .withdrawals-table-wrap .data-table th:nth-child(2),
+#page_withdrawals #historyPanel .withdrawals-table-wrap .data-table td:nth-child(2) {
+    width: 110px !important;
+    min-width: 110px !important;
+    max-width: 110px !important;
+}
+#page_withdrawals #historyPanel .withdrawals-table-wrap .data-table th:nth-child(3),
+#page_withdrawals #historyPanel .withdrawals-table-wrap .data-table td:nth-child(3) {
+    width: 90px !important;
+    min-width: 90px !important;
+    max-width: 90px !important;
+}
+#page_withdrawals #historyPanel .withdrawals-table-wrap .data-table th:nth-child(4),
+#page_withdrawals #historyPanel .withdrawals-table-wrap .data-table td:nth-child(4) {
+    width: 140px !important;
+    min-width: 140px !important;
+    max-width: 140px !important;
+}
+#page_withdrawals #historyPanel .withdrawals-table-wrap .data-table th:nth-child(5),
+#page_withdrawals #historyPanel .withdrawals-table-wrap .data-table td:nth-child(5) {
+    width: 100px !important;
+    min-width: 100px !important;
+    max-width: 100px !important;
+}
+/* History: Wallet Address 列 - 向右伸展，增加宽度 */
+#page_withdrawals #historyPanel .withdrawals-table-wrap .data-table th:nth-child(6),
+#page_withdrawals #historyPanel .withdrawals-table-wrap .data-table td:nth-child(6) {
+    width: 480px !important;
+    min-width: 480px !important;
+    max-width: 480px !important;
+}
+#page_withdrawals #historyPanel .withdrawals-table-wrap .data-table th:nth-child(7),
+#page_withdrawals #historyPanel .withdrawals-table-wrap .data-table td:nth-child(7) {
+    width: 150px !important;
+    min-width: 150px !important;
+    max-width: 150px !important;
+}
+#page_withdrawals #historyPanel .withdrawals-table-wrap .data-table th:nth-child(8),
+#page_withdrawals #historyPanel .withdrawals-table-wrap .data-table td:nth-child(8) {
+    width: 150px !important;
+    min-width: 150px !important;
+    max-width: 150px !important;
 }
 
 @media (max-width: 768px) {
