@@ -498,13 +498,13 @@ style.textContent = `
 /* Pending: Wallet Address 列 - 缩小宽度，让 User IP 往左移 */
 #page_withdrawals #pendingPanel .withdrawals-table-wrap .data-table th:nth-child(6),
 #page_withdrawals #pendingPanel .withdrawals-table-wrap .data-table td:nth-child(6) {
-    width: 250px !important;
+    width: 200px !important;
     min-width: 350px !important;
     max-width: 350px !important;
 }
 #page_withdrawals #pendingPanel .withdrawals-table-wrap .data-table th:nth-child(7),
 #page_withdrawals #pendingPanel .withdrawals-table-wrap .data-table td:nth-child(7) {
-    width: 100px !important;
+    width: 80px !important;
     min-width: 160px !important;
     max-width: 160px !important;
 }
@@ -557,8 +557,8 @@ style.textContent = `
 #page_withdrawals #historyPanel .withdrawals-table-wrap .data-table th:nth-child(6),
 #page_withdrawals #historyPanel .withdrawals-table-wrap .data-table td:nth-child(6) {
     width: 600px !important;
-    min-width: 480px !important;
-    max-width: 480px !important;
+    min-width: 600px !important;
+    max-width: 600px !important;
 }
 #page_withdrawals #historyPanel .withdrawals-table-wrap .data-table th:nth-child(7),
 #page_withdrawals #historyPanel .withdrawals-table-wrap .data-table td:nth-child(7) {
