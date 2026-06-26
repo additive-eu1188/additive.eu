@@ -498,7 +498,7 @@ style.textContent = `
 /* Pending: Wallet Address 列 - 缩小宽度，让 User IP 往左移 */
 #page_withdrawals #pendingPanel .withdrawals-table-wrap .data-table th:nth-child(6),
 #page_withdrawals #pendingPanel .withdrawals-table-wrap .data-table td:nth-child(6) {
-    width: 320px !important;
+    width: 280px !important;
     min-width: 280px !important;
     max-width: 280px !important;
 }
