@@ -113,7 +113,16 @@
         .upgrade-desc { font-size: 13px; color: #7a85a5; line-height: 1.5; margin-bottom: 20px; }
         .btn-upgrade { background: rgba(201,176,149,0.15); padding: 10px 20px; border-radius: 40px; text-decoration: none; color: #C9B095; font-weight: 600; font-size: 14px; display: inline-flex; align-items: center; gap: 8px; border: 1px solid rgba(201,176,149,0.3); }
         
-        @media (max-width: 1000px) { .chat-two-columns { flex-direction: column; } }
+        @media (max-width: 1000px) { .chat-two-columns { flex-direction: column; } 
+        .footer-note {
+            margin-top: 40px;
+            text-align: center;
+            font-size: 11px;
+            color: #5a6e8a;
+            padding: 16px 0;
+            border-top: 1px solid rgba(204, 178, 153, 0.08);
+        }
+}
     </style>
 </head>
 <body>
@@ -184,6 +193,7 @@
                     </div>
                 </div>
             </div>
+            <div class="footer-note"><i class="fas fa-lock"></i> <span data-i18n="secure_platform">Secure platform · Protected by ADDITIVE</span></div>
         </main>
     </div>
 
