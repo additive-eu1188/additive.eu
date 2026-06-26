@@ -962,19 +962,21 @@ async function handleClaim() {
     }
 
     let amount;
-    let claimDay;
-    let isReset = false;
+let claimDay;
+let isReset = false;
 
-    // 如果连续签到中断（不是昨天签到），从 Day 1 重新开始
-    if (streak > 0 && !isConsecutive(lastClaimDate)) {
-        amount = signInRewards[0].amount;
-        claimDay = 1;
-        isReset = true;
-    } else {
-        // 领取下一个未领取的天数
-        amount = signInRewards[nextDay - 1].amount;
-        claimDay = nextDay;
-    }
+// 🔥 只有当 nextDay 是 1 时，才从 Day 1 重新开始
+// 如果 nextDay > 1，说明还有未领取的天数，直接领取下一个
+if (streak > 0 && !isConsecutive(lastClaimDate) && nextDay === 1) {
+    // 连续签到中断，且下一个未领取的是 Day 1，才从 Day 1 重新开始
+    amount = signInRewards[0].amount;
+    claimDay = 1;
+    isReset = true;
+} else {
+    // 领取下一个未领取的天数
+    amount = signInRewards[nextDay - 1].amount;
+    claimDay = nextDay;
+}
 
     console.log('💰 Claim Day:', claimDay, 'Amount:', amount);
 
