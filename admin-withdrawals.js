@@ -827,14 +827,14 @@ async function loadWithdrawalHistory() {
         }
         
         var total = filtered.reduce(function(sum, w) { return sum + (w.amount || 0); }, 0);
-        var pending = filtered.filter(function(w) { return w.status === 'pending'; }).reduce(function(sum, w) { return sum + (w.amount || 0); }, 0);
-        var approved = filtered.filter(function(w) { return w.status === 'approved'; }).reduce(function(sum, w) { return sum + (w.amount || 0); }, 0);
-        var rejected = filtered.filter(function(w) { return w.status === 'rejected'; }).reduce(function(sum, w) { return sum + (w.amount || 0); }, 0);
+        var pending = filtered.filter(function(w) { return w.status === 'pending'; }).length;
+        var approved = filtered.filter(function(w) { return w.status === 'approved'; }).length;
+var rejected = filtered.filter(function(w) { return w.status === 'rejected'; }).length;
         
         document.getElementById('historyStatTotal').innerHTML = '€' + total.toFixed(2);
-        document.getElementById('historyStatPending').innerHTML = '€' + pending.toFixed(2);
-        document.getElementById('historyStatApproved').innerHTML = '€' + approved.toFixed(2);
-        document.getElementById('historyStatRejected').innerHTML = '€' + rejected.toFixed(2);
+        document.getElementById('historyStatPending').innerHTML = pending + ' times';
+        document.getElementById('historyStatApproved').innerHTML = approved + ' times';
+document.getElementById('historyStatRejected').innerHTML = rejected + ' times';
         
         if (!filtered || filtered.length === 0) {
             tbody.innerHTML = '<tr><td colspan="8" style="text-align:center; padding:30px; color:#6a7a9a;">No withdrawal records</td></tr>';
