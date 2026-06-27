@@ -358,27 +358,217 @@ if (document.readyState === 'loading') {
     ensureAnimationStyles();
 }
 
-// ========== 全局实时订阅（直接使用轮询，禁用 Realtime） ==========
+// ============================================================
+// 🔥 通知处理函数
+// ============================================================
+
+function handleNewKyc(data) {
+    console.log('📋 处理新KYC申请:', data);
+    
+    // 刷新数据
+    if (window.refreshDashboardData) {
+        window.refreshDashboardData(currentDays);
+    }
+    if (window.loadKycPage && document.getElementById('page_kyc')?.classList.contains('active')) {
+        console.log('刷新KYC页面');
+        window.loadKycPage();
+    }
+    
+    // ============================================================
+    // 🔥 添加到通知铃铛
+    // ============================================================
+    if (typeof window.notifications !== 'undefined' && Array.isArray(window.notifications)) {
+        const notification = {
+            id: 'kyc_' + data.id + '_' + Date.now(),
+            type: 'kyc',
+            title: '🪪 New KYC Application',
+            message: 'User ' + (data.username || data.uid) + ' submitted KYC verification',
+            timestamp: new Date().toISOString(),
+            read: false,
+            data: data
+        };
+        window.notifications.unshift(notification);
+        console.log('📢 KYC通知已添加到通知系统，当前总数:', window.notifications.length);
+    }
+    
+    // 显示琥珀通知
+    if (window.showAmberNotification) {
+        window.showAmberNotification(
+            '📋 新KYC申请',
+            `用户 ${data.username || data.uid} 提交了身份验证申请`,
+            'kyc'
+        );
+    }
+}
+
+function handleNewWithdrawal(data) {
+    console.log('💰 处理新提现申请:', data);
+    
+    if (window.refreshDashboardData) {
+        window.refreshDashboardData(currentDays);
+    }
+    if (window.loadWithdrawalsPage && document.getElementById('page_withdrawals')?.classList.contains('active')) {
+        console.log('刷新提现页面');
+        window.loadWithdrawalsPage();
+    }
+    
+    // ============================================================
+    // 🔥 添加到通知铃铛
+    // ============================================================
+    if (typeof window.notifications !== 'undefined' && Array.isArray(window.notifications)) {
+        const notification = {
+            id: 'withdrawal_' + data.id + '_' + Date.now(),
+            type: 'withdrawal',
+            title: '💳 New Withdrawal Request',
+            message: 'User ' + (data.username || data.uid) + ' requested €' + (data.amount || 0).toFixed(2) + ' withdrawal',
+            timestamp: new Date().toISOString(),
+            read: false,
+            data: data
+        };
+        window.notifications.unshift(notification);
+        console.log('📢 提现通知已添加到通知系统，当前总数:', window.notifications.length);
+    }
+    
+    if (window.showAmberNotification) {
+        window.showAmberNotification(
+            '💰 新提现申请',
+            `用户 ${data.username} 申请提现 €${data.amount}`,
+            'withdrawal'
+        );
+    }
+}
+
+function handleNewEmailRequest(data) {
+    console.log('📧 处理新邮箱验证请求:', data.email);
+    
+    if (window.refreshDashboardData) {
+        window.refreshDashboardData(currentDays);
+    }
+    const emailPage = document.getElementById('page_emailverify');
+    if (emailPage && emailPage.classList.contains('active')) {
+        console.log('当前在Email页面，自动刷新列表');
+        if (window.loadEmailVerifyPage) {
+            window.loadEmailVerifyPage();
+        }
+    }
+    
+    // ============================================================
+    // 🔥 添加到通知铃铛
+    // ============================================================
+    if (typeof window.notifications !== 'undefined' && Array.isArray(window.notifications)) {
+        const notification = {
+            id: 'email_' + data.id + '_' + Date.now(),
+            type: 'email',
+            title: '📧 New Email Verification',
+            message: 'Email ' + (data.email || data.uid) + ' needs verification code',
+            timestamp: new Date().toISOString(),
+            read: false,
+            data: data
+        };
+        window.notifications.unshift(notification);
+        console.log('📢 邮箱通知已添加到通知系统，当前总数:', window.notifications.length);
+    }
+    
+    if (window.showAmberNotification) {
+        window.showAmberNotification(
+            '📧 新邮箱验证请求',
+            `用户 ${data.email} 请求邮箱验证，请设置验证码`,
+            'email'
+        );
+    }
+}
+
+// ============================================================
+// 🔥 全局实时订阅 + 轮询双重保障
+// ============================================================
+
+let realtimeChannel = null;
 let pollingInterval = null;
 let lastNotified = {
     kyc: null,
     withdrawal: null,
     email: null
 };
+let realtimeConnected = false;
 
 function initGlobalRealtime() {
-    console.log('🔄 使用轮询方式监控数据变化 (每10秒)');
+    console.log('🚀 正在启动全局实时订阅...');
     
-    // 停止旧的轮询
-    if (pollingInterval) {
-        clearInterval(pollingInterval);
-        pollingInterval = null;
+    // 先启动轮询作为备选
+    startPollingFallback();
+    
+    // 然后尝试 Realtime
+    tryConnectRealtime();
+}
+
+function tryConnectRealtime() {
+    if (realtimeChannel) {
+        try {
+            sb.removeChannel(realtimeChannel);
+        } catch (e) {
+            console.log('移除旧频道失败:', e);
+        }
+        realtimeChannel = null;
     }
+    
+    try {
+        realtimeChannel = sb
+            .channel('global-realtime')
+            .on(
+                'postgres_changes',
+                { event: 'INSERT', schema: 'public', table: 'kyc_verifications' },
+                (payload) => {
+                    console.log('🔔 [Realtime] 检测到新KYC申请:', payload.new);
+                    realtimeConnected = true;
+                    handleNewKyc(payload.new);
+                }
+            )
+            .on(
+                'postgres_changes',
+                { event: 'INSERT', schema: 'public', table: 'withdrawals' },
+                (payload) => {
+                    console.log('🔔 [Realtime] 检测到新提现申请:', payload.new);
+                    realtimeConnected = true;
+                    handleNewWithdrawal(payload.new);
+                }
+            )
+            .on(
+                'postgres_changes',
+                { event: 'INSERT', schema: 'public', table: 'email_verification_requests' },
+                (payload) => {
+                    console.log('🔔 [Realtime] 检测到新邮箱验证请求:', payload.new);
+                    realtimeConnected = true;
+                    handleNewEmailRequest(payload.new);
+                }
+            )
+            .subscribe((status) => {
+                console.log('📡 全局实时订阅状态:', status);
+                if (status === 'SUBSCRIBED') {
+                    realtimeConnected = true;
+                    console.log('✅ 全局实时订阅已成功连接！');
+                    console.log('✅ 正在监听: kyc_verifications, withdrawals, email_verification_requests');
+                } else if (status === 'CHANNEL_ERROR') {
+                    realtimeConnected = false;
+                    console.warn('⚠️ Realtime 连接失败，轮询方案将继续工作');
+                }
+            });
+    } catch (e) {
+        console.warn('⚠️ Realtime 初始化失败，轮询方案将继续工作:', e.message);
+        realtimeConnected = false;
+    }
+}
+
+// ============================================================
+// 🔥 备选轮询方案（始终运行，双重保障）
+// ============================================================
+
+function startPollingFallback() {
+    console.log('🔄 轮询备选方案已启动 (每10秒检查一次)');
+    if (pollingInterval) clearInterval(pollingInterval);
     
     // 立即执行一次
     pollForUpdates();
     
-    // 启动轮询
     pollingInterval = setInterval(pollForUpdates, 10000);
 }
 
@@ -393,6 +583,7 @@ async function pollForUpdates() {
             .limit(1);
         
         if (kycs && kycs.length > 0 && kycs[0].id !== lastNotified.kyc) {
+            console.log('🔔 [轮询] 检测到新KYC申请:', kycs[0].id);
             lastNotified.kyc = kycs[0].id;
             handleNewKyc(kycs[0]);
         }
@@ -406,6 +597,7 @@ async function pollForUpdates() {
             .limit(1);
         
         if (withdrawals && withdrawals.length > 0 && withdrawals[0].id !== lastNotified.withdrawal) {
+            console.log('🔔 [轮询] 检测到新提现申请:', withdrawals[0].id);
             lastNotified.withdrawal = withdrawals[0].id;
             handleNewWithdrawal(withdrawals[0]);
         }
@@ -420,6 +612,7 @@ async function pollForUpdates() {
             .limit(1);
         
         if (emails && emails.length > 0 && emails[0].id !== lastNotified.email) {
+            console.log('🔔 [轮询] 检测到新邮箱验证请求:', emails[0].id);
             lastNotified.email = emails[0].id;
             handleNewEmailRequest(emails[0]);
         }
@@ -429,7 +622,7 @@ async function pollForUpdates() {
     }
 }
 
-// 启动轮询
+// 启动
 setTimeout(() => {
     initGlobalRealtime();
 }, 2000);
