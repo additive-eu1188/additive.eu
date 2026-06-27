@@ -1,21 +1,39 @@
-// admin-common.js - 完整版（包含自定义弹窗和通知 + 所有页面实时刷新）
+// admin-common.js - 完整版（包含通知角标功能）
 const SUPABASE_URL = 'https://qgmbzdfnwsdosdqphlxk.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_zsJFjfNUO7NKp8ZH5KrXFQ_WZ8Q2Kym';
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 // ============================================================
-// 🔥 全局通知数组 - 必须在这里初始化，确保所有地方都能访问
+// 通知数据
+// ============================================================
+let notificationCounts = {
+  dashboard: 0,
+  kyc: 0,
+  email: 0,
+  withdrawal: 0
+};
+
+// 已读状态（点击后角标消失，但高亮取决于是否当前页面）
+let readNotifications = {
+  dashboard: false,
+  kyc: false,
+  email: false,
+  withdrawal: false
+};
+
+// 当前激活的页面
+let currentActivePage = 'dashboard';
+
+// ============================================================
+// 🔥 全局通知数组
 // ============================================================
 if (typeof window.notifications === 'undefined') {
     window.notifications = [];
-    console.log('✅ window.notifications 已初始化');
 }
 
 // ============================================================
-// 🔥 通知持久化存储 - localStorage
+// 🔥 通知持久化存储
 // ============================================================
-
-// 加载通知
 function loadNotifications() {
     try {
         const saved = localStorage.getItem('admin_notifications');
@@ -23,7 +41,6 @@ function loadNotifications() {
             const parsed = JSON.parse(saved);
             if (Array.isArray(parsed) && parsed.length > 0) {
                 window.notifications = parsed;
-                console.log('📋 从 localStorage 加载了', window.notifications.length, '条通知');
                 return;
             }
         }
@@ -31,23 +48,19 @@ function loadNotifications() {
     window.notifications = window.notifications || [];
 }
 
-// 保存通知
 function saveNotifications() {
     try {
         localStorage.setItem('admin_notifications', JSON.stringify(window.notifications));
     } catch (e) {}
 }
 
-// 添加通知（带持久化）
 function addNotification(notification) {
     if (typeof window.notifications === 'undefined') {
         window.notifications = [];
     }
-    // 检查是否已存在相同 ID（避免重复）
     const exists = window.notifications.some(n => n.id === notification.id);
     if (!exists) {
         window.notifications.unshift(notification);
-        // 限制最大数量 500 条
         if (window.notifications.length > 500) {
             window.notifications = window.notifications.slice(0, 500);
         }
@@ -55,21 +68,22 @@ function addNotification(notification) {
         if (typeof updateNotificationUI === 'function') {
             updateNotificationUI();
         }
-        console.log('📢 通知已添加并保存，当前总数:', window.notifications.length);
+        // 更新侧边栏角标
+        updateSidebarBadges();
     }
 }
 
-// ============================================================
-// 🔥 通知 UI 更新函数（独立实现，不依赖 dashboard）
-// ============================================================
+loadNotifications();
 
+// ============================================================
+// 🔥 通知 UI 更新
+// ============================================================
 function updateNotificationUI() {
     var badge = document.getElementById('notificationBadge');
     var countEl = document.getElementById('notificationCount');
     var listEl = document.getElementById('notificationList');
 
     if (!badge || !countEl || !listEl) {
-        // 如果 DOM 元素还没加载，稍后重试
         setTimeout(function() {
             if (document.getElementById('notificationBadge')) {
                 updateNotificationUI();
@@ -78,7 +92,6 @@ function updateNotificationUI() {
         return;
     }
 
-    // 确保使用最新的数据
     if (typeof window.notifications === 'undefined') {
         loadNotifications();
     }
@@ -139,13 +152,6 @@ function updateNotificationUI() {
     listEl.innerHTML = html;
 }
 
-// 加载已保存的通知
-loadNotifications();
-
-// ============================================================
-// 🔥 重写标记已读和清除功能
-// ============================================================
-
 window.markNotificationRead = function(id) {
     for (var i = 0; i < window.notifications.length; i++) {
         if (window.notifications[i].id === id) {
@@ -154,22 +160,174 @@ window.markNotificationRead = function(id) {
         }
     }
     saveNotifications();
-    if (typeof updateNotificationUI === 'function') {
-        updateNotificationUI();
-    }
+    updateNotificationUI();
+    updateSidebarBadges();
 };
 
 window.clearAllNotifications = function() {
     window.notifications = [];
     saveNotifications();
-    if (typeof updateNotificationUI === 'function') {
-        updateNotificationUI();
-    }
+    updateNotificationUI();
+    updateSidebarBadges();
     if (typeof showToast === 'function') {
         showToast('All notifications cleared', 'success');
     }
 };
 
+// ============================================================
+// 🔥 侧边栏渲染（带通知角标）
+// ============================================================
+function renderSidebarNav() {
+  const navList = document.querySelector('.nav-list');
+  if (!navList) return;
+
+  // 如果已经有内容，先清空
+  navList.innerHTML = '';
+
+  const navItems = [
+    { id: 'dashboard', icon: 'fa-chart-pie', label: 'Dashboard' },
+    { id: 'users', icon: 'fa-users', label: 'Users Management' },
+    { id: 'kyc', icon: 'fa-id-card', label: 'KYC Verification' },
+    { id: 'emailverify', icon: 'fa-envelope', label: 'Email Verification' },
+    { id: 'trial', icon: 'fa-gift', label: 'Trial Bonus' },
+    { id: 'withdrawals', icon: 'fa-money-bill-wave', label: 'Withdrawal' },
+    { id: 'vip', icon: 'fa-crown', label: 'VIP Setting' },
+    { id: 'setorders', icon: 'fa-cog', label: 'Orders Trigger' },
+    { id: 'orders', icon: 'fa-clock', label: 'Orders History' },
+    { id: 'orderpool', icon: 'fa-hotel', label: 'Orders Pool' },
+    { id: 'animated', icon: 'fa-play-circle', label: 'Animated' },
+    { id: 'signin', icon: 'fa-calendar-check', label: 'Check In Bonus' },
+    { id: 'content', icon: 'fa-file-alt', label: 'Content Management' }
+  ];
+
+  navItems.forEach(item => {
+    const div = document.createElement('div');
+    div.className = 'nav-item';
+    div.setAttribute('data-page', item.id);
+
+    const isActive = currentActivePage === item.id;
+    // 有通知且未读
+    const hasUnread = notificationCounts[item.id] > 0 && !readNotifications[item.id];
+
+    if (isActive) {
+      div.classList.add('active');
+    }
+    if (hasUnread) {
+      div.classList.add('has-notification');
+    }
+
+    div.innerHTML = `
+      <i class="fas ${item.icon}"></i>
+      <span class="nav-label">${item.label}</span>
+      ${hasUnread ? `<span class="badge-notify" id="badge-${item.id}">${notificationCounts[item.id]}</span>` : ''}
+    `;
+
+    div.addEventListener('click', function(e) {
+      e.stopPropagation();
+
+      const pageId = this.dataset.page;
+
+      // === 1. 标记通知为已读（角标消失） ===
+      const badgeId = Object.keys(notificationCounts).find(key => key === pageId);
+      if (badgeId && notificationCounts[badgeId] > 0 && !readNotifications[badgeId]) {
+        readNotifications[badgeId] = true;
+        const badge = this.querySelector('.badge-notify');
+        if (badge) badge.remove();
+        // 移除 has-notification 类
+        this.classList.remove('has-notification');
+        console.log(`✅ 通知已读: ${item.label}`);
+      }
+
+      // === 2. 切换页面激活状态 ===
+      document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+      this.classList.add('active');
+      currentActivePage = pageId;
+
+      // === 3. 加载对应页面 ===
+      if (pageId) showPage(pageId);
+    });
+
+    navList.appendChild(div);
+  });
+}
+
+// ============================================================
+// 🔥 更新侧边栏角标（外部调用）
+// ============================================================
+function updateSidebarBadges() {
+  // 重新渲染侧边栏
+  renderSidebarNav();
+
+  // 重新激活当前页面
+  document.querySelectorAll('.nav-item').forEach(el => {
+    if (el.dataset.page === currentActivePage) {
+      el.classList.add('active');
+    }
+  });
+}
+
+// ============================================================
+// 🔥 更新通知数量（有新消息时调用）
+// ============================================================
+function updateNotificationCount(moduleId, count) {
+  notificationCounts[moduleId] = count;
+  readNotifications[moduleId] = false; // 新通知到来，重置已读状态
+
+  updateSidebarBadges();
+
+  if (count > 0) {
+    const moduleNames = {
+      dashboard: 'Dashboard',
+      kyc: 'KYC Verification',
+      email: 'Email Verification',
+      withdrawal: 'Withdrawal'
+    };
+    if (typeof showAmberNotification === 'function') {
+      showAmberNotification(
+        `📬 新通知 (${moduleNames[moduleId] || moduleId})`,
+        `您有 ${count} 条待处理通知`,
+        'info'
+      );
+    }
+  }
+}
+
+// ============================================================
+// 🔥 加载各模块通知数量
+// ============================================================
+async function loadNotificationCounts() {
+  try {
+    // KYC 待处理
+    const kycRes = await sb.from('kyc_verifications').select('id', { count: 'exact', head: true }).eq('status', 'pending');
+    const kycCount = kycRes.count || 0;
+
+    // Withdrawal 待处理
+    const withdrawalRes = await sb.from('withdrawals').select('id', { count: 'exact', head: true }).eq('status', 'pending');
+    const withdrawalCount = withdrawalRes.count || 0;
+
+    // Email 待处理
+    const emailRes = await sb.from('email_verification_requests').select('id', { count: 'exact', head: true }).eq('is_verified', false).is('code', null);
+    const emailCount = emailRes.count || 0;
+
+    // Dashboard = 所有通知总和
+    const dashboardCount = kycCount + withdrawalCount + emailCount;
+
+    notificationCounts.dashboard = dashboardCount;
+    notificationCounts.kyc = kycCount;
+    notificationCounts.email = emailCount;
+    notificationCounts.withdrawal = withdrawalCount;
+
+    updateSidebarBadges();
+
+    console.log('📊 通知数量已更新:', notificationCounts);
+  } catch (e) {
+    console.error('加载通知数量失败:', e);
+  }
+}
+
+// ============================================================
+// 工具函数
+// ============================================================
 let currentDays = 1;
 
 function toggleSidebar() { document.getElementById('sidebar')?.classList.toggle('open'); }
@@ -404,7 +562,7 @@ window.alert = function(message) {
     showToast(message, 'info');
 };
 
-// ========== 琥珀金风格通知（增强版） ==========
+// ========== 琥珀金风格通知 ==========
 window.showAmberNotification = function(title, message, type) {
     console.log('🔔 显示琥珀通知:', { title, message, type });
     
@@ -518,9 +676,8 @@ if (document.readyState === 'loading') {
 }
 
 // ============================================================
-// 🔥 通知处理函数（修复版 - 无重复代码）
+// 🔥 通知处理函数
 // ============================================================
-
 function handleNewKyc(data) {
     console.log('📋 处理新KYC申请:', data);
     
@@ -528,11 +685,9 @@ function handleNewKyc(data) {
         window.refreshDashboardData(currentDays);
     }
     if (window.loadKycPage && document.getElementById('page_kyc')?.classList.contains('active')) {
-        console.log('刷新KYC页面');
         window.loadKycPage();
     }
     
-    // 🔥 使用 addNotification 持久化（只调用一次）
     const notification = {
         id: 'kyc_' + data.id + '_' + Date.now(),
         type: 'kyc',
@@ -543,6 +698,9 @@ function handleNewKyc(data) {
         data: data
     };
     addNotification(notification);
+    
+    // 更新角标
+    loadNotificationCounts();
     
     if (window.showAmberNotification) {
         window.showAmberNotification(
@@ -560,11 +718,9 @@ function handleNewWithdrawal(data) {
         window.refreshDashboardData(currentDays);
     }
     if (window.loadWithdrawalsPage && document.getElementById('page_withdrawals')?.classList.contains('active')) {
-        console.log('刷新提现页面');
         window.loadWithdrawalsPage();
     }
     
-    // 🔥 使用 addNotification 持久化（只调用一次）
     const notification = {
         id: 'withdrawal_' + data.id + '_' + Date.now(),
         type: 'withdrawal',
@@ -575,6 +731,8 @@ function handleNewWithdrawal(data) {
         data: data
     };
     addNotification(notification);
+    
+    loadNotificationCounts();
     
     if (window.showAmberNotification) {
         window.showAmberNotification(
@@ -593,13 +751,11 @@ function handleNewEmailRequest(data) {
     }
     const emailPage = document.getElementById('page_emailverify');
     if (emailPage && emailPage.classList.contains('active')) {
-        console.log('当前在Email页面，自动刷新列表');
         if (window.loadEmailVerifyPage) {
             window.loadEmailVerifyPage();
         }
     }
     
-    // 🔥 使用 addNotification 持久化（只调用一次）
     const notification = {
         id: 'email_' + data.id + '_' + Date.now(),
         type: 'email',
@@ -611,6 +767,8 @@ function handleNewEmailRequest(data) {
     };
     addNotification(notification);
     
+    loadNotificationCounts();
+    
     if (window.showAmberNotification) {
         window.showAmberNotification(
             '📧 新邮箱验证请求',
@@ -621,9 +779,8 @@ function handleNewEmailRequest(data) {
 }
 
 // ============================================================
-// 🔥 全局实时订阅 + 轮询双重保障
+// 🔥 全局实时订阅
 // ============================================================
-
 let realtimeChannel = null;
 let pollingInterval = null;
 let lastNotified = {
@@ -635,11 +792,7 @@ let realtimeConnected = false;
 
 function initGlobalRealtime() {
     console.log('🚀 正在启动全局实时订阅...');
-    
-    // 先启动轮询作为备选
     startPollingFallback();
-    
-    // 然后尝试 Realtime
     tryConnectRealtime();
 }
 
@@ -688,7 +841,6 @@ function tryConnectRealtime() {
                 if (status === 'SUBSCRIBED') {
                     realtimeConnected = true;
                     console.log('✅ 全局实时订阅已成功连接！');
-                    console.log('✅ 正在监听: kyc_verifications, withdrawals, email_verification_requests');
                 } else if (status === 'CHANNEL_ERROR') {
                     realtimeConnected = false;
                     console.warn('⚠️ Realtime 连接失败，轮询方案将继续工作');
@@ -700,23 +852,15 @@ function tryConnectRealtime() {
     }
 }
 
-// ============================================================
-// 🔥 备选轮询方案（始终运行，双重保障）
-// ============================================================
-
 function startPollingFallback() {
     console.log('🔄 轮询备选方案已启动 (每10秒检查一次)');
     if (pollingInterval) clearInterval(pollingInterval);
-    
-    // 立即执行一次
     pollForUpdates();
-    
     pollingInterval = setInterval(pollForUpdates, 10000);
 }
 
 async function pollForUpdates() {
     try {
-        // 1. 检查 KYC
         const { data: kycs } = await sb
             .from('kyc_verifications')
             .select('*')
@@ -730,7 +874,6 @@ async function pollForUpdates() {
             handleNewKyc(kycs[0]);
         }
         
-        // 2. 检查提现
         const { data: withdrawals } = await sb
             .from('withdrawals')
             .select('*')
@@ -744,7 +887,6 @@ async function pollForUpdates() {
             handleNewWithdrawal(withdrawals[0]);
         }
         
-        // 3. 检查邮箱
         const { data: emails } = await sb
             .from('email_verification_requests')
             .select('*')
@@ -759,29 +901,35 @@ async function pollForUpdates() {
             handleNewEmailRequest(emails[0]);
         }
         
+        // 定期更新角标
+        loadNotificationCounts();
+        
     } catch (e) {
         // 静默失败
     }
 }
 
-// 启动
-setTimeout(() => {
-    initGlobalRealtime();
-}, 2000);
-
-// ========== 页面切换函数 ==========
-const loadedPages = {};
-
+// ============================================================
+// 🔥 页面切换函数
+// ============================================================
 function showPage(pageId) {
     console.log('切换页面:', pageId);
+    
+    // 更新当前页面
+    currentActivePage = pageId;
     
     document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
     const targetPage = document.getElementById('page_' + pageId);
     if (targetPage) targetPage.classList.add('active');
     
+    // 更新侧边栏激活状态
     document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
     const activeNav = document.querySelector(`.nav-item[data-page="${pageId}"]`);
-    if (activeNav) activeNav.classList.add('active');
+    if (activeNav) {
+        activeNav.classList.add('active');
+        // 如果有未读通知，has-notification 保留
+        // 如果已读，has-notification 已经移除
+    }
     
     if (pageId === 'dashboard' && window.loadDashboardPage) {
         console.log('加载仪表板');
@@ -817,21 +965,13 @@ function showPage(pageId) {
     }
 }
 
-if (localStorage.getItem('admin_logged_in') !== 'true') {
-    window.location.href = 'admin-login.html';
-}
-
-console.log('✅ admin-common.js 加载完成');
-
 // ============================================================
-//  金色粒子网络 · 侧边栏背景动画
+// 🔥 金色粒子网络 · 侧边栏背景动画
 // ============================================================
-
 function initParticleNetwork() {
     const sidebar = document.querySelector('.sidebar');
     if (!sidebar) return;
 
-    // 1. 创建粒子 canvas 容器 (z-index: 0 - 最下层)
     let container = sidebar.querySelector('.sidebar-canvas');
     if (!container) {
         container = document.createElement('div');
@@ -849,10 +989,8 @@ function initParticleNetwork() {
         sidebar.insertBefore(container, sidebar.firstChild);
     }
 
-    // ★ 清空容器，重新构建 (避免重复)
     container.innerHTML = '';
 
-    // 2. 创建毛玻璃覆盖层 (在 canvas 内部，覆盖粒子)
     const glassLayer = document.createElement('div');
     glassLayer.className = 'sidebar-glass';
     glassLayer.style.cssText = `
@@ -870,7 +1008,6 @@ function initParticleNetwork() {
     `;
     container.appendChild(glassLayer);
 
-    // 3. 创建 canvas (在毛玻璃下方)
     const canvas = document.createElement('canvas');
     canvas.style.cssText = `
         position: absolute;
@@ -1057,16 +1194,27 @@ function initParticleNetwork() {
     console.log('✨ 金色粒子网络已启动 (侧边栏背景)');
 }
 
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initParticleNetwork);
-} else {
-    setTimeout(initParticleNetwork, 500);
-}
-
 // ============================================================
-// 🔥 页面加载后刷新通知 UI
+// 🔥 初始化
 // ============================================================
 document.addEventListener('DOMContentLoaded', function() {
+    // 渲染侧边栏
+    renderSidebarNav();
+    
+    // 激活当前页面
+    document.querySelectorAll('.nav-item').forEach(el => {
+        if (el.dataset.page === currentActivePage) {
+            el.classList.add('active');
+        }
+    });
+    
+    // 加载通知数量
+    loadNotificationCounts();
+    
+    // 启动粒子网络
+    setTimeout(initParticleNetwork, 500);
+    
+    // 刷新通知UI
     setTimeout(function() {
         loadNotifications();
         if (typeof updateNotificationUI === 'function') {
@@ -1075,3 +1223,15 @@ document.addEventListener('DOMContentLoaded', function() {
         console.log('🔔 通知 UI 已刷新，当前:', window.notifications.length, '条');
     }, 500);
 });
+
+// 启动实时订阅
+setTimeout(() => {
+    initGlobalRealtime();
+}, 2000);
+
+// 检查登录状态
+if (localStorage.getItem('admin_logged_in') !== 'true') {
+    window.location.href = 'admin-login.html';
+}
+
+console.log('✅ admin-common.js 加载完成（含通知角标功能）');
