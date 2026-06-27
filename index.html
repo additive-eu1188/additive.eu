@@ -108,42 +108,57 @@
             padding: 24px 0;
         }
         .header-inner {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 20px;
-        }
-        .logo {
-            font-size: 28px;
-            font-weight: 800;
-            color: var(--text-white);
-            text-decoration: none;
-        }
-        .logo span { color: var(--accent); }
-        .nav-links {
-            display: flex;
-            gap: 32px;
-            align-items: center;
-            flex-wrap: wrap;
-        }
-        .nav-links a {
-            text-decoration: none;
-            font-size: 15px;
-            font-weight: 500;
-            color: var(--text-white);
-            transition: 0.2s;
-        }
-        .nav-links a:hover { color: var(--accent); }
-        .nav-links .btn-outline {
-            border-color: rgba(255,255,255,0.3);
-            color: var(--text-white);
-        }
-        .nav-links .btn-outline:hover {
-            background: var(--text-white);
-            color: var(--primary);
-            border-color: var(--text-white);
-        }
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 20px;
+}
+
+.logo {
+    font-size: 28px;
+    font-weight: 800;
+    color: var(--text-white);
+    text-decoration: none;
+}
+.logo span { color: var(--accent); }
+
+.nav-links {
+    display: flex;
+    gap: 16px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.nav-links a {
+    text-decoration: none;
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--text-white);
+    transition: 0.2s;
+}
+.nav-links a:hover { color: var(--accent); }
+
+.nav-links .btn-outline {
+    border-color: rgba(255,255,255,0.3);
+    color: var(--text-white);
+    padding: 10px 28px;
+    border-radius: 40px;
+    border: 1px solid rgba(255,255,255,0.3);
+    background: transparent;
+    font-weight: 600;
+    cursor: pointer;
+    transition: 0.2s;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+.nav-links .btn-outline:hover {
+    background: var(--text-white);
+    color: var(--primary);
+    border-color: var(--text-white);
+}
 
         /* ========== HERO 视频区域 ========== */
         .hero-section {
@@ -163,6 +178,7 @@
             height: 100%;
             object-fit: cover;
             z-index: 0;
+filter: brightness(0.2);
         }
         /* 移除蓝色遮罩层 - 原问题1修复 */
         .hero-content {
@@ -290,32 +306,136 @@
         }
 
         /* ========== 数据看板 ========== */
-        .stats-section {
-            padding: 80px 0;
-            background: var(--primary);
-            border-top: 1px solid rgba(255,255,255,0.05);
-            border-bottom: 1px solid rgba(255,255,255,0.05);
-        }
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 32px;
-            text-align: center;
-        }
-        .stat-number {
-            font-size: 44px;
-            font-weight: 800;
-            color: var(--accent);
-            margin-bottom: 8px;
-        }
-        .stat-label {
-            font-size: 15px;
-            color: var(--text-light);
-        }
-        @media (max-width: 768px) {
-            .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 24px; }
-            .stat-number { font-size: 32px; }
-        }
+.stats-section {
+    padding: 80px 0;
+    background: var(--primary);
+    border-top: 1px solid rgba(255,255,255,0.05);
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+    position: relative;
+    overflow: hidden;
+}
+
+/* 标题 */
+.stats-header {
+    text-align: center;
+    margin-bottom: 48px;
+}
+
+.stats-header h2 {
+    font-size: 48px;
+    font-weight: 700;
+    line-height: 1.2;
+    color: #ffffff;
+    letter-spacing: -0.02em;
+}
+
+.stats-header h2 .gold-text {
+    color: #C2A083;
+}
+
+/* 统计网格 - 3列 */
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 32px 40px;
+    text-align: center;
+}
+
+.stat-card {
+    padding: 12px 8px;
+    transition: all 0.3s ease;
+}
+
+.stat-card:hover {
+    transform: translateY(-4px);
+}
+
+.stat-card .stat-subtitle {
+    font-size: 13px;
+    font-weight: 500;
+    color: #C2A083;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+}
+
+.stat-card .stat-number {
+    font-size: 44px;
+    font-weight: 800;
+    color: #ffffff;
+    letter-spacing: -1px;
+    line-height: 1.1;
+    margin-bottom: 6px;
+}
+
+.stat-card .stat-number .highlight {
+    color: #C2A083;
+}
+
+.stat-card .stat-label {
+    font-size: 16px;
+    font-weight: 500;
+    color: rgba(255, 255, 255, 0.85);
+    letter-spacing: 0.3px;
+}
+
+/* ========== 响应式 ========== */
+@media (max-width: 992px) {
+    .stats-header h2 {
+        font-size: 36px;
+    }
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 24px 30px;
+    }
+    .stat-card .stat-number {
+        font-size: 36px;
+    }
+    .stat-card .stat-label {
+        font-size: 14px;
+    }
+}
+
+@media (max-width: 600px) {
+    .stats-section {
+        padding: 50px 0;
+    }
+    .stats-header h2 {
+        font-size: 28px;
+    }
+    .stats-grid {
+        grid-template-columns: 1fr 1fr;
+        gap: 16px 12px;
+    }
+    .stat-card {
+        padding: 8px 4px;
+    }
+    .stat-card .stat-subtitle {
+        font-size: 10px;
+        letter-spacing: 1px;
+    }
+    .stat-card .stat-number {
+        font-size: 26px;
+    }
+    .stat-card .stat-label {
+        font-size: 12px;
+    }
+}
+
+@media (max-width: 400px) {
+    .stats-grid {
+        gap: 12px 8px;
+    }
+    .stat-card .stat-number {
+        font-size: 22px;
+    }
+    .stat-card .stat-label {
+        font-size: 10px;
+    }
+    .stat-card .stat-subtitle {
+        font-size: 9px;
+    }
+}
 
         /* ========== 双栏内容区 ========== */
         .feature-section {
@@ -415,15 +535,11 @@
     <div class="container">
         <div class="header-inner">
             <a href="#" class="logo">
-    <img src="https://qgmbzdfnwsdosdqphlxk.supabase.co/storage/v1/object/public/logos/additivelogo1.png" 
-         alt="ADDITIVE Logo" 
-         style="height: 45px; width: auto; display: block;">
-</a>
+                <img src="https://qgmbzdfnwsdosdqphlxk.supabase.co/storage/v1/object/public/logos/additivelogo1.png" 
+                     alt="ADDITIVE Logo" 
+                     style="height: 45px; width: auto; display: block;">
+            </a>
             <div class="nav-links">
-                <a href="#">Leistungen</a>
-                <a href="#">Referenzen</a>
-                <a href="#">Technologie</a>
-                <a href="#">Ressourcen</a>
                 <a href="register.html" class="btn-outline">Anmelden</a>
                 <a href="signin.html" class="btn-outline">Einloggen</a>
             </div>
@@ -454,14 +570,46 @@
     </div>
 </section>
 
-<!-- 数据看板 -->
+<!-- ========== 数据看板 ========== -->
 <section class="stats-section">
     <div class="container">
+        <!-- 标题 -->
+        <div class="stats-header">
+            <h2><span class="gold-text">Our Numbers</span><br>Tell a Clear Story.</h2>
+        </div>
+
+        <!-- 统计网格 -->
         <div class="stats-grid">
-            <div class="stat-card"><div class="stat-number">500+</div><div class="stat-label">Kunden in Europa</div></div>
-            <div class="stat-card"><div class="stat-number">+21%</div><div class="stat-label">Mehr Umsatz</div></div>
-            <div class="stat-card"><div class="stat-number">€30 Mio.</div><div class="stat-label">Verwaltetes Budget</div></div>
-            <div class="stat-card"><div class="stat-number">960%</div><div class="stat-label">ROI im Durchschnitt</div></div>
+            <div class="stat-card">
+                <div class="stat-subtitle">More Than</div>
+                <div class="stat-number">+500</div>
+                <div class="stat-label">Clients In Europe</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-subtitle">Within one year</div>
+                <div class="stat-number">+21%</div>
+                <div class="stat-label">More Revenue For Hotels</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-subtitle">Around</div>
+                <div class="stat-number">€30 <span class="highlight">Million</span></div>
+                <div class="stat-label">Managed Advertising Budget</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-subtitle">Average</div>
+                <div class="stat-number">960%</div>
+                <div class="stat-label">ROI In Online Marketing</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-subtitle">About</div>
+                <div class="stat-number">€500 <span class="highlight">Million</span></div>
+                <div class="stat-label">Generated Added Value</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-subtitle">Recommended By</div>
+                <div class="stat-number">+50</div>
+                <div class="stat-label">Partners &amp; Agencies</div>
+            </div>
         </div>
     </div>
 </section>

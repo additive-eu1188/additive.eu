@@ -1,3 +1,17 @@
+// ============================================================
+// 统一设置 Favicon (所有页面共享)
+// ============================================================
+(function setFavicon() {
+    if (!document.querySelector('link[rel="icon"]')) {
+        const link = document.createElement('link');
+        link.rel = 'icon';
+        link.type = 'image/x-icon';
+        link.href = '/favicon.ico';
+        document.head.appendChild(link);
+        console.log('✅ Favicon set');
+    }
+})();
+
 // i18n.js - 完整版（覆盖所有页面 + 所有弹窗 + 所有提示）
 const TRANSLATIONS = {
     en: {
