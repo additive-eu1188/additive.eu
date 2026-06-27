@@ -606,7 +606,7 @@ async function refreshDashboard(days, force) {
 }
 
 // ============================================================
-// initTrendChart - 完全静态，无动画
+// initTrendChart - 细线条 + 小圆点（极简样式）
 // ============================================================
 function initTrendChart() {
     var dom = document.getElementById('trendChart');
@@ -619,51 +619,54 @@ function initTrendChart() {
         trendChart = null;
     }
     
-    console.log('📊 趋势图已加载（完全静态，无动画）');
+    console.log('📊 趋势图已加载（细线条 + 小圆点）');
     
     trendChart = echarts.init(dom);
     trendChart.setOption({
         tooltip: { 
             trigger: 'axis', 
-            axisPointer: { type: 'shadow' }, 
-            backgroundColor: 'rgba(14,18,30,0.95)', 
+            axisPointer: { type: 'line' }, 
+            backgroundColor: 'rgba(14,18,30,0.92)', 
             borderColor: 'rgba(180,180,200,0.06)', 
             borderWidth: 1, 
-            textStyle: { color: '#d8dff0' } 
+            textStyle: { color: '#d8dff0', fontSize: 11 } 
         },
-        legend: { data: ['Deposit', 'Withdrawal'], textStyle: { color: '#8892a8' }, right: 10, top: 0 },
-        grid: { top: 50, left: 60, right: 40, bottom: 30, containLabel: true },
+        grid: { 
+            top: 16, 
+            left: 38, 
+            right: 12, 
+            bottom: 18, 
+            containLabel: false 
+        },
         xAxis: { 
             type: 'category', 
             data: ['周一', '周二', '周三', '周四', '周五', '周六', '周日'], 
-            axisLabel: { color: '#8892a8' }, 
-            axisLine: { lineStyle: { color: 'rgba(180,180,200,0.04)' } }, 
+            axisLabel: { color: 'rgba(255,255,255,0.15)', fontSize: 9 }, 
+            axisLine: { lineStyle: { color: 'rgba(255,255,255,0.04)' } }, 
             axisTick: { show: false } 
         },
         yAxis: { 
             type: 'value', 
-            name: 'Amount (€)', 
-            nameTextStyle: { color: '#8892a8' }, 
-            axisLabel: { color: '#8892a8' }, 
-            splitLine: { lineStyle: { color: 'rgba(180,180,200,0.03)', type: 'dashed' } } 
+            name: '', 
+            axisLabel: { color: 'rgba(255,255,255,0.10)', fontSize: 8 }, 
+            axisLine: { show: false }, 
+            axisTick: { show: false }, 
+            splitLine: { lineStyle: { color: 'rgba(255,255,255,0.03)', type: 'dashed' } } 
         },
+        legend: { show: false },
         series: [
             { 
                 name: 'Deposit', 
                 type: 'line', 
                 data: [0, 0, 0, 0, 0, 0, 0], 
-                smooth: true, 
+                smooth: false,
                 symbol: 'circle', 
-                symbolSize: 5,
+                symbolSize: 3,
                 lineStyle: { 
-                    color: '#ccb89f', 
-                    width: 2.5,
-                    shadowBlur: 0
+                    color: '#4ade80', 
+                    width: 1.5
                 }, 
-                areaStyle: { 
-                    opacity: 0.12, 
-                    color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [{ offset: 0, color: '#ccb89f' }, { offset: 1, color: 'transparent' }]) 
-                },
+                itemStyle: { color: '#4ade80' },
                 animation: false,
                 animationDuration: 0
             },
@@ -671,25 +674,21 @@ function initTrendChart() {
                 name: 'Withdrawal', 
                 type: 'line', 
                 data: [0, 0, 0, 0, 0, 0, 0], 
-                smooth: true, 
+                smooth: false,
                 symbol: 'circle', 
-                symbolSize: 5,
+                symbolSize: 3,
                 lineStyle: { 
                     color: '#e88080', 
-                    width: 2.5,
-                    shadowBlur: 0
+                    width: 1.5
                 }, 
-                areaStyle: { 
-                    opacity: 0.12, 
-                    color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [{ offset: 0, color: '#e88080' }, { offset: 1, color: 'transparent' }]) 
-                },
+                itemStyle: { color: '#e88080' },
                 animation: false,
                 animationDuration: 0
             }
         ]
     });
     
-    console.log('趋势线图初始化完成（完全静态，无脉冲动画）');
+    console.log('趋势线图初始化完成（细线条 + 小圆点）');
     
     // 清除旧的脉冲动画
     if (pulseInterval) {
@@ -837,15 +836,15 @@ function loadDashboardPage(days) {
         <!-- 图表区域 -->
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 28px;">
             <!-- 趋势图 -->
-            <div style="background: linear-gradient(145deg, rgba(20,24,40,0.85), rgba(10,12,24,0.6)); backdrop-filter: blur(8px); border-radius: 20px; padding: 20px; border: 1px solid rgba(180,180,200,0.06); box-shadow: 0 4px 20px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.04); position: relative; overflow: hidden;">
-                <div style="position: absolute; top: -15%; right: -5%; width: 75%; height: 75%; background: radial-gradient(ellipse at 70% 20%, rgba(255,255,255,0.06), transparent 70%); pointer-events: none; border-radius: 50%;"></div>
-                <div style="position: absolute; top: 0; left: 0; right: 0; height: 1px; background: linear-gradient(90deg, transparent, rgba(180,180,200,0.08), transparent);"></div>
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; position: relative; z-index: 1;">
-                    <div style="font-size: 16px; font-weight: 600; color: #d8dff0;">D&W Trend</div>
-                    <div style="display: flex; gap: 16px; font-size: 12px; color: #8892a8;"><span><span style="display: inline-block; width: 12px; height: 12px; background: #ccb89f; border-radius: 2px; margin-right: 6px;"></span>Deposits</span><span><span style="display: inline-block; width: 12px; height: 12px; background: #e88080; border-radius: 2px; margin-right: 6px;"></span>Withdrawals</span></div>
-                </div>
-                <div id="trendChart" style="height: 320px; width: 100%; position: relative; z-index: 1;"></div>
-            </div>
+<div style="background: linear-gradient(145deg, rgba(20,24,40,0.85), rgba(10,12,24,0.6)); backdrop-filter: blur(8px); border-radius: 20px; padding: 20px; border: 1px solid rgba(180,180,200,0.06); box-shadow: 0 4px 20px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.04); position: relative; overflow: hidden;">
+    <div style="position: absolute; top: -15%; right: -5%; width: 75%; height: 75%; background: radial-gradient(ellipse at 70% 20%, rgba(255,255,255,0.06), transparent 70%); pointer-events: none; border-radius: 50%;"></div>
+    <div style="position: absolute; top: 0; left: 0; right: 0; height: 1px; background: linear-gradient(90deg, transparent, rgba(180,180,200,0.08), transparent);"></div>
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; position: relative; z-index: 1;">
+        <div style="font-size: 16px; font-weight: 600; color: #d8dff0;">D&W Trend</div>
+        <!-- ✅ 图例已删除 -->
+    </div>
+    <div id="trendChart" style="height: 320px; width: 100%; position: relative; z-index: 1;"></div>
+</div>
             
             <!-- 转化率卡片 -->
             <div style="background: linear-gradient(145deg, rgba(20,24,40,0.85), rgba(10,12,24,0.6)); backdrop-filter: blur(8px); border-radius: 20px; padding: 20px; border: 1px solid rgba(180,180,200,0.06); box-shadow: 0 4px 20px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.04); position: relative; overflow: hidden;">
