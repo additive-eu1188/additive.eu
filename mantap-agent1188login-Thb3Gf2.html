@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agent Login - ADDITIVE</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.2.0/crypto-js.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700;14..32,800&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: radial-gradient(circle at 10% 20%, #0a0f2a, #050814);
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow-x: hidden;
+        }
+        .waves-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            pointer-events: none;
+        }
+        .login-container {
+            width: 100%;
+            padding: 20px;
+            position: relative;
+            z-index: 1;
+        }
+        .login-card {
+            max-width: 420px;
+            width: 100%;
+            margin: 0 auto;
+            padding: 48px 40px;
+            background: rgba(8, 10, 26, 0.55);
+            backdrop-filter: blur(32px);
+            -webkit-backdrop-filter: blur(32px);
+            border: 1px solid rgba(204, 178, 153, 0.1);
+            border-radius: 24px;
+            box-shadow: 0 30px 80px rgba(0, 0, 0, 0.5), 0 0 40px rgba(204, 178, 153, 0.03);
+            position: relative;
+        }
+        .login-card::before {
+            content: '';
+            position: absolute;
+            inset: -1px;
+            border-radius: 24px;
+            padding: 1px;
+            background: linear-gradient(135deg, rgba(204, 178, 153, 0.15), transparent 50%, rgba(204, 178, 153, 0.05));
+            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor;
+            mask-composite: exclude;
+            pointer-events: none;
+        }
+        .login-card .logo {
+            text-align: center;
+            margin-bottom: 4px;
+        }
+        .login-card .logo img {
+            height: 42px;
+            width: auto;
+        }
+        .login-card .subtitle {
+            text-align: center;
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 13px;
+            letter-spacing: 1px;
+            margin-bottom: 32px;
+            font-weight: 400;
+        }
+        .login-card .form-group { margin-bottom: 18px; }
+        .login-card .form-group label {
+            display: block;
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.35);
+            margin-bottom: 6px;
+            letter-spacing: 0.8px;
+            text-transform: uppercase;
+            font-weight: 500;
+        }
+        .login-card .form-group input {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 12px;
+            padding: 13px 16px;
+            color: #fff;
+            font-size: 14px;
+            outline: none;
+            transition: 0.3s;
+        }
+        .login-card .form-group input:focus {
+            border-color: rgba(204, 178, 153, 0.25);
+            background: rgba(255, 255, 255, 0.06);
+            box-shadow: 0 0 20px rgba(204, 178, 153, 0.03);
+        }
+        .login-card .form-group input::placeholder {
+            color: rgba(255, 255, 255, 0.15);
+        }
+        .login-card .login-btn {
+            width: 100%;
+            border: none;
+            padding: 14px;
+            border-radius: 40px;
+            font-weight: 600;
+            font-size: 15px;
+            cursor: pointer;
+            transition: 0.3s;
+            margin-top: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            background: linear-gradient(135deg, rgba(204, 178, 153, 0.15), rgba(204, 178, 153, 0.05));
+            color: #C9B095;
+            border: 1px solid rgba(204, 178, 153, 0.12);
+        }
+        .login-card .login-btn:hover {
+            background: linear-gradient(135deg, rgba(204, 178, 153, 0.25), rgba(204, 178, 153, 0.1));
+            transform: scale(1.01);
+            box-shadow: 0 0 30px rgba(204, 178, 153, 0.05);
+        }
+        .login-card .login-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .login-card .register-link {
+            text-align: center;
+            margin-top: 22px;
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.25);
+        }
+        .login-card .register-link a {
+            color: #C9B095;
+            text-decoration: none;
+            transition: 0.2s;
+        }
+        .login-card .register-link a:hover {
+            color: #d4c0a8;
+        }
+        .error-message { text-align: center; margin-top: 18px; font-size: 13px; min-height: 40px; }
+        .success-message { text-align: center; margin-top: 18px; font-size: 13px; color: #4ade80; }
+
+        @media (max-width: 480px) {
+            .login-card { padding: 32px 24px; }
+            .login-card .logo img { height: 34px; }
+            .login-card .subtitle { font-size: 12px; }
+        }
+    </style>
+</head>
+<body>
+    <canvas id="wavesBg" class="waves-bg"></canvas>
+
+    <div class="login-container">
+        <div class="login-card">
+            <div class="logo">
+                <img src="https://qgmbzdfnwsdosdqphlxk.supabase.co/storage/v1/object/public/logos/additivelogo1.png" alt="ADDITIVE">
+            </div>
+            <div class="subtitle">Agent Access · Measurable, precise & specialized</div>
+
+            <div class="form-group">
+                <label><i class="fas fa-user" style="margin-right: 6px;"></i> Username</label>
+                <input type="text" id="loginUsername" placeholder="Enter your username">
+            </div>
+            <div class="form-group">
+                <label><i class="fas fa-lock" style="margin-right: 6px;"></i> Password</label>
+                <input type="password" id="loginPassword" placeholder="Enter your password">
+            </div>
+
+            <button class="login-btn" id="loginBtn" onclick="handleLogin()">
+                <i class="fas fa-sign-in-alt"></i> Login
+            </button>
+
+            <div id="loginError" class="error-message"></div>
+
+            <div class="register-link">
+                <span>Don't have an account?</span> <a href="register.html">Register now <i class="fas fa-arrow-right"></i></a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ============================================================
+        // Supabase 配置
+        // ============================================================
+        const SUPABASE_URL = 'https://qgmbzdfnwsdosdqphlxk.supabase.co';
+        const SUPABASE_KEY = 'sb_publishable_zsJFjfNUO7NKp8ZH5KrXFQ_WZ8Q2Kym';
+        const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        // ============================================================
+        // 登录处理
+        // ============================================================
+        async function handleLogin() {
+            const username = document.getElementById('loginUsername').value.trim();
+            const password = document.getElementById('loginPassword').value;
+            const errorDiv = document.getElementById('loginError');
+            const loginBtn = document.getElementById('loginBtn');
+
+            if (!username || !password) {
+                errorDiv.innerHTML = '<span style="color: #ff8080;">Please enter username and password</span>';
+                return;
+            }
+
+            loginBtn.disabled = true;
+            loginBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Checking...';
+            errorDiv.innerHTML = '';
+
+            try {
+                // 查找用户
+                const { data: users, error } = await sb
+                    .from('users')
+                    .select('*')
+                    .eq('username', username)
+                    .eq('password', password);
+
+                if (error) {
+                    errorDiv.innerHTML = '<span style="color: #ff8080;">Login error: ' + error.message + '</span>';
+                    loginBtn.disabled = false;
+                    loginBtn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Login';
+                    return;
+                }
+
+                if (!users || users.length === 0) {
+                    errorDiv.innerHTML = '<span style="color: #ff8080;">Invalid username or password</span>';
+                    loginBtn.disabled = false;
+                    loginBtn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Login';
+                    return;
+                }
+
+                const user = users[0];
+
+                // ============================================================
+                // 🔥 关键：检查用户是否是 Agent (user_role === 'Agent')
+                // ============================================================
+                if (user.user_role !== 'Agent') {
+                    errorDiv.innerHTML = '<span style="color: #ff8080;">Access denied. Agent privileges required.</span>';
+                    loginBtn.disabled = false;
+                    loginBtn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Login';
+                    return;
+                }
+
+                // ============================================================
+                // 检查账号是否被封禁
+                // ============================================================
+                if (user.is_banned === true) {
+                    errorDiv.innerHTML = '<span style="color: #ff8080;">Your account has been temporarily suspended.</span>';
+                    loginBtn.disabled = false;
+                    loginBtn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Login';
+                    return;
+                }
+
+                // ============================================================
+                // 登录成功 - 保存 Agent 会话
+                // ============================================================
+                localStorage.setItem('agent_logged_in', 'true');
+                localStorage.setItem('agent_uid', user.uid);
+                localStorage.setItem('agent_username', user.username);
+                localStorage.setItem('agent_invite_code', user.invite_code || '');
+                localStorage.setItem('agent_login_time', Date.now().toString());
+
+                errorDiv.innerHTML = '<span style="color: #4ade80;">Login successful! Redirecting...</span>';
+
+                setTimeout(() => {
+                    window.location.href = 'mantap-agent1188dashboard-JnfhG3b.html';
+                }, 800);
+
+            } catch (err) {
+                console.error('Login error:', err);
+                errorDiv.innerHTML = '<span style="color: #ff8080;">Login error: ' + err.message + '</span>';
+                loginBtn.disabled = false;
+                loginBtn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Login';
+            }
+        }
+
+        // 回车键登录
+        document.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                handleLogin();
+            }
+        });
+
+        // ============================================================
+        // 检查是否已登录
+        // ============================================================
+        const agentLoggedIn = localStorage.getItem('agent_logged_in') === 'true';
+        const loginTime = parseInt(localStorage.getItem('agent_login_time') || '0');
+        const isExpired = (Date.now() - loginTime) > 24 * 60 * 60 * 1000;
+
+        if (agentLoggedIn && !isExpired) {
+            window.location.href = 'mantap-agent1188dashboard-JnfhG3b.html';
+        }
+
+        console.log('🔐 Agent Login page loaded');
+    </script>
+
+    <!-- ===== 波浪背景 ===== -->
+    <script>
+        (function() {
+            const canvas = document.getElementById('wavesBg');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            let width, height;
+            let time = 0;
+
+            function resize() {
+                width = window.innerWidth;
+                height = window.innerHeight;
+                canvas.width = width;
+                canvas.height = height;
+            }
+
+            function animate() {
+                time += 0.02;
+                ctx.fillStyle = '#0a0f2a';
+                ctx.fillRect(0, 0, width, height);
+
+                for (let i = 0; i < 3; i++) {
+                    ctx.beginPath();
+                    for (let x = 0; x <= width; x += 10) {
+                        const y = height * (0.4 + i * 0.2) + Math.sin(x * 0.01 + time * (1 + i * 0.5)) * 30 + Math.cos(x * 0.02 + time) * 15;
+                        if (x === 0) ctx.moveTo(x, y);
+                        else ctx.lineTo(x, y);
+                    }
+                    ctx.strokeStyle = `rgba(201, 176, 149, ${0.15 - i * 0.03})`;
+                    ctx.lineWidth = 2;
+                    ctx.stroke();
+                }
+
+                requestAnimationFrame(animate);
+            }
+
+            window.addEventListener('resize', resize);
+            resize();
+            animate();
+        })();
+    </script>
+</body>
+</html>
