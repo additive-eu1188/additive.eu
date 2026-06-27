@@ -161,14 +161,22 @@ async function loadConversionData(days, force) {
         
         var result = [];
         var allUsers = await sb.from('users').select('uid, created_at');
-        var allDeposits = await sb.from('deposits').select('uid, created_at, amount');
+        
+        // ============================================================
+        // 🔥 只统计真实充值（manual + deposit_bonus），排除 referral_bonus
+        // 并且只统计金额 >= 40 的用户才算已转化会员
+        // ============================================================
+        var allDeposits = await sb.from('deposits')
+            .select('uid, created_at, amount, type')
+            .in('type', ['manual', 'deposit_bonus']);
         
         var users = allUsers.data || [];
         var deposits = allDeposits.data || [];
         
         var depositUsers = {};
         deposits.forEach(function(d) {
-            if (d.uid && (d.amount || 0) > 0) {
+            // 只统计金额 >= 40 的真实充值用户
+            if (d.uid && (d.amount || 0) >= 40) {
                 depositUsers[d.uid] = true;
             }
         });
@@ -1100,11 +1108,23 @@ var NOTIFICATION_TYPES = {
     SYSTEM: 'system'
 };
 
-// 获取所有通知
+// 获取所有通知（合并到现有通知，不覆盖）
 async function fetchAllNotifications() {
     try {
         var newNotifications = [];
         var seenIds = new Set();
+
+        // 先加载已有的通知
+        if (typeof loadNotifications === 'function') {
+            loadNotifications();
+        }
+        
+        // 记录已存在的 ID
+        if (Array.isArray(window.notifications)) {
+            for (var existing of window.notifications) {
+                seenIds.add(existing.id);
+            }
+        }
 
         // 1. 获取待处理的提现通知
         var { data: withdrawals, error: wError } = await sb
@@ -1121,7 +1141,7 @@ async function fetchAllNotifications() {
                     seenIds.add(id);
                     newNotifications.push({
                         id: id,
-                        type: NOTIFICATION_TYPES.WITHDRAWAL,
+                        type: 'withdrawal',
                         title: '💳 Withdrawal Request',
                         message: (item.username || item.uid) + ' requested €' + (item.amount || 0).toFixed(2) + ' withdrawal',
                         timestamp: item.request_date || new Date().toISOString(),
@@ -1147,7 +1167,7 @@ async function fetchAllNotifications() {
                     seenIds.add(id);
                     newNotifications.push({
                         id: id,
-                        type: NOTIFICATION_TYPES.KYC,
+                        type: 'kyc',
                         title: '🪪 KYC Verification',
                         message: (item.username || item.uid) + ' submitted KYC verification',
                         timestamp: item.uploaded_at || new Date().toISOString(),
@@ -1174,7 +1194,7 @@ async function fetchAllNotifications() {
                     seenIds.add(id);
                     newNotifications.push({
                         id: id,
-                        type: NOTIFICATION_TYPES.EMAIL,
+                        type: 'email',
                         title: '📧 Email Verification',
                         message: (item.email || item.uid) + ' needs email verification code',
                         timestamp: item.requested_at || new Date().toISOString(),
@@ -1185,70 +1205,34 @@ async function fetchAllNotifications() {
             }
         }
 
-        // 4. 获取IP检测通知（只取最新的，去重 - 每个用户只显示一条）
-        var { data: ips, error: iError } = await sb
-            .from('ip_logs')
-            .select('id, uid, username, ip, location, created_at')
-            .order('created_at', { ascending: false })
-            .limit(5);
-
-        if (!iError && ips) {
-            var userIpMap = new Map();
-            for (var m = 0; m < ips.length; m++) {
-                var item = ips[m];
-                if (item.uid && !userIpMap.has(item.uid)) {
-                    userIpMap.set(item.uid, item);
+        // ============================================================
+        // 🔥 关键修改：合并新通知到现有通知，不要覆盖！
+        // ============================================================
+        if (newNotifications.length > 0) {
+            // 将新通知添加到已有通知前面
+            if (typeof addNotification === 'function') {
+                // 使用 admin-common.js 的 addNotification 逐个添加
+                for (var n = newNotifications.length - 1; n >= 0; n--) {
+                    addNotification(newNotifications[n]);
                 }
-            }
-            for (var [uid, item] of userIpMap) {
-                var id = 'ip_' + item.id;
-                if (!seenIds.has(id)) {
-                    seenIds.add(id);
-                    var location = item.location || 'Unknown location';
-                    newNotifications.push({
-                        id: id,
-                        type: NOTIFICATION_TYPES.IP,
-                        title: '🌐 IP Detection',
-                        message: (item.username || uid) + ' logged in from ' + location,
-                        timestamp: item.created_at || new Date().toISOString(),
-                        read: false,
-                        data: item,
-                        ip: item.ip
-                    });
+            } else {
+                // 备用方案：合并到数组
+                for (var n2 = 0; n2 < newNotifications.length; n2++) {
+                    window.notifications.unshift(newNotifications[n2]);
+                }
+                if (typeof saveNotifications === 'function') {
+                    saveNotifications();
                 }
             }
         }
 
-// 5. 获取 IP 提款检测通知（从 window.notifications 中获取）
-if (window.notifications) {
-    const ipWithdrawalNotifs = window.notifications.filter(n => n.type === 'ip_withdrawal');
-    for (const notif of ipWithdrawalNotifs) {
-        const id = notif.id;
-        if (!seenIds.has(id)) {
-            seenIds.add(id);
-            newNotifications.push({
-                id: id,
-                type: NOTIFICATION_TYPES.IP_WITHDRAWAL || 'ip_withdrawal',
-                title: notif.title || '🚨 Multiple IP Withdrawal Detected',
-                message: notif.message || 'Multiple withdrawal requests from same IP',
-                timestamp: notif.timestamp || new Date().toISOString(),
-                read: notif.read || false,
-                data: notif,
-                ip: notif.ip,
-                detail: notif.detail
-            });
+        // 更新 UI
+        if (typeof updateNotificationUI === 'function') {
+            updateNotificationUI();
         }
-    }
-}
 
-        newNotifications.sort(function(a, b) {
-            return new Date(b.timestamp) - new Date(a.timestamp);
-        });
-
-        notifications = newNotifications;
-        updateNotificationUI();
-
-        return notifications;
+        console.log('📋 通知合并完成，当前总数:', window.notifications ? window.notifications.length : 0);
+        return window.notifications;
 
     } catch (e) {
         console.error('获取通知失败:', e);
