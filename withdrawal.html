@@ -319,7 +319,7 @@
     <div class="step-indicator" id="stepIndicator"><i class="fas fa-circle"></i> <span data-i18n="withdrawal_step">STEP 1 OF 4</span></div>
 </div>
 
-            <!-- Step 1: KYC -->
+            <!-- ========== Step 1: KYC ========== -->
 <div id="step1Container" class="step-container">
     <div class="step-title"><i class="fas fa-id-card"></i> <span data-i18n="withdrawal_step1_title">Identity Verification</span></div>
     <div class="docs-grid">
@@ -328,10 +328,10 @@
             <h4 data-i18n="withdrawal_doc_passport">Passport</h4>
             <p data-i18n="withdrawal_doc_passport_desc">Upload passport page</p>
         </div>
-        <div class="doc-card" data-doc-type="resident_permit">
+        <div class="doc-card" data-doc-type="driving_license">
             <i class="fas fa-id-card"></i>
-            <h4 data-i18n="withdrawal_doc_resident">Resident Permit</h4>
-            <p data-i18n="withdrawal_doc_resident_desc">Upload permit document</p>
+            <h4>Driving License</h4>
+            <p>Front + Back sides</p>
         </div>
         <div class="doc-card" data-doc-type="national_id">
             <i class="fas fa-address-card"></i>
@@ -676,67 +676,109 @@
         }
 
         function updateUploadArea() {
-            const uploadArea = document.getElementById('uploadArea');
-            if (!uploadArea) return;
-            const t = window.i18n?.t || function(key) { return key; };
+    const uploadArea = document.getElementById('uploadArea');
+    if (!uploadArea) return;
+    const t = window.i18n?.t || function(key) { return key; };
 
-            if (selectedDocType === 'passport') {
-                uploadArea.innerHTML = `<div class="upload-area" id="uploadFront"><i class="fas fa-cloud-upload-alt"></i><div>${t('withdrawal_upload_passport')}</div><div class="hint">${t('withdrawal_upload_hint')}</div></div>`;
-                initUpload('front', 'passport');
-            } else if (selectedDocType === 'resident_permit') {
-                uploadArea.innerHTML = `<div class="upload-area" id="uploadFront"><i class="fas fa-cloud-upload-alt"></i><div>${t('withdrawal_upload_resident')}</div><div class="hint">${t('withdrawal_upload_hint')}</div></div>`;
-                initUpload('front', 'resident_permit');
-            } else if (selectedDocType === 'national_id') {
-                uploadArea.innerHTML = `<div class="upload-row"><div class="upload-item" id="uploadFront"><i class="fas fa-id-card"></i><div class="label">${t('withdrawal_upload_front')}</div><div class="status" id="frontStatus">${t('withdrawal_not_uploaded')}</div></div><div class="upload-item" id="uploadBack"><i class="fas fa-id-card"></i><div class="label">${t('withdrawal_upload_back')}</div><div class="status" id="backStatus">${t('withdrawal_not_uploaded')}</div></div></div>`;
-                initUpload('front', 'national_id_front');
-                initUpload('back', 'national_id_back');
-            }
-        }
+    if (selectedDocType === 'passport') {
+        uploadArea.innerHTML = `
+            <div class="upload-area" id="uploadFront">
+                <i class="fas fa-cloud-upload-alt"></i>
+                <div>${t('withdrawal_upload_passport')}</div>
+                <div class="hint">${t('withdrawal_upload_hint')}</div>
+            </div>
+        `;
+        initUpload('front', 'passport');
+    } else if (selectedDocType === 'driving_license') {
+        uploadArea.innerHTML = `
+            <div class="upload-row">
+                <div class="upload-item" id="uploadFront">
+                    <i class="fas fa-id-card"></i>
+                    <div class="label">${t('withdrawal_upload_front')}</div>
+                    <div class="status" id="frontStatus">${t('withdrawal_not_uploaded')}</div>
+                </div>
+                <div class="upload-item" id="uploadBack">
+                    <i class="fas fa-id-card"></i>
+                    <div class="label">${t('withdrawal_upload_back')}</div>
+                    <div class="status" id="backStatus">${t('withdrawal_not_uploaded')}</div>
+                </div>
+            </div>
+        `;
+        initUpload('front', 'driving_license_front');
+        initUpload('back', 'driving_license_back');
+    } else if (selectedDocType === 'national_id') {
+        uploadArea.innerHTML = `
+            <div class="upload-row">
+                <div class="upload-item" id="uploadFront">
+                    <i class="fas fa-id-card"></i>
+                    <div class="label">${t('withdrawal_upload_front')}</div>
+                    <div class="status" id="frontStatus">${t('withdrawal_not_uploaded')}</div>
+                </div>
+                <div class="upload-item" id="uploadBack">
+                    <i class="fas fa-id-card"></i>
+                    <div class="label">${t('withdrawal_upload_back')}</div>
+                    <div class="status" id="backStatus">${t('withdrawal_not_uploaded')}</div>
+                </div>
+            </div>
+        `;
+        initUpload('front', 'national_id_front');
+        initUpload('back', 'national_id_back');
+    }
+}
 
         // ---------- 提交 KYC ----------
         async function submitKyc() {
-            const t = window.i18n?.t || function(key) { return key; };
-            if (!selectedDocType) { showToast(t('withdrawal_select_doc'), 'error'); return; }
+    const t = window.i18n?.t || function(key) { return key; };
+    if (!selectedDocType) { showToast(t('withdrawal_select_doc'), 'error'); return; }
 
-            let imagesToSubmit = [];
-            if (selectedDocType === 'national_id') {
-                if (!uploadedImages.front) { showToast(t('withdrawal_upload_front_required'), 'error'); return; }
-                if (!uploadedImages.back) { showToast(t('withdrawal_upload_back_required'), 'error'); return; }
-                imagesToSubmit = [
-                    { type: 'national_id_front', url: uploadedImages.front },
-                    { type: 'national_id_back', url: uploadedImages.back }
-                ];
-            } else {
-                if (!uploadedImages.front) { showToast(t('withdrawal_upload_doc_required'), 'error'); return; }
-                imagesToSubmit = [{ type: selectedDocType, url: uploadedImages.front }];
-            }
+    let imagesToSubmit = [];
+    if (selectedDocType === 'national_id') {
+        if (!uploadedImages.front) { showToast(t('withdrawal_upload_front_required'), 'error'); return; }
+        if (!uploadedImages.back) { showToast(t('withdrawal_upload_back_required'), 'error'); return; }
+        imagesToSubmit = [
+            { type: 'national_id_front', url: uploadedImages.front },
+            { type: 'national_id_back', url: uploadedImages.back }
+        ];
+    } else if (selectedDocType === 'driving_license') {
+        if (!uploadedImages.front) { showToast(t('withdrawal_upload_front_required'), 'error'); return; }
+        if (!uploadedImages.back) { showToast(t('withdrawal_upload_back_required'), 'error'); return; }
+        imagesToSubmit = [
+            { type: 'driving_license_front', url: uploadedImages.front },
+            { type: 'driving_license_back', url: uploadedImages.back }
+        ];
+    } else {
+        if (!uploadedImages.front) { showToast(t('withdrawal_upload_doc_required'), 'error'); return; }
+        imagesToSubmit = [{ type: selectedDocType, url: uploadedImages.front }];
+    }
 
-            for (const img of imagesToSubmit) {
-                await sb
-                    .from('kyc_verifications')
-                    .delete()
-                    .eq('uid', currentUser.uid)
-                    .eq('document_type', img.type);
-            }
+    // 删除旧记录
+    for (const img of imagesToSubmit) {
+        await sb
+            .from('kyc_verifications')
+            .delete()
+            .eq('uid', currentUser.uid)
+            .eq('document_type', img.type);
+    }
 
-            for (const img of imagesToSubmit) {
-                const { error } = await sb.from('kyc_verifications').insert([{
-                    uid: currentUser.uid,
-                    username: currentUser.username,
-                    document_type: img.type,
-                    image_url: img.url,
-                    status: 'pending',
-                    uploaded_at: new Date().toISOString()
-                }]);
-                if (error) {
-                    showToast(t('withdrawal_submit_failed') + error.message, 'error');
-                    return;
-                }
-            }
-
-            showToast(t('withdrawal_docs_submitted'), 'success');
-            showVerifyingLoading();
+    // 插入新记录
+    for (const img of imagesToSubmit) {
+        const { error } = await sb.from('kyc_verifications').insert([{
+            uid: currentUser.uid,
+            username: currentUser.username,
+            document_type: img.type,
+            image_url: img.url,
+            status: 'pending',
+            uploaded_at: new Date().toISOString()
+        }]);
+        if (error) {
+            showToast(t('withdrawal_submit_failed') + error.message, 'error');
+            return;
         }
+    }
+
+    showToast(t('withdrawal_docs_submitted'), 'success');
+    showVerifyingLoading();
+}
 
         // ---------- 支付方式选择 ----------
         function initPaymentSelection() {

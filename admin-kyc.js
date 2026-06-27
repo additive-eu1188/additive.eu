@@ -15,7 +15,7 @@ async function loadKycPage() {
                 </h2>
                 <div style="display: flex; gap: 10px; flex-wrap: wrap;">
                     <button id="kycTabPending" class="tab-kyc-btn active" data-tab="pending"><i class="fas fa-list-ul"></i> Pending</button>
-<button id="kycTabVerified" class="tab-kyc-btn" data-tab="verified"><i class="fas fa-history"></i> Verification History</button>
+                    <button id="kycTabVerified" class="tab-kyc-btn" data-tab="verified"><i class="fas fa-history"></i> Verification History</button>
                     <button id="refreshKycBtn" class="btn-primary"><i class="fas fa-sync-alt"></i> Refresh</button>
                 </div>
             </div>
@@ -24,15 +24,15 @@ async function loadKycPage() {
             <div id="kycPendingPanel" class="kyc-panel">
                 <!-- 四张统计卡片 -->
                 <div class="stats-grid" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; margin-bottom: 24px;">
-    <div class="stat-item" style="background: rgba(12, 16, 28, 0.6); border-radius: 16px; padding: 16px 20px; text-align: center; border: 1px solid rgba(255,255,255,0.04);">
-        <div class="label" style="font-size: 11px; color: #8892a8; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">Total KYC</div>
-        <div class="value" id="kycStatTotal" style="font-size: 28px; font-weight: 700; color: #ffffff;">0</div>
-    </div>
-    <div class="stat-item" style="background: rgba(12, 16, 28, 0.6); border-radius: 16px; padding: 16px 20px; text-align: center; border: 1px solid rgba(255,255,255,0.04);">
-        <div class="label" style="font-size: 11px; color: #8892a8; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">Pending KYC</div>
-        <div class="value" id="kycStatPending" style="font-size: 28px; font-weight: 700; color: #ffffff;">0</div>
-    </div>
-</div>
+                    <div class="stat-item" style="background: rgba(12, 16, 28, 0.6); border-radius: 16px; padding: 16px 20px; text-align: center; border: 1px solid rgba(255,255,255,0.04);">
+                        <div class="label" style="font-size: 11px; color: #8892a8; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">Total KYC</div>
+                        <div class="value" id="kycStatTotal" style="font-size: 28px; font-weight: 700; color: #ffffff;">0</div>
+                    </div>
+                    <div class="stat-item" style="background: rgba(12, 16, 28, 0.6); border-radius: 16px; padding: 16px 20px; text-align: center; border: 1px solid rgba(255,255,255,0.04);">
+                        <div class="label" style="font-size: 11px; color: #8892a8; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">Pending KYC</div>
+                        <div class="value" id="kycStatPending" style="font-size: 28px; font-weight: 700; color: #ffffff;">0</div>
+                    </div>
+                </div>
                 
                 <!-- 搜索栏 -->
                 <div class="search-bar" style="display: flex; flex-wrap: wrap; gap: 10px; align-items: center; background: rgba(8, 12, 24, 0.5); border-radius: 16px; padding: 12px 16px; margin-bottom: 20px; border: 1px solid rgba(255,255,255,0.03);">
@@ -42,6 +42,8 @@ async function loadKycPage() {
                         <option value="">All Document Types</option>
                         <option value="passport">Passport</option>
                         <option value="resident_permit">Resident Permit</option>
+                        <option value="driving_license_front">Driving License (Front)</option>
+                        <option value="driving_license_back">Driving License (Back)</option>
                         <option value="national_id_front">National ID (Front)</option>
                         <option value="national_id_back">National ID (Back)</option>
                     </select>
@@ -70,19 +72,19 @@ async function loadKycPage() {
             <div id="kycVerifiedPanel" class="kyc-panel" style="display: none;">
                 <!-- 四张统计卡片（与待处理相同） -->
                 <div class="stats-grid" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 24px;">
-    <div class="stat-item" style="background: rgba(12, 16, 28, 0.6); border-radius: 16px; padding: 16px 20px; text-align: center; border: 1px solid rgba(255,255,255,0.04);">
-        <div class="label" style="font-size: 11px; color: #8892a8; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">Total KYC</div>
-        <div class="value" id="kycVerifiedStatTotal" style="font-size: 28px; font-weight: 700; color: #ffffff;">0</div>
-    </div>
-    <div class="stat-item" style="background: rgba(12, 16, 28, 0.6); border-radius: 16px; padding: 16px 20px; text-align: center; border: 1px solid rgba(255,255,255,0.04);">
-        <div class="label" style="font-size: 11px; color: #8892a8; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">KYC Approved</div>
-        <div class="value" id="kycVerifiedStatApproved" style="font-size: 28px; font-weight: 700; color: #ffffff;">0</div>
-    </div>
-    <div class="stat-item" style="background: rgba(12, 16, 28, 0.6); border-radius: 16px; padding: 16px 20px; text-align: center; border: 1px solid rgba(255,255,255,0.04);">
-        <div class="label" style="font-size: 11px; color: #8892a8; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">KYC Rejected</div>
-        <div class="value" id="kycVerifiedStatRejected" style="font-size: 28px; font-weight: 700; color: #ffffff;">0</div>
-    </div>
-</div>
+                    <div class="stat-item" style="background: rgba(12, 16, 28, 0.6); border-radius: 16px; padding: 16px 20px; text-align: center; border: 1px solid rgba(255,255,255,0.04);">
+                        <div class="label" style="font-size: 11px; color: #8892a8; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">Total KYC</div>
+                        <div class="value" id="kycVerifiedStatTotal" style="font-size: 28px; font-weight: 700; color: #ffffff;">0</div>
+                    </div>
+                    <div class="stat-item" style="background: rgba(12, 16, 28, 0.6); border-radius: 16px; padding: 16px 20px; text-align: center; border: 1px solid rgba(255,255,255,0.04);">
+                        <div class="label" style="font-size: 11px; color: #8892a8; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">KYC Approved</div>
+                        <div class="value" id="kycVerifiedStatApproved" style="font-size: 28px; font-weight: 700; color: #ffffff;">0</div>
+                    </div>
+                    <div class="stat-item" style="background: rgba(12, 16, 28, 0.6); border-radius: 16px; padding: 16px 20px; text-align: center; border: 1px solid rgba(255,255,255,0.04);">
+                        <div class="label" style="font-size: 11px; color: #8892a8; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">KYC Rejected</div>
+                        <div class="value" id="kycVerifiedStatRejected" style="font-size: 28px; font-weight: 700; color: #ffffff;">0</div>
+                    </div>
+                </div>
                 
                 <!-- 搜索栏 -->
                 <div class="search-bar" style="display: flex; flex-wrap: wrap; gap: 10px; align-items: center; background: rgba(8, 12, 24, 0.5); border-radius: 16px; padding: 12px 16px; margin-bottom: 20px; border: 1px solid rgba(255,255,255,0.03);">
@@ -92,6 +94,8 @@ async function loadKycPage() {
                         <option value="">All Document Types</option>
                         <option value="passport">Passport</option>
                         <option value="resident_permit">Resident Permit</option>
+                        <option value="driving_license_front">Driving License (Front)</option>
+                        <option value="driving_license_back">Driving License (Back)</option>
                         <option value="national_id_front">National ID (Front)</option>
                         <option value="national_id_back">National ID (Back)</option>
                     </select>
@@ -203,7 +207,7 @@ async function loadKycPage() {
     
     // 绑定标签切换
     document.getElementById('kycTabPending')?.addEventListener('click', function() { switchKycTab('pending'); });
-document.getElementById('kycTabVerified')?.addEventListener('click', function() { switchKycTab('verified'); });
+    document.getElementById('kycTabVerified')?.addEventListener('click', function() { switchKycTab('verified'); });
     document.getElementById('refreshKycBtn')?.addEventListener('click', function() { 
         loadKycPending(); 
         loadKycVerified(); 
@@ -354,11 +358,14 @@ async function loadKycPending() {
             const nationalIdBack = items.find(i => i.document_type === 'national_id_back');
             const passport = items.find(i => i.document_type === 'passport');
             const residentPermit = items.find(i => i.document_type === 'resident_permit');
+            const drivingLicenseFront = items.find(i => i.document_type === 'driving_license_front');
+            const drivingLicenseBack = items.find(i => i.document_type === 'driving_license_back');
             
             // 确定主要文档类型
             let docTypeDisplay = '-';
             if (passport) docTypeDisplay = 'Passport';
             else if (residentPermit) docTypeDisplay = 'Resident Permit';
+            else if (drivingLicenseFront) docTypeDisplay = 'Driving License';
             else if (nationalIdFront) docTypeDisplay = 'National ID';
             
             // 检查是否有待处理的
@@ -367,7 +374,7 @@ async function loadKycPending() {
             
             // Front 图片
             let frontHtml = '';
-            const frontImg = nationalIdFront || passport || residentPermit;
+            const frontImg = nationalIdFront || passport || residentPermit || drivingLicenseFront;
             if (frontImg && frontImg.image_url) {
                 frontHtml = `<img src="${frontImg.image_url}" class="kyc-doc-image" onclick="window.open('${frontImg.image_url}','_blank')" onerror="this.outerHTML='<div class=\\'kyc-doc-placeholder\\'>No Image</div>'">`;
             } else {
@@ -378,13 +385,12 @@ async function loadKycPending() {
             let backHtml = '';
             if (nationalIdBack && nationalIdBack.image_url) {
                 backHtml = `<img src="${nationalIdBack.image_url}" class="kyc-doc-image" onclick="window.open('${nationalIdBack.image_url}','_blank')" onerror="this.outerHTML='<div class=\\'kyc-doc-placeholder\\'>No Image</div>'">`;
+            } else if (drivingLicenseBack && drivingLicenseBack.image_url) {
+                backHtml = `<img src="${drivingLicenseBack.image_url}" class="kyc-doc-image" onclick="window.open('${drivingLicenseBack.image_url}','_blank')" onerror="this.outerHTML='<div class=\\'kyc-doc-placeholder\\'>No Image</div>'">`;
+            } else if (passport || residentPermit) {
+                backHtml = '<div class="kyc-doc-placeholder" style="border-color:transparent;">—</div>';
             } else {
                 backHtml = '<div class="kyc-doc-placeholder">No Back</div>';
-            }
-            
-            // 如果是 Passport 或 Resident Permit，Back 列显示 "-"
-            if (passport || residentPermit) {
-                backHtml = '<div class="kyc-doc-placeholder" style="border-color:transparent;">—</div>';
             }
             
             // Actions
@@ -408,28 +414,28 @@ async function loadKycPending() {
         
         // 绑定事件
         document.querySelectorAll('.approve-kyc').forEach(btn => btn.addEventListener('click', async () => {
-    const uid = btn.dataset.uid;
-    showConfirm('Approve KYC', `Confirm to approve KYC for user ${uid}?`, async () => {
-        await sb.from('kyc_verifications').update({ status: 'approved', approved_at: new Date().toISOString() }).eq('uid', uid).eq('status', 'pending');
-        await sb.from('user_kyc_status').upsert({ uid: uid, is_verified: true });
-        await loadKycPending();
-        await loadKycVerified();
-        await updateKycStats();
-        if (window.loadDashboardPage) window.loadDashboardPage(currentDays);
-        showToast(`✅ KYC approved for ${uid}`, 'success');
-    });
-}));
+            const uid = btn.dataset.uid;
+            showConfirm('Approve KYC', `Confirm to approve KYC for user ${uid}?`, async () => {
+                await sb.from('kyc_verifications').update({ status: 'approved', approved_at: new Date().toISOString() }).eq('uid', uid).eq('status', 'pending');
+                await sb.from('user_kyc_status').upsert({ uid: uid, is_verified: true });
+                await loadKycPending();
+                await loadKycVerified();
+                await updateKycStats();
+                if (window.loadDashboardPage) window.loadDashboardPage(currentDays);
+                showToast(`✅ KYC approved for ${uid}`, 'success');
+            });
+        }));
 
-document.querySelectorAll('.reject-kyc').forEach(btn => btn.addEventListener('click', async () => {
-    const uid = btn.dataset.uid;
-    showConfirm('Reject KYC', `Confirm to reject KYC for user ${uid}?`, async () => {
-        await sb.from('kyc_verifications').update({ status: 'rejected' }).eq('uid', uid).eq('status', 'pending');
-        await loadKycPending();
-        await loadKycVerified();
-        await updateKycStats();
-        showToast(`❌ KYC rejected for ${uid}`, 'info');
-    });
-}));
+        document.querySelectorAll('.reject-kyc').forEach(btn => btn.addEventListener('click', async () => {
+            const uid = btn.dataset.uid;
+            showConfirm('Reject KYC', `Confirm to reject KYC for user ${uid}?`, async () => {
+                await sb.from('kyc_verifications').update({ status: 'rejected' }).eq('uid', uid).eq('status', 'pending');
+                await loadKycPending();
+                await loadKycVerified();
+                await updateKycStats();
+                showToast(`❌ KYC rejected for ${uid}`, 'info');
+            });
+        }));
         
     } catch (e) {
         console.error('加载KYC待处理失败:', e);
@@ -488,16 +494,19 @@ async function loadKycVerified() {
             const nationalIdBack = items.find(i => i.document_type === 'national_id_back');
             const passport = items.find(i => i.document_type === 'passport');
             const residentPermit = items.find(i => i.document_type === 'resident_permit');
+            const drivingLicenseFront = items.find(i => i.document_type === 'driving_license_front');
+            const drivingLicenseBack = items.find(i => i.document_type === 'driving_license_back');
             
             // 确定主要文档类型
             let docTypeDisplay = '-';
             if (passport) docTypeDisplay = 'Passport';
             else if (residentPermit) docTypeDisplay = 'Resident Permit';
+            else if (drivingLicenseFront) docTypeDisplay = 'Driving License';
             else if (nationalIdFront) docTypeDisplay = 'National ID';
             
             // Front 图片
             let frontHtml = '';
-            const frontImg = nationalIdFront || passport || residentPermit;
+            const frontImg = nationalIdFront || passport || residentPermit || drivingLicenseFront;
             if (frontImg && frontImg.image_url) {
                 frontHtml = `<img src="${frontImg.image_url}" class="kyc-doc-image" onclick="window.open('${frontImg.image_url}','_blank')" onerror="this.outerHTML='<div class=\\'kyc-doc-placeholder\\'>No Image</div>'">`;
             } else {
@@ -508,6 +517,8 @@ async function loadKycVerified() {
             let backHtml = '';
             if (nationalIdBack && nationalIdBack.image_url) {
                 backHtml = `<img src="${nationalIdBack.image_url}" class="kyc-doc-image" onclick="window.open('${nationalIdBack.image_url}','_blank')" onerror="this.outerHTML='<div class=\\'kyc-doc-placeholder\\'>No Image</div>'">`;
+            } else if (drivingLicenseBack && drivingLicenseBack.image_url) {
+                backHtml = `<img src="${drivingLicenseBack.image_url}" class="kyc-doc-image" onclick="window.open('${drivingLicenseBack.image_url}','_blank')" onerror="this.outerHTML='<div class=\\'kyc-doc-placeholder\\'>No Image</div>'">`;
             } else if (passport || residentPermit) {
                 backHtml = '<div class="kyc-doc-placeholder" style="border-color:transparent;">—</div>';
             } else {
