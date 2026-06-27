@@ -339,7 +339,7 @@ body.innerHTML = `
     deposits.forEach(d => {
         let typeName = '', icon = '';
         if (d.type === 'manual') { 
-    typeName = d.description || t('history_deposit'); 
+    typeName = t('history_deposit');  // ✅ 直接使用翻译，不拼接 description
     icon = 'fas fa-plus-circle'; 
 }
         else if (d.type === 'deposit_bonus') { 
