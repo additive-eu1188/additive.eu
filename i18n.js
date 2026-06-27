@@ -207,6 +207,11 @@ const TRANSLATIONS = {
         'order_select_rating': 'Please select a rating',
         'order_incomplete': 'You have an incomplete order, please complete it first',
         'order_trigger_completed': 'Trigger order completed! Earned €{amount} commission',
+'order_type_svip': 'x20 SVIP Reservations Order',
+'order_svip_commission': '10% Commission (x20 SVIP)',
+'toast_svip_unlocked': '🎉 x20 SVIP Reservations Order completed!',
+'svip_order': 'x20 SVIP Reservations Order',
+'svip_commission_rate': '10% Commission',
         
         // ==================== History ====================
         'history_title': 'HISTORY',
@@ -791,6 +796,11 @@ const TRANSLATIONS = {
         'order_select_rating': 'Bitte wählen Sie eine Bewertung',
         'order_incomplete': 'Sie haben einen unvollständigen Auftrag, bitte schließen Sie ihn zuerst ab',
         'order_trigger_completed': 'Trigger-Auftrag abgeschlossen! €{amount} Provision verdient',
+'order_type_svip': 'x20 SVIP Reservierungsauftrag',
+'order_svip_commission': '10% Provision (x20 SVIP)',
+'toast_svip_unlocked': '🎉 x20 SVIP Reservierungsauftrag abgeschlossen!',
+'svip_order': 'x20 SVIP Reservierungsauftrag',
+'svip_commission_rate': '10% Provision',
         
         // History
         'history_title': 'VERLAUF',
@@ -1375,6 +1385,11 @@ const TRANSLATIONS = {
         'order_select_rating': 'Seleziona una valutazione',
         'order_incomplete': 'Hai un ordine incompleto, completalo prima',
         'order_trigger_completed': 'Ordine trigger completato! Guadagnati €{amount} di commissione',
+'order_type_svip': 'Ordine di prenotazione x20 SVIP',
+'order_svip_commission': 'Commissione 10% (x20 SVIP)',
+'toast_svip_unlocked': '🎉 Ordine di prenotazione x20 SVIP completato!',
+'svip_order': 'Ordine di prenotazione x20 SVIP',
+'svip_commission_rate': 'Commissione 10%',
         
         // History
         'history_title': 'CRONOLOGIA',

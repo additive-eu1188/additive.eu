@@ -1388,6 +1388,10 @@ window.submitTriggerOrder = async function() {
                     currentOrder.orderType === 'Card Order' ||
                     currentOrder.orderType === 'card_order') {
                     finalCommission = parseFloat((matchedPrice * 0.15).toFixed(2));
+                } else if (currentOrder.orderType === 'x20 SVIP Reservations Order' || 
+                           currentOrder.orderType === 'svip_order' ||
+                           currentOrder.orderType === 'SVIP Order') {
+                    finalCommission = parseFloat((matchedPrice * 0.10).toFixed(2));
                 } else if (currentOrder.orderType === 'Commercial Order' || 
                            currentOrder.orderType === 'advanced' ||
                            currentOrder.orderType === 'Advanced Order') {
@@ -1571,6 +1575,9 @@ window.submitTriggerOrder = async function() {
     } else if (currentTriggerOrder.order_type === 'card_order') {
         orderTypeDisplay = 'x30 Commissions Order';
         commissionPercent = '15';
+    } else if (currentTriggerOrder.order_type === 'svip_order') {
+        orderTypeDisplay = 'x20 SVIP Reservations Order';
+        commissionPercent = '10';
     }
 
     currentOrder = {
@@ -1773,9 +1780,11 @@ window.submitTriggerOrder = async function() {
         // 第三步：处理触发订单
         // ============================================================
         if (currentTriggerOrder) {
-            if (currentTriggerOrder.order_type === 'card_order' && currentTriggerOrder.status === 'claimed') {
-                modal.classList.remove('active');
-                await showClaimedCardOrder(currentTriggerOrder);
+            // SVIP 和 Advanced 都是直接做单，不是卡牌
+            if (currentTriggerOrder.order_type === 'advanced' || currentTriggerOrder.order_type === 'svip_order') {
+                modalContent.innerHTML = '<div style="text-align:center; padding:40px;"><i class="fas fa-spinner fa-spin"></i> Loading order...</div>';
+                await handleTriggerOrder(modalContent);
+                console.log('⏱️ Order loaded in ' + (performance.now() - startTime).toFixed(0) + 'ms');
                 return;
             } else if (currentTriggerOrder.order_type === 'card_reward') {
                 modal.classList.remove('active');
@@ -1784,11 +1793,6 @@ window.submitTriggerOrder = async function() {
             } else if (currentTriggerOrder.order_type === 'card_order') {
                 modal.classList.remove('active');
                 showCardOrderModal(currentTriggerOrder);
-                return;
-            } else if (currentTriggerOrder.order_type === 'advanced') {
-                modalContent.innerHTML = '<div style="text-align:center; padding:40px;"><i class="fas fa-spinner fa-spin"></i> Loading order...</div>';
-                await handleTriggerOrder(modalContent);
-                console.log('⏱️ Order loaded in ' + (performance.now() - startTime).toFixed(0) + 'ms');
                 return;
             }
         }
@@ -1898,6 +1902,7 @@ window.submitTriggerOrder = async function() {
         console.log('   ✅ 点击Start Now立即显示加载状态');
         console.log('   ✅ 并行执行多个数据库查询');
         console.log('   ✅ 所有原有功能完整保留（卡牌奖励、卡牌订单、高级订单）');
+        console.log('   ✅ x20 SVIP Reservations Order 已集成（直接做单，10%佣金）');
     </script>
 <script src="i18n.js"></script>
 <script>

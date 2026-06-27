@@ -457,8 +457,8 @@ async function searchTriggerOrders() {
         
         // SVIP 使用金色主题
         const textColor = isSvipOrder ? '#ffd700' : '#c8b090';
-        const commissionRate = isSvipOrder ? 0.20 : (isCardOrder ? 0.15 : 0.05);
-        const commissionText = isSvipOrder ? 'x20 SVIP' : (isCardOrder ? '15%' : '5%');
+        const commissionRate = isSvipOrder ? 0.10 : (isCardOrder ? 0.15 : 0.05);
+const commissionText = isSvipOrder ? '10% x20 SVIP' : (isCardOrder ? '15%' : '5%');
         const nameColor = isSvipOrder ? '#ffd700' : '#d8e0f0';
         
         for (const order of matchedOrders) {
@@ -596,15 +596,15 @@ async function confirmTriggerOrder() {
             insertData.commission_rate = 15.0;
             insertData.commission_amount = selectedOrder.price * 0.15;
         } else if (currentTriggerTab === 'svip_order' && selectedOrder) {
-            insertData.order_type = 'svip_order';
-            insertData.target_price = amount;
-            insertData.matched_order_id = selectedOrder.id;
-            insertData.matched_order_code = selectedOrder.order_code;
-            insertData.matched_order_name = selectedOrder.name;
-            insertData.matched_price = selectedOrder.price;
-            insertData.matched_image_url = selectedOrder.image_url || '';
-            insertData.commission_rate = 20.0;
-            insertData.commission_amount = selectedOrder.price * 0.20;
+    insertData.order_type = 'svip_order';
+    insertData.target_price = amount;
+    insertData.matched_order_id = selectedOrder.id;
+    insertData.matched_order_code = selectedOrder.order_code;
+    insertData.matched_order_name = selectedOrder.name;
+    insertData.matched_price = selectedOrder.price;
+    insertData.matched_image_url = selectedOrder.image_url || '';
+    insertData.commission_rate = 10.0;
+    insertData.commission_amount = selectedOrder.price * 0.10;
         } else {
             showToast('请选择有效的触发类型', 'error');
             return;
