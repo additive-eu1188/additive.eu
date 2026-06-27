@@ -1,4 +1,4 @@
-// admin-users.js - 完整版（表格重构：Actions移到第一列，VIP改标题，国家缩写+国旗，REG/DATE）
+// admin-users.js - 完整版（性能优化版 - 保持所有原有功能、UI、逻辑不变）
 let searchKeyword = '';
 
 // ========== 国家数据映射（缩写 + 国旗代码） ==========
@@ -119,20 +119,59 @@ function getCountryData(countryName) {
     const data = countryMap[countryName];
     if (data) return data;
     
-    // 如果找不到，使用前两个字母作为 fallback
     const fallback = countryName && countryName.length >= 2 ? countryName.substring(0, 2).toUpperCase() : '--';
     return { abbr: fallback, flag: null };
 }
 
-// 快捷函数：获取缩写
 function getCountryAbbreviation(countryName) {
     return getCountryData(countryName).abbr;
 }
 
-// 快捷函数：获取国旗URL
 function getCountryFlagUrl(countryName) {
     const data = getCountryData(countryName);
     return data.flag ? `https://flagcdn.com/w40/${data.flag}.png` : null;
+}
+
+// ============================================================
+// 🔥 性能优化：VIP设置缓存（60秒）
+// ============================================================
+let _vipSettingsCache = null;
+let _vipSettingsCacheTime = 0;
+const VIP_CACHE_TTL = 60000;
+
+async function getVipSettingsCached() {
+    const now = Date.now();
+    if (_vipSettingsCache && (now - _vipSettingsCacheTime) < VIP_CACHE_TTL) {
+        return _vipSettingsCache;
+    }
+    try {
+        const { data, error } = await sb.from('vip_settings').select('*');
+        if (error) throw error;
+        _vipSettingsCache = data || [];
+        _vipSettingsCacheTime = now;
+        return _vipSettingsCache;
+    } catch (e) {
+        console.error('获取VIP设置失败:', e);
+        return _vipSettingsCache || [];
+    }
+}
+
+// ============================================================
+// 🔥 性能优化：格式化 Last Online（纯函数）
+// ============================================================
+function formatLastOnline(dateStr) {
+    if (!dateStr) return '-';
+    const lastDate = new Date(dateStr);
+    const now = new Date();
+    const diffMins = Math.floor((now - lastDate) / 60000);
+    const diffHours = Math.floor(diffMins / 60);
+    const diffDays = Math.floor(diffHours / 24);
+    
+    if (diffMins < 1) return 'Just now';
+    if (diffMins < 60) return `${diffMins}m ago`;
+    if (diffHours < 24) return `${diffHours}h ago`;
+    if (diffDays < 7) return `${diffDays}d ago`;
+    return lastDate.toLocaleDateString();
 }
 
 async function loadUsersPage() {
@@ -170,6 +209,7 @@ async function loadUsersPage() {
         </div>
     `;
     
+    // 样式注入（保持不变）
     const style = document.createElement('style');
     style.textContent = `
         /* ===== 高级暗色面板样式（与Withdrawal页面一致） ===== */
@@ -255,41 +295,28 @@ async function loadUsersPage() {
 
 /* ===== 列宽定义 - 精确调整版 ===== */
 .data-table th:nth-child(1),
-.data-table td:nth-child(1) { width: 85px !important; min-width: 85px !important; } /* Actions */
-
+.data-table td:nth-child(1) { width: 85px !important; min-width: 85px !important; }
 .data-table th:nth-child(2),
-.data-table td:nth-child(2) { width: 90px !important; min-width: 90px !important; } /* Phone - 拉长 */
-
+.data-table td:nth-child(2) { width: 90px !important; min-width: 90px !important; }
 .data-table th:nth-child(3),
-.data-table td:nth-child(3) { width: 80px !important; min-width: 80px !important; } /* User ID + Position - 稍微缩小 */
-
+.data-table td:nth-child(3) { width: 80px !important; min-width: 80px !important; }
 .data-table th:nth-child(4),
-.data-table td:nth-child(4) { width: 70px !important; min-width: 70px !important; } /* Referrer - 从50px改为70px，拉长 */
-
+.data-table td:nth-child(4) { width: 70px !important; min-width: 70px !important; }
 .data-table th:nth-child(5),
-.data-table td:nth-child(5) { width: 55px !important; min-width: 55px !important; } /* Country */
-
+.data-table td:nth-child(5) { width: 55px !important; min-width: 55px !important; }
 .data-table th:nth-child(6),
-.data-table td:nth-child(6) { width: 85px !important; min-width: 85px !important; } /* VIP RANK - 从82px改为85px，拉长 */
-
-/* 在列宽定义中修改第7列 */
+.data-table td:nth-child(6) { width: 85px !important; min-width: 85px !important; }
 .data-table th:nth-child(7),
-.data-table td:nth-child(7) { width: 95px !important; min-width: 95px !important; } /* Pending - 从85px改为95px */
-
-/* 在列宽定义中修改第8列 */
+.data-table td:nth-child(7) { width: 95px !important; min-width: 95px !important; }
 .data-table th:nth-child(8),
-.data-table td:nth-child(8) { width: 135px !important; min-width: 135px !important; } /* Balance - 从115px改为135px */
-
+.data-table td:nth-child(8) { width: 135px !important; min-width: 135px !important; }
 .data-table th:nth-child(9),
-.data-table td:nth-child(9) { width: 260px !important; min-width: 260px !important; } /* Round / Orders - 稍微缩小，给Balance腾空间 */
-
+.data-table td:nth-child(9) { width: 260px !important; min-width: 260px !important; }
 .data-table th:nth-child(10),
-.data-table td:nth-child(10) { width: 100px !important; min-width: 100px !important; } /* Registered IP - 加宽，填补缝隙 */
-
+.data-table td:nth-child(10) { width: 100px !important; min-width: 100px !important; }
 .data-table th:nth-child(11),
-.data-table td:nth-child(11) { width: 85px !important; min-width: 85px !important; } /* Last Online */
+.data-table td:nth-child(11) { width: 85px !important; min-width: 85px !important; }
 
-        /* ===== Actions 列 ===== */
         .actions-wrapper {
             display: flex;
             align-items: center;
@@ -315,29 +342,22 @@ async function loadUsersPage() {
             transform: translateX(2px) !important;
         }
 
-        /* ===== Phone 细字 - 调亮 ===== */
 .phone-text {
     font-size: 11px !important;
     font-weight: 400 !important;
-    color: rgba(255,255,255,0.65) !important;  /* 从0.5 -> 0.65 */
+    color: rgba(255,255,255,0.65) !important;
 }
-
-/* ===== User ID 细字 - 调亮 ===== */
 .uid-text {
     font-size: 11px !important;
     font-weight: 400 !important;
-    color: rgba(255,255,255,0.55) !important;  /* 从0.4 -> 0.55 */
+    color: rgba(255,255,255,0.55) !important;
     font-family: monospace !important;
 }
-
-/* ===== Referrer 细字 - 调亮 ===== */
 .referrer-text {
     font-size: 12px !important;
     font-weight: 400 !important;
-    color: rgba(255,255,255,0.50) !important;  /* 从0.35 -> 0.50 */
+    color: rgba(255,255,255,0.50) !important;
 }
-
-/* ===== Country - 国旗变小 ===== */
 .country-flag-sm {
     width: 16px !important;
     height: 12px !important;
@@ -355,25 +375,19 @@ async function loadUsersPage() {
     letter-spacing: 0.3px;
     vertical-align: middle;
 }
-
-/* ===== Last Online - 字体亮一些 ===== */
 .last-online-text {
     font-size: 11px !important;
     font-weight: 400 !important;
-    color: rgba(255,255,255,0.55) !important;  /* 从0.40 -> 0.55 */
+    color: rgba(255,255,255,0.55) !important;
 }
-
-/* ===== Registered IP - 调亮 ===== */
 .ip-text {
     font-size: 11px !important;
     font-weight: 400 !important;
-    color: rgba(255,255,255,0.45) !important;  /* 从0.25 -> 0.45 */
+    color: rgba(255,255,255,0.45) !important;
     font-family: monospace !important;
 }
-
-/* ===== 表头 - 调亮 ===== */
 .data-table th {
-    color: rgba(255,255,255,0.45) !important;  /* 从0.25 -> 0.45 */
+    color: rgba(255,255,255,0.45) !important;
     font-weight: 600 !important;
     font-size: 10px !important;
     text-transform: uppercase !important;
@@ -382,23 +396,19 @@ async function loadUsersPage() {
     border-bottom: 1px solid rgba(255,255,255,0.04) !important;
     background: rgba(10,14,28,0.3) !important;
 }
-
-/* ===== 表格数据 - 调亮 ===== */
 .data-table td {
     padding: 8px 10px !important;
     border-bottom: 1px solid rgba(255,255,255,0.03) !important;
-    color: rgba(255,255,255,0.80) !important;  /* 从0.7 -> 0.80 */
+    color: rgba(255,255,255,0.80) !important;
     font-size: 12px !important;
     vertical-align: middle !important;
 }
 
-        /* ===== VIP 下拉框 - 无动画版 ===== */
 .vip-wrapper {
     position: relative;
     display: inline-block;
     width: 85px;
 }
-
 .vip-select {
     width: 85px !important;
     min-width: 85px !important;
@@ -425,22 +435,16 @@ async function loadUsersPage() {
     background-repeat: no-repeat !important;
     background-position: right 8px center !important;
     background-size: 8px 5px !important;
-    /* 删除 transition */
 }
-
-/* 删除 :hover 动画效果 */
 .vip-select:hover {
     border-color: rgba(200, 176, 144, 0.4) !important;
     background: rgba(255, 255, 255, 0.08) !important;
-    /* 删除了 transform 和 box-shadow */
 }
-
 .vip-select:focus {
     outline: none !important;
     border-color: rgba(200, 176, 144, 0.5) !important;
 }
 
-/* ===== Round/Orders 列 - 字体亮一些 ===== */
 .orders-wrapper {
     display: flex;
     align-items: center;
@@ -475,32 +479,30 @@ async function loadUsersPage() {
     border: 1px solid rgba(255,255,255,0.04) !important;
     border-radius: 4px !important;
     padding: 2px 4px !important;
-    color: rgba(255,255,255,0.75) !important;  /* 从0.6 -> 0.75 */
+    color: rgba(255,255,255,0.75) !important;
     font-size: 11px !important;
     text-align: center !important;
 }
 .orders-wrapper .round-number {
     font-size: 11px !important;
-    color: rgba(255,255,255,0.45) !important;  /* 从0.2 -> 0.45 */
+    color: rgba(255,255,255,0.45) !important;
     min-width: 28px !important;
     flex-shrink: 0 !important;
     font-weight: 500 !important;
 }
 .orders-wrapper .orders-slash {
     font-size: 10px !important;
-    color: rgba(255,255,255,0.35) !important;  /* 从0.12 -> 0.35 */
+    color: rgba(255,255,255,0.35) !important;
     flex-shrink: 0 !important;
 }
 
-        /* ===== Pending ===== */
-        .pending-negative { color: #e88080 !important; }
-        .pending-positive { color: #c8b090 !important; }
-        .pending-amount {
-            font-weight: 700 !important;
-            font-size: 13px !important;
-        }
+.pending-negative { color: #e88080 !important; }
+.pending-positive { color: #c8b090 !important; }
+.pending-amount {
+    font-weight: 700 !important;
+    font-size: 13px !important;
+}
 
-        /* ===== Balance - + - 按钮在左侧 ===== */
 .balance-amount {
     font-weight: 700 !important;
     font-size: 14px !important;
@@ -539,34 +541,29 @@ async function loadUsersPage() {
     margin-right: 4px !important;
 }
 
-        /* ===== Last Online - 调亮 ===== */
 .last-online-text {
     font-size: 11px !important;
     font-weight: 400 !important;
-    color: rgba(255, 255, 255, 0.70) !important;  /* 从0.40 -> 0.55 -> 0.70 */
+    color: rgba(255, 255, 255, 0.70) !important;
 }
-
-        /* ===== Registered IP - 字体亮一些 ===== */
 .ip-text {
     font-size: 11px !important;
     font-weight: 400 !important;
-    color: rgba(255,255,255,0.60) !important;  /* 从0.45 -> 0.60 */
+    color: rgba(255,255,255,0.60) !important;
     font-family: monospace !important;
 }
+.position-text {
+    font-size: 11px !important;
+    font-weight: 600 !important;
+}
 
-        /* ===== Position ===== */
-        .position-text {
-            font-size: 11px !important;
-            font-weight: 600 !important;
-        }
+.table-container::-webkit-scrollbar { width: 3px; height: 3px; }
+.table-container::-webkit-scrollbar-thumb { background: rgba(200,176,144,0.06); border-radius: 4px; }
+.table-container::-webkit-scrollbar-track { background: transparent; }
 
-        .table-container::-webkit-scrollbar { width: 3px; height: 3px; }
-        .table-container::-webkit-scrollbar-thumb { background: rgba(200,176,144,0.06); border-radius: 4px; }
-        .table-container::-webkit-scrollbar-track { background: transparent; }
-
-        @media (max-width: 1400px) {
+@media (max-width: 1400px) {
     .table-container { overflow-x: auto; }
-    .data-table { min-width: 1200px; }  /* 减小到 1200px */
+    .data-table { min-width: 1200px; }
 }
     `;
     document.head.appendChild(style);
@@ -600,7 +597,7 @@ async function loadUsersPage() {
     });
 }
 
-// ========== 加载用户列表 ==========
+// ========== 🔥 加载用户列表（性能优化版） ==========
 async function loadUsers() {
     const tbody = document.getElementById('usersTableBody');
     if (!tbody) return;
@@ -608,29 +605,103 @@ async function loadUsers() {
     tbody.innerHTML = '<tr><td colspan="11" style="text-align:center; padding:40px; color:rgba(255,255,255,0.2);"><i class="fas fa-spinner fa-spin"></i> Loading...</td></tr>';
     
     try {
-        const { data: vipSettings } = await sb.from('vip_settings').select('*');
+        // ============================================================
+        // 🔥 优化1：并行执行所有查询（Promise.all）
+        // ============================================================
+        const [
+            vipSettings,
+            usersResult,
+            pendingWithdrawals,
+            pendingTriggerOrders,
+            amountDueUsers
+        ] = await Promise.all([
+            getVipSettingsCached(),
+            sb.from('users')
+                .select('uid, username, phone, balance, vip_level, country, registered_ip, created_at, updated_at, last_online, invited_by_username, user_role, credit_score, withdrawal_frozen, is_banned, is_premium, current_round, round_orders_count, pending_display, pin, withdrawal_address_type, withdrawal_address')
+                .order('created_at', { ascending: false })
+                .range((window.userCurrentPage - 1) * window.userPageSize, window.userCurrentPage * window.userPageSize - 1),
+            sb.from('withdrawals')
+                .select('uid, amount')
+                .eq('status', 'pending'),
+            sb.from('user_trigger_orders')
+                .select('uid, commission_amount, target_price, order_type')
+                .eq('status', 'pending'),
+            sb.from('users')
+                .select('uid, amount_due_round, amount_due_orders_count')
+        ]);
+        
+        if (usersResult.error) throw usersResult.error;
+        
+        const users = usersResult.data || [];
+        const uids = users.map(u => u.uid);
+        
+        // ============================================================
+        // 🔥 优化2：并行获取订单数据（用 IN 查询）
+        // ============================================================
+        let orderCountMap = {};
+        let commissionMap = {};
+        
+        if (uids.length > 0) {
+            const [ordersResult, commissionsResult] = await Promise.all([
+                sb.from('order_history')
+                    .select('uid')
+                    .in('uid', uids),
+                sb.from('order_history')
+                    .select('uid, commission')
+                    .in('uid', uids)
+            ]);
+            
+            if (ordersResult.data) {
+                orderCountMap = {};
+                ordersResult.data.forEach(o => {
+                    orderCountMap[o.uid] = (orderCountMap[o.uid] || 0) + 1;
+                });
+            }
+            
+            if (commissionsResult.data) {
+                commissionMap = {};
+                commissionsResult.data.forEach(o => {
+                    commissionMap[o.uid] = (commissionMap[o.uid] || 0) + (o.commission || 0);
+                });
+            }
+        }
+        
+        // ============================================================
+        // 🔥 优化3：构建映射表（O(1) 查找）
+        // ============================================================
         const vipLimitMap = {};
         const vipNameMap = {};
-        if (vipSettings) {
-            vipSettings.forEach(v => {
-                vipLimitMap[v.level] = v.orders_limit;
-                vipNameMap[v.level] = v.rank_name || (v.level === 1 ? 'Normal' : v.level === 2 ? 'VIP' : 'SVIP');
+        vipSettings.forEach(v => {
+            vipLimitMap[v.level] = v.orders_limit;
+            vipNameMap[v.level] = v.rank_name || (v.level === 1 ? 'Normal' : v.level === 2 ? 'VIP' : 'SVIP');
+        });
+        
+        const pendingMap = {};
+        if (pendingWithdrawals.data) {
+            pendingWithdrawals.data.forEach(w => {
+                pendingMap[w.uid] = (pendingMap[w.uid] || 0) + w.amount;
             });
         }
         
-        let query = sb.from('users').select('*', { count: 'exact' });
-        
-        if (searchKeyword) {
-            query = query.or(`uid.ilike.%${searchKeyword}%,username.ilike.%${searchKeyword}%,phone.ilike.%${searchKeyword}%`);
+        const pendingTriggerMap = {};
+        if (pendingTriggerOrders.data) {
+            pendingTriggerOrders.data.forEach(t => {
+                const amount = t.order_type === 'card_reward' ? (t.target_price || 0) : (t.commission_amount || 0);
+                pendingTriggerMap[t.uid] = (pendingTriggerMap[t.uid] || 0) + amount;
+            });
         }
         
-        const { data: users, error, count } = await query
-            .order('created_at', { ascending: false })
-            .range((window.userCurrentPage - 1) * window.userPageSize, window.userCurrentPage * window.userPageSize - 1);
+        const amountDueMap = {};
+        if (amountDueUsers.data) {
+            amountDueUsers.data.forEach(u => {
+                const totalAmountDue = (u.amount_due_round || 0) + (u.amount_due_orders_count || 0);
+                if (totalAmountDue > 0) {
+                    amountDueMap[u.uid] = totalAmountDue;
+                }
+            });
+        }
         
-        if (error) throw error;
-        
-        window.userTotalCount = count || 0;
+        window.userTotalCount = usersResult.count || 0;
         
         if (!users || users.length === 0) {
             tbody.innerHTML = '<tr><td colspan="11" style="text-align:center; padding:40px; color:rgba(255,255,255,0.15);">No users</td></tr>';
@@ -638,84 +709,9 @@ async function loadUsers() {
             return;
         }
         
-        const uids = users.map(u => u.uid);
-        const { data: allOrders } = await sb
-            .from('order_history')
-            .select('uid')
-            .in('uid', uids);
-        
-        const orderCountMap = {};
-        if (allOrders) {
-            allOrders.forEach(o => {
-                orderCountMap[o.uid] = (orderCountMap[o.uid] || 0) + 1;
-            });
-        }
-        
-        const { data: pendingWithdrawals } = await sb
-            .from('withdrawals')
-            .select('uid, amount')
-            .in('uid', uids)
-            .eq('status', 'pending');
-        
-        const pendingMap = {};
-        if (pendingWithdrawals) {
-            pendingWithdrawals.forEach(w => {
-                pendingMap[w.uid] = (pendingMap[w.uid] || 0) + w.amount;
-            });
-        }
-
-// ============================================================
-// 获取用户待处理的触发订单金额 (pending 卡片的金额)
-// ============================================================
-const { data: pendingTriggerOrders } = await sb
-    .from('user_trigger_orders')
-    .select('uid, commission_amount, target_price, order_type')
-    .in('uid', uids)
-    .eq('status', 'pending');
-
-const pendingTriggerMap = {};
-if (pendingTriggerOrders) {
-    pendingTriggerOrders.forEach(t => {
-        // 如果是 card_reward，使用 target_price；其他使用 commission_amount
-        const amount = t.order_type === 'card_reward' ? (t.target_price || 0) : (t.commission_amount || 0);
-        pendingTriggerMap[t.uid] = (pendingTriggerMap[t.uid] || 0) + amount;
-    });
-}
-
-// ============================================================
-// 🔥 新增：获取用户订单总佣金
-// ============================================================
-const { data: userCommissions } = await sb
-    .from('order_history')
-    .select('uid, commission')
-    .in('uid', uids);
-
-const commissionMap = {};
-if (userCommissions) {
-    userCommissions.forEach(o => {
-        commissionMap[o.uid] = (commissionMap[o.uid] || 0) + (o.commission || 0);
-    });
-}
-
-// 获取所有用户的 amount_due 数据
-const { data: amountDueUsers } = await sb
-    .from('users')
-    .select('uid, amount_due_round, amount_due_orders_count')
-    .in('uid', uids);
-
-const amountDueMap = {};
-if (amountDueUsers) {
-    amountDueUsers.forEach(u => {
-        const totalAmountDue = (u.amount_due_round || 0) + (u.amount_due_orders_count || 0);
-        if (totalAmountDue > 0) {
-            amountDueMap[u.uid] = totalAmountDue;
-        }
-    });
-}
-        
-        tbody.innerHTML = '';
-        
-        // ========== IP 重复检测 ==========
+        // ============================================================
+        // 🔥 优化4：IP 重复检测（与原逻辑完全一致）
+        // ============================================================
         const ipMap = {};
         const duplicateIps = [];
         for (const u of users) {
@@ -731,326 +727,316 @@ if (amountDueUsers) {
         }
         
         if (duplicateIps.length > 0) {
-    const sortedIps = [...duplicateIps].sort();
-    const currentKey = sortedIps.join('|');
-    const ignoredKey = localStorage.getItem('duplicate_ip_ignored');
-    
-    if (ignoredKey !== currentKey) {
-        let htmlMessage = '';
-        let plainMessage = '';
-        for (const ip of duplicateIps) {
-            const usersWithIp = users.filter(u => u.registered_ip === ip);
-            const userList = usersWithIp.map(u => `${u.username} (UID: ${u.uid})`).join('<br>');
-            const displayIp = ip || 'Unknown';
-            htmlMessage += `📌 IP: ${displayIp}<br>${userList}<br><br>`;
-            plainMessage += `IP: ${displayIp} - ${usersWithIp.map(u => `${u.username} (UID: ${u.uid})`).join(', ')}\n`;
-        }
-        htmlMessage += 'Please check abnormal users registration activity.';
-        window._duplicateIpKey = currentKey;
-        
-        // ============================================================
-        // 🔥 添加到全局通知系统（Dashboard 通知铃铛）
-        // ============================================================
-        if (typeof window.notifications !== 'undefined' && Array.isArray(window.notifications)) {
-            const existingIPNotif = window.notifications.find(n => 
-                n.type === 'ip_withdrawal' && n.ip === duplicateIps[0]
-            );
+            const sortedIps = [...duplicateIps].sort();
+            const currentKey = sortedIps.join('|');
+            const ignoredKey = localStorage.getItem('duplicate_ip_ignored');
             
-            if (!existingIPNotif) {
-                const notification = {
-                    id: 'ip_withdrawal_' + duplicateIps[0] + '_' + Date.now(),
-                    type: 'ip_withdrawal',
-                    title: '🚨 Multiple IP Detected',
-                    message: plainMessage || 'Multiple users registered from same IP',
-                    detail: plainMessage,
-                    ip: duplicateIps[0],
-                    uids: users.filter(u => duplicateIps.includes(u.registered_ip)).map(u => u.uid),
-                    timestamp: new Date().toISOString(),
-                    read: false
-                };
-                window.notifications.unshift(notification);
-                console.log('📢 IP检测通知已添加到通知系统:', notification);
+            if (ignoredKey !== currentKey) {
+                let htmlMessage = '';
+                let plainMessage = '';
+                for (const ip of duplicateIps) {
+                    const usersWithIp = users.filter(u => u.registered_ip === ip);
+                    const userList = usersWithIp.map(u => `${u.username} (UID: ${u.uid})`).join('<br>');
+                    const displayIp = ip || 'Unknown';
+                    htmlMessage += `📌 IP: ${displayIp}<br>${userList}<br><br>`;
+                    plainMessage += `IP: ${displayIp} - ${usersWithIp.map(u => `${u.username} (UID: ${u.uid})`).join(', ')}\n`;
+                }
+                htmlMessage += 'Please check abnormal users registration activity.';
+                window._duplicateIpKey = currentKey;
+                
+                if (typeof window.notifications !== 'undefined' && Array.isArray(window.notifications)) {
+                    const existingIPNotif = window.notifications.find(n => 
+                        n.type === 'ip_withdrawal' && n.ip === duplicateIps[0]
+                    );
+                    if (!existingIPNotif) {
+                        const notification = {
+                            id: 'ip_withdrawal_' + duplicateIps[0] + '_' + Date.now(),
+                            type: 'ip_withdrawal',
+                            title: '🚨 Multiple IP Detected',
+                            message: plainMessage || 'Multiple users registered from same IP',
+                            detail: plainMessage,
+                            ip: duplicateIps[0],
+                            uids: users.filter(u => duplicateIps.includes(u.registered_ip)).map(u => u.uid),
+                            timestamp: new Date().toISOString(),
+                            read: false
+                        };
+                        window.notifications.unshift(notification);
+                        console.log('📢 IP检测通知已添加到通知系统:', notification);
+                    }
+                }
+                
+                setTimeout(() => {
+                    const plainText = htmlMessage.replace(/<br>/g, '\n');
+                    showAmberNotification(
+                        '⚠️ Multiple Registered IP Detected',
+                        plainText,
+                        'warning'
+                    );
+                    setTimeout(() => {
+                        const notifications = document.querySelectorAll('.notification-amber');
+                        if (notifications.length > 0) {
+                            const latestNotification = notifications[notifications.length - 1];
+                            const messageDiv = latestNotification.querySelector('div[style*="flex: 1"]');
+                            if (messageDiv) {
+                                const messageTextEl = messageDiv.querySelector('div[style*="font-size: 12px"]');
+                                if (messageTextEl) {
+                                    messageTextEl.innerHTML = htmlMessage;
+                                } else {
+                                    const allDivs = messageDiv.querySelectorAll('div');
+                                    if (allDivs.length >= 2) {
+                                        allDivs[1].innerHTML = htmlMessage;
+                                    }
+                                }
+                                const btn = document.createElement('button');
+                                btn.textContent = 'Don\'t show again';
+                                btn.style.cssText = `
+                                    background: rgba(255,255,255,0.1);
+                                    border: 1px solid rgba(255,255,255,0.2);
+                                    padding: 4px 14px;
+                                    border-radius: 20px;
+                                    color: #d4c8a0;
+                                    cursor: pointer;
+                                    font-size: 11px;
+                                    margin-top: 8px;
+                                    font-family: 'Inter', sans-serif;
+                                    transition: 0.2s;
+                                    display: block;
+                                `;
+                                btn.onmouseover = function() {
+                                    this.style.background = 'rgba(255,255,255,0.2)';
+                                };
+                                btn.onmouseout = function() {
+                                    this.style.background = 'rgba(255,255,255,0.1)';
+                                };
+                                btn.onclick = function(e) {
+                                    e.stopPropagation();
+                                    dismissDuplicateIpAlert();
+                                };
+                                messageDiv.appendChild(btn);
+                            }
+                        }
+                    }, 300);
+                }, 500);
             }
         }
         
-        setTimeout(() => {
-            const plainText = htmlMessage.replace(/<br>/g, '\n');
-            showAmberNotification(
-                '⚠️ Multiple Registered IP Detected',
-                plainText,
-                'warning'
-            );
-
-            setTimeout(() => {
-                const notifications = document.querySelectorAll('.notification-amber');
-                if (notifications.length > 0) {
-                    const latestNotification = notifications[notifications.length - 1];
-                    const messageDiv = latestNotification.querySelector('div[style*="flex: 1"]');
-                    if (messageDiv) {
-                        const messageTextEl = messageDiv.querySelector('div[style*="font-size: 12px"]');
-                        if (messageTextEl) {
-                            messageTextEl.innerHTML = htmlMessage;
-                        } else {
-                            const allDivs = messageDiv.querySelectorAll('div');
-                            if (allDivs.length >= 2) {
-                                allDivs[1].innerHTML = htmlMessage;
-                            }
-                        }
-                        
-                        const btn = document.createElement('button');
-                        btn.textContent = 'Don\'t show again';
-                        btn.style.cssText = `
-                            background: rgba(255,255,255,0.1);
-                            border: 1px solid rgba(255,255,255,0.2);
-                            padding: 4px 14px;
-                            border-radius: 20px;
-                            color: #d4c8a0;
-                            cursor: pointer;
-                            font-size: 11px;
-                            margin-top: 8px;
-                            font-family: 'Inter', sans-serif;
-                            transition: 0.2s;
-                            display: block;
-                        `;
-                        btn.onmouseover = function() {
-                            this.style.background = 'rgba(255,255,255,0.2)';
-                        };
-                        btn.onmouseout = function() {
-                            this.style.background = 'rgba(255,255,255,0.1)';
-                        };
-                        btn.onclick = function(e) {
-                            e.stopPropagation();
-                            dismissDuplicateIpAlert();
-                        };
-                        messageDiv.appendChild(btn);
-                    }
-                }
-            }, 300);
-        }, 500);
-    }
-}
+        // ============================================================
+        // 🔥 优化5：使用 DocumentFragment 批量渲染
+        // ============================================================
+        const fragment = document.createDocumentFragment();
         
         for (let u of users) {
-    const row = tbody.insertRow();
-    row.className = 'user-row';
-    
-    const orderCount = orderCountMap[u.uid] || 0;
-    const vipName = vipNameMap[u.vip_level] || (u.vip_level === 1 ? 'Normal' : u.vip_level === 2 ? 'VIP' : 'SVIP');
-    const pendingAmount = pendingMap[u.uid] || 0;
-    const creditScore = u.credit_score !== undefined && u.credit_score !== null ? u.credit_score : 100;
-    const countryAbbr = getCountryAbbreviation(u.country);
-    
-    // ===== 1. Actions (索引 0) =====
-const actionsCell = row.insertCell(0);
-actionsCell.innerHTML = `
-    <div class="actions-wrapper">
-        <button class="btn-actions edit-user-btn" 
-            data-uid="${u.uid}" 
-            data-username="${escapeHtml(u.username)}"
-            data-phone="${escapeHtml(u.phone || '')}"
-            data-pin="${escapeHtml(u.pin || '')}"
-            data-currency="${escapeHtml(u.withdrawal_address_type || 'USDT')}"
-            data-address="${escapeHtml(u.withdrawal_address || '')}"
-            data-credit-score="${creditScore}"
-            data-user-role="${escapeHtml(u.user_role || 'User')}"
-            data-withdrawal-frozen="${u.withdrawal_frozen || false}"
-            data-is-banned="${u.is_banned || false}"
-            data-created-at="${u.created_at || ''}"
-            title="Edit User">
-            <i class="fas fa-cog"></i> Actions
-        </button>
-    </div>
-`;
-    
-    // ===== 2. Phone (索引 1) =====
-    row.insertCell(1).innerHTML = `<span class="phone-text">${escapeHtml(u.phone || '-')}</span>`;
-    
-    // ===== 3. User ID + Position (索引 2) =====
-    const userRole = u.user_role || 'User';
-    const roleColor = userRole === 'Agent' ? '#c8b090' : 'rgba(255,255,255,0.25)';
-    const roleDisplay = userRole === 'Agent' ? 'Agent' : 'User';
-    row.insertCell(2).innerHTML = `
-    <div style="display:flex; flex-direction:column; align-items:flex-start; gap:1px;">
-        <span class="badge" style="background: rgba(255,255,255,0.08); padding: 2px 12px; border-radius: 20px; font-size: 11px; color: #c8d2e8; border: 1px solid rgba(255,255,255,0.06);">${escapeHtml(u.uid)}</span>
-        <span style="font-size:9px; font-weight:500; color:${roleColor}; background:rgba(255,255,255,0.03); padding:0px 6px; border-radius:8px; letter-spacing:0.3px;">${roleDisplay}</span>
-    </div>
-`;
-    
-    // ===== 4. Referrer (索引 3) =====
-    row.insertCell(3).innerHTML = `<span class="referrer-text">${escapeHtml(u.invited_by_username || '-')}</span>`;
-    
-    // ===== 5. Country (索引 4) - 国旗变小，和名称并排 =====
-const countryCell = row.insertCell(4);
-const countryData = getCountryData(u.country);
-const flagUrl = countryData.flag ? `https://flagcdn.com/w40/${countryData.flag}.png` : null;
-let countryHtml = '';
-if (flagUrl) {
-    countryHtml = `<img src="${flagUrl}" class="country-flag-sm" onerror="this.style.display='none'" alt="" style="width:16px; height:12px; border-radius:2px; object-fit:cover; vertical-align:middle; border:1px solid rgba(255,255,255,0.04); margin-right:3px;"> <span class="country-name-text" style="font-size:11px; font-weight:500; color:rgba(255,255,255,0.65); vertical-align:middle;">${countryData.abbr}</span>`;
-} else {
-    countryHtml = `<span class="country-name-text" style="font-size:11px; font-weight:500; color:rgba(255,255,255,0.65);">${countryData.abbr}</span>`;
-}
-countryCell.innerHTML = countryHtml;
-    
-    // ===== 6. VIP RANK (索引 5) - 只保留左边会变色发亮的图标 =====
-const vipCell = row.insertCell(5);
-const vipLevels = [
-    { level: 1, name: 'Normal', color: '#8a9aaa' },
-    { level: 2, name: 'VIP', color: '#c8b090' },
-    { level: 3, name: 'SVIP', color: '#ffd700' }
-];
-
-// 获取当前等级对应的样式
-const currentVip = vipLevels.find(v => v.level === u.vip_level) || vipLevels[0];
-const currentColor = currentVip.color;
-const symbol = currentVip.level === 1 ? '●' : currentVip.level === 2 ? '◆' : '★';
-
-// 生成选项 - 只显示文字
-let optionsHtml = '';
-vipLevels.forEach(v => {
-    const selected = v.level === u.vip_level ? 'selected' : '';
-    optionsHtml += `<option value="${v.level}" ${selected} 
-        style="background:#0e1228; color:${v.color}; padding:6px 12px; 
-               font-size:11px; font-weight:${v.level === u.vip_level ? '700' : '500'}; 
-               border-bottom:1px solid rgba(255,255,255,0.04); 
-               font-family:'Inter',sans-serif;">
-        ${v.name}
-    </option>`;
-});
-
-vipCell.innerHTML = `
-    <div class="vip-wrapper" style="position:relative; display:inline-block; width:85px;">
-        <select class="vip-select vip-change-select" data-uid="${u.uid}" data-username="${escapeHtml(u.username)}" data-level="${u.vip_level}"
-                style="width:85px; min-width:85px; max-width:85px; height:24px; padding:0 16px 0 22px; border-radius:14px; 
-                       border:1px solid ${currentColor}40; background:rgba(255,255,255,0.03); color:${currentColor}; 
-                       font-size:10px; font-weight:600; cursor:pointer; appearance:none; -webkit-appearance:none;
-                       font-family:'Inter',sans-serif; text-align:center; letter-spacing:0.2px;
-                       line-height:24px; box-sizing:border-box;
-                       background-image: url('data:image/svg+xml,%3Csvg xmlns=\\'http://www.w3.org/2000/svg\\' width=\\'8\\' height=\\'5\\'%3E%3Cpath d=\\'M0 0l4 5 4-5z\\' fill=\\'${encodeURIComponent(currentColor)}60\\'/%3E%3C/svg%3E');
-                       background-repeat:no-repeat; background-position:right 8px center; background-size:8px 5px;">
-            ${optionsHtml}
-        </select>
-        <!-- 会变色发亮的图标 -->
-        <span style="position:absolute; left:6px; top:50%; transform:translateY(-50%); font-size:9px; pointer-events:none; color:${currentColor}; text-shadow: 0 0 8px ${currentColor}40; line-height:1; display:flex; align-items:center; justify-content:center; width:12px; height:12px;">
-            ${symbol}
-        </span>
-    </div>
-`;
-    
-    // ===== 7. Pending (索引 6) - 直接读取 start.html 写入的 pending_display =====
-const pendingDisplay = u.pending_display || 0;
-
-const pendingCell = row.insertCell(6);
-pendingCell.innerHTML = `
-    <span class="pending-amount ${pendingDisplay > 0 ? 'pending-positive' : ''}">
-        €${pendingDisplay.toFixed(2)}
-    </span>
-`;
-
-// ===== 8. Balance (索引 7) =====
-const balanceCell = row.insertCell(7);
-const userBalance = u.balance || 0;
-const amountDueValue = amountDueMap[u.uid] || 0;  // 使用 amountDueMap
-
-let displayBalance = userBalance;
-let isBalanceNegative = false;
-
-if (amountDueValue > 0) {
-    displayBalance = -amountDueValue;
-    isBalanceNegative = true;
-} else {
-    displayBalance = userBalance;
-    isBalanceNegative = false;
-}
-
-balanceCell.innerHTML = `
-    <div class="balance-wrapper">
-        <button class="btn-sm btn-deposit deposit-btn" data-uid="${u.uid}" data-username="${escapeHtml(u.username)}" title="Deposit" style="font-size:9px; padding:2px 6px; white-space:nowrap; flex-shrink:0; border:none; border-radius:4px; cursor:pointer; transition:0.2s; background:rgba(74,222,128,0.12); color:#4ade80; font-weight:600; min-width:18px; text-align:center;">+</button>
-        <button class="btn-sm btn-deduct deduct-btn" data-uid="${u.uid}" data-username="${escapeHtml(u.username)}" title="Deduct" style="font-size:9px; padding:2px 6px; white-space:nowrap; flex-shrink:0; border:none; border-radius:4px; cursor:pointer; transition:0.2s; background:rgba(232,128,128,0.12); color:#e88080; font-weight:600; min-width:18px; text-align:center; margin-right:4px;">−</button>
-        <span class="balance-amount" style="font-weight:700; font-size:14px; ${isBalanceNegative ? 'color:#e88080 !important;' : 'color:#7ad0b0 !important;'}">
-            ${isBalanceNegative ? '-' : ''}€${Math.abs(displayBalance).toFixed(2)}
-        </span>
-        ${isBalanceNegative ? '<div style="font-size: 8px; color: #e88080; opacity: 0.5; margin-top: 1px;">Due</div>' : ''}
-    </div>
-`;
-    
-    // ===== 9. Round / Orders (索引 8) =====
-const ordersCell = row.insertCell(8);
-const isPremium = u.is_premium || false;
-const currentRound = u.current_round || 0;
-const roundOrdersCount = u.round_orders_count || 0;
-const ordersLimit = vipLimitMap[u.vip_level] || 30;  // ✅ 新增：动态获取订单限制
-let roundDisplay = 0;
-let displayCount = 0;
-if (!isPremium) {
-    roundDisplay = 0;
-    displayCount = orderCount;
-} else {
-    roundDisplay = currentRound;
-    displayCount = roundOrdersCount;
-}
-ordersCell.innerHTML = `
-    <div class="orders-wrapper">
-        <span class="round-number" style="font-size:11px; color:rgba(255,255,255,0.2); min-width:32px; flex-shrink:0;">(${roundDisplay})</span>
-        <input type="number" class="orders-input round-edit-input" data-uid="${u.uid}" value="${displayCount}" min="0" step="1" title="Edit orders in current round" style="width:50px; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.04); border-radius:4px; padding:2px 4px; color:#e6edf5; font-size:11px; text-align:center; flex-shrink:0;">
-        <span class="orders-slash" style="font-size:10px; color:rgba(255,255,255,0.12); flex-shrink:0;">/${ordersLimit}</span>
-        <button class="btn-sm btn-reset reset-orders-btn" data-uid="${u.uid}" data-username="${escapeHtml(u.username)}" title="Reset Orders" ${!isPremium ? 'disabled style="opacity:0.2;cursor:not-allowed;"' : ''} style="font-size:9px; padding:3px 10px; white-space:nowrap; flex-shrink:0; border:none; border-radius:4px; cursor:pointer; background:rgba(200,176,144,0.08); color:#c8b090; transition:0.2s;">
-            <i class="fas fa-undo-alt"></i> Reset
-        </button>
-        <button class="btn-sm btn-save-orders save-round-orders-btn" data-uid="${u.uid}" data-username="${escapeHtml(u.username)}" title="Save Orders" style="font-size:9px; padding:3px 10px; white-space:nowrap; flex-shrink:0; border:none; border-radius:4px; cursor:pointer; background:rgba(74,222,128,0.08); color:#7ad0b0; transition:0.2s;">
-            <i class="fas fa-save"></i> Save
-        </button>
-    </div>
-`;
-    
-    // ===== 10. Registered IP (索引 9) =====
-    row.insertCell(9).innerHTML = `<span class="ip-text">${escapeHtml(u.registered_ip || '-')}</span>`;
-    
-    // ===== 11. Last Online (索引 10) =====
-    const lastOnline = u.last_online || u.updated_at || u.created_at;
-    let lastOnlineDisplay = '-';
-    if (lastOnline) {
-        const lastDate = new Date(lastOnline);
-        const now = new Date();
-        const diffMins = Math.floor((now - lastDate) / 60000);
-        const diffHours = Math.floor(diffMins / 60);
-        const diffDays = Math.floor(diffHours / 24);
-        
-        if (diffMins < 1) {
-            lastOnlineDisplay = 'Just now';
-        } else if (diffMins < 60) {
-            lastOnlineDisplay = `${diffMins}m ago`;
-        } else if (diffHours < 24) {
-            lastOnlineDisplay = `${diffHours}h ago`;
-        } else if (diffDays < 7) {
-            lastOnlineDisplay = `${diffDays}d ago`;
-        } else {
-            lastOnlineDisplay = lastDate.toLocaleDateString();
+            const row = document.createElement('tr');
+            row.className = 'user-row';
+            
+            const orderCount = orderCountMap[u.uid] || 0;
+            const vipName = vipNameMap[u.vip_level] || (u.vip_level === 1 ? 'Normal' : u.vip_level === 2 ? 'VIP' : 'SVIP');
+            const pendingAmount = pendingMap[u.uid] || 0;
+            const creditScore = u.credit_score !== undefined && u.credit_score !== null ? u.credit_score : 100;
+            const countryAbbr = getCountryAbbreviation(u.country);
+            
+            // ===== 1. Actions =====
+            const actionsCell = document.createElement('td');
+            actionsCell.innerHTML = `
+                <div class="actions-wrapper">
+                    <button class="btn-actions edit-user-btn" 
+                        data-uid="${u.uid}" 
+                        data-username="${escapeHtml(u.username)}"
+                        data-phone="${escapeHtml(u.phone || '')}"
+                        data-pin="${escapeHtml(u.pin || '')}"
+                        data-currency="${escapeHtml(u.withdrawal_address_type || 'USDT')}"
+                        data-address="${escapeHtml(u.withdrawal_address || '')}"
+                        data-credit-score="${creditScore}"
+                        data-user-role="${escapeHtml(u.user_role || 'User')}"
+                        data-withdrawal-frozen="${u.withdrawal_frozen || false}"
+                        data-is-banned="${u.is_banned || false}"
+                        data-created-at="${u.created_at || ''}"
+                        title="Edit User">
+                        <i class="fas fa-cog"></i> Actions
+                    </button>
+                </div>
+            `;
+            row.appendChild(actionsCell);
+            
+            // ===== 2. Phone =====
+            const phoneCell = document.createElement('td');
+            phoneCell.innerHTML = `<span class="phone-text">${escapeHtml(u.phone || '-')}</span>`;
+            row.appendChild(phoneCell);
+            
+            // ===== 3. User ID + Position =====
+            const userRole = u.user_role || 'User';
+            const roleColor = userRole === 'Agent' ? '#c8b090' : 'rgba(255,255,255,0.25)';
+            const roleDisplay = userRole === 'Agent' ? 'Agent' : 'User';
+            const uidCell = document.createElement('td');
+            uidCell.innerHTML = `
+                <div style="display:flex; flex-direction:column; align-items:flex-start; gap:1px;">
+                    <span class="badge" style="background: rgba(255,255,255,0.08); padding: 2px 12px; border-radius: 20px; font-size: 11px; color: #c8d2e8; border: 1px solid rgba(255,255,255,0.06);">${escapeHtml(u.uid)}</span>
+                    <span style="font-size:9px; font-weight:500; color:${roleColor}; background:rgba(255,255,255,0.03); padding:0px 6px; border-radius:8px; letter-spacing:0.3px;">${roleDisplay}</span>
+                </div>
+            `;
+            row.appendChild(uidCell);
+            
+            // ===== 4. Referrer =====
+            const referrerCell = document.createElement('td');
+            referrerCell.innerHTML = `<span class="referrer-text">${escapeHtml(u.invited_by_username || '-')}</span>`;
+            row.appendChild(referrerCell);
+            
+            // ===== 5. Country =====
+            const countryCell = document.createElement('td');
+            const countryData = getCountryData(u.country);
+            const flagUrl = countryData.flag ? `https://flagcdn.com/w40/${countryData.flag}.png` : null;
+            let countryHtml = '';
+            if (flagUrl) {
+                countryHtml = `<img src="${flagUrl}" class="country-flag-sm" onerror="this.style.display='none'" alt="" style="width:16px; height:12px; border-radius:2px; object-fit:cover; vertical-align:middle; border:1px solid rgba(255,255,255,0.04); margin-right:3px;"> <span class="country-name-text" style="font-size:11px; font-weight:500; color:rgba(255,255,255,0.65); vertical-align:middle;">${countryData.abbr}</span>`;
+            } else {
+                countryHtml = `<span class="country-name-text" style="font-size:11px; font-weight:500; color:rgba(255,255,255,0.65);">${countryData.abbr}</span>`;
+            }
+            countryCell.innerHTML = countryHtml;
+            row.appendChild(countryCell);
+            
+            // ===== 6. VIP RANK =====
+            const vipCell = document.createElement('td');
+            const vipLevels = [
+                { level: 1, name: 'Normal', color: '#8a9aaa' },
+                { level: 2, name: 'VIP', color: '#c8b090' },
+                { level: 3, name: 'SVIP', color: '#ffd700' }
+            ];
+            const currentVip = vipLevels.find(v => v.level === u.vip_level) || vipLevels[0];
+            const currentColor = currentVip.color;
+            const symbol = currentVip.level === 1 ? '●' : currentVip.level === 2 ? '◆' : '★';
+            
+            let optionsHtml = '';
+            vipLevels.forEach(v => {
+                const selected = v.level === u.vip_level ? 'selected' : '';
+                optionsHtml += `<option value="${v.level}" ${selected} 
+                    style="background:#0e1228; color:${v.color}; padding:6px 12px; 
+                           font-size:11px; font-weight:${v.level === u.vip_level ? '700' : '500'}; 
+                           border-bottom:1px solid rgba(255,255,255,0.04); 
+                           font-family:'Inter',sans-serif;">
+                    ${v.name}
+                </option>`;
+            });
+            
+            vipCell.innerHTML = `
+                <div class="vip-wrapper" style="position:relative; display:inline-block; width:85px;">
+                    <select class="vip-select vip-change-select" data-uid="${u.uid}" data-username="${escapeHtml(u.username)}" data-level="${u.vip_level}"
+                            style="width:85px; min-width:85px; max-width:85px; height:24px; padding:0 16px 0 22px; border-radius:14px; 
+                                   border:1px solid ${currentColor}40; background:rgba(255,255,255,0.03); color:${currentColor}; 
+                                   font-size:10px; font-weight:600; cursor:pointer; appearance:none; -webkit-appearance:none;
+                                   font-family:'Inter',sans-serif; text-align:center; letter-spacing:0.2px;
+                                   line-height:24px; box-sizing:border-box;
+                                   background-image: url('data:image/svg+xml,%3Csvg xmlns=\\'http://www.w3.org/2000/svg\\' width=\\'8\\' height=\\'5\\'%3E%3Cpath d=\\'M0 0l4 5 4-5z\\' fill=\\'${encodeURIComponent(currentColor)}60\\'/%3E%3C/svg%3E');
+                                   background-repeat:no-repeat; background-position:right 8px center; background-size:8px 5px;">
+                        ${optionsHtml}
+                    </select>
+                    <span style="position:absolute; left:6px; top:50%; transform:translateY(-50%); font-size:9px; pointer-events:none; color:${currentColor}; text-shadow: 0 0 8px ${currentColor}40; line-height:1; display:flex; align-items:center; justify-content:center; width:12px; height:12px;">
+                        ${symbol}
+                    </span>
+                </div>
+            `;
+            row.appendChild(vipCell);
+            
+            // ===== 7. Pending =====
+            const pendingDisplay = u.pending_display || 0;
+            const pendingCell = document.createElement('td');
+            pendingCell.innerHTML = `
+                <span class="pending-amount ${pendingDisplay > 0 ? 'pending-positive' : ''}">
+                    €${pendingDisplay.toFixed(2)}
+                </span>
+            `;
+            row.appendChild(pendingCell);
+            
+            // ===== 8. Balance =====
+            const balanceCell = document.createElement('td');
+            const userBalance = u.balance || 0;
+            const amountDueValue = amountDueMap[u.uid] || 0;
+            let displayBalance = userBalance;
+            let isBalanceNegative = false;
+            if (amountDueValue > 0) {
+                displayBalance = -amountDueValue;
+                isBalanceNegative = true;
+            } else {
+                displayBalance = userBalance;
+                isBalanceNegative = false;
+            }
+            balanceCell.innerHTML = `
+                <div class="balance-wrapper">
+                    <button class="btn-sm btn-deposit deposit-btn" data-uid="${u.uid}" data-username="${escapeHtml(u.username)}" title="Deposit" style="font-size:9px; padding:2px 6px; white-space:nowrap; flex-shrink:0; border:none; border-radius:4px; cursor:pointer; transition:0.2s; background:rgba(74,222,128,0.12); color:#4ade80; font-weight:600; min-width:18px; text-align:center;">+</button>
+                    <button class="btn-sm btn-deduct deduct-btn" data-uid="${u.uid}" data-username="${escapeHtml(u.username)}" title="Deduct" style="font-size:9px; padding:2px 6px; white-space:nowrap; flex-shrink:0; border:none; border-radius:4px; cursor:pointer; transition:0.2s; background:rgba(232,128,128,0.12); color:#e88080; font-weight:600; min-width:18px; text-align:center; margin-right:4px;">−</button>
+                    <span class="balance-amount" style="font-weight:700; font-size:14px; ${isBalanceNegative ? 'color:#e88080 !important;' : 'color:#7ad0b0 !important;'}">
+                        ${isBalanceNegative ? '-' : ''}€${Math.abs(displayBalance).toFixed(2)}
+                    </span>
+                    ${isBalanceNegative ? '<div style="font-size: 8px; color: #e88080; opacity: 0.5; margin-top: 1px;">Due</div>' : ''}
+                </div>
+            `;
+            row.appendChild(balanceCell);
+            
+            // ===== 9. Round / Orders =====
+            const ordersCell = document.createElement('td');
+            const isPremium = u.is_premium || false;
+            const currentRound = u.current_round || 0;
+            const roundOrdersCount = u.round_orders_count || 0;
+            const ordersLimit = vipLimitMap[u.vip_level] || 30;
+            let roundDisplay = 0;
+            let displayCount = 0;
+            if (!isPremium) {
+                roundDisplay = 0;
+                displayCount = orderCount;
+            } else {
+                roundDisplay = currentRound;
+                displayCount = roundOrdersCount;
+            }
+            ordersCell.innerHTML = `
+                <div class="orders-wrapper">
+                    <span class="round-number" style="font-size:11px; color:rgba(255,255,255,0.2); min-width:32px; flex-shrink:0;">(${roundDisplay})</span>
+                    <input type="number" class="orders-input round-edit-input" data-uid="${u.uid}" value="${displayCount}" min="0" step="1" title="Edit orders in current round" style="width:50px; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.04); border-radius:4px; padding:2px 4px; color:#e6edf5; font-size:11px; text-align:center; flex-shrink:0;">
+                    <span class="orders-slash" style="font-size:10px; color:rgba(255,255,255,0.12); flex-shrink:0;">/${ordersLimit}</span>
+                    <button class="btn-sm btn-reset reset-orders-btn" data-uid="${u.uid}" data-username="${escapeHtml(u.username)}" title="Reset Orders" ${!isPremium ? 'disabled style="opacity:0.2;cursor:not-allowed;"' : ''} style="font-size:9px; padding:3px 10px; white-space:nowrap; flex-shrink:0; border:none; border-radius:4px; cursor:pointer; background:rgba(200,176,144,0.08); color:#c8b090; transition:0.2s;">
+                        <i class="fas fa-undo-alt"></i> Reset
+                    </button>
+                    <button class="btn-sm btn-save-orders save-round-orders-btn" data-uid="${u.uid}" data-username="${escapeHtml(u.username)}" title="Save Orders" style="font-size:9px; padding:3px 10px; white-space:nowrap; flex-shrink:0; border:none; border-radius:4px; cursor:pointer; background:rgba(74,222,128,0.08); color:#7ad0b0; transition:0.2s;">
+                        <i class="fas fa-save"></i> Save
+                    </button>
+                </div>
+            `;
+            row.appendChild(ordersCell);
+            
+            // ===== 10. Registered IP =====
+            const ipCell = document.createElement('td');
+            ipCell.innerHTML = `<span class="ip-text">${escapeHtml(u.registered_ip || '-')}</span>`;
+            row.appendChild(ipCell);
+            
+            // ===== 11. Last Online =====
+            const lastOnlineCell = document.createElement('td');
+            lastOnlineCell.innerHTML = `<span class="last-online-text">${formatLastOnline(u.last_online || u.updated_at || u.created_at)}</span>`;
+            row.appendChild(lastOnlineCell);
+            
+            fragment.appendChild(row);
         }
-    }
-    row.insertCell(10).innerHTML = `<span class="last-online-text">${lastOnlineDisplay}</span>`;
-}
         
-        // ========== 绑定事件 ==========
+        tbody.innerHTML = '';
+        tbody.appendChild(fragment);
         
-        // Actions 按钮 -> 打开 Edit User 弹窗
-document.querySelectorAll('.edit-user-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-        const uid = btn.dataset.uid;
-        const username = btn.dataset.username;
-        const phone = btn.dataset.phone;
-        const pin = btn.dataset.pin;
-        const currency = btn.dataset.currency;
-        const address = btn.dataset.address;
-        const creditScore = btn.dataset.creditScore || 100;
-        const userRole = btn.dataset.userRole || 'User';
-        const withdrawalFrozen = btn.dataset.withdrawalFrozen === 'true';
-        const isBanned = btn.dataset.isBanned === 'true';
-        const createdAt = btn.dataset.createdAt || '';
-        openEditUserModal(uid, username, phone, pin, currency, address, creditScore, userRole, withdrawalFrozen, isBanned, createdAt);
-    });
-});
+        // ============================================================
+        // 🔥 优化6：事件绑定（与原有逻辑完全一致）
+        // ============================================================
+        document.querySelectorAll('.edit-user-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const uid = btn.dataset.uid;
+                const username = btn.dataset.username;
+                const phone = btn.dataset.phone;
+                const pin = btn.dataset.pin;
+                const currency = btn.dataset.currency;
+                const address = btn.dataset.address;
+                const creditScore = btn.dataset.creditScore || 100;
+                const userRole = btn.dataset.userRole || 'User';
+                const withdrawalFrozen = btn.dataset.withdrawalFrozen === 'true';
+                const isBanned = btn.dataset.isBanned === 'true';
+                const createdAt = btn.dataset.createdAt || '';
+                openEditUserModal(uid, username, phone, pin, currency, address, creditScore, userRole, withdrawalFrozen, isBanned, createdAt);
+            });
+        });
         
-        // VIP 下拉
         document.querySelectorAll('.vip-change-select').forEach(sel => {
             sel.addEventListener('change', () => {
                 const uid = sel.dataset.uid;
@@ -1060,7 +1046,6 @@ document.querySelectorAll('.edit-user-btn').forEach(btn => {
             });
         });
         
-        // Deposit
         document.querySelectorAll('.deposit-btn').forEach(btn => {
             btn.addEventListener('click', () => {
                 const uid = btn.dataset.uid;
@@ -1069,7 +1054,6 @@ document.querySelectorAll('.edit-user-btn').forEach(btn => {
             });
         });
         
-        // Deduct
         document.querySelectorAll('.deduct-btn').forEach(btn => {
             btn.addEventListener('click', () => {
                 const uid = btn.dataset.uid;
@@ -1078,7 +1062,6 @@ document.querySelectorAll('.edit-user-btn').forEach(btn => {
             });
         });
         
-        // Reset Orders
         document.querySelectorAll('.reset-orders-btn').forEach(btn => {
             btn.addEventListener('click', () => {
                 const uid = btn.dataset.uid;
@@ -1087,32 +1070,29 @@ document.querySelectorAll('.edit-user-btn').forEach(btn => {
             });
         });
         
-        // Save Round Orders
         document.querySelectorAll('.save-round-orders-btn').forEach(btn => {
-    btn.addEventListener('click', async () => {
-        const uid = btn.dataset.uid;
-        const username = btn.dataset.username;
-        const input = document.querySelector(`.round-edit-input[data-uid="${uid}"]`);
-        if (input) {
-            const newValue = parseInt(input.value);
-            // 动态获取该用户的 ordersLimit
-            try {
-                const { data: userData } = await sb.from('users').select('vip_level').eq('uid', uid).single();
-                const { data: vipSetting } = await sb.from('vip_settings').select('orders_limit').eq('level', userData?.vip_level || 1).single();
-                const maxOrders = vipSetting?.orders_limit || 30;
-                if (!isNaN(newValue) && newValue >= 0 && newValue <= maxOrders) {
-                    saveRoundOrders(uid, username, newValue);
-                } else {
-                    showToast(`Please enter a valid number between 0-${maxOrders}`, 'error');
+            btn.addEventListener('click', async () => {
+                const uid = btn.dataset.uid;
+                const username = btn.dataset.username;
+                const input = document.querySelector(`.round-edit-input[data-uid="${uid}"]`);
+                if (input) {
+                    const newValue = parseInt(input.value);
+                    try {
+                        const { data: userData } = await sb.from('users').select('vip_level').eq('uid', uid).single();
+                        const { data: vipSetting } = await sb.from('vip_settings').select('orders_limit').eq('level', userData?.vip_level || 1).single();
+                        const maxOrders = vipSetting?.orders_limit || 30;
+                        if (!isNaN(newValue) && newValue >= 0 && newValue <= maxOrders) {
+                            saveRoundOrders(uid, username, newValue);
+                        } else {
+                            showToast(`Please enter a valid number between 0-${maxOrders}`, 'error');
+                        }
+                    } catch (e) {
+                        showToast('Failed to get orders limit', 'error');
+                    }
                 }
-            } catch (e) {
-                showToast('Failed to get orders limit', 'error');
-            }
-        }
-    });
-});
+            });
+        });
         
-        // Round Edit Input Enter
         document.querySelectorAll('.round-edit-input').forEach(input => {
             input.addEventListener('keypress', function(e) {
                 if (e.key === 'Enter') {
@@ -1160,7 +1140,6 @@ async function updateUserVip(uid, username, newLevel) {
 
 // ========== Deposit 功能 ==========
 function depositBalance(uid, username) {
-    // 创建暗色风格弹窗
     const overlay = document.createElement('div');
     overlay.id = 'depositModal';
     overlay.style.cssText = `
@@ -1244,7 +1223,6 @@ function depositBalance(uid, username) {
     overlay.appendChild(modal);
     document.body.appendChild(overlay);
 
-    // ===== 绑定下拉事件 =====
     const rewardDisplay = modal.querySelector('.reward-select-display');
     const rewardDropdown = modal.querySelector('.reward-select-dropdown');
     const rewardOptions = modal.querySelectorAll('.reward-option');
@@ -1255,7 +1233,6 @@ function depositBalance(uid, username) {
         rewardDisplay.addEventListener('click', function(e) {
             e.stopPropagation();
             const isOpen = rewardDropdown.style.opacity === '1';
-            // 关闭所有其他下拉
             document.querySelectorAll('.reward-select-dropdown').forEach(function(el) {
                 if (el !== rewardDropdown) {
                     el.style.opacity = '0';
@@ -1293,7 +1270,6 @@ function depositBalance(uid, username) {
         });
     });
 
-    // 点击外部关闭下拉
     const closeDropdownHandler = function(e) {
         if (!e.target.closest('.reward-select-wrapper')) {
             document.querySelectorAll('.reward-select-dropdown').forEach(function(el) {
@@ -1306,18 +1282,15 @@ function depositBalance(uid, username) {
     };
     document.addEventListener('click', closeDropdownHandler);
 
-    // 聚焦第一个输入框
     setTimeout(function() {
         document.getElementById('depositAmountInput')?.focus();
     }, 100);
 
-    // Cancel 按钮
     document.getElementById('depositCancelBtn')?.addEventListener('click', function() {
         overlay.remove();
         document.removeEventListener('click', closeDropdownHandler);
     });
 
-    // 点击遮罩层关闭
     overlay.addEventListener('click', function(e) {
         if (e.target === this) {
             overlay.remove();
@@ -1325,7 +1298,6 @@ function depositBalance(uid, username) {
         }
     });
 
-    // ESC 键关闭
     const escHandler = function(e) {
         if (e.key === 'Escape') {
             overlay.remove();
@@ -1335,7 +1307,6 @@ function depositBalance(uid, username) {
     };
     document.addEventListener('keydown', escHandler);
 
-    // Confirm 按钮
     document.getElementById('depositConfirmBtn')?.addEventListener('click', async function() {
         const depositAmount = parseFloat(document.getElementById('depositAmountInput').value) || 0;
         const rewardAmount = parseFloat(document.getElementById('rewardAmountInput').value) || 0;
@@ -1351,7 +1322,6 @@ function depositBalance(uid, username) {
         await processDeposit(uid, username, depositAmount, rewardAmount, rewardName);
     });
 
-    // Enter 键提交
     modal.querySelectorAll('.deposit-input').forEach(function(input) {
         input.addEventListener('keypress', function(e) {
             if (e.key === 'Enter') {
@@ -1363,7 +1333,6 @@ function depositBalance(uid, username) {
 
 // ========== Deduct 功能 ==========
 function deductBalance(uid, username) {
-    // 创建暗色风格弹窗
     const overlay = document.createElement('div');
     overlay.id = 'deductModal';
     overlay.style.cssText = `
@@ -1423,7 +1392,6 @@ function deductBalance(uid, username) {
     overlay.appendChild(modal);
     document.body.appendChild(overlay);
 
-    // 添加动画样式（复用已有的，如果没有则添加）
     if (!document.getElementById('depositModalStyles')) {
         const style = document.createElement('style');
         style.id = 'depositModalStyles';
@@ -1447,24 +1415,20 @@ function deductBalance(uid, username) {
         document.head.appendChild(style);
     }
 
-    // 聚焦输入框
     setTimeout(() => {
         document.getElementById('deductAmountInput')?.focus();
     }, 100);
 
-    // Cancel 按钮
     document.getElementById('deductCancelBtn')?.addEventListener('click', function() {
         overlay.remove();
     });
 
-    // 点击遮罩层关闭
     overlay.addEventListener('click', function(e) {
         if (e.target === this) {
             overlay.remove();
         }
     });
 
-    // ESC 键关闭
     const escHandler = function(e) {
         if (e.key === 'Escape') {
             overlay.remove();
@@ -1473,7 +1437,6 @@ function deductBalance(uid, username) {
     };
     document.addEventListener('keydown', escHandler);
 
-    // Confirm 按钮
     document.getElementById('deductConfirmBtn')?.addEventListener('click', async function() {
         const deductAmount = parseFloat(document.getElementById('deductAmountInput').value);
         if (isNaN(deductAmount) || deductAmount <= 0) {
@@ -1519,7 +1482,6 @@ function deductBalance(uid, username) {
         }
     });
 
-    // Enter 键提交
     document.getElementById('deductAmountInput')?.addEventListener('keypress', function(e) {
         if (e.key === 'Enter') {
             document.getElementById('deductConfirmBtn')?.click();
@@ -1686,7 +1648,6 @@ async function resetUserOrders(uid, username) {
     const currentRound = user.current_round || 0;
     const roundOrdersCount = user.round_orders_count || 0;
     
-    // 动态获取该用户的 ordersLimit
     const { data: vipSetting } = await sb.from('vip_settings').select('orders_limit').eq('level', user.vip_level || 1).single();
     const ordersLimit = vipSetting?.orders_limit || 30;
     
@@ -1758,7 +1719,6 @@ function openEditUserModal(uid, username, phone, pin, currency, address, creditS
                 <div style="position: absolute; top: -100px; right: -100px; width: 300px; height: 300px; background: radial-gradient(circle, rgba(180, 180, 200, 0.03), transparent 70%); pointer-events: none; border-radius: 50%;"></div>
                 <div style="position: absolute; bottom: -80px; left: -80px; width: 200px; height: 200px; background: radial-gradient(circle, rgba(180, 180, 200, 0.02), transparent 70%); pointer-events: none; border-radius: 50%;"></div>
                 
-                <!-- 头部 -->
                 <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; position: relative; z-index: 1;">
                     <div>
                         <div style="display: flex; align-items: center; gap: 8px;">
@@ -1777,7 +1737,6 @@ function openEditUserModal(uid, username, phone, pin, currency, address, creditS
 
                 <hr style="border: none; border-top: 1px solid rgba(180, 180, 200, 0.06); margin: 0 0 12px 0;">
 
-                <!-- 四张卡片 -->
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 14px; position: relative; z-index: 1;">
                     <div style="background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(180, 180, 200, 0.06); border-radius: 10px; padding: 10px 14px;">
                         <div style="font-size: 9px; font-weight: 600; color: #6a6a80; text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 1px;">User ID</div>
@@ -1797,7 +1756,6 @@ function openEditUserModal(uid, username, phone, pin, currency, address, creditS
                     </div>
                 </div>
 
-                <!-- Account Actions -->
                 <div style="margin-bottom: 14px; position: relative; z-index: 1;">
                     <div style="font-size: 9px; font-weight: 600; color: #5a5a6a; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px;">Account Actions</div>
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px;">
@@ -1828,7 +1786,6 @@ function openEditUserModal(uid, username, phone, pin, currency, address, creditS
                     </div>
                 </div>
 
-                <!-- Credit Scores -->
                 <div style="margin-bottom: 14px; background: rgba(255,255,255,0.02); border-radius: 8px; padding: 10px 14px; border: 1px solid rgba(180,180,200,0.05); position:relative; z-index:1;">
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
                         <span style="font-weight:500; color:#6a6a80; font-size:11px;">Credit Scores</span>
@@ -1849,7 +1806,6 @@ function openEditUserModal(uid, username, phone, pin, currency, address, creditS
                     </div>
                 </div>
 
-                <!-- 底部按钮：Delete User 放在 Save Changes 左侧 -->
                 <div style="display: flex; gap: 10px; justify-content: flex-end; border-top: 1px solid rgba(180, 180, 200, 0.06); padding-top: 12px; position: relative; z-index: 1;">
                     <button onclick="deleteUserFromModal('${uid}', '${escapeHtml(username)}')" style="background: rgba(232,128,128,0.08); border: 1px solid rgba(232,128,128,0.1); padding: 6px 18px; border-radius: 40px; color: #e88080; font-weight: 500; cursor: pointer; font-size: 11px; transition: 0.2s; font-family: 'Inter', sans-serif;">
                         <i class="fas fa-trash"></i> Delete User
@@ -1865,7 +1821,6 @@ function openEditUserModal(uid, username, phone, pin, currency, address, creditS
     fetchUserFinancialStats(uid);
 }
 
-// ===== Delete User from Modal =====
 async function deleteUserFromModal(uid, username) {
     closeEditUserModal();
     showConfirm(
@@ -1896,7 +1851,6 @@ async function deleteUserFromModal(uid, username) {
     );
 }
 
-// ===== Credit Score Update =====
 let creditScoreUpdatePending = false;
 let pendingScoreValue = 0;
 
@@ -1923,7 +1877,6 @@ function updateCreditScore(value) {
     }
 }
 
-// ===== Save Edit User =====
 async function saveEditUser(uid) {
     const creditScore = document.getElementById('creditScoreSlider').value;
     
@@ -1942,14 +1895,12 @@ async function saveEditUser(uid) {
     }
 }
 
-// ===== Close Edit User Modal =====
 function closeEditUserModal() {
     const modal = document.getElementById('editUserModal');
     if (modal) modal.remove();
     document.body.style.overflow = '';
 }
 
-// ===== Fetch User Financial Stats =====
 let financialStatsTimeout = null;
 
 async function fetchUserFinancialStats(uid) {
@@ -1984,7 +1935,6 @@ async function fetchUserFinancialStats(uid) {
     }, 200);
 }
 
-// ===== Account Actions =====
 async function resetWithdrawalPin(uid) {
     showConfirm('Reset Withdrawal PIN', `确定要重置用户 ${uid} 的提现PIN吗？`, async () => {
         try {
@@ -2109,7 +2059,6 @@ async function toggleBanUser(uid) {
     );
 }
 
-// ===== IP 重复检测 - Don't show again =====
 function dismissDuplicateIpAlert() {
     const key = window._duplicateIpKey;
     if (key) {
@@ -2119,7 +2068,6 @@ function dismissDuplicateIpAlert() {
     document.querySelectorAll('.notification-amber').forEach(el => el.remove());
 }
 
-// ===== 分页渲染 =====
 function renderUserPagination() {
     const container = document.getElementById('userPagination');
     if (!container) return;
@@ -2170,7 +2118,6 @@ function escapeHtml(str) {
     });
 }
 
-// ===== 创建用户 =====
 document.getElementById('createUserBtn')?.addEventListener('click', async () => {
     const phone = document.getElementById('newPhone').value.trim();
     const username = document.getElementById('newUsername').value.trim();

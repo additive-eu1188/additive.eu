@@ -25,6 +25,30 @@ let readNotifications = {
 let currentActivePage = 'dashboard';
 
 // ============================================================
+// 🔥 全局 Tab 标签栏状态
+// ============================================================
+let tabs = [];
+let activeTabId = null;
+let tabIdCounter = 0;
+
+// 页面定义（所有可用页面）
+const PAGE_DEFS = {
+    dashboard: { id: 'dashboard', label: 'Dashboard', icon: 'fa-chart-pie', pageId: 'dashboard' },
+    users: { id: 'users', label: 'Users', icon: 'fa-users', pageId: 'users' },
+    kyc: { id: 'kyc', label: 'KYC', icon: 'fa-id-card', pageId: 'kyc' },
+    emailverify: { id: 'emailverify', label: 'Email', icon: 'fa-envelope', pageId: 'emailverify' },
+    trial: { id: 'trial', label: 'Trial', icon: 'fa-gift', pageId: 'trial' },
+    withdrawals: { id: 'withdrawals', label: 'Withdrawal', icon: 'fa-money-bill-wave', pageId: 'withdrawals' },
+    vip: { id: 'vip', label: 'VIP', icon: 'fa-crown', pageId: 'vip' },
+    setorders: { id: 'setorders', label: 'Orders Trigger', icon: 'fa-cog', pageId: 'setorders' },
+    orders: { id: 'orders', label: 'Orders History', icon: 'fa-clock', pageId: 'orders' },
+    orderpool: { id: 'orderpool', label: 'Orders Pool', icon: 'fa-hotel', pageId: 'orderpool' },
+    animated: { id: 'animated', label: 'Animated', icon: 'fa-play-circle', pageId: 'animated' },
+    signin: { id: 'signin', label: 'Check In', icon: 'fa-calendar-check', pageId: 'signin' },
+    content: { id: 'content', label: 'Content', icon: 'fa-file-alt', pageId: 'content' }
+};
+
+// ============================================================
 // 🔥 全局通知数组
 // ============================================================
 if (typeof window.notifications === 'undefined') {
@@ -181,7 +205,6 @@ function renderSidebarNav() {
   const navList = document.querySelector('.nav-list');
   if (!navList) return;
 
-  // 如果已经有内容，先清空
   navList.innerHTML = '';
 
   const navItems = [
@@ -206,15 +229,10 @@ function renderSidebarNav() {
     div.setAttribute('data-page', item.id);
 
     const isActive = currentActivePage === item.id;
-    // 有通知且未读
     const hasUnread = notificationCounts[item.id] > 0 && !readNotifications[item.id];
 
-    if (isActive) {
-      div.classList.add('active');
-    }
-    if (hasUnread) {
-      div.classList.add('has-notification');
-    }
+    if (isActive) div.classList.add('active');
+    if (hasUnread) div.classList.add('has-notification');
 
     div.innerHTML = `
       <i class="fas ${item.icon}"></i>
@@ -222,29 +240,28 @@ function renderSidebarNav() {
       ${hasUnread ? `<span class="badge-notify" id="badge-${item.id}">${notificationCounts[item.id]}</span>` : ''}
     `;
 
+    // ★ 修改点击事件：改为打开 Tab
     div.addEventListener('click', function(e) {
       e.stopPropagation();
-
       const pageId = this.dataset.page;
 
-      // === 1. 标记通知为已读（角标消失） ===
+      // 标记通知为已读
       const badgeId = Object.keys(notificationCounts).find(key => key === pageId);
       if (badgeId && notificationCounts[badgeId] > 0 && !readNotifications[badgeId]) {
         readNotifications[badgeId] = true;
         const badge = this.querySelector('.badge-notify');
         if (badge) badge.remove();
-        // 移除 has-notification 类
         this.classList.remove('has-notification');
         console.log(`✅ 通知已读: ${item.label}`);
       }
 
-      // === 2. 切换页面激活状态 ===
+      // 更新侧边栏激活状态
       document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
       this.classList.add('active');
       currentActivePage = pageId;
 
-      // === 3. 加载对应页面 ===
-      if (pageId) showPage(pageId);
+      // ★ 改为打开标签页（而不是直接 showPage）
+      openTab(pageId);
     });
 
     navList.appendChild(div);
@@ -914,8 +931,6 @@ async function pollForUpdates() {
 // ============================================================
 function showPage(pageId) {
     console.log('切换页面:', pageId);
-    
-    // 更新当前页面
     currentActivePage = pageId;
     
     document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
@@ -1200,6 +1215,9 @@ function initParticleNetwork() {
 document.addEventListener('DOMContentLoaded', function() {
     // 渲染侧边栏
     renderSidebarNav();
+
+// ★ 添加这一行：初始化 Tab 标签栏
+    initTabBar();
     
     // 激活当前页面
     document.querySelectorAll('.nav-item').forEach(el => {
@@ -1233,5 +1251,417 @@ setTimeout(() => {
 if (localStorage.getItem('admin_logged_in') !== 'true') {
     window.location.href = 'admin-login.html';
 }
+
+// ============================================================
+// 🔥 Tab 标签栏渲染
+// ============================================================
+function renderTabBar() {
+    const container = document.getElementById('tabBarContainer');
+    if (!container) {
+        // 如果 tabBarContainer 还不存在，先创建
+        initTabBar();
+        return;
+    }
+
+    // 保留 + 按钮
+    const addBtn = container.querySelector('#addTabBtn');
+    while (container.firstChild) {
+        if (container.firstChild.id === 'addTabBtn') break;
+        container.removeChild(container.firstChild);
+    }
+
+    if (tabs.length === 0) {
+        const empty = document.createElement('span');
+        empty.className = 'empty-tab';
+        empty.textContent = '点击侧边栏打开页面';
+        empty.style.cssText = 'color:rgba(255,255,255,0.08);font-size:12px;padding:0 8px;';
+        container.insertBefore(empty, addBtn);
+        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+        return;
+    }
+
+    tabs.forEach(tab => {
+        const tabEl = document.createElement('button');
+        tabEl.className = 'tab-item';
+        tabEl.dataset.tabId = tab.id;
+        tabEl.dataset.pageId = tab.pageId;
+
+        const isActive = tab.id === activeTabId;
+        if (isActive) tabEl.classList.add('active');
+
+        const hasUnread = notificationCounts[tab.pageId] > 0 && !readNotifications[tab.pageId];
+        if (hasUnread) tabEl.classList.add('has-notification');
+
+        const pageDef = PAGE_DEFS[tab.pageId];
+        const icon = pageDef ? pageDef.icon : 'fa-file';
+
+        tabEl.innerHTML = `
+            <i class="fas ${icon}"></i>
+            <span>${tab.label}</span>
+            ${hasUnread ? `<span class="tab-badge">${notificationCounts[tab.pageId]}</span>` : ''}
+            <button class="tab-close" data-tab-id="${tab.id}" title="关闭标签">
+                <i class="fas fa-times"></i>
+            </button>
+        `;
+
+        tabEl.addEventListener('click', function(e) {
+            if (e.target.closest('.tab-close')) return;
+            switchTab(tab.id);
+        });
+
+        const closeBtn = tabEl.querySelector('.tab-close');
+        closeBtn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            closeTab(tab.id);
+        });
+
+        container.insertBefore(tabEl, addBtn);
+    });
+
+    updatePageVisibility();
+}
+
+function updatePageVisibility() {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+
+    const activeTab = tabs.find(t => t.id === activeTabId);
+    if (activeTab) {
+        const pageEl = document.getElementById('page_' + activeTab.pageId);
+        if (pageEl) {
+            pageEl.classList.add('active');
+            loadPageContent(activeTab.pageId);
+        }
+    }
+}
+
+let loadedPages = {};
+
+function loadPageContent(pageId) {
+    if (loadedPages[pageId]) return;
+    loadedPages[pageId] = true;
+
+    const pageMap = {
+        'dashboard': 'loadDashboardPage',
+        'users': 'loadUsersPage',
+        'kyc': 'loadKycPage',
+        'emailverify': 'loadEmailVerifyPage',
+        'trial': 'loadTrialPage',
+        'withdrawals': 'loadWithdrawalsPage',
+        'vip': 'loadVipPage',
+        'setorders': 'loadSetordersPage',
+        'orders': 'loadOrdersPage',
+        'orderpool': 'loadOrderPoolPage',
+        'animated': 'loadAnimatedPage',
+        'signin': 'loadSigninPage',
+        'content': 'loadContentPage'
+    };
+
+    const fnName = pageMap[pageId];
+    if (fnName && window[fnName]) {
+        console.log(`📄 加载页面: ${pageId}`);
+        if (pageId === 'dashboard') {
+            window[fnName](currentDays || 1);
+        } else {
+            window[fnName]();
+        }
+    }
+}
+
+function openTab(pageId) {
+    const existing = tabs.find(t => t.pageId === pageId);
+    if (existing) {
+        switchTab(existing.id);
+        return;
+    }
+
+    const pageDef = PAGE_DEFS[pageId];
+    if (!pageDef) return;
+
+    const newTab = {
+        id: ++tabIdCounter,
+        pageId: pageId,
+        label: pageDef.label,
+        notificationCount: notificationCounts[pageId] || 0
+    };
+
+    tabs.push(newTab);
+    activeTabId = newTab.id;
+    renderTabBar();
+
+    const container = document.getElementById('tabBarContainer');
+    const newTabEl = container.querySelector(`.tab-item[data-tab-id="${newTab.id}"]`);
+    if (newTabEl) {
+        newTabEl.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+    }
+}
+
+function switchTab(tabId) {
+    const tab = tabs.find(t => t.id === tabId);
+    if (!tab) return;
+
+    const pageId = tab.pageId;
+    if (notificationCounts[pageId] > 0 && !readNotifications[pageId]) {
+        readNotifications[pageId] = true;
+        renderTabBar();
+        console.log(`✅ 通知已读: ${pageId}`);
+    }
+
+    if (activeTabId === tabId) return;
+    activeTabId = tabId;
+    renderTabBar();
+}
+
+function closeTab(tabId) {
+    const index = tabs.findIndex(t => t.id === tabId);
+    if (index === -1) return;
+
+    tabs.splice(index, 1);
+
+    if (tabs.length === 0) {
+        activeTabId = null;
+    } else if (activeTabId === tabId) {
+        const newIndex = Math.min(index, tabs.length - 1);
+        activeTabId = tabs[newIndex].id;
+    }
+
+    renderTabBar();
+}
+
+function initTabBar() {
+    if (document.getElementById('tabBarContainer')) return;
+
+    const main = document.querySelector('.main');
+    if (!main) {
+        setTimeout(initTabBar, 500);
+        return;
+    }
+
+    const container = document.createElement('div');
+    container.id = 'tabBarContainer';
+    container.className = 'tab-bar-container';
+    container.style.cssText = `
+        display: flex;
+        align-items: center;
+        background: rgba(12, 16, 28, 0.92);
+        border-bottom: 1px solid rgba(214, 178, 94, 0.08);
+        padding: 0 12px;
+        height: 50px;
+        overflow-x: auto;
+        overflow-y: hidden;
+        flex-shrink: 0;
+        gap: 2px;
+        position: sticky;
+        top: 0;
+        z-index: 100;
+        scrollbar-width: thin;
+        box-shadow: 0 2px 20px rgba(0,0,0,0.3), inset 0 1px 0 rgba(214, 178, 94, 0.04);
+        margin: -24px -32px 20px -32px;
+        padding-left: 20px;
+        padding-right: 16px;
+    `;
+
+    const addBtn = document.createElement('button');
+    addBtn.id = 'addTabBtn';
+    addBtn.className = 'tab-add-btn';
+    addBtn.innerHTML = '<i class="fas fa-plus"></i>';
+    addBtn.title = '打开新页面';
+    addBtn.style.cssText = `
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 34px;
+        height: 34px;
+        border-radius: 6px;
+        border: 1px solid rgba(255,255,255,0.06);
+        background: rgba(255,255,255,0.02);
+        color: rgba(255,255,255,0.2);
+        cursor: pointer;
+        font-size: 14px;
+        transition: 0.25s;
+        flex-shrink: 0;
+        margin-left: 4px;
+        font-family: 'Inter', sans-serif;
+    `;
+    addBtn.addEventListener('mouseenter', function() {
+        this.style.borderColor = 'rgba(214,178,94,0.2)';
+        this.style.color = '#D6B25E';
+        this.style.background = 'rgba(214,178,94,0.04)';
+    });
+    addBtn.addEventListener('mouseleave', function() {
+        this.style.borderColor = 'rgba(255,255,255,0.06)';
+        this.style.color = 'rgba(255,255,255,0.2)';
+        this.style.background = 'rgba(255,255,255,0.02)';
+    });
+
+    container.appendChild(addBtn);
+    main.insertBefore(container, main.firstChild);
+
+    // 添加 Tab 样式
+    const style = document.getElementById('tab-bar-styles');
+    if (!style) {
+        const newStyle = document.createElement('style');
+        newStyle.id = 'tab-bar-styles';
+        newStyle.textContent = `
+            .tab-item {
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                padding: 6px 14px;
+                border-radius: 8px 8px 0 0;
+                background: rgba(255,255,255,0.02);
+                color: rgba(255,255,255,0.45);
+                font-size: 12px;
+                font-weight: 500;
+                cursor: pointer;
+                transition: all 0.25s ease;
+                white-space: nowrap;
+                flex-shrink: 0;
+                height: 42px;
+                border: none;
+                font-family: 'Inter', sans-serif;
+                position: relative;
+                user-select: none;
+                border-top: 1px solid transparent;
+                border-left: 1px solid transparent;
+                border-right: 1px solid transparent;
+                text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+            }
+            .tab-item i {
+                font-size: 13px;
+                color: rgba(255,255,255,0.2);
+                transition: 0.25s;
+            }
+            .tab-item:hover {
+                background: rgba(255,255,255,0.05);
+                color: rgba(255,255,255,0.6);
+                border-top-color: rgba(214,178,94,0.06);
+                border-left-color: rgba(214,178,94,0.04);
+                border-right-color: rgba(214,178,94,0.04);
+            }
+            .tab-item.active {
+                background: linear-gradient(180deg, rgba(214,178,94,0.08) 0%, rgba(214,178,94,0.02) 100%);
+                color: #F3D38B;
+                border-top: 1px solid rgba(214,178,94,0.2);
+                border-left: 1px solid rgba(214,178,94,0.06);
+                border-right: 1px solid rgba(214,178,94,0.06);
+                box-shadow: 0 -2px 16px rgba(214,178,94,0.04), inset 0 1px 0 rgba(214,178,94,0.06);
+            }
+            .tab-item.active i {
+                color: #D6B25E;
+                filter: drop-shadow(0 0 6px rgba(214,178,94,0.1));
+            }
+            .tab-item.active::after {
+                content: '';
+                position: absolute;
+                bottom: 0;
+                left: 15%;
+                width: 70%;
+                height: 2px;
+                background: linear-gradient(90deg, transparent, #D6B25E, #F3D38B, #D6B25E, transparent);
+                border-radius: 2px;
+                box-shadow: 0 0 12px rgba(214,178,94,0.15);
+            }
+            .tab-close {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                width: 18px;
+                height: 18px;
+                border-radius: 4px;
+                border: none;
+                background: transparent;
+                color: rgba(255,255,255,0.15);
+                cursor: pointer;
+                font-size: 10px;
+                transition: 0.2s;
+                padding: 0;
+                margin-left: 2px;
+            }
+            .tab-close:hover {
+                background: rgba(232,128,128,0.15);
+                color: #e88080;
+                box-shadow: 0 0 12px rgba(232,128,128,0.05);
+            }
+            .tab-badge {
+                background: #4a7cff;
+                color: #fff;
+                font-size: 9px;
+                font-weight: 700;
+                min-width: 16px;
+                height: 16px;
+                padding: 0 5px;
+                border-radius: 40px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                line-height: 1;
+                box-shadow: 0 0 12px rgba(74,124,255,0.3);
+                margin-left: 2px;
+                flex-shrink: 0;
+                border: 1px solid rgba(255,255,255,0.06);
+            }
+            .tab-item.has-notification {
+                color: #F3D38B;
+            }
+            .tab-item.has-notification i {
+                color: #D6B25E;
+                filter: drop-shadow(0 0 8px rgba(214,178,94,0.08));
+            }
+            .tab-add-btn:hover {
+                border-color: rgba(214,178,94,0.2);
+                color: #D6B25E;
+                background: rgba(214,178,94,0.04);
+            }
+            .empty-tab {
+                color: rgba(255,255,255,0.08);
+                font-size: 12px;
+                padding: 0 8px;
+            }
+            .tab-bar-container::-webkit-scrollbar {
+                height: 2px;
+            }
+            .tab-bar-container::-webkit-scrollbar-thumb {
+                background: rgba(214,178,94,0.15);
+                border-radius: 4px;
+            }
+        `;
+        document.head.appendChild(newStyle);
+    }
+
+    // + 按钮点击：打开未打开的页面
+    addBtn.addEventListener('click', function() {
+        const pageIds = Object.keys(PAGE_DEFS);
+        const available = pageIds.filter(id => !tabs.some(t => t.pageId === id));
+        if (available.length === 0) {
+            showToast('所有页面都已打开！', 'info');
+            return;
+        }
+        openTab(available[0]);
+    });
+
+    // 快捷键 Ctrl+W
+    document.addEventListener('keydown', function(e) {
+        if ((e.ctrlKey || e.metaKey) && e.key === 'w') {
+            const activeTab = tabs.find(t => t.id === activeTabId);
+            if (activeTab) {
+                e.preventDefault();
+                closeTab(activeTab.id);
+            }
+        }
+    });
+
+    // 默认打开 Dashboard
+    openTab('dashboard');
+
+    console.log('✅ 全局 Tab 标签栏已初始化');
+    console.log('💡 快捷键: Ctrl+W 关闭当前标签');
+}
+
+// 暴露给全局
+window.openTab = openTab;
+window.closeTab = closeTab;
+window.switchTab = switchTab;
+window.renderTabBar = renderTabBar;
+window.initTabBar = initTabBar;
 
 console.log('✅ admin-common.js 加载完成（含通知角标功能）');
