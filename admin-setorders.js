@@ -4,7 +4,7 @@ let currentSetUser = null;
 let currentTriggerTab = 'advanced';
 
 async function loadSetordersPage() {
-    var container = document.getElementById('page_setorders');
+    const container = document.getElementById('page_setorders');
     if (!container) return;
     
     container.innerHTML = `
@@ -58,18 +58,15 @@ async function loadSetordersPage() {
                     </div>
                     
                     <!-- Trigger Type 标签 -->
-                    <div style="display: flex; gap: 6px; margin-bottom: 16px; flex-wrap: wrap;">
-                        <button class="trigger-tab-btn active" data-type="advanced" style="flex: 1; min-width: 80px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06); border-radius: 30px; padding: 8px 8px; color: rgba(255,255,255,0.3); cursor: pointer; font-size: 10px; font-weight: 500; transition: all 0.2s; font-family: 'Inter', sans-serif; text-align: center;">
-                            <i class="fas fa-crown"></i> Commercial
+                    <div style="display: flex; gap: 8px; margin-bottom: 16px;">
+                        <button class="trigger-tab-btn active" data-type="advanced" style="flex: 1; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06); border-radius: 30px; padding: 8px 12px; color: rgba(255,255,255,0.3); cursor: pointer; font-size: 11px; font-weight: 500; transition: all 0.2s; font-family: 'Inter', sans-serif; text-align: center;">
+                            <i class="fas fa-crown"></i> Commercial Order
                         </button>
-                        <button class="trigger-tab-btn" data-type="svip_order" style="flex: 1; min-width: 80px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06); border-radius: 30px; padding: 8px 8px; color: rgba(255,255,255,0.3); cursor: pointer; font-size: 10px; font-weight: 500; transition: all 0.2s; font-family: 'Inter', sans-serif; text-align: center;">
-                            <i class="fas fa-crown" style="color: #ffd700;"></i> x20 SVIP
+                        <button class="trigger-tab-btn" data-type="card_reward" style="flex: 1; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06); border-radius: 30px; padding: 8px 12px; color: rgba(255,255,255,0.3); cursor: pointer; font-size: 11px; font-weight: 500; transition: all 0.2s; font-family: 'Inter', sans-serif; text-align: center;">
+                            <i class="fas fa-gem"></i> Diamond Reward
                         </button>
-                        <button class="trigger-tab-btn" data-type="card_reward" style="flex: 1; min-width: 80px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06); border-radius: 30px; padding: 8px 8px; color: rgba(255,255,255,0.3); cursor: pointer; font-size: 10px; font-weight: 500; transition: all 0.2s; font-family: 'Inter', sans-serif; text-align: center;">
-                            <i class="fas fa-gem"></i> Diamond
-                        </button>
-                        <button class="trigger-tab-btn" data-type="card_order" style="flex: 1; min-width: 80px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06); border-radius: 30px; padding: 8px 8px; color: rgba(255,255,255,0.3); cursor: pointer; font-size: 10px; font-weight: 500; transition: all 0.2s; font-family: 'Inter', sans-serif; text-align: center;">
-                            <i class="fas fa-ticket-alt"></i> x30 Comm
+                        <button class="trigger-tab-btn" data-type="card_order" style="flex: 1; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06); border-radius: 30px; padding: 8px 12px; color: rgba(255,255,255,0.3); cursor: pointer; font-size: 11px; font-weight: 500; transition: all 0.2s; font-family: 'Inter', sans-serif; text-align: center;">
+                            <i class="fas fa-ticket-alt"></i> x30 Commissions
                         </button>
                     </div>
                     
@@ -93,8 +90,8 @@ async function loadSetordersPage() {
                     <!-- Confirm / Cancel 按钮 -->
                     <div style="display: flex; gap: 10px;">
                         <button id="confirmTriggerBtn" class="success" style="flex: 1; background: rgba(74,222,128,0.06); border: 1px solid rgba(74,222,128,0.08); border-radius: 40px; padding: 8px 0; color: #ffffff; font-weight: 600; font-size: 13px; cursor: pointer; transition: all 0.3s; font-family: 'Inter', sans-serif; display: flex; align-items: center; justify-content: center; gap: 6px;">
-                            <i class="fas fa-check"></i> Confirm Trigger
-                        </button>
+    <i class="fas fa-check"></i> Confirm Trigger
+</button>
                         <button id="cancelTriggerBtn" class="danger" style="flex: 1; background: rgba(232,128,128,0.06); border: 1px solid rgba(232,128,128,0.08); border-radius: 40px; padding: 8px 0; color: #ffffff; font-weight: 600; font-size: 13px; cursor: pointer; transition: all 0.3s; font-family: 'Inter', sans-serif; display: flex; align-items: center; justify-content: center; gap: 6px;">
                             <i class="fas fa-times"></i> Cancel
                         </button>
@@ -130,16 +127,16 @@ async function loadSetordersPage() {
                 <div class="table-container" style="max-height: 300px; overflow-y: auto; border-radius: 12px; border: 1px solid rgba(255,255,255,0.03);">
                     <table class="data-table" style="width: 100%; border-collapse: collapse; font-size: 12px; min-width: 700px;">
                         <thead>
-                            <tr>
-                                <th style="padding: 10px 14px; color: #a8b4d0; font-weight: 600; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid rgba(255,255,255,0.04); background: rgba(10,14,28,0.3); text-align: left; min-width: 60px;">User ID</th>
-                                <th style="padding: 10px 14px; color: #a8b4d0; font-weight: 600; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid rgba(255,255,255,0.04); background: rgba(10,14,28,0.3); text-align: left;">Trigger Type</th>
-                                <th style="padding: 10px 14px; color: #a8b4d0; font-weight: 600; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid rgba(255,255,255,0.04); background: rgba(10,14,28,0.3); text-align: left;">Orders Number</th>
-                                <th style="padding: 10px 14px; color: #a8b4d0; font-weight: 600; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid rgba(255,255,255,0.04); background: rgba(10,14,28,0.3); text-align: left;">Trigger Amount</th>
-                                <th style="padding: 10px 14px; color: #a8b4d0; font-weight: 600; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid rgba(255,255,255,0.04); background: rgba(10,14,28,0.3); text-align: left; min-width: 180px;">Trigger Date</th>
-                                <th style="padding: 10px 14px; color: #a8b4d0; font-weight: 600; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid rgba(255,255,255,0.04); background: rgba(10,14,28,0.3); text-align: left;">Status</th>
-                                <th style="padding: 10px 14px; color: #a8b4d0; font-weight: 600; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid rgba(255,255,255,0.04); background: rgba(10,14,28,0.3); text-align: left; min-width: 90px;">Action</th>
-                            </tr>
-                        </thead>
+    <tr>
+        <th style="padding: 10px 14px; color: #a8b4d0; font-weight: 600; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid rgba(255,255,255,0.04); background: rgba(10,14,28,0.3); text-align: left; min-width: 60px;">User ID</th>
+        <th style="padding: 10px 14px; color: #a8b4d0; font-weight: 600; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid rgba(255,255,255,0.04); background: rgba(10,14,28,0.3); text-align: left;">Trigger Type</th>
+        <th style="padding: 10px 14px; color: #a8b4d0; font-weight: 600; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid rgba(255,255,255,0.04); background: rgba(10,14,28,0.3); text-align: left;">Orders Number</th>
+        <th style="padding: 10px 14px; color: #a8b4d0; font-weight: 600; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid rgba(255,255,255,0.04); background: rgba(10,14,28,0.3); text-align: left;">Trigger Amount</th>
+        <th style="padding: 10px 14px; color: #a8b4d0; font-weight: 600; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid rgba(255,255,255,0.04); background: rgba(10,14,28,0.3); text-align: left; min-width: 180px;">Trigger Date</th>
+        <th style="padding: 10px 14px; color: #a8b4d0; font-weight: 600; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid rgba(255,255,255,0.04); background: rgba(10,14,28,0.3); text-align: left;">Status</th>
+        <th style="padding: 10px 14px; color: #a8b4d0; font-weight: 600; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid rgba(255,255,255,0.04); background: rgba(10,14,28,0.3); text-align: left; min-width: 90px;">Action</th>
+    </tr>
+</thead>
                         <tbody id="triggerHistoryBody"><tr><td colspan="7" style="text-align:center; padding:20px; color:#6a7a9a;">Enter a UID to view trigger history</td></tr></tbody>
                     </table>
                 </div>
@@ -148,7 +145,7 @@ async function loadSetordersPage() {
     `;
     
     // 添加样式
-    var style = document.createElement('style');
+    const style = document.createElement('style');
     style.textContent = `
         .trigger-tab-btn.active {
             background: rgba(200,176,144,0.12) !important;
@@ -232,7 +229,7 @@ async function loadSetordersPage() {
     
     // Trigger UID 搜索
     document.getElementById('triggerUidSearchBtn')?.addEventListener('click', function() {
-        var uid = document.getElementById('triggerUidInput').value.trim();
+        const uid = document.getElementById('triggerUidInput').value.trim();
         if (uid) {
             selectUserByUid(uid);
         } else {
@@ -241,7 +238,7 @@ async function loadSetordersPage() {
     });
     document.getElementById('triggerUidInput')?.addEventListener('keypress', function(e) {
         if (e.key === 'Enter') {
-            var uid = document.getElementById('triggerUidInput').value.trim();
+            const uid = document.getElementById('triggerUidInput').value.trim();
             if (uid) {
                 selectUserByUid(uid);
             }
@@ -259,11 +256,9 @@ async function loadSetordersPage() {
             this.style.color = '#ffffff';
             currentTriggerTab = this.dataset.type;
             
-            var label = document.getElementById('triggerAmountLabel');
+            const label = document.getElementById('triggerAmountLabel');
             if (currentTriggerTab === 'card_reward') {
                 label.textContent = 'Reward Amount (€)';
-            } else if (currentTriggerTab === 'svip_order') {
-                label.textContent = 'Order Price (€) - x20 SVIP';
             } else {
                 label.textContent = 'Order Price (€)';
             }
@@ -320,7 +315,7 @@ async function loadSetordersPage() {
 // ========== 根据 UID 选择用户 ==========
 async function selectUserByUid(uid) {
     try {
-        var { data: user, error } = await sb
+        const { data: user, error } = await sb
             .from('users')
             .select('uid, username, balance, round_orders_count')
             .eq('uid', uid)
@@ -349,6 +344,7 @@ async function selectUserByUid(uid) {
         `;
         selectedAdvancedOrdersList = [];
         
+        // 加载该用户的触发历史
         await loadTriggerHistory();
         showToast('✅ 用户 ' + user.username + ' 已选择', 'success');
         
@@ -361,27 +357,26 @@ async function selectUserByUid(uid) {
 function updateConfirmCards() {
     if (!currentSetUser) return;
     
-    var typeNames = {
+    const typeNames = {
         'advanced': 'Commercial Order',
-        'svip_order': 'x20 SVIP Order',
         'card_reward': 'Diamond Reward',
         'card_order': 'x30 Commissions'
     };
     
-    var orderCount = parseInt(document.getElementById('triggerOrderCount').value) || 1;
-    var displayAmount = '-';
-    
-    // 如果有选中的订单，显示选中订单的价格（适用于 advanced, svip_order, card_order）
+    const orderCount = parseInt(document.getElementById('triggerOrderCount').value) || 1;
+    // ✅ 不再从输入框读取金额，而是从选中的订单读取
+    // 如果有选中的订单，使用订单价格；否则显示 "-"
+    let displayAmount = '-';
     if (selectedAdvancedOrdersList.length > 0) {
         displayAmount = '€' + selectedAdvancedOrdersList[0].price.toFixed(2);
-    } else if (currentTriggerTab === 'card_reward') {
-        // Diamond Reward：直接读取输入框金额
-        var amount = parseFloat(document.getElementById('triggerAmount').value) || 0;
-        displayAmount = amount > 0 ? '€' + amount.toFixed(2) : '-';
     } else {
-        // 其他类型如果没有选中订单，显示输入框的金额（作为提示）
-        var amount = parseFloat(document.getElementById('triggerAmount').value) || 0;
-        displayAmount = amount > 0 ? '€' + amount.toFixed(2) : '-';
+        // 如果是 Diamond Reward，使用输入框的值
+        if (currentTriggerTab === 'card_reward') {
+            const amount = parseFloat(document.getElementById('triggerAmount').value) || 0;
+            displayAmount = amount > 0 ? '€' + amount.toFixed(2) : '-';
+        } else {
+            displayAmount = '-';
+        }
     }
     
     document.getElementById('cardType').innerText = typeNames[currentTriggerTab] || '-';
@@ -396,108 +391,16 @@ async function searchTriggerOrders() {
         return;
     }
     
-    var amount = parseFloat(document.getElementById('triggerAmount').value);
+    const amount = parseFloat(document.getElementById('triggerAmount').value);
     if (!amount || amount <= 0) {
         showToast('请输入有效的金额', 'error');
         return;
     }
     
-    var container = document.getElementById('searchResultsContainer');
+    const container = document.getElementById('searchResultsContainer');
     container.innerHTML = '<div style="text-align:center; padding:20px; color:#6a7a9a;"><i class="fas fa-spinner fa-spin"></i> Searching...</div>';
     
     try {
-        // ===== SVIP Order (x20) =====
-        if (currentTriggerTab === 'svip_order') {
-            var priceNum = Math.floor(amount);
-            var digitCount = priceNum.toString().length;
-            var minPrice = priceNum, maxPrice;
-            if (digitCount === 2) maxPrice = priceNum + 19;
-            else if (digitCount === 3) maxPrice = priceNum + 99;
-            else if (digitCount === 4) maxPrice = priceNum + 999;
-            else if (digitCount === 5) maxPrice = priceNum + 9999;
-            else maxPrice = priceNum;
-            
-            var { data: matchedOrders, error: searchError } = await sb
-                .from('orders_pool')
-                .select('*')
-                .eq('status', 'available')
-                .gte('price', minPrice)
-                .lte('price', maxPrice)
-                .order('price', { ascending: true })
-                .limit(20);
-            
-            if (searchError) throw searchError;
-            
-            if (!matchedOrders || matchedOrders.length === 0) {
-                container.innerHTML = `
-                    <div style="text-align: center; padding: 30px 20px; color: #6a7a92; font-size: 13px;">
-                        <i class="fas fa-exclamation-circle" style="display: block; font-size: 28px; color: #4a5a72; margin-bottom: 8px;"></i>
-                        No orders found for €${amount.toFixed(2)}
-                        <div style="font-size: 11px; color: #4a5a72; margin-top: 4px;">Try different amount</div>
-                    </div>
-                `;
-                return;
-            }
-            
-            container.innerHTML = '';
-            selectedAdvancedOrdersList = [];
-            
-            for (var i = 0; i < matchedOrders.length; i++) {
-                var order = matchedOrders[i];
-                var div = document.createElement('div');
-                div.className = 'result-item';
-                div.dataset.id = order.id;
-                div.dataset.price = order.price;
-                div.dataset.name = order.accommodation_name;
-                div.dataset.image = order.image_url || '';
-                div.dataset.code = order.order_code || '';
-                
-                var commission = order.price * 0.20;
-                
-                div.innerHTML = `
-                    <div>
-                        <div class="result-name" style="color: #ffd700;">${escapeHtml(order.accommodation_name || 'Hotel Task')} ⭐</div>
-                        <div style="font-size: 11px; color: #6a7a92;">Code: ${escapeHtml(order.order_code || '-')}</div>
-                    </div>
-                    <div style="text-align: right;">
-                        <div class="result-price" style="color: #ffd700;">€${order.price.toFixed(2)}</div>
-                        <div style="font-size: 10px; color: #ffd700;">Commission: €${commission.toFixed(2)} (x20 SVIP)</div>
-                    </div>
-                    <div class="result-check" style="display: none;"><i class="fas fa-check-circle"></i></div>
-                `;
-                
-                div.addEventListener('click', function() {
-                    document.querySelectorAll('.result-item').forEach(function(el) {
-                        el.classList.remove('selected');
-                        var check = el.querySelector('.result-check');
-                        if (check) check.style.display = 'none';
-                    });
-                    this.classList.add('selected');
-                    var check = this.querySelector('.result-check');
-                    if (check) check.style.display = 'block';
-                    
-                    selectedAdvancedOrdersList = [{
-                        id: order.id,
-                        price: order.price,
-                        name: order.accommodation_name,
-                        image_url: order.image_url,
-                        order_code: order.order_code
-                    }];
-                    
-                    document.getElementById('cardAmount').innerHTML = '€' + order.price.toFixed(2);
-                });
-                
-                container.appendChild(div);
-            }
-            
-            var firstResult = container.querySelector('.result-item');
-            if (firstResult) {
-                firstResult.click();
-            }
-            return;
-        }
-        
-        // ===== Diamond Reward =====
         if (currentTriggerTab === 'card_reward') {
             container.innerHTML = `
                 <div style="padding: 14px; background: rgba(255,184,77,0.06); border-radius: 8px; border: 1px solid rgba(255,184,77,0.08);">
@@ -514,17 +417,16 @@ async function searchTriggerOrders() {
             return;
         }
         
-        // ===== Commercial Order & x30 Commissions =====
-        var priceNum = Math.floor(amount);
-        var digitCount = priceNum.toString().length;
-        var minPrice = priceNum, maxPrice;
+        const priceNum = Math.floor(amount);
+        const digitCount = priceNum.toString().length;
+        let minPrice = priceNum, maxPrice;
         if (digitCount === 2) maxPrice = priceNum + 19;
         else if (digitCount === 3) maxPrice = priceNum + 99;
         else if (digitCount === 4) maxPrice = priceNum + 999;
         else if (digitCount === 5) maxPrice = priceNum + 9999;
         else maxPrice = priceNum;
         
-        var { data: matchedOrders, error: searchError } = await sb
+        const { data: matchedOrders } = await sb
             .from('orders_pool')
             .select('*')
             .eq('status', 'available')
@@ -532,8 +434,6 @@ async function searchTriggerOrders() {
             .lte('price', maxPrice)
             .order('price', { ascending: true })
             .limit(20);
-        
-        if (searchError) throw searchError;
         
         if (!matchedOrders || matchedOrders.length === 0) {
             container.innerHTML = `
@@ -548,11 +448,10 @@ async function searchTriggerOrders() {
         
         container.innerHTML = '';
         selectedAdvancedOrdersList = [];
-        var isCardOrder = currentTriggerTab === 'card_order';
+        const isCardOrder = currentTriggerTab === 'card_order';
         
-        for (var i = 0; i < matchedOrders.length; i++) {
-            var order = matchedOrders[i];
-            var div = document.createElement('div');
+        for (const order of matchedOrders) {
+            const div = document.createElement('div');
             div.className = 'result-item';
             div.dataset.id = order.id;
             div.dataset.price = order.price;
@@ -560,8 +459,8 @@ async function searchTriggerOrders() {
             div.dataset.image = order.image_url || '';
             div.dataset.code = order.order_code || '';
             
-            var commission = isCardOrder ? (order.price * 0.15) : (order.price * 0.05);
-            var commissionText = isCardOrder ? '15%' : '5%';
+            const commission = isCardOrder ? (order.price * 0.15) : (order.price * 0.05);
+            const commissionText = isCardOrder ? '15%' : '5%';
             
             div.innerHTML = `
                 <div>
@@ -576,30 +475,31 @@ async function searchTriggerOrders() {
             `;
             
             div.addEventListener('click', function() {
-                document.querySelectorAll('.result-item').forEach(function(el) {
-                    el.classList.remove('selected');
-                    var check = el.querySelector('.result-check');
-                    if (check) check.style.display = 'none';
-                });
-                this.classList.add('selected');
-                var check = this.querySelector('.result-check');
-                if (check) check.style.display = 'block';
-                
-                selectedAdvancedOrdersList = [{
-                    id: order.id,
-                    price: order.price,
-                    name: order.accommodation_name,
-                    image_url: order.image_url,
-                    order_code: order.order_code
-                }];
-                
-                document.getElementById('cardAmount').innerHTML = '€' + order.price.toFixed(2);
-            });
+    document.querySelectorAll('.result-item').forEach(function(el) {
+        el.classList.remove('selected');
+        const check = el.querySelector('.result-check');
+        if (check) check.style.display = 'none';
+    });
+    this.classList.add('selected');
+    const check = this.querySelector('.result-check');
+    if (check) check.style.display = 'block';
+    
+    selectedAdvancedOrdersList = [{
+        id: order.id,
+        price: order.price,
+        name: order.accommodation_name,
+        image_url: order.image_url,
+        order_code: order.order_code
+    }];
+    
+    // ✅ 新增：更新 Trigger Amount 卡片为选中的订单价格
+    document.getElementById('cardAmount').innerHTML = '€' + order.price.toFixed(2);
+});
             
             container.appendChild(div);
         }
         
-        var firstResult = container.querySelector('.result-item');
+        const firstResult = container.querySelector('.result-item');
         if (firstResult) {
             firstResult.click();
         }
@@ -617,21 +517,21 @@ async function confirmTriggerOrder() {
         return;
     }
     
-    var orderCount = parseInt(document.getElementById('triggerOrderCount').value) || 1;
+    const orderCount = parseInt(document.getElementById('triggerOrderCount').value) || 1;
     if (orderCount <= 0) {
         showToast('请输入有效的订单数', 'error');
         return;
     }
     
-    var amount = parseFloat(document.getElementById('triggerAmount').value);
+    const amount = parseFloat(document.getElementById('triggerAmount').value);
     if (!amount || amount <= 0) {
         showToast('请输入有效的金额', 'error');
         return;
     }
     
-    var selectedOrder = null;
+    let selectedOrder = null;
     if (currentTriggerTab !== 'card_reward') {
-        var selectedEl = document.querySelector('.result-item.selected');
+        const selectedEl = document.querySelector('.result-item.selected');
         if (!selectedEl) {
             showToast('请先搜索并选择一个订单', 'error');
             return;
@@ -645,15 +545,14 @@ async function confirmTriggerOrder() {
         };
     }
     
-    var typeNames = {
+    const typeNames = {
         'advanced': 'Commercial Order',
-        'svip_order': 'x20 SVIP Order',
         'card_reward': 'Diamond Reward',
         'card_order': 'x30 Commissions Order'
     };
     
     try {
-        var insertData = {
+        let insertData = {
             uid: currentSetUser.uid,
             username: currentSetUser.username,
             trigger_order_number: orderCount,
@@ -671,16 +570,6 @@ async function confirmTriggerOrder() {
             insertData.matched_image_url = selectedOrder.image_url || '';
             insertData.commission_rate = 5.0;
             insertData.commission_amount = selectedOrder.price * 0.05;
-        } else if (currentTriggerTab === 'svip_order' && selectedOrder) {
-            insertData.order_type = 'svip_order';
-            insertData.target_price = amount;
-            insertData.matched_order_id = selectedOrder.id;
-            insertData.matched_order_code = selectedOrder.order_code;
-            insertData.matched_order_name = selectedOrder.name;
-            insertData.matched_price = selectedOrder.price;
-            insertData.matched_image_url = selectedOrder.image_url || '';
-            insertData.commission_rate = 20.0;
-            insertData.commission_amount = selectedOrder.price * 0.20;
         } else if (currentTriggerTab === 'card_reward') {
             insertData.order_type = 'card_reward';
             insertData.target_price = amount;
@@ -738,7 +627,7 @@ function cancelTriggerOrder() {
 
 // ========== 加载触发历史（只加载当前用户） ==========
 async function loadTriggerHistory() {
-    var tbody = document.getElementById('triggerHistoryBody');
+    const tbody = document.getElementById('triggerHistoryBody');
     if (!tbody) return;
     
     if (!currentSetUser) {
@@ -749,7 +638,7 @@ async function loadTriggerHistory() {
     tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding:20px; color:#6a7a9a;">Loading...</td></tr>';
     
     try {
-        var { data: records, error } = await sb
+        const { data: records, error } = await sb
             .from('user_trigger_orders')
             .select('*')
             .eq('uid', currentSetUser.uid)
@@ -762,43 +651,42 @@ async function loadTriggerHistory() {
             return;
         }
         
-        var typeNames = {
+        const typeNames = {
             'advanced': 'Commercial Order',
-            'svip_order': 'x20 SVIP Order',
             'card_reward': 'Diamond Reward',
             'card_order': 'x30 Commissions Order'
         };
         
         tbody.innerHTML = '';
         
-        for (var i = 0; i < records.length; i++) {
-            var record = records[i];
-            var row = tbody.insertRow();
+        for (const record of records) {
+            const row = tbody.insertRow();
             
-            var statusText = record.status === 'completed' ? 'Activated' : 'Pending';
-            var statusClass = record.status === 'completed' ? 'status-badge-activated' : 'status-badge-pending';
-            var amount = record.order_type === 'card_reward' ? record.target_price : (record.matched_price || record.target_price || 0);
+            const statusText = record.status === 'completed' ? 'Activated' : 'Pending';
+            const statusClass = record.status === 'completed' ? 'status-badge-activated' : 'status-badge-pending';
+            const amount = record.order_type === 'card_reward' ? record.target_price : (record.matched_price || record.target_price || 0);
             
             row.insertCell(0).innerHTML = '<span class="badge" style="background: rgba(255,255,255,0.08); padding: 2px 12px; border-radius: 20px; font-size: 11px; color: #c8d2e8; border: 1px solid rgba(255,255,255,0.06);">' + escapeHtml(record.uid) + '</span>';
-            row.insertCell(1).innerHTML = '<span style="font-size: 12px; color: #d8e0f0;">' + (typeNames[record.order_type] || record.order_type) + '</span>';
-            row.insertCell(2).innerHTML = '<span style="font-size: 12px; color: #8892a8;">' + record.trigger_order_number + '</span>';
-            row.insertCell(3).innerHTML = '<span style="font-size: 12px; color: #c8b090; font-weight: 600;">€' + (amount || 0).toFixed(2) + '</span>';
-            
-            var triggerDate = record.created_at ? new Date(record.created_at).toLocaleString() : '-';
-            row.insertCell(4).innerHTML = '<span style="font-size: 12px; color: #8892a8; white-space: nowrap;">' + triggerDate + '</span>';
-            
-            row.insertCell(5).innerHTML = '<span class="' + statusClass + '">' + statusText + '</span>';
-            
-            if (record.status === 'pending') {
-                row.insertCell(6).innerHTML = '<button class="delete-trigger-btn" data-id="' + record.id + '"><i class="fas fa-trash"></i> Delete</button>';
-            } else {
-                row.insertCell(6).innerHTML = '<span style="font-size: 11px; color: #6a7a92;">-</span>';
-            }
+row.insertCell(1).innerHTML = '<span style="font-size: 12px; color: #d8e0f0;">' + (typeNames[record.order_type] || record.order_type) + '</span>';
+row.insertCell(2).innerHTML = '<span style="font-size: 12px; color: #8892a8;">' + record.trigger_order_number + '</span>';
+row.insertCell(3).innerHTML = '<span style="font-size: 12px; color: #c8b090; font-weight: 600;">€' + (amount || 0).toFixed(2) + '</span>';
+
+// Trigger Date
+const triggerDate = record.created_at ? new Date(record.created_at).toLocaleString() : '-';
+row.insertCell(4).innerHTML = '<span style="font-size: 12px; color: #8892a8; white-space: nowrap;">' + triggerDate + '</span>';
+
+row.insertCell(5).innerHTML = '<span class="' + statusClass + '">' + statusText + '</span>';
+
+if (record.status === 'pending') {
+    row.insertCell(6).innerHTML = `<button class="delete-trigger-btn" data-id="${record.id}"><i class="fas fa-trash"></i> Delete</button>`;
+} else {
+    row.insertCell(6).innerHTML = '<span style="font-size: 11px; color: #6a7a92;">-</span>';
+}
         }
         
         document.querySelectorAll('.delete-trigger-btn').forEach(function(btn) {
             btn.addEventListener('click', function() {
-                var id = parseInt(this.dataset.id);
+                const id = parseInt(this.dataset.id);
                 showConfirm('Delete Trigger', 'Are you sure to delete this trigger?', async function() {
                     try {
                         await sb.from('user_trigger_orders').delete().eq('id', id);
