@@ -339,9 +339,9 @@ body.innerHTML = `
     deposits.forEach(d => {
         let typeName = '', icon = '';
         if (d.type === 'manual') { 
-            typeName = d.description || t('history_manual_deposit'); 
-            icon = 'fas fa-plus-circle'; 
-        }
+    typeName = d.description || t('history_deposit'); 
+    icon = 'fas fa-plus-circle'; 
+}
         else if (d.type === 'deposit_bonus') { 
             typeName = d.description || t('history_deposit_bonus'); 
             icon = 'fas fa-gift'; 
