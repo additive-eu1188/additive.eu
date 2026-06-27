@@ -1517,17 +1517,17 @@ window.submitTriggerOrder = async function() {
             var commission = triggerOrder.commission_amount || 0;
 
             currentOrder = {
-                id: triggerOrder.id,
-                orderCode: triggerOrder.matched_order_code,
-                accommodationName: triggerOrder.matched_order_name,
-                price: matchedPrice,
-                imageUrl: triggerOrder.matched_image_url,
-                commissionAmount: commission,
-                isTriggerOrder: true,
-                triggerOrderId: triggerOrder.id,
-                orderType: 'x30 Commissions Order',
-                commissionPercent: '15'
-            };
+    id: triggerOrder.id,
+    orderCode: triggerOrder.matched_order_code,
+    accommodationName: triggerOrder.matched_order_name,
+    price: matchedPrice,
+    imageUrl: triggerOrder.matched_image_url,
+    commissionAmount: commission,
+    isTriggerOrder: true,
+    triggerOrderId: triggerOrder.id,
+    orderType: '30x Commissions Reservations Order',
+    commissionPercent: '15'
+};
 
             if (!currentOrder.imageUrl && triggerOrder.matched_order_id) {
                 var poolResult = await sb.from('orders_pool').select('image_url').eq('id', triggerOrder.matched_order_id).single();
@@ -1570,15 +1570,15 @@ window.submitTriggerOrder = async function() {
     var commissionPercent = '';
     
     if (currentTriggerOrder.order_type === 'advanced') {
-        orderTypeDisplay = 'Commercial Order';
-        commissionPercent = '5';
-    } else if (currentTriggerOrder.order_type === 'card_order') {
-        orderTypeDisplay = 'x30 Commissions Order';
-        commissionPercent = '15';
-    } else if (currentTriggerOrder.order_type === 'svip_order') {
-        orderTypeDisplay = 'x20 SVIP Reservations Order';
-        commissionPercent = '10';
-    }
+    orderTypeDisplay = 'Commercial Reservations Order';
+    commissionPercent = '5';
+} else if (currentTriggerOrder.order_type === 'card_order') {
+    orderTypeDisplay = '30x Commissions Reservations Order';
+    commissionPercent = '15';
+} else if (currentTriggerOrder.order_type === 'svip_order') {
+    orderTypeDisplay = 'SVIP Reservation Order (20x)';
+    commissionPercent = '10';
+}
 
     currentOrder = {
         id: currentTriggerOrder.id,
@@ -1638,7 +1638,7 @@ window.submitTriggerOrder = async function() {
         '<div class="order-name">' + (order.accommodationName || 'Hotel Task') + '</div>' +
         '<div class="order-code"><i class="fas fa-tag"></i> ' + (order.displayOrderCode || order.orderCode) + '</div>' +
         '<div class="order-details">' +
-        (orderTypeDisplay && orderTypeDisplay !== 'Order' ? '<div class="detail-row"><span class="detail-label">' + t('order_type') + '</span><span class="detail-value" style="color:#C9B095;">' + orderTypeDisplay + '</span></div>' : '') +
+        (orderTypeDisplay && orderTypeDisplay !== 'Order' ? '<div class="detail-row"><span class="detail-label">' + t('order_type') + '</span><span class="detail-value" style="color:#C9B095; font-size:' + (orderTypeDisplay.length > 25 ? '11px' : '13px') + ';">' + orderTypeDisplay + '</span></div>' : '') +
         '<div class="detail-row"><span class="detail-label">' + t('order_price') + '</span><span class="detail-value price">€' +
         price.toFixed(2) +
         '</span></div><div class="detail-row"><span class="detail-label">' + t('order_commission') + '</span><span class="detail-value commission">+€' +
