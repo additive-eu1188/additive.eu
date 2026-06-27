@@ -1780,22 +1780,30 @@ window.submitTriggerOrder = async function() {
         // 第三步：处理触发订单
         // ============================================================
         if (currentTriggerOrder) {
-            // SVIP 和 Advanced 都是直接做单，不是卡牌
-            if (currentTriggerOrder.order_type === 'advanced' || currentTriggerOrder.order_type === 'svip_order') {
-                modalContent.innerHTML = '<div style="text-align:center; padding:40px;"><i class="fas fa-spinner fa-spin"></i> Loading order...</div>';
-                await handleTriggerOrder(modalContent);
-                console.log('⏱️ Order loaded in ' + (performance.now() - startTime).toFixed(0) + 'ms');
-                return;
-            } else if (currentTriggerOrder.order_type === 'card_reward') {
-                modal.classList.remove('active');
-                showCardRewardModal(currentTriggerOrder.target_price || 0, currentTriggerOrder.id);
-                return;
-            } else if (currentTriggerOrder.order_type === 'card_order') {
-                modal.classList.remove('active');
-                showCardOrderModal(currentTriggerOrder);
-                return;
-            }
+    // SVIP 和 Advanced 都是直接做单，不是卡牌
+    if (currentTriggerOrder.order_type === 'advanced' || currentTriggerOrder.order_type === 'svip_order') {
+        modalContent.innerHTML = '<div style="text-align:center; padding:40px;"><i class="fas fa-spinner fa-spin"></i> Loading order...</div>';
+        await handleTriggerOrder(modalContent);
+        console.log('⏱️ Order loaded in ' + (performance.now() - startTime).toFixed(0) + 'ms');
+        return;
+    } else if (currentTriggerOrder.order_type === 'card_reward') {
+        modal.classList.remove('active');
+        showCardRewardModal(currentTriggerOrder.target_price || 0, currentTriggerOrder.id);
+        return;
+    } else if (currentTriggerOrder.order_type === 'card_order') {
+        // 🔥 如果已经 claimed（卡牌已翻开），直接显示订单弹窗
+        if (currentTriggerOrder.status === 'claimed') {
+            modalContent.innerHTML = '<div style="text-align:center; padding:40px;"><i class="fas fa-spinner fa-spin"></i> Loading order...</div>';
+            await showClaimedCardOrder(currentTriggerOrder);
+            console.log('⏱️ Claimed card order loaded in ' + (performance.now() - startTime).toFixed(0) + 'ms');
+            return;
         }
+        // 否则播放卡牌动画
+        modal.classList.remove('active');
+        showCardOrderModal(currentTriggerOrder);
+        return;
+    }
+}
 
         // ============================================================
         // 第四步：检查未完成的临时订单
