@@ -1,255 +1,27 @@
-// admin-common.js - 完整版（包含通知角标功能）
+// admin-common.js - 完整版（已移除所有粒子动画，保留金属质感侧边栏）
 const SUPABASE_URL = 'https://qgmbzdfnwsdosdqphlxk.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_zsJFjfNUO7NKp8ZH5KrXFQ_WZ8Q2Kym';
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 // ============================================================
-// 🔥 性能检测 + 自动降级（解决低帧率问题）
+// 🔥 性能检测（仅检测，无自动降级）
 // ============================================================
 
-// 检测设备性能
 function detectDevicePerformance() {
-    // 检测是否为移动设备
     const isMobile = /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
-    
-    // 检测是否为低端设备（通过 CPU 核心数判断）
     const cores = navigator.hardwareConcurrency || 4;
     const isLowEnd = cores <= 4;
-    
-    // 检测内存（如果可用）
     const memory = navigator.deviceMemory || 4;
     const isLowMemory = memory <= 4;
-    
-    // 检测是否为触摸设备
     const isTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
-    
-    // 综合判断
     const isLowPerformance = isMobile || isLowEnd || isLowMemory || isTouch;
     
-    console.log('📱 设备检测:', {
-        isMobile,
-        cores,
-        memory,
-        isTouch,
-        isLowPerformance,
-        userAgent: navigator.userAgent
-    });
+    console.log('📱 设备检测:', { isMobile, cores, memory, isTouch, isLowPerformance });
     
-    return {
-        isLowPerformance,
-        isMobile,
-        isLowEnd,
-        isLowMemory,
-        isTouch,
-        cores,
-        memory
-    };
+    return { isLowPerformance, isMobile, isLowEnd, isLowMemory, isTouch, cores, memory };
 }
 
-// 存储性能状态
 const deviceInfo = detectDevicePerformance();
-
-// ============================================================
-// 🔥 帧率监控 + 自动降级
-// ============================================================
-let fpsMonitorInterval = null;
-let fpsCounter = 0;
-let lastFpsCheck = performance.now();
-let currentFps = 60;
-let isPerformanceDegraded = false;
-
-function startFpsMonitor() {
-    let frameCount = 0;
-    let lastTime = performance.now();
-    
-    function checkFps() {
-        frameCount++;
-        const now = performance.now();
-        const delta = now - lastTime;
-        
-        if (delta >= 1000) {
-            currentFps = Math.round(frameCount * 1000 / delta);
-            frameCount = 0;
-            lastTime = now;
-            
-            // 🔥 如果帧率持续低于 30，触发降级
-            if (currentFps < 30) {
-                if (!isPerformanceDegraded) {
-                    isPerformanceDegraded = true;
-                    applyPerformanceDowngrade();
-                }
-            } else if (currentFps > 40 && isPerformanceDegraded) {
-                // 如果帧率恢复，逐步恢复（但不要立即恢复）
-                setTimeout(function() {
-                    if (currentFps > 45) {
-                        isPerformanceDegraded = false;
-                        restorePerformance();
-                    }
-                }, 5000);
-            }
-            
-            // 控制台显示帧率（调试用）
-            if (currentFps < 25) {
-                console.warn('⚠️ 当前帧率过低:', currentFps, 'FPS，已触发降级');
-            }
-        }
-        
-        requestAnimationFrame(checkFps);
-    }
-    
-    // 延迟启动，等页面加载完成
-    setTimeout(checkFps, 1000);
-}
-
-// ============================================================
-// 🔥 性能降级方案
-// ============================================================
-function applyPerformanceDowngrade() {
-    console.log('🔧 应用性能降级方案...');
-    
-    // 1. 降低粒子数量或暂停
-    const sidebarCanvas = document.querySelector('.sidebar-canvas canvas');
-    if (sidebarCanvas) {
-        // 标记粒子系统降级
-        sidebarCanvas.dataset.degraded = 'true';
-    }
-    
-    // 2. 停止不必要的动画
-    document.querySelectorAll('.nav-item .shimmer').forEach(function(el) {
-        el.style.animationPlayState = 'paused';
-    });
-    
-    // 3. 减少阴影和模糊效果
-    document.querySelectorAll('.card, .stat-card, .quick-card').forEach(function(el) {
-        el.style.boxShadow = '0 2px 8px rgba(0,0,0,0.2)';
-        el.style.backdropFilter = 'blur(4px)';
-        el.style.transition = 'none';
-    });
-    
-    // 4. 禁用 hover 动画
-    document.querySelectorAll('.nav-item, .btn-primary, button').forEach(function(el) {
-        el.style.transition = 'none';
-    });
-    
-    // 5. 表格行 hover 效果降级
-    document.querySelectorAll('.data-table tr').forEach(function(el) {
-        el.style.transition = 'none';
-    });
-    
-    // 6. 如果是移动端，进一步降级
-    if (deviceInfo.isMobile) {
-        document.querySelectorAll('.sidebar').forEach(function(el) {
-            el.style.backdropFilter = 'blur(8px)';
-        });
-        
-        // 减少 ECharts 动画
-        if (window.trendChart) {
-            window.trendChart.setOption({
-                animation: false,
-                animationDuration: 0
-            });
-        }
-    }
-    
-    // 7. 显示降级提示（非侵入式）
-    showPerformanceNotice();
-}
-
-// ============================================================
-// 🔥 显示性能提示（轻量）
-// ============================================================
-function showPerformanceNotice() {
-    // 检查是否已经显示过
-    if (document.getElementById('perfNotice')) return;
-    
-    const notice = document.createElement('div');
-    notice.id = 'perfNotice';
-    notice.style.cssText = `
-        position: fixed;
-        bottom: 20px;
-        right: 20px;
-        z-index: 9999;
-        background: rgba(20, 24, 40, 0.92);
-        backdrop-filter: blur(12px);
-        border: 1px solid rgba(255, 184, 77, 0.15);
-        border-radius: 12px;
-        padding: 10px 16px;
-        font-size: 12px;
-        color: #d4c8a0;
-        font-family: 'Inter', sans-serif;
-        box-shadow: 0 8px 24px rgba(0,0,0,0.3);
-        max-width: 280px;
-        animation: slideInRight 0.4s cubic-bezier(0.2, 0.9, 0.4, 1.1) forwards;
-        cursor: pointer;
-    `;
-    notice.innerHTML = `
-        <div style="display:flex;align-items:center;gap:8px;">
-            <span style="font-size:16px;">⚡</span>
-            <div>
-                <div style="font-weight:600;color:#ffb84d;">性能优化已启用</div>
-                <div style="font-size:11px;color:#8892a8;">设备检测到低帧率，已自动优化</div>
-            </div>
-            <button onclick="this.parentElement.parentElement.remove()" style="background:none;border:none;color:#5a4a6a;cursor:pointer;font-size:14px;">×</button>
-        </div>
-    `;
-    notice.onclick = function() {
-        this.remove();
-    };
-    document.body.appendChild(notice);
-    
-    // 5秒后自动消失
-    setTimeout(function() {
-        if (notice.parentNode) notice.remove();
-    }, 8000);
-}
-
-// ============================================================
-// 🔥 恢复性能（当帧率恢复时）
-// ============================================================
-function restorePerformance() {
-    console.log('🔄 恢复性能设置...');
-    isPerformanceDegraded = false;
-    
-    // 恢复阴影
-    document.querySelectorAll('.card, .stat-card, .quick-card').forEach(function(el) {
-        el.style.boxShadow = '';
-        el.style.backdropFilter = '';
-        el.style.transition = '';
-    });
-    
-    // 恢复 hover 动画
-    document.querySelectorAll('.nav-item, .btn-primary, button').forEach(function(el) {
-        el.style.transition = '';
-    });
-    
-    document.querySelectorAll('.data-table tr').forEach(function(el) {
-        el.style.transition = '';
-    });
-    
-    // 恢复粒子系统
-    const sidebarCanvas = document.querySelector('.sidebar-canvas canvas');
-    if (sidebarCanvas) {
-        sidebarCanvas.dataset.degraded = 'false';
-    }
-    
-    // 移除提示
-    const notice = document.getElementById('perfNotice');
-    if (notice) notice.remove();
-}
-
-// ============================================================
-// 🔥 启动帧率监控
-// ============================================================
-// 在页面加载完成后启动
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', function() {
-        setTimeout(startFpsMonitor, 1500);
-    });
-} else {
-    setTimeout(startFpsMonitor, 1500);
-}
-
-console.log('✅ 性能监控已启动，当前设备:', deviceInfo.isLowPerformance ? '低性能模式' : '高性能模式');
 
 // ============================================================
 // 通知数据
@@ -261,7 +33,6 @@ let notificationCounts = {
   withdrawal: 0
 };
 
-// 已读状态（点击后角标消失，但高亮取决于是否当前页面）
 let readNotifications = {
   dashboard: false,
   kyc: false,
@@ -269,7 +40,6 @@ let readNotifications = {
   withdrawal: false
 };
 
-// 当前激活的页面
 let currentActivePage = 'dashboard';
 
 // ============================================================
@@ -279,7 +49,6 @@ let tabs = [];
 let activeTabId = null;
 let tabIdCounter = 0;
 
-// 页面定义（所有可用页面）
 const PAGE_DEFS = {
     dashboard: { id: 'dashboard', label: 'Dashboard', icon: 'fa-chart-pie', pageId: 'dashboard' },
     users: { id: 'users', label: 'Users', icon: 'fa-users', pageId: 'users' },
@@ -303,9 +72,6 @@ if (typeof window.notifications === 'undefined') {
     window.notifications = [];
 }
 
-// ============================================================
-// 🔥 通知持久化存储
-// ============================================================
 function loadNotifications() {
     try {
         const saved = localStorage.getItem('admin_notifications');
@@ -340,7 +106,6 @@ function addNotification(notification) {
         if (typeof updateNotificationUI === 'function') {
             updateNotificationUI();
         }
-        // 更新侧边栏角标
         updateSidebarBadges();
     }
 }
@@ -488,12 +253,10 @@ function renderSidebarNav() {
       ${hasUnread ? `<span class="badge-notify" id="badge-${item.id}">${notificationCounts[item.id]}</span>` : ''}
     `;
 
-    // ★ 修改点击事件：改为打开 Tab
     div.addEventListener('click', function(e) {
       e.stopPropagation();
       const pageId = this.dataset.page;
 
-      // 标记通知为已读
       const badgeId = Object.keys(notificationCounts).find(key => key === pageId);
       if (badgeId && notificationCounts[badgeId] > 0 && !readNotifications[badgeId]) {
         readNotifications[badgeId] = true;
@@ -503,12 +266,10 @@ function renderSidebarNav() {
         console.log(`✅ 通知已读: ${item.label}`);
       }
 
-      // 更新侧边栏激活状态
       document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
       this.classList.add('active');
       currentActivePage = pageId;
 
-      // ★ 改为打开标签页（而不是直接 showPage）
       openTab(pageId);
     });
 
@@ -516,14 +277,8 @@ function renderSidebarNav() {
   });
 }
 
-// ============================================================
-// 🔥 更新侧边栏角标（外部调用）
-// ============================================================
 function updateSidebarBadges() {
-  // 重新渲染侧边栏
   renderSidebarNav();
-
-  // 重新激活当前页面
   document.querySelectorAll('.nav-item').forEach(el => {
     if (el.dataset.page === currentActivePage) {
       el.classList.add('active');
@@ -531,13 +286,9 @@ function updateSidebarBadges() {
   });
 }
 
-// ============================================================
-// 🔥 更新通知数量（有新消息时调用）
-// ============================================================
 function updateNotificationCount(moduleId, count) {
   notificationCounts[moduleId] = count;
-  readNotifications[moduleId] = false; // 新通知到来，重置已读状态
-
+  readNotifications[moduleId] = false;
   updateSidebarBadges();
 
   if (count > 0) {
@@ -557,24 +308,17 @@ function updateNotificationCount(moduleId, count) {
   }
 }
 
-// ============================================================
-// 🔥 加载各模块通知数量
-// ============================================================
 async function loadNotificationCounts() {
   try {
-    // KYC 待处理
     const kycRes = await sb.from('kyc_verifications').select('id', { count: 'exact', head: true }).eq('status', 'pending');
     const kycCount = kycRes.count || 0;
 
-    // Withdrawal 待处理
     const withdrawalRes = await sb.from('withdrawals').select('id', { count: 'exact', head: true }).eq('status', 'pending');
     const withdrawalCount = withdrawalRes.count || 0;
 
-    // Email 待处理
     const emailRes = await sb.from('email_verification_requests').select('id', { count: 'exact', head: true }).eq('is_verified', false).is('code', null);
     const emailCount = emailRes.count || 0;
 
-    // Dashboard = 所有通知总和
     const dashboardCount = kycCount + withdrawalCount + emailCount;
 
     notificationCounts.dashboard = dashboardCount;
@@ -635,7 +379,7 @@ function getTrendHtml(current, previous) {
     return '<span>→ 0%</span>';
 }
 
-// ========== 自定义 Toast 提示 ==========
+// ========== Toast 提示 ==========
 function showToast(message, type = 'success') {
     const existingToast = document.querySelector('.custom-toast');
     if (existingToast) existingToast.remove();
@@ -686,7 +430,7 @@ function showToast(message, type = 'success') {
     }, 3000);
 }
 
-// ========== 自定义确认弹窗 ==========
+// ========== 确认弹窗 ==========
 function showConfirm(title, message, onConfirm, onCancel) {
     const existingModal = document.querySelector('.custom-confirm');
     if (existingModal) existingModal.remove();
@@ -749,7 +493,7 @@ function showConfirm(title, message, onConfirm, onCancel) {
     };
 }
 
-// ========== 自定义输入弹窗 ==========
+// ========== 输入弹窗 ==========
 function showPrompt(title, placeholder, callback) {
     const existingModal = document.querySelector('.custom-prompt');
     if (existingModal) existingModal.remove();
@@ -911,7 +655,6 @@ window.showAmberNotification = function(title, message, type) {
     }, 5000);
 };
 
-// 确保动画样式存在
 function ensureAnimationStyles() {
     if (document.getElementById('notification-animation-styles')) return;
     
@@ -964,7 +707,6 @@ function handleNewKyc(data) {
     };
     addNotification(notification);
     
-    // 更新角标
     loadNotificationCounts();
     
     if (window.showAmberNotification) {
@@ -1166,7 +908,6 @@ async function pollForUpdates() {
             handleNewEmailRequest(emails[0]);
         }
         
-        // 定期更新角标
         loadNotificationCounts();
         
     } catch (e) {
@@ -1185,13 +926,10 @@ function showPage(pageId) {
     const targetPage = document.getElementById('page_' + pageId);
     if (targetPage) targetPage.classList.add('active');
     
-    // 更新侧边栏激活状态
     document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
     const activeNav = document.querySelector(`.nav-item[data-page="${pageId}"]`);
     if (activeNav) {
         activeNav.classList.add('active');
-        // 如果有未读通知，has-notification 保留
-        // 如果已读，has-notification 已经移除
     }
     
     if (pageId === 'dashboard' && window.loadDashboardPage) {
@@ -1229,261 +967,20 @@ function showPage(pageId) {
 }
 
 // ============================================================
-// 🔥 金色粒子网络 · 侧边栏背景动画
-// ============================================================
-function initParticleNetwork() {
-    const sidebar = document.querySelector('.sidebar');
-    if (!sidebar) return;
-
-// 🔥 如果设备性能低，减少粒子数量
-    const isLowPerformance = deviceInfo.isLowPerformance || false;
-    const PARTICLE_COUNT = isLowPerformance ? 18 : 55;  // 从 55 降到 18
-    const CONNECT_DISTANCE = isLowPerformance ? 80 : 130;  // 从 130 降到 80
-
-    let container = sidebar.querySelector('.sidebar-canvas');
-    if (!container) {
-        container = document.createElement('div');
-        container.className = 'sidebar-canvas';
-        container.style.cssText = `
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: 0;
-            pointer-events: none;
-            overflow: hidden;
-        `;
-        sidebar.insertBefore(container, sidebar.firstChild);
-    }
-
-    container.innerHTML = '';
-
-    const glassLayer = document.createElement('div');
-    glassLayer.className = 'sidebar-glass';
-    glassLayer.style.cssText = `
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        z-index: 1;
-        pointer-events: none;
-        background: rgba(10, 14, 30, 0.15);
-        backdrop-filter: blur(4px) saturate(1.1);
-        -webkit-backdrop-filter: blur(4px) saturate(1.1);
-        border-radius: 0;
-    `;
-    container.appendChild(glassLayer);
-
-    const canvas = document.createElement('canvas');
-    canvas.style.cssText = `
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        display: block;
-        z-index: 0;
-    `;
-    container.appendChild(canvas);
-
-    const ctx = canvas.getContext('2d');
-    let width, height;
-    let particles = [];
-    const MAX_LINE_WIDTH = 1.8;
-    const GOLD_PALETTE = [
-        'rgba(214, 178, 94, ',
-        'rgba(243, 211, 139, ',
-        'rgba(184, 148, 42, ',
-    ];
-    let animationId = null;
-
-    function resize() {
-        const rect = sidebar.getBoundingClientRect();
-        canvas.width = rect.width || 280;
-        canvas.height = rect.height || 600;
-        width = canvas.width;
-        height = canvas.height;
-        canvas.style.width = '100%';
-        canvas.style.height = '100%';
-    }
-
-    class Particle {
-        constructor() {
-            this.reset();
-            this.vx = (Math.random() - 0.5) * 0.25;
-            this.vy = (Math.random() - 0.5) * 0.25;
-            this.colorIndex = Math.floor(Math.random() * GOLD_PALETTE.length);
-            this.baseRadius = 1.5 + Math.random() * 2.5;
-        }
-
-        reset() {
-            this.x = Math.random() * width;
-            this.y = Math.random() * height;
-            this.vx = (Math.random() - 0.5) * 0.3;
-            this.vy = (Math.random() - 0.5) * 0.3;
-            this.phaseX = Math.random() * Math.PI * 2;
-            this.phaseY = Math.random() * Math.PI * 2;
-            this.freqX = 0.002 + Math.random() * 0.005;
-            this.freqY = 0.002 + Math.random() * 0.005;
-            this.amplitude = 0.2 + Math.random() * 0.4;
-        }
-
-        update() {
-            this.x += this.vx + Math.sin(Date.now() * this.freqX + this.phaseX) * this.amplitude * 0.60;
-            this.y += this.vy + Math.cos(Date.now() * this.freqY + this.phaseY) * this.amplitude * 0.60;
-
-            if (this.x < 0) { this.x = 0; this.vx *= -0.9; }
-            if (this.x > width) { this.x = width; this.vx *= -0.9; }
-            if (this.y < 0) { this.y = 0; this.vy *= -0.9; }
-            if (this.y > height) { this.y = height; this.vy *= -0.9; }
-
-            if (Math.random() < 0.002) {
-                this.vx += (Math.random() - 0.5) * 0.06;
-                this.vy += (Math.random() - 0.5) * 0.06;
-                const maxSpeed = 0.4;
-                const sp = Math.hypot(this.vx, this.vy);
-                if (sp > maxSpeed) {
-                    this.vx = (this.vx / sp) * maxSpeed;
-                    this.vy = (this.vy / sp) * maxSpeed;
-                }
-            }
-        }
-
-        draw() {
-            const alpha = 0.5 + 0.4 * Math.sin(Date.now() * 0.001 + this.phaseX);
-            const color = GOLD_PALETTE[this.colorIndex];
-            const radius = this.baseRadius * (0.8 + 0.2 * Math.sin(Date.now() * 0.002 + this.phaseX));
-            ctx.beginPath();
-            ctx.arc(this.x, this.y, radius, 0, Math.PI * 2);
-            ctx.fillStyle = color + (0.5 + 0.4 * Math.sin(Date.now() * 0.0015 + this.phaseX)) + ')';
-            ctx.shadowColor = 'rgba(214, 178, 94, 0.12)';
-            ctx.shadowBlur = 6;
-            ctx.fill();
-            ctx.shadowBlur = 0;
-        }
-    }
-
-    function initParticles() {
-        particles = [];
-        for (let i = 0; i < PARTICLE_COUNT; i++) {
-            particles.push(new Particle());
-        }
-    }
-
-    function drawLines() {
-        for (let i = 0; i < particles.length; i++) {
-            for (let j = i + 1; j < particles.length; j++) {
-                const p1 = particles[i];
-                const p2 = particles[j];
-                const dx = p1.x - p2.x;
-                const dy = p1.y - p2.y;
-                const dist = Math.hypot(dx, dy);
-
-                if (dist < CONNECT_DISTANCE) {
-                    const alpha = (1 - dist / CONNECT_DISTANCE) * 0.6;
-                    const lineWidth = (1 - dist / CONNECT_DISTANCE) * MAX_LINE_WIDTH + 0.2;
-
-                    const gradient = ctx.createLinearGradient(p1.x, p1.y, p2.x, p2.y);
-                    gradient.addColorStop(0, `rgba(214, 178, 94, ${alpha * 0.9})`);
-                    gradient.addColorStop(0.5, `rgba(243, 211, 139, ${alpha * 0.7})`);
-                    gradient.addColorStop(1, `rgba(184, 148, 42, ${alpha * 0.9})`);
-
-                    ctx.beginPath();
-                    ctx.moveTo(p1.x, p1.y);
-                    ctx.lineTo(p2.x, p2.y);
-                    ctx.strokeStyle = gradient;
-                    ctx.lineWidth = lineWidth;
-                    ctx.shadowColor = `rgba(214, 178, 94, ${alpha * 0.08})`;
-                    ctx.shadowBlur = 4;
-                    ctx.stroke();
-                    ctx.shadowBlur = 0;
-                }
-            }
-        }
-    }
-
-    function animate() {
-        ctx.clearRect(0, 0, width, height);
-
-        const grad = ctx.createRadialGradient(
-            width * 0.5 + Math.sin(Date.now() * 0.0001) * 30,
-            height * 0.5 + Math.cos(Date.now() * 0.00015) * 30,
-            10,
-            width * 0.5,
-            height * 0.5,
-            width * 0.7
-        );
-        grad.addColorStop(0, 'rgba(214, 178, 94, 0.015)');
-        grad.addColorStop(0.5, 'rgba(214, 178, 94, 0.008)');
-        grad.addColorStop(1, 'rgba(214, 178, 94, 0)');
-        ctx.fillStyle = grad;
-        ctx.fillRect(0, 0, width, height);
-
-        for (const p of particles) {
-            p.update();
-        }
-
-        drawLines();
-
-        for (const p of particles) {
-            p.draw();
-        }
-
-        animationId = requestAnimationFrame(animate);
-    }
-
-    function start() {
-        resize();
-        initParticles();
-        if (animationId) cancelAnimationFrame(animationId);
-        animate();
-    }
-
-    start();
-
-    const resizeObserver = new ResizeObserver(() => {
-        resize();
-        for (const p of particles) {
-            p.x = Math.random() * width;
-            p.y = Math.random() * height;
-        }
-    });
-    resizeObserver.observe(sidebar);
-
-    const observer = new MutationObserver(() => {
-        setTimeout(resize, 300);
-    });
-    observer.observe(sidebar, { attributes: true, attributeFilter: ['class'] });
-
-    console.log('✨ 金色粒子网络已启动 (侧边栏背景)');
-}
-
-// ============================================================
 // 🔥 初始化
 // ============================================================
 document.addEventListener('DOMContentLoaded', function() {
-    // 渲染侧边栏
     renderSidebarNav();
-
-// ★ 添加这一行：初始化 Tab 标签栏
     initTabBar();
     
-    // 激活当前页面
     document.querySelectorAll('.nav-item').forEach(el => {
         if (el.dataset.page === currentActivePage) {
             el.classList.add('active');
         }
     });
     
-    // 加载通知数量
     loadNotificationCounts();
     
-    // 启动粒子网络
-    setTimeout(initParticleNetwork, 500);
-    
-    // 刷新通知UI
     setTimeout(function() {
         loadNotifications();
         if (typeof updateNotificationUI === 'function') {
@@ -1504,17 +1001,15 @@ if (localStorage.getItem('admin_logged_in') !== 'true') {
 }
 
 // ============================================================
-// 🔥 Tab 标签栏渲染
+// 🔥 Tab 标签栏
 // ============================================================
 function renderTabBar() {
     const container = document.getElementById('tabBarContainer');
     if (!container) {
-        // 如果 tabBarContainer 还不存在，先创建
         initTabBar();
         return;
     }
 
-    // 保留 + 按钮
     const addBtn = container.querySelector('#addTabBtn');
     while (container.firstChild) {
         if (container.firstChild.id === 'addTabBtn') break;
@@ -1747,7 +1242,6 @@ function initTabBar() {
     container.appendChild(addBtn);
     main.insertBefore(container, main.firstChild);
 
-    // 添加 Tab 样式
     const style = document.getElementById('tab-bar-styles');
     if (!style) {
         const newStyle = document.createElement('style');
@@ -1879,7 +1373,6 @@ function initTabBar() {
         document.head.appendChild(newStyle);
     }
 
-    // + 按钮点击：打开未打开的页面
     addBtn.addEventListener('click', function() {
         const pageIds = Object.keys(PAGE_DEFS);
         const available = pageIds.filter(id => !tabs.some(t => t.pageId === id));
@@ -1890,7 +1383,6 @@ function initTabBar() {
         openTab(available[0]);
     });
 
-    // 快捷键 Ctrl+W
     document.addEventListener('keydown', function(e) {
         if ((e.ctrlKey || e.metaKey) && e.key === 'w') {
             const activeTab = tabs.find(t => t.id === activeTabId);
@@ -1901,7 +1393,6 @@ function initTabBar() {
         }
     });
 
-    // 默认打开 Dashboard
     openTab('dashboard');
 
     console.log('✅ 全局 Tab 标签栏已初始化');
@@ -1915,4 +1406,4 @@ window.switchTab = switchTab;
 window.renderTabBar = renderTabBar;
 window.initTabBar = initTabBar;
 
-console.log('✅ admin-common.js 加载完成（含通知角标功能）');
+console.log('✅ admin-common.js 加载完成');
