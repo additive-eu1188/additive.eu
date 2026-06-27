@@ -1096,6 +1096,7 @@ var NOTIFICATION_TYPES = {
     KYC: 'kyc',
     EMAIL: 'email',
     IP: 'ip',
+    IP_WITHDRAWAL: 'ip_withdrawal',  // 新增
     SYSTEM: 'system'
 };
 
@@ -1218,6 +1219,28 @@ async function fetchAllNotifications() {
             }
         }
 
+// 5. 获取 IP 提款检测通知（从 window.notifications 中获取）
+if (window.notifications) {
+    const ipWithdrawalNotifs = window.notifications.filter(n => n.type === 'ip_withdrawal');
+    for (const notif of ipWithdrawalNotifs) {
+        const id = notif.id;
+        if (!seenIds.has(id)) {
+            seenIds.add(id);
+            newNotifications.push({
+                id: id,
+                type: NOTIFICATION_TYPES.IP_WITHDRAWAL || 'ip_withdrawal',
+                title: notif.title || '🚨 Multiple IP Withdrawal Detected',
+                message: notif.message || 'Multiple withdrawal requests from same IP',
+                timestamp: notif.timestamp || new Date().toISOString(),
+                read: notif.read || false,
+                data: notif,
+                ip: notif.ip,
+                detail: notif.detail
+            });
+        }
+    }
+}
+
         newNotifications.sort(function(a, b) {
             return new Date(b.timestamp) - new Date(a.timestamp);
         });
@@ -1274,11 +1297,12 @@ function updateNotificationUI() {
         var bgColor = isRead ? 'rgba(255,255,255,0.02)' : 'rgba(200,176,144,0.06)';
         var borderColor = isRead ? 'rgba(255,255,255,0.03)' : 'rgba(200,176,144,0.12)';
 
-        var typeColor = '#8892a8';
+                var typeColor = '#8892a8';
         if (notif.type === 'withdrawal') typeColor = '#7ad0b0';
         else if (notif.type === 'kyc') typeColor = '#ffb84d';
         else if (notif.type === 'email') typeColor = '#4a7cff';
         else if (notif.type === 'ip') typeColor = '#c084fc';
+        else if (notif.type === 'ip_withdrawal') typeColor = '#ff6b6b';  // 红色警告
 
         html += `
             <div class="notification-item" data-id="${notif.id}" style="padding: 12px 16px; margin: 0 8px 4px 8px; border-radius: 10px; background: ${bgColor}; border-left: 3px solid ${typeColor}; cursor: pointer; transition: all 0.2s; display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; border: 1px solid ${borderColor};" onclick="markNotificationRead('${notif.id}')">

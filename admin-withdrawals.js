@@ -824,17 +824,18 @@ document.getElementById('statApprovedWithdraw').innerHTML = '€' + totalAmount.
         }
         
         // ===== 获取所有用户的余额（当前余额，已扣除提款金额） =====
-        var userBalances = {};
-        for (var w of filtered) {
-            try {
-                var userResult = await sb.from('users').select('balance').eq('uid', w.uid).single();
-                if (userResult.data) {
-                    userBalances[w.uid] = userResult.data.balance || 0;
-                }
-            } catch (e) {
-                userBalances[w.uid] = 0;
-            }
+var userBalances = {};
+for (var wi = 0; wi < filtered.length; wi++) {
+    var wItem = filtered[wi];
+    try {
+        var userResult = await sb.from('users').select('balance').eq('uid', wItem.uid).single();
+        if (userResult.data) {
+            userBalances[wItem.uid] = userResult.data.balance || 0;
         }
+    } catch (e) {
+        userBalances[wItem.uid] = 0;
+    }
+}
         
         tbody.innerHTML = '';
         for (var i = 0; i < filtered.length; i++) {
@@ -1139,3 +1140,159 @@ function escapeHtml(str) {
 }
 
 window.loadWithdrawalsPage = loadWithdrawalsPage;
+
+// admin-withdrawals.js - 在文件末尾添加以下代码
+
+// ============================================================
+// 多 IP 提款检测功能（使用 var 和兼容写法）
+// ============================================================
+
+// 检测重复 IP 提款
+async function detectDuplicateIPWithdrawals() {
+    try {
+        // 获取所有 pending 状态的提现记录
+        var { data: pendingWithdrawals, error } = await sb
+            .from('withdrawals')
+            .select('id, uid, username, amount, status, request_date, ip_address')
+            .eq('status', 'pending');
+
+        if (error) throw error;
+        if (!pendingWithdrawals || pendingWithdrawals.length === 0) return [];
+
+        // 按 IP 分组
+        var ipGroups = {};
+        var duplicateNotifications = [];
+
+        for (var i = 0; i < pendingWithdrawals.length; i++) {
+            var withdrawal = pendingWithdrawals[i];
+            var ip = withdrawal.ip_address || 'unknown';
+            if (!ipGroups[ip]) {
+                ipGroups[ip] = [];
+            }
+            ipGroups[ip].push(withdrawal);
+        }
+
+        // 检查每个 IP 组
+        var ipKeys = Object.keys(ipGroups);
+        for (var j = 0; j < ipKeys.length; j++) {
+            var ipKey = ipKeys[j];
+            if (ipKey === 'unknown') continue;
+            
+            var withdrawals = ipGroups[ipKey];
+            
+            // 获取该 IP 下所有不同的 UID
+            var uniqueUids = [];
+            var uidSet = {};
+            for (var k = 0; k < withdrawals.length; k++) {
+                var w = withdrawals[k];
+                if (!uidSet[w.uid]) {
+                    uidSet[w.uid] = true;
+                    uniqueUids.push(w.uid);
+                }
+            }
+            
+            // 如果同一个 IP 有多个不同的 UID，说明存在多账号提款
+            if (uniqueUids.length > 1) {
+                // 构建通知消息
+                var usernames = [];
+                for (var m = 0; m < withdrawals.length; m++) {
+                    usernames.push(withdrawals[m].username || withdrawals[m].uid);
+                }
+                var usernamesStr = usernames.join(', ');
+                
+                duplicateNotifications.push({
+                    ip: ipKey,
+                    uids: uniqueUids,
+                    withdrawals: withdrawals,
+                    message: '⚠️ Multiple withdrawal requests from same IP (' + ipKey + ')',
+                    detail: 'Users: ' + usernamesStr + ' (' + withdrawals.length + ' requests)',
+                    timestamp: new Date().toISOString()
+                });
+            }
+        }
+
+        return duplicateNotifications;
+
+    } catch (e) {
+        console.error('检测重复 IP 提款失败:', e);
+        return [];
+    }
+}
+
+// 生成 IP 检测通知并添加到全局通知系统
+async function generateIPWithdrawalNotifications() {
+    try {
+        var duplicates = await detectDuplicateIPWithdrawals();
+        
+        if (duplicates.length === 0) return;
+
+        // 获取现有通知
+        var existingNotifications = window.notifications || [];
+        
+        // 检查是否已有相同的 IP 通知（避免重复）
+        var existingIPNotifications = [];
+        var existingIPs = {};
+        for (var a = 0; a < existingNotifications.length; a++) {
+            if (existingNotifications[a].type === 'ip_withdrawal') {
+                existingIPNotifications.push(existingNotifications[a]);
+            }
+        }
+        for (var b = 0; b < existingIPNotifications.length; b++) {
+            existingIPs[existingIPNotifications[b].ip] = true;
+        }
+
+        for (var c = 0; c < duplicates.length; c++) {
+            var dup = duplicates[c];
+            // 如果该 IP 已经有通知，跳过
+            if (existingIPs[dup.ip]) continue;
+
+            // 构建通知对象
+            var notification = {
+                id: 'ip_withdrawal_' + dup.ip + '_' + Date.now(),
+                type: 'ip_withdrawal',
+                title: '🚨 Multiple IP Withdrawal Detected',
+                message: dup.message,
+                detail: dup.detail,
+                ip: dup.ip,
+                uids: dup.uids,
+                withdrawals: dup.withdrawals,
+                timestamp: dup.timestamp,
+                read: false
+            };
+
+            // 添加到通知列表（插入到最前面）
+            existingNotifications.unshift(notification);
+            // 标记该 IP 已添加
+            existingIPs[dup.ip] = true;
+        }
+
+        // 更新全局通知
+        window.notifications = existingNotifications;
+        
+        // 更新 UI（如果有通知函数）
+        if (typeof updateNotificationUI === 'function') {
+            updateNotificationUI();
+        }
+
+        console.log('📢 检测到 ' + duplicates.length + ' 个重复 IP 提款通知');
+
+    } catch (e) {
+        console.error('生成 IP 提款通知失败:', e);
+    }
+}
+
+// 在加载提现页面时调用检测
+var originalLoadWithdrawalsPage = window.loadWithdrawalsPage;
+window.loadWithdrawalsPage = function() {
+    if (originalLoadWithdrawalsPage) {
+        originalLoadWithdrawalsPage();
+    }
+    // 延迟执行 IP 检测
+    setTimeout(function() {
+        generateIPWithdrawalNotifications();
+    }, 1000);
+};
+
+// 导出函数供其他模块使用
+window.detectDuplicateIPWithdrawals = detectDuplicateIPWithdrawals;
+window.generateIPWithdrawalNotifications = generateIPWithdrawalNotifications;
