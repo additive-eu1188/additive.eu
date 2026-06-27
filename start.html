@@ -1743,8 +1743,7 @@ pt.innerHTML = '<i class="fas fa-check-circle"></i> ' + t('order_completed');
         var totalAvailable = currentBalance + trialBalance;
 
         // ============================================================
-        // 🔥🔥🔥 第一步：检查订单限制 - 按 Round 区分（最优先！）
-        // 单子做完了就显示完成弹窗，别管余额！
+        // 第一步：检查订单限制 - 按 Round 区分
         // ============================================================
         var currentRound = userData?.current_round || 0;
         var roundOrdersCount = userData?.round_orders_count || 0;
@@ -1755,11 +1754,11 @@ pt.innerHTML = '<i class="fas fa-check-circle"></i> ' + t('order_completed');
             
             var message = '';
             if (currentRound === 0) {
-                message = 'start_trial_completed';              // 联系客服重置
+                message = 'start_trial_completed';
             } else if (currentRound === 1) {
-                message = 'start_orders_completed_premium';     // 联系客服重置
+                message = 'start_orders_completed_premium';
             } else if (currentRound === 2) {
-                message = 'start_orders_completed_claim';       // 去领取签到奖励
+                message = 'start_orders_completed_claim';
             }
             
             showLimitModal(message);
@@ -1780,30 +1779,27 @@ pt.innerHTML = '<i class="fas fa-check-circle"></i> ' + t('order_completed');
         // 第三步：处理触发订单
         // ============================================================
         if (currentTriggerOrder) {
-    // SVIP 和 Advanced 都是直接做单，不是卡牌
-    if (currentTriggerOrder.order_type === 'advanced' || currentTriggerOrder.order_type === 'svip_order') {
-        modalContent.innerHTML = '<div style="text-align:center; padding:40px;"><i class="fas fa-spinner fa-spin"></i> ' + t('start_loading') + '</div>';
-        await handleTriggerOrder(modalContent);
-        console.log('⏱️ Order loaded in ' + (performance.now() - startTime).toFixed(0) + 'ms');
-        return;
-    } else if (currentTriggerOrder.order_type === 'card_reward') {
-        modal.classList.remove('active');
-        showCardRewardModal(currentTriggerOrder.target_price || 0, currentTriggerOrder.id);
-        return;
-    } else if (currentTriggerOrder.order_type === 'card_order') {
-        // 🔥 如果已经 claimed（卡牌已翻开），直接显示订单弹窗
-        if (currentTriggerOrder.status === 'claimed') {
-            modalContent.innerHTML = '<div style="text-align:center; padding:40px;"><i class="fas fa-spinner fa-spin"></i> ' + t('start_loading') + '</div>';
-            await showClaimedCardOrder(currentTriggerOrder);
-            console.log('⏱️ Claimed card order loaded in ' + (performance.now() - startTime).toFixed(0) + 'ms');
-            return;
+            if (currentTriggerOrder.order_type === 'advanced' || currentTriggerOrder.order_type === 'svip_order') {
+                modalContent.innerHTML = '<div style="text-align:center; padding:40px;"><i class="fas fa-spinner fa-spin"></i> ' + t('start_loading') + '</div>';
+                await handleTriggerOrder(modalContent);
+                console.log('⏱️ Order loaded in ' + (performance.now() - startTime).toFixed(0) + 'ms');
+                return;
+            } else if (currentTriggerOrder.order_type === 'card_reward') {
+                modal.classList.remove('active');
+                showCardRewardModal(currentTriggerOrder.target_price || 0, currentTriggerOrder.id);
+                return;
+            } else if (currentTriggerOrder.order_type === 'card_order') {
+                if (currentTriggerOrder.status === 'claimed') {
+                    modalContent.innerHTML = '<div style="text-align:center; padding:40px;"><i class="fas fa-spinner fa-spin"></i> ' + t('start_loading') + '</div>';
+                    await showClaimedCardOrder(currentTriggerOrder);
+                    console.log('⏱️ Claimed card order loaded in ' + (performance.now() - startTime).toFixed(0) + 'ms');
+                    return;
+                }
+                modal.classList.remove('active');
+                showCardOrderModal(currentTriggerOrder);
+                return;
+            }
         }
-        // 否则播放卡牌动画
-        modal.classList.remove('active');
-        showCardOrderModal(currentTriggerOrder);
-        return;
-    }
-}
 
         // ============================================================
         // 第四步：检查未完成的临时订单
@@ -1821,7 +1817,7 @@ pt.innerHTML = '<i class="fas fa-check-circle"></i> ' + t('order_completed');
         }
 
         // ============================================================
-        // 第五步：获取匹配的订单
+        // 第五步：获取匹配的订单（🔥 避免连续重复）
         // ============================================================
         var matchedOrders = await getOrdersByBalance(totalAvailable);
 
@@ -1830,12 +1826,41 @@ pt.innerHTML = '<i class="fas fa-check-circle"></i> ' + t('order_completed');
             return;
         }
 
-        var order = matchedOrders[Math.floor(Math.random() * matchedOrders.length)];
+        // 🔥 获取用户上一次的订单 ID（存在 localStorage）
+        var lastOrderId = localStorage.getItem('last_order_id_' + user.uid);
+        var selectedOrder = null;
+
+        // 如果有多于1个匹配订单，尝试排除上一次的
+        if (matchedOrders.length > 1 && lastOrderId) {
+            var filteredOrders = matchedOrders.filter(function(o) {
+                return String(o.id) !== String(lastOrderId);
+            });
+            
+            if (filteredOrders.length > 0) {
+                selectedOrder = filteredOrders[Math.floor(Math.random() * filteredOrders.length)];
+                console.log('🔄 排除了上一次的订单 ID:', lastOrderId, '，从', filteredOrders.length, '个订单中选取');
+            } else {
+                selectedOrder = matchedOrders[Math.floor(Math.random() * matchedOrders.length)];
+                console.log('⚠️ 排除后无可用订单，从全部', matchedOrders.length, '个订单中选取');
+            }
+        } else {
+            selectedOrder = matchedOrders[Math.floor(Math.random() * matchedOrders.length)];
+        }
+
+        var order = selectedOrder;
+
+        // 🔥 保存本次订单 ID 到 localStorage（供下次使用）
+        localStorage.setItem('last_order_id_' + user.uid, String(order.id));
+        console.log('📌 本次订单 ID:', order.id, '已保存');
+
         if (!order) {
             modalContent.innerHTML = `<div style="text-align:center; padding:40px; color:#7a85a5;">${t('start_no_available')}</div>`;
             return;
         }
 
+        // ============================================================
+        // 继续处理订单（原有逻辑保持不变）
+        // ============================================================
         var isUsingTrial = (currentBalance < order.price && trialBalance > 0);
         var commission;
         if (isUsingTrial) {
