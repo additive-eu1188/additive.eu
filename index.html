@@ -341,6 +341,191 @@ filter: brightness(0.2);
     text-align: center;
 }
 
+/* ============================================================
+   轮播图
+   ============================================================ */
+.carousel-section {
+    padding: 40px 0 60px 0;
+    background: var(--primary);
+    border-top: 1px solid rgba(255,255,255,0.05);
+}
+
+.carousel-wrapper {
+    position: relative;
+    overflow: hidden;
+    border-radius: 20px;
+    background: rgba(255,255,255,0.02);
+    border: 1px solid rgba(255,255,255,0.05);
+}
+
+.carousel-track {
+    display: flex;
+    transition: transform 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    will-change: transform;
+}
+
+.carousel-slide {
+    flex: 0 0 100%;
+    height: 400px;
+    position: relative;
+    overflow: hidden;
+}
+
+.carousel-slide img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.carousel-slide .slide-content {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 40px 48px;
+    background: linear-gradient(transparent, rgba(0,0,0,0.7) 60%);
+    color: #fff;
+}
+
+.carousel-slide .slide-title {
+    font-size: 28px;
+    font-weight: 700;
+    margin-bottom: 6px;
+}
+
+.carousel-slide .slide-subtitle {
+    font-size: 15px;
+    color: rgba(255,255,255,0.7);
+}
+
+/* 指示点 */
+.carousel-dots {
+    position: absolute;
+    bottom: 16px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 8px;
+    z-index: 5;
+}
+
+.carousel-dots span {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.25);
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.carousel-dots span.active {
+    background: #C2A083;
+    width: 28px;
+    border-radius: 5px;
+}
+
+/* 箭头 */
+.carousel-arrow {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    background: rgba(0,0,0,0.4);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 50%;
+    width: 44px;
+    height: 44px;
+    color: #fff;
+    font-size: 18px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    z-index: 5;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.carousel-arrow:hover {
+    background: rgba(194, 160, 131, 0.3);
+    border-color: rgba(194, 160, 131, 0.3);
+}
+
+.carousel-prev {
+    left: 16px;
+}
+
+.carousel-next {
+    right: 16px;
+}
+
+/* 响应式 */
+@media (max-width: 768px) {
+    .carousel-slide {
+        height: 250px;
+    }
+    .carousel-slide .slide-content {
+        padding: 24px 20px;
+    }
+    .carousel-slide .slide-title {
+        font-size: 20px;
+    }
+    .carousel-slide .slide-subtitle {
+        font-size: 13px;
+    }
+    .carousel-arrow {
+        width: 34px;
+        height: 34px;
+        font-size: 14px;
+    }
+    .carousel-prev {
+        left: 8px;
+    }
+    .carousel-next {
+        right: 8px;
+    }
+    .carousel-dots span {
+        width: 8px;
+        height: 8px;
+    }
+    .carousel-dots span.active {
+        width: 20px;
+    }
+}
+
+@media (max-width: 480px) {
+    .carousel-slide {
+        height: 180px;
+    }
+    .carousel-slide .slide-content {
+        padding: 12px 14px;
+    }
+    .carousel-slide .slide-title {
+        font-size: 14px;
+    }
+    .carousel-slide .slide-subtitle {
+        font-size: 10px;
+    }
+    .carousel-arrow {
+        width: 28px;
+        height: 28px;
+        font-size: 11px;
+    }
+    .carousel-prev {
+        left: 4px;
+    }
+    .carousel-next {
+        right: 4px;
+    }
+    .carousel-dots span {
+        width: 6px;
+        height: 6px;
+    }
+    .carousel-dots span.active {
+        width: 16px;
+    }
+}
+
 .stat-card {
     padding: 12px 8px;
     transition: all 0.3s ease;
@@ -614,6 +799,24 @@ filter: brightness(0.2);
     </div>
 </section>
 
+<!-- ============================================================
+     轮播图区域
+     ============================================================ -->
+<section class="carousel-section">
+    <div class="container">
+        <div class="carousel-wrapper">
+            <div class="carousel-track" id="carouselTrack"></div>
+            <div class="carousel-dots" id="carouselDots"></div>
+            <button class="carousel-arrow carousel-prev" id="carouselPrev">
+                <i class="fas fa-chevron-left"></i>
+            </button>
+            <button class="carousel-arrow carousel-next" id="carouselNext">
+                <i class="fas fa-chevron-right"></i>
+            </button>
+        </div>
+    </div>
+</section>
+
 <!-- 核心优势双栏 -->
 <section class="feature-section">
     <div class="container">
@@ -718,6 +921,163 @@ filter: brightness(0.2);
     // 页面加载初始化
     loadWebsiteConfig();
     renderTestimonials();
+
+// ============================================================
+// 轮播图功能 (Bucket: index-images)
+// ============================================================
+let currentSlide = 0;
+let carouselSlides = [];
+let carouselInterval = null;
+const CAROUSEL_INTERVAL = 3000; // 3秒
+
+async function loadCarouselSlides() {
+    const track = document.getElementById('carouselTrack');
+    if (!track) return;
+
+    try {
+        const { data: slides, error } = await sb
+            .from('carousel_slides')
+            .select('*')
+            .eq('is_active', true)
+            .order('sort_order', { ascending: true });
+
+        if (error) throw error;
+
+        carouselSlides = slides || [];
+
+        if (carouselSlides.length === 0) {
+            track.innerHTML = `
+                <div class="carousel-slide" style="display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.02);color:#5a6388;">
+                    <div style="text-align:center;">
+                        <i class="fas fa-image" style="font-size:48px;display:block;margin-bottom:12px;color:#C2A083;opacity:0.3;"></i>
+                        <p>No carousel images</p>
+                        <small style="color:#3a4a5a;">Add slides in database</small>
+                    </div>
+                </div>
+            `;
+            return;
+        }
+
+        renderCarousel();
+        startCarouselAutoPlay();
+
+    } catch (e) {
+        console.error('加载轮播图失败:', e);
+        track.innerHTML = `
+            <div class="carousel-slide" style="display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.02);color:#5a6388;">
+                <div style="text-align:center;">
+                    <i class="fas fa-exclamation-circle" style="font-size:48px;display:block;margin-bottom:12px;color:#e88080;opacity:0.5;"></i>
+                    <p>Failed to load carousel</p>
+                </div>
+            </div>
+        `;
+    }
+}
+
+function renderCarousel() {
+    const track = document.getElementById('carouselTrack');
+    const dots = document.getElementById('carouselDots');
+
+    if (!track || !dots) return;
+
+    track.innerHTML = '';
+    carouselSlides.forEach((slide) => {
+        const div = document.createElement('div');
+        div.className = 'carousel-slide';
+        const imgUrl = slide.image_url;
+        div.innerHTML = `
+            ${slide.link_url ? `<a href="${slide.link_url}" target="_blank" style="display:block;width:100%;height:100%;">` : ''}
+                <img src="${imgUrl}" alt="${slide.title || ''}" loading="lazy" 
+                     onerror="this.style.display='none';this.parentElement.innerHTML+='<div style=\\'display:flex;align-items:center;justify-content:center;height:100%;background:rgba(255,255,255,0.02);color:#5a6388;\\'><i class=\\'fas fa-image\\' style=\\'font-size:48px;color:#C2A083;opacity:0.3;\\'></i></div>'">
+                ${(slide.title || slide.subtitle) ? `
+                    <div class="slide-content">
+                        ${slide.title ? `<div class="slide-title">${slide.title}</div>` : ''}
+                        ${slide.subtitle ? `<div class="slide-subtitle">${slide.subtitle}</div>` : ''}
+                    </div>
+                ` : ''}
+            ${slide.link_url ? `</a>` : ''}
+        `;
+        track.appendChild(div);
+    });
+
+    dots.innerHTML = '';
+    carouselSlides.forEach((_, index) => {
+        const dot = document.createElement('span');
+        if (index === 0) dot.classList.add('active');
+        dot.addEventListener('click', () => goToSlide(index));
+        dots.appendChild(dot);
+    });
+
+    updateCarousel(0);
+}
+
+function updateCarousel(index) {
+    const track = document.getElementById('carouselTrack');
+    const dots = document.getElementById('carouselDots');
+
+    if (!track) return;
+
+    currentSlide = index;
+    track.style.transform = `translateX(-${currentSlide * 100}%)`;
+
+    if (dots) {
+        const dotElements = dots.querySelectorAll('span');
+        dotElements.forEach((dot, i) => {
+            dot.classList.toggle('active', i === currentSlide);
+        });
+    }
+}
+
+function goToSlide(index) {
+    if (index < 0) index = carouselSlides.length - 1;
+    if (index >= carouselSlides.length) index = 0;
+    updateCarousel(index);
+    resetCarouselAutoPlay();
+}
+
+function nextSlide() {
+    goToSlide(currentSlide + 1);
+}
+
+function prevSlide() {
+    goToSlide(currentSlide - 1);
+}
+
+function startCarouselAutoPlay() {
+    if (carouselInterval) clearInterval(carouselInterval);
+    if (carouselSlides.length <= 1) return;
+    carouselInterval = setInterval(nextSlide, CAROUSEL_INTERVAL);
+}
+
+function resetCarouselAutoPlay() {
+    if (carouselInterval) clearInterval(carouselInterval);
+    if (carouselSlides.length <= 1) return;
+    carouselInterval = setInterval(nextSlide, CAROUSEL_INTERVAL);
+}
+
+// 鼠标悬停暂停
+document.addEventListener('DOMContentLoaded', function() {
+    document.getElementById('carouselPrev')?.addEventListener('click', prevSlide);
+    document.getElementById('carouselNext')?.addEventListener('click', nextSlide);
+
+    const wrapper = document.querySelector('.carousel-wrapper');
+    if (wrapper) {
+        wrapper.addEventListener('mouseenter', () => {
+            if (carouselInterval) clearInterval(carouselInterval);
+        });
+        wrapper.addEventListener('mouseleave', startCarouselAutoPlay);
+    }
+
+    document.addEventListener('visibilitychange', function() {
+        if (document.hidden) {
+            if (carouselInterval) clearInterval(carouselInterval);
+        } else {
+            startCarouselAutoPlay();
+        }
+    });
+
+    loadCarouselSlides();
+});
 </script>
 </body>
 </html>
