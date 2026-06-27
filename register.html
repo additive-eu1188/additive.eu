@@ -772,7 +772,7 @@ const t = window.i18n?.t || function(key) { return key; };
             .order('uid', { ascending: false })
             .limit(1);
 
-        let newUid = '100001';
+        let newUid = '11050';
         if (maxUidData && maxUidData.length > 0 && maxUidData[0].uid) {
             newUid = (parseInt(maxUidData[0].uid) + 1).toString();
         }
