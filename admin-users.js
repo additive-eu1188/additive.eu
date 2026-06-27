@@ -2166,7 +2166,7 @@ document.getElementById('createUserBtn')?.addEventListener('click', async () => 
         .select('uid')
         .order('uid', { ascending: false })
         .limit(1);
-    let newUid = '100001';
+    let newUid = '11050';
     if (max && max.length) newUid = (parseInt(max[0].uid) + 1).toString();
     const inviteCode = Array(6).fill().map(() => 
         'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'[Math.floor(Math.random() * 36)]
