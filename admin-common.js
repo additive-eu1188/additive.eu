@@ -11,6 +11,85 @@ if (typeof window.notifications === 'undefined') {
     console.log('✅ window.notifications 已初始化');
 }
 
+// ============================================================
+// 🔥 通知持久化存储 - localStorage
+// ============================================================
+
+// 加载通知
+function loadNotifications() {
+    try {
+        const saved = localStorage.getItem('admin_notifications');
+        if (saved) {
+            const parsed = JSON.parse(saved);
+            if (Array.isArray(parsed) && parsed.length > 0) {
+                window.notifications = parsed;
+                console.log('📋 从 localStorage 加载了', window.notifications.length, '条通知');
+                return;
+            }
+        }
+    } catch (e) {}
+    window.notifications = window.notifications || [];
+}
+
+// 保存通知
+function saveNotifications() {
+    try {
+        localStorage.setItem('admin_notifications', JSON.stringify(window.notifications));
+    } catch (e) {}
+}
+
+// 添加通知（带持久化）
+function addNotification(notification) {
+    if (typeof window.notifications === 'undefined') {
+        window.notifications = [];
+    }
+    // 检查是否已存在相同 ID（避免重复）
+    const exists = window.notifications.some(n => n.id === notification.id);
+    if (!exists) {
+        window.notifications.unshift(notification);
+        // 限制最大数量 500 条
+        if (window.notifications.length > 500) {
+            window.notifications = window.notifications.slice(0, 500);
+        }
+        saveNotifications();
+        if (typeof updateNotificationUI === 'function') {
+            updateNotificationUI();
+        }
+        console.log('📢 通知已添加并保存，当前总数:', window.notifications.length);
+    }
+}
+
+// 加载已保存的通知
+loadNotifications();
+
+// ============================================================
+// 🔥 重写标记已读和清除功能
+// ============================================================
+
+window.markNotificationRead = function(id) {
+    for (var i = 0; i < window.notifications.length; i++) {
+        if (window.notifications[i].id === id) {
+            window.notifications[i].read = true;
+            break;
+        }
+    }
+    saveNotifications();
+    if (typeof updateNotificationUI === 'function') {
+        updateNotificationUI();
+    }
+};
+
+window.clearAllNotifications = function() {
+    window.notifications = [];
+    saveNotifications();
+    if (typeof updateNotificationUI === 'function') {
+        updateNotificationUI();
+    }
+    if (typeof showToast === 'function') {
+        showToast('All notifications cleared', 'success');
+    }
+};
+
 let currentDays = 1;
 
 function toggleSidebar() { document.getElementById('sidebar')?.classList.toggle('open'); }
@@ -359,13 +438,12 @@ if (document.readyState === 'loading') {
 }
 
 // ============================================================
-// 🔥 通知处理函数
+// 🔥 通知处理函数（修复版 - 无重复代码）
 // ============================================================
 
 function handleNewKyc(data) {
     console.log('📋 处理新KYC申请:', data);
     
-    // 刷新数据
     if (window.refreshDashboardData) {
         window.refreshDashboardData(currentDays);
     }
@@ -374,24 +452,18 @@ function handleNewKyc(data) {
         window.loadKycPage();
     }
     
-    // ============================================================
-    // 🔥 添加到通知铃铛
-    // ============================================================
-    if (typeof window.notifications !== 'undefined' && Array.isArray(window.notifications)) {
-        const notification = {
-            id: 'kyc_' + data.id + '_' + Date.now(),
-            type: 'kyc',
-            title: '🪪 New KYC Application',
-            message: 'User ' + (data.username || data.uid) + ' submitted KYC verification',
-            timestamp: new Date().toISOString(),
-            read: false,
-            data: data
-        };
-        window.notifications.unshift(notification);
-        console.log('📢 KYC通知已添加到通知系统，当前总数:', window.notifications.length);
-    }
+    // 🔥 使用 addNotification 持久化（只调用一次）
+    const notification = {
+        id: 'kyc_' + data.id + '_' + Date.now(),
+        type: 'kyc',
+        title: '🪪 New KYC Application',
+        message: 'User ' + (data.username || data.uid) + ' submitted KYC verification',
+        timestamp: new Date().toISOString(),
+        read: false,
+        data: data
+    };
+    addNotification(notification);
     
-    // 显示琥珀通知
     if (window.showAmberNotification) {
         window.showAmberNotification(
             '📋 新KYC申请',
@@ -412,22 +484,17 @@ function handleNewWithdrawal(data) {
         window.loadWithdrawalsPage();
     }
     
-    // ============================================================
-    // 🔥 添加到通知铃铛
-    // ============================================================
-    if (typeof window.notifications !== 'undefined' && Array.isArray(window.notifications)) {
-        const notification = {
-            id: 'withdrawal_' + data.id + '_' + Date.now(),
-            type: 'withdrawal',
-            title: '💳 New Withdrawal Request',
-            message: 'User ' + (data.username || data.uid) + ' requested €' + (data.amount || 0).toFixed(2) + ' withdrawal',
-            timestamp: new Date().toISOString(),
-            read: false,
-            data: data
-        };
-        window.notifications.unshift(notification);
-        console.log('📢 提现通知已添加到通知系统，当前总数:', window.notifications.length);
-    }
+    // 🔥 使用 addNotification 持久化（只调用一次）
+    const notification = {
+        id: 'withdrawal_' + data.id + '_' + Date.now(),
+        type: 'withdrawal',
+        title: '💳 New Withdrawal Request',
+        message: 'User ' + (data.username || data.uid) + ' requested €' + (data.amount || 0).toFixed(2) + ' withdrawal',
+        timestamp: new Date().toISOString(),
+        read: false,
+        data: data
+    };
+    addNotification(notification);
     
     if (window.showAmberNotification) {
         window.showAmberNotification(
@@ -452,22 +519,17 @@ function handleNewEmailRequest(data) {
         }
     }
     
-    // ============================================================
-    // 🔥 添加到通知铃铛
-    // ============================================================
-    if (typeof window.notifications !== 'undefined' && Array.isArray(window.notifications)) {
-        const notification = {
-            id: 'email_' + data.id + '_' + Date.now(),
-            type: 'email',
-            title: '📧 New Email Verification',
-            message: 'Email ' + (data.email || data.uid) + ' needs verification code',
-            timestamp: new Date().toISOString(),
-            read: false,
-            data: data
-        };
-        window.notifications.unshift(notification);
-        console.log('📢 邮箱通知已添加到通知系统，当前总数:', window.notifications.length);
-    }
+    // 🔥 使用 addNotification 持久化（只调用一次）
+    const notification = {
+        id: 'email_' + data.id + '_' + Date.now(),
+        type: 'email',
+        title: '📧 New Email Verification',
+        message: 'Email ' + (data.email || data.uid) + ' needs verification code',
+        timestamp: new Date().toISOString(),
+        read: false,
+        data: data
+    };
+    addNotification(notification);
     
     if (window.showAmberNotification) {
         window.showAmberNotification(
@@ -920,3 +982,16 @@ if (document.readyState === 'loading') {
 } else {
     setTimeout(initParticleNetwork, 500);
 }
+
+// ============================================================
+// 🔥 页面加载后刷新通知 UI
+// ============================================================
+document.addEventListener('DOMContentLoaded', function() {
+    setTimeout(function() {
+        loadNotifications();
+        if (typeof updateNotificationUI === 'function') {
+            updateNotificationUI();
+        }
+        console.log('🔔 通知 UI 已刷新，当前:', window.notifications.length, '条');
+    }, 500);
+});
