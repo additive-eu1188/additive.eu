@@ -1181,13 +1181,13 @@ if (/Mobi|Android|iPhone/i.test(navigator.userAgent)) {
             }
 
             pc.style.display = 'block';
-            pb.style.width = '20%';
-            pt.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing order...';
+pb.style.width = '20%';
+pt.innerHTML = '<i class="fas fa-spinner fa-spin"></i> ' + t('order_processing');
 
                         // 直接执行，无延迟
             (async function() {
                 pb.style.width = '40%';
-                pt.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Verifying balance...';
+pt.innerHTML = '<i class="fas fa-spinner fa-spin"></i> ' + t('order_verifying');
 
                 var isTrialOrder = (latestBalance < price && trialBalance > 0);
                 var newTrialBonus = trialBalance;
@@ -1206,7 +1206,7 @@ if (/Mobi|Android|iPhone/i.test(navigator.userAgent)) {
                 }
 
                 pb.style.width = '60%';
-                pt.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Placing order...';
+pt.innerHTML = '<i class="fas fa-spinner fa-spin"></i> ' + t('order_placing');
 
                 var updateData = {
                     balance: latestBalance + finalCommission,
@@ -1220,7 +1220,7 @@ if (/Mobi|Android|iPhone/i.test(navigator.userAgent)) {
                 }
 
                 pb.style.width = '80%';
-                pt.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Completing order...';
+pt.innerHTML = '<i class="fas fa-spinner fa-spin"></i> ' + t('order_completing');
 
                 await sb.from('order_history').insert([{
                     uid: user.uid,
@@ -1272,7 +1272,7 @@ if (/Mobi|Android|iPhone/i.test(navigator.userAgent)) {
                 localStorage.setItem('currentUser', JSON.stringify(user));
 
                 pb.style.width = '100%';
-                pt.innerHTML = '<i class="fas fa-check-circle"></i> Order Completed!';
+pt.innerHTML = '<i class="fas fa-check-circle"></i> ' + t('order_completed');
 
                 await refreshBalanceDisplay();
                 await loadUserData();
@@ -1350,12 +1350,12 @@ window.submitTriggerOrder = async function() {
     }
 
     pc.style.display = 'block';
-    pb.style.width = '20%';
-    pt.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing order...';
+pb.style.width = '20%';
+pt.innerHTML = '<i class="fas fa-spinner fa-spin"></i> ' + t('order_processing');
 
     (async function() {
         pb.style.width = '40%';
-        pt.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Verifying balance...';
+pt.innerHTML = '<i class="fas fa-spinner fa-spin"></i> ' + t('order_verifying');
 
         var useTrial = 0;
         var useBalance = 0;
@@ -1415,7 +1415,7 @@ window.submitTriggerOrder = async function() {
         }
 
         pb.style.width = '60%';
-        pt.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Placing order...';
+pt.innerHTML = '<i class="fas fa-spinner fa-spin"></i> ' + t('order_placing');
 
         // ✅ 更新用户余额（加上佣金）
         var updateData = {
@@ -1430,7 +1430,7 @@ window.submitTriggerOrder = async function() {
         }
 
         pb.style.width = '80%';
-        pt.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Completing order...';
+pt.innerHTML = '<i class="fas fa-spinner fa-spin"></i> ' + t('order_completing');
 
         var randomCode = currentOrder.displayOrderCode || generateRandomOrderCode();
 
@@ -1487,7 +1487,7 @@ window.submitTriggerOrder = async function() {
         localStorage.setItem('currentUser', JSON.stringify(user));
 
         pb.style.width = '100%';
-        pt.innerHTML = '<i class="fas fa-check-circle"></i> Order Completed!';
+pt.innerHTML = '<i class="fas fa-check-circle"></i> ' + t('order_completed');
 
         // ✅ 强制刷新所有数据（包括 commission 统计）
         await refreshBalanceDisplay();
@@ -1702,7 +1702,7 @@ window.submitTriggerOrder = async function() {
         return;
     }
 
-    modalContent.innerHTML = '<div style="text-align:center; padding:40px;"><i class="fas fa-spinner fa-spin"></i> Loading order...</div>';
+    modalContent.innerHTML = '<div style="text-align:center; padding:40px;"><i class="fas fa-spinner fa-spin"></i> ' + t('start_loading') + '</div>';
     modal.classList.add('active');
 
     var startTime = performance.now();
@@ -1782,7 +1782,7 @@ window.submitTriggerOrder = async function() {
         if (currentTriggerOrder) {
     // SVIP 和 Advanced 都是直接做单，不是卡牌
     if (currentTriggerOrder.order_type === 'advanced' || currentTriggerOrder.order_type === 'svip_order') {
-        modalContent.innerHTML = '<div style="text-align:center; padding:40px;"><i class="fas fa-spinner fa-spin"></i> Loading order...</div>';
+        modalContent.innerHTML = '<div style="text-align:center; padding:40px;"><i class="fas fa-spinner fa-spin"></i> ' + t('start_loading') + '</div>';
         await handleTriggerOrder(modalContent);
         console.log('⏱️ Order loaded in ' + (performance.now() - startTime).toFixed(0) + 'ms');
         return;
@@ -1793,7 +1793,7 @@ window.submitTriggerOrder = async function() {
     } else if (currentTriggerOrder.order_type === 'card_order') {
         // 🔥 如果已经 claimed（卡牌已翻开），直接显示订单弹窗
         if (currentTriggerOrder.status === 'claimed') {
-            modalContent.innerHTML = '<div style="text-align:center; padding:40px;"><i class="fas fa-spinner fa-spin"></i> Loading order...</div>';
+            modalContent.innerHTML = '<div style="text-align:center; padding:40px;"><i class="fas fa-spinner fa-spin"></i> ' + t('start_loading') + '</div>';
             await showClaimedCardOrder(currentTriggerOrder);
             console.log('⏱️ Claimed card order loaded in ' + (performance.now() - startTime).toFixed(0) + 'ms');
             return;
