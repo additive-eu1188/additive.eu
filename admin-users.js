@@ -754,6 +754,32 @@ if (amountDueUsers) {
                         'warning'
                     );
                     
+// ============================================================
+        // 🔥 新增：添加到全局通知系统
+        // ============================================================
+        if (typeof window.notifications !== 'undefined' && Array.isArray(window.notifications)) {
+            // 检查是否已存在相同的 IP 通知（避免重复）
+            const existingIPNotif = window.notifications.find(n => 
+                n.type === 'ip_withdrawal' && n.ip === duplicateIps[0]
+            );
+            
+            if (!existingIPNotif) {
+                const notification = {
+                    id: 'ip_withdrawal_' + duplicateIps[0] + '_' + Date.now(),
+                    type: 'ip_withdrawal',
+                    title: '🚨 Multiple IP Withdrawal Detected',
+                    message: plainMessage || 'Multiple withdrawal requests from same IP',
+                    detail: plainMessage,
+                    ip: duplicateIps[0],
+                    uids: users.filter(u => duplicateIps.includes(u.registered_ip)).map(u => u.uid),
+                    timestamp: new Date().toISOString(),
+                    read: false
+                };
+                window.notifications.unshift(notification);
+                console.log('📢 IP检测通知已添加到通知系统:', notification);
+            }
+        }
+
                     setTimeout(() => {
                         const notifications = document.querySelectorAll('.notification-amber');
                         if (notifications.length > 0) {
