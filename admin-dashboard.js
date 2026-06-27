@@ -714,13 +714,12 @@ function initTrendChart() {
     if (typeof deviceInfo !== 'undefined' && deviceInfo) {
         isLowPerformance = deviceInfo.isLowPerformance || false;
     } else {
-        // 降级检测：移动设备或低核心数
         var isMobile = /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
         var cores = navigator.hardwareConcurrency || 4;
         isLowPerformance = isMobile || cores <= 4;
     }
     
-    console.log('📊 图表性能模式:', isLowPerformance ? '低性能（无动画）' : '高性能（有动画）');
+    console.log('📊 图表性能模式:', isLowPerformance ? '低性能（无动画）' : '高性能（无动画）');
     
     trendChart = echarts.init(dom);
     trendChart.setOption({
@@ -732,7 +731,7 @@ function initTrendChart() {
             borderWidth: 1, 
             textStyle: { color: '#d8dff0' } 
         },
-        legend: { data: ['入金', '出金'], textStyle: { color: '#8892a8' }, right: 10, top: 0 },
+        legend: { data: ['Deposit', 'Withdrawal'], textStyle: { color: '#8892a8' }, right: 10, top: 0 },
         grid: { top: 50, left: 60, right: 40, bottom: 30, containLabel: true },
         xAxis: { 
             type: 'category', 
@@ -756,7 +755,6 @@ function initTrendChart() {
                 smooth: true, 
                 symbol: 'circle', 
                 symbolSize: isLowPerformance ? 4 : 6,
-                // 🔥 低性能时禁用阴影
                 lineStyle: { 
                     color: '#7ad0b0', 
                     width: isLowPerformance ? 2 : 3, 
@@ -767,9 +765,9 @@ function initTrendChart() {
                     opacity: isLowPerformance ? 0.15 : 0.25, 
                     color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [{ offset: 0, color: '#7ad0b0' }, { offset: 1, color: 'transparent' }]) 
                 },
-                // 🔥 低性能时禁用动画
-                animation: !isLowPerformance,
-                animationDuration: isLowPerformance ? 0 : 500
+                // 🔥 直接显示，无展开动画
+                animation: false,
+                animationDuration: 0
             },
             { 
                 name: 'Withdrawal', 
@@ -788,15 +786,15 @@ function initTrendChart() {
                     opacity: isLowPerformance ? 0.15 : 0.25, 
                     color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [{ offset: 0, color: '#e88080' }, { offset: 1, color: 'transparent' }]) 
                 },
-                animation: !isLowPerformance,
-                animationDuration: isLowPerformance ? 0 : 500
+                animation: false,
+                animationDuration: 0
             }
         ]
     });
     
     console.log('趋势线图初始化完成');
     
-    // 🔥 如果已经存在 pulseInterval，清除
+    // 🔥 清除旧的脉冲动画
     if (pulseInterval) {
         clearInterval(pulseInterval);
         pulseInterval = null;
@@ -808,7 +806,7 @@ function initTrendChart() {
         return;
     }
     
-    // 高性能设备：保留脉冲动画
+    // 高性能设备：保留脉冲动画（呼吸效果）
     var pulseOpacity = 0.3, pulseDirection = 0.006;
     pulseInterval = setInterval(function() {
         pulseOpacity += pulseDirection;
