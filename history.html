@@ -343,9 +343,16 @@ body.innerHTML = `
     icon = 'fas fa-plus-circle'; 
 }
         else if (d.type === 'deposit_bonus') { 
-            typeName = d.description || t('history_deposit_bonus'); 
-            icon = 'fas fa-gift'; 
-        }
+    // 根据 description 匹配翻译
+    if (d.description && d.description.includes('New Member')) {
+        typeName = t('history_deposit_new_member');
+    } else if (d.description && d.description.includes('Deposit')) {
+        typeName = t('history_deposit_deposit');
+    } else {
+        typeName = d.description || t('history_deposit_bonus');
+    }
+    icon = 'fas fa-gift'; 
+}
         else if (d.type === 'order_commission') { 
             typeName = t('history_order_commission'); 
             icon = 'fas fa-chart-line'; 

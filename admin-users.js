@@ -1187,7 +1187,21 @@ function depositBalance(uid, username) {
 
         <div style="margin-bottom: 20px;">
             <label style="display: block; font-size: 11px; color: #6a7a92; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">Reward Name</label>
-            <input type="text" id="rewardNameInput" class="deposit-input" placeholder="Deposit Bonus" style="width: 100%; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06); border-radius: 10px; padding: 10px 14px; color: #e6edf5; font-size: 14px; outline: none; transition: 0.2s; box-sizing: border-box;">
+            <div class="reward-select-wrapper" style="position: relative;">
+                <div class="reward-select-display" style="display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06); border-radius: 10px; cursor: pointer; color: #e6edf5; font-size: 14px; transition: 0.2s; user-select: none; min-height: 46px;">
+                    <span id="rewardSelectedText">New Member Reward</span>
+                    <i class="fas fa-chevron-down" style="color: #5a6a82; font-size: 12px;"></i>
+                </div>
+                <div class="reward-select-dropdown" style="position: absolute; top: calc(100% + 4px); left: 0; right: 0; background: rgba(14, 18, 30, 0.98); backdrop-filter: blur(16px); border: 1px solid rgba(255,255,255,0.06); border-radius: 10px; padding: 4px 0; opacity: 0; visibility: hidden; transform: translateY(-6px); transition: all 0.2s ease; z-index: 100; max-height: 0; overflow: hidden; box-shadow: 0 20px 60px rgba(0,0,0,0.5);">
+                    <div class="reward-option" data-value="New Member Reward" style="padding: 10px 16px; cursor: pointer; transition: 0.15s ease; color: #b8c4de; font-size: 13px; font-weight: 500; display: flex; align-items: center; gap: 8px;">
+                        <span>New Member Reward</span>
+                    </div>
+                    <div class="reward-option" data-value="Deposit Reward" style="padding: 10px 16px; cursor: pointer; transition: 0.15s ease; color: #b8c4de; font-size: 13px; font-weight: 500; display: flex; align-items: center; gap: 8px;">
+                        <span>Deposit Reward</span>
+                    </div>
+                </div>
+                <input type="hidden" id="rewardNameInput" value="New Member Reward">
+            </div>
         </div>
 
         <div style="display: flex; gap: 10px;">
@@ -1203,44 +1217,84 @@ function depositBalance(uid, username) {
     overlay.appendChild(modal);
     document.body.appendChild(overlay);
 
-    // 添加动画样式
-    if (!document.getElementById('depositModalStyles')) {
-        const style = document.createElement('style');
-        style.id = 'depositModalStyles';
-        style.textContent = `
-            @keyframes fadeIn {
-                from { opacity: 0; }
-                to { opacity: 1; }
+    // ===== 绑定下拉事件 =====
+    const rewardDisplay = modal.querySelector('.reward-select-display');
+    const rewardDropdown = modal.querySelector('.reward-select-dropdown');
+    const rewardOptions = modal.querySelectorAll('.reward-option');
+    const rewardHidden = modal.querySelector('#rewardNameInput');
+    const rewardSelectedText = modal.querySelector('#rewardSelectedText');
+
+    if (rewardDisplay && rewardDropdown) {
+        rewardDisplay.addEventListener('click', function(e) {
+            e.stopPropagation();
+            const isOpen = rewardDropdown.style.opacity === '1';
+            // 关闭所有其他下拉
+            document.querySelectorAll('.reward-select-dropdown').forEach(function(el) {
+                if (el !== rewardDropdown) {
+                    el.style.opacity = '0';
+                    el.style.visibility = 'hidden';
+                    el.style.maxHeight = '0';
+                    el.style.transform = 'translateY(-6px)';
+                }
+            });
+            if (!isOpen) {
+                rewardDropdown.style.opacity = '1';
+                rewardDropdown.style.visibility = 'visible';
+                rewardDropdown.style.maxHeight = '200px';
+                rewardDropdown.style.transform = 'translateY(0)';
+            } else {
+                rewardDropdown.style.opacity = '0';
+                rewardDropdown.style.visibility = 'hidden';
+                rewardDropdown.style.maxHeight = '0';
+                rewardDropdown.style.transform = 'translateY(-6px)';
             }
-            @keyframes scaleIn {
-                from { transform: scale(0.92); opacity: 0; }
-                to { transform: scale(1); opacity: 1; }
-            }
-            .deposit-input:focus {
-                border-color: rgba(74,222,128,0.25);
-                background: rgba(255,255,255,0.06);
-            }
-            .deposit-input::placeholder {
-                color: rgba(255,255,255,0.12);
-            }
-        `;
-        document.head.appendChild(style);
+        });
     }
 
+    rewardOptions.forEach(function(option) {
+        option.addEventListener('click', function(e) {
+            e.stopPropagation();
+            const value = this.dataset.value;
+            if (rewardSelectedText) rewardSelectedText.textContent = value;
+            if (rewardHidden) rewardHidden.value = value;
+            if (rewardDropdown) {
+                rewardDropdown.style.opacity = '0';
+                rewardDropdown.style.visibility = 'hidden';
+                rewardDropdown.style.maxHeight = '0';
+                rewardDropdown.style.transform = 'translateY(-6px)';
+            }
+        });
+    });
+
+    // 点击外部关闭下拉
+    const closeDropdownHandler = function(e) {
+        if (!e.target.closest('.reward-select-wrapper')) {
+            document.querySelectorAll('.reward-select-dropdown').forEach(function(el) {
+                el.style.opacity = '0';
+                el.style.visibility = 'hidden';
+                el.style.maxHeight = '0';
+                el.style.transform = 'translateY(-6px)';
+            });
+        }
+    };
+    document.addEventListener('click', closeDropdownHandler);
+
     // 聚焦第一个输入框
-    setTimeout(() => {
+    setTimeout(function() {
         document.getElementById('depositAmountInput')?.focus();
     }, 100);
 
     // Cancel 按钮
     document.getElementById('depositCancelBtn')?.addEventListener('click', function() {
         overlay.remove();
+        document.removeEventListener('click', closeDropdownHandler);
     });
 
     // 点击遮罩层关闭
     overlay.addEventListener('click', function(e) {
         if (e.target === this) {
             overlay.remove();
+            document.removeEventListener('click', closeDropdownHandler);
         }
     });
 
@@ -1249,6 +1303,7 @@ function depositBalance(uid, username) {
         if (e.key === 'Escape') {
             overlay.remove();
             document.removeEventListener('keydown', escHandler);
+            document.removeEventListener('click', closeDropdownHandler);
         }
     };
     document.addEventListener('keydown', escHandler);
@@ -1257,7 +1312,7 @@ function depositBalance(uid, username) {
     document.getElementById('depositConfirmBtn')?.addEventListener('click', async function() {
         const depositAmount = parseFloat(document.getElementById('depositAmountInput').value) || 0;
         const rewardAmount = parseFloat(document.getElementById('rewardAmountInput').value) || 0;
-        const rewardName = document.getElementById('rewardNameInput').value.trim() || 'Deposit Bonus';
+        const rewardName = document.getElementById('rewardNameInput').value || 'New Member Reward';
 
         if (depositAmount <= 0 && rewardAmount <= 0) {
             showToast('至少输入一个金额', 'error');
@@ -1265,11 +1320,12 @@ function depositBalance(uid, username) {
         }
 
         overlay.remove();
+        document.removeEventListener('click', closeDropdownHandler);
         await processDeposit(uid, username, depositAmount, rewardAmount, rewardName);
     });
 
     // Enter 键提交
-    document.querySelectorAll('.deposit-input').forEach(function(input) {
+    modal.querySelectorAll('.deposit-input').forEach(function(input) {
         input.addEventListener('keypress', function(e) {
             if (e.key === 'Enter') {
                 document.getElementById('depositConfirmBtn')?.click();
