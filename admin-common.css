@@ -987,3 +987,52 @@ button.danger:hover {
     border: 1px solid rgba(255, 255, 255, 0.08);
     flex-shrink: 0;
 }
+
+/* ===== 性能优化：低端设备降级 ===== */
+@media (max-width: 768px) {
+    .sidebar .sidebar-canvas {
+        display: none !important;  /* 移动端完全禁用粒子 */
+    }
+    
+    .card, .stat-card, .quick-card {
+        transition: none !important;
+        backdrop-filter: blur(4px) !important;
+    }
+    
+    .nav-item {
+        transition: none !important;
+    }
+}
+
+/* 性能降级模式 - 由 JS 添加类触发 */
+.performance-degraded .sidebar .sidebar-canvas {
+    opacity: 0.3 !important;
+}
+
+.performance-degraded .card {
+    transition: none !important;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2) !important;
+}
+
+.performance-degraded .nav-item {
+    transition: none !important;
+}
+
+.performance-degraded .data-table tr {
+    transition: none !important;
+}
+
+/* 帧率显示（调试用，默认隐藏） */
+#fpsDisplay {
+    position: fixed;
+    bottom: 20px;
+    left: 20px;
+    z-index: 9999;
+    background: rgba(0,0,0,0.6);
+    color: #fff;
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-family: monospace;
+    display: none;
+}

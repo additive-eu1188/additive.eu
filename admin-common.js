@@ -4,6 +4,254 @@ const SUPABASE_KEY = 'sb_publishable_zsJFjfNUO7NKp8ZH5KrXFQ_WZ8Q2Kym';
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 // ============================================================
+// 🔥 性能检测 + 自动降级（解决低帧率问题）
+// ============================================================
+
+// 检测设备性能
+function detectDevicePerformance() {
+    // 检测是否为移动设备
+    const isMobile = /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
+    
+    // 检测是否为低端设备（通过 CPU 核心数判断）
+    const cores = navigator.hardwareConcurrency || 4;
+    const isLowEnd = cores <= 4;
+    
+    // 检测内存（如果可用）
+    const memory = navigator.deviceMemory || 4;
+    const isLowMemory = memory <= 4;
+    
+    // 检测是否为触摸设备
+    const isTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+    
+    // 综合判断
+    const isLowPerformance = isMobile || isLowEnd || isLowMemory || isTouch;
+    
+    console.log('📱 设备检测:', {
+        isMobile,
+        cores,
+        memory,
+        isTouch,
+        isLowPerformance,
+        userAgent: navigator.userAgent
+    });
+    
+    return {
+        isLowPerformance,
+        isMobile,
+        isLowEnd,
+        isLowMemory,
+        isTouch,
+        cores,
+        memory
+    };
+}
+
+// 存储性能状态
+const deviceInfo = detectDevicePerformance();
+
+// ============================================================
+// 🔥 帧率监控 + 自动降级
+// ============================================================
+let fpsMonitorInterval = null;
+let fpsCounter = 0;
+let lastFpsCheck = performance.now();
+let currentFps = 60;
+let isPerformanceDegraded = false;
+
+function startFpsMonitor() {
+    let frameCount = 0;
+    let lastTime = performance.now();
+    
+    function checkFps() {
+        frameCount++;
+        const now = performance.now();
+        const delta = now - lastTime;
+        
+        if (delta >= 1000) {
+            currentFps = Math.round(frameCount * 1000 / delta);
+            frameCount = 0;
+            lastTime = now;
+            
+            // 🔥 如果帧率持续低于 30，触发降级
+            if (currentFps < 30) {
+                if (!isPerformanceDegraded) {
+                    isPerformanceDegraded = true;
+                    applyPerformanceDowngrade();
+                }
+            } else if (currentFps > 40 && isPerformanceDegraded) {
+                // 如果帧率恢复，逐步恢复（但不要立即恢复）
+                setTimeout(function() {
+                    if (currentFps > 45) {
+                        isPerformanceDegraded = false;
+                        restorePerformance();
+                    }
+                }, 5000);
+            }
+            
+            // 控制台显示帧率（调试用）
+            if (currentFps < 25) {
+                console.warn('⚠️ 当前帧率过低:', currentFps, 'FPS，已触发降级');
+            }
+        }
+        
+        requestAnimationFrame(checkFps);
+    }
+    
+    // 延迟启动，等页面加载完成
+    setTimeout(checkFps, 1000);
+}
+
+// ============================================================
+// 🔥 性能降级方案
+// ============================================================
+function applyPerformanceDowngrade() {
+    console.log('🔧 应用性能降级方案...');
+    
+    // 1. 降低粒子数量或暂停
+    const sidebarCanvas = document.querySelector('.sidebar-canvas canvas');
+    if (sidebarCanvas) {
+        // 标记粒子系统降级
+        sidebarCanvas.dataset.degraded = 'true';
+    }
+    
+    // 2. 停止不必要的动画
+    document.querySelectorAll('.nav-item .shimmer').forEach(function(el) {
+        el.style.animationPlayState = 'paused';
+    });
+    
+    // 3. 减少阴影和模糊效果
+    document.querySelectorAll('.card, .stat-card, .quick-card').forEach(function(el) {
+        el.style.boxShadow = '0 2px 8px rgba(0,0,0,0.2)';
+        el.style.backdropFilter = 'blur(4px)';
+        el.style.transition = 'none';
+    });
+    
+    // 4. 禁用 hover 动画
+    document.querySelectorAll('.nav-item, .btn-primary, button').forEach(function(el) {
+        el.style.transition = 'none';
+    });
+    
+    // 5. 表格行 hover 效果降级
+    document.querySelectorAll('.data-table tr').forEach(function(el) {
+        el.style.transition = 'none';
+    });
+    
+    // 6. 如果是移动端，进一步降级
+    if (deviceInfo.isMobile) {
+        document.querySelectorAll('.sidebar').forEach(function(el) {
+            el.style.backdropFilter = 'blur(8px)';
+        });
+        
+        // 减少 ECharts 动画
+        if (window.trendChart) {
+            window.trendChart.setOption({
+                animation: false,
+                animationDuration: 0
+            });
+        }
+    }
+    
+    // 7. 显示降级提示（非侵入式）
+    showPerformanceNotice();
+}
+
+// ============================================================
+// 🔥 显示性能提示（轻量）
+// ============================================================
+function showPerformanceNotice() {
+    // 检查是否已经显示过
+    if (document.getElementById('perfNotice')) return;
+    
+    const notice = document.createElement('div');
+    notice.id = 'perfNotice';
+    notice.style.cssText = `
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        z-index: 9999;
+        background: rgba(20, 24, 40, 0.92);
+        backdrop-filter: blur(12px);
+        border: 1px solid rgba(255, 184, 77, 0.15);
+        border-radius: 12px;
+        padding: 10px 16px;
+        font-size: 12px;
+        color: #d4c8a0;
+        font-family: 'Inter', sans-serif;
+        box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+        max-width: 280px;
+        animation: slideInRight 0.4s cubic-bezier(0.2, 0.9, 0.4, 1.1) forwards;
+        cursor: pointer;
+    `;
+    notice.innerHTML = `
+        <div style="display:flex;align-items:center;gap:8px;">
+            <span style="font-size:16px;">⚡</span>
+            <div>
+                <div style="font-weight:600;color:#ffb84d;">性能优化已启用</div>
+                <div style="font-size:11px;color:#8892a8;">设备检测到低帧率，已自动优化</div>
+            </div>
+            <button onclick="this.parentElement.parentElement.remove()" style="background:none;border:none;color:#5a4a6a;cursor:pointer;font-size:14px;">×</button>
+        </div>
+    `;
+    notice.onclick = function() {
+        this.remove();
+    };
+    document.body.appendChild(notice);
+    
+    // 5秒后自动消失
+    setTimeout(function() {
+        if (notice.parentNode) notice.remove();
+    }, 8000);
+}
+
+// ============================================================
+// 🔥 恢复性能（当帧率恢复时）
+// ============================================================
+function restorePerformance() {
+    console.log('🔄 恢复性能设置...');
+    isPerformanceDegraded = false;
+    
+    // 恢复阴影
+    document.querySelectorAll('.card, .stat-card, .quick-card').forEach(function(el) {
+        el.style.boxShadow = '';
+        el.style.backdropFilter = '';
+        el.style.transition = '';
+    });
+    
+    // 恢复 hover 动画
+    document.querySelectorAll('.nav-item, .btn-primary, button').forEach(function(el) {
+        el.style.transition = '';
+    });
+    
+    document.querySelectorAll('.data-table tr').forEach(function(el) {
+        el.style.transition = '';
+    });
+    
+    // 恢复粒子系统
+    const sidebarCanvas = document.querySelector('.sidebar-canvas canvas');
+    if (sidebarCanvas) {
+        sidebarCanvas.dataset.degraded = 'false';
+    }
+    
+    // 移除提示
+    const notice = document.getElementById('perfNotice');
+    if (notice) notice.remove();
+}
+
+// ============================================================
+// 🔥 启动帧率监控
+// ============================================================
+// 在页面加载完成后启动
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', function() {
+        setTimeout(startFpsMonitor, 1500);
+    });
+} else {
+    setTimeout(startFpsMonitor, 1500);
+}
+
+console.log('✅ 性能监控已启动，当前设备:', deviceInfo.isLowPerformance ? '低性能模式' : '高性能模式');
+
+// ============================================================
 // 通知数据
 // ============================================================
 let notificationCounts = {
@@ -987,6 +1235,11 @@ function initParticleNetwork() {
     const sidebar = document.querySelector('.sidebar');
     if (!sidebar) return;
 
+// 🔥 如果设备性能低，减少粒子数量
+    const isLowPerformance = deviceInfo.isLowPerformance || false;
+    const PARTICLE_COUNT = isLowPerformance ? 18 : 55;  // 从 55 降到 18
+    const CONNECT_DISTANCE = isLowPerformance ? 80 : 130;  // 从 130 降到 80
+
     let container = sidebar.querySelector('.sidebar-canvas');
     if (!container) {
         container = document.createElement('div');
@@ -1038,8 +1291,6 @@ function initParticleNetwork() {
     const ctx = canvas.getContext('2d');
     let width, height;
     let particles = [];
-    const PARTICLE_COUNT = 55;
-    const CONNECT_DISTANCE = 130;
     const MAX_LINE_WIDTH = 1.8;
     const GOLD_PALETTE = [
         'rgba(214, 178, 94, ',
