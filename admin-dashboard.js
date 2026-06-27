@@ -469,17 +469,43 @@ async function loadRecentRegistrations() {
             return;
         }
         
+        // ============================================================
+        // 🔥 获取所有用户的 manual 存款记录
+        // ============================================================
+        var uids = users.map(function(u) { return u.uid; });
+        var { data: deposits } = await sb
+            .from('deposits')
+            .select('uid')
+            .eq('type', 'manual')
+            .in('uid', uids);
+        
+        var manualDepositUsers = {};
+        if (deposits) {
+            deposits.forEach(function(d) {
+                manualDepositUsers[d.uid] = true;
+            });
+        }
+        
         var html = '';
         for (var i = 0; i < users.length; i++) {
             var u = users[i];
             var referrer = u.invited_by_username || '-';
-            var joinedMembership = u.balance > 0 ? '✅ Yes' : '❌ No';
+            // 🔥 只有 manual 存款 >= 40 才算真正加入会员
+            var hasManualDeposit = manualDepositUsers[u.uid] === true;
+            // 获取该用户 manual 存款总额
+            var { data: userDeposits } = await sb
+                .from('deposits')
+                .select('amount')
+                .eq('uid', u.uid)
+                .eq('type', 'manual');
+            var totalManual = userDeposits ? userDeposits.reduce(function(s, d) { return s + (d.amount || 0); }, 0) : 0;
+            var joinedMembership = (hasManualDeposit && totalManual >= 40) ? '✅ Yes' : '❌ No';
             var amount = u.balance > 0 ? '€' + u.balance.toFixed(2) : '€0.00';
             
             html += '<tr style="border-bottom: 1px solid rgba(200,176,144,0.03);">' +
                 '<td style="padding: 4px 6px; color: #d8dff0; font-weight: 500;">' + escapeHtml(u.username) + '</td>' +
                 '<td style="padding: 4px 6px; color: #8892a8;">' + escapeHtml(referrer) + '</td>' +
-                '<td style="padding: 4px 6px; text-align: center; color: ' + (u.balance > 0 ? '#7ad0b0' : '#5a4a2a') + ';">' + joinedMembership + '</td>' +
+                '<td style="padding: 4px 6px; text-align: center; color: ' + (hasManualDeposit && totalManual >= 40 ? '#7ad0b0' : '#5a4a2a') + ';">' + joinedMembership + '</td>' +
                 '<td style="padding: 4px 6px; text-align: right; color: ' + (u.balance > 0 ? '#c8b090' : '#4a5a72') + '; font-weight: 600;">' + amount + '</td>' +
                 '</tr>';
         }
