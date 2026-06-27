@@ -597,7 +597,7 @@ async function loadUsersPage() {
     });
 }
 
-// ========== 🔥 加载用户列表（性能优化版） ==========
+// ========== 加载用户列表（并行查询优化版） ==========
 async function loadUsers() {
     const tbody = document.getElementById('usersTableBody');
     if (!tbody) return;
@@ -606,37 +606,48 @@ async function loadUsers() {
     
     try {
         // ============================================================
-        // 🔥 优化1：并行执行所有查询（Promise.all）
+        // 🔥 优化：并行执行所有独立查询（Promise.all）
         // ============================================================
         const [
-            vipSettings,
+            vipSettingsResult,
             usersResult,
-            pendingWithdrawals,
-            pendingTriggerOrders,
-            amountDueUsers
+            pendingWithdrawalsResult,
+            pendingTriggerOrdersResult,
+            amountDueUsersResult
         ] = await Promise.all([
-            getVipSettingsCached(),
+            // VIP 设置
+            sb.from('vip_settings').select('*'),
+            
+            // 用户列表（只查需要的字段）
             sb.from('users')
                 .select('uid, username, phone, balance, vip_level, country, registered_ip, created_at, updated_at, last_online, invited_by_username, user_role, credit_score, withdrawal_frozen, is_banned, is_premium, current_round, round_orders_count, pending_display, pin, withdrawal_address_type, withdrawal_address')
                 .order('created_at', { ascending: false })
                 .range((window.userCurrentPage - 1) * window.userPageSize, window.userCurrentPage * window.userPageSize - 1),
+            
+            // 待处理提现（只查 uid 和 amount）
             sb.from('withdrawals')
                 .select('uid, amount')
                 .eq('status', 'pending'),
+            
+            // 待处理触发订单
             sb.from('user_trigger_orders')
                 .select('uid, commission_amount, target_price, order_type')
                 .eq('status', 'pending'),
+            
+            // amount_due
             sb.from('users')
                 .select('uid, amount_due_round, amount_due_orders_count')
         ]);
         
+        // 检查用户查询是否成功
         if (usersResult.error) throw usersResult.error;
         
         const users = usersResult.data || [];
+        const vipSettings = await getVipSettingsCached();
         const uids = users.map(u => u.uid);
         
         // ============================================================
-        // 🔥 优化2：并行获取订单数据（用 IN 查询）
+        // 🔥 优化：第二次并行查询（用 IN 查询订单数据）
         // ============================================================
         let orderCountMap = {};
         let commissionMap = {};
@@ -651,6 +662,7 @@ async function loadUsers() {
                     .in('uid', uids)
             ]);
             
+            // 构建订单计数映射
             if (ordersResult.data) {
                 orderCountMap = {};
                 ordersResult.data.forEach(o => {
@@ -658,6 +670,7 @@ async function loadUsers() {
                 });
             }
             
+            // 构建佣金映射
             if (commissionsResult.data) {
                 commissionMap = {};
                 commissionsResult.data.forEach(o => {
@@ -667,7 +680,7 @@ async function loadUsers() {
         }
         
         // ============================================================
-        // 🔥 优化3：构建映射表（O(1) 查找）
+        // 🔥 优化：构建映射表（O(1) 查找）
         // ============================================================
         const vipLimitMap = {};
         const vipNameMap = {};
@@ -677,23 +690,23 @@ async function loadUsers() {
         });
         
         const pendingMap = {};
-        if (pendingWithdrawals.data) {
-            pendingWithdrawals.data.forEach(w => {
+        if (pendingWithdrawalsResult.data) {
+            pendingWithdrawalsResult.data.forEach(w => {
                 pendingMap[w.uid] = (pendingMap[w.uid] || 0) + w.amount;
             });
         }
         
         const pendingTriggerMap = {};
-        if (pendingTriggerOrders.data) {
-            pendingTriggerOrders.data.forEach(t => {
+        if (pendingTriggerOrdersResult.data) {
+            pendingTriggerOrdersResult.data.forEach(t => {
                 const amount = t.order_type === 'card_reward' ? (t.target_price || 0) : (t.commission_amount || 0);
                 pendingTriggerMap[t.uid] = (pendingTriggerMap[t.uid] || 0) + amount;
             });
         }
         
         const amountDueMap = {};
-        if (amountDueUsers.data) {
-            amountDueUsers.data.forEach(u => {
+        if (amountDueUsersResult.data) {
+            amountDueUsersResult.data.forEach(u => {
                 const totalAmountDue = (u.amount_due_round || 0) + (u.amount_due_orders_count || 0);
                 if (totalAmountDue > 0) {
                     amountDueMap[u.uid] = totalAmountDue;
@@ -701,6 +714,7 @@ async function loadUsers() {
             });
         }
         
+        // 更新总记录数
         window.userTotalCount = usersResult.count || 0;
         
         if (!users || users.length === 0) {
@@ -710,7 +724,7 @@ async function loadUsers() {
         }
         
         // ============================================================
-        // 🔥 优化4：IP 重复检测（与原逻辑完全一致）
+        // 🔥 优化：IP 重复检测（与原逻辑完全一致）
         // ============================================================
         const ipMap = {};
         const duplicateIps = [];
@@ -767,11 +781,13 @@ async function loadUsers() {
                 
                 setTimeout(() => {
                     const plainText = htmlMessage.replace(/<br>/g, '\n');
-                    showAmberNotification(
-                        '⚠️ Multiple Registered IP Detected',
-                        plainText,
-                        'warning'
-                    );
+                    if (typeof showAmberNotification === 'function') {
+                        showAmberNotification(
+                            '⚠️ Multiple Registered IP Detected',
+                            plainText,
+                            'warning'
+                        );
+                    }
                     setTimeout(() => {
                         const notifications = document.querySelectorAll('.notification-amber');
                         if (notifications.length > 0) {
@@ -810,7 +826,9 @@ async function loadUsers() {
                                 };
                                 btn.onclick = function(e) {
                                     e.stopPropagation();
-                                    dismissDuplicateIpAlert();
+                                    if (typeof dismissDuplicateIpAlert === 'function') {
+                                        dismissDuplicateIpAlert();
+                                    }
                                 };
                                 messageDiv.appendChild(btn);
                             }
@@ -821,7 +839,7 @@ async function loadUsers() {
         }
         
         // ============================================================
-        // 🔥 优化5：使用 DocumentFragment 批量渲染
+        // 🔥 优化：使用 DocumentFragment 批量渲染 DOM
         // ============================================================
         const fragment = document.createDocumentFragment();
         
@@ -1014,11 +1032,12 @@ async function loadUsers() {
             fragment.appendChild(row);
         }
         
+        // 一次性插入所有行
         tbody.innerHTML = '';
         tbody.appendChild(fragment);
         
         // ============================================================
-        // 🔥 优化6：事件绑定（与原有逻辑完全一致）
+        // 🔥 事件绑定（保持不变）
         // ============================================================
         document.querySelectorAll('.edit-user-btn').forEach(btn => {
             btn.addEventListener('click', () => {
@@ -1119,6 +1138,24 @@ async function loadUsers() {
         console.error('加载用户失败:', e);
         tbody.innerHTML = `<tr><td colspan="11" style="text-align:center; padding:40px; color:#e88080;">加载失败: ${escapeHtml(e.message)}</td></tr>`;
     }
+}
+
+// ============================================================
+// 🔥 辅助函数：格式化 Last Online
+// ============================================================
+function formatLastOnline(dateStr) {
+    if (!dateStr) return '-';
+    const lastDate = new Date(dateStr);
+    const now = new Date();
+    const diffMins = Math.floor((now - lastDate) / 60000);
+    const diffHours = Math.floor(diffMins / 60);
+    const diffDays = Math.floor(diffHours / 24);
+    
+    if (diffMins < 1) return 'Just now';
+    if (diffMins < 60) return `${diffMins}m ago`;
+    if (diffHours < 24) return `${diffHours}h ago`;
+    if (diffDays < 7) return `${diffDays}d ago`;
+    return lastDate.toLocaleDateString();
 }
 
 // ========== 更新用户 VIP 等级 ==========
