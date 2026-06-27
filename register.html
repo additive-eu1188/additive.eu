@@ -791,7 +791,7 @@ const t = window.i18n?.t || function(key) { return key; };
             type: 'referral_bonus',
             created_at: new Date().toISOString()
         }]);
-        showMessage(t('register_invite_valid'), false);
+        showMessage(t('register_invite_valid_only'), false);
 
         const newInviteCode = generateInviteCode();
         const userIp = await getUserIP();

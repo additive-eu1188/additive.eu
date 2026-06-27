@@ -576,7 +576,7 @@ if (typeof window._i18n_loaded === 'undefined') {
             'register_creating': 'Creating account...',
             'register_success': 'Registration successful! Redirecting...',
             'register_failed': 'Registration failed: ',
-            'register_invite_valid': 'Invitation code is valid! Referrer earned €10',
+            'register_invite_valid_only': 'Invitation code is valid!',
             'register_invite_invalid': 'Invalid invitation code, continuing registration',
 
             // ==================== Toast / Notifications ====================
@@ -1213,7 +1213,7 @@ if (typeof window._i18n_loaded === 'undefined') {
             'register_creating': 'Konto wird erstellt...',
             'register_success': 'Registrierung erfolgreich! Weiterleitung...',
             'register_failed': 'Registrierung fehlgeschlagen: ',
-            'register_invite_valid': 'Einladungscode ist gültig! Werber erhielt €10',
+            'register_invite_valid_only': 'Einladungscode ist gültig!',
             'register_invite_invalid': 'Ungültiger Einladungscode, Registrierung wird fortgesetzt',
 
             // ==================== Toast / Notifications ====================
@@ -1850,7 +1850,7 @@ if (typeof window._i18n_loaded === 'undefined') {
             'register_creating': 'Creazione account...',
             'register_success': 'Registrazione riuscita! Reindirizzamento...',
             'register_failed': 'Registrazione fallita: ',
-            'register_invite_valid': 'Codice di invito valido! Il referrer ha guadagnato €10',
+            'register_invite_valid_only': 'Codice di invito valido!',
             'register_invite_invalid': 'Codice di invito non valido, registrazione in corso',
 
             // ==================== Toast / Notifications ====================
