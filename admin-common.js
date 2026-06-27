@@ -59,6 +59,86 @@ function addNotification(notification) {
     }
 }
 
+// ============================================================
+// 🔥 通知 UI 更新函数（独立实现，不依赖 dashboard）
+// ============================================================
+
+function updateNotificationUI() {
+    var badge = document.getElementById('notificationBadge');
+    var countEl = document.getElementById('notificationCount');
+    var listEl = document.getElementById('notificationList');
+
+    if (!badge || !countEl || !listEl) {
+        // 如果 DOM 元素还没加载，稍后重试
+        setTimeout(function() {
+            if (document.getElementById('notificationBadge')) {
+                updateNotificationUI();
+            }
+        }, 500);
+        return;
+    }
+
+    // 确保使用最新的数据
+    if (typeof window.notifications === 'undefined') {
+        loadNotifications();
+    }
+
+    var unreadCount = 0;
+    for (var i = 0; i < window.notifications.length; i++) {
+        if (!window.notifications[i].read) unreadCount++;
+    }
+
+    if (unreadCount > 0) {
+        badge.style.display = 'flex';
+        badge.textContent = unreadCount > 99 ? '99+' : unreadCount;
+    } else {
+        badge.style.display = 'none';
+    }
+
+    countEl.textContent = window.notifications.length + ' notifications';
+
+    if (window.notifications.length === 0) {
+        listEl.innerHTML = `
+            <div style="text-align: center; padding: 40px 20px; color: #6a7a92; font-size: 13px;">
+                <i class="fas fa-inbox" style="display: block; font-size: 28px; color: #4a5a72; margin-bottom: 10px;"></i>
+                No notifications
+            </div>
+        `;
+        return;
+    }
+
+    var html = '';
+    for (var j = 0; j < window.notifications.length; j++) {
+        var notif = window.notifications[j];
+        var timeStr = formatTime(notif.timestamp);
+        var isRead = notif.read;
+        var bgColor = isRead ? 'rgba(255,255,255,0.02)' : 'rgba(200,176,144,0.06)';
+        var borderColor = isRead ? 'rgba(255,255,255,0.03)' : 'rgba(200,176,144,0.12)';
+
+        var typeColor = '#8892a8';
+        if (notif.type === 'withdrawal') typeColor = '#7ad0b0';
+        else if (notif.type === 'kyc') typeColor = '#ffb84d';
+        else if (notif.type === 'email') typeColor = '#4a7cff';
+        else if (notif.type === 'ip') typeColor = '#c084fc';
+        else if (notif.type === 'ip_withdrawal') typeColor = '#ff6b6b';
+
+        html += `
+            <div class="notification-item" data-id="${notif.id}" style="padding: 12px 16px; margin: 0 8px 4px 8px; border-radius: 10px; background: ${bgColor}; border-left: 3px solid ${typeColor}; cursor: pointer; transition: all 0.2s; display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; border: 1px solid ${borderColor};" onclick="markNotificationRead('${notif.id}')">
+                <div style="flex: 1; min-width: 0;">
+                    <div style="font-size: 13px; font-weight: 500; color: #d8e0f0;">${escapeHtml(notif.title)}</div>
+                    <div style="font-size: 12px; color: #8892a8; margin-top: 2px; word-break: break-word;">${escapeHtml(notif.message)}</div>
+                </div>
+                <div style="display: flex; flex-direction: column; align-items: flex-end; flex-shrink: 0; min-width: 60px;">
+                    <div style="font-size: 10px; color: #5a6a82; white-space: nowrap;">${timeStr}</div>
+                    ${!isRead ? '<div style="margin-top: 4px; width: 6px; height: 6px; border-radius: 50%; background: #4a7cff;"></div>' : ''}
+                </div>
+            </div>
+        `;
+    }
+
+    listEl.innerHTML = html;
+}
+
 // 加载已保存的通知
 loadNotifications();
 
