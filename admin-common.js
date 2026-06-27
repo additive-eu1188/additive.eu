@@ -3,6 +3,14 @@ const SUPABASE_URL = 'https://qgmbzdfnwsdosdqphlxk.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_zsJFjfNUO7NKp8ZH5KrXFQ_WZ8Q2Kym';
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
+// ============================================================
+// 🔥 全局通知数组 - 必须在这里初始化，确保所有地方都能访问
+// ============================================================
+if (typeof window.notifications === 'undefined') {
+    window.notifications = [];
+    console.log('✅ window.notifications 已初始化');
+}
+
 let currentDays = 1;
 
 function toggleSidebar() { document.getElementById('sidebar')?.classList.toggle('open'); }
