@@ -369,17 +369,21 @@ function updateConfirmCards() {
     };
     
     var orderCount = parseInt(document.getElementById('triggerOrderCount').value) || 1;
+    
+    // 获取 Trigger Amount 显示值
     var displayAmount = '-';
     
+    // 如果有选中的订单，优先显示订单价格
     if (selectedAdvancedOrdersList.length > 0) {
         displayAmount = '€' + selectedAdvancedOrdersList[0].price.toFixed(2);
+    } else if (currentTriggerTab === 'card_reward') {
+        // Diamond Reward：从输入框读取
+        var amount = parseFloat(document.getElementById('triggerAmount').value) || 0;
+        displayAmount = amount > 0 ? '€' + amount.toFixed(2) : '-';
     } else {
-        if (currentTriggerTab === 'card_reward') {
-            var amount = parseFloat(document.getElementById('triggerAmount').value) || 0;
-            displayAmount = amount > 0 ? '€' + amount.toFixed(2) : '-';
-        } else {
-            displayAmount = '-';
-        }
+        // 其他类型：从输入框读取
+        var amount = parseFloat(document.getElementById('triggerAmount').value) || 0;
+        displayAmount = amount > 0 ? '€' + amount.toFixed(2) : '-';
     }
     
     document.getElementById('cardType').innerText = typeNames[currentTriggerTab] || '-';
