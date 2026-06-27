@@ -1092,9 +1092,30 @@
                         document.getElementById('currentEventTag').innerHTML = eventCount + ' Active Events';
                     }
 
-                    const { data: checkinRecords } = await sb.from('user_checkin_records').select('id', { count: 'exact' })
-                        .eq('uid', user.uid);
-                    const checkinDays = checkinRecords?.length || 0;
+                    // 从本地存储读取签到数据
+let checkinDays = 0;
+const savedCheckin = localStorage.getItem('additive_checkin');
+if (savedCheckin) {
+    try {
+        const checkinData = JSON.parse(savedCheckin);
+        // claimedDays 是数组，长度就是已签到的天数
+        checkinDays = checkinData.claimedDays ? checkinData.claimedDays.length : 0;
+        console.log('📊 Check-in days from localStorage:', checkinDays, checkinData.claimedDays);
+    } catch (e) {
+        console.error('读取签到数据失败:', e);
+        // 备用方案：从数据库读取
+        const { data: checkinRecords } = await sb.from('user_checkin_records')
+            .select('id', { count: 'exact' })
+            .eq('uid', user.uid);
+        checkinDays = checkinRecords?.length || 0;
+    }
+} else {
+    // 如果本地没有数据，从数据库读取
+    const { data: checkinRecords } = await sb.from('user_checkin_records')
+        .select('id', { count: 'exact' })
+        .eq('uid', user.uid);
+    checkinDays = checkinRecords?.length || 0;
+}
                     const contractStatus = document.getElementById('contractStatus');
                     const contractTag = document.getElementById('contractTag');
                     if (contractStatus) {
