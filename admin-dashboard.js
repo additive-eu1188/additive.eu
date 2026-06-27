@@ -1,4 +1,4 @@
-// admin-dashboard.js - 完整版（所有功能完整，通知使用 admin-common.js）
+// admin-dashboard.js - 完整版（完全静态，无动画，金属质感 #ccb89f）
 let trendChart = null;
 let ringChart = null;
 let breatheInterval = null;
@@ -61,9 +61,6 @@ async function loadStatsData(days, force) {
     try {
         var usersRes = await sb.from('users').select('created_at, balance');
         
-        // ============================================================
-        // 🔥 只统计 manual 类型的存款（真实充值）
-        // ============================================================
         var depositsRes = await sb.from('deposits')
             .select('created_at, amount')
             .eq('type', 'manual');
@@ -120,9 +117,6 @@ async function loadChartData(days, force) {
         return;
     }
     try {
-        // ============================================================
-        // 🔥 趋势图入金只统计 manual 类型
-        // ============================================================
         var depositsRes = await sb.from('deposits')
             .select('created_at, amount')
             .eq('type', 'manual');
@@ -146,8 +140,8 @@ async function loadChartData(days, force) {
             trendChart.setOption({ 
                 xAxis: { data: dates }, 
                 series: [
-                    { name: '入金', data: depositData },
-                    { name: '出金', data: withdrawData }
+                    { name: 'Deposit', data: depositData },
+                    { name: 'Withdrawal', data: withdrawData }
                 ]
             });
             console.log('趋势线图已更新');
@@ -174,10 +168,6 @@ async function loadConversionData(days, force) {
         var result = [];
         var allUsers = await sb.from('users').select('uid, created_at');
         
-        // ============================================================
-        // 🔥 只统计真实充值（manual + deposit_bonus），排除 referral_bonus
-        // 并且只统计金额 >= 40 的用户才算已转化会员
-        // ============================================================
         var allDeposits = await sb.from('deposits')
             .select('uid, created_at, amount, type')
             .in('type', ['manual', 'deposit_bonus']);
@@ -187,7 +177,6 @@ async function loadConversionData(days, force) {
         
         var depositUsers = {};
         deposits.forEach(function(d) {
-            // 只统计金额 >= 40 的真实充值用户
             if (d.uid && (d.amount || 0) >= 40) {
                 depositUsers[d.uid] = true;
             }
@@ -293,7 +282,7 @@ function applyConversionData(data, days) {
         if (allConverteds[i]) allConverteds[i].innerText = d.converted;
         if (allRates[i]) {
             allRates[i].innerText = d.rate + '%';
-            allRates[i].style.color = d.rate >= 50 ? '#7ad0b0' : d.rate >= 20 ? '#c8b090' : '#e88080';
+            allRates[i].style.color = d.rate >= 50 ? '#ccb89f' : d.rate >= 20 ? '#c8b090' : '#e88080';
         }
     }
     
@@ -302,7 +291,7 @@ function applyConversionData(data, days) {
         var row = allRows[j];
         var label = row.querySelector('.conversion-stat-label');
         if (label && label.innerText === targetLabel) {
-            row.style.background = 'rgba(200, 176, 144, 0.08)';
+            row.style.background = 'rgba(204,184,159,0.08)';
             row.style.borderRadius = '8px';
             row.style.padding = '3px 6px';
         } else {
@@ -312,7 +301,7 @@ function applyConversionData(data, days) {
     }
 }
 
-// ========== 初始化波浪环形图 ==========
+// ========== 初始化环形进度条（静态金属质感 #ccb89f） ==========
 function initWaveRing() {
     var container = document.getElementById('waveRingContainer');
     if (!container) return;
@@ -323,13 +312,7 @@ function initWaveRing() {
     container.style.position = 'relative';
     container.style.margin = '0 auto';
     
-    var canvas = document.createElement('canvas');
-    canvas.width = 220;
-    canvas.height = 220;
-    canvas.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;border-radius:50%;z-index:1;';
-    canvas.id = 'waveCanvas';
-    container.appendChild(canvas);
-    
+    // 使用 SVG 绘制静态金属环形进度条
     var svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
     svg.setAttribute('viewBox', '0 0 220 220');
     svg.style.cssText = 'width:100%;height:100%;transform:rotate(-90deg);position:relative;z-index:2;';
@@ -337,25 +320,30 @@ function initWaveRing() {
         <defs>
             <linearGradient id="metalGrad" x1="0%" y1="0%" x2="100%" y2="100%">
                 <stop offset="0%" stop-color="#3a2a1a"/>
-                <stop offset="20%" stop-color="#c8b090"/>
+                <stop offset="20%" stop-color="#ccb89f"/>
                 <stop offset="40%" stop-color="#b8942a"/>
                 <stop offset="55%" stop-color="#e8d5c0"/>
                 <stop offset="70%" stop-color="#8a7020"/>
-                <stop offset="85%" stop-color="#c8b090"/>
+                <stop offset="85%" stop-color="#ccb89f"/>
                 <stop offset="100%" stop-color="#2a1a0a"/>
             </linearGradient>
-            <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" stop-color="#b8942a"/>
-                <stop offset="30%" stop-color="#c8b090"/>
-                <stop offset="60%" stop-color="#d4af37"/>
-                <stop offset="100%" stop-color="#c8b090"/>
+            <linearGradient id="progressGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#ccb89f"/>
+                <stop offset="30%" stop-color="#d4c8a0"/>
+                <stop offset="60%" stop-color="#e8d5c0"/>
+                <stop offset="100%" stop-color="#ccb89f"/>
             </linearGradient>
         </defs>
-        <circle cx="110" cy="110" r="95" fill="none" stroke="rgba(255,255,255,0.03)" stroke-width="12"/>
-        <circle cx="110" cy="110" r="95" fill="none" stroke="url(#grad)" stroke-width="12" stroke-linecap="round" stroke-dasharray="596.9" stroke-dashoffset="596.9" filter="drop-shadow(0 0 20px rgba(200,176,144,0.3))" class="progress-ring"/>
+        <!-- 背景圆环 -->
+        <circle cx="110" cy="110" r="95" fill="none" stroke="rgba(204,184,159,0.06)" stroke-width="12"/>
+        <!-- 进度圆环（金属质感 #ccb89f） -->
+        <circle cx="110" cy="110" r="95" fill="none" stroke="url(#progressGrad)" stroke-width="12" stroke-linecap="round" stroke-dasharray="596.9" stroke-dashoffset="596.9" filter="drop-shadow(0 0 20px rgba(204,184,159,0.15))" class="progress-ring" style="transition: stroke-dashoffset 1s ease;"/>
+        <!-- 外圈装饰光晕 -->
+        <circle cx="110" cy="110" r="100" fill="none" stroke="rgba(204,184,159,0.03)" stroke-width="1"/>
     `;
     container.appendChild(svg);
     
+    // 中心文字（百分比 + 标签）
     var centerText = document.createElement('div');
     centerText.style.cssText = 'position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;pointer-events:none;z-index:10;';
     centerText.innerHTML = `
@@ -364,91 +352,16 @@ function initWaveRing() {
     `;
     container.appendChild(centerText);
     
-    startWaveAnimation(canvas);
-    
+    // 等待数据加载后更新进度
     setTimeout(function() {
         var progressRing = container.querySelector('.progress-ring');
         if (progressRing) {
             var rate = parseInt(document.getElementById('ringPercent')?.innerText || '78');
             var circumference = 596.9;
             var offset = circumference - (circumference * rate / 100);
-            progressRing.style.transition = 'stroke-dashoffset 2.2s cubic-bezier(0.22,1,0.36,1)';
             progressRing.style.strokeDashoffset = offset;
         }
-    }, 100);
-}
-
-// ========== 波浪动画引擎 ==========
-function startWaveAnimation(canvas) {
-    var ctx = canvas.getContext('2d');
-    var w = 220, h = 220;
-    var cx = 110, cy = 110;
-    
-    var expandingRings = [];
-    var ringSpawnCounter = 0;
-    
-    function spawnExpandingRing() {
-        var radius = 5 + Math.random() * 6;
-        var speed = 0.5 + Math.random() * 0.4;
-        var maxRadius = 110 + Math.random() * 15;
-        var alpha = 0.2 + Math.random() * 0.15;
-        var color = Math.random() > 0.5 ? '#c8b090' : '#d4af37';
-        var width = 1.5 + Math.random() * 1.5;
-        expandingRings.push({
-            radius: radius,
-            maxRadius: maxRadius,
-            speed: speed,
-            alpha: alpha,
-            color: color,
-            width: width
-        });
-    }
-    
-    var time = 0;
-    
-    function draw() {
-        time++;
-        ctx.clearRect(0, 0, w, h);
-        
-        ringSpawnCounter++;
-        if (ringSpawnCounter % 40 === 0) {
-            spawnExpandingRing();
-        }
-        
-        for (var r = expandingRings.length - 1; r >= 0; r--) {
-            var ring = expandingRings[r];
-            ring.radius += 0.5 * ring.speed;
-            
-            var fade = ring.alpha * (1 - ring.radius / ring.maxRadius);
-            
-            if (ring.radius > ring.maxRadius || fade < 0.005) {
-                expandingRings.splice(r, 1);
-                continue;
-            }
-            
-            ctx.beginPath();
-            ctx.arc(cx, cy, ring.radius, 0, Math.PI * 2);
-            ctx.strokeStyle = ring.color;
-            ctx.lineWidth = ring.width * (1 - ring.radius / ring.maxRadius * 0.5);
-            ctx.globalAlpha = Math.max(0, fade);
-            ctx.shadowColor = ring.color;
-            ctx.shadowBlur = 6;
-            ctx.stroke();
-            ctx.shadowBlur = 0;
-        }
-        
-        var centerGlow = ctx.createRadialGradient(cx, cy, 0, cx, cy, 60);
-        centerGlow.addColorStop(0, 'rgba(200,176,144,0.03)');
-        centerGlow.addColorStop(1, 'transparent');
-        ctx.fillStyle = centerGlow;
-        ctx.globalAlpha = 1;
-        ctx.beginPath();
-        ctx.arc(cx, cy, 60, 0, Math.PI * 2);
-        ctx.fill();
-        
-        requestAnimationFrame(draw);
-    }
-    draw();
+    }, 300);
 }
 
 // ========== 加载最近注册用户数据 ==========
@@ -469,9 +382,6 @@ async function loadRecentRegistrations() {
             return;
         }
         
-        // ============================================================
-        // 🔥 获取所有用户的 manual 存款总额
-        // ============================================================
         var uids = users.map(function(u) { return u.uid; });
         var { data: deposits } = await sb
             .from('deposits')
@@ -491,19 +401,17 @@ async function loadRecentRegistrations() {
             var u = users[i];
             var referrer = u.invited_by_username || '-';
             
-            // 🔥 获取该用户 manual 存款总额
             var totalManual = manualDepositMap[u.uid] || 0;
             var hasManualDeposit = totalManual >= 40;
             var joinedMembership = hasManualDeposit ? '✅ Yes' : '❌ No';
             
-            // 🔥 Amount 显示手动充值总额，而不是 balance
             var amount = totalManual > 0 ? '€' + totalManual.toFixed(2) : '€0.00';
             
             html += '<tr style="border-bottom: 1px solid rgba(200,176,144,0.03);">' +
                 '<td style="padding: 4px 6px; color: #d8dff0; font-weight: 500;">' + escapeHtml(u.username) + '</td>' +
                 '<td style="padding: 4px 6px; color: #8892a8;">' + escapeHtml(referrer) + '</td>' +
-                '<td style="padding: 4px 6px; text-align: center; color: ' + (hasManualDeposit ? '#7ad0b0' : '#5a4a2a') + ';">' + joinedMembership + '</td>' +
-                '<td style="padding: 4px 6px; text-align: right; color: ' + (totalManual > 0 ? '#c8b090' : '#4a5a72') + '; font-weight: 600;">' + amount + '</td>' +
+                '<td style="padding: 4px 6px; text-align: center; color: ' + (hasManualDeposit ? '#ccb89f' : '#5a4a2a') + ';">' + joinedMembership + '</td>' +
+                '<td style="padding: 4px 6px; text-align: right; color: ' + (totalManual > 0 ? '#ccb89f' : '#4a5a72') + '; font-weight: 600;">' + amount + '</td>' +
                 '</tr>';
         }
         tbody.innerHTML = html;
@@ -557,7 +465,7 @@ async function loadActivityTimeline(force) {
                 user: username,
                 time: item.uploaded_at || item.created_at,
                 icon: 'fas fa-id-card',
-                color: '#c8b090'
+                color: '#ccb89f'
             });
         }
         
@@ -575,7 +483,7 @@ async function loadActivityTimeline(force) {
                 amount: '€' + (item.amount || 0).toFixed(2),
                 time: item.request_date,
                 icon: 'fas fa-money-bill-wave',
-                color: '#c8b090'
+                color: '#ccb89f'
             });
         }
         
@@ -587,7 +495,7 @@ async function loadActivityTimeline(force) {
                 user: item.username,
                 time: item.created_at,
                 icon: 'fas fa-user-plus',
-                color: '#c8b090'
+                color: '#ccb89f'
             });
         }
         
@@ -604,7 +512,7 @@ async function loadActivityTimeline(force) {
                 user: item.email,
                 time: item.requested_at,
                 icon: 'fas fa-envelope',
-                color: '#c8b090'
+                color: '#ccb89f'
             });
         }
         
@@ -635,7 +543,7 @@ function renderActivityList(activities) {
         var a = activities[i];
         var amountHtml = '';
         if (a.amount) {
-            amountHtml = '<div style="font-size: 11px; color: #7ad0b0;">' + a.amount + '</div>';
+            amountHtml = '<div style="font-size: 11px; color: #ccb89f;">' + a.amount + '</div>';
         }
         html += '<div style="display: flex; align-items: center; gap: 14px; padding: 12px 0; border-bottom: 1px solid rgba(180,180,200,0.04); cursor: pointer;" onclick="handleActivityClick(\'' + a.type + '\')">' +
             '<div style="width: 36px; height: 36px; border-radius: 10px; background: ' + a.color + '15; display: flex; align-items: center; justify-content: center;">' +
@@ -697,7 +605,9 @@ async function refreshDashboard(days, force) {
     }
 }
 
-// 在 admin-dashboard.js 中替换 initTrendChart 函数
+// ============================================================
+// initTrendChart - 完全静态，无动画
+// ============================================================
 function initTrendChart() {
     var dom = document.getElementById('trendChart');
     if (!dom) {
@@ -709,17 +619,7 @@ function initTrendChart() {
         trendChart = null;
     }
     
-    // 🔥 检测是否为低性能设备
-    var isLowPerformance = false;
-    if (typeof deviceInfo !== 'undefined' && deviceInfo) {
-        isLowPerformance = deviceInfo.isLowPerformance || false;
-    } else {
-        var isMobile = /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
-        var cores = navigator.hardwareConcurrency || 4;
-        isLowPerformance = isMobile || cores <= 4;
-    }
-    
-    console.log('📊 图表性能模式:', isLowPerformance ? '低性能（无动画）' : '高性能（无动画）');
+    console.log('📊 趋势图已加载（完全静态，无动画）');
     
     trendChart = echarts.init(dom);
     trendChart.setOption({
@@ -754,18 +654,16 @@ function initTrendChart() {
                 data: [0, 0, 0, 0, 0, 0, 0], 
                 smooth: true, 
                 symbol: 'circle', 
-                symbolSize: isLowPerformance ? 4 : 6,
+                symbolSize: 5,
                 lineStyle: { 
-                    color: '#7ad0b0', 
-                    width: isLowPerformance ? 2 : 3, 
-                    shadowBlur: isLowPerformance ? 0 : 10, 
-                    shadowColor: isLowPerformance ? 'transparent' : '#7ad0b030' 
+                    color: '#ccb89f', 
+                    width: 2.5,
+                    shadowBlur: 0
                 }, 
                 areaStyle: { 
-                    opacity: isLowPerformance ? 0.15 : 0.25, 
-                    color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [{ offset: 0, color: '#7ad0b0' }, { offset: 1, color: 'transparent' }]) 
+                    opacity: 0.12, 
+                    color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [{ offset: 0, color: '#ccb89f' }, { offset: 1, color: 'transparent' }]) 
                 },
-                // 🔥 直接显示，无展开动画
                 animation: false,
                 animationDuration: 0
             },
@@ -775,15 +673,14 @@ function initTrendChart() {
                 data: [0, 0, 0, 0, 0, 0, 0], 
                 smooth: true, 
                 symbol: 'circle', 
-                symbolSize: isLowPerformance ? 4 : 6,
+                symbolSize: 5,
                 lineStyle: { 
                     color: '#e88080', 
-                    width: isLowPerformance ? 2 : 3, 
-                    shadowBlur: isLowPerformance ? 0 : 10, 
-                    shadowColor: isLowPerformance ? 'transparent' : '#e8808030' 
+                    width: 2.5,
+                    shadowBlur: 0
                 }, 
                 areaStyle: { 
-                    opacity: isLowPerformance ? 0.15 : 0.25, 
+                    opacity: 0.12, 
                     color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [{ offset: 0, color: '#e88080' }, { offset: 1, color: 'transparent' }]) 
                 },
                 animation: false,
@@ -792,35 +689,13 @@ function initTrendChart() {
         ]
     });
     
-    console.log('趋势线图初始化完成');
+    console.log('趋势线图初始化完成（完全静态，无脉冲动画）');
     
-    // 🔥 清除旧的脉冲动画
+    // 清除旧的脉冲动画
     if (pulseInterval) {
         clearInterval(pulseInterval);
         pulseInterval = null;
     }
-    
-    // 🔥 低性能设备完全禁用脉冲动画
-    if (isLowPerformance) {
-        console.log('⏸️ 低性能模式：脉冲动画已禁用');
-        return;
-    }
-    
-    // 高性能设备：保留脉冲动画（呼吸效果）
-    var pulseOpacity = 0.3, pulseDirection = 0.006;
-    pulseInterval = setInterval(function() {
-        pulseOpacity += pulseDirection;
-        if (pulseOpacity >= 0.5) pulseDirection = -0.006;
-        if (pulseOpacity <= 0.2) pulseDirection = 0.006;
-        if (trendChart) {
-            trendChart.setOption({
-                series: [
-                    { lineStyle: { shadowBlur: 12 + (1 - pulseOpacity) * 10 }, areaStyle: { opacity: 0.15 + pulseOpacity * 0.15 } },
-                    { lineStyle: { shadowBlur: 12 + (1 - pulseOpacity) * 10 }, areaStyle: { opacity: 0.15 + pulseOpacity * 0.15 } }
-                ]
-            });
-        }
-    }, 200);
 }
 
 function bindDateFilters() {
@@ -896,28 +771,28 @@ function loadDashboardPage(days) {
             <div onclick="showPage('kyc')" style="background: linear-gradient(145deg, rgba(20,24,40,0.85), rgba(10,12,24,0.6)); border-radius: 16px; padding: 18px 16px; border: 1px solid rgba(180,180,200,0.06); cursor: pointer; transition: all 0.3s; position: relative; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.04);">
                 <div style="position: absolute; top: -15%; right: -5%; width: 75%; height: 75%; background: radial-gradient(ellipse at 70% 20%, rgba(255,255,255,0.10), transparent 70%); pointer-events: none; border-radius: 50%;"></div>
                 <div style="position: absolute; top: 0; left: 0; right: 0; height: 1px; background: linear-gradient(90deg, transparent, rgba(180,180,200,0.08), transparent);"></div>
-                <i class="fas fa-id-card" style="font-size: 22px; color: #c8b090; margin-bottom: 6px; display: block; position: relative; z-index: 1;"></i>
+                <i class="fas fa-id-card" style="font-size: 22px; color: #ccb89f; margin-bottom: 6px; display: block; position: relative; z-index: 1;"></i>
                 <div id="kycPendingCount" style="font-size: 26px; font-weight: 700; color: #ffffff; margin: 2px 0; position: relative; z-index: 1;">0</div>
                 <div style="font-size: 11px; color: #8892a8; text-transform: uppercase; letter-spacing: 0.5px; position: relative; z-index: 1;">Pending KYC</div>
             </div>
             <div onclick="showPage('withdrawals')" style="background: linear-gradient(145deg, rgba(20,24,40,0.85), rgba(10,12,24,0.6)); border-radius: 16px; padding: 18px 16px; border: 1px solid rgba(180,180,200,0.06); cursor: pointer; transition: all 0.3s; position: relative; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.04);">
                 <div style="position: absolute; top: -15%; right: -5%; width: 75%; height: 75%; background: radial-gradient(ellipse at 70% 20%, rgba(255,255,255,0.10), transparent 70%); pointer-events: none; border-radius: 50%;"></div>
                 <div style="position: absolute; top: 0; left: 0; right: 0; height: 1px; background: linear-gradient(90deg, transparent, rgba(180,180,200,0.08), transparent);"></div>
-                <i class="fas fa-money-bill-wave" style="font-size: 22px; color: #c8b090; margin-bottom: 6px; display: block; position: relative; z-index: 1;"></i>
+                <i class="fas fa-money-bill-wave" style="font-size: 22px; color: #ccb89f; margin-bottom: 6px; display: block; position: relative; z-index: 1;"></i>
                 <div id="withdrawalPendingCount" style="font-size: 26px; font-weight: 700; color: #ffffff; margin: 2px 0; position: relative; z-index: 1;">0</div>
                 <div style="font-size: 11px; color: #8892a8; text-transform: uppercase; letter-spacing: 0.5px; position: relative; z-index: 1;">Pending Withdrawals</div>
             </div>
             <div onclick="showPage('emailverify')" style="background: linear-gradient(145deg, rgba(20,24,40,0.85), rgba(10,12,24,0.6)); border-radius: 16px; padding: 18px 16px; border: 1px solid rgba(180,180,200,0.06); cursor: pointer; transition: all 0.3s; position: relative; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.04);">
                 <div style="position: absolute; top: -15%; right: -5%; width: 75%; height: 75%; background: radial-gradient(ellipse at 70% 20%, rgba(255,255,255,0.10), transparent 70%); pointer-events: none; border-radius: 50%;"></div>
                 <div style="position: absolute; top: 0; left: 0; right: 0; height: 1px; background: linear-gradient(90deg, transparent, rgba(180,180,200,0.08), transparent);"></div>
-                <i class="fas fa-envelope" style="font-size: 22px; color: #c8b090; margin-bottom: 6px; display: block; position: relative; z-index: 1;"></i>
+                <i class="fas fa-envelope" style="font-size: 22px; color: #ccb89f; margin-bottom: 6px; display: block; position: relative; z-index: 1;"></i>
                 <div id="emailPendingCount" style="font-size: 26px; font-weight: 700; color: #ffffff; margin: 2px 0; position: relative; z-index: 1;">0</div>
                 <div style="font-size: 11px; color: #8892a8; text-transform: uppercase; letter-spacing: 0.5px; position: relative; z-index: 1;">Pending Email</div>
             </div>
             <div onclick="showPage('orderpool')" style="background: linear-gradient(145deg, rgba(20,24,40,0.85), rgba(10,12,24,0.6)); border-radius: 16px; padding: 18px 16px; border: 1px solid rgba(180,180,200,0.06); cursor: pointer; transition: all 0.3s; position: relative; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.04);">
                 <div style="position: absolute; top: -15%; right: -5%; width: 75%; height: 75%; background: radial-gradient(ellipse at 70% 20%, rgba(255,255,255,0.10), transparent 70%); pointer-events: none; border-radius: 50%;"></div>
                 <div style="position: absolute; top: 0; left: 0; right: 0; height: 1px; background: linear-gradient(90deg, transparent, rgba(180,180,200,0.08), transparent);"></div>
-                <i class="fas fa-hotel" style="font-size: 22px; color: #c8b090; margin-bottom: 6px; display: block; position: relative; z-index: 1;"></i>
+                <i class="fas fa-hotel" style="font-size: 22px; color: #ccb89f; margin-bottom: 6px; display: block; position: relative; z-index: 1;"></i>
                 <div id="orderPoolCount" style="font-size: 26px; font-weight: 700; color: #ffffff; margin: 2px 0; position: relative; z-index: 1;">0</div>
                 <div style="font-size: 11px; color: #8892a8; text-transform: uppercase; letter-spacing: 0.5px; position: relative; z-index: 1;">Hotel Orders Count</div>
             </div>
@@ -928,7 +803,7 @@ function loadDashboardPage(days) {
             <div style="background: linear-gradient(145deg, rgba(20,24,40,0.85), rgba(10,12,24,0.6)); border-radius: 16px; padding: 18px 20px; border: 1px solid rgba(180,180,200,0.06); transition: all 0.3s; position: relative; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.04);">
                 <div style="position: absolute; top: -15%; right: -5%; width: 75%; height: 75%; background: radial-gradient(ellipse at 70% 20%, rgba(255,255,255,0.10), transparent 70%); pointer-events: none; border-radius: 50%;"></div>
                 <div style="position: absolute; top: 0; left: 0; right: 0; height: 1px; background: linear-gradient(90deg, transparent, rgba(180,180,200,0.08), transparent);"></div>
-                <i class="fas fa-user-plus" style="font-size: 20px; color: #c8b090; margin-bottom: 4px; display: block; position: relative; z-index: 1;"></i>
+                <i class="fas fa-user-plus" style="font-size: 20px; color: #ccb89f; margin-bottom: 4px; display: block; position: relative; z-index: 1;"></i>
                 <div id="newUsersCount" style="font-size: 28px; font-weight: 700; color: #ffffff; letter-spacing: -0.5px; position: relative; z-index: 1;">0</div>
                 <div style="font-size: 11px; color: #8892a8; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 2px; position: relative; z-index: 1;">New Registered Today</div>
                 <div id="newUsersTrend" style="font-size: 10px; margin-top: 4px; position: relative; z-index: 1;"></div>
@@ -936,7 +811,7 @@ function loadDashboardPage(days) {
             <div style="background: linear-gradient(145deg, rgba(20,24,40,0.85), rgba(10,12,24,0.6)); border-radius: 16px; padding: 18px 20px; border: 1px solid rgba(180,180,200,0.06); transition: all 0.3s; position: relative; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.04);">
                 <div style="position: absolute; top: -15%; right: -5%; width: 75%; height: 75%; background: radial-gradient(ellipse at 70% 20%, rgba(255,255,255,0.10), transparent 70%); pointer-events: none; border-radius: 50%;"></div>
                 <div style="position: absolute; top: 0; left: 0; right: 0; height: 1px; background: linear-gradient(90deg, transparent, rgba(180,180,200,0.08), transparent);"></div>
-                <i class="fas fa-users" style="font-size: 20px; color: #c8b090; margin-bottom: 4px; display: block; position: relative; z-index: 1;"></i>
+                <i class="fas fa-users" style="font-size: 20px; color: #ccb89f; margin-bottom: 4px; display: block; position: relative; z-index: 1;"></i>
                 <div id="totalUsersCount" style="font-size: 28px; font-weight: 700; color: #ffffff; letter-spacing: -0.5px; position: relative; z-index: 1;">0</div>
                 <div style="font-size: 11px; color: #8892a8; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 2px; position: relative; z-index: 1;">Total Users</div>
                 <div id="totalUsersTrend" style="font-size: 10px; margin-top: 4px; position: relative; z-index: 1;"></div>
@@ -944,7 +819,7 @@ function loadDashboardPage(days) {
             <div style="background: linear-gradient(145deg, rgba(20,24,40,0.85), rgba(10,12,24,0.6)); border-radius: 16px; padding: 18px 20px; border: 1px solid rgba(180,180,200,0.06); transition: all 0.3s; position: relative; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.04);">
                 <div style="position: absolute; top: -15%; right: -5%; width: 75%; height: 75%; background: radial-gradient(ellipse at 70% 20%, rgba(255,255,255,0.10), transparent 70%); pointer-events: none; border-radius: 50%;"></div>
                 <div style="position: absolute; top: 0; left: 0; right: 0; height: 1px; background: linear-gradient(90deg, transparent, rgba(180,180,200,0.08), transparent);"></div>
-                <i class="fas fa-arrow-down" style="font-size: 20px; color: #c8b090; margin-bottom: 4px; display: block; position: relative; z-index: 1;"></i>
+                <i class="fas fa-arrow-down" style="font-size: 20px; color: #ccb89f; margin-bottom: 4px; display: block; position: relative; z-index: 1;"></i>
                 <div id="totalDepositCount" style="font-size: 28px; font-weight: 700; color: #ffffff; letter-spacing: -0.5px; position: relative; z-index: 1;">€0</div>
                 <div style="font-size: 11px; color: #8892a8; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 2px; position: relative; z-index: 1;">Total Deposits</div>
                 <div id="totalDepositTrend" style="font-size: 10px; margin-top: 4px; position: relative; z-index: 1;"></div>
@@ -952,7 +827,7 @@ function loadDashboardPage(days) {
             <div style="background: linear-gradient(145deg, rgba(20,24,40,0.85), rgba(10,12,24,0.6)); border-radius: 16px; padding: 18px 20px; border: 1px solid rgba(180,180,200,0.06); transition: all 0.3s; position: relative; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.04);">
                 <div style="position: absolute; top: -15%; right: -5%; width: 75%; height: 75%; background: radial-gradient(ellipse at 70% 20%, rgba(255,255,255,0.10), transparent 70%); pointer-events: none; border-radius: 50%;"></div>
                 <div style="position: absolute; top: 0; left: 0; right: 0; height: 1px; background: linear-gradient(90deg, transparent, rgba(180,180,200,0.08), transparent);"></div>
-                <i class="fas fa-arrow-up" style="font-size: 20px; color: #c8b090; margin-bottom: 4px; display: block; position: relative; z-index: 1;"></i>
+                <i class="fas fa-arrow-up" style="font-size: 20px; color: #ccb89f; margin-bottom: 4px; display: block; position: relative; z-index: 1;"></i>
                 <div id="totalWithdrawCount" style="font-size: 28px; font-weight: 700; color: #ffffff; letter-spacing: -0.5px; position: relative; z-index: 1;">€0</div>
                 <div style="font-size: 11px; color: #8892a8; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 2px; position: relative; z-index: 1;">Total Withdrawals</div>
                 <div id="totalWithdrawTrend" style="font-size: 10px; margin-top: 4px; position: relative; z-index: 1;"></div>
@@ -967,7 +842,7 @@ function loadDashboardPage(days) {
                 <div style="position: absolute; top: 0; left: 0; right: 0; height: 1px; background: linear-gradient(90deg, transparent, rgba(180,180,200,0.08), transparent);"></div>
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; position: relative; z-index: 1;">
                     <div style="font-size: 16px; font-weight: 600; color: #d8dff0;">D&W Trend</div>
-                    <div style="display: flex; gap: 16px; font-size: 12px; color: #8892a8;"><span><span style="display: inline-block; width: 12px; height: 12px; background: #7ad0b0; border-radius: 2px; margin-right: 6px;"></span>Deposits</span><span><span style="display: inline-block; width: 12px; height: 12px; background: #e88080; border-radius: 2px; margin-right: 6px;"></span>Withdrawals</span></div>
+                    <div style="display: flex; gap: 16px; font-size: 12px; color: #8892a8;"><span><span style="display: inline-block; width: 12px; height: 12px; background: #ccb89f; border-radius: 2px; margin-right: 6px;"></span>Deposits</span><span><span style="display: inline-block; width: 12px; height: 12px; background: #e88080; border-radius: 2px; margin-right: 6px;"></span>Withdrawals</span></div>
                 </div>
                 <div id="trendChart" style="height: 320px; width: 100%; position: relative; z-index: 1;"></div>
             </div>
@@ -984,7 +859,7 @@ function loadDashboardPage(days) {
                             <span style="color: #8892a8;">Today Register</span>
                         </div>
                         <div style="display: flex; align-items: baseline; gap: 4px; justify-content: flex-end;">
-                            <span id="conversionRegister" style="font-size: 22px; font-weight: 700; color: #c8b090;">0</span>
+                            <span id="conversionRegister" style="font-size: 22px; font-weight: 700; color: #ccb89f;">0</span>
                             <span style="font-size: 12px; color: #6a5a3a;">/</span>
                             <span id="conversionConverted" style="font-size: 16px; font-weight: 600; color: #d4af37;">0</span>
                             <span style="font-size: 10px; color: #5a4a2a;">converted</span>
@@ -1022,9 +897,9 @@ function loadDashboardPage(days) {
                         <div style="margin-top: 8px; padding-top: 8px; border-top: 1px solid rgba(200,176,144,0.06);">
                             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2px;">
                                 <div style="font-size: 9px; color: #5a4a2a; font-weight: 500; letter-spacing: 0.5px; text-transform: uppercase;">
-                                    <i class="fas fa-users" style="color: #c8b090; margin-right: 4px; font-size: 9px;"></i>Recent
+                                    <i class="fas fa-users" style="color: #ccb89f; margin-right: 4px; font-size: 9px;"></i>Recent
                                 </div>
-                                <a href="#" onclick="showPage('users'); return false;" style="font-size: 8px; color: #4a3a2a; text-decoration: none; transition: 0.2s;" onmouseover="this.style.color='#c8b090'" onmouseout="this.style.color='#4a3a2a'">View All →</a>
+                                <a href="#" onclick="showPage('users'); return false;" style="font-size: 8px; color: #4a3a2a; text-decoration: none; transition: 0.2s;" onmouseover="this.style.color='#ccb89f'" onmouseout="this.style.color='#4a3a2a'">View All →</a>
                             </div>
                             <div style="overflow-y: auto; max-height: 155px;">
                                 <table style="width: 100%; border-collapse: collapse; font-size: 10px;">
@@ -1053,7 +928,7 @@ function loadDashboardPage(days) {
             <div style="position: absolute; top: 0; left: 0; right: 0; height: 1px; background: linear-gradient(90deg, transparent, rgba(180,180,200,0.08), transparent);"></div>
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; position: relative; z-index: 1;">
                 <div style="font-size: 16px; font-weight: 600; color: #d8dff0;"><i class="fas fa-history" style="color: #8892a8; margin-right: 8px;"></i>Real-Time Event</div>
-                <div style="font-size: 11px; color: #7ad0b0;"><i class="fas fa-circle" style="font-size: 8px; margin-right: 4px;"></i>Real-Time Updates</div>
+                <div style="font-size: 11px; color: #ccb89f;"><i class="fas fa-circle" style="font-size: 8px; margin-right: 4px;"></i>Real-Time Updates</div>
             </div>
             <div id="activityList" style="max-height: 350px; overflow-y: auto; position: relative; z-index: 1;">
                 <div style="text-align: center; padding: 20px; color: #6a7a9a;">Loading...</div>
@@ -1082,32 +957,32 @@ function loadDashboardPage(days) {
         [onclick] > div[style*="linear-gradient"]:hover > div:first-child {
             background: radial-gradient(ellipse at 70% 20%, rgba(255,255,255,0.15), transparent 70%) !important;
         }
-        .trend-up { color: #7ad0b0; }
+        .trend-up { color: #ccb89f; }
         .trend-down { color: #e88080; }
         #activityList::-webkit-scrollbar { width: 3px; }
         #activityList::-webkit-scrollbar-thumb { background: rgba(180,180,200,0.06); border-radius: 4px; }
         #activityList::-webkit-scrollbar-track { background: transparent; }
         .conversion-stat-row:hover {
-            background: rgba(200,176,144,0.04);
+            background: rgba(204,184,159,0.04);
             border-radius: 6px;
         }
         #recentRegistrationsBody tr:hover td {
-            background: rgba(200,176,144,0.04);
+            background: rgba(204,184,159,0.04);
         }
         #recentRegistrationsBody td {
             padding: 2px 4px;
         }
         #recentRegistrationsBody::-webkit-scrollbar { width: 3px; }
-        #recentRegistrationsBody::-webkit-scrollbar-thumb { background: rgba(200,176,144,0.12); border-radius: 4px; }
+        #recentRegistrationsBody::-webkit-scrollbar-thumb { background: rgba(204,184,159,0.12); border-radius: 4px; }
         .notification-item:hover {
             background: rgba(255,255,255,0.06) !important;
-            border-color: rgba(200,176,144,0.2) !important;
+            border-color: rgba(204,184,159,0.2) !important;
         }
         #notificationList::-webkit-scrollbar {
             width: 4px;
         }
         #notificationList::-webkit-scrollbar-thumb {
-            background: rgba(200,176,144,0.15);
+            background: rgba(204,184,159,0.15);
             border-radius: 4px;
         }
         #notificationList::-webkit-scrollbar-track {
@@ -1121,7 +996,6 @@ function loadDashboardPage(days) {
         bindDateFilters();
         initWaveRing();
         refreshDashboard(days, true);
-        // 初始化通知
         initNotificationEvents();
     }, 200);
     
@@ -1189,7 +1063,6 @@ function initNotificationEvents() {
                 dropdown.style.display = 'none';
             } else {
                 dropdown.style.display = 'block';
-                // 使用 admin-common.js 中的 updateNotificationUI
                 if (typeof updateNotificationUI === 'function') {
                     updateNotificationUI();
                 }
