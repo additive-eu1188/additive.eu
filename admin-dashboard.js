@@ -1,4 +1,4 @@
-// admin-dashboard.js - 完整版
+// admin-dashboard.js - 完整版（所有功能完整，通知使用 admin-common.js）
 let trendChart = null;
 let ringChart = null;
 let breatheInterval = null;
@@ -60,7 +60,14 @@ async function loadStatsData(days, force) {
     }
     try {
         var usersRes = await sb.from('users').select('created_at, balance');
-        var depositsRes = await sb.from('deposits').select('created_at, amount');
+        
+        // ============================================================
+        // 🔥 只统计 manual 类型的存款（真实充值）
+        // ============================================================
+        var depositsRes = await sb.from('deposits')
+            .select('created_at, amount')
+            .eq('type', 'manual');
+        
         var withdrawalsRes = await sb.from('withdrawals').select('request_date, amount, status');
         var users = usersRes.data || [];
         var deposits = depositsRes.data || [];
@@ -113,7 +120,12 @@ async function loadChartData(days, force) {
         return;
     }
     try {
-        var depositsRes = await sb.from('deposits').select('created_at, amount');
+        // ============================================================
+        // 🔥 趋势图入金只统计 manual 类型
+        // ============================================================
+        var depositsRes = await sb.from('deposits')
+            .select('created_at, amount')
+            .eq('type', 'manual');
         var withdrawalsRes = await sb.from('withdrawals').select('request_date, amount, status');
         var deposits = depositsRes.data || [];
         var withdrawals = withdrawalsRes.data || [];
@@ -1093,248 +1105,8 @@ if (typeof formatTime !== 'function') {
 }
 
 // ============================================================
-// Notification System
+// 🔥 Notification 事件绑定（使用 admin-common.js 中的函数）
 // ============================================================
-var notifications = [];
-var notificationBadgeCount = 0;
-var notificationFetchInterval = null;
-
-var NOTIFICATION_TYPES = {
-    WITHDRAWAL: 'withdrawal',
-    KYC: 'kyc',
-    EMAIL: 'email',
-    IP: 'ip',
-    IP_WITHDRAWAL: 'ip_withdrawal',  // 新增
-    SYSTEM: 'system'
-};
-
-// 获取所有通知（合并到现有通知，不覆盖）
-async function fetchAllNotifications() {
-    try {
-        var newNotifications = [];
-        var seenIds = new Set();
-
-        // 先加载已有的通知
-        if (typeof loadNotifications === 'function') {
-            loadNotifications();
-        }
-        
-        // 记录已存在的 ID
-        if (Array.isArray(window.notifications)) {
-            for (var existing of window.notifications) {
-                seenIds.add(existing.id);
-            }
-        }
-
-        // 1. 获取待处理的提现通知
-        var { data: withdrawals, error: wError } = await sb
-            .from('withdrawals')
-            .select('id, uid, username, amount, status, request_date')
-            .eq('status', 'pending')
-            .order('request_date', { ascending: false });
-
-        if (!wError && withdrawals) {
-            for (var i = 0; i < withdrawals.length; i++) {
-                var item = withdrawals[i];
-                var id = 'withdrawal_' + item.id;
-                if (!seenIds.has(id)) {
-                    seenIds.add(id);
-                    newNotifications.push({
-                        id: id,
-                        type: 'withdrawal',
-                        title: '💳 Withdrawal Request',
-                        message: (item.username || item.uid) + ' requested €' + (item.amount || 0).toFixed(2) + ' withdrawal',
-                        timestamp: item.request_date || new Date().toISOString(),
-                        read: false,
-                        data: item
-                    });
-                }
-            }
-        }
-
-        // 2. 获取待处理的KYC通知
-        var { data: kycs, error: kError } = await sb
-            .from('kyc_verifications')
-            .select('id, uid, username, status, uploaded_at')
-            .eq('status', 'pending')
-            .order('uploaded_at', { ascending: false });
-
-        if (!kError && kycs) {
-            for (var j = 0; j < kycs.length; j++) {
-                var item = kycs[j];
-                var id = 'kyc_' + item.id;
-                if (!seenIds.has(id)) {
-                    seenIds.add(id);
-                    newNotifications.push({
-                        id: id,
-                        type: 'kyc',
-                        title: '🪪 KYC Verification',
-                        message: (item.username || item.uid) + ' submitted KYC verification',
-                        timestamp: item.uploaded_at || new Date().toISOString(),
-                        read: false,
-                        data: item
-                    });
-                }
-            }
-        }
-
-        // 3. 获取待处理的邮件验证通知
-        var { data: emails, error: eError } = await sb
-            .from('email_verification_requests')
-            .select('id, email, uid, username, requested_at, is_verified, code')
-            .is('code', null)
-            .eq('is_verified', false)
-            .order('requested_at', { ascending: false });
-
-        if (!eError && emails) {
-            for (var k = 0; k < emails.length; k++) {
-                var item = emails[k];
-                var id = 'email_' + item.id;
-                if (!seenIds.has(id)) {
-                    seenIds.add(id);
-                    newNotifications.push({
-                        id: id,
-                        type: 'email',
-                        title: '📧 Email Verification',
-                        message: (item.email || item.uid) + ' needs email verification code',
-                        timestamp: item.requested_at || new Date().toISOString(),
-                        read: false,
-                        data: item
-                    });
-                }
-            }
-        }
-
-        // ============================================================
-        // 🔥 关键修改：合并新通知到现有通知，不要覆盖！
-        // ============================================================
-        if (newNotifications.length > 0) {
-            // 将新通知添加到已有通知前面
-            if (typeof addNotification === 'function') {
-                // 使用 admin-common.js 的 addNotification 逐个添加
-                for (var n = newNotifications.length - 1; n >= 0; n--) {
-                    addNotification(newNotifications[n]);
-                }
-            } else {
-                // 备用方案：合并到数组
-                for (var n2 = 0; n2 < newNotifications.length; n2++) {
-                    window.notifications.unshift(newNotifications[n2]);
-                }
-                if (typeof saveNotifications === 'function') {
-                    saveNotifications();
-                }
-            }
-        }
-
-        // 更新 UI
-        if (typeof updateNotificationUI === 'function') {
-            updateNotificationUI();
-        }
-
-        console.log('📋 通知合并完成，当前总数:', window.notifications ? window.notifications.length : 0);
-        return window.notifications;
-
-    } catch (e) {
-        console.error('获取通知失败:', e);
-        return [];
-    }
-}
-
-// 更新通知UI
-function updateNotificationUI() {
-    var badge = document.getElementById('notificationBadge');
-    var countEl = document.getElementById('notificationCount');
-    var listEl = document.getElementById('notificationList');
-
-    if (!badge || !countEl || !listEl) return;
-
-    var unreadCount = 0;
-    for (var i = 0; i < notifications.length; i++) {
-        if (!notifications[i].read) unreadCount++;
-    }
-    notificationBadgeCount = unreadCount;
-
-    if (unreadCount > 0) {
-        badge.style.display = 'flex';
-        badge.textContent = unreadCount > 99 ? '99+' : unreadCount;
-    } else {
-        badge.style.display = 'none';
-    }
-
-    countEl.textContent = notifications.length + ' notifications';
-
-    if (notifications.length === 0) {
-        listEl.innerHTML = `
-            <div style="text-align: center; padding: 40px 20px; color: #6a7a92; font-size: 13px;">
-                <i class="fas fa-inbox" style="display: block; font-size: 28px; color: #4a5a72; margin-bottom: 10px;"></i>
-                No notifications
-            </div>
-        `;
-        return;
-    }
-
-    var html = '';
-    for (var j = 0; j < notifications.length; j++) {
-        var notif = notifications[j];
-        var timeStr = formatTime(notif.timestamp);
-        var isRead = notif.read;
-        var bgColor = isRead ? 'rgba(255,255,255,0.02)' : 'rgba(200,176,144,0.06)';
-        var borderColor = isRead ? 'rgba(255,255,255,0.03)' : 'rgba(200,176,144,0.12)';
-
-                var typeColor = '#8892a8';
-        if (notif.type === 'withdrawal') typeColor = '#7ad0b0';
-        else if (notif.type === 'kyc') typeColor = '#ffb84d';
-        else if (notif.type === 'email') typeColor = '#4a7cff';
-        else if (notif.type === 'ip') typeColor = '#c084fc';
-        else if (notif.type === 'ip_withdrawal') typeColor = '#ff6b6b';  // 红色警告
-
-        html += `
-            <div class="notification-item" data-id="${notif.id}" style="padding: 12px 16px; margin: 0 8px 4px 8px; border-radius: 10px; background: ${bgColor}; border-left: 3px solid ${typeColor}; cursor: pointer; transition: all 0.2s; display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; border: 1px solid ${borderColor};" onclick="markNotificationRead('${notif.id}')">
-                <div style="flex: 1; min-width: 0;">
-                    <div style="font-size: 13px; font-weight: 500; color: #d8e0f0;">${escapeHtml(notif.title)}</div>
-                    <div style="font-size: 12px; color: #8892a8; margin-top: 2px; word-break: break-word;">${escapeHtml(notif.message)}</div>
-                </div>
-                <div style="display: flex; flex-direction: column; align-items: flex-end; flex-shrink: 0; min-width: 60px;">
-                    <div style="font-size: 10px; color: #5a6a82; white-space: nowrap;">${timeStr}</div>
-                    ${!isRead ? '<div style="margin-top: 4px; width: 6px; height: 6px; border-radius: 50%; background: #4a7cff;"></div>' : ''}
-                </div>
-            </div>
-        `;
-    }
-
-    listEl.innerHTML = html;
-}
-
-// 标记通知为已读
-window.markNotificationRead = function(id) {
-    for (var i = 0; i < notifications.length; i++) {
-        if (notifications[i].id === id) {
-            notifications[i].read = true;
-            break;
-        }
-    }
-    updateNotificationUI();
-};
-
-// 清除所有通知
-window.clearAllNotifications = function() {
-    notifications = [];
-    updateNotificationUI();
-    if (typeof showToast === 'function') {
-        showToast('All notifications cleared', 'success');
-    }
-};
-
-// 定期刷新通知
-function startNotificationPolling() {
-    fetchAllNotifications();
-    if (notificationFetchInterval) clearInterval(notificationFetchInterval);
-    notificationFetchInterval = setInterval(function() {
-        fetchAllNotifications();
-    }, 30000);
-}
-
-// 初始化Notification事件绑定
 function initNotificationEvents() {
     var bellBtn = document.getElementById('notificationBellBtn');
     var dropdown = document.getElementById('notificationDropdown');
@@ -1347,7 +1119,10 @@ function initNotificationEvents() {
                 dropdown.style.display = 'none';
             } else {
                 dropdown.style.display = 'block';
-                fetchAllNotifications();
+                // 使用 admin-common.js 中的 updateNotificationUI
+                if (typeof updateNotificationUI === 'function') {
+                    updateNotificationUI();
+                }
             }
         });
     }
@@ -1364,13 +1139,15 @@ function initNotificationEvents() {
             e.stopPropagation();
             if (typeof showConfirm === 'function') {
                 showConfirm('Clear All Notifications', 'Are you sure you want to clear all notifications?', function() {
-                    window.clearAllNotifications();
+                    if (typeof window.clearAllNotifications === 'function') {
+                        window.clearAllNotifications();
+                    }
                 });
             } else {
-                window.clearAllNotifications();
+                if (typeof window.clearAllNotifications === 'function') {
+                    window.clearAllNotifications();
+                }
             }
         });
     }
-
-    startNotificationPolling();
 }
