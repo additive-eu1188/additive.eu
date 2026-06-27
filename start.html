@@ -1525,7 +1525,7 @@ window.submitTriggerOrder = async function() {
     commissionAmount: commission,
     isTriggerOrder: true,
     triggerOrderId: triggerOrder.id,
-    orderType: '30x Commissions Reservations Order',
+    orderType: t('order_type_30x') || '30x Commissions Reservations Order',
     commissionPercent: '15'
 };
 
@@ -1570,13 +1570,13 @@ window.submitTriggerOrder = async function() {
     var commissionPercent = '';
     
     if (currentTriggerOrder.order_type === 'advanced') {
-    orderTypeDisplay = 'Commercial Reservations Order';
+    orderTypeDisplay = t('order_type_commercial') || 'Commercial Reservations Order';
     commissionPercent = '5';
 } else if (currentTriggerOrder.order_type === 'card_order') {
-    orderTypeDisplay = '30x Commissions Reservations Order';
+    orderTypeDisplay = t('order_type_30x') || '30x Commissions Reservations Order';
     commissionPercent = '15';
 } else if (currentTriggerOrder.order_type === 'svip_order') {
-    orderTypeDisplay = 'SVIP Reservation Order (20x)';
+    orderTypeDisplay = t('order_type_svip') || 'SVIP Reservation Order (20x)';
     commissionPercent = '10';
 }
 
