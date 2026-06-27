@@ -401,6 +401,8 @@ function initGlobalRealtime() {
 
 function handleNewKyc(data) {
     console.log('📋 处理新KYC申请:', data);
+    
+    // 刷新数据
     if (window.refreshDashboardData) {
         window.refreshDashboardData(currentDays);
     }
@@ -408,6 +410,25 @@ function handleNewKyc(data) {
         console.log('刷新KYC页面');
         window.loadKycPage();
     }
+    
+    // ============================================================
+    // 🔥 新增：添加到通知铃铛
+    // ============================================================
+    if (typeof window.notifications !== 'undefined' && Array.isArray(window.notifications)) {
+        const notification = {
+            id: 'kyc_' + data.id + '_' + Date.now(),
+            type: 'kyc',
+            title: '🪪 New KYC Application',
+            message: 'User ' + (data.username || data.uid) + ' submitted KYC verification',
+            timestamp: new Date().toISOString(),
+            read: false,
+            data: data
+        };
+        window.notifications.unshift(notification);
+        console.log('📢 KYC通知已添加到通知系统:', notification);
+    }
+    
+    // 显示琥珀通知
     if (window.showAmberNotification) {
         window.showAmberNotification(
             '📋 新KYC申请',
@@ -419,6 +440,7 @@ function handleNewKyc(data) {
 
 function handleNewWithdrawal(data) {
     console.log('💰 处理新提现申请:', data);
+    
     if (window.refreshDashboardData) {
         window.refreshDashboardData(currentDays);
     }
@@ -426,6 +448,24 @@ function handleNewWithdrawal(data) {
         console.log('刷新提现页面');
         window.loadWithdrawalsPage();
     }
+    
+    // ============================================================
+    // 🔥 新增：添加到通知铃铛
+    // ============================================================
+    if (typeof window.notifications !== 'undefined' && Array.isArray(window.notifications)) {
+        const notification = {
+            id: 'withdrawal_' + data.id + '_' + Date.now(),
+            type: 'withdrawal',
+            title: '💳 New Withdrawal Request',
+            message: 'User ' + (data.username || data.uid) + ' requested €' + (data.amount || 0).toFixed(2) + ' withdrawal',
+            timestamp: new Date().toISOString(),
+            read: false,
+            data: data
+        };
+        window.notifications.unshift(notification);
+        console.log('📢 提现通知已添加到通知系统:', notification);
+    }
+    
     if (window.showAmberNotification) {
         window.showAmberNotification(
             '💰 新提现申请',
@@ -437,6 +477,7 @@ function handleNewWithdrawal(data) {
 
 function handleNewEmailRequest(data) {
     console.log('📧 处理新邮箱验证请求:', data.email);
+    
     if (window.refreshDashboardData) {
         window.refreshDashboardData(currentDays);
     }
@@ -447,15 +488,30 @@ function handleNewEmailRequest(data) {
             window.loadEmailVerifyPage();
         }
     }
+    
+    // ============================================================
+    // 🔥 新增：添加到通知铃铛
+    // ============================================================
+    if (typeof window.notifications !== 'undefined' && Array.isArray(window.notifications)) {
+        const notification = {
+            id: 'email_' + data.id + '_' + Date.now(),
+            type: 'email',
+            title: '📧 New Email Verification',
+            message: 'Email ' + (data.email || data.uid) + ' needs verification code',
+            timestamp: new Date().toISOString(),
+            read: false,
+            data: data
+        };
+        window.notifications.unshift(notification);
+        console.log('📢 邮箱通知已添加到通知系统:', notification);
+    }
+    
     if (window.showAmberNotification) {
         window.showAmberNotification(
             '📧 新邮箱验证请求',
             `用户 ${data.email} 请求邮箱验证，请设置验证码`,
             'email'
         );
-    } else {
-        console.log('琥珀通知函数不存在，使用 alert 代替');
-        alert(`新邮箱验证请求: ${data.email}`);
     }
 }
 
