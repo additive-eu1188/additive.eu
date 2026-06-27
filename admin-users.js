@@ -731,34 +731,27 @@ if (amountDueUsers) {
         }
         
         if (duplicateIps.length > 0) {
-            const sortedIps = [...duplicateIps].sort();
-            const currentKey = sortedIps.join('|');
-            const ignoredKey = localStorage.getItem('duplicate_ip_ignored');
-            
-            if (ignoredKey !== currentKey) {
-                let htmlMessage = '';
-                for (const ip of duplicateIps) {
-                    const usersWithIp = users.filter(u => u.registered_ip === ip);
-                    const userList = usersWithIp.map(u => `${u.username} (UID: ${u.uid})`).join('<br>');
-                    const displayIp = ip || 'Unknown';
-                    htmlMessage += `📌 IP: ${displayIp}<br>${userList}<br><br>`;
-                }
-                htmlMessage += 'Please check abnormal users registration activity.';
-                window._duplicateIpKey = currentKey;
-                
-                setTimeout(() => {
-                    const plainText = htmlMessage.replace(/<br>/g, '\n');
-                    showAmberNotification(
-                        '⚠️ Multiple Registered IP Detected',
-                        plainText,
-                        'warning'
-                    );
-                    
-// ============================================================
-        // 🔥 新增：添加到全局通知系统
+    const sortedIps = [...duplicateIps].sort();
+    const currentKey = sortedIps.join('|');
+    const ignoredKey = localStorage.getItem('duplicate_ip_ignored');
+    
+    if (ignoredKey !== currentKey) {
+        let htmlMessage = '';
+        let plainMessage = '';
+        for (const ip of duplicateIps) {
+            const usersWithIp = users.filter(u => u.registered_ip === ip);
+            const userList = usersWithIp.map(u => `${u.username} (UID: ${u.uid})`).join('<br>');
+            const displayIp = ip || 'Unknown';
+            htmlMessage += `📌 IP: ${displayIp}<br>${userList}<br><br>`;
+            plainMessage += `IP: ${displayIp} - ${usersWithIp.map(u => `${u.username} (UID: ${u.uid})`).join(', ')}\n`;
+        }
+        htmlMessage += 'Please check abnormal users registration activity.';
+        window._duplicateIpKey = currentKey;
+        
+        // ============================================================
+        // 🔥 添加到全局通知系统（Dashboard 通知铃铛）
         // ============================================================
         if (typeof window.notifications !== 'undefined' && Array.isArray(window.notifications)) {
-            // 检查是否已存在相同的 IP 通知（避免重复）
             const existingIPNotif = window.notifications.find(n => 
                 n.type === 'ip_withdrawal' && n.ip === duplicateIps[0]
             );
@@ -767,8 +760,8 @@ if (amountDueUsers) {
                 const notification = {
                     id: 'ip_withdrawal_' + duplicateIps[0] + '_' + Date.now(),
                     type: 'ip_withdrawal',
-                    title: '🚨 Multiple IP Withdrawal Detected',
-                    message: plainMessage || 'Multiple withdrawal requests from same IP',
+                    title: '🚨 Multiple IP Detected',
+                    message: plainMessage || 'Multiple users registered from same IP',
                     detail: plainMessage,
                     ip: duplicateIps[0],
                     uids: users.filter(u => duplicateIps.includes(u.registered_ip)).map(u => u.uid),
@@ -779,55 +772,63 @@ if (amountDueUsers) {
                 console.log('📢 IP检测通知已添加到通知系统:', notification);
             }
         }
+        
+        setTimeout(() => {
+            const plainText = htmlMessage.replace(/<br>/g, '\n');
+            showAmberNotification(
+                '⚠️ Multiple Registered IP Detected',
+                plainText,
+                'warning'
+            );
 
-                    setTimeout(() => {
-                        const notifications = document.querySelectorAll('.notification-amber');
-                        if (notifications.length > 0) {
-                            const latestNotification = notifications[notifications.length - 1];
-                            const messageDiv = latestNotification.querySelector('div[style*="flex: 1"]');
-                            if (messageDiv) {
-                                const messageTextEl = messageDiv.querySelector('div[style*="font-size: 12px"]');
-                                if (messageTextEl) {
-                                    messageTextEl.innerHTML = htmlMessage;
-                                } else {
-                                    const allDivs = messageDiv.querySelectorAll('div');
-                                    if (allDivs.length >= 2) {
-                                        allDivs[1].innerHTML = htmlMessage;
-                                    }
-                                }
-                                
-                                const btn = document.createElement('button');
-                                btn.textContent = 'Don\'t show again';
-                                btn.style.cssText = `
-                                    background: rgba(255,255,255,0.1);
-                                    border: 1px solid rgba(255,255,255,0.2);
-                                    padding: 4px 14px;
-                                    border-radius: 20px;
-                                    color: #d4c8a0;
-                                    cursor: pointer;
-                                    font-size: 11px;
-                                    margin-top: 8px;
-                                    font-family: 'Inter', sans-serif;
-                                    transition: 0.2s;
-                                    display: block;
-                                `;
-                                btn.onmouseover = function() {
-                                    this.style.background = 'rgba(255,255,255,0.2)';
-                                };
-                                btn.onmouseout = function() {
-                                    this.style.background = 'rgba(255,255,255,0.1)';
-                                };
-                                btn.onclick = function(e) {
-                                    e.stopPropagation();
-                                    dismissDuplicateIpAlert();
-                                };
-                                messageDiv.appendChild(btn);
+            setTimeout(() => {
+                const notifications = document.querySelectorAll('.notification-amber');
+                if (notifications.length > 0) {
+                    const latestNotification = notifications[notifications.length - 1];
+                    const messageDiv = latestNotification.querySelector('div[style*="flex: 1"]');
+                    if (messageDiv) {
+                        const messageTextEl = messageDiv.querySelector('div[style*="font-size: 12px"]');
+                        if (messageTextEl) {
+                            messageTextEl.innerHTML = htmlMessage;
+                        } else {
+                            const allDivs = messageDiv.querySelectorAll('div');
+                            if (allDivs.length >= 2) {
+                                allDivs[1].innerHTML = htmlMessage;
                             }
                         }
-                    }, 300);
-                }, 500);
-            }
-        }
+                        
+                        const btn = document.createElement('button');
+                        btn.textContent = 'Don\'t show again';
+                        btn.style.cssText = `
+                            background: rgba(255,255,255,0.1);
+                            border: 1px solid rgba(255,255,255,0.2);
+                            padding: 4px 14px;
+                            border-radius: 20px;
+                            color: #d4c8a0;
+                            cursor: pointer;
+                            font-size: 11px;
+                            margin-top: 8px;
+                            font-family: 'Inter', sans-serif;
+                            transition: 0.2s;
+                            display: block;
+                        `;
+                        btn.onmouseover = function() {
+                            this.style.background = 'rgba(255,255,255,0.2)';
+                        };
+                        btn.onmouseout = function() {
+                            this.style.background = 'rgba(255,255,255,0.1)';
+                        };
+                        btn.onclick = function(e) {
+                            e.stopPropagation();
+                            dismissDuplicateIpAlert();
+                        };
+                        messageDiv.appendChild(btn);
+                    }
+                }
+            }, 300);
+        }, 500);
+    }
+}
         
         for (let u of users) {
     const row = tbody.insertRow();
