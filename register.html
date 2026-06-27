@@ -781,17 +781,8 @@ const t = window.i18n?.t || function(key) { return key; };
         const invitedBy = inviter.uid;
         const invitedByUsername = inviter.username;
 
-        // 给邀请人发放 €10 奖励
-        const newBalance = (inviter.balance || 0) + 10;
-        await sb.from('users').update({ balance: newBalance }).eq('uid', inviter.uid);
-        await sb.from('deposits').insert([{
-            uid: inviter.uid,
-            username: inviter.username,
-            amount: 10,
-            type: 'referral_bonus',
-            created_at: new Date().toISOString()
-        }]);
-        showMessage(t('register_invite_valid_only'), false);
+        // 邀请码验证通过，但不发放奖励
+showMessage('✅ Invitation code is valid!', false);
 
         const newInviteCode = generateInviteCode();
         const userIp = await getUserIP();
