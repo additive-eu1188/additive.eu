@@ -68,6 +68,9 @@ async function loadSetordersPage() {
                         <button class="trigger-tab-btn" data-type="card_order" style="flex: 1; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06); border-radius: 30px; padding: 8px 12px; color: rgba(255,255,255,0.3); cursor: pointer; font-size: 11px; font-weight: 500; transition: all 0.2s; font-family: 'Inter', sans-serif; text-align: center;">
                             <i class="fas fa-ticket-alt"></i> x30 Commissions
                         </button>
+                        <button class="trigger-tab-btn" data-type="svip_order" style="flex: 1; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06); border-radius: 30px; padding: 8px 12px; color: rgba(255,255,255,0.3); cursor: pointer; font-size: 11px; font-weight: 500; transition: all 0.2s; font-family: 'Inter', sans-serif; text-align: center;">
+                            <i class="fas fa-crown" style="color: #ffd700;"></i> x20 SVIP Order
+                        </button>
                     </div>
                     
                     <!-- 输入区域 -->
@@ -360,7 +363,8 @@ function updateConfirmCards() {
     const typeNames = {
         'advanced': 'Commercial Order',
         'card_reward': 'Diamond Reward',
-        'card_order': 'x30 Commissions'
+        'card_order': 'x30 Commissions',
+        'svip_order': 'x20 SVIP Order'
     };
     
     const orderCount = parseInt(document.getElementById('triggerOrderCount').value) || 1;
@@ -449,6 +453,13 @@ async function searchTriggerOrders() {
         container.innerHTML = '';
         selectedAdvancedOrdersList = [];
         const isCardOrder = currentTriggerTab === 'card_order';
+        const isSvipOrder = currentTriggerTab === 'svip_order';
+        
+        // SVIP 使用金色主题
+        const textColor = isSvipOrder ? '#ffd700' : '#c8b090';
+        const commissionRate = isSvipOrder ? 0.20 : (isCardOrder ? 0.15 : 0.05);
+        const commissionText = isSvipOrder ? 'x20 SVIP' : (isCardOrder ? '15%' : '5%');
+        const nameColor = isSvipOrder ? '#ffd700' : '#d8e0f0';
         
         for (const order of matchedOrders) {
             const div = document.createElement('div');
@@ -459,17 +470,16 @@ async function searchTriggerOrders() {
             div.dataset.image = order.image_url || '';
             div.dataset.code = order.order_code || '';
             
-            const commission = isCardOrder ? (order.price * 0.15) : (order.price * 0.05);
-            const commissionText = isCardOrder ? '15%' : '5%';
+            const commission = order.price * commissionRate;
             
             div.innerHTML = `
                 <div>
-                    <div class="result-name">${escapeHtml(order.accommodation_name || 'Hotel Task')}</div>
+                    <div class="result-name" style="color: ${nameColor};">${escapeHtml(order.accommodation_name || 'Hotel Task')}${isSvipOrder ? ' ⭐' : ''}</div>
                     <div style="font-size: 11px; color: #6a7a92;">Code: ${escapeHtml(order.order_code || '-')}</div>
                 </div>
                 <div style="text-align: right;">
-                    <div class="result-price">€${order.price.toFixed(2)}</div>
-                    <div style="font-size: 10px; color: #4ade80;">Commission: €${commission.toFixed(2)} (${commissionText})</div>
+                    <div class="result-price" style="color: ${textColor};">€${order.price.toFixed(2)}</div>
+                    <div style="font-size: 10px; color: ${isSvipOrder ? '#ffd700' : '#4ade80'};">Commission: €${commission.toFixed(2)} (${commissionText})</div>
                 </div>
                 <div class="result-check" style="display: none;"><i class="fas fa-check-circle"></i></div>
             `;
@@ -548,7 +558,8 @@ async function confirmTriggerOrder() {
     const typeNames = {
         'advanced': 'Commercial Order',
         'card_reward': 'Diamond Reward',
-        'card_order': 'x30 Commissions Order'
+        'card_order': 'x30 Commissions Order',
+        'svip_order': 'x20 SVIP Order'
     };
     
     try {
@@ -584,6 +595,16 @@ async function confirmTriggerOrder() {
             insertData.matched_image_url = selectedOrder.image_url || '';
             insertData.commission_rate = 15.0;
             insertData.commission_amount = selectedOrder.price * 0.15;
+        } else if (currentTriggerTab === 'svip_order' && selectedOrder) {
+            insertData.order_type = 'svip_order';
+            insertData.target_price = amount;
+            insertData.matched_order_id = selectedOrder.id;
+            insertData.matched_order_code = selectedOrder.order_code;
+            insertData.matched_order_name = selectedOrder.name;
+            insertData.matched_price = selectedOrder.price;
+            insertData.matched_image_url = selectedOrder.image_url || '';
+            insertData.commission_rate = 20.0;
+            insertData.commission_amount = selectedOrder.price * 0.20;
         } else {
             showToast('请选择有效的触发类型', 'error');
             return;
@@ -654,7 +675,8 @@ async function loadTriggerHistory() {
         const typeNames = {
             'advanced': 'Commercial Order',
             'card_reward': 'Diamond Reward',
-            'card_order': 'x30 Commissions Order'
+            'card_order': 'x30 Commissions Order',
+            'svip_order': 'x20 SVIP Order'
         };
         
         tbody.innerHTML = '';
