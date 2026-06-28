@@ -639,12 +639,7 @@ function getAmountDue(uid) {
     var allOrders = await getOrdersFromAdmin();
     if (balance < 50) { return []; }
     
-    var minPrice = balance * 0.6;
-    var maxPrice = balance * 0.95;
-    
-    // ============================================================
-    // 🔥 获取用户最近1单的酒店名称（只排除上一单，避免连续重复）
-    // ============================================================
+    // 获取上一单酒店名
     var lastHotelName = null;
     if (user && user.uid) {
         try {
@@ -664,32 +659,34 @@ function getAmountDue(uid) {
         }
     }
     
-    // 先按价格匹配，排除上一单的酒店（避免连续重复）
+    // ============================================================
+    // 🔥 价格范围：balance * 0.5 ~ balance * 0.95（覆盖更多低价订单）
+    // ============================================================
+    var minPrice = balance * 0.5;
+    var maxPrice = balance * 0.95;
+    console.log('💰 价格范围:', minPrice.toFixed(2), '~', maxPrice.toFixed(2));
+    
+    // 第 1 轮：按价格匹配，排除上一单酒店
     var matchedOrders = allOrders.filter(function(order) {
         var price = order.price || 0;
-        // 🔥 只排除上一单的酒店名（避免连续重复）
         if (lastHotelName && order.accommodationName === lastHotelName) {
-            console.log('⏭️ 跳过上一单酒店:', order.accommodationName);
             return false;
         }
         return price >= minPrice && price <= maxPrice;
     });
     
-    // 如果没有匹配的，放宽价格范围（但仍排除上一单的酒店）
+    // 第 2 轮：如果匹配不到，允许上一单酒店
     if (matchedOrders.length === 0) {
-        var widerMin = balance * 0.7;
-        var widerMax = balance * 0.98;
+        console.log('⚠️ 匹配不到新酒店，允许使用上一单的酒店');
         matchedOrders = allOrders.filter(function(order) {
             var price = order.price || 0;
-            if (lastHotelName && order.accommodationName === lastHotelName) {
-                return false;
-            }
-            return price >= widerMin && price <= widerMax;
+            return price >= minPrice && price <= maxPrice;
         });
     }
     
-    // 如果还是没有匹配的，允许使用上一单的酒店（实在匹配不到了）
+    // 第 3 轮：如果还是没有，放宽到任何 ≤ balance
     if (matchedOrders.length === 0) {
+        console.log('⚠️ 仍然匹配不到，放宽到任何 ≤ balance');
         var targetPrice = balance * 0.85;
         matchedOrders = allOrders.filter(function(order) {
             return order.price <= balance;
@@ -700,10 +697,9 @@ function getAmountDue(uid) {
             return diffA - diffB;
         });
         matchedOrders = matchedOrders.slice(0, 5);
-        console.log('⚠️ 匹配不到新酒店，允许使用上一单的酒店');
     }
     
-    console.log('✅ 匹配到', matchedOrders.length, '个订单');
+    console.log('✅ 匹配到', matchedOrders.length, '个订单（酒店名:', matchedOrders.map(o => o.accommodationName).join(', '), '）');
     return matchedOrders;
 }
 
