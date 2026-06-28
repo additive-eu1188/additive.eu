@@ -1694,16 +1694,21 @@ pt.innerHTML = '<i class="fas fa-check-circle"></i> ' + t('order_completed');
             if (!modal) return;
             var orderModal = modal.querySelector('.order-modal');
             
-            // 外层：半透明黑色背景 + 模糊（让背景变暗且朦胧）
             modal.style.background = 'rgba(0,0,0,0.55)';
             modal.style.backdropFilter = 'blur(8px)';
             modal.style.webkitBackdropFilter = 'blur(8px)';
             
-            // 中层透明
             if (orderModal) {
                 orderModal.style.background = 'transparent';
                 orderModal.style.border = 'none';
                 orderModal.style.boxShadow = 'none';
+            }
+            
+            // 隐藏底层 start now 按钮（避免重影 bug）
+            var startBtn = document.getElementById('startNowBtn');
+            if (startBtn) {
+                startBtn.style.opacity = '0';
+                startBtn.style.pointerEvents = 'none';
             }
         }
 
@@ -1712,7 +1717,6 @@ pt.innerHTML = '<i class="fas fa-check-circle"></i> ' + t('order_completed');
             if (!modal) return;
             var orderModal = modal.querySelector('.order-modal');
             
-            // 恢复 CSS 默认值
             modal.style.background = '';
             modal.style.backdropFilter = '';
             modal.style.webkitBackdropFilter = '';
@@ -1721,6 +1725,13 @@ pt.innerHTML = '<i class="fas fa-check-circle"></i> ' + t('order_completed');
                 orderModal.style.background = '';
                 orderModal.style.border = '';
                 orderModal.style.boxShadow = '';
+            }
+            
+            // 恢复底层 start now 按钮
+            var startBtn = document.getElementById('startNowBtn');
+            if (startBtn) {
+                startBtn.style.opacity = '1';
+                startBtn.style.pointerEvents = 'auto';
             }
         }
 
