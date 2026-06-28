@@ -1623,13 +1623,6 @@ pt.innerHTML = '<i class="fas fa-check-circle"></i> ' + t('order_completed');
     if (!modal || !modalContent) return;
 
     restoreModalStyle();
-    
-    // 额外确保按钮恢复显示（防止边缘情况）
-    var startBtn = document.getElementById('startNowBtn');
-    if (startBtn) {
-        startBtn.style.opacity = '1';
-        startBtn.style.pointerEvents = 'auto';
-    }
 
     var orderTypeDisplay = order.orderType || 'Order';
     var commissionPercent = order.commissionPercent || '';
@@ -1768,7 +1761,7 @@ pt.innerHTML = '<i class="fas fa-check-circle"></i> ' + t('order_completed');
                 <i class="fas fa-spinner fa-spin" style="font-size:32px; color:#C9B095;"></i>
             </div>
             <p style="color:#e0d5c8; font-size:17px; font-weight:500; letter-spacing:0.5px; margin:0; text-shadow:0 2px 8px rgba(0,0,0,0.3);">${t('start_searching_order')}</p>
-            <p style="color:rgba(255,255,255,0.25); font-size:12px; margin-top:8px; letter-spacing:0.3px;">${t('start_searching_subtitle')}</p>
+            <p style="color:rgba(255,255,255,0.5); font-size:12px; margin-top:8px; letter-spacing:0.3px;">${t('start_searching_subtitle')}</p>
         </div>
     </div>
 `;
@@ -1859,7 +1852,7 @@ pt.innerHTML = '<i class="fas fa-check-circle"></i> ' + t('order_completed');
                 <i class="fas fa-spinner fa-spin" style="font-size:32px; color:#C9B095;"></i>
             </div>
             <p style="color:#e0d5c8; font-size:17px; font-weight:500; letter-spacing:0.5px; margin:0; text-shadow:0 2px 8px rgba(0,0,0,0.3);">${t('start_searching_order')}</p>
-            <p style="color:rgba(255,255,255,0.25); font-size:12px; margin-top:8px; letter-spacing:0.3px;">${t('start_searching_subtitle')}</p>
+            <p style="color:rgba(255,255,255,0.5); font-size:12px; margin-top:8px; letter-spacing:0.3px;">${t('start_searching_subtitle')}</p>
         </div>
     </div>
 `;
@@ -1882,7 +1875,7 @@ pt.innerHTML = '<i class="fas fa-check-circle"></i> ' + t('order_completed');
                 <i class="fas fa-spinner fa-spin" style="font-size:32px; color:#C9B095;"></i>
             </div>
             <p style="color:#e0d5c8; font-size:17px; font-weight:500; letter-spacing:0.5px; margin:0; text-shadow:0 2px 8px rgba(0,0,0,0.3);">${t('start_searching_order')}</p>
-            <p style="color:rgba(255,255,255,0.25); font-size:12px; margin-top:8px; letter-spacing:0.3px;">${t('start_searching_subtitle')}</p>
+            <p style="color:rgba(255,255,255,0.5); font-size:12px; margin-top:8px; letter-spacing:0.3px;">${t('start_searching_subtitle')}</p>
         </div>
     </div>
 `;
