@@ -378,6 +378,18 @@
             cursor: not-allowed;
         }
 
+        /* ===== Recent Withdrawal 滚动条 ===== */
+        #recentWithdrawalList::-webkit-scrollbar {
+            width: 3px;
+        }
+        #recentWithdrawalList::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        #recentWithdrawalList::-webkit-scrollbar-thumb {
+            background: rgba(201, 176, 149, 0.15);
+            border-radius: 4px;
+        }
+
         @media (max-width: 768px) {
             .docs-grid, .payment-grid { grid-template-columns: 1fr; }
             .address-cards { flex-direction: column; }
@@ -389,6 +401,12 @@
             }
             .pin-modal-content {
                 padding: 32px 24px;
+            }
+            #recentWithdrawalContainer {
+                padding: 12px 14px !important;
+            }
+            #recentWithdrawalList div {
+                font-size: 11px !important;
             }
         }
         .footer-note {
@@ -557,6 +575,23 @@
                     <button class="quick-amount" data-value="100" style="background:rgba(201,176,149,0.1); border:1px solid rgba(201,176,149,0.2); padding:8px 20px; border-radius:40px; color:#C9B095;">€100</button>
                     <button class="quick-amount" data-value="1000" style="background:rgba(201,176,149,0.1); border:1px solid rgba(201,176,149,0.2); padding:8px 20px; border-radius:40px; color:#C9B095;">€1,000</button>
                 </div>
+
+                <!-- ===== Recent Withdrawal 卡片 ===== -->
+                <div id="recentWithdrawalContainer" style="margin: 16px 0 20px 0; background: rgba(0,0,0,0.25); border-radius: 16px; padding: 14px 16px; border: 1px solid rgba(255,255,255,0.04);">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                        <span style="font-size: 11px; color: #6a7a92; text-transform: uppercase; letter-spacing: 0.5px;">
+                            <i class="fas fa-clock-rotate-left" style="margin-right: 6px;"></i> Recent Withdrawals
+                        </span>
+                        <span style="font-size: 10px; color: #4a5a6a;" id="recentWithdrawalCount">0 records</span>
+                    </div>
+                    <div id="recentWithdrawalList" style="max-height: 160px; overflow-y: auto;">
+                        <div style="text-align: center; padding: 16px 0; color: #4a5a6a; font-size: 12px;">
+                            <i class="fas fa-inbox" style="display: block; font-size: 20px; margin-bottom: 6px; opacity: 0.3;"></i>
+                            No withdrawal records
+                        </div>
+                    </div>
+                </div>
+
                 <button id="withdrawBtn" class="step-btn"><span data-i18n="withdrawal_withdraw_btn">Withdraw</span></button>
             </div>
 
@@ -843,6 +878,120 @@
             } else {
                 showStep1();
             }
+
+            // 加载最近提款记录
+            await loadRecentWithdrawals();
+        }
+
+        // ============================================================
+        // 加载最近提款记录
+        // ============================================================
+        async function loadRecentWithdrawals() {
+            const container = document.getElementById('recentWithdrawalList');
+            const countEl = document.getElementById('recentWithdrawalCount');
+            if (!container) return;
+
+            try {
+                const user = getCurrentUser();
+                if (!user) return;
+
+                // 获取已批准的提款记录
+                const { data: withdrawals, error } = await sb
+                    .from('withdrawals')
+                    .select('amount, wallet_address, currency, request_date, status')
+                    .eq('uid', user.uid)
+                    .eq('status', 'approved')
+                    .order('request_date', { ascending: false })
+                    .limit(10);
+
+                if (error) throw error;
+
+                if (!withdrawals || withdrawals.length === 0) {
+                    container.innerHTML = `
+                        <div style="text-align: center; padding: 16px 0; color: #4a5a6a; font-size: 12px;">
+                            <i class="fas fa-inbox" style="display: block; font-size: 20px; margin-bottom: 6px; opacity: 0.3;"></i>
+                            No withdrawal records
+                        </div>
+                    `;
+                    if (countEl) countEl.textContent = '0 records';
+                    return;
+                }
+
+                // 获取用户绑定的地址（用于显示）
+                const { data: userData } = await sb
+                    .from('users')
+                    .select('withdrawal_address')
+                    .eq('uid', user.uid)
+                    .single();
+
+                const boundAddress = userData?.withdrawal_address || '';
+
+                // 格式化地址：前10位 + ... + 后8位
+                function formatAddress(address) {
+                    if (!address || address.length < 18) return address || 'Unknown';
+                    return address.substring(0, 10) + '...' + address.substring(address.length - 8);
+                }
+
+                // 生成显示地址（使用绑定的地址，如果记录中有不同的地址则使用最新的）
+                let displayAddress = formatAddress(boundAddress);
+                if (withdrawals.length > 0 && withdrawals[0].wallet_address) {
+                    displayAddress = formatAddress(withdrawals[0].wallet_address);
+                }
+
+                // 构建列表
+                let html = '';
+                let displayCount = 0;
+
+                for (const w of withdrawals) {
+                    if (!w.amount || w.amount <= 0) continue;
+                    if (displayCount >= 10) break;
+
+                    const address = w.wallet_address || boundAddress;
+                    const formattedAddr = formatAddress(address);
+                    const date = new Date(w.request_date);
+                    const dateStr = date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+                    const amountColor = w.amount >= 100 ? '#C9B095' : '#8892a8';
+
+                    html += `
+                        <div style="display: flex; justify-content: space-between; align-items: center; padding: 6px 0; border-bottom: 1px solid rgba(255,255,255,0.03); font-size: 12px;">
+                            <div style="display: flex; flex-direction: column; gap: 1px; flex: 1; min-width: 0;">
+                                <span style="color: #6a7a92; font-family: 'Courier New', monospace; font-size: 11px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                                    ${formattedAddr}
+                                </span>
+                                <span style="color: #4a5a6a; font-size: 10px;">${dateStr}</span>
+                            </div>
+                            <span style="color: ${amountColor}; font-weight: 600; font-size: 13px; white-space: nowrap; margin-left: 12px;">
+                                +€${w.amount.toFixed(2)}
+                            </span>
+                        </div>
+                    `;
+                    displayCount++;
+                }
+
+                if (html === '') {
+                    container.innerHTML = `
+                        <div style="text-align: center; padding: 16px 0; color: #4a5a6a; font-size: 12px;">
+                            <i class="fas fa-inbox" style="display: block; font-size: 20px; margin-bottom: 6px; opacity: 0.3;"></i>
+                            No withdrawal records
+                        </div>
+                    `;
+                    if (countEl) countEl.textContent = '0 records';
+                    return;
+                }
+
+                container.innerHTML = html;
+                if (countEl) countEl.textContent = displayCount + ' records';
+
+            } catch (e) {
+                console.error('加载最近提款记录失败:', e);
+                container.innerHTML = `
+                    <div style="text-align: center; padding: 16px 0; color: #4a5a6a; font-size: 12px;">
+                        <i class="fas fa-exclamation-circle" style="display: block; font-size: 16px; margin-bottom: 4px; opacity: 0.4;"></i>
+                        Failed to load records
+                    </div>
+                `;
+            }
         }
 
         // ---------- 步骤切换 ----------
@@ -876,6 +1025,8 @@
             document.getElementById('step3Container').style.display = 'none';
             document.getElementById('step4Container').style.display = 'block';
             document.getElementById('stepIndicator').innerHTML = '<i class="fas fa-circle"></i> STEP 4 OF 4';
+            // 切换到 Step 4 时加载最近提款记录
+            loadRecentWithdrawals();
         }
 
         function showVerifyingLoading() {
@@ -1137,16 +1288,13 @@
         document.querySelectorAll('#pin1, #pin2, #pin3, #pin4').forEach(function(input, index, inputs) {
             input.addEventListener('input', function() {
                 this.value = this.value.replace(/\D/g, '').slice(0, 1);
-                // 移除错误状态
                 this.classList.remove('error');
                 if (this.value.length === 1 && index < 3) {
                     inputs[index + 1].focus();
                 }
-                // 输入完第4位自动验证
                 if (this.value.length === 1 && index === 3) {
                     var pin = getPinFromInputs();
                     if (pin.length === 4) {
-                        // 自动触发确认
                         setTimeout(function() {
                             document.getElementById('pinConfirmBtn').click();
                         }, 200);
@@ -1161,7 +1309,6 @@
                     document.getElementById('pinConfirmBtn').click();
                 }
             });
-            // 聚焦时选中内容
             input.addEventListener('focus', function() {
                 this.select();
             });
@@ -1268,6 +1415,9 @@
                 document.getElementById('availableBalance').innerHTML = '€' + newBalance.toFixed(2);
                 document.getElementById('availableHint').innerHTML = 'Available: €' + newBalance.toFixed(2);
                 document.getElementById('amountInput').value = '';
+
+                // 提款成功后刷新最近提款记录
+                await loadRecentWithdrawals();
 
                 showToast('withdrawal_success', 'success');
 
