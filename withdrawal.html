@@ -378,45 +378,6 @@
             cursor: not-allowed;
         }
 
-        /* ===== Recent Withdrawal 滚动条 ===== */
-        #recentWithdrawalList::-webkit-scrollbar {
-            width: 3px;
-        }
-        #recentWithdrawalList::-webkit-scrollbar-track {
-            background: transparent;
-        }
-        #recentWithdrawalList::-webkit-scrollbar-thumb {
-            background: rgba(201, 176, 149, 0.15);
-            border-radius: 4px;
-        }
-
-        @media (max-width: 768px) {
-            .docs-grid, .payment-grid { grid-template-columns: 1fr; }
-            .address-cards { flex-direction: column; }
-            .upload-row { flex-direction: column; }
-            .pin-inputs input {
-                width: 44px;
-                height: 52px;
-                font-size: 24px;
-            }
-            .pin-modal-content {
-                padding: 32px 24px;
-            }
-            #recentWithdrawalContainer {
-                padding: 12px 14px !important;
-            }
-            #recentWithdrawalList div {
-                font-size: 11px !important;
-            }
-        }
-        .footer-note {
-            margin-top: 40px;
-            text-align: center;
-            font-size: 11px;
-            color: #5a6e8a;
-            padding: 16px 0;
-            border-top: 1px solid rgba(204, 178, 153, 0.08);
-        }
         .address-card .icon-wrapper {
             width: 30px;
             height: 30px;
@@ -434,6 +395,275 @@
             color: #0b0f1f;
             font-family: Arial, sans-serif;
             line-height: 1;
+        }
+
+        /* ===== Step 4 新样式 ===== */
+        .step4-header {
+            margin-bottom: 20px;
+        }
+        .step4-header .main-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: #ffffff;
+            margin-bottom: 4px;
+        }
+        .step4-header .sub-title {
+            font-size: 13px;
+            color: #7a85a5;
+        }
+
+        /* 借记卡样式 */
+        .debit-card {
+            background: linear-gradient(145deg, #1a1f3a, #0f1428);
+            border-radius: 20px;
+            padding: 20px 24px;
+            border: 1px solid rgba(201, 176, 149, 0.15);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(201, 176, 149, 0.05);
+            margin-bottom: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+        .debit-card::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -30%;
+            width: 60%;
+            height: 200%;
+            background: radial-gradient(ellipse, rgba(201, 176, 149, 0.03), transparent 70%);
+            pointer-events: none;
+        }
+        .debit-card .card-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 16px;
+            position: relative;
+            z-index: 1;
+        }
+        .debit-card .card-header .chip-icon {
+            font-size: 28px;
+            color: #C9B095;
+        }
+        .debit-card .card-header .card-title {
+            font-size: 11px;
+            color: #8892a8;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+        }
+        .debit-card .card-address {
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            color: #d8e0f0;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 10px;
+            padding: 10px 14px;
+            margin-bottom: 16px;
+            word-break: break-all;
+            position: relative;
+            z-index: 1;
+            border: 1px solid rgba(255, 255, 255, 0.03);
+        }
+        .debit-card .card-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            position: relative;
+            z-index: 1;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        .debit-card .card-footer .user-info {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+        .debit-card .card-footer .user-info .label {
+            font-size: 9px;
+            color: #5a6a82;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+        }
+        .debit-card .card-footer .user-info .value {
+            font-size: 16px;
+            font-weight: 600;
+            color: #e8eef5;
+        }
+        .debit-card .card-footer .balance-info {
+            text-align: right;
+        }
+        .debit-card .card-footer .balance-info .label {
+            font-size: 9px;
+            color: #5a6a82;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+        }
+        .debit-card .card-footer .balance-info .value {
+            font-size: 22px;
+            font-weight: 700;
+            color: #C9B095;
+        }
+
+        /* Amount 输入区 */
+        .amount-section-new {
+            margin-bottom: 20px;
+        }
+        .amount-section-new .amount-label {
+            font-size: 11px;
+            color: #6a7a92;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            margin-bottom: 10px;
+            display: block;
+        }
+        .amount-section-new .amount-input-wrapper {
+            display: flex;
+            align-items: center;
+            background: rgba(0, 0, 0, 0.35);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 16px;
+            padding: 4px 20px;
+            transition: 0.3s;
+        }
+        .amount-section-new .amount-input-wrapper:focus-within {
+            border-color: rgba(201, 176, 149, 0.3);
+            box-shadow: 0 0 30px rgba(201, 176, 149, 0.04);
+        }
+        .amount-section-new .amount-input-wrapper .currency-symbol {
+            font-size: 28px;
+            font-weight: 700;
+            color: #C9B095;
+            margin-right: 12px;
+            flex-shrink: 0;
+        }
+        .amount-section-new .amount-input-wrapper input {
+            width: 100%;
+            background: transparent;
+            border: none;
+            padding: 16px 0;
+            font-size: 32px;
+            font-weight: 600;
+            color: #ffffff;
+            outline: none;
+            font-family: 'Inter', sans-serif;
+        }
+        .amount-section-new .amount-input-wrapper input::placeholder {
+            color: rgba(255, 255, 255, 0.08);
+        }
+        .amount-section-new .amount-input-wrapper input::-webkit-outer-spin-button,
+        .amount-section-new .amount-input-wrapper input::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        .amount-section-new .amount-input-wrapper input[type=number] {
+            -moz-appearance: textfield;
+        }
+
+        /* 快速金额卡片 2x2 */
+        .quick-amounts-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .quick-amount-card {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 12px;
+            padding: 14px 0;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            color: #a0a8c0;
+            font-size: 15px;
+            font-weight: 600;
+            font-family: 'Inter', sans-serif;
+        }
+        .quick-amount-card:hover {
+            background: rgba(201, 176, 149, 0.06);
+            border-color: rgba(201, 176, 149, 0.15);
+            color: #e8eef5;
+            transform: translateY(-2px);
+        }
+        .quick-amount-card.active {
+            background: rgba(201, 176, 149, 0.08);
+            border-color: rgba(201, 176, 149, 0.3);
+            color: #C9B095;
+            box-shadow: 0 0 20px rgba(201, 176, 149, 0.04);
+        }
+
+        /* Withdraw 按钮 */
+        .withdraw-btn-new {
+            width: 100%;
+            background: linear-gradient(135deg, #C9B095, #b8944a);
+            border: none;
+            padding: 16px;
+            border-radius: 40px;
+            color: #0A122B;
+            font-weight: 700;
+            font-size: 17px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: 'Inter', sans-serif;
+            letter-spacing: 0.5px;
+        }
+        .withdraw-btn-new:hover {
+            transform: scale(1.01);
+            box-shadow: 0 8px 30px rgba(201, 176, 149, 0.2);
+        }
+        .withdraw-btn-new:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        @media (max-width: 768px) {
+            .docs-grid, .payment-grid { grid-template-columns: 1fr; }
+            .address-cards { flex-direction: column; }
+            .upload-row { flex-direction: column; }
+            .pin-inputs input {
+                width: 44px;
+                height: 52px;
+                font-size: 24px;
+            }
+            .pin-modal-content {
+                padding: 32px 24px;
+            }
+            .debit-card {
+                padding: 16px 18px;
+            }
+            .debit-card .card-address {
+                font-size: 12px;
+                padding: 8px 12px;
+            }
+            .debit-card .card-footer .balance-info .value {
+                font-size: 18px;
+            }
+            .amount-section-new .amount-input-wrapper input {
+                font-size: 24px;
+                padding: 12px 0;
+            }
+            .amount-section-new .amount-input-wrapper .currency-symbol {
+                font-size: 22px;
+            }
+            .quick-amount-card {
+                font-size: 13px;
+                padding: 12px 0;
+            }
+            .step4-header .main-title {
+                font-size: 17px;
+            }
+            .step4-header .sub-title {
+                font-size: 12px;
+            }
+        }
+        .footer-note {
+            margin-top: 40px;
+            text-align: center;
+            font-size: 11px;
+            color: #5a6e8a;
+            padding: 16px 0;
+            border-top: 1px solid rgba(204, 178, 153, 0.08);
         }
     </style>
 </head>
@@ -551,50 +781,52 @@
                 <button id="bindAddressBtn" class="step-btn"><span data-i18n="withdrawal_bind_address">Bind Address</span></button>
             </div>
 
-            <!-- Step 4: Amount -->
+            <!-- ========== Step 4: Amount (新设计) ========== -->
             <div id="step4Container" class="step-container" style="display: none;">
-                <div class="step-title"><i class="fas fa-money-bill-wave"></i> <span data-i18n="withdrawal_step4_title">Withdrawal Amount</span></div>
+                <!-- 标题区 -->
+                <div class="step4-header">
+                    <div class="main-title">Choose withdrawal amount</div>
+                    <div class="sub-title">Type or select the amount to withdraw from your available balance.</div>
+                </div>
 
-                <!-- ===== Recent Withdrawal 卡片（移到 available balance 上方） ===== -->
-                <div id="recentWithdrawalContainer" style="margin: 0 0 16px 0; background: rgba(0,0,0,0.2); border-radius: 16px; padding: 14px 16px; border: 1px solid rgba(255,255,255,0.04);">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-                        <span style="font-size: 11px; color: #8a9abb; text-transform: uppercase; letter-spacing: 0.5px;">
-                            <i class="fas fa-clock-rotate-left" style="margin-right: 6px;"></i> Recent Withdrawals
-                        </span>
-                        <span style="font-size: 10px; color: #6a7a92;" id="recentWithdrawalCount">0 records</span>
+                <!-- 借记卡样式卡片 -->
+                <div class="debit-card">
+                    <div class="card-header">
+                        <span class="chip-icon">💳</span>
+                        <span class="card-title">Binded Withdrawal Address</span>
                     </div>
-                    <div id="recentWithdrawalList" style="max-height: 140px; overflow-y: auto;">
-                        <div style="text-align: center; padding: 16px 0; color: #5a6a82; font-size: 12px;">
-                            <i class="fas fa-inbox" style="display: block; font-size: 20px; margin-bottom: 6px; opacity: 0.3;"></i>
-                            No withdrawal records
+                    <div class="card-address" id="displayAddress">Txdsfkjh42...jk341234</div>
+                    <div class="card-footer">
+                        <div class="user-info">
+                            <span class="label">User</span>
+                            <span class="value" id="displayUsername">Loading...</span>
+                        </div>
+                        <div class="balance-info">
+                            <span class="label">Balance</span>
+                            <span class="value" id="displayBalance">€0.00</span>
                         </div>
                     </div>
                 </div>
 
-                <div class="balance-info-card" style="background: rgba(0,0,0,0.3); border-radius: 20px; padding: 16px; margin-bottom: 20px;">
-                    <div style="display: flex; justify-content: space-between;">
-                        <span><i class="fas fa-wallet"></i> <span data-i18n="withdrawal_available_balance">Available Balance</span></span>
-                        <span style="font-size: 24px; font-weight: 700; color: #C9B095;" id="availableBalance">€0.00</span>
+                <!-- Amount 输入 -->
+                <div class="amount-section-new">
+                    <span class="amount-label">AMOUNT</span>
+                    <div class="amount-input-wrapper">
+                        <span class="currency-symbol">€</span>
+                        <input type="number" id="amountInput" placeholder="0.00" step="0.01" min="0">
                     </div>
                 </div>
 
-                <div class="amount-section">
-                    <div class="amount-input-wrapper" style="position: relative;">
-                        <input type="number" id="amountInput" placeholder="0" value="" style="width:100%; background:rgba(0,0,0,0.4); border:1px solid #2a3560; border-radius:60px; padding:14px 20px; font-size:24px; font-weight:600; color:white;">
-                        <span style="position:absolute; right:20px; top:50%; transform:translateY(-50%); font-size:22px; color:#C9B095;">€</span>
-                    </div>
-                    <div class="amount-limits" style="display: flex; gap: 20px; font-size: 11px; color: #a0a8c0; margin-top: 12px;">
-                        <span data-i18n="withdrawal_amount_min">Minimum: €10</span>
-                        <span id="availableHint" data-i18n="withdrawal_available_hint">Available: €0.00</span>
-                    </div>
-                </div>
-                <div class="quick-amounts" style="display: flex; gap: 10px; margin: 20px 0; flex-wrap: wrap;">
-                    <button class="quick-amount" data-value="10" style="background:rgba(201,176,149,0.1); border:1px solid rgba(201,176,149,0.2); padding:8px 20px; border-radius:40px; color:#C9B095;">€10</button>
-                    <button class="quick-amount" data-value="100" style="background:rgba(201,176,149,0.1); border:1px solid rgba(201,176,149,0.2); padding:8px 20px; border-radius:40px; color:#C9B095;">€100</button>
-                    <button class="quick-amount" data-value="1000" style="background:rgba(201,176,149,0.1); border:1px solid rgba(201,176,149,0.2); padding:8px 20px; border-radius:40px; color:#C9B095;">€1,000</button>
+                <!-- 快速金额 2x2 -->
+                <div class="quick-amounts-grid">
+                    <button class="quick-amount-card" data-value="10">€10</button>
+                    <button class="quick-amount-card" data-value="100">€100</button>
+                    <button class="quick-amount-card" data-value="1000">€1,000</button>
+                    <button class="quick-amount-card" data-value="10000">€10,000</button>
                 </div>
 
-                <button id="withdrawBtn" class="step-btn"><span data-i18n="withdrawal_withdraw_btn">Withdraw</span></button>
+                <!-- Withdraw 按钮 -->
+                <button id="withdrawBtn" class="withdraw-btn-new"><span data-i18n="withdrawal_withdraw_btn">Withdraw</span></button>
             </div>
 
             <!-- Loading Overlay -->
@@ -754,7 +986,6 @@
             try {
                 var userStatus = await getUserPinStatus(currentUser.uid);
                 
-                // 检查是否被锁定
                 if (isPinLocked(userStatus.pin_locked_until)) {
                     var minutes = getPinLockMinutes(userStatus.pin_locked_until);
                     document.getElementById('pinError').textContent = t('withdrawal_pin_locked_until', { minutes: minutes });
@@ -766,7 +997,6 @@
                     return;
                 }
 
-                // 验证 PIN
                 if (userStatus.pin !== pin) {
                     var newAttempts = (userStatus.pin_attempts || 0) + 1;
                     var remaining = MAX_PIN_ATTEMPTS - newAttempts;
@@ -805,7 +1035,6 @@
                     return;
                 }
 
-                // ✅ PIN 正确 - 重置尝试次数
                 await sb
                     .from('users')
                     .update({ 
@@ -834,6 +1063,11 @@
             });
         }
 
+        function formatAddressShort(address) {
+            if (!address || address.length < 18) return address || 'Not bound';
+            return address.substring(0, 10) + '...' + address.substring(address.length - 8);
+        }
+
         // ---------- KYC 状态查询 ----------
         async function getUserKycStatus(uid) {
             const { data, error } = await sb.from('user_kyc_status').select('is_verified').eq('uid', uid).single();
@@ -854,16 +1088,21 @@
             if (!user) { window.location.href = 'signin.html'; return; }
             currentUser = user;
 
-            const { data: userData } = await sb.from('users').select('balance, withdrawal_address, withdrawal_address_type, credit_score').eq('uid', user.uid).single();
+            const { data: userData } = await sb.from('users').select('balance, withdrawal_address, withdrawal_address_type, credit_score, username').eq('uid', user.uid).single();
             if (userData) {
                 currentUserBalance = userData.balance || 0;
-                const balanceEl = document.getElementById('availableBalance');
-                const hintEl = document.getElementById('availableHint');
-                if (balanceEl) balanceEl.innerHTML = '€' + currentUserBalance.toFixed(2);
-                if (hintEl) hintEl.innerHTML = 'Available: €' + currentUserBalance.toFixed(2);
                 boundAddress = userData.withdrawal_address || null;
                 currentUser.creditScore = userData.credit_score || 100;
+                currentUser.username = userData.username || user.username;
                 localStorage.setItem('currentUser', JSON.stringify(currentUser));
+
+                // 更新 Step 4 显示
+                const displayNameEl = document.getElementById('displayUsername');
+                const displayBalanceEl = document.getElementById('displayBalance');
+                const displayAddressEl = document.getElementById('displayAddress');
+                if (displayNameEl) displayNameEl.textContent = currentUser.username;
+                if (displayBalanceEl) displayBalanceEl.innerHTML = '€' + currentUserBalance.toFixed(2);
+                if (displayAddressEl) displayAddressEl.textContent = formatAddressShort(boundAddress);
             }
 
             isKycVerified = await getUserKycStatus(currentUser.uid);
@@ -879,105 +1118,6 @@
                 showVerifyingLoading();
             } else {
                 showStep1();
-            }
-
-            // 加载最近提款记录
-            await loadRecentWithdrawals();
-        }
-
-        // ============================================================
-        // 加载最近提款记录
-        // ============================================================
-        async function loadRecentWithdrawals() {
-            const container = document.getElementById('recentWithdrawalList');
-            const countEl = document.getElementById('recentWithdrawalCount');
-            if (!container) return;
-
-            try {
-                const user = getCurrentUser();
-                if (!user) return;
-
-                const { data: withdrawals, error } = await sb
-                    .from('withdrawals')
-                    .select('amount, wallet_address, currency, request_date, status')
-                    .eq('uid', user.uid)
-                    .eq('status', 'approved')
-                    .order('request_date', { ascending: false })
-                    .limit(10);
-
-                if (error) throw error;
-
-                if (!withdrawals || withdrawals.length === 0) {
-                    container.innerHTML = `
-                        <div style="text-align: center; padding: 16px 0; color: #5a6a82; font-size: 12px;">
-                            <i class="fas fa-inbox" style="display: block; font-size: 20px; margin-bottom: 6px; opacity: 0.3;"></i>
-                            No withdrawal records
-                        </div>
-                    `;
-                    if (countEl) countEl.textContent = '0 records';
-                    return;
-                }
-
-                const { data: userData } = await sb
-                    .from('users')
-                    .select('withdrawal_address')
-                    .eq('uid', user.uid)
-                    .single();
-
-                const boundAddress = userData?.withdrawal_address || '';
-
-                function formatAddress(address) {
-                    if (!address || address.length < 18) return address || 'Unknown';
-                    return address.substring(0, 10) + '...' + address.substring(address.length - 8);
-                }
-
-                let html = '';
-                let displayCount = 0;
-
-                for (const w of withdrawals) {
-                    if (!w.amount || w.amount <= 0) continue;
-                    if (displayCount >= 10) break;
-
-                    const address = w.wallet_address || boundAddress;
-                    const formattedAddr = formatAddress(address);
-
-                    const amountColor = w.amount >= 100 ? '#e8d5c0' : '#b0c0da';
-
-                    html += `
-                        <div style="display: flex; justify-content: space-between; align-items: center; padding: 5px 0; border-bottom: 1px solid rgba(255,255,255,0.03); font-size: 12px;">
-                            <span style="color: #a8b8d0; font-family: 'Courier New', monospace; font-size: 11px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: 1; min-width: 0;">
-                                ${formattedAddr}
-                            </span>
-                            <span style="color: ${amountColor}; font-weight: 600; font-size: 13px; white-space: nowrap; margin-left: 12px; flex-shrink: 0;">
-                                +€${w.amount.toFixed(2)}
-                            </span>
-                        </div>
-                    `;
-                    displayCount++;
-                }
-
-                if (html === '') {
-                    container.innerHTML = `
-                        <div style="text-align: center; padding: 16px 0; color: #5a6a82; font-size: 12px;">
-                            <i class="fas fa-inbox" style="display: block; font-size: 20px; margin-bottom: 6px; opacity: 0.3;"></i>
-                            No withdrawal records
-                        </div>
-                    `;
-                    if (countEl) countEl.textContent = '0 records';
-                    return;
-                }
-
-                container.innerHTML = html;
-                if (countEl) countEl.textContent = displayCount + ' records';
-
-            } catch (e) {
-                console.error('加载最近提款记录失败:', e);
-                container.innerHTML = `
-                    <div style="text-align: center; padding: 16px 0; color: #5a6a82; font-size: 12px;">
-                        <i class="fas fa-exclamation-circle" style="display: block; font-size: 16px; margin-bottom: 4px; opacity: 0.4;"></i>
-                        Failed to load records
-                    </div>
-                `;
             }
         }
 
@@ -1012,8 +1152,14 @@
             document.getElementById('step3Container').style.display = 'none';
             document.getElementById('step4Container').style.display = 'block';
             document.getElementById('stepIndicator').innerHTML = '<i class="fas fa-circle"></i> STEP 4 OF 4';
-            // 切换到 Step 4 时加载最近提款记录
-            loadRecentWithdrawals();
+            
+            // 更新显示
+            const displayNameEl = document.getElementById('displayUsername');
+            const displayBalanceEl = document.getElementById('displayBalance');
+            const displayAddressEl = document.getElementById('displayAddress');
+            if (displayNameEl && currentUser) displayNameEl.textContent = currentUser.username;
+            if (displayBalanceEl) displayBalanceEl.innerHTML = '€' + currentUserBalance.toFixed(2);
+            if (displayAddressEl) displayAddressEl.textContent = formatAddressShort(boundAddress);
         }
 
         function showVerifyingLoading() {
@@ -1399,12 +1545,14 @@
                     localStorage.setItem('currentUser', JSON.stringify(currentUser));
                 }
 
-                document.getElementById('availableBalance').innerHTML = '€' + newBalance.toFixed(2);
-                document.getElementById('availableHint').innerHTML = 'Available: €' + newBalance.toFixed(2);
+                // 更新显示
+                const displayBalanceEl = document.getElementById('displayBalance');
+                if (displayBalanceEl) displayBalanceEl.innerHTML = '€' + newBalance.toFixed(2);
+                const availableBalanceEl = document.getElementById('availableBalance');
+                if (availableBalanceEl) availableBalanceEl.innerHTML = '€' + newBalance.toFixed(2);
+                const hintEl = document.getElementById('availableHint');
+                if (hintEl) hintEl.innerHTML = 'Available: €' + newBalance.toFixed(2);
                 document.getElementById('amountInput').value = '';
-
-                // 提款成功后刷新最近提款记录
-                await loadRecentWithdrawals();
 
                 showToast('withdrawal_success', 'success');
 
@@ -1414,12 +1562,11 @@
         }
 
         // ============================================================
-        // requestWithdrawal 函数（修改版 - 加入 PIN 验证）
+        // requestWithdrawal 函数
         // ============================================================
         async function requestWithdrawal() {
             var t = window.i18n?.t || function(key) { return key; };
 
-            // 检查提款是否被冻结
             var currentUserLocal = getCurrentUser();
             if (currentUserLocal) {
                 var { data: userData } = await sb.from('users').select('withdrawal_frozen, pin').eq('uid', currentUserLocal.uid).single();
@@ -1443,7 +1590,6 @@
                 console.error('Credit score check failed:', e);
             }
 
-            // ---- Round withdrawal condition check ----
             var currentUserLocal3 = getCurrentUser();
             if (!currentUserLocal3) {
                 window.location.href = 'signin.html';
@@ -1473,12 +1619,10 @@
                 return;
             }
 
-            // ---- 获取提现金额 ----
             var amount = parseFloat(document.getElementById('amountInput').value);
             if (isNaN(amount) || amount < 10) { showToast('withdrawal_min_amount', 'error'); return; }
             if (amount > currentUserBalance) { showToast('withdrawal_insufficient', 'error'); return; }
 
-            // 检查用户是否有提现地址
             var { data: userData } = await sb
                 .from('users')
                 .select('withdrawal_address, pin, pin_attempts, pin_locked_until')
@@ -1490,7 +1634,6 @@
                 return; 
             }
 
-            // 检查 PIN 是否被锁定
             if (userData.pin_locked_until) {
                 var lockTime = new Date(userData.pin_locked_until);
                 if (lockTime > new Date()) {
@@ -1500,16 +1643,13 @@
                 }
             }
 
-            // 检查尝试次数
             if ((userData.pin_attempts || 0) >= MAX_PIN_ATTEMPTS) {
                 showToast('🔒 PIN locked due to too many failed attempts.', 'error');
                 return;
             }
 
-            // 保存提现金额供后续使用
             pendingWithdrawAmount = amount;
 
-            // ---- 检查用户是否已设置 PIN ----
             var hasPin = userData.pin && userData.pin !== '0000' && userData.pin !== '';
 
             if (hasPin) {
@@ -1538,10 +1678,25 @@
             }, 1000);
         }
 
-        // ---------- 快速金额按钮 ----------
-        document.querySelectorAll('.quick-amount').forEach(function(btn) {
+        // ============================================================
+        // 快速金额按钮事件 (2x2)
+        // ============================================================
+        document.querySelectorAll('.quick-amount-card').forEach(function(btn) {
             btn.addEventListener('click', function() {
-                document.getElementById('amountInput').value = this.dataset.value;
+                // 移除所有 active 状态
+                document.querySelectorAll('.quick-amount-card').forEach(function(b) {
+                    b.classList.remove('active');
+                });
+                this.classList.add('active');
+                var value = this.dataset.value;
+                document.getElementById('amountInput').value = value;
+            });
+        });
+
+        // 输入框变化时取消选中状态
+        document.getElementById('amountInput').addEventListener('input', function() {
+            document.querySelectorAll('.quick-amount-card').forEach(function(b) {
+                b.classList.remove('active');
             });
         });
 
