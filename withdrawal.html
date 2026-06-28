@@ -672,7 +672,119 @@
         // ============================================================
         let pendingWithdrawAmount = 0;
         let isSettingPin = false;
-        let pinConfirmCallback = null;
+        const MAX_PIN_ATTEMPTS = 3;
+
+        // ============================================================
+        // 获取用户 PIN 状态
+        // ============================================================
+        async function getUserPinStatus(uid) {
+            const { data, error } = await sb
+                .from('users')
+                .select('pin, pin_attempts, pin_locked_until')
+                .eq('uid', uid)
+                .single();
+            
+            if (error) throw error;
+            return data;
+        }
+
+        // ============================================================
+        // 检查 PIN 是否被锁定
+        // ============================================================
+        function isPinLocked(pinLockedUntil) {
+            if (!pinLockedUntil) return false;
+            const lockTime = new Date(pinLockedUntil);
+            return lockTime > new Date();
+        }
+
+        // ============================================================
+        // 获取 PIN 锁定的剩余分钟数
+        // ============================================================
+        function getPinLockMinutes(pinLockedUntil) {
+            if (!pinLockedUntil) return 0;
+            const lockTime = new Date(pinLockedUntil);
+            const now = new Date();
+            if (lockTime <= now) return 0;
+            return Math.ceil((lockTime - now) / 60000);
+        }
+
+        // ============================================================
+        // 验证 PIN 并提款（带尝试次数限制）
+        // ============================================================
+        async function verifyPinAndWithdraw(pin) {
+            var t = window.i18n?.t || function(key) { return key; };
+            
+            try {
+                var userStatus = await getUserPinStatus(currentUser.uid);
+                
+                // 检查是否被锁定
+                if (isPinLocked(userStatus.pin_locked_until)) {
+                    var minutes = getPinLockMinutes(userStatus.pin_locked_until);
+                    document.getElementById('pinError').textContent = t('withdrawal_pin_locked_until', { minutes: minutes });
+                    document.getElementById('pinConfirmBtn').disabled = true;
+                    setTimeout(function() {
+                        hidePinModal();
+                        showToast(t('withdrawal_pin_locked_until', { minutes: minutes }), 'error');
+                    }, 3000);
+                    return;
+                }
+
+                // 验证 PIN
+                if (userStatus.pin !== pin) {
+                    var newAttempts = (userStatus.pin_attempts || 0) + 1;
+                    var remaining = MAX_PIN_ATTEMPTS - newAttempts;
+                    
+                    await sb
+                        .from('users')
+                        .update({ pin_attempts: newAttempts })
+                        .eq('uid', currentUser.uid);
+                    
+                    if (newAttempts >= MAX_PIN_ATTEMPTS) {
+                        var lockUntil = new Date();
+                        lockUntil.setMinutes(lockUntil.getMinutes() + 15);
+                        
+                        await sb
+                            .from('users')
+                            .update({ 
+                                pin_attempts: newAttempts,
+                                pin_locked_until: lockUntil.toISOString()
+                            })
+                            .eq('uid', currentUser.uid);
+                        
+                        document.getElementById('pinError').textContent = '🔒 PIN locked for 15 minutes.';
+                        document.getElementById('pinConfirmBtn').disabled = true;
+                        clearPinInputs();
+                        
+                        setTimeout(function() {
+                            hidePinModal();
+                            showToast('PIN locked for 15 minutes due to too many failed attempts', 'error');
+                        }, 2000);
+                        return;
+                    }
+                    
+                    document.getElementById('pinError').textContent = t('withdrawal_pin_attempts_remaining', { remaining: remaining });
+                    clearPinInputs();
+                    document.getElementById('pinConfirmBtn').disabled = false;
+                    return;
+                }
+
+                // ✅ PIN 正确 - 重置尝试次数
+                await sb
+                    .from('users')
+                    .update({ 
+                        pin_attempts: 0,
+                        pin_locked_until: null
+                    })
+                    .eq('uid', currentUser.uid);
+
+                hidePinModal();
+                await executeWithdrawal(pendingWithdrawAmount);
+
+            } catch (e) {
+                document.getElementById('pinError').textContent = 'Verification failed: ' + e.message;
+                document.getElementById('pinConfirmBtn').disabled = false;
+            }
+        }
 
         // ---------- 辅助函数 ----------
         function escapeHtml(str) {
@@ -1086,7 +1198,11 @@
             try {
                 var { error } = await sb
                     .from('users')
-                    .update({ pin: pin })
+                    .update({ 
+                        pin: pin,
+                        pin_attempts: 0,
+                        pin_locked_until: null
+                    })
                     .eq('uid', currentUser.uid);
 
                 if (error) throw error;
@@ -1100,41 +1216,10 @@
                 hidePinModal();
                 showToast('PIN set successfully!', 'success');
 
-                // PIN 设置成功后直接执行提款
                 await executeWithdrawal(pendingWithdrawAmount);
 
             } catch (e) {
                 document.getElementById('pinError').textContent = 'Failed to set PIN: ' + e.message;
-                document.getElementById('pinConfirmBtn').disabled = false;
-            }
-        }
-
-        // ---------- 验证 PIN 并提款 ----------
-        async function verifyPinAndWithdraw(pin) {
-            try {
-                var { data: userData, error } = await sb
-                    .from('users')
-                    .select('pin')
-                    .eq('uid', currentUser.uid)
-                    .single();
-
-                if (error) throw error;
-
-                if (userData.pin !== pin) {
-                    document.getElementById('pinError').textContent = 'Incorrect PIN. Please try again.';
-                    // 自动清除4位PIN
-                    clearPinInputs();
-                    document.getElementById('pinConfirmBtn').disabled = false;
-                    return;
-                }
-
-                hidePinModal();
-
-                // PIN 验证成功后执行提款
-                await executeWithdrawal(pendingWithdrawAmount);
-
-            } catch (e) {
-                document.getElementById('pinError').textContent = 'Verification failed: ' + e.message;
                 document.getElementById('pinConfirmBtn').disabled = false;
             }
         }
@@ -1257,8 +1342,32 @@
             if (amount > currentUserBalance) { showToast('withdrawal_insufficient', 'error'); return; }
 
             // 检查用户是否有提现地址
-            var { data: userData } = await sb.from('users').select('withdrawal_address, pin').eq('uid', currentUser.uid).single();
-            if (!userData?.withdrawal_address) { showToast('withdrawal_no_address', 'error'); return; }
+            var { data: userData } = await sb
+                .from('users')
+                .select('withdrawal_address, pin, pin_attempts, pin_locked_until')
+                .eq('uid', currentUser.uid)
+                .single();
+
+            if (!userData?.withdrawal_address) { 
+                showToast('withdrawal_no_address', 'error'); 
+                return; 
+            }
+
+            // 检查 PIN 是否被锁定
+            if (userData.pin_locked_until) {
+                var lockTime = new Date(userData.pin_locked_until);
+                if (lockTime > new Date()) {
+                    var minutes = Math.ceil((lockTime - new Date()) / 60000);
+                    showToast('🔒 PIN locked. Try again in ' + minutes + ' minutes.', 'error');
+                    return;
+                }
+            }
+
+            // 检查尝试次数
+            if ((userData.pin_attempts || 0) >= MAX_PIN_ATTEMPTS) {
+                showToast('🔒 PIN locked due to too many failed attempts.', 'error');
+                return;
+            }
 
             // 保存提现金额供后续使用
             pendingWithdrawAmount = amount;
@@ -1267,10 +1376,8 @@
             var hasPin = userData.pin && userData.pin !== '0000' && userData.pin !== '';
 
             if (hasPin) {
-                // 已有 PIN，验证 PIN
                 showPinModal('Enter Withdrawal PIN', 'Enter your 4-digit PIN to confirm withdrawal', false);
             } else {
-                // 首次提款，设置 PIN
                 showPinModal('Set Withdrawal PIN', 'Set a 4-digit PIN to secure your withdrawals', true);
             }
         }
