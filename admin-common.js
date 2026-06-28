@@ -1061,7 +1061,7 @@ function renderTabBar() {
             closeTab(tab.id);
         });
 
-        container.insertBefore(tabEl, addBtn);
+        document.getElementById('tabsWrapper')?.insertBefore(tabEl, addBtn);
     });
 
     updatePageVisibility();
@@ -1188,24 +1188,158 @@ function initTabBar() {
     container.style.cssText = `
         display: flex;
         align-items: center;
+        justify-content: space-between;
         background: rgba(12, 16, 28, 0.92);
         border-bottom: 1px solid rgba(214, 178, 94, 0.08);
         padding: 0 12px;
         height: 50px;
-        overflow-x: auto;
-        overflow-y: hidden;
+        overflow: hidden;
         flex-shrink: 0;
-        gap: 2px;
         position: sticky;
         top: 0;
         z-index: 100;
-        scrollbar-width: thin;
         box-shadow: 0 2px 20px rgba(0,0,0,0.3), inset 0 1px 0 rgba(214, 178, 94, 0.04);
         margin: -24px -32px 20px -32px;
         padding-left: 20px;
         padding-right: 16px;
     `;
 
+    // ============================================================
+    // 左侧：Tabs 区域
+    // ============================================================
+    const leftSection = document.createElement('div');
+    leftSection.style.cssText = `
+        display: flex;
+        align-items: center;
+        gap: 2px;
+        flex: 1;
+        overflow-x: auto;
+        overflow-y: hidden;
+        height: 100%;
+        scrollbar-width: thin;
+    `;
+    leftSection.id = 'tabsWrapper';
+
+    // ============================================================
+    // 右侧：Notification 按钮
+    // ============================================================
+    const rightSection = document.createElement('div');
+    rightSection.style.cssText = `
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-shrink: 0;
+        margin-left: 12px;
+        height: 100%;
+    `;
+
+    // Notification 按钮
+    const notifBtn = document.createElement('button');
+    notifBtn.id = 'notificationBellBtn';
+    notifBtn.style.cssText = `
+        background: rgba(255,255,255,0.04);
+        border: 1px solid rgba(255,255,255,0.06);
+        border-radius: 50%;
+        width: 36px;
+        height: 36px;
+        color: #d8e0f0;
+        cursor: pointer;
+        position: relative;
+        transition: all 0.3s;
+        font-size: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+    `;
+    notifBtn.innerHTML = `
+        <i class="fas fa-bell"></i>
+        <span id="notificationBadge" style="
+            position: absolute;
+            top: -4px;
+            right: -4px;
+            background: #e88080;
+            color: #fff;
+            border-radius: 50%;
+            font-size: 9px;
+            font-weight: 700;
+            min-width: 18px;
+            height: 18px;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 0 4px;
+            border: 2px solid rgba(12, 16, 28, 0.8);
+        ">0</span>
+    `;
+    notifBtn.title = 'Notifications';
+
+    // Notification 下拉面板
+    const dropdown = document.createElement('div');
+    dropdown.id = 'notificationDropdown';
+    dropdown.style.cssText = `
+        display: none;
+        position: absolute;
+        top: 44px;
+        right: 0;
+        width: 380px;
+        max-height: 460px;
+        background: rgba(16, 20, 34, 0.98);
+        border-radius: 16px;
+        border: 1px solid rgba(255,255,255,0.06);
+        box-shadow: 0 20px 60px rgba(0,0,0,0.6);
+        overflow: hidden;
+        z-index: 1000;
+        backdrop-filter: blur(20px);
+    `;
+    dropdown.innerHTML = `
+        <div style="padding: 14px 20px; border-bottom: 1px solid rgba(255,255,255,0.04); display: flex; justify-content: space-between; align-items: center;">
+            <h4 style="font-size: 13px; font-weight: 600; color: #d8e0f0; margin: 0;">
+                <i class="fas fa-bell" style="color: #8892a8; margin-right: 8px;"></i>
+                Notifications
+            </h4>
+            <span id="notificationCount" style="font-size: 11px; color: #6a7a92;">0</span>
+        </div>
+        <div id="notificationList" style="max-height: 320px; overflow-y: auto; padding: 8px 0;">
+            <div style="text-align: center; padding: 40px 20px; color: #6a7a92; font-size: 13px;">
+                <i class="fas fa-inbox" style="display: block; font-size: 28px; color: #4a5a72; margin-bottom: 10px;"></i>
+                No notifications
+            </div>
+        </div>
+        <div style="padding: 10px 20px; border-top: 1px solid rgba(255,255,255,0.04);">
+            <button id="clearAllNotificationsBtn" style="
+                width: 100%;
+                background: rgba(232,128,128,0.06);
+                border: 1px solid rgba(232,128,128,0.08);
+                border-radius: 30px;
+                padding: 6px 0;
+                color: #e88080;
+                font-weight: 500;
+                font-size: 12px;
+                cursor: pointer;
+                transition: all 0.2s;
+                font-family: 'Inter', sans-serif;
+            ">
+                <i class="fas fa-trash"></i> Clear All
+            </button>
+        </div>
+    `;
+
+    // 将 dropdown 放入相对定位容器
+    const notifWrapper = document.createElement('div');
+    notifWrapper.style.cssText = `
+        position: relative;
+        display: inline-block;
+    `;
+    notifWrapper.appendChild(notifBtn);
+    notifWrapper.appendChild(dropdown);
+
+    // 组装右侧
+    rightSection.appendChild(notifWrapper);
+
+    // ============================================================
+    // 添加 Tab 按钮（左侧）
+    // ============================================================
     const addBtn = document.createElement('button');
     addBtn.id = 'addTabBtn';
     addBtn.className = 'tab-add-btn';
@@ -1225,7 +1359,6 @@ function initTabBar() {
         font-size: 14px;
         transition: 0.25s;
         flex-shrink: 0;
-        margin-left: 4px;
         font-family: 'Inter', sans-serif;
     `;
     addBtn.addEventListener('mouseenter', function() {
@@ -1239,9 +1372,18 @@ function initTabBar() {
         this.style.background = 'rgba(255,255,255,0.02)';
     });
 
-    container.appendChild(addBtn);
+    leftSection.appendChild(addBtn);
+
+    // 组装容器
+    container.appendChild(leftSection);
+    container.appendChild(rightSection);
+
+    // 插入到 main 顶部
     main.insertBefore(container, main.firstChild);
 
+    // ============================================================
+    // 样式
+    // ============================================================
     const style = document.getElementById('tab-bar-styles');
     if (!style) {
         const newStyle = document.createElement('style');
@@ -1250,9 +1392,9 @@ function initTabBar() {
             .tab-item {
                 display: flex;
                 align-items: center;
-                gap: 8px;
-                padding: 6px 14px;
-                border-radius: 8px 8px 0 0;
+                gap: 6px;
+                padding: 4px 12px;
+                border-radius: 6px;
                 background: rgba(255,255,255,0.02);
                 color: rgba(255,255,255,0.45);
                 font-size: 12px;
@@ -1261,63 +1403,40 @@ function initTabBar() {
                 transition: all 0.25s ease;
                 white-space: nowrap;
                 flex-shrink: 0;
-                height: 42px;
+                height: 34px;
                 border: none;
                 font-family: 'Inter', sans-serif;
                 position: relative;
                 user-select: none;
-                border-top: 1px solid transparent;
-                border-left: 1px solid transparent;
-                border-right: 1px solid transparent;
-                text-shadow: 0 1px 2px rgba(0,0,0,0.3);
             }
             .tab-item i {
-                font-size: 13px;
+                font-size: 12px;
                 color: rgba(255,255,255,0.2);
                 transition: 0.25s;
             }
             .tab-item:hover {
                 background: rgba(255,255,255,0.05);
                 color: rgba(255,255,255,0.6);
-                border-top-color: rgba(214,178,94,0.06);
-                border-left-color: rgba(214,178,94,0.04);
-                border-right-color: rgba(214,178,94,0.04);
             }
             .tab-item.active {
-                background: linear-gradient(180deg, rgba(214,178,94,0.08) 0%, rgba(214,178,94,0.02) 100%);
+                background: rgba(214,178,94,0.08);
                 color: #F3D38B;
-                border-top: 1px solid rgba(214,178,94,0.2);
-                border-left: 1px solid rgba(214,178,94,0.06);
-                border-right: 1px solid rgba(214,178,94,0.06);
-                box-shadow: 0 -2px 16px rgba(214,178,94,0.04), inset 0 1px 0 rgba(214,178,94,0.06);
             }
             .tab-item.active i {
                 color: #D6B25E;
-                filter: drop-shadow(0 0 6px rgba(214,178,94,0.1));
-            }
-            .tab-item.active::after {
-                content: '';
-                position: absolute;
-                bottom: 0;
-                left: 15%;
-                width: 70%;
-                height: 2px;
-                background: linear-gradient(90deg, transparent, #D6B25E, #F3D38B, #D6B25E, transparent);
-                border-radius: 2px;
-                box-shadow: 0 0 12px rgba(214,178,94,0.15);
             }
             .tab-close {
                 display: flex;
                 align-items: center;
                 justify-content: center;
-                width: 18px;
-                height: 18px;
+                width: 16px;
+                height: 16px;
                 border-radius: 4px;
                 border: none;
                 background: transparent;
                 color: rgba(255,255,255,0.15);
                 cursor: pointer;
-                font-size: 10px;
+                font-size: 9px;
                 transition: 0.2s;
                 padding: 0;
                 margin-left: 2px;
@@ -1325,16 +1444,15 @@ function initTabBar() {
             .tab-close:hover {
                 background: rgba(232,128,128,0.15);
                 color: #e88080;
-                box-shadow: 0 0 12px rgba(232,128,128,0.05);
             }
             .tab-badge {
                 background: #4a7cff;
                 color: #fff;
-                font-size: 9px;
+                font-size: 8px;
                 font-weight: 700;
-                min-width: 16px;
-                height: 16px;
-                padding: 0 5px;
+                min-width: 14px;
+                height: 14px;
+                padding: 0 4px;
                 border-radius: 40px;
                 display: flex;
                 align-items: center;
@@ -1343,46 +1461,94 @@ function initTabBar() {
                 box-shadow: 0 0 12px rgba(74,124,255,0.3);
                 margin-left: 2px;
                 flex-shrink: 0;
-                border: 1px solid rgba(255,255,255,0.06);
             }
             .tab-item.has-notification {
                 color: #F3D38B;
             }
             .tab-item.has-notification i {
                 color: #D6B25E;
-                filter: drop-shadow(0 0 8px rgba(214,178,94,0.08));
             }
-            .tab-add-btn:hover {
-                border-color: rgba(214,178,94,0.2);
-                color: #D6B25E;
-                background: rgba(214,178,94,0.04);
-            }
-            .empty-tab {
-                color: rgba(255,255,255,0.08);
-                font-size: 12px;
-                padding: 0 8px;
-            }
-            .tab-bar-container::-webkit-scrollbar {
+            #tabsWrapper::-webkit-scrollbar {
                 height: 2px;
             }
-            .tab-bar-container::-webkit-scrollbar-thumb {
+            #tabsWrapper::-webkit-scrollbar-thumb {
                 background: rgba(214,178,94,0.15);
                 border-radius: 4px;
+            }
+            #tabsWrapper::-webkit-scrollbar-track {
+                background: transparent;
+            }
+            #notificationList::-webkit-scrollbar {
+                width: 3px;
+            }
+            #notificationList::-webkit-scrollbar-thumb {
+                background: rgba(200,176,144,0.12);
+                border-radius: 4px;
+            }
+            .notification-item:hover {
+                background: rgba(255,255,255,0.04) !important;
             }
         `;
         document.head.appendChild(newStyle);
     }
 
+    // ============================================================
+    // 事件绑定
+    // ============================================================
+
+    // Notification 按钮点击
+    notifBtn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        if (dropdown.style.display === 'block') {
+            dropdown.style.display = 'none';
+        } else {
+            dropdown.style.display = 'block';
+            if (typeof updateNotificationUI === 'function') {
+                updateNotificationUI();
+            }
+        }
+    });
+
+    // 点击外部关闭 dropdown
+    document.addEventListener('click', function(e) {
+        if (notifWrapper && !notifWrapper.contains(e.target)) {
+            dropdown.style.display = 'none';
+        }
+    });
+
+    // Clear All 按钮
+    const clearBtn = dropdown.querySelector('#clearAllNotificationsBtn');
+    if (clearBtn) {
+        clearBtn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            if (typeof showConfirm === 'function') {
+                showConfirm('Clear All Notifications', 'Are you sure you want to clear all notifications?', function() {
+                    if (typeof window.clearAllNotifications === 'function') {
+                        window.clearAllNotifications();
+                    }
+                    dropdown.style.display = 'none';
+                });
+            } else {
+                if (typeof window.clearAllNotifications === 'function') {
+                    window.clearAllNotifications();
+                }
+                dropdown.style.display = 'none';
+            }
+        });
+    }
+
+    // 添加 Tab 按钮
     addBtn.addEventListener('click', function() {
         const pageIds = Object.keys(PAGE_DEFS);
         const available = pageIds.filter(id => !tabs.some(t => t.pageId === id));
         if (available.length === 0) {
-            showToast('所有页面都已打开！', 'info');
+            if (typeof showToast === 'function') showToast('所有页面都已打开！', 'info');
             return;
         }
         openTab(available[0]);
     });
 
+    // 键盘快捷键 Ctrl+W 关闭标签
     document.addEventListener('keydown', function(e) {
         if ((e.ctrlKey || e.metaKey) && e.key === 'w') {
             const activeTab = tabs.find(t => t.id === activeTabId);
@@ -1393,9 +1559,10 @@ function initTabBar() {
         }
     });
 
+    // 初始打开 Dashboard
     openTab('dashboard');
 
-    console.log('✅ 全局 Tab 标签栏已初始化');
+    console.log('✅ 全局 Tab 标签栏已初始化（含 Notification 按钮）');
     console.log('💡 快捷键: Ctrl+W 关闭当前标签');
 }
 
