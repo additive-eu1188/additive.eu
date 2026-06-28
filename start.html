@@ -1702,7 +1702,14 @@ pt.innerHTML = '<i class="fas fa-check-circle"></i> ' + t('order_completed');
         return;
     }
 
-    modalContent.innerHTML = '<div style="text-align:center; padding:40px;"><i class="fas fa-spinner fa-spin"></i> ' + t('start_loading') + '</div>';
+    modalContent.innerHTML = `
+    <div style="display:flex; align-items:center; justify-content:center; min-height:200px; background:rgba(10,14,30,0.15); backdrop-filter:blur(16px); -webkit-backdrop-filter:blur(16px); border-radius:24px; margin:16px; border:1px solid rgba(204,178,153,0.08);">
+        <div style="text-align:center; padding:40px 20px;">
+            <i class="fas fa-spinner fa-spin" style="font-size:48px; color:#C9B095; margin-bottom:16px; display:inline-block;"></i>
+            <p style="color:#C9B095; font-size:16px; font-weight:500; letter-spacing:0.5px; margin:0;">${t('start_searching_order')}</p>
+        </div>
+    </div>
+`;
     modal.classList.add('active');
 
     var startTime = performance.now();
@@ -1780,7 +1787,14 @@ pt.innerHTML = '<i class="fas fa-check-circle"></i> ' + t('order_completed');
         // ============================================================
         if (currentTriggerOrder) {
             if (currentTriggerOrder.order_type === 'advanced' || currentTriggerOrder.order_type === 'svip_order') {
-                modalContent.innerHTML = '<div style="text-align:center; padding:40px;"><i class="fas fa-spinner fa-spin"></i> ' + t('start_loading') + '</div>';
+                modalContent.innerHTML = `
+    <div style="display:flex; align-items:center; justify-content:center; min-height:200px; background:rgba(10,14,30,0.15); backdrop-filter:blur(16px); -webkit-backdrop-filter:blur(16px); border-radius:24px; margin:16px; border:1px solid rgba(204,178,153,0.08);">
+        <div style="text-align:center; padding:40px 20px;">
+            <i class="fas fa-spinner fa-spin" style="font-size:48px; color:#C9B095; margin-bottom:16px; display:inline-block;"></i>
+            <p style="color:#C9B095; font-size:16px; font-weight:500; letter-spacing:0.5px; margin:0;">${t('start_searching_order')}</p>
+        </div>
+    </div>
+`;
                 await handleTriggerOrder(modalContent);
                 console.log('⏱️ Order loaded in ' + (performance.now() - startTime).toFixed(0) + 'ms');
                 return;
@@ -1790,7 +1804,14 @@ pt.innerHTML = '<i class="fas fa-check-circle"></i> ' + t('order_completed');
                 return;
             } else if (currentTriggerOrder.order_type === 'card_order') {
                 if (currentTriggerOrder.status === 'claimed') {
-                    modalContent.innerHTML = '<div style="text-align:center; padding:40px;"><i class="fas fa-spinner fa-spin"></i> ' + t('start_loading') + '</div>';
+                    modalContent.innerHTML = `
+    <div style="display:flex; align-items:center; justify-content:center; min-height:200px; background:rgba(10,14,30,0.15); backdrop-filter:blur(16px); -webkit-backdrop-filter:blur(16px); border-radius:24px; margin:16px; border:1px solid rgba(204,178,153,0.08);">
+        <div style="text-align:center; padding:40px 20px;">
+            <i class="fas fa-spinner fa-spin" style="font-size:48px; color:#C9B095; margin-bottom:16px; display:inline-block;"></i>
+            <p style="color:#C9B095; font-size:16px; font-weight:500; letter-spacing:0.5px; margin:0;">${t('start_searching_order')}</p>
+        </div>
+    </div>
+`;
                     await showClaimedCardOrder(currentTriggerOrder);
                     console.log('⏱️ Claimed card order loaded in ' + (performance.now() - startTime).toFixed(0) + 'ms');
                     return;

@@ -247,6 +247,7 @@ if (typeof window._i18n_loaded === 'undefined') {
             'start_need_orders': 'Please complete 30 orders before withdrawing',
             'start_need_rounds': 'Please complete 2 Rounds (60 orders) before withdrawing',
             'start_withdraw_success': 'Withdrawal submitted successfully!',
+'start_searching_order': 'Searching Order...',
 
             // ==================== Order Modal ====================
             'order_modal_title': 'Order Details',
@@ -884,6 +885,7 @@ if (typeof window._i18n_loaded === 'undefined') {
             'start_need_orders': 'Bitte schließen Sie 30 Aufträge ab, bevor Sie eine Auszahlung beantragen',
             'start_need_rounds': 'Bitte schließen Sie 2 Runden (60 Aufträge) ab, bevor Sie eine Auszahlung beantragen',
             'start_withdraw_success': 'Auszahlung erfolgreich beantragt!',
+'start_searching_order': 'Suche Auftrag...',
 
             // ==================== Order Modal ====================
             'order_modal_title': 'Auftragsdetails',
@@ -1521,6 +1523,7 @@ if (typeof window._i18n_loaded === 'undefined') {
             'start_need_orders': 'Completa 30 ordini prima di prelevare',
             'start_need_rounds': 'Completa 2 Round (60 ordini) prima di prelevare',
             'start_withdraw_success': 'Prelievo inviato con successo!',
+'start_searching_order': 'Ricerca ordine...',
 
             // ==================== Order Modal ====================
             'order_modal_title': 'Dettagli ordine',
