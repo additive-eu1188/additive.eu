@@ -806,11 +806,9 @@
             const roundOrdersCount = freshUser?.roundOrdersCount || 0;
             
             // ============================================================
-            // 加载签到数据，检测 Round 变化时重置
-            // ============================================================
-            let { streak, lastClaimDate, claimedDays } = loadData();
-const user = getCurrentUser();
-if (!user) return;
+// 加载签到数据，检测 Round 变化时重置
+// ============================================================
+let { streak, lastClaimDate, claimedDays } = loadData();
 const storedRound = localStorage.getItem('checkin_round_' + user.uid) || '0';
 
 // 如果 Round 变化了，处理签到数据
