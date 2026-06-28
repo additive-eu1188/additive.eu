@@ -1328,10 +1328,14 @@ function closeTab(tabId) {
 }
 
 // ============================================================
-// 🔥 初始化 Tab Bar（带全局通知按钮）
+// 🔥 初始化 Tab Bar（带全局通知按钮）- 修复版
 // ============================================================
 function initTabBar() {
-    if (document.getElementById('tabBarContainer')) return;
+    if (document.getElementById('tabBarContainer')) {
+        // 如果已存在，只更新通知角标
+        updateGlobalNotificationBadge();
+        return;
+    }
 
     const main = document.querySelector('.main');
     if (!main) {
@@ -1364,31 +1368,51 @@ function initTabBar() {
     `;
 
     // ============================================================
+    // 🔥 左侧：Tab 列表区域（用于动态插入 tab 标签）
+    // ============================================================
+    const tabsWrapper = document.createElement('div');
+    tabsWrapper.id = 'tabsWrapper';
+    tabsWrapper.style.cssText = `
+        display: flex;
+        align-items: center;
+        gap: 2px;
+        flex: 1;
+        overflow-x: auto;
+        overflow-y: hidden;
+        scrollbar-width: thin;
+        height: 100%;
+    `;
+    container.appendChild(tabsWrapper);
+
+    // ============================================================
     // 🔥 右侧：通知按钮 + 添加按钮
     // ============================================================
     const rightWrapper = document.createElement('div');
+    rightWrapper.id = 'tabBarRightWrapper';
     rightWrapper.style.cssText = `
         display: flex;
         align-items: center;
         gap: 6px;
         flex-shrink: 0;
         margin-left: auto;
+        padding-left: 8px;
+        height: 100%;
     `;
 
-    // 通知按钮
+    // ---- 通知按钮 ----
     const notifContainer = document.createElement('div');
     notifContainer.id = 'globalNotificationContainer';
     notifContainer.style.cssText = `
         position: relative;
         display: flex;
         align-items: center;
+        height: 100%;
     `;
 
     const notifBtn = document.createElement('button');
     notifBtn.id = 'globalNotificationBtn';
     notifBtn.className = 'tab-notif-btn';
-    notifBtn.innerHTML = '<i class="fas fa-bell"></i>';
-    notifBtn.title = '通知';
+    notifBtn.setAttribute('aria-label', '通知');
     notifBtn.style.cssText = `
         display: flex;
         align-items: center;
@@ -1406,6 +1430,8 @@ function initTabBar() {
         font-family: 'Inter', sans-serif;
         position: relative;
     `;
+    notifBtn.innerHTML = '<i class="fas fa-bell"></i>';
+    
     notifBtn.addEventListener('mouseenter', function() {
         this.style.borderColor = 'rgba(214,178,94,0.2)';
         this.style.color = '#D6B25E';
@@ -1444,6 +1470,7 @@ function initTabBar() {
         line-height: 1;
         z-index: 2;
     `;
+    badge.textContent = '0';
     notifBtn.appendChild(badge);
 
     // 通知下拉
@@ -1452,7 +1479,7 @@ function initTabBar() {
     dropdown.style.cssText = `
         display: none;
         position: absolute;
-        top: 40px;
+        top: 42px;
         right: 0;
         width: 400px;
         max-height: 500px;
@@ -1495,7 +1522,7 @@ function initTabBar() {
     notifContainer.appendChild(dropdown);
     rightWrapper.appendChild(notifContainer);
 
-    // 添加 Tab 按钮
+    // ---- 添加 Tab 按钮 ----
     const addBtn = document.createElement('button');
     addBtn.id = 'addTabBtn';
     addBtn.className = 'tab-add-btn';
@@ -1541,42 +1568,47 @@ function initTabBar() {
     container.appendChild(rightWrapper);
 
     // ============================================================
-    // 🔥 绑定通知按钮事件
+    // 🔥 绑定通知按钮事件（延迟绑定，确保 DOM 已存在）
     // ============================================================
-    const markAllBtn = dropdown.querySelector('#markAllReadBtn');
-    if (markAllBtn) {
-        markAllBtn.addEventListener('click', function(e) {
-            e.stopPropagation();
-            if (typeof window.markAllNotificationsRead === 'function') {
-                window.markAllNotificationsRead();
-            }
-        });
-        markAllBtn.addEventListener('mouseenter', function() {
-            this.style.background = 'rgba(74, 124, 255, 0.12)';
-        });
-        markAllBtn.addEventListener('mouseleave', function() {
-            this.style.background = 'rgba(74, 124, 255, 0.06)';
-        });
-    }
+    setTimeout(function() {
+        const markAllBtn = dropdown.querySelector('#markAllReadBtn');
+        if (markAllBtn) {
+            markAllBtn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                if (typeof window.markAllNotificationsRead === 'function') {
+                    window.markAllNotificationsRead();
+                }
+            });
+            markAllBtn.addEventListener('mouseenter', function() {
+                this.style.background = 'rgba(74, 124, 255, 0.12)';
+            });
+            markAllBtn.addEventListener('mouseleave', function() {
+                this.style.background = 'rgba(74, 124, 255, 0.06)';
+            });
+        }
 
-    const clearBtn = dropdown.querySelector('#clearAllNotificationsBtn');
-    if (clearBtn) {
-        clearBtn.addEventListener('click', function(e) {
-            e.stopPropagation();
-            if (typeof showConfirm === 'function') {
-                showConfirm('Clear All Notifications', 'Are you sure you want to clear all notifications?', function() {
+        const clearBtn = dropdown.querySelector('#clearAllNotificationsBtn');
+        if (clearBtn) {
+            clearBtn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                if (typeof showConfirm === 'function') {
+                    showConfirm('Clear All Notifications', 'Are you sure you want to clear all notifications?', function() {
+                        if (typeof window.clearAllNotifications === 'function') {
+                            window.clearAllNotifications();
+                        }
+                    });
+                } else {
                     if (typeof window.clearAllNotifications === 'function') {
                         window.clearAllNotifications();
                     }
-                });
-            } else {
-                if (typeof window.clearAllNotifications === 'function') {
-                    window.clearAllNotifications();
                 }
-            }
-        });
-    }
+            });
+        }
+    }, 100);
 
+    // ============================================================
+    // 🔥 插入到 main 顶部
+    // ============================================================
     main.insertBefore(container, main.firstChild);
 
     // ============================================================
@@ -1737,6 +1769,13 @@ function initTabBar() {
             }
             #notificationList::-webkit-scrollbar-track {
                 background: transparent;
+            }
+            /* 空状态占位 */
+            #tabsWrapper:empty::after {
+                content: '点击侧边栏打开页面';
+                color: rgba(255,255,255,0.08);
+                font-size: 12px;
+                padding: 0 8px;
             }
         `;
         document.head.appendChild(newStyle);
