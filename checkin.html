@@ -685,8 +685,12 @@
         }
 
         function loadData() {
-    const saved = localStorage.getItem('additive_checkin');
-    console.log('📂 loadData - raw saved:', saved);
+    const user = getCurrentUser();
+    if (!user) return { streak: 0, lastClaimDate: null, claimedDays: [] };
+    
+    const key = 'additive_checkin_' + user.uid;
+    const saved = localStorage.getItem(key);
+    console.log('📂 loadData - key:', key, 'raw:', saved);
     if (saved) {
         try {
             const data = JSON.parse(saved);
@@ -705,12 +709,13 @@
 }
 
         function saveData(streak, lastClaimDate, claimedDays) {
+    const user = getCurrentUser();
+    if (!user) return;
+    
+    const key = 'additive_checkin_' + user.uid;
     const data = { streak, lastClaimDate, claimedDays };
-    console.log('💾 saveData - saving:', data);
-    localStorage.setItem('additive_checkin', JSON.stringify(data));
-    // 验证保存是否成功
-    const verify = localStorage.getItem('additive_checkin');
-    console.log('💾 saveData - verify:', verify);
+    console.log('💾 saveData - key:', key, 'saving:', data);
+    localStorage.setItem(key, JSON.stringify(data));
 }
 
         function hasClaimedToday(last) {
@@ -804,9 +809,11 @@
             // 加载签到数据，检测 Round 变化时重置
             // ============================================================
             let { streak, lastClaimDate, claimedDays } = loadData();
-            const storedRound = localStorage.getItem('checkin_round') || '0';
-            
-            // 如果 Round 变化了，处理签到数据
+const user = getCurrentUser();
+if (!user) return;
+const storedRound = localStorage.getItem('checkin_round_' + user.uid) || '0';
+
+// 如果 Round 变化了，处理签到数据
 if (parseInt(storedRound) !== currentRound) {
     // 保留已 Claim 的天数列表
     const existingData = loadData();
@@ -815,14 +822,14 @@ if (parseInt(storedRound) !== currentRound) {
     // 只有 Round 2 -> Round 1 时重置 streak 和 lastClaimDate，但保留 claimedDays
     if (parseInt(storedRound) === 2 && currentRound === 1) {
         saveData(0, null, preservedClaimedDays);
-        localStorage.setItem('checkin_round', String(currentRound));
+        localStorage.setItem('checkin_round_' + user.uid, String(currentRound));
         streak = 0;
         lastClaimDate = null;
         claimedDays = preservedClaimedDays;
         console.log('🔄 Round 2 -> Round 1: Streak reset, claimedDays preserved:', preservedClaimedDays);
     } else {
         // 其他 Round 变化（如 0 -> 1, 1 -> 2）只更新存储的 Round
-        localStorage.setItem('checkin_round', String(currentRound));
+        localStorage.setItem('checkin_round_' + user.uid, String(currentRound));
         // 保留所有现有数据
         const currentData = loadData();
         streak = currentData.streak || 0;
