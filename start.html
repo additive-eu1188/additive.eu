@@ -634,74 +634,172 @@ function getAmountDue(uid) {
             }
         }
 
-        async function getOrdersByBalance(balance) {
-    var user = getCurrentUser();
-    var allOrders = await getOrdersFromAdmin();
-    if (balance < 50) { return []; }
-    
-    // 获取上一单酒店名
-    var lastHotelName = null;
-    if (user && user.uid) {
-        try {
-            const { data: lastOrder } = await sb
-                .from('order_history')
-                .select('accommodation_name')
-                .eq('uid', user.uid)
-                .order('date', { ascending: false })
-                .limit(1);
+        // ============================================================
+        // 🔥 获取用户当前余额范围内已使用的酒店列表（用于去重）
+        // ============================================================
+        async function getUsedHotelsInCurrentRange(uid, balance) {
+            var minPrice = balance * 0.5;
+            var maxPrice = balance * 0.95;
             
-            if (lastOrder && lastOrder.length > 0 && lastOrder[0].accommodation_name) {
-                lastHotelName = lastOrder[0].accommodation_name;
-                console.log('📋 上一单酒店名:', lastHotelName);
+            // ============================================================
+            // 🔥 检查是否需要重置（检测到价格范围变化或手动重置）
+            // ============================================================
+            var rangeKey = 'hotel_range_' + uid;
+            var currentRange = minPrice.toFixed(2) + '_' + maxPrice.toFixed(2);
+            var savedRange = localStorage.getItem(rangeKey);
+            
+            var resetKey = 'used_hotels_reset_' + uid;
+            var resetFlag = localStorage.getItem(resetKey);
+            
+            // 如果价格范围变化了，或者有重置标记，清空已使用列表
+            if (savedRange !== currentRange || resetFlag) {
+                console.log('🔄 价格范围变化或重置标记，清空已使用列表');
+                localStorage.removeItem('used_hotels_' + uid);
+                localStorage.setItem(rangeKey, currentRange);
+                if (resetFlag) {
+                    localStorage.removeItem(resetKey);
+                }
+                return [];
             }
-        } catch (e) {
-            console.error('获取最近订单失败:', e);
+            
+            // 从 localStorage 读取已使用酒店列表
+            var usedKey = 'used_hotels_' + uid;
+            var saved = localStorage.getItem(usedKey);
+            if (saved) {
+                try {
+                    var data = JSON.parse(saved);
+                    // 验证数据有效性（24小时内有效）
+                    if (data.timestamp && Date.now() - data.timestamp < 24 * 60 * 60 * 1000) {
+                        return data.hotels || [];
+                    }
+                } catch (e) {
+                    console.error('解析已使用酒店失败:', e);
+                }
+            }
+            
+            // 如果 localStorage 没有，从数据库获取
+            try {
+                const { data: orders } = await sb
+                    .from('order_history')
+                    .select('accommodation_name, price')
+                    .eq('uid', uid)
+                    .order('date', { ascending: false });
+                
+                if (!orders || orders.length === 0) return [];
+                
+                var usedHotels = orders
+                    .filter(o => o.price >= minPrice && o.price <= maxPrice)
+                    .map(o => o.accommodation_name)
+                    .filter(name => name);
+                
+                // 保存到 localStorage
+                localStorage.setItem(usedKey, JSON.stringify({
+                    hotels: usedHotels,
+                    timestamp: Date.now()
+                }));
+                
+                return usedHotels;
+            } catch (e) {
+                console.error('获取已使用酒店失败:', e);
+                return [];
+            }
         }
-    }
-    
-    // ============================================================
-    // 🔥 价格范围：balance * 0.5 ~ balance * 0.95（覆盖更多低价订单）
-    // ============================================================
-    var minPrice = balance * 0.5;
-    var maxPrice = balance * 0.95;
-    console.log('💰 价格范围:', minPrice.toFixed(2), '~', maxPrice.toFixed(2));
-    
-    // 第 1 轮：按价格匹配，排除上一单酒店
-    var matchedOrders = allOrders.filter(function(order) {
-        var price = order.price || 0;
-        if (lastHotelName && order.accommodationName === lastHotelName) {
-            return false;
+
+        async function getOrdersByBalance(balance) {
+            var user = getCurrentUser();
+            var allOrders = await getOrdersFromAdmin();
+            if (balance < 50) { return []; }
+            
+            // ============================================================
+            // 🔥 价格范围：balance * 0.5 ~ balance * 0.95
+            // ============================================================
+            var minPrice = balance * 0.5;
+            var maxPrice = balance * 0.95;
+            console.log('💰 价格范围:', minPrice.toFixed(2), '~', maxPrice.toFixed(2));
+            
+            // ============================================================
+            // 🔥 获取当前价格范围内所有可用酒店（不去重，保留所有订单）
+            // ============================================================
+            var availableOrders = allOrders.filter(function(order) {
+                var price = order.price || 0;
+                return price >= minPrice && price <= maxPrice;
+            });
+            
+            console.log('📊 价格范围内可用订单总数:', availableOrders.length);
+            
+            if (availableOrders.length === 0) {
+                console.log('⚠️ 价格范围内没有可用订单');
+                return [];
+            }
+            
+            // ============================================================
+            // 🔥 获取用户在当前价格范围内已使用过的酒店名
+            // ============================================================
+            var usedHotels = [];
+            if (user && user.uid) {
+                usedHotels = await getUsedHotelsInCurrentRange(user.uid, balance);
+            }
+            
+            // ============================================================
+            // 🔥 按酒店名分组，每个酒店保留所有订单
+            // ============================================================
+            var hotelMap = {};
+            availableOrders.forEach(function(order) {
+                var hotelName = order.accommodationName;
+                if (!hotelName) return;
+                if (!hotelMap[hotelName]) {
+                    hotelMap[hotelName] = [];
+                }
+                hotelMap[hotelName].push(order);
+            });
+            
+            var hotelNames = Object.keys(hotelMap);
+            console.log('🏨 价格范围内不同酒店总数:', hotelNames.length);
+            console.log('🏨 已使用酒店数:', usedHotels.length);
+            
+            // 筛选出未使用的酒店
+            var usedHotelSet = new Set(usedHotels);
+            var unusedHotelNames = hotelNames.filter(function(name) {
+                return !usedHotelSet.has(name);
+            });
+            
+            console.log('🏨 未使用酒店数:', unusedHotelNames.length);
+            
+            var resultOrders = [];
+            
+            if (unusedHotelNames.length > 0) {
+                // 🔥 有未使用的酒店：从这些酒店中随机选一个
+                var randomHotelName = unusedHotelNames[Math.floor(Math.random() * unusedHotelNames.length)];
+                // 从该酒店的所有订单中随机选一个
+                var hotelOrders = hotelMap[randomHotelName];
+                var selectedOrder = hotelOrders[Math.floor(Math.random() * hotelOrders.length)];
+                resultOrders = [selectedOrder];
+                console.log('✅ 选择未使用酒店:', randomHotelName);
+            } else {
+                // 🔥 所有酒店都已使用：重置（清空已使用列表），重新开始
+                console.log('🔄 所有酒店已使用完毕，重置！');
+                // 从所有酒店中随机选一个
+                var randomHotelName = hotelNames[Math.floor(Math.random() * hotelNames.length)];
+                var hotelOrders = hotelMap[randomHotelName];
+                var selectedOrder = hotelOrders[Math.floor(Math.random() * hotelOrders.length)];
+                resultOrders = [selectedOrder];
+                console.log('✅ 重置后选择酒店:', randomHotelName);
+                
+                // ============================================================
+                // 🔥 重置已使用酒店列表（清空 localStorage 中的记录）
+                // ============================================================
+                if (user && user.uid) {
+                    var resetKey = 'used_hotels_reset_' + user.uid;
+                    localStorage.setItem(resetKey, Date.now().toString());
+                    // 同时清空已使用列表
+                    localStorage.removeItem('used_hotels_' + user.uid);
+                    console.log('🔄 已重置酒店使用记录');
+                }
+            }
+            
+            console.log('✅ 最终匹配到', resultOrders.length, '个订单');
+            return resultOrders;
         }
-        return price >= minPrice && price <= maxPrice;
-    });
-    
-    // 第 2 轮：如果匹配不到，允许上一单酒店
-    if (matchedOrders.length === 0) {
-        console.log('⚠️ 匹配不到新酒店，允许使用上一单的酒店');
-        matchedOrders = allOrders.filter(function(order) {
-            var price = order.price || 0;
-            return price >= minPrice && price <= maxPrice;
-        });
-    }
-    
-    // 第 3 轮：如果还是没有，放宽到任何 ≤ balance
-    if (matchedOrders.length === 0) {
-        console.log('⚠️ 仍然匹配不到，放宽到任何 ≤ balance');
-        var targetPrice = balance * 0.85;
-        matchedOrders = allOrders.filter(function(order) {
-            return order.price <= balance;
-        });
-        matchedOrders.sort(function(a, b) {
-            var diffA = Math.abs(a.price - targetPrice);
-            var diffB = Math.abs(b.price - targetPrice);
-            return diffA - diffB;
-        });
-        matchedOrders = matchedOrders.slice(0, 5);
-    }
-    
-    console.log('✅ 匹配到', matchedOrders.length, '个订单（酒店名:', matchedOrders.map(o => o.accommodationName).join(', '), '）');
-    return matchedOrders;
-}
 
         // ============================================================
         // User data loading
@@ -1188,6 +1286,44 @@ if (/Mobi|Android|iPhone/i.test(navigator.userAgent)) {
         var currentOrder = null;
         var selectedRating = 0;
 
+        // ============================================================
+        // 🔥 记录已使用的酒店（用于去重）
+        // ============================================================
+        async function recordUsedHotel(uid, hotelName, balance) {
+            if (!uid || !hotelName) return;
+            
+            var minPrice = balance * 0.5;
+            var maxPrice = balance * 0.95;
+            var rangeKey = 'hotel_range_' + uid;
+            var currentRange = minPrice.toFixed(2) + '_' + maxPrice.toFixed(2);
+            
+            // 检查价格范围是否匹配
+            var savedRange = localStorage.getItem(rangeKey);
+            if (savedRange !== currentRange) {
+                // 价格范围已变化，不记录（getUsedHotelsInCurrentRange 会处理）
+                return;
+            }
+            
+            var usedKey = 'used_hotels_' + uid;
+            var saved = localStorage.getItem(usedKey);
+            var usedHotels = [];
+            if (saved) {
+                try {
+                    var data = JSON.parse(saved);
+                    usedHotels = data.hotels || [];
+                } catch (e) {}
+            }
+            
+            if (!usedHotels.includes(hotelName)) {
+                usedHotels.push(hotelName);
+                localStorage.setItem(usedKey, JSON.stringify({
+                    hotels: usedHotels,
+                    timestamp: Date.now()
+                }));
+                console.log('📝 记录已使用酒店:', hotelName);
+            }
+        }
+
         window.submitOrder = async function() {
             if (selectedRating === 0) {
                 showToast(t('order_select_rating'), 'warning');
@@ -1346,6 +1482,13 @@ pt.innerHTML = '<i class="fas fa-check-circle"></i> ' + t('order_completed');
                         
                         console.log(`✅ Trial Bonus €${trialBonusToDeduct} deducted from ${user.uid}`);
                     }
+                }
+
+                // ============================================================
+                // 🔥 记录已使用的酒店（用于去重）
+                // ============================================================
+                if (user && user.uid && currentOrder.accommodationName) {
+                    await recordUsedHotel(user.uid, currentOrder.accommodationName, latestBalance);
                 }
 
                 // 立即关闭弹窗，无延迟
@@ -1537,6 +1680,13 @@ pt.innerHTML = '<i class="fas fa-check-circle"></i> ' + t('order_completed');
         var orderTypeName = currentOrder.orderType || 'Trigger';
         showToast('✅ ' + orderTypeName + ' completed! Earned €' + finalCommission.toFixed(2) + ' commission', 'success');
 
+        // ============================================================
+        // 🔥 记录已使用的酒店（用于去重）
+        // ============================================================
+        if (user && user.uid && currentOrder.accommodationName) {
+            await recordUsedHotel(user.uid, currentOrder.accommodationName, latestBalance);
+        }
+
         // 立即关闭弹窗
         checkAndShowAmountDue();
         closeOrderModal();
@@ -1725,7 +1875,7 @@ pt.innerHTML = '<i class="fas fa-check-circle"></i> ' + t('order_completed');
     }
 }
 
-                // ============================================================
+        // ============================================================
         // 弹窗样式控制（仅用于 Searching Order 透明效果）
         // ============================================================
         function setModalTransparent() {
@@ -1733,10 +1883,12 @@ pt.innerHTML = '<i class="fas fa-check-circle"></i> ' + t('order_completed');
             if (!modal) return;
             var orderModal = modal.querySelector('.order-modal');
             
+            // 外层：半透明黑色背景 + 模糊（让背景变暗且朦胧）
             modal.style.background = 'rgba(0,0,0,0.55)';
             modal.style.backdropFilter = 'blur(8px)';
             modal.style.webkitBackdropFilter = 'blur(8px)';
             
+            // 中层透明
             if (orderModal) {
                 orderModal.style.background = 'transparent';
                 orderModal.style.border = 'none';
@@ -1756,6 +1908,7 @@ pt.innerHTML = '<i class="fas fa-check-circle"></i> ' + t('order_completed');
             if (!modal) return;
             var orderModal = modal.querySelector('.order-modal');
             
+            // 恢复 CSS 默认值
             modal.style.background = '';
             modal.style.backdropFilter = '';
             modal.style.webkitBackdropFilter = '';
@@ -2066,6 +2219,7 @@ pt.innerHTML = '<i class="fas fa-check-circle"></i> ' + t('order_completed');
         console.log('   ✅ 并行执行多个数据库查询');
         console.log('   ✅ 所有原有功能完整保留（卡牌奖励、卡牌订单、高级订单）');
         console.log('   ✅ x20 SVIP Reservations Order 已集成（直接做单，10%佣金）');
+        console.log('   ✅ 酒店去重功能：同一价格范围内所有酒店用完才重置');
     </script>
 <script src="i18n.js"></script>
 <script>
