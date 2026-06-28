@@ -1632,6 +1632,7 @@ pt.innerHTML = '<i class="fas fa-check-circle"></i> ' + t('order_completed');
 
     const t = window.i18n?.t || function(key) { return key; };
     
+    modalContent.innerHTML =
         '<div class="order-image">' + (order.imageUrl ? '<img src="' + order.imageUrl + '" onerror="handleImageError(this)">' :
             '<i class="fas fa-hotel" style="font-size:56px;color:#C9B095;"></i>') + '</div>' +
         '<div class="order-name">' + (order.accommodationName || 'Hotel Task') + '</div>' +
