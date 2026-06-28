@@ -11,6 +11,7 @@
     <script src="user-data.js"></script>
     <script src="toast.js"></script>
     <style>
+        /* ===== 原有样式 ===== */
         .page-header { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 24px; flex-wrap: wrap; gap: 12px; }
         .page-header h1 { font-size: 28px; font-weight: 700; color: #ffffff; }
         .step-indicator { font-size: 12px; color: #C9B095; background: rgba(201,176,149,0.15); padding: 4px 12px; border-radius: 30px; }
@@ -397,7 +398,11 @@
             line-height: 1;
         }
 
-        /* ===== Step 4 新样式 ===== */
+        /* ============================================================
+           Step 4 新样式 - 玫瑰金借记卡
+           ============================================================ */
+
+        /* Step 4 标题区 */
         .step4-header {
             margin-bottom: 20px;
         }
@@ -412,101 +417,266 @@
             color: #7a85a5;
         }
 
-        /* 借记卡样式 */
-        .debit-card {
-            background: linear-gradient(145deg, #1a1f3a, #0f1428);
-            border-radius: 20px;
-            padding: 20px 24px;
-            border: 1px solid rgba(201, 176, 149, 0.15);
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(201, 176, 149, 0.05);
-            margin-bottom: 20px;
+        /* ===== 玫瑰金借记卡 ===== */
+        .card-rosegold {
+            background: linear-gradient(160deg, #0f0808 0%, #2a1010 25%, #3a1515 45%, #2a1010 65%, #0f0808 100%);
+            border-radius: 24px;
+            padding: 24px 24px 20px 24px;
+            border: 1px solid rgba(201, 149, 149, 0.15);
             position: relative;
-            overflow: hidden;
+            overflow: visible;
+            min-height: 190px;
+            box-shadow:
+                0 20px 60px rgba(0,0,0,0.6),
+                0 0 80px rgba(201,149,149,0.03),
+                inset 0 1px 0 rgba(201,149,149,0.08),
+                inset 0 -1px 0 rgba(0,0,0,0.3);
+            isolation: isolate;
+            margin-bottom: 20px;
         }
-        .debit-card::before {
+
+        /* 背景光晕 */
+        .card-rosegold::before {
             content: '';
             position: absolute;
-            top: -50%;
-            right: -30%;
-            width: 60%;
-            height: 200%;
-            background: radial-gradient(ellipse, rgba(201, 176, 149, 0.03), transparent 70%);
+            top: -20%;
+            left: -10%;
+            width: 65%;
+            height: 80%;
+            background: radial-gradient(ellipse, rgba(201,149,149,0.07), transparent 70%);
             pointer-events: none;
+            border-radius: 50%;
+            z-index: 0;
         }
-        .debit-card .card-header {
+
+        .card-rosegold::after {
+            content: '';
+            position: absolute;
+            bottom: -30%;
+            right: -20%;
+            width: 50%;
+            height: 60%;
+            background: radial-gradient(ellipse, rgba(201,149,149,0.04), transparent 70%);
+            pointer-events: none;
+            border-radius: 50%;
+            z-index: 0;
+        }
+
+        /* 右上角发光圆点 */
+        .pulse-dot-wrapper {
+            position: absolute;
+            top: 18px;
+            right: 20px;
+            z-index: 5;
+            width: 28px;
+            height: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .pulse-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: radial-gradient(circle at 30% 30%, #e8c0c0, #d4a0a0, #b08080);
+            box-shadow: 0 0 12px rgba(201,149,149,0.3), inset 0 1px 0 rgba(255,255,255,0.15);
+            position: relative;
+            z-index: 2;
+            flex-shrink: 0;
+        }
+
+        .pulse-ring {
+            position: absolute;
+            border-radius: 50%;
+            border: 1px solid rgba(201, 149, 149, 0.15);
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            animation: pulseRing 3s ease-out infinite;
+            opacity: 0;
+        }
+
+        .pulse-ring:nth-child(2) { animation-delay: 1s; }
+        .pulse-ring:nth-child(3) { animation-delay: 2s; }
+
+        @keyframes pulseRing {
+            0% {
+                transform: scale(0.8);
+                opacity: 0.8;
+                border-color: rgba(201,149,149,0.25);
+            }
+            100% {
+                transform: scale(1.8);
+                opacity: 0;
+                border-color: rgba(201,149,149,0);
+            }
+        }
+
+        /* 卡片头部 */
+        .card-rosegold .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 14px;
+            position: relative;
+            z-index: 1;
+        }
+        .card-rosegold .card-header .left {
             display: flex;
             align-items: center;
             gap: 10px;
-            margin-bottom: 16px;
+        }
+        .card-rosegold .card-header .left i {
+            font-size: 18px;
+            color: #d4a0a0;
+            filter: drop-shadow(0 0 8px rgba(201,149,149,0.08));
+        }
+        .card-rosegold .card-header .left span {
+            font-size: 9px;
+            color: #a08080;
+            letter-spacing: 1.8px;
+            font-weight: 600;
+            text-shadow: 0 1px 4px rgba(0,0,0,0.3);
+        }
+        .card-rosegold .card-header .ring {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            border: 1.5px solid rgba(201,149,149,0.12);
             position: relative;
-            z-index: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0.6;
         }
-        .debit-card .card-header .chip-icon {
-            font-size: 28px;
-            color: #C9B095;
+        .card-rosegold .card-header .ring::after {
+            content: '';
+            position: absolute;
+            top: 5px;
+            left: 5px;
+            right: 5px;
+            bottom: 5px;
+            border-radius: 50%;
+            border: 1px solid rgba(201,149,149,0.06);
         }
-        .debit-card .card-header .card-title {
-            font-size: 11px;
-            color: #8892a8;
-            text-transform: uppercase;
-            letter-spacing: 0.8px;
-        }
-        .debit-card .card-address {
+
+        /* 地址 - 3D金属质感，无边框 */
+        .card-rosegold .card-address {
             font-family: 'Courier New', monospace;
             font-size: 14px;
-            color: #d8e0f0;
-            background: rgba(0, 0, 0, 0.3);
-            border-radius: 10px;
-            padding: 10px 14px;
-            margin-bottom: 16px;
-            word-break: break-all;
+            color: #e8d0d0;
             position: relative;
             z-index: 1;
-            border: 1px solid rgba(255, 255, 255, 0.03);
+            word-break: break-all;
+            letter-spacing: 0.5px;
+            padding: 4px 0 8px 0;
+            text-shadow:
+                0 1px 0 rgba(201,149,149,0.15),
+                0 2px 4px rgba(0,0,0,0.5),
+                0 4px 8px rgba(0,0,0,0.3),
+                0 0 20px rgba(201,149,149,0.04);
+            font-weight: 500;
+            background: linear-gradient(180deg, #f0e0e0 0%, #e8d0d0 35%, #d0b0b0 65%, #c0a0a0 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3)) drop-shadow(0 0 20px rgba(201,149,149,0.04));
+            line-height: 1.6;
         }
-        .debit-card .card-footer {
+
+        /* 分隔线 */
+        .card-rosegold .card-divider {
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(201,149,149,0.08), rgba(201,149,149,0.15), rgba(201,149,149,0.08), transparent);
+            margin: 6px 0 12px 0;
+            position: relative;
+            z-index: 1;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+        }
+
+        /* 底部 - User + Balance */
+        .card-rosegold .card-footer {
             display: flex;
             justify-content: space-between;
             align-items: flex-end;
             position: relative;
             z-index: 1;
-            flex-wrap: wrap;
-            gap: 8px;
         }
-        .debit-card .card-footer .user-info {
-            display: flex;
-            flex-direction: column;
-            gap: 2px;
-        }
-        .debit-card .card-footer .user-info .label {
-            font-size: 9px;
-            color: #5a6a82;
+        .card-rosegold .card-footer .user-section .label {
+            font-size: 8px;
+            color: #6a4a4a;
             text-transform: uppercase;
-            letter-spacing: 0.8px;
-        }
-        .debit-card .card-footer .user-info .value {
-            font-size: 16px;
+            letter-spacing: 1.2px;
             font-weight: 600;
-            color: #e8eef5;
         }
-        .debit-card .card-footer .balance-info {
+        .card-rosegold .card-footer .user-section .label i {
+            margin-right: 4px;
+            font-size: 9px;
+            color: #6a4a4a;
+        }
+        .card-rosegold .card-footer .user-section .value {
+            font-size: 15px;
+            font-weight: 600;
+            color: #e8d0d0;
+            margin-top: 3px;
+            text-shadow: 0 1px 4px rgba(0,0,0,0.3);
+        }
+        .card-rosegold .card-footer .balance-section {
             text-align: right;
         }
-        .debit-card .card-footer .balance-info .label {
-            font-size: 9px;
-            color: #5a6a82;
+        .card-rosegold .card-footer .balance-section .label {
+            font-size: 8px;
+            color: #6a4a4a;
             text-transform: uppercase;
-            letter-spacing: 0.8px;
+            letter-spacing: 1.2px;
+            font-weight: 600;
         }
-        .debit-card .card-footer .balance-info .value {
-            font-size: 22px;
+        .card-rosegold .card-footer .balance-section .label i {
+            margin-right: 4px;
+            font-size: 9px;
+            color: #6a4a4a;
+        }
+        .card-rosegold .card-footer .balance-section .value {
+            font-size: 24px;
             font-weight: 700;
-            color: #C9B095;
+            background: linear-gradient(135deg, #e8c0c0 0%, #d4a0a0 40%, #c08080 70%, #d4a0a0 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-top: 3px;
+            text-shadow: 0 2px 12px rgba(201,149,149,0.08);
+            letter-spacing: -0.5px;
         }
 
-        /* Amount 输入区 */
+        /* 装饰光晕 */
+        .card-rosegold .glow-orb {
+            position: absolute;
+            bottom: -20px;
+            right: -20px;
+            width: 140px;
+            height: 140px;
+            background: radial-gradient(circle, rgba(201,149,149,0.04), transparent 70%);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 0;
+        }
+        .card-rosegold .glow-orb-top {
+            position: absolute;
+            top: -30px;
+            left: -30px;
+            width: 100px;
+            height: 100px;
+            background: radial-gradient(circle, rgba(201,149,149,0.03), transparent 70%);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* ===== Amount 输入区 ===== */
         .amount-section-new {
-            margin-bottom: 20px;
+            margin-bottom: 16px;
         }
         .amount-section-new .amount-label {
             font-size: 11px;
@@ -526,13 +696,13 @@
             transition: 0.3s;
         }
         .amount-section-new .amount-input-wrapper:focus-within {
-            border-color: rgba(201, 176, 149, 0.3);
-            box-shadow: 0 0 30px rgba(201, 176, 149, 0.04);
+            border-color: rgba(201, 149, 149, 0.2);
+            box-shadow: 0 0 30px rgba(201,149,149,0.04);
         }
         .amount-section-new .amount-input-wrapper .currency-symbol {
             font-size: 28px;
             font-weight: 700;
-            color: #C9B095;
+            color: #d4a0a0;
             margin-right: 12px;
             flex-shrink: 0;
         }
@@ -559,7 +729,7 @@
             -moz-appearance: textfield;
         }
 
-        /* 快速金额卡片 2x2 */
+        /* ===== 快速金额 2x2 ===== */
         .quick-amounts-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -580,43 +750,46 @@
             font-family: 'Inter', sans-serif;
         }
         .quick-amount-card:hover {
-            background: rgba(201, 176, 149, 0.06);
-            border-color: rgba(201, 176, 149, 0.15);
-            color: #e8eef5;
+            background: rgba(201, 149, 149, 0.06);
+            border-color: rgba(201, 149, 149, 0.15);
+            color: #e8d0d0;
             transform: translateY(-2px);
         }
         .quick-amount-card.active {
-            background: rgba(201, 176, 149, 0.08);
-            border-color: rgba(201, 176, 149, 0.3);
-            color: #C9B095;
-            box-shadow: 0 0 20px rgba(201, 176, 149, 0.04);
+            background: rgba(201, 149, 149, 0.08);
+            border-color: rgba(201, 149, 149, 0.25);
+            color: #d4a0a0;
+            box-shadow: 0 0 20px rgba(201,149,149,0.04);
         }
 
-        /* Withdraw 按钮 */
+        /* ===== Withdraw 按钮 ===== */
         .withdraw-btn-new {
             width: 100%;
-            background: linear-gradient(135deg, #C9B095, #b8944a);
+            background: linear-gradient(135deg, #d4a0a0, #b08080);
             border: none;
             padding: 16px;
             border-radius: 40px;
-            color: #0A122B;
+            color: #0a0808;
             font-weight: 700;
             font-size: 17px;
             cursor: pointer;
             transition: all 0.3s ease;
             font-family: 'Inter', sans-serif;
             letter-spacing: 0.5px;
+            box-shadow: 0 4px 20px rgba(201,149,149,0.15);
         }
         .withdraw-btn-new:hover {
             transform: scale(1.01);
-            box-shadow: 0 8px 30px rgba(201, 176, 149, 0.2);
+            box-shadow: 0 8px 30px rgba(201,149,149,0.25);
         }
         .withdraw-btn-new:disabled {
             opacity: 0.4;
             cursor: not-allowed;
             transform: none;
+            box-shadow: none;
         }
 
+        /* ===== 响应式 ===== */
         @media (max-width: 768px) {
             .docs-grid, .payment-grid { grid-template-columns: 1fr; }
             .address-cards { flex-direction: column; }
@@ -629,15 +802,34 @@
             .pin-modal-content {
                 padding: 32px 24px;
             }
-            .debit-card {
-                padding: 16px 18px;
+            .card-rosegold {
+                padding: 18px 16px 16px 16px;
+                border-radius: 20px;
+                min-height: 160px;
             }
-            .debit-card .card-address {
+            .card-rosegold .card-address {
                 font-size: 12px;
-                padding: 8px 12px;
+                padding: 2px 0 6px 0;
             }
-            .debit-card .card-footer .balance-info .value {
-                font-size: 18px;
+            .card-rosegold .card-footer .balance-section .value {
+                font-size: 20px;
+            }
+            .card-rosegold .card-footer .user-section .value {
+                font-size: 13px;
+            }
+            .pulse-dot-wrapper {
+                top: 12px;
+                right: 14px;
+                width: 24px;
+                height: 24px;
+            }
+            .pulse-dot {
+                width: 8px;
+                height: 8px;
+            }
+            .card-rosegold .card-header .left span {
+                font-size: 8px;
+                letter-spacing: 1.2px;
             }
             .amount-section-new .amount-input-wrapper input {
                 font-size: 24px;
@@ -655,6 +847,59 @@
             }
             .step4-header .sub-title {
                 font-size: 12px;
+            }
+        }
+        @media (max-width: 480px) {
+            .card-rosegold {
+                padding: 14px 12px 12px 12px;
+                border-radius: 16px;
+                min-height: 140px;
+            }
+            .card-rosegold .card-address {
+                font-size: 10px;
+                padding: 2px 0 4px 0;
+            }
+            .card-rosegold .card-footer .balance-section .value {
+                font-size: 17px;
+            }
+            .card-rosegold .card-footer .user-section .value {
+                font-size: 12px;
+            }
+            .card-rosegold .card-header .left i {
+                font-size: 14px;
+            }
+            .card-rosegold .card-header .left span {
+                font-size: 7px;
+                letter-spacing: 1px;
+            }
+            .pulse-dot-wrapper {
+                top: 10px;
+                right: 10px;
+                width: 20px;
+                height: 20px;
+            }
+            .pulse-dot {
+                width: 6px;
+                height: 6px;
+            }
+            .amount-section-new .amount-input-wrapper input {
+                font-size: 20px;
+                padding: 10px 0;
+            }
+            .amount-section-new .amount-input-wrapper .currency-symbol {
+                font-size: 18px;
+                margin-right: 8px;
+            }
+            .quick-amount-card {
+                font-size: 12px;
+                padding: 10px 0;
+            }
+            .quick-amounts-grid {
+                gap: 8px;
+            }
+            .withdraw-btn-new {
+                font-size: 15px;
+                padding: 14px;
             }
         }
         .footer-note {
@@ -781,7 +1026,7 @@
                 <button id="bindAddressBtn" class="step-btn"><span data-i18n="withdrawal_bind_address">Bind Address</span></button>
             </div>
 
-            <!-- ========== Step 4: Amount (新设计) ========== -->
+            <!-- ========== Step 4: Amount (新设计 - 玫瑰金) ========== -->
             <div id="step4Container" class="step-container" style="display: none;">
                 <!-- 标题区 -->
                 <div class="step4-header">
@@ -789,21 +1034,44 @@
                     <div class="sub-title">Type or select the amount to withdraw from your available balance.</div>
                 </div>
 
-                <!-- 借记卡样式卡片 -->
-                <div class="debit-card">
-                    <div class="card-header">
-                        <span class="chip-icon">💳</span>
-                        <span class="card-title">Binded Withdrawal Address</span>
+                <!-- 玫瑰金借记卡 -->
+                <div class="card-rosegold">
+                    <!-- 光晕装饰 -->
+                    <div class="glow-orb"></div>
+                    <div class="glow-orb-top"></div>
+
+                    <!-- 右上角发光圆点 + 脉冲光圈 -->
+                    <div class="pulse-dot-wrapper">
+                        <span class="pulse-ring"></span>
+                        <span class="pulse-ring"></span>
+                        <span class="pulse-ring"></span>
+                        <span class="pulse-dot"></span>
                     </div>
-                    <div class="card-address" id="displayAddress">Txdsfkjh42...jk341234</div>
-                    <div class="card-footer">
-                        <div class="user-info">
-                            <span class="label">User</span>
-                            <span class="value" id="displayUsername">Loading...</span>
+
+                    <!-- 卡片头部 -->
+                    <div class="card-header">
+                        <div class="left">
+                            <i class="fas fa-credit-card"></i>
+                            <span>BINDED WITHDRAWAL ADDRESS</span>
                         </div>
-                        <div class="balance-info">
-                            <span class="label">Balance</span>
-                            <span class="value" id="displayBalance">€0.00</span>
+                        <div class="ring"></div>
+                    </div>
+
+                    <!-- 地址 - 3D金属质感，无边框，前10+后8 -->
+                    <div class="card-address" id="displayAddress">Txdsfkjh42...jk341234</div>
+
+                    <!-- 分隔线 -->
+                    <div class="card-divider"></div>
+
+                    <!-- 底部 User + Balance -->
+                    <div class="card-footer">
+                        <div class="user-section">
+                            <div class="label"><i class="fas fa-user"></i> User</div>
+                            <div class="value" id="displayUsername">John Doe</div>
+                        </div>
+                        <div class="balance-section">
+                            <div class="label"><i class="fas fa-wallet"></i> Balance</div>
+                            <div class="value" id="displayBalance">€0.00</div>
                         </div>
                     </div>
                 </div>
@@ -952,7 +1220,7 @@
                 .select('pin, pin_attempts, pin_locked_until')
                 .eq('uid', uid)
                 .single();
-            
+
             if (error) throw error;
             return data;
         }
@@ -982,10 +1250,10 @@
         // ============================================================
         async function verifyPinAndWithdraw(pin) {
             var t = window.i18n?.t || function(key) { return key; };
-            
+
             try {
                 var userStatus = await getUserPinStatus(currentUser.uid);
-                
+
                 if (isPinLocked(userStatus.pin_locked_until)) {
                     var minutes = getPinLockMinutes(userStatus.pin_locked_until);
                     document.getElementById('pinError').textContent = t('withdrawal_pin_locked_until', { minutes: minutes });
@@ -1000,35 +1268,35 @@
                 if (userStatus.pin !== pin) {
                     var newAttempts = (userStatus.pin_attempts || 0) + 1;
                     var remaining = MAX_PIN_ATTEMPTS - newAttempts;
-                    
+
                     await sb
                         .from('users')
                         .update({ pin_attempts: newAttempts })
                         .eq('uid', currentUser.uid);
-                    
+
                     if (newAttempts >= MAX_PIN_ATTEMPTS) {
                         var lockUntil = new Date();
                         lockUntil.setMinutes(lockUntil.getMinutes() + 15);
-                        
+
                         await sb
                             .from('users')
-                            .update({ 
+                            .update({
                                 pin_attempts: newAttempts,
                                 pin_locked_until: lockUntil.toISOString()
                             })
                             .eq('uid', currentUser.uid);
-                        
+
                         document.getElementById('pinError').textContent = '🔒 PIN locked for 15 minutes.';
                         document.getElementById('pinConfirmBtn').disabled = true;
                         clearPinInputs();
-                        
+
                         setTimeout(function() {
                             hidePinModal();
                             showToast('PIN locked for 15 minutes due to too many failed attempts', 'error');
                         }, 2000);
                         return;
                     }
-                    
+
                     document.getElementById('pinError').textContent = t('withdrawal_pin_attempts_remaining', { remaining: remaining });
                     clearPinInputs();
                     document.getElementById('pinConfirmBtn').disabled = false;
@@ -1037,7 +1305,7 @@
 
                 await sb
                     .from('users')
-                    .update({ 
+                    .update({
                         pin_attempts: 0,
                         pin_locked_until: null
                     })
@@ -1152,7 +1420,7 @@
             document.getElementById('step3Container').style.display = 'none';
             document.getElementById('step4Container').style.display = 'block';
             document.getElementById('stepIndicator').innerHTML = '<i class="fas fa-circle"></i> STEP 4 OF 4';
-            
+
             // 更新显示
             const displayNameEl = document.getElementById('displayUsername');
             const displayBalanceEl = document.getElementById('displayBalance');
@@ -1478,7 +1746,7 @@
             try {
                 var { error } = await sb
                     .from('users')
-                    .update({ 
+                    .update({
                         pin: pin,
                         pin_attempts: 0,
                         pin_locked_until: null
@@ -1548,10 +1816,6 @@
                 // 更新显示
                 const displayBalanceEl = document.getElementById('displayBalance');
                 if (displayBalanceEl) displayBalanceEl.innerHTML = '€' + newBalance.toFixed(2);
-                const availableBalanceEl = document.getElementById('availableBalance');
-                if (availableBalanceEl) availableBalanceEl.innerHTML = '€' + newBalance.toFixed(2);
-                const hintEl = document.getElementById('availableHint');
-                if (hintEl) hintEl.innerHTML = 'Available: €' + newBalance.toFixed(2);
                 document.getElementById('amountInput').value = '';
 
                 showToast('withdrawal_success', 'success');
@@ -1629,9 +1893,9 @@
                 .eq('uid', currentUser.uid)
                 .single();
 
-            if (!userData?.withdrawal_address) { 
-                showToast('withdrawal_no_address', 'error'); 
-                return; 
+            if (!userData?.withdrawal_address) {
+                showToast('withdrawal_no_address', 'error');
+                return;
             }
 
             if (userData.pin_locked_until) {
@@ -1683,7 +1947,6 @@
         // ============================================================
         document.querySelectorAll('.quick-amount-card').forEach(function(btn) {
             btn.addEventListener('click', function() {
-                // 移除所有 active 状态
                 document.querySelectorAll('.quick-amount-card').forEach(function(b) {
                     b.classList.remove('active');
                 });
