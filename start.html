@@ -605,34 +605,64 @@ function getAmountDue(uid) {
         var ORDERS_CACHE_TTL = 30000; // 30秒缓存
 
         async function getOrdersFromAdmin(forceRefresh) {
-            forceRefresh = forceRefresh || false;
-            var now = Date.now();
-            if (!forceRefresh && ordersCache && (now - ordersCacheTime) < ORDERS_CACHE_TTL) {
-                return ordersCache;
+    forceRefresh = forceRefresh || false;
+    var now = Date.now();
+    if (!forceRefresh && ordersCache && (now - ordersCacheTime) < ORDERS_CACHE_TTL) {
+        return ordersCache;
+    }
+    try {
+        // 🔥 修改：分页获取所有数据（每次最多 1000 条，循环获取）
+        var allOrders = [];
+        var page = 0;
+        var pageSize = 1000;
+        var hasMore = true;
+        
+        while (hasMore) {
+            var from = page * pageSize;
+            var to = from + pageSize - 1;
+            
+            var result = await sb
+                .from('orders_pool')
+                .select('*')
+                .eq('status', 'available')
+                .range(from, to);
+            
+            if (result.error) {
+                console.error('Failed to fetch orders:', result.error);
+                break;
             }
-            try {
-                var result = await sb.from('orders_pool').select('*').eq('status', 'available');
-                if (result.error) {
-                    console.error('Failed to fetch orders:', result.error);
-                    return ordersCache || [];
+            
+            if (result.data && result.data.length > 0) {
+                allOrders = allOrders.concat(result.data);
+                page++;
+                // 如果返回的数据少于 pageSize，说明已经是最后一页
+                if (result.data.length < pageSize) {
+                    hasMore = false;
                 }
-                ordersCache = result.data.map(function(order) {
-                    return {
-                        id: order.id,
-                        orderCode: order.order_code,
-                        accommodationName: order.accommodation_name,
-                        price: order.price,
-                        imageUrl: order.image_url,
-                        status: order.status
-                    };
-                });
-                ordersCacheTime = now;
-                return ordersCache;
-            } catch (e) {
-                console.error('Order fetch exception:', e);
-                return ordersCache || [];
+            } else {
+                hasMore = false;
             }
         }
+        
+        console.log('📦 总共加载了', allOrders.length, '条可用订单');
+        
+        ordersCache = allOrders.map(function(order) {
+            return {
+                id: order.id,
+                orderCode: order.order_code,
+                accommodationName: order.accommodation_name,
+                price: order.price,
+                imageUrl: order.image_url,
+                status: order.status
+            };
+        });
+        ordersCacheTime = now;
+        return ordersCache;
+    } catch (e) {
+        console.error('Order fetch exception:', e);
+        return ordersCache || [];
+    }
+}
 
         // ============================================================
 // 🔥 获取用户当前余额范围内已使用的酒店列表（用于去重）
