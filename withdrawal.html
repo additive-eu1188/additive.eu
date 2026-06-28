@@ -540,27 +540,6 @@
             font-weight: 600;
             text-shadow: 0 1px 4px rgba(0,0,0,0.3);
         }
-        .card-rosegold .card-header .ring {
-            width: 28px;
-            height: 28px;
-            border-radius: 50%;
-            border: 1.5px solid rgba(201,149,149,0.12);
-            position: relative;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            opacity: 0.6;
-        }
-        .card-rosegold .card-header .ring::after {
-            content: '';
-            position: absolute;
-            top: 5px;
-            left: 5px;
-            right: 5px;
-            bottom: 5px;
-            border-radius: 50%;
-            border: 1px solid rgba(201,149,149,0.06);
-        }
 
         /* 地址 - 3D金属质感，无边框 */
         .card-rosegold .card-address {
@@ -803,33 +782,42 @@
                 padding: 32px 24px;
             }
             .card-rosegold {
-        padding: 22px 20px 18px 20px;
-        border-radius: 22px;
-        min-height: 180px;          
+        padding: 32px 28px 26px 28px !important;
+        border-radius: 28px !important;
+        min-height: 220px !important;
+        margin-bottom: 20px;
+        width: 100%;
     }
     .card-rosegold .card-address {
-        font-size: 14px;            
-        padding: 4px 0 8px 0;
+        font-size: 18px !important;
+        padding: 8px 0 12px 0 !important;
     }
     .card-rosegold .card-footer .balance-section .value {
-        font-size: 22px;       
+        font-size: 28px !important;
     }
     .card-rosegold .card-footer .user-section .value {
-        font-size: 15px;    
+        font-size: 18px !important;
     }
-    .pulse-dot-wrapper {
-        top: 16px;
-        right: 18px;
-        width: 28px;
-        height: 28px;
-    }
-    .pulse-dot {
-        width: 10px;
-        height: 10px;
+    .card-rosegold .card-header .left i {
+        font-size: 22px !important;
     }
     .card-rosegold .card-header .left span {
-        font-size: 9px;
-        letter-spacing: 1.5px;
+        font-size: 11px !important;
+        letter-spacing: 1.8px !important;
+    }
+    .pulse-dot-wrapper {
+        top: 22px !important;
+        right: 24px !important;
+        width: 36px !important;
+        height: 36px !important;
+    }
+    .pulse-dot {
+        width: 14px !important;
+        height: 14px !important;
+    }
+    .card-rosegold .card-header .ring {
+        width: 36px !important;
+        height: 36px !important;
     }
 }
             .amount-section-new .amount-input-wrapper input {
@@ -1028,7 +1016,7 @@
             </div>
 
             <!-- ========== Step 4: Amount (新设计 - 玫瑰金) ========== -->
-            <div id="step4Container" class="step-container" style="display: none;">
+            <div id="step4Container" style="display: none; padding: 0; background: transparent; border: none; box-shadow: none; backdrop-filter: none;">
                 <!-- 标题区 -->
                 <div class="step4-header">
                     <div class="main-title">Choose withdrawal amount</div>
@@ -1055,7 +1043,6 @@
                             <i class="fas fa-credit-card"></i>
                             <span>BINDED WITHDRAWAL ADDRESS</span>
                         </div>
-                        <div class="ring"></div>
                     </div>
 
                     <!-- 地址 - 3D金属质感，无边框，前10+后8 -->
