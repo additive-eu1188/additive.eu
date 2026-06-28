@@ -417,50 +417,53 @@
             color: #7a85a5;
         }
 
-        /* ===== 玫瑰金借记卡 ===== */
-        .card-rosegold {
-            background: linear-gradient(160deg, #0f0808 0%, #2a1010 25%, #3a1515 45%, #2a1010 65%, #0f0808 100%);
-            border-radius: 24px;
-            padding: 24px 24px 20px 24px;
-            border: 1px solid rgba(201, 149, 149, 0.15);
-            position: relative;
-            overflow: visible;
-            min-height: 190px;
-            box-shadow:
-                0 20px 60px rgba(0,0,0,0.6),
-                0 0 80px rgba(201,149,149,0.03),
-                inset 0 1px 0 rgba(201,149,149,0.08),
-                inset 0 -1px 0 rgba(0,0,0,0.3);
-            isolation: isolate;
-            margin-bottom: 20px;
-        }
+        /* ===== 玫瑰金借记卡 - 更亮 + 金属反光 ===== */
+.card-rosegold {
+    background: linear-gradient(160deg, #1a0a0a 0%, #3a1818 20%, #5a2828 40%, #7a3838 55%, #5a2828 70%, #3a1818 85%, #1a0a0a 100%);
+    border-radius: 20px;
+    padding: 20px 22px 18px 22px;
+    border: 1px solid rgba(201, 149, 149, 0.3);
+    position: relative;
+    overflow: visible;
+    min-height: 170px;
+    box-shadow:
+        0 20px 60px rgba(0,0,0,0.6),
+        0 0 80px rgba(201,149,149,0.06),
+        inset 0 1px 0 rgba(201,149,149,0.2),
+        inset 0 -1px 0 rgba(0,0,0,0.2),
+        inset 0 2px 4px rgba(201,149,149,0.04),
+        inset 0 -2px 4px rgba(0,0,0,0.1);
+    isolation: isolate;
+    margin-bottom: 16px;
+}
 
-        /* 背景光晕 */
-        .card-rosegold::before {
-            content: '';
-            position: absolute;
-            top: -20%;
-            left: -10%;
-            width: 65%;
-            height: 80%;
-            background: radial-gradient(ellipse, rgba(201,149,149,0.07), transparent 70%);
-            pointer-events: none;
-            border-radius: 50%;
-            z-index: 0;
-        }
+/* 顶部金属高光条 */
+.card-rosegold::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 10%;
+    right: 10%;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(201,149,149,0.3), rgba(255,255,255,0.15), rgba(201,149,149,0.3), transparent);
+    pointer-events: none;
+    z-index: 2;
+    border-radius: 50%;
+}
 
-        .card-rosegold::after {
-            content: '';
-            position: absolute;
-            bottom: -30%;
-            right: -20%;
-            width: 50%;
-            height: 60%;
-            background: radial-gradient(ellipse, rgba(201,149,149,0.04), transparent 70%);
-            pointer-events: none;
-            border-radius: 50%;
-            z-index: 0;
-        }
+/* 背景光晕 */
+.card-rosegold::before {
+    content: '';
+    position: absolute;
+    top: -20%;
+    left: -10%;
+    width: 65%;
+    height: 80%;
+    background: radial-gradient(ellipse, rgba(201,149,149,0.1), transparent 70%);
+    pointer-events: none;
+    border-radius: 50%;
+    z-index: 0;
+}
 
         /* 右上角发光圆点 */
         .pulse-dot-wrapper {
@@ -782,42 +785,35 @@
                 padding: 32px 24px;
             }
             .card-rosegold {
-        padding: 32px 28px 26px 28px !important;
-        border-radius: 28px !important;
-        min-height: 220px !important;
-        margin-bottom: 20px;
-        width: 100%;
+        padding: 18px 16px 14px 16px !important;
+        border-radius: 18px !important;
+        min-height: 150px !important;
     }
     .card-rosegold .card-address {
-        font-size: 18px !important;
-        padding: 8px 0 12px 0 !important;
+        font-size: 13px !important;
+        padding: 4px 0 6px 0 !important;
     }
     .card-rosegold .card-footer .balance-section .value {
-        font-size: 28px !important;
+        font-size: 20px !important;
     }
     .card-rosegold .card-footer .user-section .value {
-        font-size: 18px !important;
+        font-size: 14px !important;
     }
     .card-rosegold .card-header .left i {
-        font-size: 22px !important;
+        font-size: 16px !important;
     }
     .card-rosegold .card-header .left span {
-        font-size: 11px !important;
-        letter-spacing: 1.8px !important;
+        font-size: 8px !important;
     }
     .pulse-dot-wrapper {
-        top: 22px !important;
-        right: 24px !important;
-        width: 36px !important;
-        height: 36px !important;
+        top: 14px !important;
+        right: 16px !important;
+        width: 24px !important;
+        height: 24px !important;
     }
     .pulse-dot {
-        width: 14px !important;
-        height: 14px !important;
-    }
-    .card-rosegold .card-header .ring {
-        width: 36px !important;
-        height: 36px !important;
+        width: 8px !important;
+        height: 8px !important;
     }
 }
             .amount-section-new .amount-input-wrapper input {
