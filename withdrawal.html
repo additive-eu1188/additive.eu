@@ -417,59 +417,59 @@
             color: #7a85a5;
         }
 
-        /* ===== 玫瑰金借记卡 - 更亮 + 金属反光 ===== */
-.card-rosegold {
-    background: linear-gradient(160deg, #1a0a0a 0%, #3a1818 20%, #5a2828 40%, #7a3838 55%, #5a2828 70%, #3a1818 85%, #1a0a0a 100%);
-    border-radius: 20px;
-    padding: 20px 22px 18px 22px;
-    border: 1px solid rgba(201, 149, 149, 0.3);
-    position: relative;
-    overflow: visible;
-    min-height: 170px;
-    box-shadow:
-        0 20px 60px rgba(0,0,0,0.6),
-        0 0 80px rgba(201,149,149,0.06),
-        inset 0 1px 0 rgba(201,149,149,0.2),
-        inset 0 -1px 0 rgba(0,0,0,0.2),
-        inset 0 2px 4px rgba(201,149,149,0.04),
-        inset 0 -2px 4px rgba(0,0,0,0.1);
-    isolation: isolate;
-    margin-bottom: 16px;
-}
+        /* ===== 玫瑰金借记卡 ===== */
+        .card-rosegold {
+            background: linear-gradient(160deg, #1a0a0a 0%, #3a1818 20%, #5a2828 40%, #7a3838 55%, #5a2828 70%, #3a1818 85%, #1a0a0a 100%);
+            border-radius: 20px;
+            padding: 20px 22px 18px 22px;
+            border: 1px solid rgba(201, 149, 149, 0.3);
+            position: relative;
+            overflow: visible;
+            min-height: 170px;
+            box-shadow:
+                0 20px 60px rgba(0,0,0,0.6),
+                0 0 80px rgba(201,149,149,0.06),
+                inset 0 1px 0 rgba(201,149,149,0.2),
+                inset 0 -1px 0 rgba(0,0,0,0.2),
+                inset 0 2px 4px rgba(201,149,149,0.04),
+                inset 0 -2px 4px rgba(0,0,0,0.1);
+            isolation: isolate;
+            margin-bottom: 16px;
+        }
 
-/* 顶部金属高光条 */
-.card-rosegold::after {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 10%;
-    right: 10%;
-    height: 1px;
-    background: linear-gradient(90deg, transparent, rgba(201,149,149,0.3), rgba(255,255,255,0.15), rgba(201,149,149,0.3), transparent);
-    pointer-events: none;
-    z-index: 2;
-    border-radius: 50%;
-}
+        /* 顶部金属高光条 */
+        .card-rosegold::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 10%;
+            right: 10%;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(201,149,149,0.3), rgba(255,255,255,0.15), rgba(201,149,149,0.3), transparent);
+            pointer-events: none;
+            z-index: 2;
+            border-radius: 50%;
+        }
 
-/* 背景光晕 */
-.card-rosegold::before {
-    content: '';
-    position: absolute;
-    top: -20%;
-    left: -10%;
-    width: 65%;
-    height: 80%;
-    background: radial-gradient(ellipse, rgba(201,149,149,0.1), transparent 70%);
-    pointer-events: none;
-    border-radius: 50%;
-    z-index: 0;
-}
+        /* 背景光晕 */
+        .card-rosegold::before {
+            content: '';
+            position: absolute;
+            top: -20%;
+            left: -10%;
+            width: 65%;
+            height: 80%;
+            background: radial-gradient(ellipse, rgba(201,149,149,0.1), transparent 70%);
+            pointer-events: none;
+            border-radius: 50%;
+            z-index: 0;
+        }
 
         /* 右上角发光圆点 */
         .pulse-dot-wrapper {
             position: absolute;
-            top: 18px;
-            right: 20px;
+            top: 16px;
+            right: 18px;
             z-index: 5;
             width: 28px;
             height: 28px;
@@ -522,7 +522,7 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 14px;
+            margin-bottom: 10px;
             position: relative;
             z-index: 1;
         }
@@ -538,7 +538,7 @@
         }
         .card-rosegold .card-header .left span {
             font-size: 9px;
-            color: #a08080;
+            color: #c0a0a0;
             letter-spacing: 1.8px;
             font-weight: 600;
             text-shadow: 0 1px 4px rgba(0,0,0,0.3);
@@ -548,7 +548,7 @@
         .card-rosegold .card-address {
             font-family: 'Courier New', monospace;
             font-size: 14px;
-            color: #e8d0d0;
+            color: #f0e0e0;
             position: relative;
             z-index: 1;
             word-break: break-all;
@@ -560,11 +560,11 @@
                 0 4px 8px rgba(0,0,0,0.3),
                 0 0 20px rgba(201,149,149,0.04);
             font-weight: 500;
-            background: linear-gradient(180deg, #f0e0e0 0%, #e8d0d0 35%, #d0b0b0 65%, #c0a0a0 100%);
+            background: linear-gradient(180deg, #f8f0f0 0%, #f0e0e0 35%, #e0c8c8 65%, #d0b8b8 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
-            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3)) drop-shadow(0 0 20px rgba(201,149,149,0.04));
+            filter: drop-shadow(0 2px 6px rgba(0,0,0,0.3)) drop-shadow(0 0 30px rgba(201,149,149,0.06));
             line-height: 1.6;
         }
 
@@ -572,7 +572,7 @@
         .card-rosegold .card-divider {
             height: 1px;
             background: linear-gradient(90deg, transparent, rgba(201,149,149,0.08), rgba(201,149,149,0.15), rgba(201,149,149,0.08), transparent);
-            margin: 6px 0 12px 0;
+            margin: 4px 0 10px 0;
             position: relative;
             z-index: 1;
             box-shadow: 0 1px 2px rgba(0,0,0,0.1);
@@ -601,7 +601,7 @@
         .card-rosegold .card-footer .user-section .value {
             font-size: 15px;
             font-weight: 600;
-            color: #e8d0d0;
+            color: #f0e0e0;
             margin-top: 3px;
             text-shadow: 0 1px 4px rgba(0,0,0,0.3);
         }
@@ -623,7 +623,7 @@
         .card-rosegold .card-footer .balance-section .value {
             font-size: 24px;
             font-weight: 700;
-            background: linear-gradient(135deg, #e8c0c0 0%, #d4a0a0 40%, #c08080 70%, #d4a0a0 100%);
+            background: linear-gradient(135deg, #f0d0d0 0%, #e0b8b8 40%, #d0a0a0 70%, #e0b8b8 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
@@ -639,7 +639,7 @@
             right: -20px;
             width: 140px;
             height: 140px;
-            background: radial-gradient(circle, rgba(201,149,149,0.04), transparent 70%);
+            background: radial-gradient(circle, rgba(201,149,149,0.06), transparent 70%);
             border-radius: 50%;
             pointer-events: none;
             z-index: 0;
@@ -751,7 +751,7 @@
             border: none;
             padding: 16px;
             border-radius: 40px;
-            color: #0a0808;
+            color: #ffffff;
             font-weight: 700;
             font-size: 17px;
             cursor: pointer;
@@ -784,38 +784,41 @@
             .pin-modal-content {
                 padding: 32px 24px;
             }
+
+            /* 借记卡手机版调大 */
             .card-rosegold {
-        padding: 18px 16px 14px 16px !important;
-        border-radius: 18px !important;
-        min-height: 150px !important;
-    }
-    .card-rosegold .card-address {
-        font-size: 13px !important;
-        padding: 4px 0 6px 0 !important;
-    }
-    .card-rosegold .card-footer .balance-section .value {
-        font-size: 20px !important;
-    }
-    .card-rosegold .card-footer .user-section .value {
-        font-size: 14px !important;
-    }
-    .card-rosegold .card-header .left i {
-        font-size: 16px !important;
-    }
-    .card-rosegold .card-header .left span {
-        font-size: 8px !important;
-    }
-    .pulse-dot-wrapper {
-        top: 14px !important;
-        right: 16px !important;
-        width: 24px !important;
-        height: 24px !important;
-    }
-    .pulse-dot {
-        width: 8px !important;
-        height: 8px !important;
-    }
-}
+                padding: 18px 16px 14px 16px !important;
+                border-radius: 18px !important;
+                min-height: 150px !important;
+            }
+            .card-rosegold .card-address {
+                font-size: 13px !important;
+                padding: 4px 0 6px 0 !important;
+            }
+            .card-rosegold .card-footer .balance-section .value {
+                font-size: 20px !important;
+            }
+            .card-rosegold .card-footer .user-section .value {
+                font-size: 14px !important;
+            }
+            .card-rosegold .card-header .left i {
+                font-size: 16px !important;
+            }
+            .card-rosegold .card-header .left span {
+                font-size: 8px !important;
+                letter-spacing: 1.2px !important;
+            }
+            .pulse-dot-wrapper {
+                top: 14px !important;
+                right: 16px !important;
+                width: 24px !important;
+                height: 24px !important;
+            }
+            .pulse-dot {
+                width: 8px !important;
+                height: 8px !important;
+            }
+
             .amount-section-new .amount-input-wrapper input {
                 font-size: 24px;
                 padding: 12px 0;
@@ -834,38 +837,39 @@
                 font-size: 12px;
             }
         }
+
         @media (max-width: 480px) {
             .card-rosegold {
-                padding: 14px 12px 12px 12px;
-                border-radius: 16px;
-                min-height: 140px;
+                padding: 14px 12px 10px 12px !important;
+                border-radius: 16px !important;
+                min-height: 130px !important;
             }
             .card-rosegold .card-address {
-                font-size: 10px;
-                padding: 2px 0 4px 0;
+                font-size: 11px !important;
+                padding: 2px 0 4px 0 !important;
             }
             .card-rosegold .card-footer .balance-section .value {
-                font-size: 17px;
+                font-size: 17px !important;
             }
             .card-rosegold .card-footer .user-section .value {
-                font-size: 12px;
+                font-size: 12px !important;
             }
             .card-rosegold .card-header .left i {
-                font-size: 14px;
+                font-size: 14px !important;
             }
             .card-rosegold .card-header .left span {
-                font-size: 7px;
-                letter-spacing: 1px;
+                font-size: 7px !important;
+                letter-spacing: 1px !important;
             }
             .pulse-dot-wrapper {
-                top: 10px;
-                right: 10px;
-                width: 20px;
-                height: 20px;
+                top: 12px !important;
+                right: 12px !important;
+                width: 20px !important;
+                height: 20px !important;
             }
             .pulse-dot {
-                width: 6px;
-                height: 6px;
+                width: 6px !important;
+                height: 6px !important;
             }
             .amount-section-new .amount-input-wrapper input {
                 font-size: 20px;
@@ -887,6 +891,7 @@
                 padding: 14px;
             }
         }
+
         .footer-note {
             margin-top: 40px;
             text-align: center;
@@ -1011,13 +1016,13 @@
                 <button id="bindAddressBtn" class="step-btn"><span data-i18n="withdrawal_bind_address">Bind Address</span></button>
             </div>
 
-            <!-- ========== Step 4: Amount (新设计 - 玫瑰金) ========== -->
+            <!-- ========== Step 4: Amount ========== -->
             <div id="step4Container" style="display: none; padding: 0; background: transparent; border: none; box-shadow: none; backdrop-filter: none;">
                 <!-- 标题区 -->
                 <div class="step4-header">
-    <div class="main-title" data-i18n="withdrawal_step4_title">Choose withdrawal amount</div>
-    <div class="sub-title" data-i18n="withdrawal_step4_subtitle">Type or select the amount to withdraw from your available balance.</div>
-</div>
+                    <div class="main-title" data-i18n="withdrawal_step4_title">Choose withdrawal amount</div>
+                    <div class="sub-title" data-i18n="withdrawal_step4_subtitle">Type or select the amount to withdraw from your available balance.</div>
+                </div>
 
                 <!-- 玫瑰金借记卡 -->
                 <div class="card-rosegold">
@@ -1035,11 +1040,11 @@
 
                     <!-- 卡片头部 -->
                     <div class="card-header">
-    <div class="left">
-        <i class="fas fa-credit-card"></i>
-        <span data-i18n="withdrawal_card_title">BINDED WITHDRAWAL ADDRESS</span>
-    </div>
-</div>
+                        <div class="left">
+                            <i class="fas fa-credit-card"></i>
+                            <span data-i18n="withdrawal_card_title">BINDED WITHDRAWAL ADDRESS</span>
+                        </div>
+                    </div>
 
                     <!-- 地址 - 3D金属质感，无边框，前10+后8 -->
                     <div class="card-address" id="displayAddress">Txdsfkjh42...jk341234</div>
@@ -1049,24 +1054,25 @@
 
                     <!-- 底部 User + Balance -->
                     <div class="card-footer">
-    <div class="user-section">
-        <div class="label"><i class="fas fa-user"></i> <span data-i18n="withdrawal_user_label">User</span></div>
-        <div class="value" id="displayUsername">John Doe</div>
-    </div>
-    <div class="balance-section">
-        <div class="label"><i class="fas fa-wallet"></i> <span data-i18n="withdrawal_balance_label">Balance</span></div>
-        <div class="value" id="displayBalance">€0.00</div>
-    </div>
-</div>
+                        <div class="user-section">
+                            <div class="label"><i class="fas fa-user"></i> <span data-i18n="withdrawal_user_label">User</span></div>
+                            <div class="value" id="displayUsername">John Doe</div>
+                        </div>
+                        <div class="balance-section">
+                            <div class="label"><i class="fas fa-wallet"></i> <span data-i18n="withdrawal_balance_label">Balance</span></div>
+                            <div class="value" id="displayBalance">€0.00</div>
+                        </div>
+                    </div>
+                </div>
 
                 <!-- Amount 输入 -->
                 <div class="amount-section-new">
-    <span class="amount-label" data-i18n="withdrawal_amount_label">AMOUNT</span>
-    <div class="amount-input-wrapper">
-        <span class="currency-symbol">€</span>
-        <input type="number" id="amountInput" placeholder="0.00" step="0.01" min="0">
-    </div>
-</div>
+                    <span class="amount-label" data-i18n="withdrawal_amount_label">AMOUNT</span>
+                    <div class="amount-input-wrapper">
+                        <span class="currency-symbol">€</span>
+                        <input type="number" id="amountInput" placeholder="0.00" step="0.01" min="0">
+                    </div>
+                </div>
 
                 <!-- 快速金额 2x2 -->
                 <div class="quick-amounts-grid">
