@@ -606,39 +606,52 @@ async function loadUsers() {
     
     try {
         // ============================================================
-        // 1. 初始化查询 - 只选择需要的字段
+        // 🔥 优化：并行执行所有独立查询（Promise.all）
         // ============================================================
-        let query = sb.from('users')
-            .select('uid, username, phone, balance, vip_level, country, registered_ip, created_at, updated_at, last_online, invited_by_username, user_role, credit_score, withdrawal_frozen, is_banned, is_premium, current_round, round_orders_count, pending_display, pin, withdrawal_address_type, withdrawal_address', { count: 'exact' })
-            .order('created_at', { ascending: false });
-
-        // ============================================================
-        // 2. ✅ 修复：如果有关键词，则添加搜索条件
-        // ============================================================
-        // 从全局变量或输入框获取搜索关键词
-        const searchKeyword = document.getElementById('searchUserInput')?.value.trim() || '';
-        if (searchKeyword) {
-            // 使用 .or() 进行多字段模糊搜索 (UID, 手机号, 用户名)
-            query = query.or(`uid.ilike.%${searchKeyword}%,phone.ilike.%${searchKeyword}%,username.ilike.%${searchKeyword}%`);
-        }
-
-        // ============================================================
-        // 3. 应用分页
-        // ============================================================
-        const from = (window.userCurrentPage - 1) * window.userPageSize;
-        const to = window.userCurrentPage * window.userPageSize - 1;
-        query = query.range(from, to);
-
-        // ============================================================
-        // 4. 执行查询
-        // ============================================================
-        const usersResult = await query;
+        const [
+            vipSettingsResult,
+            usersResult,
+            pendingWithdrawalsResult,
+            pendingTriggerOrdersResult,
+            amountDueUsersResult
+        ] = await Promise.all([
+            // VIP 设置
+            sb.from('vip_settings').select('*'),
+            
+            // 用户列表（只查需要的字段）
+(async () => {
+    let query = sb.from('users')
+        .select('uid, username, phone, balance, vip_level, country, registered_ip, created_at, updated_at, last_online, invited_by_username, user_role, credit_score, withdrawal_frozen, is_banned, is_premium, current_round, round_orders_count, pending_display, pin, withdrawal_address_type, withdrawal_address', { count: 'exact' })
+        .order('created_at', { ascending: false });
+    
+    // ✅ 添加搜索条件
+    if (searchKeyword) {
+        query = query.or(`uid.ilike.%${searchKeyword}%,phone.ilike.%${searchKeyword}%,username.ilike.%${searchKeyword}%`);
+    }
+    
+    return query.range((window.userCurrentPage - 1) * window.userPageSize, window.userCurrentPage * window.userPageSize - 1);
+})(),
+            
+            // 待处理提现（只查 uid 和 amount）
+            sb.from('withdrawals')
+                .select('uid, amount')
+                .eq('status', 'pending'),
+            
+            // 待处理触发订单
+            sb.from('user_trigger_orders')
+                .select('uid, commission_amount, target_price, order_type')
+                .eq('status', 'pending'),
+            
+            // amount_due
+            sb.from('users')
+                .select('uid, amount_due_round, amount_due_orders_count')
+        ]);
         
         // 检查用户查询是否成功
         if (usersResult.error) throw usersResult.error;
         
         const users = usersResult.data || [];
-        const vipSettings = await getVipSettingsCached();
+        const vipSettings = vipSettingsResult.data || [];
         const uids = users.map(u => u.uid);
         
         // ============================================================
@@ -1130,7 +1143,7 @@ async function loadUsers() {
         }
         
     } catch (e) {
-        console.error('加载用户失败:', e);
+        console.error('加载用户失败:', e);、、、、、、、、、、、、、、、、、、、、、、、、、、、、、
         tbody.innerHTML = `<tr><td colspan="11" style="text-align:center; padding:40px; color:#e88080;">加载失败: ${escapeHtml(e.message)}</td></tr>`;
     }
 }
