@@ -806,9 +806,9 @@
             const roundOrdersCount = freshUser?.roundOrdersCount || 0;
             
             // ============================================================
-// 加载签到数据，检测 Round 变化时重置
-// ============================================================
-let { streak, lastClaimDate, claimedDays } = loadData();
+            // 加载签到数据，检测 Round 变化时重置
+            // ============================================================
+            let { streak, lastClaimDate, claimedDays } = loadData();
 const storedRound = localStorage.getItem('checkin_round_' + user.uid) || '0';
 
 // 如果 Round 变化了，处理签到数据
@@ -817,14 +817,14 @@ if (parseInt(storedRound) !== currentRound) {
     const existingData = loadData();
     const preservedClaimedDays = existingData.claimedDays || [];
     
-    // 只有 Round 2 -> Round 1 时重置 streak 和 lastClaimDate，但保留 claimedDays
+    // 只有 Round 2 -> Round 1 时重置 streak，但保留 claimedDays 和 lastClaimDate
     if (parseInt(storedRound) === 2 && currentRound === 1) {
-        saveData(0, null, preservedClaimedDays);
+        saveData(0, lastClaimDate, preservedClaimedDays);
         localStorage.setItem('checkin_round_' + user.uid, String(currentRound));
         streak = 0;
-        lastClaimDate = null;
+        // lastClaimDate 保留，不清空（防止同一天重复 Claim）
         claimedDays = preservedClaimedDays;
-        console.log('🔄 Round 2 -> Round 1: Streak reset, claimedDays preserved:', preservedClaimedDays);
+        console.log('🔄 Round 2 -> Round 1: Streak reset, lastClaimDate preserved:', lastClaimDate, 'claimedDays preserved:', preservedClaimedDays);
     } else {
         // 其他 Round 变化（如 0 -> 1, 1 -> 2）只更新存储的 Round
         localStorage.setItem('checkin_round_' + user.uid, String(currentRound));
@@ -889,11 +889,7 @@ if (canClaim) {
     // 检查是否所有天数都已 Claim
     const allClaimed = signInRewards.every(r => claimedDays.includes(r.day));
     
-    if (hasClaimed) {
-        claimBtn.classList.add('disabled');
-        claimBtn.disabled = true;
-        claimWarning.innerHTML = t('checkin_claimed_today');
-    } else if (allClaimed) {
+    if (allClaimed) {
         claimBtn.classList.add('disabled');
         claimBtn.disabled = true;
         claimWarning.innerHTML = t('checkin_all_completed');
@@ -918,7 +914,6 @@ async function handleClaim() {
     
     const t = window.i18n?.t || function(key) { return key; };
     const { streak, lastClaimDate, claimedDays } = loadData();
-    const hasClaimed = hasClaimedToday(lastClaimDate);
 
     // ============================================================
     // 🔥 找出第一个未领取的天数
@@ -933,13 +928,9 @@ async function handleClaim() {
         }
     }
 
-    console.log('📊 Streak:', streak, 'NextDay:', nextDay, 'HasClaimed:', hasClaimed, 'ClaimedDays:', claimedDays);
+    console.log('📊 Streak:', streak, 'NextDay:', nextDay, 'ClaimedDays:', claimedDays);
 
-    if (hasClaimed) {
-        showToast('checkin_claimed_today_msg', 'warning');
-        return;
-    }
-    
+    // 如果所有天数都已 Claim，提示完成
     if (allClaimed) {
         showToast('checkin_all_completed', 'success');
         return;
@@ -969,22 +960,9 @@ async function handleClaim() {
         return;
     }
 
-    let amount;
-let claimDay;
-let isReset = false;
-
-// 🔥 只有当 nextDay 是 1 时，才从 Day 1 重新开始
-// 如果 nextDay > 1，说明还有未领取的天数，直接领取下一个
-if (streak > 0 && !isConsecutive(lastClaimDate) && nextDay === 1) {
-    // 连续签到中断，且下一个未领取的是 Day 1，才从 Day 1 重新开始
-    amount = signInRewards[0].amount;
-    claimDay = 1;
-    isReset = true;
-} else {
-    // 领取下一个未领取的天数
-    amount = signInRewards[nextDay - 1].amount;
-    claimDay = nextDay;
-}
+    // 领取 nextDay
+    const amount = signInRewards[nextDay - 1].amount;
+    const claimDay = nextDay;
 
     console.log('💰 Claim Day:', claimDay, 'Amount:', amount);
 
@@ -993,7 +971,7 @@ if (streak > 0 && !isConsecutive(lastClaimDate) && nextDay === 1) {
         t('checkin_claim_reward_message', { day: claimDay, amount: amount.toFixed(2) }),
         async function() {
             console.log('✅ 用户确认 Claim');
-            await processClaim(user, amount, claimDay, isReset, streak, claimedDays);
+            await processClaim(user, amount, claimDay, claimedDays);
         },
         function() {
             console.log('❌ 用户取消 Claim');
@@ -1005,7 +983,7 @@ if (streak > 0 && !isConsecutive(lastClaimDate) && nextDay === 1) {
         // ============================================================
         // 处理 Claim 逻辑
         // ============================================================
-        async function processClaim(user, amount, claimDay, isReset, streak, claimedDays) {
+        async function processClaim(user, amount, claimDay, claimedDays) {
             console.log('🔄 开始处理 Claim...');
             
             try {
@@ -1053,19 +1031,17 @@ const { error: insertError } = await sb
         uid: user.uid,
         day_number: claimDay,
         amount: amount,
-        checkin_date: new Date().toISOString().split('T')[0],  // 保留日期用于展示
+        checkin_date: new Date().toISOString().split('T')[0],
         created_at: new Date().toISOString()
     }]);
 
-                // 4. 更新本地存储 - 修复版
+                // 4. 更新本地存储
 let newClaimedDays = [...claimedDays];
 if (!newClaimedDays.includes(claimDay)) {
     newClaimedDays.push(claimDay);
 }
-// 按从小到大排序
 newClaimedDays.sort((a, b) => a - b);
 
-// streak 应该是已领取的总数
 const newStreak = newClaimedDays.length;
 
 saveData(newStreak, new Date().toISOString(), newClaimedDays);
