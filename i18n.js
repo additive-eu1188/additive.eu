@@ -405,6 +405,15 @@ if (typeof window._i18n_loaded === 'undefined') {
             'withdrawal_withdraw_btn': 'Withdraw',
             'withdrawal_frozen': 'Your account withdrawal feature is currently frozen.',
             'account_banned': 'Your account has been temporarily suspended due to system verification requirements.',
+'withdrawal_pin_locked': '🔒 PIN locked due to too many failed attempts. Please wait.',
+'withdrawal_pin_attempts_remaining': 'Incorrect PIN. {remaining} attempt(s) remaining.',
+'withdrawal_pin_locked_until': '🔒 PIN locked. Try again in {minutes} minutes.',
+'withdrawal_step4_title': 'Choose withdrawal amount',
+'withdrawal_step4_subtitle': 'Type or select the amount to withdraw from your available balance.',
+'withdrawal_card_title': 'BINDED WITHDRAWAL ADDRESS',
+'withdrawal_user_label': 'User',
+'withdrawal_balance_label': 'Balance',
+'withdrawal_amount_label': 'AMOUNT',
 
             // ==================== Settings ====================
             'settings_title': 'SETTINGS',
@@ -1044,6 +1053,15 @@ if (typeof window._i18n_loaded === 'undefined') {
             'withdrawal_withdraw_btn': 'Auszahlen',
             'withdrawal_frozen': 'Ihre Kontenauszahlungsfunktion ist derzeit eingefroren.',
             'account_banned': 'Ihr Konto wurde aufgrund von Systemüberprüfungsanforderungen vorübergehend gesperrt.',
+'withdrawal_pin_locked': '🔒 PIN gesperrt aufgrund zu vieler Fehlversuche. Bitte warten.',
+'withdrawal_pin_attempts_remaining': 'Falsche PIN. Noch {remaining} Versuch(e).',
+'withdrawal_pin_locked_until': '🔒 PIN gesperrt. Versuchen Sie es in {minutes} Minuten erneut.',
+'withdrawal_step4_title': 'Auszahlungsbetrag wählen',
+'withdrawal_step4_subtitle': 'Geben Sie den Betrag ein oder wählen Sie ihn aus Ihrem verfügbaren Guthaben aus.',
+'withdrawal_card_title': 'HINTERLEGTE AUSZAHLUNGSADRESSE',
+'withdrawal_user_label': 'Benutzer',
+'withdrawal_balance_label': 'Guthaben',
+'withdrawal_amount_label': 'BETRAG',
 
             // ==================== Settings ====================
             'settings_title': 'EINSTELLUNGEN',
@@ -1683,6 +1701,15 @@ if (typeof window._i18n_loaded === 'undefined') {
             'withdrawal_withdraw_btn': 'Preleva',
             'withdrawal_frozen': 'La funzione di prelievo del tuo account è attualmente congelata.',
             'account_banned': 'Il tuo account è stato temporaneamente sospeso a causa di requisiti di verifica del sistema.',
+'withdrawal_pin_locked': '🔒 PIN bloccato per troppi tentativi falliti. Attendere prego.',
+'withdrawal_pin_attempts_remaining': 'PIN errato. {remaining} tentativo(i) rimanenti.',
+'withdrawal_pin_locked_until': '🔒 PIN bloccato. Riprova tra {minutes} minuti.',
+'withdrawal_step4_title': 'Scegli l\'importo del prelievo',
+'withdrawal_step4_subtitle': 'Digita o seleziona l\'importo da prelevare dal tuo saldo disponibile.',
+'withdrawal_card_title': 'INDIRIZZO DI PRELIEVO ASSOCIATO',
+'withdrawal_user_label': 'Utente',
+'withdrawal_balance_label': 'Saldo',
+'withdrawal_amount_label': 'IMPORTO',
 
             // ==================== Settings ====================
             'settings_title': 'IMPOSTAZIONI',
