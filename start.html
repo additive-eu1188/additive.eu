@@ -1686,7 +1686,7 @@ pt.innerHTML = '<i class="fas fa-check-circle"></i> ' + t('order_completed');
     }
 }
 
-        // ============================================================
+                // ============================================================
         // 弹窗样式控制（仅用于 Searching Order 透明效果）
         // ============================================================
         function setModalTransparent() {
@@ -1694,10 +1694,10 @@ pt.innerHTML = '<i class="fas fa-check-circle"></i> ' + t('order_completed');
             if (!modal) return;
             var orderModal = modal.querySelector('.order-modal');
             
-            // 外层透明
-            modal.style.background = 'rgba(0,0,0,0.0)';
-            modal.style.backdropFilter = 'blur(0px)';
-            modal.style.webkitBackdropFilter = 'blur(0px)';
+            // 外层：半透明黑色背景 + 模糊（让背景变暗且朦胧）
+            modal.style.background = 'rgba(0,0,0,0.55)';
+            modal.style.backdropFilter = 'blur(8px)';
+            modal.style.webkitBackdropFilter = 'blur(8px)';
             
             // 中层透明
             if (orderModal) {
