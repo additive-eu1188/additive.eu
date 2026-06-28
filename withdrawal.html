@@ -256,10 +256,140 @@
             font-weight: 600;
         }
 
+        /* ===== PIN 弹窗样式 ===== */
+        .pin-modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(7, 11, 26, 0.92);
+            backdrop-filter: blur(14px);
+            z-index: 30001;
+            display: none;
+            align-items: center;
+            justify-content: center;
+        }
+        .pin-modal-overlay.active {
+            display: flex !important;
+        }
+        .pin-modal-content {
+            background: linear-gradient(160deg, #1a1428, #0e0a1a);
+            border-radius: 32px;
+            padding: 40px 36px;
+            max-width: 420px;
+            width: 90%;
+            border: 1px solid rgba(201, 176, 149, 0.15);
+            box-shadow: 0 24px 60px rgba(0, 0, 0, 0.6);
+            text-align: center;
+            transform: scale(0.92);
+            transition: transform 0.3s cubic-bezier(0.2, 0.9, 0.4, 1.1);
+        }
+        .pin-modal-overlay.active .pin-modal-content {
+            transform: scale(1);
+        }
+        .pin-modal-content .pin-icon {
+            font-size: 48px;
+            color: #C9B095;
+            margin-bottom: 12px;
+        }
+        .pin-modal-content h3 {
+            font-size: 20px;
+            font-weight: 700;
+            color: #e8d5c0;
+            margin-bottom: 8px;
+        }
+        .pin-modal-content .pin-desc {
+            font-size: 13px;
+            color: #7a85a5;
+            margin-bottom: 20px;
+        }
+        .pin-inputs {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+        .pin-inputs input {
+            width: 52px;
+            height: 60px;
+            text-align: center;
+            font-size: 28px;
+            font-weight: 700;
+            background: rgba(255, 255, 255, 0.06);
+            border: 2px solid rgba(201, 176, 149, 0.2);
+            border-radius: 12px;
+            color: #fff;
+            outline: none;
+            transition: 0.2s;
+        }
+        .pin-inputs input:focus {
+            border-color: #C9B095;
+            box-shadow: 0 0 20px rgba(201, 176, 149, 0.1);
+        }
+        .pin-inputs input.error {
+            border-color: #e88080;
+            animation: shake 0.3s ease;
+        }
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-8px); }
+            75% { transform: translateX(8px); }
+        }
+        .pin-error {
+            font-size: 12px;
+            color: #e88080;
+            min-height: 20px;
+            margin-bottom: 12px;
+        }
+        .pin-buttons {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+        }
+        .pin-buttons button {
+            padding: 10px 24px;
+            border-radius: 40px;
+            font-size: 14px;
+            font-family: 'Inter', sans-serif;
+            cursor: pointer;
+            transition: 0.25s;
+            border: none;
+        }
+        .pin-cancel-btn {
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            color: #5a4a6a;
+        }
+        .pin-cancel-btn:hover {
+            background: rgba(255, 255, 255, 0.08);
+        }
+        .pin-confirm-btn {
+            background: rgba(201, 176, 149, 0.15);
+            border: 1px solid rgba(201, 176, 149, 0.3);
+            color: #C9B095;
+            font-weight: 600;
+        }
+        .pin-confirm-btn:hover {
+            background: rgba(201, 176, 149, 0.25);
+        }
+        .pin-confirm-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
         @media (max-width: 768px) {
             .docs-grid, .payment-grid { grid-template-columns: 1fr; }
             .address-cards { flex-direction: column; }
             .upload-row { flex-direction: column; }
+            .pin-inputs input {
+                width: 44px;
+                height: 52px;
+                font-size: 24px;
+            }
+            .pin-modal-content {
+                padding: 32px 24px;
+            }
         }
         .footer-note {
             margin-top: 40px;
@@ -269,24 +399,24 @@
             padding: 16px 0;
             border-top: 1px solid rgba(204, 178, 153, 0.08);
         }
-.address-card .icon-wrapper {
-    width: 30px;
-    height: 30px;
-    border-radius: 50%;
-    background: #C9B095;
-    margin: 0 auto 8px;
-    display: inline-flex;  /* 改成 inline-flex */
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;        /* 防止被压缩 */
-}
-.address-card .icon-wrapper .tether-text {
-    font-size: 15px;
-    font-weight: 700;
-    color: #0b0f1f;
-    font-family: Arial, sans-serif;
-    line-height: 1;
-}
+        .address-card .icon-wrapper {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background: #C9B095;
+            margin: 0 auto 8px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+        .address-card .icon-wrapper .tether-text {
+            font-size: 15px;
+            font-weight: 700;
+            color: #0b0f1f;
+            font-family: Arial, sans-serif;
+            line-height: 1;
+        }
     </style>
 </head>
 <body>
@@ -297,28 +427,27 @@
             <div class="sidebar-top">
                 <div class="logo">
                     <img src="https://qgmbzdfnwsdosdqphlxk.supabase.co/storage/v1/object/public/logos/additivelogo1.png" alt="ADDITIVE" style="height: 35px; width: auto;">
-                    
                 </div>
                 <nav class="nav">
-    <a href="dashboard.html" class="nav-item"><i class="fas fa-th-large"></i><span data-i18n="nav_dashboard">Dashboard</span></a>
-    <a href="start.html" class="nav-item"><i class="fas fa-play"></i><span data-i18n="nav_start">Start</span></a>
-    <a href="history.html" class="nav-item"><i class="fas fa-clock"></i><span data-i18n="nav_history">History</span></a>
-    <a href="checkin.html" class="nav-item"><i class="fas fa-calendar-check"></i><span data-i18n="nav_checkin">Sign in</span></a>
-    <a href="event.html" class="nav-item"><i class="fas fa-calendar-alt"></i><span data-i18n="nav_event">Event</span></a>
-    <a href="withdrawal.html" class="nav-item active"><i class="fas fa-arrow-right-to-bracket"></i><span data-i18n="nav_withdrawal">Withdrawal</span></a>
-    <a href="employment.html" class="nav-item"><i class="fas fa-file-contract"></i><span data-i18n="nav_employment">Employment Contract</span></a>
-    <a href="company.html" class="nav-item"><i class="fas fa-building"></i><span data-i18n="nav_company">Company Profile</span></a>
-    <a href="chat.html" class="nav-item"><i class="fas fa-comment-dots"></i><span data-i18n="nav_chat">Chat with us</span></a>
-    <a href="settings.html" class="nav-item"><i class="fas fa-sliders-h"></i><span data-i18n="nav_settings">Settings</span></a>
-    <a href="membership.html" class="nav-item"><i class="fas fa-crown"></i><span data-i18n="nav_membership">Membership</span></a>
-</nav>
+                    <a href="dashboard.html" class="nav-item"><i class="fas fa-th-large"></i><span data-i18n="nav_dashboard">Dashboard</span></a>
+                    <a href="start.html" class="nav-item"><i class="fas fa-play"></i><span data-i18n="nav_start">Start</span></a>
+                    <a href="history.html" class="nav-item"><i class="fas fa-clock"></i><span data-i18n="nav_history">History</span></a>
+                    <a href="checkin.html" class="nav-item"><i class="fas fa-calendar-check"></i><span data-i18n="nav_checkin">Sign in</span></a>
+                    <a href="event.html" class="nav-item"><i class="fas fa-calendar-alt"></i><span data-i18n="nav_event">Event</span></a>
+                    <a href="withdrawal.html" class="nav-item active"><i class="fas fa-arrow-right-to-bracket"></i><span data-i18n="nav_withdrawal">Withdrawal</span></a>
+                    <a href="employment.html" class="nav-item"><i class="fas fa-file-contract"></i><span data-i18n="nav_employment">Employment Contract</span></a>
+                    <a href="company.html" class="nav-item"><i class="fas fa-building"></i><span data-i18n="nav_company">Company Profile</span></a>
+                    <a href="chat.html" class="nav-item"><i class="fas fa-comment-dots"></i><span data-i18n="nav_chat">Chat with us</span></a>
+                    <a href="settings.html" class="nav-item"><i class="fas fa-sliders-h"></i><span data-i18n="nav_settings">Settings</span></a>
+                    <a href="membership.html" class="nav-item"><i class="fas fa-crown"></i><span data-i18n="nav_membership">Membership</span></a>
+                </nav>
             </div>
             <div class="sidebar-upgrade-card">
-    <div class="sidebar-premium-badge" data-i18n="sidebar_premium">PREMIUM ACCESS</div>
-    <div class="sidebar-upgrade-title" data-i18n="sidebar_upgrade">Upgrade your membership</div>
-    <div class="sidebar-upgrade-desc" data-i18n="sidebar_upgrade_desc">Unlock higher rewards,<br>priority support, and premium<br>hotel discovery benefits</div>
-    <a href="membership.html" class="sidebar-upgrade-btn" data-i18n="sidebar_upgrade_btn">Upgrade Now <i class="fas fa-arrow-right"></i></a>
-</div>
+                <div class="sidebar-premium-badge" data-i18n="sidebar_premium">PREMIUM ACCESS</div>
+                <div class="sidebar-upgrade-title" data-i18n="sidebar_upgrade">Upgrade your membership</div>
+                <div class="sidebar-upgrade-desc" data-i18n="sidebar_upgrade_desc">Unlock higher rewards,<br>priority support, and premium<br>hotel discovery benefits</div>
+                <a href="membership.html" class="sidebar-upgrade-btn" data-i18n="sidebar_upgrade_btn">Upgrade Now <i class="fas fa-arrow-right"></i></a>
+            </div>
         </aside>
 
         <main class="main" style="max-width: 700px;">
@@ -333,123 +462,144 @@
             </div>
 
             <div class="page-header">
-    <h1 data-i18n="withdrawal_title">WITHDRAWAL</h1>
-    <div class="step-indicator" id="stepIndicator"><i class="fas fa-circle"></i> <span data-i18n="withdrawal_step">STEP 1 OF 4</span></div>
-</div>
+                <h1 data-i18n="withdrawal_title">WITHDRAWAL</h1>
+                <div class="step-indicator" id="stepIndicator"><i class="fas fa-circle"></i> <span data-i18n="withdrawal_step">STEP 1 OF 4</span></div>
+            </div>
 
             <!-- ========== Step 1: KYC ========== -->
-<div id="step1Container" class="step-container">
-    <div class="step-title"><i class="fas fa-id-card"></i> <span data-i18n="withdrawal_step1_title">Identity Verification</span></div>
-    <div class="docs-grid">
-        <div class="doc-card" data-doc-type="passport">
-            <i class="fas fa-passport"></i>
-            <h4 data-i18n="withdrawal_doc_passport">Passport</h4>
-            <p data-i18n="withdrawal_doc_passport_desc">Upload passport page</p>
-        </div>
-        <div class="doc-card" data-doc-type="driving_license">
-    <i class="fas fa-id-card"></i>
-    <h4 data-i18n="withdrawal_doc_driving_license">Driving License</h4>
-    <p data-i18n="withdrawal_doc_driving_license_desc">Front + Back sides</p>
-</div>
-        <div class="doc-card" data-doc-type="national_id">
-            <i class="fas fa-address-card"></i>
-            <h4 data-i18n="withdrawal_doc_national">National ID Card</h4>
-            <p data-i18n="withdrawal_doc_national_desc">Front + Back sides</p>
-        </div>
-    </div>
-    <div id="uploadArea"></div>
-    <button id="submitKycBtn" class="step-btn"><span data-i18n="withdrawal_submit_kyc">Submit Verification</span></button>
-</div>
+            <div id="step1Container" class="step-container">
+                <div class="step-title"><i class="fas fa-id-card"></i> <span data-i18n="withdrawal_step1_title">Identity Verification</span></div>
+                <div class="docs-grid">
+                    <div class="doc-card" data-doc-type="passport">
+                        <i class="fas fa-passport"></i>
+                        <h4 data-i18n="withdrawal_doc_passport">Passport</h4>
+                        <p data-i18n="withdrawal_doc_passport_desc">Upload passport page</p>
+                    </div>
+                    <div class="doc-card" data-doc-type="driving_license">
+                        <i class="fas fa-id-card"></i>
+                        <h4 data-i18n="withdrawal_doc_driving_license">Driving License</h4>
+                        <p data-i18n="withdrawal_doc_driving_license_desc">Front + Back sides</p>
+                    </div>
+                    <div class="doc-card" data-doc-type="national_id">
+                        <i class="fas fa-address-card"></i>
+                        <h4 data-i18n="withdrawal_doc_national">National ID Card</h4>
+                        <p data-i18n="withdrawal_doc_national_desc">Front + Back sides</p>
+                    </div>
+                </div>
+                <div id="uploadArea"></div>
+                <button id="submitKycBtn" class="step-btn"><span data-i18n="withdrawal_submit_kyc">Submit Verification</span></button>
+            </div>
 
             <!-- Step 2: Payment Method -->
-<div id="step2Container" class="step-container" style="display: none;">
-    <div class="step-title"><i class="fas fa-credit-card"></i> <span data-i18n="withdrawal_step2_title">Select Withdrawal Method</span></div>
-    <div class="payment-grid">
-        <div class="payment-card disabled" data-method="paypal">
-            <i class="fab fa-paypal"></i>
-            <h4 data-i18n="withdrawal_method_paypal">PAYPAL</h4>
-            <p data-i18n="withdrawal_method_contract_not_active">Your employment contract has not yet been activated</p>
-            <span class="disabled-tag" data-i18n="withdrawal_method_unavailable">Unavailable</span>
-        </div>
-        <div class="payment-card disabled" data-method="sepa">
-            <i class="fas fa-university"></i>
-            <h4 data-i18n="withdrawal_method_sepa">SEPA INSTANT</h4>
-            <p data-i18n="withdrawal_method_contract_not_active">Your employment contract has not yet been activated</p>
-            <span class="disabled-tag" data-i18n="withdrawal_method_unavailable">Unavailable</span>
-        </div>
-        <div class="payment-card" data-method="crypto">
-            <i class="fab fa-bitcoin"></i>
-            <h4 data-i18n="withdrawal_method_crypto">CRYPTO CURRENCIES</h4>
-            <p data-i18n="withdrawal_method_available">Available for withdrawal</p>
-        </div>
-    </div>
-</div>
+            <div id="step2Container" class="step-container" style="display: none;">
+                <div class="step-title"><i class="fas fa-credit-card"></i> <span data-i18n="withdrawal_step2_title">Select Withdrawal Method</span></div>
+                <div class="payment-grid">
+                    <div class="payment-card disabled" data-method="paypal">
+                        <i class="fab fa-paypal"></i>
+                        <h4 data-i18n="withdrawal_method_paypal">PAYPAL</h4>
+                        <p data-i18n="withdrawal_method_contract_not_active">Your employment contract has not yet been activated</p>
+                        <span class="disabled-tag" data-i18n="withdrawal_method_unavailable">Unavailable</span>
+                    </div>
+                    <div class="payment-card disabled" data-method="sepa">
+                        <i class="fas fa-university"></i>
+                        <h4 data-i18n="withdrawal_method_sepa">SEPA INSTANT</h4>
+                        <p data-i18n="withdrawal_method_contract_not_active">Your employment contract has not yet been activated</p>
+                        <span class="disabled-tag" data-i18n="withdrawal_method_unavailable">Unavailable</span>
+                    </div>
+                    <div class="payment-card" data-method="crypto">
+                        <i class="fab fa-bitcoin"></i>
+                        <h4 data-i18n="withdrawal_method_crypto">CRYPTO CURRENCIES</h4>
+                        <p data-i18n="withdrawal_method_available">Available for withdrawal</p>
+                    </div>
+                </div>
+            </div>
 
             <!-- Step 3: Bind Address -->
-<div id="step3Container" class="step-container" style="display: none;">
-    <div class="step-title"><i class="fas fa-link"></i> <span data-i18n="withdrawal_step3_title">Bind Withdrawal Address</span></div>
-    <div class="address-cards">
-        <div class="address-card" data-address-type="usdt">
-    <div class="icon-wrapper">
-        <span class="tether-text">₮</span>
-    </div>
-    <div>USDT (TRC20)</div>
-    <small>Tether</small>
-</div>
-        <div class="address-card" data-address-type="eth"><i class="fab fa-ethereum"></i><div>ETH (ERC20)</div><small style="font-size: 10px;">Ethereum</small></div>
-        <div class="address-card" data-address-type="btc"><i class="fab fa-bitcoin"></i><div>BTC</div><small style="font-size: 10px;">Bitcoin</small></div>
-        <div class="address-card" data-address-type="usdc"><i class="fas fa-dollar-sign"></i><div>USDC</div><small style="font-size: 10px;">USD Coin</small></div>
-    </div>
-    <input type="text" id="addressInput" class="address-input" placeholder="Paste your wallet address here..." data-i18n-placeholder="withdrawal_address_placeholder">
-    <button id="bindAddressBtn" class="step-btn"><span data-i18n="withdrawal_bind_address">Bind Address</span></button>
-</div>
+            <div id="step3Container" class="step-container" style="display: none;">
+                <div class="step-title"><i class="fas fa-link"></i> <span data-i18n="withdrawal_step3_title">Bind Withdrawal Address</span></div>
+                <div class="address-cards">
+                    <div class="address-card" data-address-type="usdt">
+                        <div class="icon-wrapper">
+                            <span class="tether-text">₮</span>
+                        </div>
+                        <div>USDT (TRC20)</div>
+                        <small>Tether</small>
+                    </div>
+                    <div class="address-card" data-address-type="eth"><i class="fab fa-ethereum"></i><div>ETH (ERC20)</div><small style="font-size: 10px;">Ethereum</small></div>
+                    <div class="address-card" data-address-type="btc"><i class="fab fa-bitcoin"></i><div>BTC</div><small style="font-size: 10px;">Bitcoin</small></div>
+                    <div class="address-card" data-address-type="usdc"><i class="fas fa-dollar-sign"></i><div>USDC</div><small style="font-size: 10px;">USD Coin</small></div>
+                </div>
+                <input type="text" id="addressInput" class="address-input" placeholder="Paste your wallet address here..." data-i18n-placeholder="withdrawal_address_placeholder">
+                <button id="bindAddressBtn" class="step-btn"><span data-i18n="withdrawal_bind_address">Bind Address</span></button>
+            </div>
 
             <!-- Step 4: Amount -->
-<div id="step4Container" class="step-container" style="display: none;">
-    <div class="step-title"><i class="fas fa-money-bill-wave"></i> <span data-i18n="withdrawal_step4_title">Withdrawal Amount</span></div>
-    <div class="balance-info-card" style="background: rgba(0,0,0,0.3); border-radius: 20px; padding: 16px; margin-bottom: 20px;">
-        <div style="display: flex; justify-content: space-between;">
-            <span><i class="fas fa-wallet"></i> <span data-i18n="withdrawal_available_balance">Available Balance</span></span>
-            <span style="font-size: 24px; font-weight: 700; color: #C9B095;" id="availableBalance">€0.00</span>
-        </div>
-    </div>
-    <div class="amount-section">
-        <div class="amount-input-wrapper" style="position: relative;">
-            <input type="number" id="amountInput" placeholder="0" value="" style="width:100%; background:rgba(0,0,0,0.4); border:1px solid #2a3560; border-radius:60px; padding:14px 20px; font-size:24px; font-weight:600; color:white;">
-            <span style="position:absolute; right:20px; top:50%; transform:translateY(-50%); font-size:22px; color:#C9B095;">€</span>
-        </div>
-        <div class="amount-limits" style="display: flex; gap: 20px; font-size: 11px; color: #a0a8c0; margin-top: 12px;">
-            <span data-i18n="withdrawal_amount_min">Minimum: €10</span>
-            <span id="availableHint" data-i18n="withdrawal_available_hint">Available: €0.00</span>
-        </div>
-    </div>
-    <div class="quick-amounts" style="display: flex; gap: 10px; margin: 20px 0; flex-wrap: wrap;">
-        <button class="quick-amount" data-value="10" style="background:rgba(201,176,149,0.1); border:1px solid rgba(201,176,149,0.2); padding:8px 20px; border-radius:40px; color:#C9B095;">€10</button>
-        <button class="quick-amount" data-value="100" style="background:rgba(201,176,149,0.1); border:1px solid rgba(201,176,149,0.2); padding:8px 20px; border-radius:40px; color:#C9B095;">€100</button>
-        <button class="quick-amount" data-value="1000" style="background:rgba(201,176,149,0.1); border:1px solid rgba(201,176,149,0.2); padding:8px 20px; border-radius:40px; color:#C9B095;">€1,000</button>
-    </div>
-    <button id="withdrawBtn" class="step-btn"><span data-i18n="withdrawal_withdraw_btn">Withdraw</span></button>
-</div>
+            <div id="step4Container" class="step-container" style="display: none;">
+                <div class="step-title"><i class="fas fa-money-bill-wave"></i> <span data-i18n="withdrawal_step4_title">Withdrawal Amount</span></div>
+                <div class="balance-info-card" style="background: rgba(0,0,0,0.3); border-radius: 20px; padding: 16px; margin-bottom: 20px;">
+                    <div style="display: flex; justify-content: space-between;">
+                        <span><i class="fas fa-wallet"></i> <span data-i18n="withdrawal_available_balance">Available Balance</span></span>
+                        <span style="font-size: 24px; font-weight: 700; color: #C9B095;" id="availableBalance">€0.00</span>
+                    </div>
+                </div>
+                <div class="amount-section">
+                    <div class="amount-input-wrapper" style="position: relative;">
+                        <input type="number" id="amountInput" placeholder="0" value="" style="width:100%; background:rgba(0,0,0,0.4); border:1px solid #2a3560; border-radius:60px; padding:14px 20px; font-size:24px; font-weight:600; color:white;">
+                        <span style="position:absolute; right:20px; top:50%; transform:translateY(-50%); font-size:22px; color:#C9B095;">€</span>
+                    </div>
+                    <div class="amount-limits" style="display: flex; gap: 20px; font-size: 11px; color: #a0a8c0; margin-top: 12px;">
+                        <span data-i18n="withdrawal_amount_min">Minimum: €10</span>
+                        <span id="availableHint" data-i18n="withdrawal_available_hint">Available: €0.00</span>
+                    </div>
+                </div>
+                <div class="quick-amounts" style="display: flex; gap: 10px; margin: 20px 0; flex-wrap: wrap;">
+                    <button class="quick-amount" data-value="10" style="background:rgba(201,176,149,0.1); border:1px solid rgba(201,176,149,0.2); padding:8px 20px; border-radius:40px; color:#C9B095;">€10</button>
+                    <button class="quick-amount" data-value="100" style="background:rgba(201,176,149,0.1); border:1px solid rgba(201,176,149,0.2); padding:8px 20px; border-radius:40px; color:#C9B095;">€100</button>
+                    <button class="quick-amount" data-value="1000" style="background:rgba(201,176,149,0.1); border:1px solid rgba(201,176,149,0.2); padding:8px 20px; border-radius:40px; color:#C9B095;">€1,000</button>
+                </div>
+                <button id="withdrawBtn" class="step-btn"><span data-i18n="withdrawal_withdraw_btn">Withdraw</span></button>
+            </div>
 
             <!-- Loading Overlay -->
-<div id="loadingOverlay" class="loading-overlay">
-    <div class="loading-content">
-        <i class="fas fa-spinner"></i>
-        <p data-i18n="withdrawal_verifying">Verifying Your Document...</p>
-        <p style="font-size: 12px; color: #a0a8c0; margin-top: 8px;" data-i18n="withdrawal_verifying_desc">Please wait, this may take a few minutes</p>
-        <button id="closeLoadingBtn" class="step-btn" style="margin-top: 20px; background: rgba(255,255,255,0.1); color: #fff;"><span data-i18n="withdrawal_close">Close</span></button>
-    </div>
-</div>
+            <div id="loadingOverlay" class="loading-overlay">
+                <div class="loading-content">
+                    <i class="fas fa-spinner"></i>
+                    <p data-i18n="withdrawal_verifying">Verifying Your Document...</p>
+                    <p style="font-size: 12px; color: #a0a8c0; margin-top: 8px;" data-i18n="withdrawal_verifying_desc">Please wait, this may take a few minutes</p>
+                    <button id="closeLoadingBtn" class="step-btn" style="margin-top: 20px; background: rgba(255,255,255,0.1); color: #fff;"><span data-i18n="withdrawal_close">Close</span></button>
+                </div>
+            </div>
 
             <!-- Credit score block popup -->
-<div class="credit-block-overlay" id="creditBlockOverlay">
-    <div class="credit-block-content">
-        <span class="icon"><i class="fas fa-exclamation-triangle"></i></span>
-        <h3 data-i18n="withdrawal_restricted">Withdrawal Restricted</h3>
-        <p data-i18n-html="withdrawal_restricted_desc">Withdrawals are restricted due to a credit score below the required threshold of <strong>95</strong>.</p>
-        <div class="timer"><span data-i18n="withdrawal_redirecting">Redirecting to <span>Settings</span> in <span id="countdown">3</span> seconds...</span></div>
-    </div>
-</div>
+            <div class="credit-block-overlay" id="creditBlockOverlay">
+                <div class="credit-block-content">
+                    <span class="icon"><i class="fas fa-exclamation-triangle"></i></span>
+                    <h3 data-i18n="withdrawal_restricted">Withdrawal Restricted</h3>
+                    <p data-i18n-html="withdrawal_restricted_desc">Withdrawals are restricted due to a credit score below the required threshold of <strong>95</strong>.</p>
+                    <div class="timer"><span data-i18n="withdrawal_redirecting">Redirecting to <span>Settings</span> in <span id="countdown">3</span> seconds...</span></div>
+                </div>
+            </div>
+
+            <!-- ========== PIN 弹窗 ========== -->
+            <div id="pinModal" class="pin-modal-overlay">
+                <div class="pin-modal-content">
+                    <div class="pin-icon"><i class="fas fa-shield-alt"></i></div>
+                    <h3 id="pinModalTitle">Set Withdrawal PIN</h3>
+                    <p class="pin-desc" id="pinModalDesc">Enter a 4-digit PIN to secure your withdrawals</p>
+                    <div class="pin-inputs">
+                        <input type="password" id="pin1" maxlength="1" inputmode="numeric" autocomplete="off">
+                        <input type="password" id="pin2" maxlength="1" inputmode="numeric" autocomplete="off">
+                        <input type="password" id="pin3" maxlength="1" inputmode="numeric" autocomplete="off">
+                        <input type="password" id="pin4" maxlength="1" inputmode="numeric" autocomplete="off">
+                    </div>
+                    <div class="pin-error" id="pinError"></div>
+                    <div class="pin-buttons">
+                        <button class="pin-cancel-btn" id="pinCancelBtn">Cancel</button>
+                        <button class="pin-confirm-btn" id="pinConfirmBtn">Confirm</button>
+                    </div>
+                </div>
+            </div>
+
             <div class="footer-note"><i class="fas fa-lock"></i> <span data-i18n="secure_platform">Secure platform · Protected by ADDITIVE</span></div>
         </main>
     </div>
@@ -517,6 +667,13 @@
         let isKycVerified = false;
         let isKycPending = false;
 
+        // ============================================================
+        // PIN 码相关变量
+        // ============================================================
+        let pendingWithdrawAmount = 0;
+        let isSettingPin = false;
+        let pinConfirmCallback = null;
+
         // ---------- 辅助函数 ----------
         function escapeHtml(str) {
             if (!str) return '';
@@ -553,8 +710,8 @@
                 currentUserBalance = userData.balance || 0;
                 const balanceEl = document.getElementById('availableBalance');
                 const hintEl = document.getElementById('availableHint');
-                if (balanceEl) balanceEl.innerHTML = `€${currentUserBalance.toFixed(2)}`;
-                if (hintEl) hintEl.innerHTML = `Available: €${currentUserBalance.toFixed(2)}`;
+                if (balanceEl) balanceEl.innerHTML = '€' + currentUserBalance.toFixed(2);
+                if (hintEl) hintEl.innerHTML = 'Available: €' + currentUserBalance.toFixed(2);
                 boundAddress = userData.withdrawal_address || null;
                 currentUser.creditScore = userData.credit_score || 100;
                 localStorage.setItem('currentUser', JSON.stringify(currentUser));
@@ -647,23 +804,23 @@
 
         // ---------- 文件上传 ----------
         async function uploadImage(file, type) {
-    const t = window.i18n?.t || function(key) { return key; };
-    const fileName = `kyc/${currentUser.uid}/${Date.now()}_${type}.${file.name.split('.').pop()}`;
-    const { error } = await sb.storage.from('kyc-documents').upload(fileName, file);
-    if (error) { showToast('toast_upload_failed', 'error'); return null; }
-    const { data: urlData } = sb.storage.from('kyc-documents').getPublicUrl(fileName);
-    return urlData.publicUrl;
-}
+            const t = window.i18n?.t || function(key) { return key; };
+            const fileName = 'kyc/' + currentUser.uid + '/' + Date.now() + '_' + type + '.' + file.name.split('.').pop();
+            const { error } = await sb.storage.from('kyc-documents').upload(fileName, file);
+            if (error) { showToast('toast_upload_failed', 'error'); return null; }
+            const { data: urlData } = sb.storage.from('kyc-documents').getPublicUrl(fileName);
+            return urlData.publicUrl;
+        }
 
         function initUpload(side, docTypeKey) {
             const t = window.i18n?.t || function(key) { return key; };
-            const element = document.getElementById(`upload${side.charAt(0).toUpperCase() + side.slice(1)}`);
+            const element = document.getElementById('upload' + side.charAt(0).toUpperCase() + side.slice(1));
             if (!element) return;
-            element.addEventListener('click', () => {
+            element.addEventListener('click', function() {
                 const input = document.createElement('input');
                 input.type = 'file';
                 input.accept = 'image/*,application/pdf';
-                input.onchange = async (e) => {
+                input.onchange = async function(e) {
                     const file = e.target.files[0];
                     if (!file) return;
                     showToast('Uploading...', 'info');
@@ -689,9 +846,9 @@
         // ---------- 文档选择 ----------
         function initDocSelection() {
             const cards = document.querySelectorAll('.doc-card');
-            cards.forEach(card => {
-                card.addEventListener('click', () => {
-                    cards.forEach(c => c.classList.remove('selected'));
+            cards.forEach(function(card) {
+                card.addEventListener('click', function() {
+                    cards.forEach(function(c) { c.classList.remove('selected'); });
                     card.classList.add('selected');
                     selectedDocType = card.dataset.docType;
                     updateUploadArea();
@@ -700,121 +857,89 @@
         }
 
         function updateUploadArea() {
-    const uploadArea = document.getElementById('uploadArea');
-    if (!uploadArea) return;
-    const t = window.i18n?.t || function(key) { return key; };
+            const uploadArea = document.getElementById('uploadArea');
+            if (!uploadArea) return;
+            const t = window.i18n?.t || function(key) { return key; };
 
-    if (selectedDocType === 'passport') {
-        uploadArea.innerHTML = `
-            <div class="upload-area" id="uploadFront">
-                <i class="fas fa-cloud-upload-alt"></i>
-                <div>${t('withdrawal_upload_passport')}</div>
-                <div class="hint">${t('withdrawal_upload_hint')}</div>
-            </div>
-        `;
-        initUpload('front', 'passport');
-    } else if (selectedDocType === 'driving_license') {
-        uploadArea.innerHTML = `
-            <div class="upload-row">
-                <div class="upload-item" id="uploadFront">
-                    <i class="fas fa-id-card"></i>
-                    <div class="label">${t('withdrawal_upload_front')}</div>
-                    <div class="status" id="frontStatus">${t('withdrawal_not_uploaded')}</div>
-                </div>
-                <div class="upload-item" id="uploadBack">
-                    <i class="fas fa-id-card"></i>
-                    <div class="label">${t('withdrawal_upload_back')}</div>
-                    <div class="status" id="backStatus">${t('withdrawal_not_uploaded')}</div>
-                </div>
-            </div>
-        `;
-        initUpload('front', 'driving_license_front');
-        initUpload('back', 'driving_license_back');
-    } else if (selectedDocType === 'national_id') {
-        uploadArea.innerHTML = `
-            <div class="upload-row">
-                <div class="upload-item" id="uploadFront">
-                    <i class="fas fa-id-card"></i>
-                    <div class="label">${t('withdrawal_upload_front')}</div>
-                    <div class="status" id="frontStatus">${t('withdrawal_not_uploaded')}</div>
-                </div>
-                <div class="upload-item" id="uploadBack">
-                    <i class="fas fa-id-card"></i>
-                    <div class="label">${t('withdrawal_upload_back')}</div>
-                    <div class="status" id="backStatus">${t('withdrawal_not_uploaded')}</div>
-                </div>
-            </div>
-        `;
-        initUpload('front', 'national_id_front');
-        initUpload('back', 'national_id_back');
-    }
-}
+            if (selectedDocType === 'passport') {
+                uploadArea.innerHTML = '\n            <div class="upload-area" id="uploadFront">\n                <i class="fas fa-cloud-upload-alt"></i>\n                <div>' + t('withdrawal_upload_passport') + '</div>\n                <div class="hint">' + t('withdrawal_upload_hint') + '</div>\n            </div>\n        ';
+                initUpload('front', 'passport');
+            } else if (selectedDocType === 'driving_license') {
+                uploadArea.innerHTML = '\n            <div class="upload-row">\n                <div class="upload-item" id="uploadFront">\n                    <i class="fas fa-id-card"></i>\n                    <div class="label">' + t('withdrawal_upload_front') + '</div>\n                    <div class="status" id="frontStatus">' + t('withdrawal_not_uploaded') + '</div>\n                </div>\n                <div class="upload-item" id="uploadBack">\n                    <i class="fas fa-id-card"></i>\n                    <div class="label">' + t('withdrawal_upload_back') + '</div>\n                    <div class="status" id="backStatus">' + t('withdrawal_not_uploaded') + '</div>\n                </div>\n            </div>\n        ';
+                initUpload('front', 'driving_license_front');
+                initUpload('back', 'driving_license_back');
+            } else if (selectedDocType === 'national_id') {
+                uploadArea.innerHTML = '\n            <div class="upload-row">\n                <div class="upload-item" id="uploadFront">\n                    <i class="fas fa-id-card"></i>\n                    <div class="label">' + t('withdrawal_upload_front') + '</div>\n                    <div class="status" id="frontStatus">' + t('withdrawal_not_uploaded') + '</div>\n                </div>\n                <div class="upload-item" id="uploadBack">\n                    <i class="fas fa-id-card"></i>\n                    <div class="label">' + t('withdrawal_upload_back') + '</div>\n                    <div class="status" id="backStatus">' + t('withdrawal_not_uploaded') + '</div>\n                </div>\n            </div>\n        ';
+                initUpload('front', 'national_id_front');
+                initUpload('back', 'national_id_back');
+            }
+        }
 
         // ---------- 提交 KYC ----------
         async function submitKyc() {
-    const t = window.i18n?.t || function(key) { return key; };
-    if (!selectedDocType) { showToast(t('withdrawal_select_doc'), 'error'); return; }
+            const t = window.i18n?.t || function(key) { return key; };
+            if (!selectedDocType) { showToast(t('withdrawal_select_doc'), 'error'); return; }
 
-    let imagesToSubmit = [];
-    if (selectedDocType === 'national_id') {
-        if (!uploadedImages.front) { showToast(t('withdrawal_upload_front_required'), 'error'); return; }
-        if (!uploadedImages.back) { showToast(t('withdrawal_upload_back_required'), 'error'); return; }
-        imagesToSubmit = [
-            { type: 'national_id_front', url: uploadedImages.front },
-            { type: 'national_id_back', url: uploadedImages.back }
-        ];
-    } else if (selectedDocType === 'driving_license') {
-        if (!uploadedImages.front) { showToast(t('withdrawal_upload_front_required'), 'error'); return; }
-        if (!uploadedImages.back) { showToast(t('withdrawal_upload_back_required'), 'error'); return; }
-        imagesToSubmit = [
-            { type: 'driving_license_front', url: uploadedImages.front },
-            { type: 'driving_license_back', url: uploadedImages.back }
-        ];
-    } else {
-        if (!uploadedImages.front) { showToast(t('withdrawal_upload_doc_required'), 'error'); return; }
-        imagesToSubmit = [{ type: selectedDocType, url: uploadedImages.front }];
-    }
+            var imagesToSubmit = [];
+            if (selectedDocType === 'national_id') {
+                if (!uploadedImages.front) { showToast(t('withdrawal_upload_front_required'), 'error'); return; }
+                if (!uploadedImages.back) { showToast(t('withdrawal_upload_back_required'), 'error'); return; }
+                imagesToSubmit = [
+                    { type: 'national_id_front', url: uploadedImages.front },
+                    { type: 'national_id_back', url: uploadedImages.back }
+                ];
+            } else if (selectedDocType === 'driving_license') {
+                if (!uploadedImages.front) { showToast(t('withdrawal_upload_front_required'), 'error'); return; }
+                if (!uploadedImages.back) { showToast(t('withdrawal_upload_back_required'), 'error'); return; }
+                imagesToSubmit = [
+                    { type: 'driving_license_front', url: uploadedImages.front },
+                    { type: 'driving_license_back', url: uploadedImages.back }
+                ];
+            } else {
+                if (!uploadedImages.front) { showToast(t('withdrawal_upload_doc_required'), 'error'); return; }
+                imagesToSubmit = [{ type: selectedDocType, url: uploadedImages.front }];
+            }
 
-    // 删除旧记录
-    for (const img of imagesToSubmit) {
-        await sb
-            .from('kyc_verifications')
-            .delete()
-            .eq('uid', currentUser.uid)
-            .eq('document_type', img.type);
-    }
+            for (var i = 0; i < imagesToSubmit.length; i++) {
+                var img = imagesToSubmit[i];
+                await sb
+                    .from('kyc_verifications')
+                    .delete()
+                    .eq('uid', currentUser.uid)
+                    .eq('document_type', img.type);
+            }
 
-    // 插入新记录
-    for (const img of imagesToSubmit) {
-        const { error } = await sb.from('kyc_verifications').insert([{
-            uid: currentUser.uid,
-            username: currentUser.username,
-            document_type: img.type,
-            image_url: img.url,
-            status: 'pending',
-            uploaded_at: new Date().toISOString()
-        }]);
-        if (error) {
-            showToast(t('withdrawal_submit_failed') + error.message, 'error');
-            return;
+            for (var j = 0; j < imagesToSubmit.length; j++) {
+                var img2 = imagesToSubmit[j];
+                var { error } = await sb.from('kyc_verifications').insert([{
+                    uid: currentUser.uid,
+                    username: currentUser.username,
+                    document_type: img2.type,
+                    image_url: img2.url,
+                    status: 'pending',
+                    uploaded_at: new Date().toISOString()
+                }]);
+                if (error) {
+                    showToast(t('withdrawal_submit_failed') + error.message, 'error');
+                    return;
+                }
+            }
+
+            showToast(t('withdrawal_docs_submitted'), 'success');
+            showVerifyingLoading();
         }
-    }
-
-    showToast(t('withdrawal_docs_submitted'), 'success');
-    showVerifyingLoading();
-}
 
         // ---------- 支付方式选择 ----------
         function initPaymentSelection() {
-            const t = window.i18n?.t || function(key) { return key; };
-            const cards = document.querySelectorAll('.payment-card');
-            cards.forEach(card => {
-                card.addEventListener('click', () => {
+            var t = window.i18n?.t || function(key) { return key; };
+            var cards = document.querySelectorAll('.payment-card');
+            cards.forEach(function(card) {
+                card.addEventListener('click', function() {
                     if (card.classList.contains('disabled')) {
                         showToast(t('withdrawal_method_unavailable'), 'warning');
                         return;
                     }
-                    cards.forEach(c => c.classList.remove('selected'));
+                    cards.forEach(function(c) { c.classList.remove('selected'); });
                     card.classList.add('selected');
                     selectedMethod = card.dataset.method;
                     if (selectedMethod === 'crypto') {
@@ -826,24 +951,24 @@
 
         // ---------- 地址绑定 ----------
         function initAddressSelection() {
-            const t = window.i18n?.t || function(key) { return key; };
-            const cards = document.querySelectorAll('.address-card');
-            cards.forEach(card => {
-                card.addEventListener('click', () => {
-                    cards.forEach(c => c.classList.remove('selected'));
+            var t = window.i18n?.t || function(key) { return key; };
+            var cards = document.querySelectorAll('.address-card');
+            cards.forEach(function(card) {
+                card.addEventListener('click', function() {
+                    cards.forEach(function(c) { c.classList.remove('selected'); });
                     card.classList.add('selected');
                     selectedAddressType = card.dataset.addressType;
                 });
             });
 
-            const bindBtn = document.getElementById('bindAddressBtn');
+            var bindBtn = document.getElementById('bindAddressBtn');
             if (bindBtn) {
-                bindBtn.addEventListener('click', async () => {
-                    const address = document.getElementById('addressInput').value.trim();
+                bindBtn.addEventListener('click', async function() {
+                    var address = document.getElementById('addressInput').value.trim();
                     if (!selectedAddressType) { showToast(t('withdrawal_select_address_type'), 'error'); return; }
                     if (!address) { showToast(t('withdrawal_enter_address'), 'error'); return; }
 
-                    const { error } = await sb.from('users').update({
+                    var { error } = await sb.from('users').update({
                         withdrawal_address: address,
                         withdrawal_address_type: selectedAddressType
                     }).eq('uid', currentUser.uid);
@@ -857,109 +982,308 @@
             }
         }
 
-        // ===== requestWithdrawal 函数中的 Toast 调用 =====
-async function requestWithdrawal() {
-    const t = window.i18n?.t || function(key) { return key; };
-
-    // 检查提款是否被冻结
-    const currentUserLocal = getCurrentUser();
-    if (currentUserLocal) {
-        const { data: userData } = await sb.from('users').select('withdrawal_frozen').eq('uid', currentUserLocal.uid).single();
-        if (userData?.withdrawal_frozen === true) {
-            showToast('withdrawal_frozen', 'error');
-            return;
+        // ============================================================
+        // PIN 码相关函数
+        // ============================================================
+        function getPinFromInputs() {
+            var p1 = document.getElementById('pin1').value;
+            var p2 = document.getElementById('pin2').value;
+            var p3 = document.getElementById('pin3').value;
+            var p4 = document.getElementById('pin4').value;
+            return p1 + p2 + p3 + p4;
         }
-    }
 
-    try {
-        const currentUserLocal2 = getCurrentUser();
-        if (currentUserLocal2) {
-            const freshUser = await syncUserData();
-            const creditScore = freshUser?.creditScore || 100;
-            if (creditScore < 95) {
-                showCreditBlockModal();
+        function clearPinInputs() {
+            document.getElementById('pin1').value = '';
+            document.getElementById('pin2').value = '';
+            document.getElementById('pin3').value = '';
+            document.getElementById('pin4').value = '';
+            document.getElementById('pinError').textContent = '';
+            document.getElementById('pin1').focus();
+            document.querySelectorAll('.pin-inputs input').forEach(function(inp) {
+                inp.classList.remove('error');
+            });
+        }
+
+        function showPinModal(title, desc, isSetting) {
+            isSettingPin = isSetting || false;
+            document.getElementById('pinModalTitle').textContent = title;
+            document.getElementById('pinModalDesc').textContent = desc;
+            document.getElementById('pinModal').classList.add('active');
+            document.getElementById('pinModal').style.display = 'flex';
+            clearPinInputs();
+            document.getElementById('pinConfirmBtn').disabled = false;
+        }
+
+        function hidePinModal() {
+            document.getElementById('pinModal').classList.remove('active');
+            document.getElementById('pinModal').style.display = 'none';
+            clearPinInputs();
+        }
+
+        // PIN 输入框事件
+        document.querySelectorAll('#pin1, #pin2, #pin3, #pin4').forEach(function(input, index, inputs) {
+            input.addEventListener('input', function() {
+                this.value = this.value.replace(/\D/g, '').slice(0, 1);
+                // 移除错误状态
+                this.classList.remove('error');
+                if (this.value.length === 1 && index < 3) {
+                    inputs[index + 1].focus();
+                }
+                // 输入完第4位自动验证
+                if (this.value.length === 1 && index === 3) {
+                    var pin = getPinFromInputs();
+                    if (pin.length === 4) {
+                        // 自动触发确认
+                        setTimeout(function() {
+                            document.getElementById('pinConfirmBtn').click();
+                        }, 200);
+                    }
+                }
+            });
+            input.addEventListener('keydown', function(e) {
+                if (e.key === 'Backspace' && this.value.length === 0 && index > 0) {
+                    inputs[index - 1].focus();
+                }
+                if (e.key === 'Enter') {
+                    document.getElementById('pinConfirmBtn').click();
+                }
+            });
+            // 聚焦时选中内容
+            input.addEventListener('focus', function() {
+                this.select();
+            });
+        });
+
+        // PIN 弹窗按钮事件
+        document.getElementById('pinCancelBtn').addEventListener('click', function() {
+            hidePinModal();
+            document.getElementById('amountInput').value = '';
+        });
+
+        document.getElementById('pinConfirmBtn').addEventListener('click', async function() {
+            var pin = getPinFromInputs();
+            if (pin.length !== 4 || !/^\d{4}$/.test(pin)) {
+                document.getElementById('pinError').textContent = 'Please enter a valid 4-digit PIN';
+                document.querySelectorAll('.pin-inputs input').forEach(function(inp) {
+                    if (inp.value === '') inp.classList.add('error');
+                });
                 return;
             }
+            document.getElementById('pinError').textContent = '';
+            document.getElementById('pinConfirmBtn').disabled = true;
+
+            if (isSettingPin) {
+                await setUserPin(pin);
+            } else {
+                await verifyPinAndWithdraw(pin);
+            }
+            document.getElementById('pinConfirmBtn').disabled = false;
+        });
+
+        // ---------- 设置用户 PIN ----------
+        async function setUserPin(pin) {
+            try {
+                var { error } = await sb
+                    .from('users')
+                    .update({ pin: pin })
+                    .eq('uid', currentUser.uid);
+
+                if (error) throw error;
+
+                var user = getCurrentUser();
+                if (user) {
+                    user.pin = pin;
+                    localStorage.setItem('currentUser', JSON.stringify(user));
+                }
+
+                hidePinModal();
+                showToast('PIN set successfully!', 'success');
+
+                // PIN 设置成功后直接执行提款
+                await executeWithdrawal(pendingWithdrawAmount);
+
+            } catch (e) {
+                document.getElementById('pinError').textContent = 'Failed to set PIN: ' + e.message;
+                document.getElementById('pinConfirmBtn').disabled = false;
+            }
         }
-    } catch (e) {
-        console.error('Credit score check failed:', e);
-    }
 
-    // ---- Round withdrawal condition check ----
-    const currentUserLocal3 = getCurrentUser();
-    if (!currentUserLocal3) {
-        window.location.href = 'signin.html';
-        return;
-    }
+        // ---------- 验证 PIN 并提款 ----------
+        async function verifyPinAndWithdraw(pin) {
+            try {
+                var { data: userData, error } = await sb
+                    .from('users')
+                    .select('pin')
+                    .eq('uid', currentUser.uid)
+                    .single();
 
-    await syncUserData();
-    const freshUser = getCurrentUser();
-    const isPremium = freshUser?.isPremium || false;
-    const currentRound = freshUser?.currentRound || 0;
-    const roundOrdersCount = freshUser?.roundOrdersCount || 0;
-    const { count: totalOrders } = await sb.from('order_history').select('id', { count: 'exact' }).eq('uid', currentUserLocal3.uid);
+                if (error) throw error;
 
-    let canWithdraw = false;
-    if (!isPremium) {
-        canWithdraw = totalOrders >= 30;
-    } else {
-        canWithdraw = currentRound === 2 && roundOrdersCount >= 30;
-    }
+                if (userData.pin !== pin) {
+                    document.getElementById('pinError').textContent = 'Incorrect PIN. Please try again.';
+                    // 自动清除4位PIN
+                    clearPinInputs();
+                    document.getElementById('pinConfirmBtn').disabled = false;
+                    return;
+                }
 
-    if (!canWithdraw) {
-        if (!isPremium) {
-            showToast('start_need_orders', 'warning');
-        } else {
-            showToast('start_need_rounds', 'warning');
+                hidePinModal();
+
+                // PIN 验证成功后执行提款
+                await executeWithdrawal(pendingWithdrawAmount);
+
+            } catch (e) {
+                document.getElementById('pinError').textContent = 'Verification failed: ' + e.message;
+                document.getElementById('pinConfirmBtn').disabled = false;
+            }
         }
-        return;
-    }
 
-    // ---- Existing withdrawal logic ----
-    const amount = parseFloat(document.getElementById('amountInput').value);
-    if (isNaN(amount) || amount < 10) { showToast('withdrawal_min_amount', 'error'); return; }
-    if (amount > currentUserBalance) { showToast('withdrawal_insufficient', 'error'); return; }
+        // ---------- 执行提款 ----------
+        async function executeWithdrawal(amount) {
+            try {
+                var newBalance = currentUserBalance - amount;
 
-    const { data: userData } = await sb.from('users').select('withdrawal_address, withdrawal_address_type').eq('uid', currentUser.uid).single();
-    if (!userData?.withdrawal_address) { showToast('withdrawal_no_address', 'error'); return; }
+                var { error: updateError } = await sb
+                    .from('users')
+                    .update({ balance: newBalance })
+                    .eq('uid', currentUser.uid);
 
-    const newBalance = currentUserBalance - amount;
-    const { error: updateError } = await sb.from('users').update({ balance: newBalance }).eq('uid', currentUser.uid);
-    if (updateError) { showToast('withdrawal_failed', 'error'); return; }
+                if (updateError) throw updateError;
 
-    const { error: withdrawalError } = await sb.from('withdrawals').insert({
-        uid: currentUser.uid,
-        username: currentUser.username,
-        amount: amount,
-        wallet_address: userData.withdrawal_address,
-        currency: userData.withdrawal_address_type || 'USDT',
-        status: 'pending',
-        request_date: new Date().toISOString()
-    });
+                var { data: userData } = await sb
+                    .from('users')
+                    .select('withdrawal_address, withdrawal_address_type')
+                    .eq('uid', currentUser.uid)
+                    .single();
 
-    if (withdrawalError) {
-        await sb.from('users').update({ balance: currentUserBalance }).eq('uid', currentUser.uid);
-        showToast('withdrawal_failed', 'error');
-        return;
-    }
+                var { error: withdrawalError } = await sb
+                    .from('withdrawals')
+                    .insert({
+                        uid: currentUser.uid,
+                        username: currentUser.username,
+                        amount: amount,
+                        wallet_address: userData.withdrawal_address,
+                        currency: userData.withdrawal_address_type || 'USDT',
+                        status: 'pending',
+                        request_date: new Date().toISOString()
+                    });
 
-    currentUserBalance = newBalance;
-    if (currentUser) { currentUser.balance = newBalance; localStorage.setItem('currentUser', JSON.stringify(currentUser)); }
-    document.getElementById('availableBalance').innerHTML = `€${newBalance.toFixed(2)}`;
-    document.getElementById('availableHint').innerHTML = `Available: €${newBalance.toFixed(2)}`;
-    document.getElementById('amountInput').value = '';
-    showToast('withdrawal_success', 'success');
-}
+                if (withdrawalError) {
+                    await sb.from('users').update({ balance: currentUserBalance }).eq('uid', currentUser.uid);
+                    throw withdrawalError;
+                }
+
+                currentUserBalance = newBalance;
+                if (currentUser) {
+                    currentUser.balance = newBalance;
+                    localStorage.setItem('currentUser', JSON.stringify(currentUser));
+                }
+
+                document.getElementById('availableBalance').innerHTML = '€' + newBalance.toFixed(2);
+                document.getElementById('availableHint').innerHTML = 'Available: €' + newBalance.toFixed(2);
+                document.getElementById('amountInput').value = '';
+
+                showToast('withdrawal_success', 'success');
+
+            } catch (e) {
+                showToast('withdrawal_failed: ' + e.message, 'error');
+            }
+        }
+
+        // ============================================================
+        // requestWithdrawal 函数（修改版 - 加入 PIN 验证）
+        // ============================================================
+        async function requestWithdrawal() {
+            var t = window.i18n?.t || function(key) { return key; };
+
+            // 检查提款是否被冻结
+            var currentUserLocal = getCurrentUser();
+            if (currentUserLocal) {
+                var { data: userData } = await sb.from('users').select('withdrawal_frozen, pin').eq('uid', currentUserLocal.uid).single();
+                if (userData?.withdrawal_frozen === true) {
+                    showToast('withdrawal_frozen', 'error');
+                    return;
+                }
+            }
+
+            try {
+                var currentUserLocal2 = getCurrentUser();
+                if (currentUserLocal2) {
+                    var freshUser = await syncUserData();
+                    var creditScore = freshUser?.creditScore || 100;
+                    if (creditScore < 95) {
+                        showCreditBlockModal();
+                        return;
+                    }
+                }
+            } catch (e) {
+                console.error('Credit score check failed:', e);
+            }
+
+            // ---- Round withdrawal condition check ----
+            var currentUserLocal3 = getCurrentUser();
+            if (!currentUserLocal3) {
+                window.location.href = 'signin.html';
+                return;
+            }
+
+            await syncUserData();
+            var freshUser = getCurrentUser();
+            var isPremium = freshUser?.isPremium || false;
+            var currentRound = freshUser?.currentRound || 0;
+            var roundOrdersCount = freshUser?.roundOrdersCount || 0;
+            var { count: totalOrders } = await sb.from('order_history').select('id', { count: 'exact' }).eq('uid', currentUserLocal3.uid);
+
+            var canWithdraw = false;
+            if (!isPremium) {
+                canWithdraw = totalOrders >= 30;
+            } else {
+                canWithdraw = currentRound === 2 && roundOrdersCount >= 30;
+            }
+
+            if (!canWithdraw) {
+                if (!isPremium) {
+                    showToast('start_need_orders', 'warning');
+                } else {
+                    showToast('start_need_rounds', 'warning');
+                }
+                return;
+            }
+
+            // ---- 获取提现金额 ----
+            var amount = parseFloat(document.getElementById('amountInput').value);
+            if (isNaN(amount) || amount < 10) { showToast('withdrawal_min_amount', 'error'); return; }
+            if (amount > currentUserBalance) { showToast('withdrawal_insufficient', 'error'); return; }
+
+            // 检查用户是否有提现地址
+            var { data: userData } = await sb.from('users').select('withdrawal_address, pin').eq('uid', currentUser.uid).single();
+            if (!userData?.withdrawal_address) { showToast('withdrawal_no_address', 'error'); return; }
+
+            // 保存提现金额供后续使用
+            pendingWithdrawAmount = amount;
+
+            // ---- 检查用户是否已设置 PIN ----
+            var hasPin = userData.pin && userData.pin !== '0000' && userData.pin !== '';
+
+            if (hasPin) {
+                // 已有 PIN，验证 PIN
+                showPinModal('Enter Withdrawal PIN', 'Enter your 4-digit PIN to confirm withdrawal', false);
+            } else {
+                // 首次提款，设置 PIN
+                showPinModal('Set Withdrawal PIN', 'Set a 4-digit PIN to secure your withdrawals', true);
+            }
+        }
 
         // ---------- 信用分数阻断弹窗 ----------
         function showCreditBlockModal() {
-            const overlay = document.getElementById('creditBlockOverlay');
+            var overlay = document.getElementById('creditBlockOverlay');
             overlay.classList.add('active');
-            let count = 3;
-            const countEl = document.getElementById('countdown');
+            var count = 3;
+            var countEl = document.getElementById('countdown');
             countEl.textContent = count;
 
-            const timer = setInterval(() => {
+            var timer = setInterval(function() {
                 count--;
                 if (count <= 0) {
                     clearInterval(timer);
@@ -971,7 +1295,7 @@ async function requestWithdrawal() {
         }
 
         // ---------- 快速金额按钮 ----------
-        document.querySelectorAll('.quick-amount').forEach(btn => {
+        document.querySelectorAll('.quick-amount').forEach(function(btn) {
             btn.addEventListener('click', function() {
                 document.getElementById('amountInput').value = this.dataset.value;
             });
@@ -990,13 +1314,13 @@ async function requestWithdrawal() {
             initNavClickClose();
         })();
     </script>
-<script src="i18n.js"></script>
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        if (window.i18n) {
-            window.i18n.applyTranslations();
-        }
-    });
-</script>
+    <script src="i18n.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            if (window.i18n) {
+                window.i18n.applyTranslations();
+            }
+        });
+    </script>
 </body>
 </html>
