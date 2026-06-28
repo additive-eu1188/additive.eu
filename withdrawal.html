@@ -866,7 +866,11 @@
             .step4-header .sub-title {
                 font-size: 12px;
             }
-        }
+        .card-rosegold .card-logo-overlay img {
+        width: 70px;
+        max-width: 100px;
+    }
+}
 
         @media (max-width: 480px) {
             .card-rosegold {
@@ -930,7 +934,11 @@
                 font-size: 15px;
                 padding: 14px;
             }
-        }
+        .card-rosegold .card-logo-overlay img {
+        width: 50px;
+        max-width: 80px;
+    }
+}
 
         .footer-note {
             margin-top: 40px;
@@ -1065,48 +1073,50 @@
                 </div>
 
                 <!-- 玫瑰金借记卡 -->
-                <div class="card-rosegold">
-                    <!-- 光晕装饰 -->
-                    <div class="glow-orb"></div>
-                    <div class="glow-orb-top"></div>
+<div class="card-rosegold">
+    <!-- 光晕装饰 -->
+    <div class="glow-orb"></div>
+    <div class="glow-orb-top"></div>
 
-                    <!-- 右上角发光圆点 + 脉冲光圈 -->
-                    <div class="pulse-dot-wrapper">
-                        <span class="pulse-ring"></span>
-                        <span class="pulse-ring"></span>
-                        <span class="pulse-ring"></span>
-                        <span class="pulse-dot"></span>
-                    </div>
+    <!-- 右上角发光圆点 + 脉冲光圈 -->
+    <div class="pulse-dot-wrapper">
+        <span class="pulse-ring"></span>
+        <span class="pulse-ring"></span>
+        <span class="pulse-ring"></span>
+        <span class="pulse-dot"></span>
+    </div>
 
-                    <!-- 卡片头部 -->
-                    <div class="card-header">
-                        <div class="left">
-                            <i class="fas fa-credit-card"></i>
-                            <span data-i18n="withdrawal_card_title">BINDED WITHDRAWAL ADDRESS</span>
-                        </div>
-                    </div>
+    <!-- 卡片中间的 Logo - 调低可见度 -->
+    <div class="card-logo-overlay">
+        <img src="creditcardlogo.png" alt="logo" onerror="this.style.display='none'">
+    </div>
 
-                    <!-- 卡片内容包装器 -->
-                    <div class="card-content-wrapper">
-                        <!-- 地址 - 3D金属质感，无边框，前10+后8 -->
-                        <div class="card-address" id="displayAddress">Txdsfkjh42...jk341234</div>
+    <!-- 卡片头部 -->
+    <div class="card-header">
+        <div class="left">
+            <i class="fas fa-credit-card"></i>
+            <span data-i18n="withdrawal_card_title">BINDED WITHDRAWAL ADDRESS</span>
+        </div>
+    </div>
 
-                        <!-- 底部区域（分隔线 + User + Balance） -->
-                        <div>
-                            <div class="card-divider"></div>
-                            <div class="card-footer">
-                                <div class="user-section">
-                                    <div class="label"><i class="fas fa-user"></i> <span data-i18n="withdrawal_user_label">User</span></div>
-                                    <div class="value" id="displayUsername">John Doe</div>
-                                </div>
-                                <div class="balance-section">
-                                    <div class="label"><i class="fas fa-wallet"></i> <span data-i18n="withdrawal_balance_label">Balance</span></div>
-                                    <div class="value" id="displayBalance">€0.00</div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+    <!-- 卡片内容包装器 -->
+    <div class="card-content-wrapper">
+        <div class="card-address" id="displayAddress">Txdsfkjh42...jk341234</div>
+        <div>
+            <div class="card-divider"></div>
+            <div class="card-footer">
+                <div class="user-section">
+                    <div class="label"><i class="fas fa-user"></i> <span data-i18n="withdrawal_user_label">User</span></div>
+                    <div class="value" id="displayUsername">John Doe</div>
                 </div>
+                <div class="balance-section">
+                    <div class="label"><i class="fas fa-wallet"></i> <span data-i18n="withdrawal_balance_label">Balance</span></div>
+                    <div class="value" id="displayBalance">€0.00</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 
                 <!-- Amount 输入 -->
                 <div class="amount-section-new">
