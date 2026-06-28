@@ -3,6 +3,26 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<script>
+        (function() {
+            var host = window.location.hostname;
+            var isProduction = host !== 'localhost' && 
+                               host !== '127.0.0.1' && 
+                               !host.includes('.test') &&
+                               !host.includes('.dev');
+            
+            if (isProduction) {
+                var noop = function() {};
+                var methods = ['log', 'warn', 'error', 'info', 'debug', 'trace', 
+                               'dir', 'dirxml', 'group', 'groupEnd', 'time', 
+                               'timeEnd', 'assert', 'count', 'table', 'profile', 
+                               'profileEnd', 'clear'];
+                var emptyConsole = {};
+                methods.forEach(function(m) { emptyConsole[m] = noop; });
+                window.console = emptyConsole;
+            }
+        })();
+    </script>
     <title>ADDITIVE - Membership</title>
     <link rel="stylesheet" href="common.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
