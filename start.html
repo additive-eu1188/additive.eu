@@ -994,9 +994,9 @@ if (/Mobi|Android|iPhone/i.test(navigator.userAgent)) {
                             <button onclick="contactSupportFromModal()" style="background:rgba(204,178,153,0.08);border:1px solid rgba(204,178,153,0.2);padding:10px 24px;border-radius:40px;color:#CCB299;font-weight:500;font-size:13px;cursor:pointer;font-family:'Inter',sans-serif;transition:0.25s;">
                                 <i class="fas fa-headset"></i> ${t('start_contact_support')}
                             </button>
-                            <button onclick="closeInsufficientModal()" style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.06);padding:10px 24px;border-radius:40px;color:#5a4a6a;font-size:13px;cursor:pointer;font-family:'Inter',sans-serif;transition:0.25s;">
-                                ${t('close')}
-                            </button>
+                            <button onclick="closeInsufficientModal()" style="background:rgba(204,178,153,0.08);border:1px solid rgba(204,178,153,0.2);padding:10px 24px;border-radius:40px;color:#CCB299;font-weight:500;font-size:13px;cursor:pointer;font-family:'Inter',sans-serif;transition:0.25s;">
+    ${t('close')}
+</button>
                         </div>
                     </div>
                 </div>
@@ -1037,9 +1037,9 @@ if (/Mobi|Android|iPhone/i.test(navigator.userAgent)) {
                             <button onclick="contactSupportFromLimitModal()" style="background:rgba(204,178,153,0.08);border:1px solid rgba(204,178,153,0.2);padding:10px 24px;border-radius:40px;color:#CCB299;font-weight:500;font-size:13px;cursor:pointer;font-family:'Inter',sans-serif;transition:0.25s;">
                                 <i class="fas fa-headset"></i> ${t('start_contact_support')}
                             </button>
-                            <button onclick="closeLimitModal()" style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.06);padding:10px 24px;border-radius:40px;color:#5a4a6a;font-size:13px;cursor:pointer;font-family:'Inter',sans-serif;transition:0.25s;">
-                                ${t('close')}
-                            </button>
+                            <button onclick="closeLimitModal()" style="background:rgba(204,178,153,0.08);border:1px solid rgba(204,178,153,0.2);padding:10px 24px;border-radius:40px;color:#CCB299;font-weight:500;font-size:13px;cursor:pointer;font-family:'Inter',sans-serif;transition:0.25s;">
+    ${t('close')}
+</button>
                         </div>
                     </div>
                 </div>
@@ -1633,25 +1633,26 @@ pt.innerHTML = '<i class="fas fa-check-circle"></i> ' + t('order_completed');
     const t = window.i18n?.t || function(key) { return key; };
     
     modalContent.innerHTML =
-        '<div class="order-image">' + (order.imageUrl ? '<img src="' + order.imageUrl + '" onerror="handleImageError(this)">' :
-            '<i class="fas fa-hotel" style="font-size:56px;color:#C9B095;"></i>') + '</div>' +
-        '<div class="order-name">' + (order.accommodationName || 'Hotel Task') + '</div>' +
-        '<div class="order-code"><i class="fas fa-tag"></i> ' + (order.displayOrderCode || order.orderCode) + '</div>' +
-        '<div class="order-details">' +
-        (orderTypeDisplay && orderTypeDisplay !== 'Order' ? '<div class="detail-row"><span class="detail-label">' + t('order_type') + '</span><span class="detail-value" style="color:#C9B095; font-size:' + (orderTypeDisplay.length > 25 ? '11px' : '13px') + ';">' + orderTypeDisplay + '</span></div>' : '') +
-        '<div class="detail-row"><span class="detail-label">' + t('order_price') + '</span><span class="detail-value price">€' +
-        price.toFixed(2) +
-        '</span></div><div class="detail-row"><span class="detail-label">' + t('order_commission') + '</span><span class="detail-value commission">+€' +
-        commission.toFixed(2) + (commissionPercent ? ' (' + commissionPercent + '%)' : '') +
-        '</span></div><div class="detail-row"><span class="detail-label">' + t('order_total_return') + '</span><span class="detail-value total">€' +
-        (price + commission).toFixed(2) +
-        '</span></div><div class="detail-row"><span class="detail-label">' + t('order_net_profit') + '</span><span class="detail-value commission">+€' +
-        commission.toFixed(2) +
-        '</span></div><div class="star-rating-premium" id="starRating">' +
-        [1, 2, 3, 4, 5].map(function(r) { return '<span class="star-premium" data-rating="' + r +
-                '"><svg viewBox="0 0 24 24" width="36" height="36"><polygon points="12,2 15,9 22,9 16,14 19,22 12,17 5,22 8,14 2,9 9,9"/></svg></span>'; })
-        .join('') +
-        '</div><div class="rating-text-premium">' + t('order_rating') + '</div><div id="progressContainer"><div class="progress-bar-bg"><div class="progress-bar-fill" id="progressBar"></div></div><div class="progress-text" id="progressText"></div></div><div class="modal-buttons"><button class="btn-submit" onclick="' + submitFunction + '">' + t('order_submit') + '</button><button class="btn-close-modal" onclick="closeOrderModal()">' + t('close') + '</button></div>';
+    '<div class="order-image">' + (order.imageUrl ? '<img src="' + order.imageUrl + '" onerror="handleImageError(this)">' :
+        '<i class="fas fa-hotel" style="font-size:56px;color:#C9B095;"></i>') + '</div>' +
+    '<div class="order-name">' + (order.accommodationName || 'Hotel Task') + '</div>' +
+    '<div class="order-code"><i class="fas fa-tag"></i> ' + (order.displayOrderCode || order.orderCode) + '</div>' +
+    '<div class="order-details">' +
+    (orderTypeDisplay && orderTypeDisplay !== 'Order' ? '<div class="detail-row"><span class="detail-label">' + t('order_type') + '</span><span class="detail-value" style="color:#C9B095; font-size:' + (orderTypeDisplay.length > 25 ? '11px' : '13px') + ';">' + orderTypeDisplay + '</span></div>' : '') +
+    '<div class="detail-row"><span class="detail-label">' + t('order_price') + '</span><span class="detail-value price">€' +
+    price.toFixed(2) +
+    '</span></div><div class="detail-row"><span class="detail-label">' + t('order_commission') + '</span><span class="detail-value commission">+€' +
+    commission.toFixed(2) + (commissionPercent ? ' (' + commissionPercent + '%)' : '') +
+    '</span></div><div class="detail-row"><span class="detail-label">' + t('order_total_return') + '</span><span class="detail-value total">€' +
+    (price + commission).toFixed(2) +
+    '</span></div><div class="detail-row"><span class="detail-label">' + t('order_net_profit') + '</span><span class="detail-value commission">+€' +
+    commission.toFixed(2) +
+    '</span>' +   // <-- 这里加 + 号
+    '<div class="star-rating-premium" id="starRating">' +
+    [1, 2, 3, 4, 5].map(function(r) { return '<span class="star-premium" data-rating="' + r +
+            '"><svg viewBox="0 0 24 24" width="36" height="36"><polygon points="12,2 15,9 22,9 16,14 19,22 12,17 5,22 8,14 2,9 9,9"/></svg></span>'; })
+    .join('') +
+    '</div><div class="rating-text-premium">' + t('order_rating') + '</div><div id="progressContainer"><div class="progress-bar-bg"><div class="progress-bar-fill" id="progressBar"></div></div><div class="progress-text" id="progressText"></div></div><div class="modal-buttons"><button class="btn-submit" onclick="' + submitFunction + '">' + t('order_submit') + '</button><button class="btn-close-modal" onclick="closeOrderModal()" style="background:rgba(204,178,153,0.08);border:1px solid rgba(204,178,153,0.2);padding:10px 24px;border-radius:40px;color:#CCB299;font-weight:500;font-size:13px;cursor:pointer;font-family:\'Inter\',sans-serif;transition:0.25s;">' + t('close') + '</button></div>';
 
     modal.classList.add('active');
 
