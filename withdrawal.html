@@ -788,31 +788,31 @@
         }
 
         /* ===== Withdraw 按钮 ===== */
-        .withdraw-btn-new {
-            width: 100%;
-            background: linear-gradient(135deg, #d4a0a0, #b08080);
-            border: none;
-            padding: 16px;
-            border-radius: 40px;
-            color: #ffffff;
-            font-weight: 700;
-            font-size: 17px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            font-family: 'Inter', sans-serif;
-            letter-spacing: 0.5px;
-            box-shadow: 0 4px 20px rgba(201,149,149,0.15);
-        }
-        .withdraw-btn-new:hover {
-            transform: scale(1.01);
-            box-shadow: 0 8px 30px rgba(201,149,149,0.25);
-        }
-        .withdraw-btn-new:disabled {
-            opacity: 0.4;
-            cursor: not-allowed;
-            transform: none;
-            box-shadow: none;
-        }
+.withdraw-btn-new {
+    width: 100%;
+    background: linear-gradient(135deg, #C9B095, #b8944a);  /* 改成和 step-btn 一样的金色渐变 */
+    border: none;
+    padding: 16px;
+    border-radius: 40px;
+    color: #0A122B;  /* 深色文字，和 step-btn 一致 */
+    font-weight: 700;
+    font-size: 17px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-family: 'Inter', sans-serif;
+    letter-spacing: 0.5px;
+    box-shadow: 0 4px 20px rgba(201,176,149,0.15);
+}
+.withdraw-btn-new:hover {
+    transform: scale(1.01);
+    box-shadow: 0 8px 30px rgba(201,176,149,0.25);
+}
+.withdraw-btn-new:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
 
         /* ===== 响应式 ===== */
         @media (max-width: 768px) {
