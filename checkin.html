@@ -179,6 +179,15 @@
             box-shadow: 0 8px 30px rgba(74, 222, 128, 0.08);
         }
 
+        .claim-section {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+            padding: 0 20px;
+            box-sizing: border-box;
+        }
+
         .claim-btn {
             background: rgba(201, 176, 149, 0.15);
             border: 1px solid rgba(201, 176, 149, 0.3);
@@ -190,8 +199,12 @@
             margin-bottom: 16px;
             display: inline-flex;
             align-items: center;
+            justify-content: center;
             gap: 10px;
             transition: 0.2s;
+            min-width: 200px;
+            width: 100%;
+            max-width: 400px;
         }
         .claim-btn.disabled {
             opacity: 0.5;
@@ -205,6 +218,7 @@
             font-size: 11px;
             color: #ffaa66;
             line-height: 1.4;
+            text-align: center;
         }
         .total-rewards-card {
             background: rgba(20, 30, 55, 0.7);
@@ -363,33 +377,6 @@
             padding: 16px 0;
             border-top: 1px solid rgba(204, 178, 153, 0.08);
         }
-.claim-section {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    width: 100%;
-    padding: 0 20px;
-    box-sizing: border-box;
-}
-
-.claim-btn {
-    background: rgba(201, 176, 149, 0.15);
-    border: 1px solid rgba(201, 176, 149, 0.3);
-    padding: 12px 28px;
-    border-radius: 40px;
-    color: #C9B095;
-    font-weight: 600;
-    cursor: pointer;
-    margin-bottom: 16px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 10px;
-    transition: 0.2s;
-    min-width: 200px;
-    width: 100%;
-    max-width: 400px;
-}
     </style>
 </head>
 <body>
@@ -916,10 +903,18 @@ if (canClaim) {
     // 检查是否所有天数都已 Claim
     const allClaimed = signInRewards.every(r => claimedDays.includes(r.day));
     
+    // 🔥 检查今天是否已经 Claim 过（防止同一次 Round 2 内重复 Claim）
+    const hasClaimedToday = lastClaimDate && new Date().toDateString() === new Date(lastClaimDate).toDateString();
+    
     if (allClaimed) {
         claimBtn.classList.add('disabled');
         claimBtn.disabled = true;
         claimWarning.innerHTML = t('checkin_all_completed');
+    } else if (hasClaimedToday) {
+        // 今天已经 Claim 过了，需要等 Round 重置后再 Claim
+        claimBtn.classList.add('disabled');
+        claimBtn.disabled = true;
+        claimWarning.innerHTML = t('checkin_claimed_today');
     } else {
         claimBtn.classList.remove('disabled');
         claimBtn.disabled = false;
@@ -941,6 +936,14 @@ async function handleClaim() {
     
     const t = window.i18n?.t || function(key) { return key; };
     const { streak, lastClaimDate, claimedDays } = loadData();
+
+    // ============================================================
+    // 🔥 检查今天是否已经 Claim 过
+    // ============================================================
+    if (lastClaimDate && new Date().toDateString() === new Date(lastClaimDate).toDateString()) {
+        showToast('checkin_claimed_today_msg', 'warning');
+        return;
+    }
 
     // ============================================================
     // 🔥 找出第一个未领取的天数
