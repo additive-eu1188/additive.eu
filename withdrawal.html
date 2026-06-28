@@ -1015,9 +1015,9 @@
             <div id="step4Container" style="display: none; padding: 0; background: transparent; border: none; box-shadow: none; backdrop-filter: none;">
                 <!-- 标题区 -->
                 <div class="step4-header">
-                    <div class="main-title">Choose withdrawal amount</div>
-                    <div class="sub-title">Type or select the amount to withdraw from your available balance.</div>
-                </div>
+    <div class="main-title" data-i18n="withdrawal_step4_title">Choose withdrawal amount</div>
+    <div class="sub-title" data-i18n="withdrawal_step4_subtitle">Type or select the amount to withdraw from your available balance.</div>
+</div>
 
                 <!-- 玫瑰金借记卡 -->
                 <div class="card-rosegold">
@@ -1035,11 +1035,11 @@
 
                     <!-- 卡片头部 -->
                     <div class="card-header">
-                        <div class="left">
-                            <i class="fas fa-credit-card"></i>
-                            <span>BINDED WITHDRAWAL ADDRESS</span>
-                        </div>
-                    </div>
+    <div class="left">
+        <i class="fas fa-credit-card"></i>
+        <span data-i18n="withdrawal_card_title">BINDED WITHDRAWAL ADDRESS</span>
+    </div>
+</div>
 
                     <!-- 地址 - 3D金属质感，无边框，前10+后8 -->
                     <div class="card-address" id="displayAddress">Txdsfkjh42...jk341234</div>
@@ -1049,25 +1049,24 @@
 
                     <!-- 底部 User + Balance -->
                     <div class="card-footer">
-                        <div class="user-section">
-                            <div class="label"><i class="fas fa-user"></i> User</div>
-                            <div class="value" id="displayUsername">John Doe</div>
-                        </div>
-                        <div class="balance-section">
-                            <div class="label"><i class="fas fa-wallet"></i> Balance</div>
-                            <div class="value" id="displayBalance">€0.00</div>
-                        </div>
-                    </div>
-                </div>
+    <div class="user-section">
+        <div class="label"><i class="fas fa-user"></i> <span data-i18n="withdrawal_user_label">User</span></div>
+        <div class="value" id="displayUsername">John Doe</div>
+    </div>
+    <div class="balance-section">
+        <div class="label"><i class="fas fa-wallet"></i> <span data-i18n="withdrawal_balance_label">Balance</span></div>
+        <div class="value" id="displayBalance">€0.00</div>
+    </div>
+</div>
 
                 <!-- Amount 输入 -->
                 <div class="amount-section-new">
-                    <span class="amount-label">AMOUNT</span>
-                    <div class="amount-input-wrapper">
-                        <span class="currency-symbol">€</span>
-                        <input type="number" id="amountInput" placeholder="0.00" step="0.01" min="0">
-                    </div>
-                </div>
+    <span class="amount-label" data-i18n="withdrawal_amount_label">AMOUNT</span>
+    <div class="amount-input-wrapper">
+        <span class="currency-symbol">€</span>
+        <input type="number" id="amountInput" placeholder="0.00" step="0.01" min="0">
+    </div>
+</div>
 
                 <!-- 快速金额 2x2 -->
                 <div class="quick-amounts-grid">
