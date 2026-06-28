@@ -270,17 +270,18 @@
             border-top: 1px solid rgba(204, 178, 153, 0.08);
         }
 .address-card .icon-wrapper {
-    width: 56px;
-    height: 56px;
+    width: 30px;
+    height: 30px;
     border-radius: 50%;
     background: #C9B095;
     margin: 0 auto 8px;
-    display: flex;
+    display: inline-flex;  /* 改成 inline-flex */
     align-items: center;
     justify-content: center;
+    flex-shrink: 0;        /* 防止被压缩 */
 }
 .address-card .icon-wrapper .tether-text {
-    font-size: 28px;
+    font-size: 15px;
     font-weight: 700;
     color: #0b0f1f;
     font-family: Arial, sans-serif;
@@ -389,9 +390,7 @@
     <div class="step-title"><i class="fas fa-link"></i> <span data-i18n="withdrawal_step3_title">Bind Withdrawal Address</span></div>
     <div class="address-cards">
         <div class="address-card" data-address-type="usdt">
-    <div class="icon-wrapper">
-        <span class="tether-text">₮</span>
-    </div>
+    <i class="fas fa-t" style="font-size:15px; background:#C9B095; color:#0b0f1f; width:30px; height:30px; border-radius:50%; display:inline-flex; align-items:center; justify-content:center; margin:0 auto 8px; font-weight:700;"></i>
     <div>USDT (TRC20)</div>
     <small>Tether</small>
 </div>
