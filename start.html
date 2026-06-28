@@ -1505,6 +1505,7 @@ pt.innerHTML = '<i class="fas fa-check-circle"></i> ' + t('order_completed');
 };
 
         function closeOrderModal() {
+            restoreModalStyle();
             document.getElementById('orderModal').classList.remove('active');
             selectedRating = 0;
         }
@@ -1621,6 +1622,8 @@ pt.innerHTML = '<i class="fas fa-check-circle"></i> ' + t('order_completed');
     var modalContent = document.getElementById('modalContent');
     if (!modal || !modalContent) return;
 
+    restoreModalStyle();
+
     var orderTypeDisplay = order.orderType || 'Order';
     var commissionPercent = order.commissionPercent || '';
     var price = order.price || 0;
@@ -1684,6 +1687,44 @@ pt.innerHTML = '<i class="fas fa-check-circle"></i> ' + t('order_completed');
 }
 
         // ============================================================
+        // 弹窗样式控制（仅用于 Searching Order 透明效果）
+        // ============================================================
+        function setModalTransparent() {
+            var modal = document.getElementById('orderModal');
+            if (!modal) return;
+            var orderModal = modal.querySelector('.order-modal');
+            
+            // 外层透明
+            modal.style.background = 'rgba(0,0,0,0.0)';
+            modal.style.backdropFilter = 'blur(0px)';
+            modal.style.webkitBackdropFilter = 'blur(0px)';
+            
+            // 中层透明
+            if (orderModal) {
+                orderModal.style.background = 'transparent';
+                orderModal.style.border = 'none';
+                orderModal.style.boxShadow = 'none';
+            }
+        }
+
+        function restoreModalStyle() {
+            var modal = document.getElementById('orderModal');
+            if (!modal) return;
+            var orderModal = modal.querySelector('.order-modal');
+            
+            // 恢复 CSS 默认值
+            modal.style.background = '';
+            modal.style.backdropFilter = '';
+            modal.style.webkitBackdropFilter = '';
+            
+            if (orderModal) {
+                orderModal.style.background = '';
+                orderModal.style.border = '';
+                orderModal.style.boxShadow = '';
+            }
+        }
+
+        // ============================================================
         // Main entry: open order (优化版 - 并行查询 + 即时反馈)
         // ============================================================
         async function openOrderModal() {
@@ -1713,6 +1754,9 @@ pt.innerHTML = '<i class="fas fa-check-circle"></i> ' + t('order_completed');
         </div>
     </div>
 `;
+
+    setModalTransparent();
+
     modal.classList.add('active');
 
     var startTime = performance.now();
@@ -1801,6 +1845,9 @@ pt.innerHTML = '<i class="fas fa-check-circle"></i> ' + t('order_completed');
         </div>
     </div>
 `;
+
+                setModalTransparent();
+
                 await handleTriggerOrder(modalContent);
                 console.log('⏱️ Order loaded in ' + (performance.now() - startTime).toFixed(0) + 'ms');
                 return;
@@ -1821,6 +1868,9 @@ pt.innerHTML = '<i class="fas fa-check-circle"></i> ' + t('order_completed');
         </div>
     </div>
 `;
+
+                    setModalTransparent();
+
                     await showClaimedCardOrder(currentTriggerOrder);
                     console.log('⏱️ Claimed card order loaded in ' + (performance.now() - startTime).toFixed(0) + 'ms');
                     return;
