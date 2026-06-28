@@ -619,18 +619,10 @@ async function loadUsers() {
             sb.from('vip_settings').select('*'),
             
             // 用户列表（只查需要的字段）
-(async () => {
-    let query = sb.from('users')
-        .select('uid, username, phone, balance, vip_level, country, registered_ip, created_at, updated_at, last_online, invited_by_username, user_role, credit_score, withdrawal_frozen, is_banned, is_premium, current_round, round_orders_count, pending_display, pin, withdrawal_address_type, withdrawal_address', { count: 'exact' })
-        .order('created_at', { ascending: false });
-    
-    // ✅ 添加搜索条件
-    if (searchKeyword) {
-        query = query.or(`uid.ilike.%${searchKeyword}%,phone.ilike.%${searchKeyword}%,username.ilike.%${searchKeyword}%`);
-    }
-    
-    return query.range((window.userCurrentPage - 1) * window.userPageSize, window.userCurrentPage * window.userPageSize - 1);
-})(),
+            sb.from('users')
+                .select('uid, username, phone, balance, vip_level, country, registered_ip, created_at, updated_at, last_online, invited_by_username, user_role, credit_score, withdrawal_frozen, is_banned, is_premium, current_round, round_orders_count, pending_display, pin, withdrawal_address_type, withdrawal_address')
+                .order('created_at', { ascending: false })
+                .range((window.userCurrentPage - 1) * window.userPageSize, window.userCurrentPage * window.userPageSize - 1),
             
             // 待处理提现（只查 uid 和 amount）
             sb.from('withdrawals')
@@ -651,7 +643,7 @@ async function loadUsers() {
         if (usersResult.error) throw usersResult.error;
         
         const users = usersResult.data || [];
-        const vipSettings = vipSettingsResult.data || [];
+        const vipSettings = await getVipSettingsCached();
         const uids = users.map(u => u.uid);
         
         // ============================================================
@@ -1143,7 +1135,7 @@ async function loadUsers() {
         }
         
     } catch (e) {
-        console.error('加载用户失败:', e);、、、、、、、、、、、、、、、、、、、、、、、、、、、、、
+        console.error('加载用户失败:', e);
         tbody.innerHTML = `<tr><td colspan="11" style="text-align:center; padding:40px; color:#e88080;">加载失败: ${escapeHtml(e.message)}</td></tr>`;
     }
 }
