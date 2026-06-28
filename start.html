@@ -1647,7 +1647,7 @@ pt.innerHTML = '<i class="fas fa-check-circle"></i> ' + t('order_completed');
     (price + commission).toFixed(2) +
     '</span></div><div class="detail-row"><span class="detail-label">' + t('order_net_profit') + '</span><span class="detail-value commission">+€' +
     commission.toFixed(2) +
-    '</span>' +   // <-- 这里加 + 号
+    '</span>' +   // ✅ 这里改成 '</span>' + 
     '<div class="star-rating-premium" id="starRating">' +
     [1, 2, 3, 4, 5].map(function(r) { return '<span class="star-premium" data-rating="' + r +
             '"><svg viewBox="0 0 24 24" width="36" height="36"><polygon points="12,2 15,9 22,9 16,14 19,22 12,17 5,22 8,14 2,9 9,9"/></svg></span>'; })
