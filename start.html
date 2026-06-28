@@ -639,7 +639,7 @@ function getAmountDue(uid) {
     var allOrders = await getOrdersFromAdmin();
     if (balance < 50) { return []; }
     
-    var minPrice = balance * 0.8;
+    var minPrice = balance * 0.6;
     var maxPrice = balance * 0.95;
     
     // ============================================================
