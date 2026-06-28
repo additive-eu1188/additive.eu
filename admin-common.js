@@ -475,6 +475,7 @@ function updateSidebarBadges() {
       el.classList.add('active');
     }
   });
+  renderTabBar();  // ✅ 在函数内部
 }
 
 function updateNotificationCount(moduleId, count) {
@@ -525,6 +526,7 @@ async function loadNotificationCounts() {
   } catch (e) {
     console.error('加载通知数量失败:', e);
   }
+  renderTabBar();  // ✅ 在 try-catch 外面，但属于函数体
 }
 
 // ============================================================
@@ -1255,7 +1257,12 @@ function renderTabBar() {
         const isActive = tab.id === activeTabId;
         if (isActive) tabEl.classList.add('active');
 
-        const hasUnread = notificationCounts[tab.pageId] > 0 && !readNotifications[tab.pageId];
+        // ✅ 新代码
+const countKey = tab.pageId === 'emailverify' ? 'email' : 
+                 tab.pageId === 'withdrawals' ? 'withdrawal' : 
+                 tab.pageId;
+const count = notificationCounts[countKey] || 0;
+const hasUnread = count > 0 && !readNotifications[countKey];
         if (hasUnread) tabEl.classList.add('has-notification');
 
         const pageDef = PAGE_DEFS[tab.pageId];
@@ -1264,7 +1271,7 @@ function renderTabBar() {
         tabEl.innerHTML = `
             <i class="fas ${icon}"></i>
             <span>${tab.label}</span>
-            ${hasUnread ? `<span class="tab-badge">${notificationCounts[tab.pageId]}</span>` : ''}
+            ${hasUnread ? `<span class="tab-badge">${count}</span>` : ''}
             <button class="tab-close" data-tab-id="${tab.id}" title="关闭标签">
                 <i class="fas fa-times"></i>
             </button>
@@ -1366,10 +1373,13 @@ function switchTab(tabId) {
     if (!tab) return;
 
     const pageId = tab.pageId;
-    if (notificationCounts[pageId] > 0 && !readNotifications[pageId]) {
-        readNotifications[pageId] = true;
+    const countKey = pageId === 'emailverify' ? 'email' : 
+                     pageId === 'withdrawals' ? 'withdrawal' : 
+                     pageId;
+    
+    if (notificationCounts[countKey] > 0 && !readNotifications[countKey]) {
+        readNotifications[countKey] = true;
         renderTabBar();
-        console.log(`✅ 通知已读: ${pageId}`);
     }
 
     if (activeTabId === tabId) return;

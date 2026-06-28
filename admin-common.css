@@ -908,3 +908,16 @@ button.danger:hover {
     font-family: monospace;
     display: none;
 }
+
+/* Tab 标签有通知时发光 */
+.tab-item.has-notification {
+    color: #F3D38B !important;
+}
+.tab-item.has-notification i {
+    color: #D6B25E !important;
+}
+.tab-item.has-notification .tab-badge {
+    background: #4a7cff !important;
+    color: #fff !important;
+    box-shadow: 0 0 12px rgba(74, 124, 255, 0.4);
+}
