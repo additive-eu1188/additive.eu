@@ -635,171 +635,150 @@ function getAmountDue(uid) {
         }
 
         // ============================================================
-        // 🔥 获取用户当前余额范围内已使用的酒店列表（用于去重）
-        // ============================================================
-        async function getUsedHotelsInCurrentRange(uid, balance) {
-            var minPrice = balance * 0.5;
-            var maxPrice = balance * 0.95;
-            
-            // ============================================================
-            // 🔥 检查是否需要重置（检测到价格范围变化或手动重置）
-            // ============================================================
-            var rangeKey = 'hotel_range_' + uid;
-            var currentRange = minPrice.toFixed(2) + '_' + maxPrice.toFixed(2);
-            var savedRange = localStorage.getItem(rangeKey);
-            
-            var resetKey = 'used_hotels_reset_' + uid;
-            var resetFlag = localStorage.getItem(resetKey);
-            
-            // 如果价格范围变化了，或者有重置标记，清空已使用列表
-            if (savedRange !== currentRange || resetFlag) {
-                console.log('🔄 价格范围变化或重置标记，清空已使用列表');
-                localStorage.removeItem('used_hotels_' + uid);
-                localStorage.setItem(rangeKey, currentRange);
-                if (resetFlag) {
-                    localStorage.removeItem(resetKey);
-                }
-                return [];
+// 🔥 获取用户当前余额范围内已使用的酒店列表（用于去重）
+// ============================================================
+async function getUsedHotelsInCurrentRange(uid, balance) {
+    // ============================================================
+    // 🔥 使用档位（range bucket）而非精确价格范围
+    // 避免每次余额微小变化都清空列表
+    // ============================================================
+    var bucketSize = 50; // 每50欧元一个档位
+    var bucketMin = Math.floor(balance / bucketSize) * bucketSize;
+    var bucketMax = bucketMin + bucketSize;
+    
+    // 实际价格范围：档位的 50%~95%
+    var minPrice = bucketMin * 0.5;
+    var maxPrice = bucketMax * 0.95;
+    
+    // 档位标识（如 "100-150"）
+    var bucketKey = bucketMin + '-' + bucketMax;
+    
+    console.log('💰 余额:', balance, '档位:', bucketKey, '价格范围:', minPrice.toFixed(2), '~', maxPrice.toFixed(2));
+    
+    // ============================================================
+    // 🔥 根据档位存储，而非精确价格范围
+    // ============================================================
+    var rangeKey = 'hotel_range_bucket_' + uid;
+    var savedBucket = localStorage.getItem(rangeKey);
+    
+    // 只有当档位变化时才更新（不是每次余额变化都更新）
+    if (savedBucket !== bucketKey) {
+        console.log('🔄 档位变化:', savedBucket, '->', bucketKey, '（清空已使用列表）');
+        localStorage.removeItem('used_hotels_' + uid);
+        localStorage.setItem(rangeKey, bucketKey);
+        return [];
+    }
+    
+    // 从 localStorage 读取已使用酒店列表
+    var usedKey = 'used_hotels_' + uid;
+    var saved = localStorage.getItem(usedKey);
+    if (saved) {
+        try {
+            var data = JSON.parse(saved);
+            if (data.timestamp && Date.now() - data.timestamp < 7 * 24 * 60 * 60 * 1000) {
+                return data.hotels || [];
             }
-            
-            // 从 localStorage 读取已使用酒店列表
-            var usedKey = 'used_hotels_' + uid;
-            var saved = localStorage.getItem(usedKey);
-            if (saved) {
-                try {
-                    var data = JSON.parse(saved);
-                    // 验证数据有效性（24小时内有效）
-                    if (data.timestamp && Date.now() - data.timestamp < 24 * 60 * 60 * 1000) {
-                        return data.hotels || [];
-                    }
-                } catch (e) {
-                    console.error('解析已使用酒店失败:', e);
-                }
-            }
-            
-            // 如果 localStorage 没有，从数据库获取
-            try {
-                const { data: orders } = await sb
-                    .from('order_history')
-                    .select('accommodation_name, price')
-                    .eq('uid', uid)
-                    .order('date', { ascending: false });
-                
-                if (!orders || orders.length === 0) return [];
-                
-                var usedHotels = orders
-                    .filter(o => o.price >= minPrice && o.price <= maxPrice)
-                    .map(o => o.accommodation_name)
-                    .filter(name => name);
-                
-                // 保存到 localStorage
-                localStorage.setItem(usedKey, JSON.stringify({
-                    hotels: usedHotels,
-                    timestamp: Date.now()
-                }));
-                
-                return usedHotels;
-            } catch (e) {
-                console.error('获取已使用酒店失败:', e);
-                return [];
-            }
+        } catch (e) {
+            console.error('解析已使用酒店失败:', e);
         }
-
+    }
+    
+    return [];
+}
         async function getOrdersByBalance(balance) {
-            var user = getCurrentUser();
-            var allOrders = await getOrdersFromAdmin();
-            if (balance < 50) { return []; }
-            
-            // ============================================================
-            // 🔥 价格范围：balance * 0.5 ~ balance * 0.95
-            // ============================================================
-            var minPrice = balance * 0.5;
-            var maxPrice = balance * 0.95;
-            console.log('💰 价格范围:', minPrice.toFixed(2), '~', maxPrice.toFixed(2));
-            
-            // ============================================================
-            // 🔥 获取当前价格范围内所有可用酒店（不去重，保留所有订单）
-            // ============================================================
-            var availableOrders = allOrders.filter(function(order) {
-                var price = order.price || 0;
-                return price >= minPrice && price <= maxPrice;
-            });
-            
-            console.log('📊 价格范围内可用订单总数:', availableOrders.length);
-            
-            if (availableOrders.length === 0) {
-                console.log('⚠️ 价格范围内没有可用订单');
-                return [];
-            }
-            
-            // ============================================================
-            // 🔥 获取用户在当前价格范围内已使用过的酒店名
-            // ============================================================
-            var usedHotels = [];
-            if (user && user.uid) {
-                usedHotels = await getUsedHotelsInCurrentRange(user.uid, balance);
-            }
-            
-            // ============================================================
-            // 🔥 按酒店名分组，每个酒店保留所有订单
-            // ============================================================
-            var hotelMap = {};
-            availableOrders.forEach(function(order) {
-                var hotelName = order.accommodationName;
-                if (!hotelName) return;
-                if (!hotelMap[hotelName]) {
-                    hotelMap[hotelName] = [];
-                }
-                hotelMap[hotelName].push(order);
-            });
-            
-            var hotelNames = Object.keys(hotelMap);
-            console.log('🏨 价格范围内不同酒店总数:', hotelNames.length);
-            console.log('🏨 已使用酒店数:', usedHotels.length);
-            
-            // 筛选出未使用的酒店
-            var usedHotelSet = new Set(usedHotels);
-            var unusedHotelNames = hotelNames.filter(function(name) {
-                return !usedHotelSet.has(name);
-            });
-            
-            console.log('🏨 未使用酒店数:', unusedHotelNames.length);
-            
-            var resultOrders = [];
-            
-            if (unusedHotelNames.length > 0) {
-                // 🔥 有未使用的酒店：从这些酒店中随机选一个
-                var randomHotelName = unusedHotelNames[Math.floor(Math.random() * unusedHotelNames.length)];
-                // 从该酒店的所有订单中随机选一个
-                var hotelOrders = hotelMap[randomHotelName];
-                var selectedOrder = hotelOrders[Math.floor(Math.random() * hotelOrders.length)];
-                resultOrders = [selectedOrder];
-                console.log('✅ 选择未使用酒店:', randomHotelName);
-            } else {
-                // 🔥 所有酒店都已使用：重置（清空已使用列表），重新开始
-                console.log('🔄 所有酒店已使用完毕，重置！');
-                // 从所有酒店中随机选一个
-                var randomHotelName = hotelNames[Math.floor(Math.random() * hotelNames.length)];
-                var hotelOrders = hotelMap[randomHotelName];
-                var selectedOrder = hotelOrders[Math.floor(Math.random() * hotelOrders.length)];
-                resultOrders = [selectedOrder];
-                console.log('✅ 重置后选择酒店:', randomHotelName);
-                
-                // ============================================================
-                // 🔥 重置已使用酒店列表（清空 localStorage 中的记录）
-                // ============================================================
-                if (user && user.uid) {
-                    var resetKey = 'used_hotels_reset_' + user.uid;
-                    localStorage.setItem(resetKey, Date.now().toString());
-                    // 同时清空已使用列表
-                    localStorage.removeItem('used_hotels_' + user.uid);
-                    console.log('🔄 已重置酒店使用记录');
-                }
-            }
-            
-            console.log('✅ 最终匹配到', resultOrders.length, '个订单');
-            return resultOrders;
+    var user = getCurrentUser();
+    var allOrders = await getOrdersFromAdmin();
+    if (balance < 50) { return []; }
+    
+    // ============================================================
+    // 🔥 使用档位（range bucket）而非精确价格范围
+    // ============================================================
+    var bucketSize = 50;
+    var bucketMin = Math.floor(balance / bucketSize) * bucketSize;
+    var bucketMax = bucketMin + bucketSize;
+    var minPrice = bucketMin * 0.5;
+    var maxPrice = bucketMax * 0.95;
+    var bucketKey = bucketMin + '-' + bucketMax;
+    
+    console.log('💰 余额:', balance, '档位:', bucketKey, '价格范围:', minPrice.toFixed(2), '~', maxPrice.toFixed(2));
+    
+    // ============================================================
+    // 🔥 获取当前价格范围内所有可用酒店
+    // ============================================================
+    var availableOrders = allOrders.filter(function(order) {
+        var price = order.price || 0;
+        return price >= minPrice && price <= maxPrice;
+    });
+    
+    console.log('📊 价格范围内可用订单总数:', availableOrders.length);
+    
+    if (availableOrders.length === 0) {
+        console.log('⚠️ 价格范围内没有可用订单');
+        return [];
+    }
+    
+    // ============================================================
+    // 🔥 获取用户在当前档位内已使用过的酒店名
+    // ============================================================
+    var usedHotels = [];
+    if (user && user.uid) {
+        usedHotels = await getUsedHotelsInCurrentRange(user.uid, balance);
+    }
+    
+    // ============================================================
+    // 🔥 按酒店名分组
+    // ============================================================
+    var hotelMap = {};
+    availableOrders.forEach(function(order) {
+        var hotelName = order.accommodationName;
+        if (!hotelName) return;
+        if (!hotelMap[hotelName]) {
+            hotelMap[hotelName] = [];
         }
+        hotelMap[hotelName].push(order);
+    });
+    
+    var hotelNames = Object.keys(hotelMap);
+    console.log('🏨 价格范围内不同酒店总数:', hotelNames.length);
+    console.log('🏨 已使用酒店数:', usedHotels.length);
+    
+    var usedHotelSet = new Set(usedHotels);
+    var unusedHotelNames = hotelNames.filter(function(name) {
+        return !usedHotelSet.has(name);
+    });
+    
+    console.log('🏨 未使用酒店数:', unusedHotelNames.length);
+    console.log('🏨 已使用酒店列表:', usedHotels);
+    console.log('🏨 未使用酒店列表:', unusedHotelNames);
+    
+    var resultOrders = [];
+    
+    if (unusedHotelNames.length > 0) {
+        var randomHotelName = unusedHotelNames[Math.floor(Math.random() * unusedHotelNames.length)];
+        var hotelOrders = hotelMap[randomHotelName];
+        var selectedOrder = hotelOrders[Math.floor(Math.random() * hotelOrders.length)];
+        resultOrders = [selectedOrder];
+        console.log('✅ 选择未使用酒店:', randomHotelName);
+    } else {
+        console.log('🔄 所有酒店已使用完毕，重置！');
+        var randomHotelName = hotelNames[Math.floor(Math.random() * hotelNames.length)];
+        var hotelOrders = hotelMap[randomHotelName];
+        var selectedOrder = hotelOrders[Math.floor(Math.random() * hotelOrders.length)];
+        resultOrders = [selectedOrder];
+        console.log('✅ 重置后选择酒店:', randomHotelName);
+        
+        // 重置已使用酒店列表
+        if (user && user.uid) {
+            localStorage.removeItem('used_hotels_' + user.uid);
+            var resetKey = 'used_hotels_reset_' + user.uid;
+            localStorage.setItem(resetKey, Date.now().toString());
+            console.log('🔄 已重置酒店使用记录');
+        }
+    }
+    
+    console.log('✅ 最终匹配到', resultOrders.length, '个订单');
+    return resultOrders;
+}
 
         // ============================================================
         // User data loading
@@ -1290,39 +1269,41 @@ if (/Mobi|Android|iPhone/i.test(navigator.userAgent)) {
         // 🔥 记录已使用的酒店（用于去重）
         // ============================================================
         async function recordUsedHotel(uid, hotelName, balance) {
-            if (!uid || !hotelName) return;
-            
-            var minPrice = balance * 0.5;
-            var maxPrice = balance * 0.95;
-            var rangeKey = 'hotel_range_' + uid;
-            var currentRange = minPrice.toFixed(2) + '_' + maxPrice.toFixed(2);
-            
-            // 检查价格范围是否匹配
-            var savedRange = localStorage.getItem(rangeKey);
-            if (savedRange !== currentRange) {
-                // 价格范围已变化，不记录（getUsedHotelsInCurrentRange 会处理）
-                return;
-            }
-            
-            var usedKey = 'used_hotels_' + uid;
-            var saved = localStorage.getItem(usedKey);
-            var usedHotels = [];
-            if (saved) {
-                try {
-                    var data = JSON.parse(saved);
-                    usedHotels = data.hotels || [];
-                } catch (e) {}
-            }
-            
-            if (!usedHotels.includes(hotelName)) {
-                usedHotels.push(hotelName);
-                localStorage.setItem(usedKey, JSON.stringify({
-                    hotels: usedHotels,
-                    timestamp: Date.now()
-                }));
-                console.log('📝 记录已使用酒店:', hotelName);
-            }
-        }
+    if (!uid || !hotelName) return;
+    
+    var bucketSize = 50;
+    var bucketMin = Math.floor(balance / bucketSize) * bucketSize;
+    var bucketMax = bucketMin + bucketSize;
+    var bucketKey = bucketMin + '-' + bucketMax;
+    
+    var rangeKey = 'hotel_range_bucket_' + uid;
+    var savedBucket = localStorage.getItem(rangeKey);
+    
+    // 如果档位不匹配，不记录（getUsedHotelsInCurrentRange 会处理）
+    if (savedBucket !== bucketKey) {
+        console.log('⚠️ 档位不匹配，不记录酒店:', hotelName);
+        return;
+    }
+    
+    var usedKey = 'used_hotels_' + uid;
+    var saved = localStorage.getItem(usedKey);
+    var usedHotels = [];
+    if (saved) {
+        try {
+            var data = JSON.parse(saved);
+            usedHotels = data.hotels || [];
+        } catch (e) {}
+    }
+    
+    if (!usedHotels.includes(hotelName)) {
+        usedHotels.push(hotelName);
+        localStorage.setItem(usedKey, JSON.stringify({
+            hotels: usedHotels,
+            timestamp: Date.now()
+        }));
+        console.log('📝 记录已使用酒店:', hotelName);
+    }
+}
 
         window.submitOrder = async function() {
             if (selectedRating === 0) {
