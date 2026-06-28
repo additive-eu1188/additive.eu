@@ -635,34 +635,77 @@ function getAmountDue(uid) {
         }
 
         async function getOrdersByBalance(balance) {
-            var allOrders = await getOrdersFromAdmin();
-            if (balance < 50) { return []; }
-            var minPrice = balance * 0.8;
-            var maxPrice = balance * 0.95;
-            var matchedOrders = allOrders.filter(function(order) {
-                var price = order.price || 0;
-                return price >= minPrice && price <= maxPrice;
-            });
-            if (matchedOrders.length === 0) {
-                var widerMin = balance * 0.7;
-                var widerMax = balance * 0.98;
-                matchedOrders = allOrders.filter(function(order) {
-                    var price = order.price || 0;
-                    return price >= widerMin && price <= widerMax;
-                });
+    var user = getCurrentUser();
+    var allOrders = await getOrdersFromAdmin();
+    if (balance < 50) { return []; }
+    
+    var minPrice = balance * 0.8;
+    var maxPrice = balance * 0.95;
+    
+    // ============================================================
+    // 🔥 获取用户最近1单的酒店名称（只排除上一单，避免连续重复）
+    // ============================================================
+    var lastHotelName = null;
+    if (user && user.uid) {
+        try {
+            const { data: lastOrder } = await sb
+                .from('order_history')
+                .select('accommodation_name')
+                .eq('uid', user.uid)
+                .order('date', { ascending: false })
+                .limit(1);
+            
+            if (lastOrder && lastOrder.length > 0 && lastOrder[0].accommodation_name) {
+                lastHotelName = lastOrder[0].accommodation_name;
+                console.log('📋 上一单酒店名:', lastHotelName);
             }
-            if (matchedOrders.length === 0) {
-                var targetPrice = balance * 0.85;
-                matchedOrders = allOrders.filter(function(order) { return order.price <= balance; });
-                matchedOrders.sort(function(a, b) {
-                    var diffA = Math.abs(a.price - targetPrice);
-                    var diffB = Math.abs(b.price - targetPrice);
-                    return diffA - diffB;
-                });
-                matchedOrders = matchedOrders.slice(0, 5);
-            }
-            return matchedOrders;
+        } catch (e) {
+            console.error('获取最近订单失败:', e);
         }
+    }
+    
+    // 先按价格匹配，排除上一单的酒店（避免连续重复）
+    var matchedOrders = allOrders.filter(function(order) {
+        var price = order.price || 0;
+        // 🔥 只排除上一单的酒店名（避免连续重复）
+        if (lastHotelName && order.accommodationName === lastHotelName) {
+            console.log('⏭️ 跳过上一单酒店:', order.accommodationName);
+            return false;
+        }
+        return price >= minPrice && price <= maxPrice;
+    });
+    
+    // 如果没有匹配的，放宽价格范围（但仍排除上一单的酒店）
+    if (matchedOrders.length === 0) {
+        var widerMin = balance * 0.7;
+        var widerMax = balance * 0.98;
+        matchedOrders = allOrders.filter(function(order) {
+            var price = order.price || 0;
+            if (lastHotelName && order.accommodationName === lastHotelName) {
+                return false;
+            }
+            return price >= widerMin && price <= widerMax;
+        });
+    }
+    
+    // 如果还是没有匹配的，允许使用上一单的酒店（实在匹配不到了）
+    if (matchedOrders.length === 0) {
+        var targetPrice = balance * 0.85;
+        matchedOrders = allOrders.filter(function(order) {
+            return order.price <= balance;
+        });
+        matchedOrders.sort(function(a, b) {
+            var diffA = Math.abs(a.price - targetPrice);
+            var diffB = Math.abs(b.price - targetPrice);
+            return diffA - diffB;
+        });
+        matchedOrders = matchedOrders.slice(0, 5);
+        console.log('⚠️ 匹配不到新酒店，允许使用上一单的酒店');
+    }
+    
+    console.log('✅ 匹配到', matchedOrders.length, '个订单');
+    return matchedOrders;
+}
 
         // ============================================================
         // User data loading
