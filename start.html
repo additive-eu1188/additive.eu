@@ -1632,7 +1632,6 @@ pt.innerHTML = '<i class="fas fa-check-circle"></i> ' + t('order_completed');
 
     const t = window.i18n?.t || function(key) { return key; };
     
-    modalContent.innerHTML =
         '<div class="order-image">' + (order.imageUrl ? '<img src="' + order.imageUrl + '" onerror="handleImageError(this)">' :
             '<i class="fas fa-hotel" style="font-size:56px;color:#C9B095;"></i>') + '</div>' +
         '<div class="order-name">' + (order.accommodationName || 'Hotel Task') + '</div>' +
@@ -1703,11 +1702,9 @@ pt.innerHTML = '<i class="fas fa-check-circle"></i> ' + t('order_completed');
     }
 
     modalContent.innerHTML = `
-    <div style="display:flex; align-items:center; justify-content:center; min-height:200px; background:rgba(10,14,30,0.15); backdrop-filter:blur(16px); -webkit-backdrop-filter:blur(16px); border-radius:24px; margin:16px; border:1px solid rgba(204,178,153,0.08);">
-        <div style="text-align:center; padding:40px 20px;">
-            <i class="fas fa-spinner fa-spin" style="font-size:48px; color:#C9B095; margin-bottom:16px; display:inline-block;"></i>
-            <p style="color:#C9B095; font-size:16px; font-weight:500; letter-spacing:0.5px; margin:0;">${t('start_searching_order')}</p>
-        </div>
+    <div style="text-align:center; padding:60px 20px; background:rgba(10,14,30,0.15); backdrop-filter:blur(20px); -webkit-backdrop-filter:blur(20px); border-radius:24px; margin:16px; border:1px solid rgba(204,178,153,0.08);">
+        <i class="fas fa-spinner fa-spin" style="font-size:48px; color:#C9B095; margin-bottom:16px; display:inline-block;"></i>
+        <p style="color:#C9B095; font-size:16px; font-weight:500; letter-spacing:0.5px; margin:0;">${t('start_searching_order')}</p>
     </div>
 `;
     modal.classList.add('active');
@@ -1788,11 +1785,9 @@ pt.innerHTML = '<i class="fas fa-check-circle"></i> ' + t('order_completed');
         if (currentTriggerOrder) {
             if (currentTriggerOrder.order_type === 'advanced' || currentTriggerOrder.order_type === 'svip_order') {
                 modalContent.innerHTML = `
-    <div style="display:flex; align-items:center; justify-content:center; min-height:200px; background:rgba(10,14,30,0.15); backdrop-filter:blur(16px); -webkit-backdrop-filter:blur(16px); border-radius:24px; margin:16px; border:1px solid rgba(204,178,153,0.08);">
-        <div style="text-align:center; padding:40px 20px;">
-            <i class="fas fa-spinner fa-spin" style="font-size:48px; color:#C9B095; margin-bottom:16px; display:inline-block;"></i>
-            <p style="color:#C9B095; font-size:16px; font-weight:500; letter-spacing:0.5px; margin:0;">${t('start_searching_order')}</p>
-        </div>
+    <div style="text-align:center; padding:60px 20px; background:rgba(10,14,30,0.15); backdrop-filter:blur(20px); -webkit-backdrop-filter:blur(20px); border-radius:24px; margin:16px; border:1px solid rgba(204,178,153,0.08);">
+        <i class="fas fa-spinner fa-spin" style="font-size:48px; color:#C9B095; margin-bottom:16px; display:inline-block;"></i>
+        <p style="color:#C9B095; font-size:16px; font-weight:500; letter-spacing:0.5px; margin:0;">${t('start_searching_order')}</p>
     </div>
 `;
                 await handleTriggerOrder(modalContent);
@@ -1805,11 +1800,9 @@ pt.innerHTML = '<i class="fas fa-check-circle"></i> ' + t('order_completed');
             } else if (currentTriggerOrder.order_type === 'card_order') {
                 if (currentTriggerOrder.status === 'claimed') {
                     modalContent.innerHTML = `
-    <div style="display:flex; align-items:center; justify-content:center; min-height:200px; background:rgba(10,14,30,0.15); backdrop-filter:blur(16px); -webkit-backdrop-filter:blur(16px); border-radius:24px; margin:16px; border:1px solid rgba(204,178,153,0.08);">
-        <div style="text-align:center; padding:40px 20px;">
-            <i class="fas fa-spinner fa-spin" style="font-size:48px; color:#C9B095; margin-bottom:16px; display:inline-block;"></i>
-            <p style="color:#C9B095; font-size:16px; font-weight:500; letter-spacing:0.5px; margin:0;">${t('start_searching_order')}</p>
-        </div>
+    <div style="text-align:center; padding:60px 20px; background:rgba(10,14,30,0.15); backdrop-filter:blur(20px); -webkit-backdrop-filter:blur(20px); border-radius:24px; margin:16px; border:1px solid rgba(204,178,153,0.08);">
+        <i class="fas fa-spinner fa-spin" style="font-size:48px; color:#C9B095; margin-bottom:16px; display:inline-block;"></i>
+        <p style="color:#C9B095; font-size:16px; font-weight:500; letter-spacing:0.5px; margin:0;">${t('start_searching_order')}</p>
     </div>
 `;
                     await showClaimedCardOrder(currentTriggerOrder);
