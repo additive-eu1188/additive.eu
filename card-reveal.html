@@ -52,7 +52,7 @@
             transition: all 1.2s cubic-bezier(0.15, 0.85, 0.3, 1.05);
         }
 
-        /* ===== 星空粒子（炸开后遍布屏幕） ===== */
+        /* ===== 星空粒子（炸开后遍布屏幕，然后消失） ===== */
         .star-particle {
             position: fixed;
             border-radius: 50%;
@@ -79,8 +79,8 @@
         }
 
         .card-item {
-            width: 180px;
-            height: 250px;
+            width: 200px;
+            height: 300px;
             perspective: 2000px;
             cursor: default;
             position: relative;
@@ -121,7 +121,7 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            padding: 24px 16px;
+            padding: 28px 24px;
             border-radius: 20px;
             overflow: hidden;
             -webkit-backface-visibility: hidden;
@@ -135,8 +135,8 @@
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(184, 148, 74, 0.06);
         }
         .face-front .crown-img {
-            width: 56px;
-            height: 56px;
+            width: 60px;
+            height: 60px;
             object-fit: contain;
             margin-bottom: 16px;
             z-index: 3;
@@ -148,7 +148,7 @@
             filter: drop-shadow(0 0 40px rgba(184, 148, 74, 0.25));
         }
         .face-front span {
-            font-size: 13px;
+            font-size: 14px;
             color: rgba(184, 148, 74, 0.35);
             letter-spacing: 2px;
             font-weight: 500;
@@ -156,7 +156,7 @@
             position: relative;
         }
         .face-front .diamond-icon {
-            font-size: 42px;
+            font-size: 46px;
             color: rgba(184, 148, 74, 0.20);
             margin-top: 10px;
             z-index: 3;
@@ -179,7 +179,7 @@
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(184, 148, 74, 0.08), inset 0 -1px 0 rgba(0, 0, 0, 0.4);
         }
         .face-back .icon {
-            font-size: 40px;
+            font-size: 44px;
             color: #c4a86a;
             margin-bottom: 12px;
             filter: drop-shadow(0 0 16px rgba(184, 148, 74, 0.12));
@@ -187,12 +187,12 @@
             position: relative;
         }
         .face-back .amount {
-            font-size: 44px;
+            font-size: 48px;
             font-weight: 800;
             color: #d4b87a;
             text-shadow: 0 0 24px rgba(184, 148, 74, 0.06);
             line-height: 1.1;
-            margin-bottom: 2px;
+            margin-bottom: 4px;
             z-index: 3;
             position: relative;
             letter-spacing: 1px;
@@ -224,12 +224,12 @@
         }
         .face-back .bottom-tag {
             position: absolute;
-            bottom: 14px;
+            bottom: 16px;
             left: 50%;
             transform: translateX(-50%);
             font-size: 9px;
             font-weight: 600;
-            padding: 3px 10px;
+            padding: 4px 14px;
             border-radius: 20px;
             z-index: 5;
             letter-spacing: 0.5px;
@@ -240,8 +240,8 @@
         .face-back .bottom-tag i { margin-right: 4px; }
         .face-back .shield-bg {
             position: absolute;
-            width: 120px;
-            height: 140px;
+            width: 140px;
+            height: 160px;
             border: 1px solid rgba(184, 148, 74, 0.03);
             border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
             transform: rotate(45deg);
@@ -250,10 +250,10 @@
         }
         .face-back .inner-border {
             position: absolute;
-            top: 20px;
-            left: 20px;
-            right: 20px;
-            bottom: 20px;
+            top: 16px;
+            left: 16px;
+            right: 16px;
+            bottom: 16px;
             border: 1px solid rgba(184, 148, 74, 0.04);
             border-radius: 12px;
             pointer-events: none;
@@ -273,7 +273,7 @@
 
         @keyframes cardFloatLight {
             0% { transform: translateY(0px); }
-            50% { transform: translateY(-6px); }
+            50% { transform: translateY(-8px); }
             100% { transform: translateY(0px); }
         }
 
@@ -337,21 +337,23 @@
         .hint-text i { margin-right: 8px; color: #b8944a; }
 
         @media (max-width: 700px) {
-            .card-item { width: 140px; height: 200px; }
-            .face-front .crown-img { width: 44px; height: 44px; }
-            .face-front .diamond-icon { font-size: 32px; }
-            .face-back .icon { font-size: 32px; }
-            .face-back .amount { font-size: 32px; }
+            .card-item { width: 160px; height: 240px; }
+            .face-front .crown-img { width: 48px; height: 48px; }
+            .face-front .diamond-icon { font-size: 36px; }
+            .face-back .icon { font-size: 36px; }
+            .face-back .amount { font-size: 36px; }
             .cards-grid { gap: 16px; padding: 12px; }
+            .face { padding: 20px 16px; }
             .card-item.moving-to-center { transform: translate(-50%, -50%) scale(1.5) !important; }
         }
         @media (max-width: 480px) {
-            .card-item { width: 110px; height: 160px; }
-            .face-front .crown-img { width: 32px; height: 32px; }
-            .face-front .diamond-icon { font-size: 24px; }
-            .face-back .icon { font-size: 24px; }
-            .face-back .amount { font-size: 24px; }
-            .face-back .bottom-tag { font-size: 7px; padding: 2px 8px; bottom: 8px; }
+            .card-item { width: 120px; height: 185px; }
+            .face-front .crown-img { width: 36px; height: 36px; }
+            .face-front .diamond-icon { font-size: 28px; }
+            .face-back .icon { font-size: 28px; }
+            .face-back .amount { font-size: 28px; }
+            .face-back .bottom-tag { font-size: 7px; padding: 2px 10px; bottom: 10px; }
+            .face { padding: 14px 12px; }
             .cards-grid { gap: 10px; padding: 8px; }
             .hint-text { font-size: 10px; margin-top: 16px; }
             .card-item.moving-to-center { transform: translate(-50%, -50%) scale(1.3) !important; }
@@ -438,7 +440,7 @@
     } else {
         fixedAmount = 'x30';
         fixedLabel = 'COMMISSIONS';
-        fixedIcon = 'fa-ticket-alt';
+        fixedIcon = 'fa-gem';
     }
 
     // ============================================================
@@ -480,7 +482,7 @@
             backHtml = `
                 <div class="shield-bg"></div>
                 <div class="inner-border"></div>
-                <div class="icon"><i class="fas fa-ticket-alt"></i></div>
+                <div class="icon"><i class="fas fa-gem"></i></div>
                 <div class="amount x30">x30</div>
                 <div class="divider-line"></div>
                 <div class="label">COMMISSIONS</div>
@@ -507,7 +509,7 @@
     grid.innerHTML = html;
 
     // ============================================================
-    // 粒子流 + 星空粒子系统
+    // 粒子流 + 星空粒子系统（粒子炸开后消失）
     // ============================================================
     const streamContainer = document.getElementById('streamContainer');
     const hintText = document.getElementById('hintText');
@@ -515,9 +517,7 @@
     let flipLock = false;
     let isPlaying = false;
     let isFlipped = false;
-    let starAnimationId = null;
     let starParticles = [];
-    let starOpacityPhase = 0;
 
     function getCardPositions() {
         const rect = document.querySelector('.stage').getBoundingClientRect();
@@ -532,72 +532,69 @@
         return positions;
     }
 
-    // ===== 创建星空粒子（同一批粒子炸开遍布屏幕） =====
+    // ===== 创建星空粒子（炸开后遍布屏幕，然后消失） =====
     function convertToStarParticles() {
-    const particleElements = streamContainer.querySelectorAll('.stream-particle');
-    if (particleElements.length === 0) return;
+        const particleElements = streamContainer.querySelectorAll('.stream-particle');
+        if (particleElements.length === 0) return;
 
-    document.querySelectorAll('.star-particle').forEach(el => el.remove());
-    starParticles = [];
-
-    const centerX = window.innerWidth / 2;
-    const centerY = window.innerHeight / 2;
-
-    particleElements.forEach((p, index) => {
-        const rect = p.getBoundingClientRect();
-        const currentX = rect.left + rect.width / 2;
-        const currentY = rect.top + rect.height / 2;
-
-        p.className = 'star-particle';
-        p.style.position = 'fixed';
-        p.style.zIndex = '2';
-        p.style.transition = 'none';
-        p.style.pointerEvents = 'none';
-        
-        p.style.left = '0px';
-        p.style.top = '0px';
-        p.style.transform = 'translate3d(' + currentX + 'px, ' + currentY + 'px, 0) scale(0.5)';
-
-        const angle = Math.random() * Math.PI * 2;
-        const dist = 80 + Math.random() * Math.max(window.innerWidth, window.innerHeight) * 0.55;
-        const targetX = centerX + Math.cos(angle) * dist;
-        const targetY = centerY + Math.sin(angle) * dist;
-
-        p.dataset.targetX = targetX;
-        p.dataset.targetY = targetY;
-        p.dataset.baseOpacity = 0.6 + Math.random() * 0.35;
-        p.dataset.speed = 0.003 + Math.random() * 0.006;
-        p.dataset.phase = Math.random() * Math.PI * 2;
-
-        const colors = ['#b8944a', '#c4a86a', '#d4b87a', '#a08040', '#e8d5b8', '#ffd700', '#f0e0c0', '#c9b095'];
-        p.style.background = colors[Math.floor(Math.random() * colors.length)];
-        const size = 1.2 + Math.random() * 2.8;
-        p.style.width = size + 'px';
-        p.style.height = size + 'px';
-        p.style.boxShadow = 'none';
-        p.style.opacity = '0.1';
-
-        document.body.appendChild(p);
-        starParticles.push(p);
-
-        setTimeout(() => {
-            p.style.transition = 'all 1.8s cubic-bezier(0.15, 0.9, 0.3, 1.0)';
-            p.style.transform = 'translate3d(' + targetX + 'px, ' + targetY + 'px, 0) scale(0.6)';
-            p.style.opacity = '1';
-        }, 50 + index * 1.2);
-    });
-
-    streamContainer.innerHTML = '';
-    streamContainer.classList.remove('fade-out');
-
-    // ✅ 炸开动画完成后（约2秒），移除所有粒子
-    setTimeout(() => {
         document.querySelectorAll('.star-particle').forEach(el => el.remove());
         starParticles = [];
-        isPlaying = false;
-        hintText.classList.add('show');
-    }, 2200);
-}
+
+        const centerX = window.innerWidth / 2;
+        const centerY = window.innerHeight / 2;
+
+        particleElements.forEach((p, index) => {
+            const rect = p.getBoundingClientRect();
+            const currentX = rect.left + rect.width / 2;
+            const currentY = rect.top + rect.height / 2;
+
+            p.className = 'star-particle';
+            p.style.position = 'fixed';
+            p.style.zIndex = '2';
+            p.style.transition = 'none';
+            p.style.pointerEvents = 'none';
+            
+            p.style.left = '0px';
+            p.style.top = '0px';
+            p.style.transform = 'translate3d(' + currentX + 'px, ' + currentY + 'px, 0) scale(0.5)';
+
+            const angle = Math.random() * Math.PI * 2;
+            const dist = 80 + Math.random() * Math.max(window.innerWidth, window.innerHeight) * 0.55;
+            const targetX = centerX + Math.cos(angle) * dist;
+            const targetY = centerY + Math.sin(angle) * dist;
+
+            p.dataset.targetX = targetX;
+            p.dataset.targetY = targetY;
+
+            const colors = ['#b8944a', '#c4a86a', '#d4b87a', '#a08040', '#e8d5b8', '#ffd700', '#f0e0c0', '#c9b095'];
+            p.style.background = colors[Math.floor(Math.random() * colors.length)];
+            const size = 1.2 + Math.random() * 2.8;
+            p.style.width = size + 'px';
+            p.style.height = size + 'px';
+            p.style.boxShadow = 'none';
+            p.style.opacity = '0.1';
+
+            document.body.appendChild(p);
+            starParticles.push(p);
+
+            setTimeout(() => {
+                p.style.transition = 'all 1.8s cubic-bezier(0.15, 0.9, 0.3, 1.0)';
+                p.style.transform = 'translate3d(' + targetX + 'px, ' + targetY + 'px, 0) scale(0.6)';
+                p.style.opacity = '1';
+            }, 50 + index * 1.2);
+        });
+
+        streamContainer.innerHTML = '';
+        streamContainer.classList.remove('fade-out');
+
+        // ✅ 炸开动画完成后（约2秒），移除所有粒子
+        setTimeout(() => {
+            document.querySelectorAll('.star-particle').forEach(el => el.remove());
+            starParticles = [];
+            isPlaying = false;
+            hintText.classList.add('show');
+        }, 2200);
+    }
 
     // ============================================================
     // 入场动画
@@ -608,7 +605,8 @@
         flipLock = false;
         isFlipped = false;
 
-        clearStarParticles();
+        document.querySelectorAll('.star-particle').forEach(el => el.remove());
+        starParticles = [];
 
         cards.forEach(card => {
             card.classList.remove('show', 'float-anim', 'flipped', 'dimmed', 'moving-to-center', 'shaking', 'returning');
@@ -663,7 +661,6 @@
             p.style.height = size + 'px';
             const color = colors[Math.floor(Math.random() * colors.length)];
             p.style.background = color;
-            // 减少 box-shadow 计算
             p.style.boxShadow = 'none';
 
             const targetIdx = Math.floor(Math.random() * 3);
@@ -798,7 +795,7 @@
                     backFace.innerHTML = `
                         <div class="shield-bg"></div>
                         <div class="inner-border"></div>
-                        <div class="icon"><i class="fas fa-hotel"></i></div>
+                        <div class="icon"><i class="fas fa-gem"></i></div>
                         <div class="amount x30">${rand.amount}</div>
                         <div class="divider-line"></div>
                         <div class="label">COMMISSIONS</div>
@@ -899,6 +896,10 @@
 
     console.log('✅ 性能优化：使用 translate3d、GPU加速、减少box-shadow');
     console.log('✅ 粒子数量：500个');
+    console.log('✅ 粒子炸开后约2.2秒自动消失');
+    console.log('✅ 卡牌高度提升至300px');
+    console.log('✅ x30 Commissions 背面图标改为钻石 (fa-gem)');
+    console.log('✅ 卡牌内边距调整，内容不再触碰边缘');
 </script>
 
 </body>
