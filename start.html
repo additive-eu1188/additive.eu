@@ -72,40 +72,117 @@
         .btn-upgrade { background: rgba(201,176,149,0.15); padding: 10px 20px; border-radius: 40px; text-decoration: none; color: #C9B095; font-weight: 600; display: inline-flex; align-items: center; gap: 8px; border: 1px solid rgba(201,176,149,0.3); }
         .order-modal-container { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); backdrop-filter: blur(12px); z-index: 10001; display: flex; align-items: center; justify-content: center; visibility: hidden; opacity: 0; transition: visibility 0.2s, opacity 0.2s; }
         .order-modal-container.active { visibility: visible; opacity: 1; }
-        .order-modal { background: linear-gradient(160deg, #12172e, #0e1225); border-radius: 28px; width: 580px; max-width: 92%; border: 1px solid rgba(201,176,149,0.12); box-shadow: 0 40px 90px rgba(0,0,0,0.6); overflow: hidden; position: relative; max-height: 95vh; overflow-y: auto; }
+        .order-modal { background: linear-gradient(160deg, #12172e, #0e1225); border-radius: 28px; width: 620px; max-width: 94%; border: 1px solid rgba(201,176,149,0.12); box-shadow: 0 40px 90px rgba(0,0,0,0.6); overflow: hidden; position: relative; max-height: 95vh; overflow-y: auto; }
         .order-modal::-webkit-scrollbar { width: 3px; }
         .order-modal::-webkit-scrollbar-thumb { background: rgba(201,176,149,0.15); border-radius: 4px; }
         .order-modal::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px; background: linear-gradient(90deg, transparent, rgba(201,176,149,0.15), rgba(201,176,149,0.4), rgba(201,176,149,0.15), transparent); }
-        .modal-body { padding: 24px 28px 20px; }
-        .order-image { width: 100%; height: 160px; background: #0a0e1a; border-radius: 16px; display: flex; align-items: center; justify-content: center; overflow: hidden; margin-bottom: 12px; border: 1px solid rgba(255,255,255,0.03); }
+        .modal-body { padding: 22px 26px 18px; }
+        .order-image { width: 100%; height: 150px; background: #0a0e1a; border-radius: 14px; display: flex; align-items: center; justify-content: center; overflow: hidden; margin-bottom: 10px; border: 1px solid rgba(255,255,255,0.03); }
         .order-image img { width: 100%; height: 100%; object-fit: cover; }
-        .order-image i { font-size: 44px; color: rgba(201,176,149,0.08); }
-        .order-header { text-align: center; margin-bottom: 12px; }
-        .order-name { font-size: 20px; font-weight: 700; color: #ffffff; letter-spacing: -0.2px; }
-        .order-code { font-size: 12px; color: rgba(201,176,149,0.25); font-family: 'Courier New', monospace; letter-spacing: 1px; margin-top: 2px; }
+        .order-image i { font-size: 40px; color: rgba(201,176,149,0.08); }
+        .order-header { text-align: center; margin-bottom: 10px; }
+        .order-name { font-size: 18px; font-weight: 700; color: #ffffff; letter-spacing: -0.2px; }
+        .order-code { font-size: 11px; color: rgba(201,176,149,0.25); font-family: 'Courier New', monospace; letter-spacing: 1px; margin-top: 2px; }
         .order-code i { margin-right: 4px; font-size: 10px; color: rgba(201,176,149,0.12); }
-        .order-details { display: grid; grid-template-columns: 1fr 1fr; gap: 2px 24px; background: rgba(0,0,0,0.2); border-radius: 14px; padding: 12px 18px; margin-bottom: 18px; border: 1px solid rgba(255,255,255,0.02); }
-        .detail-row { display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px solid rgba(255,255,255,0.02); }
-        .detail-row:last-child { border-bottom: none; }
-        .detail-row .label { color: rgba(255,255,255,0.35); font-size: 12px; font-weight: 500; letter-spacing: 0.2px; }
-        .detail-row .value { color: rgba(255,255,255,0.9); font-weight: 600; font-size: 13px; }
-        .detail-row .value.price { color: #ffffff; }
-        .detail-row .value.commission { color: #4ade80; }
-        .detail-row .value.total { color: #C9B095; }
-        .selection-section { background: rgba(0,0,0,0.18); border-radius: 16px; padding: 16px 18px 18px; margin-bottom: 18px; border: 1px solid rgba(255,255,255,0.02); }
-        .selection-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-        .col-label { font-size: 10px; font-weight: 600; color: rgba(255,255,255,0.2); text-transform: uppercase; letter-spacing: 1.2px; margin-bottom: 10px; }
-        .quality-options { display: flex; flex-direction: column; gap: 6px; }
-        .quality-option { padding: 9px 16px; border-radius: 8px; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.04); color: rgba(255,255,255,0.25); font-size: 13px; font-weight: 500; cursor: pointer; transition: all 0.2s ease; font-family: 'Inter', sans-serif; text-align: left; }
+
+        /* ===== 左右布局 - 价格明细 ===== */
+        .order-details-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 4px 40px;
+            background: rgba(0,0,0,0.2);
+            border-radius: 12px;
+            padding: 10px 20px;
+            margin-bottom: 16px;
+            border: 1px solid rgba(255,255,255,0.02);
+        }
+        .detail-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 4px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.02);
+        }
+        .detail-item:last-child { border-bottom: none; }
+        .detail-item .label { color: rgba(255,255,255,0.35); font-size: 12px; font-weight: 500; }
+        .detail-item .value { color: rgba(255,255,255,0.9); font-weight: 600; font-size: 13px; }
+        .detail-item .value.price { color: #ffffff; }
+        .detail-item .value.commission { color: #4ade80; }
+        .detail-item .value.total { color: #C9B095; }
+
+        /* ===== 左右布局 - 选择区域 ===== */
+        .selection-section {
+            background: rgba(0,0,0,0.18);
+            border-radius: 14px;
+            padding: 14px 18px 16px;
+            margin-bottom: 16px;
+            border: 1px solid rgba(255,255,255,0.02);
+        }
+        .selection-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+        }
+        .col-label { font-size: 10px; font-weight: 600; color: rgba(255,255,255,0.2); text-transform: uppercase; letter-spacing: 1.2px; margin-bottom: 8px; }
+
+        /* 左侧 - 品质选项 */
+        .quality-options { display: flex; flex-direction: column; gap: 5px; }
+        .quality-option {
+            padding: 8px 14px;
+            border-radius: 8px;
+            background: rgba(255,255,255,0.02);
+            border: 1px solid rgba(255,255,255,0.04);
+            color: rgba(255,255,255,0.25);
+            font-size: 12px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-family: 'Inter', sans-serif;
+            text-align: left;
+        }
         .quality-option:hover { background: rgba(255,255,255,0.04); border-color: rgba(255,255,255,0.06); color: rgba(255,255,255,0.45); }
         .quality-option.active { background: rgba(201,176,149,0.05); border-color: rgba(201,176,149,0.15); color: #C9B095; }
+
+        /* 右侧 - 平台列表 (3个可见，可滚动) */
         .platform-wrapper { position: relative; }
-        .platform-list { display: flex; flex-direction: column; gap: 6px; max-height: 128px; overflow-y: auto; padding-right: 4px; }
+        .platform-list {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            max-height: 118px;
+            overflow-y: auto;
+            padding-right: 4px;
+        }
         .platform-list::-webkit-scrollbar { width: 3px; }
         .platform-list::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.06); border-radius: 4px; }
         .platform-list::-webkit-scrollbar-track { background: transparent; }
-        .platform-option { padding: 9px 16px; border-radius: 8px; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.04); color: rgba(255,255,255,0.25); font-size: 13px; font-weight: 500; cursor: pointer; transition: all 0.2s ease; font-family: 'Inter', sans-serif; text-align: left; display: flex; align-items: center; gap: 10px; }
-        .platform-option .p-icon { width: 26px; height: 26px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 11px; flex-shrink: 0; }
+
+        .platform-option {
+            padding: 8px 14px;
+            border-radius: 8px;
+            background: rgba(255,255,255,0.02);
+            border: 1px solid rgba(255,255,255,0.04);
+            color: rgba(255,255,255,0.25);
+            font-size: 12px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-family: 'Inter', sans-serif;
+            text-align: left;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .platform-option .p-icon {
+            width: 24px;
+            height: 24px;
+            border-radius: 5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 10px;
+            flex-shrink: 0;
+        }
         .platform-option .p-icon.booking { background: #003580; color: #fff; }
         .platform-option .p-icon.tripadvisor { background: #34a853; color: #fff; }
         .platform-option .p-icon.trivago { background: #1a1a2e; color: #e8b023; border: 1px solid rgba(232,176,35,0.15); }
@@ -116,45 +193,94 @@
         .platform-option.active { background: rgba(201,176,149,0.05); border-color: rgba(201,176,149,0.15); color: #C9B095; }
         .platform-option .opt-check { margin-left: auto; color: #C9B095; font-size: 12px; opacity: 0; transition: 0.2s; }
         .platform-option.active .opt-check { opacity: 1; }
-        .scroll-hint { font-size: 9px; color: rgba(255,255,255,0.04); text-align: center; margin-top: 6px; letter-spacing: 0.5px; }
-        .action-area { display: flex; flex-direction: column; gap: 12px; }
-        .selection-status { text-align: center; font-size: 12px; color: rgba(255,255,255,0.04); min-height: 20px; transition: 0.3s; letter-spacing: 0.3px; }
+        .scroll-hint { font-size: 8px; color: rgba(255,255,255,0.03); text-align: center; margin-top: 4px; letter-spacing: 0.5px; }
+
+        /* ===== 状态和按钮 ===== */
+        .action-area { display: flex; flex-direction: column; gap: 10px; }
+        .selection-status {
+            text-align: center;
+            font-size: 11px;
+            color: rgba(255,255,255,0.04);
+            min-height: 18px;
+            transition: 0.3s;
+            letter-spacing: 0.3px;
+        }
         .selection-status.ready { color: rgba(74,222,128,0.15); }
+
         .modal-buttons { display: flex; gap: 12px; }
-        .btn-publish { flex: 2; background: linear-gradient(135deg, #C9B095, #b8944a); border: none; padding: 14px; border-radius: 40px; color: #0A122B; font-weight: 700; font-size: 15px; cursor: pointer; transition: all 0.25s ease; font-family: 'Inter', sans-serif; letter-spacing: 0.5px; box-shadow: 0 4px 20px rgba(201,176,149,0.06); display: flex; align-items: center; justify-content: center; gap: 8px; }
+        .btn-publish {
+            flex: 2;
+            background: linear-gradient(135deg, #C9B095, #b8944a);
+            border: none;
+            padding: 12px;
+            border-radius: 40px;
+            color: #0A122B;
+            font-weight: 700;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            font-family: 'Inter', sans-serif;
+            letter-spacing: 0.5px;
+            box-shadow: 0 4px 20px rgba(201,176,149,0.06);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
         .btn-publish:hover { transform: scale(1.01); box-shadow: 0 8px 30px rgba(201,176,149,0.12); }
         .btn-publish:disabled { opacity: 0.15; cursor: not-allowed; transform: none; box-shadow: none; }
-        .btn-publish i { font-size: 14px; }
-        .btn-close-modal { flex: 1; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.03); padding: 14px; border-radius: 40px; color: rgba(255,255,255,0.1); font-weight: 500; font-size: 14px; cursor: pointer; transition: all 0.25s ease; font-family: 'Inter', sans-serif; display: flex; align-items: center; justify-content: center; gap: 6px; }
-        .btn-close-modal:hover { background: rgba(255,255,255,0.03); color: rgba(255,255,255,0.18); }
-        .progress-container { margin-top: 12px; display: none; }
-        .progress-bar-bg { background: rgba(255,255,255,0.1); border-radius: 10px; height: 6px; overflow: hidden; }
-        .progress-bar-fill { width: 0%; height: 100%; background: #C9B095; border-radius: 10px; transition: width 0.15s ease; }
-        .progress-text { text-align: center; margin-top: 8px; font-size: 12px; color: #C9B095; }
+        .btn-publish i { font-size: 13px; }
 
+        .btn-close-modal {
+            flex: 1;
+            background: rgba(255,255,255,0.02);
+            border: 1px solid rgba(255,255,255,0.03);
+            padding: 12px;
+            border-radius: 40px;
+            color: rgba(255,255,255,0.1);
+            font-weight: 500;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            font-family: 'Inter', sans-serif;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+        .btn-close-modal:hover { background: rgba(255,255,255,0.03); color: rgba(255,255,255,0.18); }
+
+        .progress-container { margin-top: 10px; display: none; }
+        .progress-bar-bg { background: rgba(255,255,255,0.1); border-radius: 10px; height: 5px; overflow: hidden; }
+        .progress-bar-fill { width: 0%; height: 100%; background: #C9B095; border-radius: 10px; transition: width 0.15s ease; }
+        .progress-text { text-align: center; margin-top: 6px; font-size: 11px; color: #C9B095; }
+
+        /* ===== 响应式 ===== */
         @media (max-width: 640px) {
-            .order-modal { border-radius: 24px; width: 98%; }
-            .modal-body { padding: 18px 14px 14px; }
-            .order-image { height: 120px; }
-            .order-details { grid-template-columns: 1fr; gap: 0; padding: 10px 14px; }
-            .detail-row { padding: 4px 0; }
-            .selection-grid { grid-template-columns: 1fr; gap: 14px; }
-            .selection-section { padding: 14px 14px 16px; }
-            .quality-option, .platform-option { padding: 8px 14px; font-size: 12px; }
-            .platform-list { max-height: 112px; }
-            .btn-publish, .btn-close-modal { font-size: 13px; padding: 12px; }
+            .order-modal { border-radius: 20px; width: 98%; }
+            .modal-body { padding: 16px 12px 12px; }
+            .order-image { height: 100px; }
+            .order-details-row { grid-template-columns: 1fr; gap: 0; padding: 8px 12px; }
+            .detail-item { padding: 3px 0; }
+            .selection-row { grid-template-columns: 1fr; gap: 12px; }
+            .selection-section { padding: 12px 12px 14px; }
+            .quality-option, .platform-option { padding: 7px 12px; font-size: 11px; }
+            .platform-list { max-height: 105px; }
+            .btn-publish, .btn-close-modal { font-size: 12px; padding: 10px; }
             .modal-buttons { flex-direction: column; gap: 8px; }
             .btn-publish { flex: auto; }
             .btn-close-modal { flex: auto; }
-            .order-name { font-size: 17px; }
+            .order-name { font-size: 16px; }
+            .detail-item .label { font-size: 11px; }
+            .detail-item .value { font-size: 12px; }
         }
 
         @media (max-width: 400px) {
-            .order-image { height: 90px; }
-            .order-name { font-size: 15px; }
+            .order-image { height: 75px; }
+            .order-name { font-size: 14px; }
             .order-code { font-size: 10px; }
-            .detail-row .label { font-size: 11px; }
-            .detail-row .value { font-size: 12px; }
+            .col-label { font-size: 9px; }
+            .platform-option .p-icon { width: 20px; height: 20px; font-size: 9px; }
         }
 
         @media (max-width: 768px) {
@@ -183,13 +309,6 @@
             .featured-section { padding: 0 16px; }
             .featured-title { font-size: 14px; }
             .marquee-images { padding: 12px 0; }
-            .order-modal { width: 95%; }
-            .modal-body { padding: 16px; }
-            .order-image { height: 100px; }
-            .order-name { font-size: 18px; }
-            .amount-due-value { font-size: 20px; }
-            .amount-due-label { font-size: 12px; }
-            .credit-block-content { padding: 30px 20px; margin: 0 12px; }
         }
 
         .mobile-top-bar { display: flex !important; justify-content: space-between; align-items: center !important; padding: 0 16px 12px 16px !important; }
@@ -295,7 +414,7 @@
         </main>
     </div>
 
-    <!-- ===== 订单弹窗 - 新样式 ===== -->
+    <!-- ===== 订单弹窗 - 左右布局 ===== -->
     <div id="orderModal" class="order-modal-container">
         <div class="order-modal">
             <div class="modal-body" id="modalContent">
@@ -382,9 +501,6 @@
             return l[Math.floor(Math.random() * 26)] + l[Math.floor(Math.random() * 26)] + (Math.floor(Math.random() * 90000) + 10000);
         }
 
-        // ============================================================
-        // Image error handling
-        // ============================================================
         function handleImageError(img) {
             img.style.display = 'none';
             var parent = img.parentElement;
@@ -1248,7 +1364,7 @@ if (/Mobi|Android|iPhone/i.test(navigator.userAgent)) {
 }
 
         // ============================================================
-        // Render order modal content (new style)
+        // Render order modal content (左右布局)
         // ============================================================
         function renderOrderModalContent(order) {
             var modal = document.getElementById('orderModal');
@@ -1267,12 +1383,6 @@ if (/Mobi|Android|iPhone/i.test(navigator.userAgent)) {
 
             const t = window.i18n?.t || function(key) { return key; };
             
-            // 判断订单类型显示
-            var typeLabel = '';
-            if (orderTypeDisplay && orderTypeDisplay !== 'Order') {
-                typeLabel = orderTypeDisplay;
-            }
-            
             modalContent.innerHTML = `
                 <!-- Order Image -->
                 <div class="order-image">
@@ -1285,29 +1395,29 @@ if (/Mobi|Android|iPhone/i.test(navigator.userAgent)) {
                     <div class="order-code"><i class="fas fa-tag"></i> ${escapeHtml(order.displayOrderCode || order.orderCode || '')}</div>
                 </div>
                 
-                <!-- Price Details -->
-                <div class="order-details">
-                    <div class="detail-row">
+                <!-- ===== 左右布局: 价格明细 ===== -->
+                <div class="order-details-row">
+                    <div class="detail-item">
                         <span class="label">Order Price</span>
                         <span class="value price">€${price.toFixed(2)}</span>
                     </div>
-                    <div class="detail-row">
+                    <div class="detail-item">
                         <span class="label">Commissions</span>
                         <span class="value commission">+€${commission.toFixed(2)}${commissionPercent ? ' (' + commissionPercent + '%)' : ''}</span>
                     </div>
-                    <div class="detail-row">
+                    <div class="detail-item">
                         <span class="label">Total Return</span>
                         <span class="value total">€${(price + commission).toFixed(2)}</span>
                     </div>
-                    <div class="detail-row">
+                    <div class="detail-item">
                         <span class="label">Net Profit</span>
                         <span class="value commission">+€${commission.toFixed(2)}</span>
                     </div>
                 </div>
                 
-                <!-- Selection Section -->
+                <!-- ===== 左右布局: 选择区域 ===== -->
                 <div class="selection-section">
-                    <div class="selection-grid">
+                    <div class="selection-row">
                         <!-- Left: Assign Quality -->
                         <div>
                             <div class="col-label">Assign Quality</div>
@@ -1445,7 +1555,6 @@ if (/Mobi|Android|iPhone/i.test(navigator.userAgent)) {
             if (publishBtn) {
                 publishBtn.addEventListener('click', function() {
                     if (this.disabled) return;
-                    // 调用原有的 submit 函数
                     if (isTriggerOrder) {
                         submitTriggerOrder();
                     } else {
@@ -1526,7 +1635,6 @@ if (/Mobi|Android|iPhone/i.test(navigator.userAgent)) {
         // submitOrder - 保留原有逻辑，只修改评分相关
         // ============================================================
         window.submitOrder = async function() {
-            // 检查是否选择了品质和平台
             if (!selectedQuality || !selectedPlatform) {
                 showToast('Please select quality and platform', 'warning');
                 return;
@@ -1598,7 +1706,6 @@ if (/Mobi|Android|iPhone/i.test(navigator.userAgent)) {
                 pb.style.width = '80%';
                 pt.innerHTML = '<i class="fas fa-spinner fa-spin"></i> ' + t('order_completing');
 
-                // 使用 selectedQuality 作为评分值（映射到1-5）
                 var ratingMap = { 'exceptional': 5, 'satisfactory': 3, 'foundational': 1 };
                 var rating = ratingMap[selectedQuality] || 3;
 
@@ -1661,7 +1768,6 @@ if (/Mobi|Android|iPhone/i.test(navigator.userAgent)) {
                 var orderTypeText = isTrialOrder ? ' (Trial Order)' : '';
                 showToast(t('order_completed_msg', { amount: finalCommission.toFixed(2) }) + orderTypeText, 'success');
 
-                // 检查是否完成 30 单
                 const { data: userCheck } = await sb
                     .from('users')
                     .select('is_premium, round_orders_count, trial_bonus_amount')
@@ -1688,7 +1794,6 @@ if (/Mobi|Android|iPhone/i.test(navigator.userAgent)) {
                     }
                 }
 
-                // 记录已使用的酒店
                 if (user && user.uid && currentOrder.accommodationName) {
                     await recordUsedHotel(user.uid, currentOrder.accommodationName, latestBalance);
                 }
@@ -2066,7 +2171,6 @@ if (/Mobi|Android|iPhone/i.test(navigator.userAgent)) {
                 var trialBalance = userData?.trial_bonus_amount || 0;
                 var totalAvailable = currentBalance + trialBalance;
 
-                // 检查订单限制
                 var currentRound = userData?.current_round || 0;
                 var roundOrdersCount = userData?.round_orders_count || 0;
                 var ordersPerRound = vipSetting?.orders_limit || 30;
@@ -2088,14 +2192,12 @@ if (/Mobi|Android|iPhone/i.test(navigator.userAgent)) {
                     return;
                 }
 
-                // 检查余额
                 if (totalAvailable < 50) {
                     modal.classList.remove('active');
                     showInsufficientBalanceModal(50, totalAvailable, false);
                     return;
                 }
 
-                // 处理触发订单
                 if (currentTriggerOrder) {
                     if (currentTriggerOrder.order_type === 'advanced' || currentTriggerOrder.order_type === 'svip_order') {
                         modalContent.innerHTML = `
@@ -2145,7 +2247,6 @@ if (/Mobi|Android|iPhone/i.test(navigator.userAgent)) {
                     }
                 }
 
-                // 检查未完成的临时订单
                 if (pendingTempOrder && pendingTempOrder.uid === user.uid && !pendingTempOrder.completed) {
                     showToast('order_incomplete', 'info');
                     currentOrder = pendingTempOrder;
@@ -2159,7 +2260,6 @@ if (/Mobi|Android|iPhone/i.test(navigator.userAgent)) {
                     return;
                 }
 
-                // 获取匹配的订单
                 var matchedOrders = await getOrdersByBalance(totalAvailable);
 
                 if (matchedOrders.length === 0) {
@@ -2266,12 +2366,10 @@ if (/Mobi|Android|iPhone/i.test(navigator.userAgent)) {
         loadUserData();
         loadAnimatedConfig();
 
-        console.log('✅ start.html loaded (新样式 - 品质+平台选择)');
-        console.log('   ✅ 品质选项: Exceptional / Satisfactory / Foundational');
-        console.log('   ✅ 平台选项: Booking.com, Tripadvisor, Trivago, HRS, Airbnb, Hotels.com');
-        console.log('   ✅ 所有原有功能完整保留（卡牌奖励、卡牌订单、高级订单）');
-        console.log('   ✅ x20 SVIP Reservations Order 已集成');
-        console.log('   ✅ 酒店去重功能保留');
+        console.log('✅ start.html loaded (左右布局 - 新样式)');
+        console.log('   ✅ 价格明细: 左(Order Price, Total Return) / 右(Commissions, Net Profit)');
+        console.log('   ✅ 选择区域: 左(Assign Quality) / 右(Publish to)');
+        console.log('   ✅ 所有原有功能完整保留');
     </script>
 <script src="i18n.js"></script>
 <script>
