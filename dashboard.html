@@ -1482,9 +1482,9 @@
                         document.getElementById('displayUid').innerText = userData.uid;
                         document.getElementById('displayBalance').innerHTML = '€' + (userData.balance || 0).toFixed(2);
                         const vipMap = { 1: 'Normal', 2: 'VIP', 3: 'SVIP' };
-                        const level = vipMap[userData.vip_level] || 'Normal';
-                        document.getElementById('displayMembership').innerText = `Membership ${level}`;
-                        document.getElementById('premiumStatusText').innerHTML = level;
+const level = vipMap[userData.vip_level] || 'Normal';
+document.getElementById('displayMembership').innerText = level;  // ← 去掉 "Membership "
+document.getElementById('premiumStatusText').innerHTML = level;
                     }
                     const { data: orders } = await sb.from('order_history').select('commission').eq('uid', user.uid);
                     const total = orders?.reduce((s, o) => s + (o.commission || 0), 0) || 0;
