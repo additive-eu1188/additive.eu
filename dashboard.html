@@ -825,6 +825,215 @@
             .action-text { font-size: 9px; }
             .action-sub { font-size: 7px; }
         }
+
+/* ===== 红色玫瑰金借记卡 - Amount Due ===== */
+.card-rosegold-red {
+    background: linear-gradient(160deg, #1a0505 0%, #3a1010 20%, #5a1818 40%, #7a2020 55%, #5a1818 70%, #3a1010 85%, #1a0505 100%);
+    border-radius: 20px;
+    padding: 22px 22px 20px 22px;
+    border: 1px solid rgba(255, 80, 80, 0.35);
+    position: relative;
+    overflow: visible;
+    min-height: 200px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.6), 0 0 80px rgba(255,80,80,0.08), inset 0 1px 0 rgba(255,80,80,0.2), inset 0 -1px 0 rgba(0,0,0,0.2), inset 0 2px 4px rgba(255,80,80,0.04), inset 0 -2px 4px rgba(0,0,0,0.1);
+    isolation: isolate;
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 24px;
+}
+
+.card-rosegold-red::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 10%;
+    right: 10%;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(255,80,80,0.3), rgba(255,150,150,0.15), rgba(255,80,80,0.3), transparent);
+    pointer-events: none;
+    z-index: 2;
+    border-radius: 50%;
+}
+
+.card-rosegold-red::before {
+    content: '';
+    position: absolute;
+    top: -20%;
+    left: -10%;
+    width: 65%;
+    height: 80%;
+    background: radial-gradient(ellipse, rgba(255,80,80,0.12), transparent 70%);
+    pointer-events: none;
+    border-radius: 50%;
+    z-index: 0;
+}
+
+.card-rosegold-red .card-logo-overlay {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 0;
+    opacity: 0.10;
+    pointer-events: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 70%;
+    height: 70%;
+}
+.card-rosegold-red .card-logo-overlay img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    max-width: 180px;
+    max-height: 130px;
+    filter: grayscale(0.3) brightness(1.1);
+}
+
+.card-rosegold-red .card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 6px;
+    position: relative;
+    z-index: 1;
+    flex-shrink: 0;
+}
+.card-rosegold-red .card-header .left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.card-rosegold-red .card-header .left i {
+    font-size: 18px;
+    color: #ff8080;
+    filter: drop-shadow(0 0 8px rgba(255,80,80,0.1));
+}
+.card-rosegold-red .card-header .left span {
+    font-size: 10px;
+    color: #ff9090;
+    letter-spacing: 2px;
+    font-weight: 600;
+    text-shadow: 0 1px 4px rgba(0,0,0,0.3);
+}
+
+.card-rosegold-red .card-content-wrapper {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    flex: 1;
+    min-height: 110px;
+    position: relative;
+    z-index: 1;
+}
+
+.card-rosegold-red .card-amount-red {
+    font-family: 'Inter', sans-serif;
+    font-weight: 800;
+    font-size: 42px;
+    text-align: left;
+    padding: 14px 0 14px 4px;
+    position: relative;
+    z-index: 1;
+    text-shadow: 0 2px 8px rgba(0,0,0,0.4), 0 0 40px rgba(255,80,80,0.08);
+    background: linear-gradient(180deg, #ffd0d0 0%, #ffb0b0 30%, #ff8080 55%, #f06060 80%, #e05050 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    filter: drop-shadow(0 2px 8px rgba(0,0,0,0.3)) drop-shadow(0 0 40px rgba(255,80,80,0.06));
+    line-height: 1.3;
+    flex-shrink: 0;
+    letter-spacing: -0.5px;
+}
+
+.card-rosegold-red .card-divider {
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(255,80,80,0.10), rgba(255,80,80,0.18), rgba(255,80,80,0.10), transparent);
+    margin: 4px 0 8px 0;
+    position: relative;
+    z-index: 1;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+    flex-shrink: 0;
+}
+
+.card-rosegold-red .card-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    position: relative;
+    z-index: 1;
+    margin-top: auto;
+    padding-top: 2px;
+    flex-shrink: 0;
+}
+.card-rosegold-red .card-footer .user-section .label {
+    font-size: 9px;
+    color: #8a4040;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    font-weight: 600;
+}
+.card-rosegold-red .card-footer .user-section .label i {
+    margin-right: 4px;
+    font-size: 9px;
+    color: #8a4040;
+}
+.card-rosegold-red .card-footer .user-section .value {
+    font-size: 16px;
+    font-weight: 700;
+    color: #ffb0b0;
+    margin-top: 2px;
+    text-shadow: 0 1px 4px rgba(0,0,0,0.4);
+    letter-spacing: 0.5px;
+}
+.card-rosegold-red .card-footer .balance-section {
+    text-align: right;
+    cursor: pointer;
+}
+.card-rosegold-red .card-footer .balance-section .label {
+    font-size: 9px;
+    color: #8a4040;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    font-weight: 600;
+}
+.card-rosegold-red .card-footer .balance-section .label i {
+    margin-right: 4px;
+    font-size: 9px;
+    color: #8a4040;
+}
+.card-rosegold-red .card-footer .balance-section .value {
+    font-size: 16px;
+    font-weight: 700;
+    color: #ff8080;
+    margin-top: 2px;
+    text-shadow: 0 2px 12px rgba(255,80,80,0.1);
+    letter-spacing: 0.3px;
+}
+
+.card-rosegold-red .glow-orb {
+    position: absolute;
+    bottom: -20px;
+    right: -20px;
+    width: 140px;
+    height: 140px;
+    background: radial-gradient(circle, rgba(255,80,80,0.08), transparent 70%);
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 0;
+}
+.card-rosegold-red .glow-orb-top {
+    position: absolute;
+    top: -30px;
+    left: -30px;
+    width: 100px;
+    height: 100px;
+    background: radial-gradient(circle, rgba(255,80,80,0.04), transparent 70%);
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 0;
+}
     </style>
 </head>
 <body>
@@ -876,48 +1085,73 @@
                 <div class="premium-tag"><i class="fas fa-gem"></i> <span data-i18n="dashboard_operator_access">OPERATOR ACCESS</span></div>
             </div>
 
-            <!-- ===== 玫瑰金借记卡 - Available Balance ===== -->
-<div class="card-rosegold">
-    <!-- 光晕装饰 -->
+            <!-- ===== 玫瑰金借记卡 - Available Balance（默认显示） ===== -->
+<div class="card-rosegold" id="balanceCard">
     <div class="glow-orb"></div>
     <div class="glow-orb-top"></div>
-
-    <!-- 右上角发光圆点 + 脉冲光圈 -->
     <div class="pulse-dot-wrapper">
         <span class="pulse-ring"></span>
         <span class="pulse-ring"></span>
         <span class="pulse-ring"></span>
         <span class="pulse-dot"></span>
     </div>
-
-    <!-- 卡片中间的 Logo - 水印效果 -->
     <div class="card-logo-overlay">
         <img src="creditcardlogo.png" alt="logo" onerror="this.style.display='none'">
     </div>
-
-    <!-- 卡片头部 -->
     <div class="card-header">
         <div class="left">
             <i class="fas fa-wallet"></i>
             <span data-i18n="dashboard_balance">AVAILABLE BALANCE</span>
         </div>
     </div>
-
-    <!-- 卡片内容包装器 -->
     <div class="card-content-wrapper">
-        <!-- 余额 - 亮金属银 -->
         <div class="card-balance" id="displayBalance">€0.00</div>
-
-        <!-- 底部 -->
         <div>
             <div class="card-divider"></div>
             <div class="card-footer">
                 <div class="user-section">
-                    <div class="label"><i class="fas fa-crown"></i> <span data-i18n="dashboard_membership">Membership</span></div>
+                    <div class="label"><i class="fas fa-crown"></i> Membership</div>
                     <div class="value" id="displayMembership">Normal</div>
                 </div>
                 <div class="balance-section" onclick="location.href='membership.html'">
-                    <div class="label"><i class="fas fa-arrow-right"></i> <span data-i18n="dashboard_upgrade_now">Upgrade</span></div>
+                    <div class="label"><i class="fas fa-arrow-right"></i> Upgrade</div>
+                    <div class="value">→</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ===== 红色玫瑰金借记卡 - Amount Due（默认隐藏） ===== -->
+<div class="card-rosegold-red" id="amountDueCard" style="display:none;">
+    <div class="glow-orb"></div>
+    <div class="glow-orb-top"></div>
+    <div class="pulse-dot-wrapper">
+        <span class="pulse-ring"></span>
+        <span class="pulse-ring"></span>
+        <span class="pulse-ring"></span>
+        <span class="pulse-dot"></span>
+    </div>
+    <div class="card-logo-overlay">
+        <img src="creditcardlogo.png" alt="logo" onerror="this.style.display='none'">
+    </div>
+    <div class="card-header">
+        <div class="left">
+            <i class="fas fa-exclamation-triangle"></i>
+            <span>AMOUNT DUE</span>
+        </div>
+    </div>
+    <div class="card-content-wrapper">
+        <div class="card-amount-red" id="displayAmountDue">€0.00</div>
+        <div>
+            <div class="card-divider"></div>
+            <div class="card-footer">
+                <div class="user-section">
+                    <div class="label"><i class="fas fa-user"></i> User</div>
+                    <div class="value" id="amountDueUsername">Loading...</div>
+                </div>
+                <div class="balance-section" onclick="location.href='start.html'">
+                    <div class="label"><i class="fas fa-arrow-right"></i> Recharge</div>
                     <div class="value">→</div>
                 </div>
             </div>
@@ -1309,6 +1543,77 @@
     }
 }
 
+// ============================================================
+// Amount Due management (从 start.html 复制)
+// ============================================================
+function setAmountDue(uid, orderPrice, amountDue) {
+    const numUid = String(uid);
+    const numOrderPrice = Math.round(Number(orderPrice) * 100) / 100;
+    const numAmountDue = Math.round(Number(amountDue) * 100) / 100;
+    
+    if (numAmountDue > 0 && numOrderPrice > 0) {
+        localStorage.setItem('amountDue_' + numUid, JSON.stringify({
+            orderPrice: numOrderPrice,
+            amountDue: numAmountDue,
+            timestamp: Date.now()
+        }));
+    } else {
+        localStorage.removeItem('amountDue_' + numUid);
+    }
+}
+
+function getAmountDue(uid) {
+    var data = localStorage.getItem('amountDue_' + uid);
+    if (data) {
+        try {
+            var parsed = JSON.parse(data);
+            if (Date.now() - parsed.timestamp > 7 * 24 * 60 * 60 * 1000) {
+                localStorage.removeItem('amountDue_' + uid);
+                return null;
+            }
+            return parsed;
+        } catch (e) {
+            localStorage.removeItem('amountDue_' + uid);
+            return null;
+        }
+    }
+    return null;
+}
+
+// 检查 Amount Due
+async function checkAmountDueAndSwitchCard() {
+    var user = getCurrentUser();
+    if (!user) return;
+    
+    // 从 localStorage 获取 amountDue
+    var amountDueData = getAmountDue(user.uid);
+    var amountDue = amountDueData?.amountDue || 0;
+    var orderPrice = amountDueData?.orderPrice || 0;
+    
+    var balanceCard = document.getElementById('balanceCard');
+    var amountDueCard = document.getElementById('amountDueCard');
+    var displayBalance = document.getElementById('displayBalance');
+    var displayAmountDue = document.getElementById('displayAmountDue');
+    var amountDueUsername = document.getElementById('amountDueUsername');
+    
+    if (amountDue > 0 && orderPrice > 0) {
+        // 显示 Amount Due 卡片
+        balanceCard.style.display = 'none';
+        amountDueCard.style.display = 'flex';
+        displayAmountDue.textContent = '€' + amountDue.toFixed(2);
+        amountDueUsername.textContent = user.username || user.uid;
+    } else {
+        // 显示 Available Balance 卡片
+        balanceCard.style.display = 'flex';
+        amountDueCard.style.display = 'none';
+        // 更新余额
+        var result = await sb.from('users').select('balance').eq('uid', user.uid).single();
+        if (result.data) {
+            displayBalance.textContent = '€' + (result.data.balance || 0).toFixed(2);
+        }
+    }
+}
+
             // ========== 图表 ==========
             let commissionChart = null,
                 currentChartType = 'line';
@@ -1586,6 +1891,8 @@ if (certificateStatus) {
                                 `<div class="booking-item"><div class="booking-info"><i class="fas fa-hotel"></i><div><div class="booking-name">${o.accommodation_name || 'Hotel Task'}</div><div class="booking-date">${d.toLocaleDateString()}, ${d.toLocaleTimeString()}</div></div></div><div class="booking-amount positive">+€${(o.commission || 0).toFixed(2)}</div></div>`;
                         });
                     }
+// ✅ 检查 Amount Due 并切换卡片
+await checkAmountDueAndSwitchCard();
                     await loadDashboardProducts();
                     await initCommissionChart();
                     bindChartButtons();
