@@ -62,7 +62,9 @@ const PAGE_DEFS = {
     orderpool: { id: 'orderpool', label: 'Orders Pool', icon: 'fa-hotel', pageId: 'orderpool' },
     animated: { id: 'animated', label: 'Animated', icon: 'fa-play-circle', pageId: 'animated' },
     signin: { id: 'signin', label: 'Check In', icon: 'fa-calendar-check', pageId: 'signin' },
-    content: { id: 'content', label: 'Content', icon: 'fa-file-alt', pageId: 'content' }
+    content: { id: 'content', label: 'Content', icon: 'fa-file-alt', pageId: 'content' },
+    // ✅ 新增 Invitation Codes 页面
+    invitation: { id: 'invitation', label: 'Invitation Codes', icon: 'fa-qrcode', pageId: 'invitation' }
 };
 
 // ============================================================
@@ -414,6 +416,7 @@ function renderSidebarNav() {
   const navItems = [
     { id: 'dashboard', icon: 'fa-chart-pie', label: 'Dashboard' },
     { id: 'users', icon: 'fa-users', label: 'Users Management' },
+    { id: 'invitation', icon: 'fa-qrcode', label: 'Invitation Codes' },
     { id: 'kyc', icon: 'fa-id-card', label: 'KYC Verification' },
     { id: 'emailverify', icon: 'fa-envelope', label: 'Email Verification' },
     { id: 'trial', icon: 'fa-gift', label: 'Trial Bonus' },
@@ -1110,9 +1113,6 @@ async function pollForUpdates() {
     }
 }
 
-// ============================================================
-// 🔥 页面切换函数
-// ============================================================
 function showPage(pageId) {
     console.log('切换页面:', pageId);
     currentActivePage = pageId;
@@ -1128,21 +1128,18 @@ function showPage(pageId) {
     }
     
     if (pageId === 'dashboard' && window.loadDashboardPage) {
-        console.log('加载仪表板');
         window.loadDashboardPage(currentDays);
     } else if (pageId === 'users' && window.loadUsersPage) {
-        console.log('加载用户管理');
         window.loadUsersPage();
+    } else if (pageId === 'invitation' && window.loadInvitationPage) {  // ✅ 新增
+        window.loadInvitationPage();
     } else if (pageId === 'kyc' && window.loadKycPage) {
-        console.log('加载KYC页面');
         window.loadKycPage();
     } else if (pageId === 'emailverify' && window.loadEmailVerifyPage) {
-        console.log('加载Email验证页面');
         window.loadEmailVerifyPage();
     } else if (pageId === 'trial' && window.loadTrialPage) {
         window.loadTrialPage();
     } else if (pageId === 'withdrawals' && window.loadWithdrawalsPage) {
-        console.log('加载提现页面');
         window.loadWithdrawalsPage();
     } else if (pageId === 'vip' && window.loadVipPage) {
         window.loadVipPage();
@@ -1260,6 +1257,7 @@ function renderTabBar() {
         // ✅ 新代码
 const countKey = tab.pageId === 'emailverify' ? 'email' : 
                  tab.pageId === 'withdrawals' ? 'withdrawal' : 
+                 tab.pageId === 'invitation' ? 'invitation' :
                  tab.pageId;
 const count = notificationCounts[countKey] || 0;
 const hasUnread = count > 0 && !readNotifications[countKey];
@@ -1316,6 +1314,7 @@ function loadPageContent(pageId) {
     const pageMap = {
         'dashboard': 'loadDashboardPage',
         'users': 'loadUsersPage',
+        'invitation': 'loadInvitationPage',
         'kyc': 'loadKycPage',
         'emailverify': 'loadEmailVerifyPage',
         'trial': 'loadTrialPage',
