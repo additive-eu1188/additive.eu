@@ -3,18 +3,33 @@ if (typeof window._i18n_loaded === 'undefined') {
     window._i18n_loaded = true;
 
     // ============================================================
-    // 统一设置 Favicon (所有页面共享)
-    // ============================================================
-    (function setFavicon() {
-        if (!document.querySelector('link[rel="icon"]')) {
-            const link = document.createElement('link');
-            link.rel = 'icon';
-            link.type = 'image/png';
-            link.href = '/favicon.png';
-            document.head.appendChild(link);
-            console.log('✅ Favicon set');
-        }
-    })();
+// 统一设置 Favicon (所有页面共享)
+// ============================================================
+(function setFavicon() {
+    // 移除旧的 favicon，确保更新
+    document.querySelectorAll('link[rel="icon"], link[rel="shortcut icon"]').forEach(function(el) {
+        el.remove();
+    });
+    
+    // 使用您提供的 Supabase URL
+    var iconUrl = 'https://qgmbzdfnwsdosdqphlxk.supabase.co/storage/v1/object/public/fav-icon/favicon.png';
+    
+    // 设置主要 icon
+    var link = document.createElement('link');
+    link.rel = 'icon';
+    link.type = 'image/png';
+    link.href = iconUrl;
+    document.head.appendChild(link);
+    
+    // 设置兼容性 icon
+    var link2 = document.createElement('link');
+    link2.rel = 'shortcut icon';
+    link2.type = 'image/png';
+    link2.href = iconUrl;
+    document.head.appendChild(link2);
+    
+    console.log('✅ Favicon set to:', iconUrl);
+})();
 
     // ============================================================
     // 翻译数据
