@@ -109,44 +109,132 @@ function applyStatsData(data) {
     if (totalWithdrawTrendEl) totalWithdrawTrendEl.innerHTML = getTrendHtml(data.periodWithdraw, data.prevPeriodWithdraw);
 }
 
-async function loadChartData(days, force) {
+// ============================================================
+// loadChartData - 显示当前月份数据（1日到当日）
+// ============================================================
+async function loadChartData(force) {
     force = force || false;
     var now = Date.now();
+    
+    // 缓存检查
     if (!force && cachedData.chart && (now - cachedData.lastChartTime) < CACHE_DURATION && trendChart) {
-        trendChart.setOption({ xAxis: { data: cachedData.chart.dates }, series: [{ data: cachedData.chart.depositData }, { data: cachedData.chart.withdrawData }] });
+        trendChart.setOption({ 
+            xAxis: { data: cachedData.chart.dates }, 
+            series: [
+                { data: cachedData.chart.depositData },
+                { data: cachedData.chart.withdrawData }
+            ] 
+        });
         return;
     }
+    
     try {
         var depositsRes = await sb.from('deposits')
             .select('created_at, amount')
             .eq('type', 'manual');
-        var withdrawalsRes = await sb.from('withdrawals').select('request_date, amount, status');
+            
+        var withdrawalsRes = await sb.from('withdrawals')
+            .select('request_date, amount, status');
+            
         var deposits = depositsRes.data || [];
         var withdrawals = withdrawalsRes.data || [];
-        var dates = [], depositData = [], withdrawData = [];
+        
+        // ============================================================
+        // 🔥 获取当前月份的第一天和最后一天
+        // ============================================================
         var today = new Date();
-        for (var i = days - 1; i >= 0; i--) {
-            var d = new Date(); d.setDate(today.getDate() - i);
+        var year = today.getFullYear();
+        var month = today.getMonth(); // 0 = 1月, 5 = 6月
+        var daysInMonth = new Date(year, month + 1, 0).getDate(); // 当月总天数
+        var currentDay = today.getDate(); // 当前是几号
+        
+        // 生成当月所有日期 (1日 到 总天数)
+        var dates = [];
+        var dateStrMap = {};
+        
+        for (var day = 1; day <= daysInMonth; day++) {
+            var d = new Date(year, month, day);
             var dateStr = d.toISOString().split('T')[0];
-            dates.push((d.getMonth() + 1) + '/' + d.getDate());
-            var dayDeposit = deposits.filter(function(dep) { return dep.created_at && dep.created_at.split('T')[0] === dateStr; }).reduce(function(s, d) { return s + (d.amount || 0); }, 0);
-            var dayWithdraw = withdrawals.filter(function(w) { return w.status === 'approved' && w.request_date && w.request_date.split('T')[0] === dateStr; }).reduce(function(s, w) { return s + (w.amount || 0); }, 0);
-            depositData.push(dayDeposit);
-            withdrawData.push(dayWithdraw);
+            var label = (month + 1) + '/' + day;
+            dates.push(label);
+            dateStrMap[label] = dateStr;
         }
+        
+        console.log('📅 当前月份:', year + '-' + String(month + 1).padStart(2, '0'), '总天数:', daysInMonth, '今日:', currentDay);
+        
+        // ============================================================
+        // 🔥 按天汇总数据（仅限本月）
+        // ============================================================
+        var depositData = [];
+        var withdrawData = [];
+        
+        // 获取本月第一天和最后一天的日期字符串
+        var firstDayStr = new Date(year, month, 1).toISOString().split('T')[0];
+        var lastDayStr = new Date(year, month + 1, 0).toISOString().split('T')[0];
+        
+        // 过滤出本月的数据
+        var monthDeposits = deposits.filter(function(d) {
+            return d.created_at && d.created_at >= firstDayStr && d.created_at <= lastDayStr;
+        });
+        
+        var monthWithdrawals = withdrawals.filter(function(w) {
+            return w.status === 'approved' && w.request_date && w.request_date >= firstDayStr && w.request_date <= lastDayStr;
+        });
+        
+        // 按天汇总
+        for (var i = 0; i < dates.length; i++) {
+            var label = dates[i];
+            var dateStr = dateStrMap[label];
+            var dayNum = parseInt(label.split('/')[1]);
+            
+            // 如果日期还没到（未来日期），数据为 null（显示为空）
+            // 如果日期已经到了但没有数据，数据为 0（显示在底部）
+            if (dayNum > currentDay) {
+                // 未来日期：用 null 表示空
+                depositData.push(null);
+                withdrawData.push(null);
+            } else {
+                // 过去或今天的日期：计算数据
+                var dayDeposit = monthDeposits.filter(function(dep) {
+                    return dep.created_at && dep.created_at.split('T')[0] === dateStr;
+                }).reduce(function(s, d) { return s + (d.amount || 0); }, 0);
+                
+                var dayWithdraw = monthWithdrawals.filter(function(w) {
+                    return w.request_date && w.request_date.split('T')[0] === dateStr;
+                }).reduce(function(s, w) { return s + (w.amount || 0); }, 0);
+                
+                depositData.push(dayDeposit);
+                withdrawData.push(dayWithdraw);
+            }
+        }
+        
+        console.log('📊 本月数据汇总完成, 总天数:', dates.length);
+        
         cachedData.chart = { dates: dates, depositData: depositData, withdrawData: withdrawData };
         cachedData.lastChartTime = now;
+        
         if (trendChart) {
             trendChart.setOption({ 
                 xAxis: { data: dates }, 
                 series: [
-                    { name: 'Deposit', data: depositData },
-                    { name: 'Withdrawal', data: withdrawData }
+                    { 
+                        name: 'Deposit', 
+                        data: depositData,
+                        // 对于 null 值，不显示连接线（断开）
+                        connectNulls: false
+                    },
+                    { 
+                        name: 'Withdrawal', 
+                        data: withdrawData,
+                        connectNulls: false
+                    }
                 ]
             });
-            console.log('趋势线图已更新');
+            console.log('📊 D&W Trend 已更新 (本月数据: ' + dates.length + '天)');
         }
-    } catch (e) { console.error('加载图表数据失败:', e); }
+    } catch (e) {
+        console.error('加载图表数据失败:', e);
+    }
 }
 
 // ========== 加载转化率数据 ==========
@@ -619,9 +707,36 @@ function initTrendChart() {
         trendChart = null;
     }
     
-    console.log('📊 趋势图已加载（细线条 + 小圆点）');
+    console.log('📊 趋势图已加载（当月数据）');
     
     trendChart = echarts.init(dom);
+    
+    // ✅ 生成当月的默认日期标签
+    var defaultDates = [];
+    var today = new Date();
+    var year = today.getFullYear();
+    var month = today.getMonth();
+    var daysInMonth = new Date(year, month + 1, 0).getDate();
+    
+    for (var day = 1; day <= daysInMonth; day++) {
+        defaultDates.push((month + 1) + '/' + day);
+    }
+    
+    // 默认数据：过去日期为 0，未来日期为 null
+    var currentDay = today.getDate();
+    var defaultDepositData = [];
+    var defaultWithdrawData = [];
+    
+    for (var i = 1; i <= daysInMonth; i++) {
+        if (i > currentDay) {
+            defaultDepositData.push(null);
+            defaultWithdrawData.push(null);
+        } else {
+            defaultDepositData.push(0);
+            defaultWithdrawData.push(0);
+        }
+    }
+    
     trendChart.setOption({
         tooltip: { 
             trigger: 'axis', 
@@ -629,7 +744,22 @@ function initTrendChart() {
             backgroundColor: 'rgba(14,18,30,0.92)', 
             borderColor: 'rgba(180,180,200,0.06)', 
             borderWidth: 1, 
-            textStyle: { color: '#d8dff0', fontSize: 11 } 
+            textStyle: { color: '#d8dff0', fontSize: 11 },
+            // 处理 null 值显示
+            formatter: function(params) {
+                var result = params[0].axisValue + '<br/>';
+                var hasData = false;
+                params.forEach(function(p) {
+                    if (p.value !== null && p.value !== undefined) {
+                        result += p.marker + ' ' + p.seriesName + ': €' + p.value.toFixed(2) + '<br/>';
+                        hasData = true;
+                    }
+                });
+                if (!hasData) {
+                    result += '<span style="color:#5a6a82;">No data for this day</span>';
+                }
+                return result;
+            }
         },
         grid: { 
             top: 16, 
@@ -640,8 +770,13 @@ function initTrendChart() {
         },
         xAxis: { 
             type: 'category', 
-            data: ['周一', '周二', '周三', '周四', '周五', '周六', '周日'], 
-            axisLabel: { color: 'rgba(255,255,255,0.15)', fontSize: 9 }, 
+            data: defaultDates,
+            axisLabel: { 
+                color: 'rgba(255,255,255,0.15)', 
+                fontSize: 9,
+                // 每5天显示一个标签，避免太拥挤
+                interval: Math.max(0, Math.floor(defaultDates.length / 30))
+            }, 
             axisLine: { lineStyle: { color: 'rgba(255,255,255,0.04)' } }, 
             axisTick: { show: false } 
         },
@@ -658,7 +793,7 @@ function initTrendChart() {
             { 
                 name: 'Deposit', 
                 type: 'line', 
-                data: [0, 0, 0, 0, 0, 0, 0], 
+                data: defaultDepositData,
                 smooth: false,
                 symbol: 'circle', 
                 symbolSize: 3,
@@ -667,13 +802,14 @@ function initTrendChart() {
                     width: 1.5
                 }, 
                 itemStyle: { color: '#4ade80' },
+                connectNulls: false,  // ✅ null 值断开连接
                 animation: false,
                 animationDuration: 0
             },
             { 
                 name: 'Withdrawal', 
                 type: 'line', 
-                data: [0, 0, 0, 0, 0, 0, 0], 
+                data: defaultWithdrawData,
                 smooth: false,
                 symbol: 'circle', 
                 symbolSize: 3,
@@ -682,15 +818,15 @@ function initTrendChart() {
                     width: 1.5
                 }, 
                 itemStyle: { color: '#e88080' },
+                connectNulls: false,  // ✅ null 值断开连接
                 animation: false,
                 animationDuration: 0
             }
         ]
     });
     
-    console.log('趋势线图初始化完成（细线条 + 小圆点）');
+    console.log('✅ D&W Trend 初始化完成（当月: ' + defaultDates.length + '天）');
     
-    // 清除旧的脉冲动画
     if (pulseInterval) {
         clearInterval(pulseInterval);
         pulseInterval = null;
