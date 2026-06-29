@@ -1,1839 +1,1129 @@
-// admin-common.js - 完整版（已移除所有粒子动画，保留金属质感侧边栏）
-const SUPABASE_URL = 'https://qgmbzdfnwsdosdqphlxk.supabase.co';
-const SUPABASE_KEY = 'sb_publishable_zsJFjfNUO7NKp8ZH5KrXFQ_WZ8Q2Kym';
-const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-
-// ============================================================
-// 🔥 性能检测（仅检测，无自动降级）
-// ============================================================
-
-function detectDevicePerformance() {
-    const isMobile = /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
-    const cores = navigator.hardwareConcurrency || 4;
-    const isLowEnd = cores <= 4;
-    const memory = navigator.deviceMemory || 4;
-    const isLowMemory = memory <= 4;
-    const isTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
-    const isLowPerformance = isMobile || isLowEnd || isLowMemory || isTouch;
-    
-    console.log('📱 设备检测:', { isMobile, cores, memory, isTouch, isLowPerformance });
-    
-    return { isLowPerformance, isMobile, isLowEnd, isLowMemory, isTouch, cores, memory };
-}
-
-const deviceInfo = detectDevicePerformance();
-
-// ============================================================
-// 通知数据
-// ============================================================
-let notificationCounts = {
-  dashboard: 0,
-  kyc: 0,
-  email: 0,
-  withdrawal: 0
+// admin-dashboard.js - 完整版（完全静态，无动画，金属质感 #ccb89f）
+// 修改：图表固定显示30天数据，日期筛选按钮只影响统计卡片
+let trendChart = null;
+let ringChart = null;
+let breatheInterval = null;
+let pulseInterval = null;
+let dashboardRefreshInterval = null;
+let dashboardRendered = false;
+let cachedData = {
+    stats: null,
+    chart: null,
+    activity: null,
+    conversion: null,
+    lastStatsTime: 0,
+    lastChartTime: 0,
+    lastActivityTime: 0,
+    lastConversionTime: 0
 };
-
-let readNotifications = {
-  dashboard: false,
-  kyc: false,
-  email: false,
-  withdrawal: false
-};
-
-let currentActivePage = 'dashboard';
-
-// ============================================================
-// 🔥 全局 Tab 标签栏状态
-// ============================================================
-let tabs = [];
-let activeTabId = null;
-let tabIdCounter = 0;
-
-const PAGE_DEFS = {
-    dashboard: { id: 'dashboard', label: 'Dashboard', icon: 'fa-chart-pie', pageId: 'dashboard' },
-    users: { id: 'users', label: 'Users', icon: 'fa-users', pageId: 'users' },
-    kyc: { id: 'kyc', label: 'KYC', icon: 'fa-id-card', pageId: 'kyc' },
-    emailverify: { id: 'emailverify', label: 'Email', icon: 'fa-envelope', pageId: 'emailverify' },
-    trial: { id: 'trial', label: 'Trial', icon: 'fa-gift', pageId: 'trial' },
-    withdrawals: { id: 'withdrawals', label: 'Withdrawal', icon: 'fa-money-bill-wave', pageId: 'withdrawals' },
-    vip: { id: 'vip', label: 'VIP', icon: 'fa-crown', pageId: 'vip' },
-    setorders: { id: 'setorders', label: 'Orders Trigger', icon: 'fa-cog', pageId: 'setorders' },
-    orders: { id: 'orders', label: 'Orders History', icon: 'fa-clock', pageId: 'orders' },
-    orderpool: { id: 'orderpool', label: 'Orders Pool', icon: 'fa-hotel', pageId: 'orderpool' },
-    animated: { id: 'animated', label: 'Animated', icon: 'fa-play-circle', pageId: 'animated' },
-    signin: { id: 'signin', label: 'Check In', icon: 'fa-calendar-check', pageId: 'signin' },
-    content: { id: 'content', label: 'Content', icon: 'fa-file-alt', pageId: 'content' }
-};
-
-// ============================================================
-// 🔥 全局通知数组
-// ============================================================
-if (typeof window.notifications === 'undefined') {
-    window.notifications = [];
-}
-
-// ✅ 用于防止重复通知的 Set
-let notifiedIds = new Set();
-
-function loadNotifications() {
-    try {
-        const saved = localStorage.getItem('admin_notifications');
-        if (saved) {
-            const parsed = JSON.parse(saved);
-            if (Array.isArray(parsed) && parsed.length > 0) {
-                window.notifications = parsed;
-                // 重建 notifiedIds
-                notifiedIds = new Set();
-                parsed.forEach(function(n) {
-                    notifiedIds.add(n.id);
-                });
-                return;
-            }
-        }
-    } catch (e) {}
-    window.notifications = window.notifications || [];
-}
-
-function saveNotifications() {
-    try {
-        localStorage.setItem('admin_notifications', JSON.stringify(window.notifications));
-    } catch (e) {}
-}
-
-// ============================================================
-// 🔥 添加通知（防重复）
-// ============================================================
-function addNotification(notification) {
-    if (typeof window.notifications === 'undefined') {
-        window.notifications = [];
-    }
-    
-    // ✅ 检查是否已有相同 ID 的通知
-    if (notifiedIds.has(notification.id)) {
-        console.log('⏭️ 通知已存在，跳过:', notification.id);
-        return;
-    }
-    
-    // ✅ 检查是否有相似的通知（防止几乎相同的通知重复）
-    var similarExists = window.notifications.some(function(n) {
-        if (n.type !== notification.type) return false;
-        if (notification.type === 'kyc' && n.data && notification.data) {
-            return n.data.uid === notification.data.uid;
-        }
-        if (notification.type === 'withdrawal' && n.data && notification.data) {
-            return n.data.uid === notification.data.uid && n.data.amount === notification.data.amount;
-        }
-        if (notification.type === 'email' && n.data && notification.data) {
-            return n.data.email === notification.data.email;
-        }
-        return false;
-    });
-    
-    if (similarExists) {
-        console.log('⏭️ 相似通知已存在，跳过:', notification.id);
-        return;
-    }
-    
-    // 添加到通知列表
-    window.notifications.unshift(notification);
-    notifiedIds.add(notification.id);
-    
-    if (window.notifications.length > 500) {
-        window.notifications = window.notifications.slice(0, 500);
-    }
-    saveNotifications();
-    
-    // 更新 UI
-    if (typeof updateNotificationUI === 'function') {
-        updateNotificationUI();
-    }
-    updateSidebarBadges();
-    updateGlobalNotificationBadge(); // ✅ 更新全局通知角标
-}
-
-loadNotifications();
-
-// ============================================================
-// 🔥 通知 UI 更新（同时更新 Dashboard 和 Tab Bar）
-// ============================================================
-function updateNotificationUI() {
-    // ============================================================
-    // 1. 更新 Dashboard 的通知下拉
-    // ============================================================
-    var badge = document.getElementById('notificationBadge');
-    var countEl = document.getElementById('notificationCount');
-    var listEl = document.getElementById('notificationList');
-
-    if (badge && countEl && listEl) {
-        updateSingleNotificationList(listEl, badge, countEl);
-    }
-
-    // ============================================================
-    // 2. 更新 Tab Bar 的全局通知下拉
-    // ============================================================
-    var globalBadge = document.getElementById('globalNotificationBadge');
-    var globalCountEl = document.getElementById('globalNotificationCount');
-    var globalListEl = document.getElementById('globalNotificationList');
-
-    // 如果没有 globalNotificationList，创建它（兼容旧版本）
-    if (!globalListEl) {
-        var dropdown = document.getElementById('globalNotificationDropdown');
-        if (dropdown) {
-            // 查找或创建 notificationList
-            var existingList = dropdown.querySelector('#globalNotificationList');
-            if (!existingList) {
-                var listContainer = dropdown.querySelector('#notificationList') || dropdown.querySelector('div[id*="notificationList"]');
-                if (listContainer) {
-                    listContainer.id = 'globalNotificationList';
-                    globalListEl = listContainer;
-                } else {
-                    // 如果完全不存在，创建新的
-                    var contentDiv = dropdown.querySelector('div[style*="max-height: 350px"]');
-                    if (contentDiv) {
-                        contentDiv.id = 'globalNotificationList';
-                        globalListEl = contentDiv;
-                    }
-                }
-            } else {
-                globalListEl = existingList;
-            }
-        }
-    }
-
-    if (globalBadge && globalCountEl && globalListEl) {
-        updateSingleNotificationList(globalListEl, globalBadge, globalCountEl);
-    } else {
-        // 如果元素不存在，延迟重试
-        setTimeout(function() {
-            updateNotificationUI();
-        }, 300);
-    }
-
-    // 更新侧边栏
-    updateSidebarBadges();
-}
-
-// ============================================================
-// 🔥 单个通知列表更新函数
-// ============================================================
-function updateSingleNotificationList(listEl, badgeEl, countEl) {
-    if (typeof window.notifications === 'undefined') {
-        loadNotifications();
-    }
-
-    var unreadCount = 0;
-    for (var i = 0; i < window.notifications.length; i++) {
-        if (!window.notifications[i].read) unreadCount++;
-    }
-
-    if (unreadCount > 0) {
-        badgeEl.style.display = 'flex';
-        badgeEl.textContent = unreadCount > 99 ? '99+' : unreadCount;
-    } else {
-        badgeEl.style.display = 'none';
-    }
-
-    countEl.textContent = window.notifications.length + ' notifications';
-
-    if (window.notifications.length === 0) {
-        listEl.innerHTML = `
-            <div style="text-align: center; padding: 40px 20px; color: #6a7a92; font-size: 13px;">
-                <i class="fas fa-inbox" style="display: block; font-size: 28px; color: #4a5a72; margin-bottom: 10px;"></i>
-                No notifications
-            </div>
-        `;
-        return;
-    }
-
-    // ✅ 使用 Set 防止同一通知重复渲染
-    var renderedIds = new Set();
-    var html = '';
-    
-    for (var j = 0; j < window.notifications.length; j++) {
-        var notif = window.notifications[j];
-        
-        if (renderedIds.has(notif.id)) continue;
-        renderedIds.add(notif.id);
-        
-        var timeStr = formatTime(notif.timestamp);
-        var isRead = notif.read;
-        var bgColor = isRead ? 'rgba(255,255,255,0.02)' : 'rgba(200,176,144,0.06)';
-        var borderColor = isRead ? 'rgba(255,255,255,0.03)' : 'rgba(200,176,144,0.12)';
-
-        var typeColor = '#8892a8';
-        if (notif.type === 'withdrawal') typeColor = '#7ad0b0';
-        else if (notif.type === 'kyc') typeColor = '#ffb84d';
-        else if (notif.type === 'email') typeColor = '#4a7cff';
-        else if (notif.type === 'ip') typeColor = '#c084fc';
-        else if (notif.type === 'ip_withdrawal') typeColor = '#ff6b6b';
-
-        html += `
-            <div class="notification-item" data-id="${notif.id}" style="padding: 12px 16px; margin: 0 8px 4px 8px; border-radius: 10px; background: ${bgColor}; border-left: 3px solid ${typeColor}; cursor: pointer; transition: all 0.2s; display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; border: 1px solid ${borderColor};" onclick="markNotificationRead('${notif.id}')">
-                <div style="flex: 1; min-width: 0;">
-                    <div style="font-size: 13px; font-weight: 500; color: #d8e0f0;">${escapeHtml(notif.title)}</div>
-                    <div style="font-size: 12px; color: #8892a8; margin-top: 2px; word-break: break-word;">${escapeHtml(notif.message)}</div>
-                </div>
-                <div style="display: flex; flex-direction: column; align-items: flex-end; flex-shrink: 0; min-width: 60px;">
-                    <div style="font-size: 10px; color: #5a6a82; white-space: nowrap;">${timeStr}</div>
-                    ${!isRead ? '<div style="margin-top: 4px; width: 6px; height: 6px; border-radius: 50%; background: #4a7cff;"></div>' : ''}
-                </div>
-            </div>
-        `;
-    }
-
-    listEl.innerHTML = html;
-}
-
-// ============================================================
-// 🔥 更新全局通知角标（Tab Bar 右侧）
-// ============================================================
-function updateGlobalNotificationBadge() {
-    var badge = document.getElementById('globalNotificationBadge');
-    if (!badge) return;
-    
-    if (typeof window.notifications === 'undefined') {
-        loadNotifications();
-    }
-    
-    var unreadCount = 0;
-    for (var i = 0; i < window.notifications.length; i++) {
-        if (!window.notifications[i].read) unreadCount++;
-    }
-    
-    if (unreadCount > 0) {
-        badge.style.display = 'flex';
-        badge.textContent = unreadCount > 99 ? '99+' : unreadCount;
-    } else {
-        badge.style.display = 'none';
-    }
-}
-
-// ============================================================
-// 🔥 标记所有通知为已读
-// ============================================================
-window.markAllNotificationsRead = function() {
-    if (!window.notifications || window.notifications.length === 0) {
-        showToast('No notifications to mark', 'info');
-        return;
-    }
-    
-    var markedCount = 0;
-    for (var i = 0; i < window.notifications.length; i++) {
-        if (!window.notifications[i].read) {
-            window.notifications[i].read = true;
-            markedCount++;
-        }
-    }
-    
-    saveNotifications();
-    updateNotificationUI();
-    updateSidebarBadges();
-    updateGlobalNotificationBadge();
-    
-    if (markedCount > 0) {
-        showToast('✅ ' + markedCount + ' notifications marked as read', 'success');
-    } else {
-        showToast('All notifications already read', 'info');
-    }
-};
-
-// ============================================================
-// 🔥 通知下拉切换（全局）
-// ============================================================
-var isNotificationDropdownOpen = false;
-
-function toggleNotificationDropdown() {
-    var dropdown = document.getElementById('globalNotificationDropdown');
-    if (!dropdown) return;
-    
-    // 切换显示
-    if (dropdown.style.display === 'block') {
-        dropdown.style.display = 'none';
-        isNotificationDropdownOpen = false;
-    } else {
-        dropdown.style.display = 'block';
-        isNotificationDropdownOpen = true;
-        if (typeof updateNotificationUI === 'function') {
-            updateNotificationUI();
-        }
-    }
-}
-
-function closeNotificationDropdown() {
-    var dropdown = document.getElementById('globalNotificationDropdown');
-    if (dropdown) {
-        dropdown.style.display = 'none';
-        isNotificationDropdownOpen = false;
-    }
-}
-
-
-// 点击外部关闭通知下拉
-document.addEventListener('click', function(e) {
-    var container = document.getElementById('globalNotificationContainer');
-    if (container && !container.contains(e.target)) {
-        closeNotificationDropdown();
-    }
-});
-
-window.markNotificationRead = function(id) {
-    for (var i = 0; i < window.notifications.length; i++) {
-        if (window.notifications[i].id === id) {
-            window.notifications[i].read = true;
-            break;
-        }
-    }
-    saveNotifications();
-    updateNotificationUI();
-    updateSidebarBadges();
-    updateGlobalNotificationBadge();
-};
-
-window.clearAllNotifications = function() {
-    window.notifications = [];
-    notifiedIds = new Set();
-    saveNotifications();
-    updateNotificationUI();
-    updateSidebarBadges();
-    updateGlobalNotificationBadge();
-    closeNotificationDropdown();
-    if (typeof showToast === 'function') {
-        showToast('All notifications cleared', 'success');
-    }
-};
-
-// ============================================================
-// 🔥 侧边栏渲染（带通知角标）
-// ============================================================
-function renderSidebarNav() {
-  const navList = document.querySelector('.nav-list');
-  if (!navList) return;
-
-  navList.innerHTML = '';
-
-  const navItems = [
-    { id: 'dashboard', icon: 'fa-chart-pie', label: 'Dashboard' },
-    { id: 'users', icon: 'fa-users', label: 'Users Management' },
-    { id: 'kyc', icon: 'fa-id-card', label: 'KYC Verification' },
-    { id: 'emailverify', icon: 'fa-envelope', label: 'Email Verification' },
-    { id: 'trial', icon: 'fa-gift', label: 'Trial Bonus' },
-    { id: 'withdrawals', icon: 'fa-money-bill-wave', label: 'Withdrawal' },
-    { id: 'vip', icon: 'fa-crown', label: 'VIP Setting' },
-    { id: 'setorders', icon: 'fa-cog', label: 'Orders Trigger' },
-    { id: 'orders', icon: 'fa-clock', label: 'Orders History' },
-    { id: 'orderpool', icon: 'fa-hotel', label: 'Orders Pool' },
-    { id: 'animated', icon: 'fa-play-circle', label: 'Animated' },
-    { id: 'signin', icon: 'fa-calendar-check', label: 'Check In Bonus' },
-    { id: 'content', icon: 'fa-file-alt', label: 'Content Management' }
-  ];
-
-  navItems.forEach(item => {
-    const div = document.createElement('div');
-    div.className = 'nav-item';
-    div.setAttribute('data-page', item.id);
-
-    const isActive = currentActivePage === item.id;
-    const hasUnread = notificationCounts[item.id] > 0 && !readNotifications[item.id];
-
-    if (isActive) div.classList.add('active');
-    if (hasUnread) div.classList.add('has-notification');
-
-    div.innerHTML = `
-      <i class="fas ${item.icon}"></i>
-      <span class="nav-label">${item.label}</span>
-      ${hasUnread ? `<span class="badge-notify" id="badge-${item.id}">${notificationCounts[item.id]}</span>` : ''}
-    `;
-
-    div.addEventListener('click', function(e) {
-      e.stopPropagation();
-      const pageId = this.dataset.page;
-
-      const badgeId = Object.keys(notificationCounts).find(key => key === pageId);
-      if (badgeId && notificationCounts[badgeId] > 0 && !readNotifications[badgeId]) {
-        readNotifications[badgeId] = true;
-        const badge = this.querySelector('.badge-notify');
-        if (badge) badge.remove();
-        this.classList.remove('has-notification');
-        console.log(`✅ 通知已读: ${item.label}`);
-      }
-
-      document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-      this.classList.add('active');
-      currentActivePage = pageId;
-
-      openTab(pageId);
-    });
-
-    navList.appendChild(div);
-  });
-}
-
-function updateSidebarBadges() {
-  renderSidebarNav();
-  document.querySelectorAll('.nav-item').forEach(el => {
-    if (el.dataset.page === currentActivePage) {
-      el.classList.add('active');
-    }
-  });
-  renderTabBar();  // ✅ 在函数内部
-}
-
-function updateNotificationCount(moduleId, count) {
-  notificationCounts[moduleId] = count;
-  readNotifications[moduleId] = false;
-  updateSidebarBadges();
-  updateGlobalNotificationBadge();
-
-  if (count > 0) {
-    const moduleNames = {
-      dashboard: 'Dashboard',
-      kyc: 'KYC Verification',
-      email: 'Email Verification',
-      withdrawal: 'Withdrawal'
-    };
-    if (typeof showAmberNotification === 'function') {
-      showAmberNotification(
-        `📬 新通知 (${moduleNames[moduleId] || moduleId})`,
-        `您有 ${count} 条待处理通知`,
-        'info'
-      );
-    }
-  }
-}
-
-async function loadNotificationCounts() {
-  try {
-    const kycRes = await sb.from('kyc_verifications').select('id', { count: 'exact', head: true }).eq('status', 'pending');
-    const kycCount = kycRes.count || 0;
-
-    const withdrawalRes = await sb.from('withdrawals').select('id', { count: 'exact', head: true }).eq('status', 'pending');
-    const withdrawalCount = withdrawalRes.count || 0;
-
-    const emailRes = await sb.from('email_verification_requests').select('id', { count: 'exact', head: true }).eq('is_verified', false).is('code', null);
-    const emailCount = emailRes.count || 0;
-
-    const dashboardCount = kycCount + withdrawalCount + emailCount;
-
-    notificationCounts.dashboard = dashboardCount;
-    notificationCounts.kyc = kycCount;
-    notificationCounts.email = emailCount;
-    notificationCounts.withdrawal = withdrawalCount;
-
-    updateSidebarBadges();
-    updateGlobalNotificationBadge();
-
-    console.log('📊 通知数量已更新:', notificationCounts);
-  } catch (e) {
-    console.error('加载通知数量失败:', e);
-  }
-  renderTabBar();  // ✅ 在 try-catch 外面，但属于函数体
-}
-
-// ============================================================
-// 工具函数
-// ============================================================
-let currentDays = 1;
-
-function toggleSidebar() { document.getElementById('sidebar')?.classList.toggle('open'); }
-window.toggleSidebar = toggleSidebar;
-
-function escapeHtml(str) { if(!str) return ''; return str.replace(/[&<>]/g, m => m === '&' ? '&amp;' : m === '<' ? '&lt;' : m === '>' ? '&gt;' : m); }
-
-function formatTime(dateStr) {
-    if (!dateStr) return '刚刚';
-    const date = new Date(dateStr);
-    const now = new Date();
-    const diff = Math.floor((now - date) / 1000 / 60);
-    if (diff < 1) return '刚刚';
-    if (diff < 60) return `${diff}分钟前`;
-    if (diff < 1440) return `${Math.floor(diff / 60)}小时前`;
-    return `${Math.floor(diff / 1440)}天前`;
-}
-
-function animateNumber(element, target, prefix = '', suffix = '') {
-    if (!element) return;
-    let current = 0;
-    const duration = 1500;
-    const step = target / (duration / 16);
-    const timer = setInterval(() => {
-        current += step;
-        if (current >= target) {
-            element.innerText = prefix + target.toLocaleString() + suffix;
-            clearInterval(timer);
-        } else {
-            element.innerText = prefix + Math.floor(current).toLocaleString() + suffix;
-        }
-    }, 16);
-}
-
-function getTrendHtml(current, previous) {
-    if (previous === 0) return current > 0 ? '<span class="trend-up">↑ +100%</span>' : '<span class="trend-up">→ 0%</span>';
-    const percent = ((current - previous) / previous * 100).toFixed(1);
-    if (percent > 0) return `<span class="trend-up">↑ +${percent}%</span>`;
-    if (percent < 0) return `<span class="trend-down">↓ ${percent}%</span>`;
-    return '<span>→ 0%</span>';
-}
-
-// ========== Toast 提示 ==========
-function showToast(message, type = 'success') {
-    const existingToast = document.querySelector('.custom-toast');
-    if (existingToast) existingToast.remove();
-    
-    const toast = document.createElement('div');
-    toast.className = `custom-toast custom-toast-${type}`;
-    
-    let icon = 'fa-check-circle';
-    let bgColor = '#ffb84d';
-    if (type === 'success') { icon = 'fa-check-circle'; bgColor = '#2ed15a'; }
-    else if (type === 'error') { icon = 'fa-exclamation-circle'; bgColor = '#ff5a5a'; }
-    else if (type === 'warning') { icon = 'fa-exclamation-triangle'; bgColor = '#ffb84d'; }
-    else { icon = 'fa-info-circle'; bgColor = '#4a7cff'; }
-    
-    toast.style.cssText = `
-        position: fixed;
-        bottom: 30px;
-        left: 50%;
-        transform: translateX(-50%) translateY(100px);
-        background: rgba(15, 20, 35, 0.95);
-        backdrop-filter: blur(20px);
-        border-radius: 50px;
-        padding: 12px 24px;
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        z-index: 10001;
-        opacity: 0;
-        transition: all 0.3s ease;
-        box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-        border-left: 3px solid ${bgColor};
-        font-family: 'Inter', sans-serif;
-        color: #fff;
-    `;
-    
-    toast.innerHTML = `
-        <div><i class="fas ${icon}" style="color: ${bgColor}; font-size: 18px;"></i></div>
-        <div style="font-size: 14px;">${message}</div>
-        <div style="position: absolute; bottom: 0; left: 0; height: 3px; background: ${bgColor}; width: 100%; border-radius: 0 0 50px 50px; animation: toastProgress 3s linear forwards;"></div>
-    `;
-    
-    document.body.appendChild(toast);
-    setTimeout(() => { toast.style.transform = 'translateX(-50%) translateY(0)'; toast.style.opacity = '1'; }, 10);
-    setTimeout(() => {
-        toast.style.transform = 'translateX(-50%) translateY(100px)';
-        toast.style.opacity = '0';
-        setTimeout(() => toast.remove(), 300);
-    }, 3000);
-}
-
-// ========== 确认弹窗 ==========
-function showConfirm(title, message, onConfirm, onCancel) {
-    const existingModal = document.querySelector('.custom-confirm');
-    if (existingModal) existingModal.remove();
-    
-    const modal = document.createElement('div');
-    modal.className = 'custom-confirm';
-    modal.style.cssText = `
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        z-index: 10002;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        visibility: hidden;
-        opacity: 0;
-        transition: all 0.2s ease;
-    `;
-    
-    modal.innerHTML = `
-        <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); backdrop-filter: blur(5px);"></div>
-        <div style="position: relative; background: linear-gradient(145deg, #1a1508, #0f0c06); border-radius: 24px; padding: 24px; width: 340px; max-width: 90%; text-align: center; border: 1px solid rgba(255,184,77,0.3); box-shadow: 0 20px 40px rgba(0,0,0,0.4); transform: scale(0.9); transition: transform 0.2s ease;">
-            <div style="font-size: 18px; font-weight: 600; color: #ffb84d; margin-bottom: 12px;">${title}</div>
-            <div style="font-size: 14px; color: #d4c8a0; margin-bottom: 24px; line-height: 1.5;">${message}</div>
-            <div style="display: flex; gap: 12px; justify-content: center;">
-                <button id="confirm-cancel" style="background: rgba(255,255,255,0.1); border: none; padding: 10px 24px; border-radius: 40px; color: #fff; cursor: pointer;">取消</button>
-                <button id="confirm-ok" style="background: linear-gradient(135deg, #ffb84d, #cc8822); border: none; padding: 10px 24px; border-radius: 40px; color: #0a0806; font-weight: 600; cursor: pointer;">确认</button>
-            </div>
-        </div>
-    `;
-    
-    document.body.appendChild(modal);
-    setTimeout(() => {
-        modal.style.visibility = 'visible';
-        modal.style.opacity = '1';
-        modal.querySelector('div:last-child').style.transform = 'scale(1)';
-    }, 10);
-    
-    modal.querySelector('#confirm-cancel').onclick = () => {
-        modal.style.visibility = 'hidden';
-        modal.style.opacity = '0';
-        setTimeout(() => modal.remove(), 300);
-        if (onCancel) onCancel();
-    };
-    
-    modal.querySelector('#confirm-ok').onclick = () => {
-        modal.style.visibility = 'hidden';
-        modal.style.opacity = '0';
-        setTimeout(() => modal.remove(), 300);
-        if (onConfirm) onConfirm();
-    };
-    
-    modal.querySelector('div:first-child').onclick = () => {
-        modal.style.visibility = 'hidden';
-        modal.style.opacity = '0';
-        setTimeout(() => modal.remove(), 300);
-        if (onCancel) onCancel();
-    };
-}
-
-// ========== 输入弹窗 ==========
-function showPrompt(title, placeholder, callback) {
-    const existingModal = document.querySelector('.custom-prompt');
-    if (existingModal) existingModal.remove();
-    
-    const modal = document.createElement('div');
-    modal.className = 'custom-prompt';
-    modal.style.cssText = `
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        z-index: 10002;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        visibility: hidden;
-        opacity: 0;
-        transition: all 0.2s ease;
-    `;
-    
-    modal.innerHTML = `
-        <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); backdrop-filter: blur(5px);"></div>
-        <div style="position: relative; background: linear-gradient(145deg, #1a1508, #0f0c06); border-radius: 24px; padding: 24px; width: 340px; max-width: 90%; text-align: center; border: 1px solid rgba(255,184,77,0.3); box-shadow: 0 20px 40px rgba(0,0,0,0.4); transform: scale(0.9); transition: transform 0.2s ease;">
-            <div style="font-size: 18px; font-weight: 600; color: #ffb84d; margin-bottom: 20px;">${title}</div>
-            <input type="text" id="prompt-input" placeholder="${placeholder}" style="width: 100%; padding: 12px 16px; background: #0a0806; border: 1px solid rgba(255,184,77,0.3); border-radius: 12px; color: #fff; font-size: 14px; outline: none; margin-bottom: 20px;">
-            <div style="display: flex; gap: 12px; justify-content: center;">
-                <button id="prompt-cancel" style="background: rgba(255,255,255,0.1); border: none; padding: 10px 24px; border-radius: 40px; color: #fff; cursor: pointer;">取消</button>
-                <button id="prompt-ok" style="background: linear-gradient(135deg, #ffb84d, #cc8822); border: none; padding: 10px 24px; border-radius: 40px; color: #0a0806; font-weight: 600; cursor: pointer;">确认</button>
-            </div>
-        </div>
-    `;
-    
-    document.body.appendChild(modal);
-    setTimeout(() => {
-        modal.style.visibility = 'visible';
-        modal.style.opacity = '1';
-        modal.querySelector('div:last-child').style.transform = 'scale(1)';
-        const input = document.getElementById('prompt-input');
-        input.focus();
-    }, 10);
-    
-    modal.querySelector('#prompt-cancel').onclick = () => {
-        modal.style.visibility = 'hidden';
-        modal.style.opacity = '0';
-        setTimeout(() => modal.remove(), 300);
-        if (callback) callback(null);
-    };
-    
-    modal.querySelector('#prompt-ok').onclick = () => {
-        const value = document.getElementById('prompt-input').value.trim();
-        modal.style.visibility = 'hidden';
-        modal.style.opacity = '0';
-        setTimeout(() => modal.remove(), 300);
-        if (callback) callback(value);
-    };
-    
-    modal.querySelector('div:first-child').onclick = () => {
-        modal.style.visibility = 'hidden';
-        modal.style.opacity = '0';
-        setTimeout(() => modal.remove(), 300);
-        if (callback) callback(null);
-    };
-    
-    document.getElementById('prompt-input').addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') {
-            modal.querySelector('#prompt-ok').click();
-        }
-    });
-}
-
-// 替换原生 alert
-window.originalAlert = window.alert;
-window.alert = function(message) {
-    showToast(message, 'info');
-};
-
-// ========== 琥珀金风格通知 ==========
-window.showAmberNotification = function(title, message, type) {
-    console.log('🔔 显示琥珀通知:', { title, message, type });
-    
-    const existingNotification = document.querySelector('.notification-amber');
-    if (existingNotification) existingNotification.remove();
-    
-    let icon = 'fa-info-circle';
-    let iconColor = '#ffb84d';
-    
-    if (type === 'withdrawal') {
-        icon = 'fa-money-bill-wave';
-    } else if (type === 'kyc') {
-        icon = 'fa-id-card';
-    } else if (type === 'email') {
-        icon = 'fa-envelope';
-    }
-    
-    const notification = document.createElement('div');
-    notification.className = 'notification-amber';
-    
-    notification.style.cssText = `
-        position: fixed !important;
-        top: 20px !important;
-        right: 20px !important;
-        z-index: 100000 !important;
-        min-width: 320px !important;
-        max-width: 420px !important;
-        padding: 16px 20px !important;
-        border-radius: 16px !important;
-        display: flex !important;
-        align-items: center !important;
-        gap: 14px !important;
-        background: rgba(30, 25, 15, 0.98) !important;
-        backdrop-filter: blur(16px) !important;
-        border-left: 4px solid ${iconColor} !important;
-        box-shadow: 0 10px 30px -5px rgba(0,0,0,0.5) !important;
-        cursor: pointer !important;
-        font-family: 'Inter', sans-serif !important;
-        animation: slideInRight 0.4s cubic-bezier(0.2, 0.9, 0.4, 1.1) forwards !important;
-        pointer-events: auto !important;
-    `;
-    
-    notification.innerHTML = `
-        <div style="width: 44px; height: 44px; border-radius: 12px; background: rgba(255,184,77,0.15); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
-            <i class="fas ${icon}" style="color: ${iconColor}; font-size: 22px;"></i>
-        </div>
-        <div style="flex: 1; min-width: 0;">
-            <div style="font-weight: 700; font-size: 15px; color: #ffb84d; margin-bottom: 6px;">${escapeHtml(title)}</div>
-            <div style="font-size: 12px; color: #d4c8a0; opacity: 0.95; line-height: 1.4;">${escapeHtml(message)}</div>
-            <div style="font-size: 10px; color: #8a7a5a; margin-top: 6px;">刚刚收到</div>
-        </div>
-        <div style="cursor: pointer; opacity: 0.6; padding: 6px; flex-shrink: 0;" class="notification-close">
-            <i class="fas fa-times" style="color: #d4c8a0; font-size: 14px;"></i>
-        </div>
-        <div style="position: absolute; bottom: 0; left: 0; height: 3px; background: ${iconColor}; width: 100%; border-radius: 0 0 16px 16px; animation: toastProgress 4s linear forwards;"></div>
-    `;
-    
-    document.body.appendChild(notification);
-    
-    const closeBtn = notification.querySelector('.notification-close');
-    if (closeBtn) {
-        closeBtn.onclick = (e) => {
-            e.stopPropagation();
-            notification.style.animation = 'slideOutRight 0.3s ease forwards';
-            setTimeout(() => notification.remove(), 300);
+const CACHE_DURATION = 30000;
+const DEBOUNCE_DELAY = 300;
+
+function debounce(func, wait) {
+    let timeout;
+    return function executedFunction(...args) {
+        const later = function() {
+            clearTimeout(timeout);
+            func(...args);
         };
+        clearTimeout(timeout);
+        timeout = setTimeout(later, wait);
+    };
+}
+
+async function loadQuickCards() {
+    try {
+        var kycRes = await sb.from('kyc_verifications').select('id', { count: 'exact', head: true }).eq('status', 'pending');
+        var withdrawalRes = await sb.from('withdrawals').select('id', { count: 'exact', head: true }).eq('status', 'pending');
+        var poolRes = await sb.from('orders_pool').select('*', { count: 'exact', head: true });
+        var emailRes = await sb.from('email_verification_requests').select('id', { count: 'exact', head: true }).eq('is_verified', false).is('code', null);
+        
+        var kycEl = document.getElementById('kycPendingCount');
+        var withdrawalEl = document.getElementById('withdrawalPendingCount');
+        var poolEl = document.getElementById('orderPoolCount');
+        var emailEl = document.getElementById('emailPendingCount');
+        
+        if (kycEl) kycEl.innerText = kycRes.count || 0;
+        if (withdrawalEl) withdrawalEl.innerText = withdrawalRes.count || 0;
+        if (poolEl) poolEl.innerText = poolRes.count || 0;
+        if (emailEl) emailEl.innerText = emailRes.count || 0;
+        
+        console.log('实时更新: KYC待审核=' + (kycRes.count || 0) + ', 提现待处理=' + (withdrawalRes.count || 0) + ', 待发送Email=' + (emailRes.count || 0));
+    } catch (e) { console.error('加载快捷卡片失败:', e); }
+}
+
+async function loadStatsData(days, force) {
+    force = force || false;
+    var now = Date.now();
+    if (!force && cachedData.stats && (now - cachedData.lastStatsTime) < CACHE_DURATION) {
+        applyStatsData(cachedData.stats);
+        return;
+    }
+    try {
+        var usersRes = await sb.from('users').select('created_at, balance');
+        
+        var depositsRes = await sb.from('deposits')
+            .select('created_at, amount')
+            .eq('type', 'manual');
+        
+        var withdrawalsRes = await sb.from('withdrawals').select('request_date, amount, status');
+        var users = usersRes.data || [];
+        var deposits = depositsRes.data || [];
+        var withdrawals = withdrawalsRes.data || [];
+        var nowDate = new Date();
+        var startDate = new Date(); startDate.setDate(nowDate.getDate() - days);
+        var startStr = startDate.toISOString().split('T')[0];
+        var lastPeriodStart = new Date(); lastPeriodStart.setDate(nowDate.getDate() - days * 2);
+        var lastPeriodStr = lastPeriodStart.toISOString().split('T')[0];
+        
+        var newUsers = users.filter(function(u) { return u.created_at && u.created_at.split('T')[0] >= startStr; }).length;
+        var prevNewUsers = users.filter(function(u) { return u.created_at && u.created_at.split('T')[0] >= lastPeriodStr && u.created_at.split('T')[0] < startStr; }).length;
+        var totalDeposit = deposits.reduce(function(s, d) { return s + (d.amount || 0); }, 0);
+        var periodDeposit = deposits.filter(function(d) { return d.created_at && d.created_at.split('T')[0] >= startStr; }).reduce(function(s, d) { return s + (d.amount || 0); }, 0);
+        var prevPeriodDeposit = deposits.filter(function(d) { return d.created_at && d.created_at.split('T')[0] >= lastPeriodStr && d.created_at.split('T')[0] < startStr; }).reduce(function(s, d) { return s + (d.amount || 0); }, 0);
+        var totalWithdraw = withdrawals.filter(function(w) { return w.status === 'approved'; }).reduce(function(s, w) { return s + (w.amount || 0); }, 0);
+        var periodWithdraw = withdrawals.filter(function(w) { return w.status === 'approved' && w.request_date && w.request_date.split('T')[0] >= startStr; }).reduce(function(s, w) { return s + (w.amount || 0); }, 0);
+        var prevPeriodWithdraw = withdrawals.filter(function(w) { return w.status === 'approved' && w.request_date && w.request_date.split('T')[0] >= lastPeriodStr && w.request_date.split('T')[0] < startStr; }).reduce(function(s, w) { return s + (w.amount || 0); }, 0);
+        
+        var statsData = { newUsers: newUsers, prevNewUsers: prevNewUsers, totalUsers: users.length, totalDeposit: totalDeposit, periodDeposit: periodDeposit, prevPeriodDeposit: prevPeriodDeposit, totalWithdraw: totalWithdraw, periodWithdraw: periodWithdraw, prevPeriodWithdraw: prevPeriodWithdraw };
+        cachedData.stats = statsData;
+        cachedData.lastStatsTime = now;
+        applyStatsData(statsData);
+    } catch (e) { console.error('加载统计数据失败:', e); }
+}
+
+function applyStatsData(data) {
+    var newUsersEl = document.getElementById('newUsersCount');
+    var totalUsersEl = document.getElementById('totalUsersCount');
+    var totalDepositEl = document.getElementById('totalDepositCount');
+    var totalWithdrawEl = document.getElementById('totalWithdrawCount');
+    var newUsersTrendEl = document.getElementById('newUsersTrend');
+    var totalDepositTrendEl = document.getElementById('totalDepositTrend');
+    var totalWithdrawTrendEl = document.getElementById('totalWithdrawTrend');
+    
+    if (newUsersEl) animateNumber(newUsersEl, data.newUsers, '', '');
+    if (newUsersTrendEl) newUsersTrendEl.innerHTML = getTrendHtml(data.newUsers, data.prevNewUsers);
+    if (totalUsersEl) animateNumber(totalUsersEl, data.totalUsers, '', '');
+    if (totalDepositEl) animateNumber(totalDepositEl, data.totalDeposit, '€', '');
+    if (totalDepositTrendEl) totalDepositTrendEl.innerHTML = getTrendHtml(data.periodDeposit, data.prevPeriodDeposit);
+    if (totalWithdrawEl) animateNumber(totalWithdrawEl, data.totalWithdraw, '€', '');
+    if (totalWithdrawTrendEl) totalWithdrawTrendEl.innerHTML = getTrendHtml(data.periodWithdraw, data.prevPeriodWithdraw);
+}
+
+// ============================================================
+// ✅ 修改：loadChartData 固定使用 30 天，移除 days 参数
+// ============================================================
+async function loadChartData(force) {
+    force = force || false;
+    var now = Date.now();
+    if (!force && cachedData.chart && (now - cachedData.lastChartTime) < CACHE_DURATION && trendChart) {
+        trendChart.setOption({
+            xAxis: { data: cachedData.chart.dates },
+            series: [
+                { name: 'Deposit', data: cachedData.chart.depositData },
+                { name: 'Withdrawal', data: cachedData.chart.withdrawData }
+            ]
+        });
+        return;
+    }
+    try {
+        // ✅ 固定使用 30 天
+        var days = 30;
+        
+        var depositsRes = await sb.from('deposits')
+            .select('created_at, amount')
+            .eq('type', 'manual');
+        var withdrawalsRes = await sb.from('withdrawals').select('request_date, amount, status');
+        var deposits = depositsRes.data || [];
+        var withdrawals = withdrawalsRes.data || [];
+        var dates = [], depositData = [], withdrawData = [];
+        var today = new Date();
+        for (var i = days - 1; i >= 0; i--) {
+            var d = new Date();
+            d.setDate(today.getDate() - i);
+            var dateStr = d.toISOString().split('T')[0];
+            dates.push((d.getMonth() + 1) + '/' + d.getDate());
+            var dayDeposit = deposits.filter(function(dep) {
+                return dep.created_at && dep.created_at.split('T')[0] === dateStr;
+            }).reduce(function(s, d) { return s + (d.amount || 0); }, 0);
+            var dayWithdraw = withdrawals.filter(function(w) {
+                return w.status === 'approved' && w.request_date && w.request_date.split('T')[0] === dateStr;
+            }).reduce(function(s, w) { return s + (w.amount || 0); }, 0);
+            depositData.push(dayDeposit);
+            withdrawData.push(dayWithdraw);
+        }
+        cachedData.chart = { dates: dates, depositData: depositData, withdrawData: withdrawData };
+        cachedData.lastChartTime = now;
+        if (trendChart) {
+            trendChart.setOption({
+                xAxis: { data: dates },
+                series: [
+                    { name: 'Deposit', data: depositData },
+                    { name: 'Withdrawal', data: withdrawData }
+                ]
+            });
+            console.log('📊 30天趋势图已更新');
+        }
+    } catch (e) {
+        console.error('加载图表数据失败:', e);
+    }
+}
+
+// ========== 加载转化率数据 ==========
+async function loadConversionData(days, force) {
+    force = force || false;
+    var now = Date.now();
+    if (!force && cachedData.conversion && (now - cachedData.lastConversionTime) < CACHE_DURATION) {
+        applyConversionData(cachedData.conversion, days);
+        return;
+    }
+    try {
+        var periods = [
+            { label: 'Today', days: 0 },
+            { label: '7 Days', days: 7 },
+            { label: '30 Days', days: 30 },
+            { label: 'All Time', days: -1 }
+        ];
+        
+        var result = [];
+        var allUsers = await sb.from('users').select('uid, created_at');
+        
+        var allDeposits = await sb.from('deposits')
+            .select('uid, created_at, amount, type')
+            .in('type', ['manual', 'deposit_bonus']);
+        
+        var users = allUsers.data || [];
+        var deposits = allDeposits.data || [];
+        
+        var depositUsers = {};
+        deposits.forEach(function(d) {
+            if (d.uid && (d.amount || 0) >= 40) {
+                depositUsers[d.uid] = true;
+            }
+        });
+        
+        for (var p = 0; p < periods.length; p++) {
+            var period = periods[p];
+            var startDate = new Date();
+            
+            if (period.days === -1) {
+                startDate = new Date(0);
+            } else if (period.days === 0) {
+                startDate = new Date();
+                startDate.setHours(0, 0, 0, 0);
+            } else {
+                startDate.setDate(startDate.getDate() - period.days);
+            }
+            
+            var startStr = startDate.toISOString().split('T')[0];
+            var endStr = new Date().toISOString().split('T')[0];
+            
+            var registeredUsers = users.filter(function(u) {
+                if (!u.created_at) return false;
+                var dateStr = u.created_at.split('T')[0];
+                if (period.days === -1) return true;
+                return dateStr >= startStr && dateStr <= endStr;
+            });
+            
+            var totalRegister = registeredUsers.length;
+            
+            var convertedUsers = registeredUsers.filter(function(u) {
+                return depositUsers[u.uid] === true;
+            });
+            
+            var totalConverted = convertedUsers.length;
+            var rate = totalRegister > 0 ? Math.round((totalConverted / totalRegister) * 100) : 0;
+            
+            result.push({
+                label: period.label,
+                days: period.days,
+                register: totalRegister,
+                converted: totalConverted,
+                rate: rate
+            });
+        }
+        
+        cachedData.conversion = result;
+        cachedData.lastConversionTime = now;
+        applyConversionData(result, days);
+        
+    } catch (e) {
+        console.error('加载转化率数据失败:', e);
+    }
+}
+
+function applyConversionData(data, days) {
+    var selected = data || [];
+    var targetLabel = 'Today';
+    if (days === 7) targetLabel = '7 Days';
+    else if (days === 30) targetLabel = '30 Days';
+    else if (days === -1) targetLabel = 'All Time';
+    
+    var matched = selected.filter(function(d) { return d.label === targetLabel; });
+    var displayData = matched.length > 0 ? matched[0] : selected[0];
+    
+    var ringPercent = document.getElementById('ringPercent');
+    if (ringPercent) {
+        ringPercent.innerText = displayData.rate + '%';
     }
     
-    notification.onclick = (e) => {
-        if (e.target !== closeBtn && !closeBtn?.contains(e.target)) {
-            notification.style.animation = 'slideOutRight 0.3s ease forwards';
-            setTimeout(() => notification.remove(), 300);
-        }
+    var registerEl = document.getElementById('conversionRegister');
+    var convertedEl = document.getElementById('conversionConverted');
+    var labelEl = document.getElementById('conversionLabel');
+    
+    if (registerEl) registerEl.innerText = displayData.register;
+    if (convertedEl) convertedEl.innerText = displayData.converted;
+    if (labelEl) {
+        var labelMap = {
+            'Today': 'Today Register',
+            '7 Days': '7 Days Register',
+            '30 Days': '30 Days Register',
+            'All Time': 'All Time Register'
+        };
+        labelEl.innerText = labelMap[displayData.label] || 'Today Register';
+    }
+    
+    var allLabels = document.querySelectorAll('.conversion-stat-label');
+    var allRegisters = document.querySelectorAll('.conversion-stat-register');
+    var allConverteds = document.querySelectorAll('.conversion-stat-converted');
+    var allRates = document.querySelectorAll('.conversion-stat-rate');
+    
+    var labelMap2 = {
+        'Today': 'Today',
+        '7 Days': '7 Days',
+        '30 Days': '30 Days',
+        'All Time': 'All Time'
     };
     
-    setTimeout(() => {
-        if (notification.parentNode) {
-            notification.style.animation = 'slideOutRight 0.3s ease forwards';
-            setTimeout(() => notification.remove(), 300);
+    for (var i = 0; i < data.length; i++) {
+        var d = data[i];
+        if (allLabels[i]) allLabels[i].innerText = labelMap2[d.label] || d.label;
+        if (allRegisters[i]) allRegisters[i].innerText = d.register;
+        if (allConverteds[i]) allConverteds[i].innerText = d.converted;
+        if (allRates[i]) {
+            allRates[i].innerText = d.rate + '%';
+            allRates[i].style.color = d.rate >= 50 ? '#ccb89f' : d.rate >= 20 ? '#c8b090' : '#e88080';
         }
-    }, 5000);
+    }
+    
+    var allRows = document.querySelectorAll('.conversion-stat-row');
+    for (var j = 0; j < allRows.length; j++) {
+        var row = allRows[j];
+        var label = row.querySelector('.conversion-stat-label');
+        if (label && label.innerText === targetLabel) {
+            row.style.background = 'rgba(204,184,159,0.08)';
+            row.style.borderRadius = '8px';
+            row.style.padding = '3px 6px';
+        } else {
+            row.style.background = 'transparent';
+            row.style.padding = '3px 0';
+        }
+    }
+}
+
+// ========== 初始化环形进度条（静态金属质感 #ccb89f） ==========
+function initWaveRing() {
+    var container = document.getElementById('waveRingContainer');
+    if (!container) return;
+    
+    container.innerHTML = '';
+    container.style.width = '220px';
+    container.style.height = '220px';
+    container.style.position = 'relative';
+    container.style.margin = '0 auto';
+    
+    // 使用 SVG 绘制静态金属环形进度条
+    var svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    svg.setAttribute('viewBox', '0 0 220 220');
+    svg.style.cssText = 'width:100%;height:100%;transform:rotate(-90deg);position:relative;z-index:2;';
+    svg.innerHTML = `
+        <defs>
+            <linearGradient id="metalGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#3a2a1a"/>
+                <stop offset="20%" stop-color="#ccb89f"/>
+                <stop offset="40%" stop-color="#b8942a"/>
+                <stop offset="55%" stop-color="#e8d5c0"/>
+                <stop offset="70%" stop-color="#8a7020"/>
+                <stop offset="85%" stop-color="#ccb89f"/>
+                <stop offset="100%" stop-color="#2a1a0a"/>
+            </linearGradient>
+            <linearGradient id="progressGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#ccb89f"/>
+                <stop offset="30%" stop-color="#d4c8a0"/>
+                <stop offset="60%" stop-color="#e8d5c0"/>
+                <stop offset="100%" stop-color="#ccb89f"/>
+            </linearGradient>
+        </defs>
+        <!-- 背景圆环 -->
+        <circle cx="110" cy="110" r="95" fill="none" stroke="rgba(204,184,159,0.06)" stroke-width="12"/>
+        <!-- 进度圆环（金属质感 #ccb89f） -->
+        <circle cx="110" cy="110" r="95" fill="none" stroke="url(#progressGrad)" stroke-width="12" stroke-linecap="round" stroke-dasharray="596.9" stroke-dashoffset="596.9" filter="drop-shadow(0 0 20px rgba(204,184,159,0.15))" class="progress-ring" style="transition: stroke-dashoffset 1s ease;"/>
+        <!-- 外圈装饰光晕 -->
+        <circle cx="110" cy="110" r="100" fill="none" stroke="rgba(204,184,159,0.03)" stroke-width="1"/>
+    `;
+    container.appendChild(svg);
+    
+    // 中心文字（百分比 + 标签）
+    var centerText = document.createElement('div');
+    centerText.style.cssText = 'position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;pointer-events:none;z-index:10;';
+    centerText.innerHTML = `
+        <div id="ringPercent" style="font-size:48px;font-weight:900;letter-spacing:-1px;line-height:1;background:linear-gradient(180deg,#ffffff 0%,#d0d8e8 35%,#8892a8 65%,#c0c8d8 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;filter:drop-shadow(0 0 30px rgba(200,210,230,0.12)) drop-shadow(0 4px 8px rgba(0,0,0,0.3));">78%</div>
+        <div style="font-size:13px;font-weight:700;letter-spacing:2px;text-transform:uppercase;margin-top:6px;background:linear-gradient(180deg,#d0d8e8 0%,#8892a8 50%,#5a6a82 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;filter:drop-shadow(0 0 20px rgba(200,210,230,0.08)) drop-shadow(0 2px 4px rgba(0,0,0,0.2));">Conversion Rate</div>
+    `;
+    container.appendChild(centerText);
+    
+    // 等待数据加载后更新进度
+    setTimeout(function() {
+        var progressRing = container.querySelector('.progress-ring');
+        if (progressRing) {
+            var rate = parseInt(document.getElementById('ringPercent')?.innerText || '78');
+            var circumference = 596.9;
+            var offset = circumference - (circumference * rate / 100);
+            progressRing.style.strokeDashoffset = offset;
+        }
+    }, 300);
+}
+
+// ========== 加载最近注册用户数据 ==========
+async function loadRecentRegistrations() {
+    var tbody = document.getElementById('recentRegistrationsBody');
+    if (!tbody) return;
+    
+    try {
+        var usersRes = await sb.from('users')
+            .select('uid, username, invited_by_username, created_at, balance')
+            .order('created_at', { ascending: false })
+            .limit(9);
+        
+        var users = usersRes.data || [];
+        
+        if (users.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; padding: 20px; color: #4a5a72; font-size: 12px;">No users yet</td></tr>';
+            return;
+        }
+        
+        var uids = users.map(function(u) { return u.uid; });
+        var { data: deposits } = await sb
+            .from('deposits')
+            .select('uid, amount')
+            .eq('type', 'manual')
+            .in('uid', uids);
+        
+        var manualDepositMap = {};
+        if (deposits) {
+            deposits.forEach(function(d) {
+                manualDepositMap[d.uid] = (manualDepositMap[d.uid] || 0) + (d.amount || 0);
+            });
+        }
+        
+        var html = '';
+        for (var i = 0; i < users.length; i++) {
+            var u = users[i];
+            var referrer = u.invited_by_username || '-';
+            
+            var totalManual = manualDepositMap[u.uid] || 0;
+            var hasManualDeposit = totalManual >= 40;
+            var joinedMembership = hasManualDeposit ? '✅ Yes' : '❌ No';
+            
+            var amount = totalManual > 0 ? '€' + totalManual.toFixed(2) : '€0.00';
+            
+            html += '<tr style="border-bottom: 1px solid rgba(200,176,144,0.03);">' +
+                '<td style="padding: 4px 6px; color: #d8dff0; font-weight: 500;">' + escapeHtml(u.username) + '</td>' +
+                '<td style="padding: 4px 6px; color: #8892a8;">' + escapeHtml(referrer) + '</td>' +
+                '<td style="padding: 4px 6px; text-align: center; color: ' + (hasManualDeposit ? '#ccb89f' : '#5a4a2a') + ';">' + joinedMembership + '</td>' +
+                '<td style="padding: 4px 6px; text-align: right; color: ' + (totalManual > 0 ? '#ccb89f' : '#4a5a72') + '; font-weight: 600;">' + amount + '</td>' +
+                '</tr>';
+        }
+        tbody.innerHTML = html;
+        
+    } catch (e) {
+        console.error('加载最近注册用户失败:', e);
+        tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; padding: 16px; color: #e88080; font-size: 12px;">Failed to load</td></tr>';
+    }
+}
+
+async function loadActivityTimeline(force) {
+    force = force || false;
+    var now = Date.now();
+    if (!force && cachedData.activity && (now - cachedData.lastActivityTime) < CACHE_DURATION) {
+        renderActivityList(cachedData.activity);
+        return;
+    }
+    try {
+        console.log('🔄 加载实时活动...');
+        
+        var kycRes = await sb.from('kyc_verifications').select('*').order('uploaded_at', { ascending: false }).limit(30);
+        var withdrawalRes = await sb.from('withdrawals').select('*').order('request_date', { ascending: false }).limit(30);
+        var userRes = await sb.from('users').select('*').order('created_at', { ascending: false }).limit(30);
+        var emailRes = await sb.from('email_verification_requests').select('*').order('requested_at', { ascending: false }).limit(30);
+        
+        var kycList = kycRes.data || [];
+        var withdrawalList = withdrawalRes.data || [];
+        var userList = userRes.data || [];
+        var emailList = emailRes.data || [];
+        
+        console.log('📊 数据统计: KYC=' + kycList.length + ', 提现=' + withdrawalList.length + ', 用户=' + userList.length + ', 邮箱=' + emailList.length);
+        
+        var activities = [];
+        
+        for (var k = 0; k < kycList.length; k++) {
+            var item = kycList[k];
+            var username = item.username || item.uid;
+            if (!item.username || item.username === item.uid) {
+                var userResult = await sb.from('users').select('username').eq('uid', item.uid).maybeSingle();
+                if (userResult.data) username = userResult.data.username;
+            }
+            
+            var statusText = '';
+            if (item.status === 'pending') statusText = '待审核';
+            else if (item.status === 'approved') statusText = '已通过';
+            else if (item.status === 'rejected') statusText = '已拒绝';
+            
+            activities.push({
+                type: 'kyc',
+                title: '📋 KYC申请 ' + statusText,
+                user: username,
+                time: item.uploaded_at || item.created_at,
+                icon: 'fas fa-id-card',
+                color: '#ccb89f'
+            });
+        }
+        
+        for (var w = 0; w < withdrawalList.length; w++) {
+            var item = withdrawalList[w];
+            var statusText = '';
+            if (item.status === 'pending') statusText = '待审核';
+            else if (item.status === 'approved') statusText = '已批准';
+            else if (item.status === 'rejected') statusText = '已拒绝';
+            
+            activities.push({
+                type: 'withdrawal',
+                title: '💰 提现申请 ' + statusText,
+                user: item.username,
+                amount: '€' + (item.amount || 0).toFixed(2),
+                time: item.request_date,
+                icon: 'fas fa-money-bill-wave',
+                color: '#ccb89f'
+            });
+        }
+        
+        for (var u = 0; u < userList.length; u++) {
+            var item = userList[u];
+            activities.push({
+                type: 'user',
+                title: '👤 新用户注册',
+                user: item.username,
+                time: item.created_at,
+                icon: 'fas fa-user-plus',
+                color: '#ccb89f'
+            });
+        }
+        
+        for (var e = 0; e < emailList.length; e++) {
+            var item = emailList[e];
+            var statusText = '';
+            if (item.code && !item.is_verified) statusText = '待验证';
+            else if (item.is_verified) statusText = '已验证';
+            else statusText = '待设置验证码';
+            
+            activities.push({
+                type: 'email',
+                title: '📧 邮箱验证请求 ' + statusText,
+                user: item.email,
+                time: item.requested_at,
+                icon: 'fas fa-envelope',
+                color: '#ccb89f'
+            });
+        }
+        
+        activities.sort(function(a, b) { return new Date(b.time) - new Date(a.time); });
+        
+        console.log('📋 生成活动列表: ' + activities.length + ' 条');
+        
+        cachedData.activity = activities.slice(0, 30);
+        cachedData.lastActivityTime = now;
+        renderActivityList(activities.slice(0, 15));
+        
+    } catch (e) {
+        console.error('加载活动时间线失败:', e);
+    }
+}
+
+function renderActivityList(activities) {
+    var activityList = document.getElementById('activityList');
+    if (!activityList) return;
+    
+    if (!activities || activities.length === 0) {
+        activityList.innerHTML = '<div style="text-align: center; padding: 20px; color: #6a7a9a;">暂无活动</div>';
+        return;
+    }
+    
+    var html = '';
+    for (var i = 0; i < activities.length; i++) {
+        var a = activities[i];
+        var amountHtml = '';
+        if (a.amount) {
+            amountHtml = '<div style="font-size: 11px; color: #ccb89f;">' + a.amount + '</div>';
+        }
+        html += '<div style="display: flex; align-items: center; gap: 14px; padding: 12px 0; border-bottom: 1px solid rgba(180,180,200,0.04); cursor: pointer;" onclick="handleActivityClick(\'' + a.type + '\')">' +
+            '<div style="width: 36px; height: 36px; border-radius: 10px; background: ' + a.color + '15; display: flex; align-items: center; justify-content: center;">' +
+            '<i class="' + a.icon + '" style="color: ' + a.color + ';"></i>' +
+            '</div>' +
+            '<div style="flex: 1;">' +
+            '<div style="font-size: 13px; font-weight: 500; color: #d8dff0;">' + escapeHtml(a.title) + '</div>' +
+            '<div style="font-size: 11px; color: #8892a8;">' + escapeHtml(a.user) + '</div>' +
+            amountHtml +
+            '</div>' +
+            '<div style="font-size: 10px; color: #5a6a82;">' + formatTime(a.time) + '</div>' +
+            '</div>';
+    }
+    activityList.innerHTML = html;
+}
+
+window.handleActivityClick = function(type) {
+    if (type === 'kyc') {
+        showPage('kyc');
+    } else if (type === 'withdrawal') {
+        showPage('withdrawals');
+    } else if (type === 'email') {
+        showPage('emailverify');
+    }
 };
 
-function ensureAnimationStyles() {
-    if (document.getElementById('notification-animation-styles')) return;
+// ============================================================
+// ✅ 修改：refreshDashboard 中图表调用不传 days 参数
+// ============================================================
+async function refreshDashboard(days, force) {
+    days = days || currentDays;
+    force = force || false;
     
-    const style = document.createElement('style');
-    style.id = 'notification-animation-styles';
+    // ✅ 图表固定加载30天数据，不受 days 参数影响
+    await Promise.all([
+        loadQuickCards(),
+        loadStatsData(days, force),    // 统计卡片跟随日期筛选
+        loadChartData(force),           // 图表固定30天
+        loadConversionData(days, force),
+        loadActivityTimeline(force),
+        loadRecentRegistrations()
+    ]);
+    
+    var ringPercent = document.getElementById('ringPercent');
+    if (ringPercent && cachedData.conversion) {
+        var targetLabel = 'Today';
+        if (days === 7) targetLabel = '7 Days';
+        else if (days === 30) targetLabel = '30 Days';
+        else if (days === -1) targetLabel = 'All Time';
+        var matched = cachedData.conversion.filter(function(d) { return d.label === targetLabel; });
+        if (matched.length > 0) {
+            var rate = matched[0].rate;
+            ringPercent.innerText = rate + '%';
+            var container = document.getElementById('waveRingContainer');
+            if (container) {
+                var progressRing = container.querySelector('.progress-ring');
+                if (progressRing) {
+                    var circumference = 596.9;
+                    var offset = circumference - (circumference * rate / 100);
+                    progressRing.style.strokeDashoffset = offset;
+                }
+            }
+        }
+    }
+}
+
+// ============================================================
+// initTrendChart - 细线条 + 小圆点（极简样式）
+// ============================================================
+function initTrendChart() {
+    var dom = document.getElementById('trendChart');
+    if (!dom) {
+        console.error('trendChart容器不存在');
+        return;
+    }
+    if (trendChart) {
+        trendChart.dispose();
+        trendChart = null;
+    }
+    
+    console.log('📊 趋势图已加载（细线条 + 小圆点）');
+    
+    trendChart = echarts.init(dom);
+    trendChart.setOption({
+        tooltip: { 
+            trigger: 'axis', 
+            axisPointer: { type: 'line' }, 
+            backgroundColor: 'rgba(14,18,30,0.92)', 
+            borderColor: 'rgba(180,180,200,0.06)', 
+            borderWidth: 1, 
+            textStyle: { color: '#d8dff0', fontSize: 11 } 
+        },
+        grid: { 
+            top: 16, 
+            left: 38, 
+            right: 12, 
+            bottom: 18, 
+            containLabel: false 
+        },
+        xAxis: { 
+            type: 'category', 
+            data: ['周一', '周二', '周三', '周四', '周五', '周六', '周日'], 
+            axisLabel: { color: 'rgba(255,255,255,0.15)', fontSize: 9 }, 
+            axisLine: { lineStyle: { color: 'rgba(255,255,255,0.04)' } }, 
+            axisTick: { show: false } 
+        },
+        yAxis: { 
+            type: 'value', 
+            name: '', 
+            axisLabel: { color: 'rgba(255,255,255,0.10)', fontSize: 8 }, 
+            axisLine: { show: false }, 
+            axisTick: { show: false }, 
+            splitLine: { lineStyle: { color: 'rgba(255,255,255,0.03)', type: 'dashed' } } 
+        },
+        legend: { show: false },
+        series: [
+            { 
+                name: 'Deposit', 
+                type: 'line', 
+                data: [0, 0, 0, 0, 0, 0, 0], 
+                smooth: false,
+                symbol: 'circle', 
+                symbolSize: 3,
+                lineStyle: { 
+                    color: '#4ade80', 
+                    width: 1.5
+                }, 
+                itemStyle: { color: '#4ade80' },
+                animation: false,
+                animationDuration: 0
+            },
+            { 
+                name: 'Withdrawal', 
+                type: 'line', 
+                data: [0, 0, 0, 0, 0, 0, 0], 
+                smooth: false,
+                symbol: 'circle', 
+                symbolSize: 3,
+                lineStyle: { 
+                    color: '#e88080', 
+                    width: 1.5
+                }, 
+                itemStyle: { color: '#e88080' },
+                animation: false,
+                animationDuration: 0
+            }
+        ]
+    });
+    
+    console.log('趋势线图初始化完成（细线条 + 小圆点）');
+    
+    // 清除旧的脉冲动画
+    if (pulseInterval) {
+        clearInterval(pulseInterval);
+        pulseInterval = null;
+    }
+}
+
+function bindDateFilters() {
+    var handleFilterChange = debounce(function(btn) {
+        document.querySelectorAll('.date-filter-btn').forEach(function(b) { b.classList.remove('active'); });
+        btn.classList.add('active');
+        var days = parseInt(btn.dataset.days);
+        currentDays = days;
+        refreshDashboard(days, true);
+    }, DEBOUNCE_DELAY);
+    document.querySelectorAll('.date-filter-btn').forEach(function(btn) {
+        if (btn._handler) btn.removeEventListener('click', btn._handler);
+        btn._handler = function() { handleFilterChange(btn); };
+        btn.addEventListener('click', btn._handler);
+    });
+}
+
+// ============================================================
+// loadDashboardPage - 图表初始化时固定30天
+// ============================================================
+function loadDashboardPage(days) {
+    days = days || 1;
+    var container = document.getElementById('page_dashboard');
+    if (!container) return;
+    
+    if (dashboardRendered) {
+        refreshDashboard(currentDays, true);
+        return;
+    }
+    
+    dashboardRendered = true;
+    
+    container.innerHTML = `
+        <!-- ========== Notification 按钮 ========== -->
+        <div class="notification-container" style="display: flex; justify-content: flex-start; margin-bottom: 16px; position: relative;">
+            <div style="position: relative; display: inline-block;">
+                <button id="notificationBellBtn" style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06); border-radius: 50%; width: 44px; height: 44px; color: #d8e0f0; cursor: pointer; position: relative; transition: all 0.3s; font-size: 18px; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 20px rgba(0,0,0,0.2);">
+                    <i class="fas fa-bell"></i>
+                    <span id="notificationBadge" style="position: absolute; top: -4px; right: -4px; background: #e88080; color: #fff; border-radius: 50%; font-size: 10px; font-weight: 700; min-width: 18px; height: 18px; display: none; align-items: center; justify-content: center; padding: 0 4px; border: 2px solid rgba(12, 16, 28, 0.8);">0</span>
+                </button>
+                
+                <!-- Notification Dropdown -->
+                <div id="notificationDropdown" style="display: none; position: absolute; top: 52px; left: 0; width: 400px; max-height: 500px; background: rgba(16, 20, 34, 0.98); border-radius: 16px; border: 1px solid rgba(255,255,255,0.06); box-shadow: 0 20px 60px rgba(0,0,0,0.6); overflow: hidden; z-index: 1000; backdrop-filter: blur(20px);">
+                    <div style="padding: 16px 20px; border-bottom: 1px solid rgba(255,255,255,0.04); display: flex; justify-content: space-between; align-items: center;">
+                        <h4 style="font-size: 14px; font-weight: 600; color: #d8e0f0; margin: 0;">
+                            <i class="fas fa-bell" style="color: #8892a8; margin-right: 8px;"></i>
+                            Notifications
+                        </h4>
+                        <span id="notificationCount" style="font-size: 11px; color: #6a7a92;">0</span>
+                    </div>
+                    <div id="notificationList" style="max-height: 350px; overflow-y: auto; padding: 8px 0;">
+                        <div style="text-align: center; padding: 40px 20px; color: #6a7a92; font-size: 13px;">
+                            <i class="fas fa-inbox" style="display: block; font-size: 28px; color: #4a5a72; margin-bottom: 10px;"></i>
+                            No notifications
+                        </div>
+                    </div>
+                    <div style="padding: 12px 20px; border-top: 1px solid rgba(255,255,255,0.04);">
+                        <button id="clearAllNotificationsBtn" style="width: 100%; background: rgba(232,128,128,0.06); border: 1px solid rgba(232,128,128,0.08); border-radius: 30px; padding: 8px 0; color: #e88080; font-weight: 500; font-size: 12px; cursor: pointer; transition: all 0.2s; font-family: 'Inter', sans-serif;">
+                            <i class="fas fa-trash"></i> Clear All
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 日期过滤器 -->
+        <div style="display: flex; justify-content: flex-end; gap: 10px; margin-bottom: 24px; flex-wrap: wrap;">
+            <button class="date-filter-btn active" data-days="1" style="background: linear-gradient(145deg, rgba(20,24,40,0.6), rgba(10,12,24,0.4)); border: 1px solid rgba(180,180,200,0.06); border-radius: 30px; padding: 8px 20px; color: #8892a8; cursor: pointer; transition: all 0.3s; font-size: 13px; font-weight: 500; font-family: 'Inter', sans-serif; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">Today</button>
+            <button class="date-filter-btn" data-days="7" style="background: linear-gradient(145deg, rgba(20,24,40,0.6), rgba(10,12,24,0.4)); border: 1px solid rgba(180,180,200,0.06); border-radius: 30px; padding: 8px 20px; color: #8892a8; cursor: pointer; transition: all 0.3s; font-size: 13px; font-weight: 500; font-family: 'Inter', sans-serif; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">7 Days</button>
+            <button class="date-filter-btn" data-days="30" style="background: linear-gradient(145deg, rgba(20,24,40,0.6), rgba(10,12,24,0.4)); border: 1px solid rgba(180,180,200,0.06); border-radius: 30px; padding: 8px 20px; color: #8892a8; cursor: pointer; transition: all 0.3s; font-size: 13px; font-weight: 500; font-family: 'Inter', sans-serif; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">30 Days</button>
+            <button class="date-filter-btn" data-days="-1" style="background: linear-gradient(145deg, rgba(20,24,40,0.6), rgba(10,12,24,0.4)); border: 1px solid rgba(180,180,200,0.06); border-radius: 30px; padding: 8px 20px; color: #8892a8; cursor: pointer; transition: all 0.3s; font-size: 13px; font-weight: 500; font-family: 'Inter', sans-serif; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">All Time</button>
+        </div>
+        
+        <!-- 快捷卡片 -->
+        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px;">
+            <div onclick="showPage('kyc')" style="background: linear-gradient(145deg, rgba(20,24,40,0.85), rgba(10,12,24,0.6)); border-radius: 16px; padding: 18px 16px; border: 1px solid rgba(180,180,200,0.06); cursor: pointer; transition: all 0.3s; position: relative; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.04);">
+                <div style="position: absolute; top: -15%; right: -5%; width: 75%; height: 75%; background: radial-gradient(ellipse at 70% 20%, rgba(255,255,255,0.10), transparent 70%); pointer-events: none; border-radius: 50%;"></div>
+                <div style="position: absolute; top: 0; left: 0; right: 0; height: 1px; background: linear-gradient(90deg, transparent, rgba(180,180,200,0.08), transparent);"></div>
+                <i class="fas fa-id-card" style="font-size: 22px; color: #ccb89f; margin-bottom: 6px; display: block; position: relative; z-index: 1;"></i>
+                <div id="kycPendingCount" style="font-size: 26px; font-weight: 700; color: #ffffff; margin: 2px 0; position: relative; z-index: 1;">0</div>
+                <div style="font-size: 11px; color: #8892a8; text-transform: uppercase; letter-spacing: 0.5px; position: relative; z-index: 1;">Pending KYC</div>
+            </div>
+            <div onclick="showPage('withdrawals')" style="background: linear-gradient(145deg, rgba(20,24,40,0.85), rgba(10,12,24,0.6)); border-radius: 16px; padding: 18px 16px; border: 1px solid rgba(180,180,200,0.06); cursor: pointer; transition: all 0.3s; position: relative; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.04);">
+                <div style="position: absolute; top: -15%; right: -5%; width: 75%; height: 75%; background: radial-gradient(ellipse at 70% 20%, rgba(255,255,255,0.10), transparent 70%); pointer-events: none; border-radius: 50%;"></div>
+                <div style="position: absolute; top: 0; left: 0; right: 0; height: 1px; background: linear-gradient(90deg, transparent, rgba(180,180,200,0.08), transparent);"></div>
+                <i class="fas fa-money-bill-wave" style="font-size: 22px; color: #ccb89f; margin-bottom: 6px; display: block; position: relative; z-index: 1;"></i>
+                <div id="withdrawalPendingCount" style="font-size: 26px; font-weight: 700; color: #ffffff; margin: 2px 0; position: relative; z-index: 1;">0</div>
+                <div style="font-size: 11px; color: #8892a8; text-transform: uppercase; letter-spacing: 0.5px; position: relative; z-index: 1;">Pending Withdrawals</div>
+            </div>
+            <div onclick="showPage('emailverify')" style="background: linear-gradient(145deg, rgba(20,24,40,0.85), rgba(10,12,24,0.6)); border-radius: 16px; padding: 18px 16px; border: 1px solid rgba(180,180,200,0.06); cursor: pointer; transition: all 0.3s; position: relative; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.04);">
+                <div style="position: absolute; top: -15%; right: -5%; width: 75%; height: 75%; background: radial-gradient(ellipse at 70% 20%, rgba(255,255,255,0.10), transparent 70%); pointer-events: none; border-radius: 50%;"></div>
+                <div style="position: absolute; top: 0; left: 0; right: 0; height: 1px; background: linear-gradient(90deg, transparent, rgba(180,180,200,0.08), transparent);"></div>
+                <i class="fas fa-envelope" style="font-size: 22px; color: #ccb89f; margin-bottom: 6px; display: block; position: relative; z-index: 1;"></i>
+                <div id="emailPendingCount" style="font-size: 26px; font-weight: 700; color: #ffffff; margin: 2px 0; position: relative; z-index: 1;">0</div>
+                <div style="font-size: 11px; color: #8892a8; text-transform: uppercase; letter-spacing: 0.5px; position: relative; z-index: 1;">Pending Email</div>
+            </div>
+            <div onclick="showPage('orderpool')" style="background: linear-gradient(145deg, rgba(20,24,40,0.85), rgba(10,12,24,0.6)); border-radius: 16px; padding: 18px 16px; border: 1px solid rgba(180,180,200,0.06); cursor: pointer; transition: all 0.3s; position: relative; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.04);">
+                <div style="position: absolute; top: -15%; right: -5%; width: 75%; height: 75%; background: radial-gradient(ellipse at 70% 20%, rgba(255,255,255,0.10), transparent 70%); pointer-events: none; border-radius: 50%;"></div>
+                <div style="position: absolute; top: 0; left: 0; right: 0; height: 1px; background: linear-gradient(90deg, transparent, rgba(180,180,200,0.08), transparent);"></div>
+                <i class="fas fa-hotel" style="font-size: 22px; color: #ccb89f; margin-bottom: 6px; display: block; position: relative; z-index: 1;"></i>
+                <div id="orderPoolCount" style="font-size: 26px; font-weight: 700; color: #ffffff; margin: 2px 0; position: relative; z-index: 1;">0</div>
+                <div style="font-size: 11px; color: #8892a8; text-transform: uppercase; letter-spacing: 0.5px; position: relative; z-index: 1;">Hotel Orders Count</div>
+            </div>
+        </div>
+        
+        <!-- 统计卡片 -->
+        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px;">
+            <div style="background: linear-gradient(145deg, rgba(20,24,40,0.85), rgba(10,12,24,0.6)); border-radius: 16px; padding: 18px 20px; border: 1px solid rgba(180,180,200,0.06); transition: all 0.3s; position: relative; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.04);">
+                <div style="position: absolute; top: -15%; right: -5%; width: 75%; height: 75%; background: radial-gradient(ellipse at 70% 20%, rgba(255,255,255,0.10), transparent 70%); pointer-events: none; border-radius: 50%;"></div>
+                <div style="position: absolute; top: 0; left: 0; right: 0; height: 1px; background: linear-gradient(90deg, transparent, rgba(180,180,200,0.08), transparent);"></div>
+                <i class="fas fa-user-plus" style="font-size: 20px; color: #ccb89f; margin-bottom: 4px; display: block; position: relative; z-index: 1;"></i>
+                <div id="newUsersCount" style="font-size: 28px; font-weight: 700; color: #ffffff; letter-spacing: -0.5px; position: relative; z-index: 1;">0</div>
+                <div style="font-size: 11px; color: #8892a8; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 2px; position: relative; z-index: 1;">New Registered Today</div>
+                <div id="newUsersTrend" style="font-size: 10px; margin-top: 4px; position: relative; z-index: 1;"></div>
+            </div>
+            <div style="background: linear-gradient(145deg, rgba(20,24,40,0.85), rgba(10,12,24,0.6)); border-radius: 16px; padding: 18px 20px; border: 1px solid rgba(180,180,200,0.06); transition: all 0.3s; position: relative; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.04);">
+                <div style="position: absolute; top: -15%; right: -5%; width: 75%; height: 75%; background: radial-gradient(ellipse at 70% 20%, rgba(255,255,255,0.10), transparent 70%); pointer-events: none; border-radius: 50%;"></div>
+                <div style="position: absolute; top: 0; left: 0; right: 0; height: 1px; background: linear-gradient(90deg, transparent, rgba(180,180,200,0.08), transparent);"></div>
+                <i class="fas fa-users" style="font-size: 20px; color: #ccb89f; margin-bottom: 4px; display: block; position: relative; z-index: 1;"></i>
+                <div id="totalUsersCount" style="font-size: 28px; font-weight: 700; color: #ffffff; letter-spacing: -0.5px; position: relative; z-index: 1;">0</div>
+                <div style="font-size: 11px; color: #8892a8; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 2px; position: relative; z-index: 1;">Total Users</div>
+                <div id="totalUsersTrend" style="font-size: 10px; margin-top: 4px; position: relative; z-index: 1;"></div>
+            </div>
+            <div style="background: linear-gradient(145deg, rgba(20,24,40,0.85), rgba(10,12,24,0.6)); border-radius: 16px; padding: 18px 20px; border: 1px solid rgba(180,180,200,0.06); transition: all 0.3s; position: relative; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.04);">
+                <div style="position: absolute; top: -15%; right: -5%; width: 75%; height: 75%; background: radial-gradient(ellipse at 70% 20%, rgba(255,255,255,0.10), transparent 70%); pointer-events: none; border-radius: 50%;"></div>
+                <div style="position: absolute; top: 0; left: 0; right: 0; height: 1px; background: linear-gradient(90deg, transparent, rgba(180,180,200,0.08), transparent);"></div>
+                <i class="fas fa-arrow-down" style="font-size: 20px; color: #ccb89f; margin-bottom: 4px; display: block; position: relative; z-index: 1;"></i>
+                <div id="totalDepositCount" style="font-size: 28px; font-weight: 700; color: #ffffff; letter-spacing: -0.5px; position: relative; z-index: 1;">€0</div>
+                <div style="font-size: 11px; color: #8892a8; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 2px; position: relative; z-index: 1;">Total Deposits</div>
+                <div id="totalDepositTrend" style="font-size: 10px; margin-top: 4px; position: relative; z-index: 1;"></div>
+            </div>
+            <div style="background: linear-gradient(145deg, rgba(20,24,40,0.85), rgba(10,12,24,0.6)); border-radius: 16px; padding: 18px 20px; border: 1px solid rgba(180,180,200,0.06); transition: all 0.3s; position: relative; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.04);">
+                <div style="position: absolute; top: -15%; right: -5%; width: 75%; height: 75%; background: radial-gradient(ellipse at 70% 20%, rgba(255,255,255,0.10), transparent 70%); pointer-events: none; border-radius: 50%;"></div>
+                <div style="position: absolute; top: 0; left: 0; right: 0; height: 1px; background: linear-gradient(90deg, transparent, rgba(180,180,200,0.08), transparent);"></div>
+                <i class="fas fa-arrow-up" style="font-size: 20px; color: #ccb89f; margin-bottom: 4px; display: block; position: relative; z-index: 1;"></i>
+                <div id="totalWithdrawCount" style="font-size: 28px; font-weight: 700; color: #ffffff; letter-spacing: -0.5px; position: relative; z-index: 1;">€0</div>
+                <div style="font-size: 11px; color: #8892a8; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 2px; position: relative; z-index: 1;">Total Withdrawals</div>
+                <div id="totalWithdrawTrend" style="font-size: 10px; margin-top: 4px; position: relative; z-index: 1;"></div>
+            </div>
+        </div>
+        
+        <!-- 图表区域 -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 28px;">
+            <!-- 趋势图 -->
+<div style="background: linear-gradient(145deg, rgba(20,24,40,0.85), rgba(10,12,24,0.6)); backdrop-filter: blur(8px); border-radius: 20px; padding: 20px; border: 1px solid rgba(180,180,200,0.06); box-shadow: 0 4px 20px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.04); position: relative; overflow: hidden;">
+    <div style="position: absolute; top: -15%; right: -5%; width: 75%; height: 75%; background: radial-gradient(ellipse at 70% 20%, rgba(255,255,255,0.06), transparent 70%); pointer-events: none; border-radius: 50%;"></div>
+    <div style="position: absolute; top: 0; left: 0; right: 0; height: 1px; background: linear-gradient(90deg, transparent, rgba(180,180,200,0.08), transparent);"></div>
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; position: relative; z-index: 1;">
+        <div style="font-size: 16px; font-weight: 600; color: #d8dff0;">D&W Trend</div>
+    </div>
+    <div id="trendChart" style="height: 320px; width: 100%; position: relative; z-index: 1;"></div>
+</div>
+            
+            <!-- 转化率卡片 -->
+            <div style="background: linear-gradient(145deg, rgba(20,24,40,0.85), rgba(10,12,24,0.6)); backdrop-filter: blur(8px); border-radius: 20px; padding: 20px; border: 1px solid rgba(180,180,200,0.06); box-shadow: 0 4px 20px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.04); position: relative; overflow: hidden;">
+                <div style="position: absolute; top: -15%; right: -5%; width: 75%; height: 75%; background: radial-gradient(ellipse at 70% 20%, rgba(255,255,255,0.06), transparent 70%); pointer-events: none; border-radius: 50%;"></div>
+                <div style="position: absolute; top: 0; left: 0; right: 0; height: 1px; background: linear-gradient(90deg, transparent, rgba(180,180,200,0.08), transparent);"></div>
+                
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 6px; position: relative; z-index: 1;">
+                    <div style="font-size: 15px; font-weight: 600; color: #d8dff0;">📈 New Orders Conversion Rate</div>
+                    <div style="text-align: right;">
+                        <div style="font-size: 10px; color: #6a5a3a; letter-spacing: 0.5px;">
+                            <span style="color: #8892a8;">Today Register</span>
+                        </div>
+                        <div style="display: flex; align-items: baseline; gap: 4px; justify-content: flex-end;">
+                            <span id="conversionRegister" style="font-size: 22px; font-weight: 700; color: #ccb89f;">0</span>
+                            <span style="font-size: 12px; color: #6a5a3a;">/</span>
+                            <span id="conversionConverted" style="font-size: 16px; font-weight: 600; color: #d4af37;">0</span>
+                            <span style="font-size: 10px; color: #5a4a2a;">converted</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div style="display: flex; align-items: stretch; gap: 12px; position: relative; z-index: 1; min-height: 210px;">
+                    <div id="waveRingContainer" style="width: 220px; height: 280px; flex-shrink: 0; position: relative; align-self: center;"></div>
+                    
+                    <div style="flex: 1; min-width: 0; display: flex; flex-direction: column; justify-content: space-between; gap: 0px;">
+                        <div style="border-top: 1px solid rgba(200,176,144,0.06); padding-top: 8px;">
+                            <div class="conversion-stat-row" style="display: flex; justify-content: space-between; padding: 2px 0; font-size: 11px; color: #6a7a92;">
+                                <span class="conversion-stat-label">Today</span>
+                                <span><span class="conversion-stat-register">0</span> / <span class="conversion-stat-converted">0</span></span>
+                                <span class="conversion-stat-rate" style="font-weight: 600;">0%</span>
+                            </div>
+                            <div class="conversion-stat-row" style="display: flex; justify-content: space-between; padding: 2px 0; font-size: 11px; color: #6a7a92;">
+                                <span class="conversion-stat-label">7 Days</span>
+                                <span><span class="conversion-stat-register">0</span> / <span class="conversion-stat-converted">0</span></span>
+                                <span class="conversion-stat-rate" style="font-weight: 600;">0%</span>
+                            </div>
+                            <div class="conversion-stat-row" style="display: flex; justify-content: space-between; padding: 2px 0; font-size: 11px; color: #6a7a92;">
+                                <span class="conversion-stat-label">30 Days</span>
+                                <span><span class="conversion-stat-register">0</span> / <span class="conversion-stat-converted">0</span></span>
+                                <span class="conversion-stat-rate" style="font-weight: 600;">0%</span>
+                            </div>
+                            <div class="conversion-stat-row" style="display: flex; justify-content: space-between; padding: 2px 0; font-size: 11px; color: #6a7a92;">
+                                <span class="conversion-stat-label">All Time</span>
+                                <span><span class="conversion-stat-register">0</span> / <span class="conversion-stat-converted">0</span></span>
+                                <span class="conversion-stat-rate" style="font-weight: 600;">0%</span>
+                            </div>
+                        </div>
+                        
+                        <div style="margin-top: 8px; padding-top: 8px; border-top: 1px solid rgba(200,176,144,0.06);">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2px;">
+                                <div style="font-size: 9px; color: #5a4a2a; font-weight: 500; letter-spacing: 0.5px; text-transform: uppercase;">
+                                    <i class="fas fa-users" style="color: #ccb89f; margin-right: 4px; font-size: 9px;"></i>Recent
+                                </div>
+                                <a href="#" onclick="showPage('users'); return false;" style="font-size: 8px; color: #4a3a2a; text-decoration: none; transition: 0.2s;" onmouseover="this.style.color='#ccb89f'" onmouseout="this.style.color='#4a3a2a'">View All →</a>
+                            </div>
+                            <div style="overflow-y: auto; max-height: 155px;">
+                                <table style="width: 100%; border-collapse: collapse; font-size: 10px;">
+                                    <thead>
+                                        <tr style="border-bottom: 1px solid rgba(200,176,144,0.04); position: sticky; top: 0; background: rgba(20,24,40,0.9); z-index: 2;">
+                                            <th style="text-align: left; padding: 2px 4px; color: #4a3a2a; font-weight: 500; font-size: 8px; text-transform: uppercase; letter-spacing: 0.3px;">User</th>
+                                            <th style="text-align: left; padding: 2px 4px; color: #4a3a2a; font-weight: 500; font-size: 8px; text-transform: uppercase; letter-spacing: 0.3px;">Ref</th>
+                                            <th style="text-align: center; padding: 2px 4px; color: #4a3a2a; font-weight: 500; font-size: 8px; text-transform: uppercase; letter-spacing: 0.3px;">Joined</th>
+                                            <th style="text-align: right; padding: 2px 4px; color: #4a3a2a; font-weight: 500; font-size: 8px; text-transform: uppercase; letter-spacing: 0.3px;">Amount</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="recentRegistrationsBody">
+                                        <tr><td colspan="4" style="text-align: center; padding: 8px; color: #4a5a72; font-size: 10px;">Loading...</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 实时活动 -->
+        <div style="background: linear-gradient(145deg, rgba(20,24,40,0.85), rgba(10,12,24,0.6)); backdrop-filter: blur(8px); border-radius: 20px; padding: 20px; border: 1px solid rgba(180,180,200,0.06); box-shadow: 0 4px 20px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.04); position: relative; overflow: hidden;">
+            <div style="position: absolute; top: -15%; right: -5%; width: 75%; height: 75%; background: radial-gradient(ellipse at 70% 20%, rgba(255,255,255,0.06), transparent 70%); pointer-events: none; border-radius: 50%;"></div>
+            <div style="position: absolute; top: 0; left: 0; right: 0; height: 1px; background: linear-gradient(90deg, transparent, rgba(180,180,200,0.08), transparent);"></div>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; position: relative; z-index: 1;">
+                <div style="font-size: 16px; font-weight: 600; color: #d8dff0;"><i class="fas fa-history" style="color: #8892a8; margin-right: 8px;"></i>Real-Time Event</div>
+                <div style="font-size: 11px; color: #ccb89f;"><i class="fas fa-circle" style="font-size: 8px; margin-right: 4px;"></i>Real-Time Updates</div>
+            </div>
+            <div id="activityList" style="max-height: 350px; overflow-y: auto; position: relative; z-index: 1;">
+                <div style="text-align: center; padding: 20px; color: #6a7a9a;">Loading...</div>
+            </div>
+        </div>
+    `;
+    
+    var style = document.createElement('style');
     style.textContent = `
-        @keyframes slideInRight {
-            0% { transform: translateX(calc(100% + 20px)); opacity: 0; }
-            100% { transform: translateX(0); opacity: 1; }
+        .date-filter-btn.active {
+            background: linear-gradient(145deg, rgba(30,40,70,0.8), rgba(20,28,50,0.6)) !important;
+            color: #e6edf5 !important;
+            border-color: rgba(180,180,200,0.12) !important;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.04) !important;
         }
-        @keyframes slideOutRight {
-            0% { transform: translateX(0); opacity: 1; }
-            100% { transform: translateX(calc(100% + 20px)); opacity: 0; }
+        .date-filter-btn:hover {
+            background: linear-gradient(145deg, rgba(24,28,48,0.7), rgba(14,16,28,0.5)) !important;
+            color: #e6edf5 !important;
+            border-color: rgba(180,180,200,0.10) !important;
         }
-        @keyframes toastProgress {
-            0% { width: 100%; }
-            100% { width: 0%; }
+        [onclick] > div[style*="linear-gradient"]:hover {
+            border-color: rgba(180,180,200,0.12) !important;
+            transform: translateY(-3px);
+            box-shadow: 0 8px 30px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.06) !important;
+        }
+        [onclick] > div[style*="linear-gradient"]:hover > div:first-child {
+            background: radial-gradient(ellipse at 70% 20%, rgba(255,255,255,0.15), transparent 70%) !important;
+        }
+        .trend-up { color: #ccb89f; }
+        .trend-down { color: #e88080; }
+        #activityList::-webkit-scrollbar { width: 3px; }
+        #activityList::-webkit-scrollbar-thumb { background: rgba(180,180,200,0.06); border-radius: 4px; }
+        #activityList::-webkit-scrollbar-track { background: transparent; }
+        .conversion-stat-row:hover {
+            background: rgba(204,184,159,0.04);
+            border-radius: 6px;
+        }
+        #recentRegistrationsBody tr:hover td {
+            background: rgba(204,184,159,0.04);
+        }
+        #recentRegistrationsBody td {
+            padding: 2px 4px;
+        }
+        #recentRegistrationsBody::-webkit-scrollbar { width: 3px; }
+        #recentRegistrationsBody::-webkit-scrollbar-thumb { background: rgba(204,184,159,0.12); border-radius: 4px; }
+        .notification-item:hover {
+            background: rgba(255,255,255,0.06) !important;
+            border-color: rgba(204,184,159,0.2) !important;
+        }
+        #notificationList::-webkit-scrollbar {
+            width: 4px;
+        }
+        #notificationList::-webkit-scrollbar-thumb {
+            background: rgba(204,184,159,0.15);
+            border-radius: 4px;
+        }
+        #notificationList::-webkit-scrollbar-track {
+            background: transparent;
         }
     `;
     document.head.appendChild(style);
+    
+    setTimeout(function() {
+        initTrendChart();
+        bindDateFilters();
+        initWaveRing();
+        refreshDashboard(days, true);
+        initNotificationEvents();
+        
+        // ✅ 确保图表加载30天数据
+        setTimeout(function() {
+            loadChartData(true);
+        }, 500);
+    }, 200);
+    
+    if (dashboardRefreshInterval) clearInterval(dashboardRefreshInterval);
+    dashboardRefreshInterval = setInterval(function() { 
+        refreshDashboard(currentDays, false); 
+    }, 15000);
 }
 
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', ensureAnimationStyles);
-} else {
-    ensureAnimationStyles();
-}
-
-// ============================================================
-// 🔥 通知处理函数
-// ============================================================
-function handleNewKyc(data) {
-    console.log('📋 处理新KYC申请:', data);
-    
-    if (window.refreshDashboardData) {
-        window.refreshDashboardData(currentDays);
-    }
-    if (window.loadKycPage && document.getElementById('page_kyc')?.classList.contains('active')) {
-        window.loadKycPage();
-    }
-    
-    const notification = {
-        id: 'kyc_' + data.id + '_' + Date.now(),
-        type: 'kyc',
-        title: '🪪 New KYC Application',
-        message: 'User ' + (data.username || data.uid) + ' submitted KYC verification',
-        timestamp: new Date().toISOString(),
-        read: false,
-        data: data
-    };
-    addNotification(notification);
-    
-    loadNotificationCounts();
-    
-    if (window.showAmberNotification) {
-        window.showAmberNotification(
-            '📋 新KYC申请',
-            `用户 ${data.username || data.uid} 提交了身份验证申请`,
-            'kyc'
-        );
-    }
-}
-
-function handleNewWithdrawal(data) {
-    console.log('💰 处理新提现申请:', data);
-    
-    if (window.refreshDashboardData) {
-        window.refreshDashboardData(currentDays);
-    }
-    if (window.loadWithdrawalsPage && document.getElementById('page_withdrawals')?.classList.contains('active')) {
-        window.loadWithdrawalsPage();
-    }
-    
-    const notification = {
-        id: 'withdrawal_' + data.id + '_' + Date.now(),
-        type: 'withdrawal',
-        title: '💳 New Withdrawal Request',
-        message: 'User ' + (data.username || data.uid) + ' requested €' + (data.amount || 0).toFixed(2) + ' withdrawal',
-        timestamp: new Date().toISOString(),
-        read: false,
-        data: data
-    };
-    addNotification(notification);
-    
-    loadNotificationCounts();
-    
-    if (window.showAmberNotification) {
-        window.showAmberNotification(
-            '💰 新提现申请',
-            `用户 ${data.username} 申请提现 €${data.amount}`,
-            'withdrawal'
-        );
-    }
-}
-
-function handleNewEmailRequest(data) {
-    console.log('📧 处理新邮箱验证请求:', data.email);
-    
-    if (window.refreshDashboardData) {
-        window.refreshDashboardData(currentDays);
-    }
-    const emailPage = document.getElementById('page_emailverify');
-    if (emailPage && emailPage.classList.contains('active')) {
-        if (window.loadEmailVerifyPage) {
-            window.loadEmailVerifyPage();
-        }
-    }
-    
-    const notification = {
-        id: 'email_' + data.id + '_' + Date.now(),
-        type: 'email',
-        title: '📧 New Email Verification',
-        message: 'Email ' + (data.email || data.uid) + ' needs verification code',
-        timestamp: new Date().toISOString(),
-        read: false,
-        data: data
-    };
-    addNotification(notification);
-    
-    loadNotificationCounts();
-    
-    if (window.showAmberNotification) {
-        window.showAmberNotification(
-            '📧 新邮箱验证请求',
-            `用户 ${data.email} 请求邮箱验证，请设置验证码`,
-            'email'
-        );
-    }
-}
-
-// ============================================================
-// 🔥 全局实时订阅
-// ============================================================
-let realtimeChannel = null;
-let pollingInterval = null;
-let lastNotified = {
-    kyc: null,
-    withdrawal: null,
-    email: null
+window.loadDashboardPage = loadDashboardPage;
+window.refreshDashboardData = function(days) {
+    refreshDashboard(days || currentDays, true);
 };
-let realtimeConnected = false;
 
-function initGlobalRealtime() {
-    console.log('🚀 正在启动全局实时订阅...');
-    startPollingFallback();
-    tryConnectRealtime();
+// ============================================================
+// 辅助函数（如果不存在则定义）
+// ============================================================
+if (typeof escapeHtml !== 'function') {
+    window.escapeHtml = function(str) {
+        if (!str) return '';
+        return String(str).replace(/[&<>]/g, function(m) {
+            if (m === '&') return '&amp;';
+            if (m === '<') return '&lt;';
+            if (m === '>') return '&gt;';
+            return m;
+        });
+    };
 }
 
-function tryConnectRealtime() {
-    if (realtimeChannel) {
+if (typeof formatTime !== 'function') {
+    window.formatTime = function(timestamp) {
+        if (!timestamp) return '-';
         try {
-            sb.removeChannel(realtimeChannel);
+            var date = new Date(timestamp);
+            var now = new Date();
+            var diff = Math.floor((now - date) / 1000);
+            
+            if (diff < 60) return 'Just now';
+            if (diff < 3600) return Math.floor(diff / 60) + 'm ago';
+            if (diff < 86400) return Math.floor(diff / 3600) + 'h ago';
+            if (diff < 172800) return 'Yesterday';
+            
+            var month = String(date.getMonth() + 1).padStart(2, '0');
+            var day = String(date.getDate()).padStart(2, '0');
+            var year = date.getFullYear();
+            var hours = String(date.getHours()).padStart(2, '0');
+            var minutes = String(date.getMinutes()).padStart(2, '0');
+            return month + '/' + day + '/' + year + ' ' + hours + ':' + minutes;
         } catch (e) {
-            console.log('移除旧频道失败:', e);
+            return '-';
         }
-        realtimeChannel = null;
-    }
-    
-    try {
-        realtimeChannel = sb
-            .channel('global-realtime')
-            .on(
-                'postgres_changes',
-                { event: 'INSERT', schema: 'public', table: 'kyc_verifications' },
-                (payload) => {
-                    console.log('🔔 [Realtime] 检测到新KYC申请:', payload.new);
-                    realtimeConnected = true;
-                    handleNewKyc(payload.new);
-                }
-            )
-            .on(
-                'postgres_changes',
-                { event: 'INSERT', schema: 'public', table: 'withdrawals' },
-                (payload) => {
-                    console.log('🔔 [Realtime] 检测到新提现申请:', payload.new);
-                    realtimeConnected = true;
-                    handleNewWithdrawal(payload.new);
-                }
-            )
-            .on(
-                'postgres_changes',
-                { event: 'INSERT', schema: 'public', table: 'email_verification_requests' },
-                (payload) => {
-                    console.log('🔔 [Realtime] 检测到新邮箱验证请求:', payload.new);
-                    realtimeConnected = true;
-                    handleNewEmailRequest(payload.new);
-                }
-            )
-            .subscribe((status) => {
-                console.log('📡 全局实时订阅状态:', status);
-                if (status === 'SUBSCRIBED') {
-                    realtimeConnected = true;
-                    console.log('✅ 全局实时订阅已成功连接！');
-                } else if (status === 'CHANNEL_ERROR') {
-                    realtimeConnected = false;
-                    console.warn('⚠️ Realtime 连接失败，轮询方案将继续工作');
-                }
-            });
-    } catch (e) {
-        console.warn('⚠️ Realtime 初始化失败，轮询方案将继续工作:', e.message);
-        realtimeConnected = false;
-    }
-}
-
-function startPollingFallback() {
-    console.log('🔄 轮询备选方案已启动 (每10秒检查一次)');
-    if (pollingInterval) clearInterval(pollingInterval);
-    pollForUpdates();
-    pollingInterval = setInterval(pollForUpdates, 10000);
-}
-
-async function pollForUpdates() {
-    try {
-        const { data: kycs } = await sb
-            .from('kyc_verifications')
-            .select('*')
-            .eq('status', 'pending')
-            .order('uploaded_at', { ascending: false })
-            .limit(1);
-        
-        if (kycs && kycs.length > 0 && kycs[0].id !== lastNotified.kyc) {
-            console.log('🔔 [轮询] 检测到新KYC申请:', kycs[0].id);
-            lastNotified.kyc = kycs[0].id;
-            handleNewKyc(kycs[0]);
-        }
-        
-        const { data: withdrawals } = await sb
-            .from('withdrawals')
-            .select('*')
-            .eq('status', 'pending')
-            .order('request_date', { ascending: false })
-            .limit(1);
-        
-        if (withdrawals && withdrawals.length > 0 && withdrawals[0].id !== lastNotified.withdrawal) {
-            console.log('🔔 [轮询] 检测到新提现申请:', withdrawals[0].id);
-            lastNotified.withdrawal = withdrawals[0].id;
-            handleNewWithdrawal(withdrawals[0]);
-        }
-        
-        const { data: emails } = await sb
-            .from('email_verification_requests')
-            .select('*')
-            .is('code', null)
-            .eq('is_verified', false)
-            .order('requested_at', { ascending: false })
-            .limit(1);
-        
-        if (emails && emails.length > 0 && emails[0].id !== lastNotified.email) {
-            console.log('🔔 [轮询] 检测到新邮箱验证请求:', emails[0].id);
-            lastNotified.email = emails[0].id;
-            handleNewEmailRequest(emails[0]);
-        }
-        
-        loadNotificationCounts();
-        
-    } catch (e) {
-        // 静默失败
-    }
+    };
 }
 
 // ============================================================
-// 🔥 页面切换函数
+// 🔥 Notification 事件绑定（使用 admin-common.js 中的函数）
 // ============================================================
-function showPage(pageId) {
-    console.log('切换页面:', pageId);
-    currentActivePage = pageId;
-    
-    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-    const targetPage = document.getElementById('page_' + pageId);
-    if (targetPage) targetPage.classList.add('active');
-    
-    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-    const activeNav = document.querySelector(`.nav-item[data-page="${pageId}"]`);
-    if (activeNav) {
-        activeNav.classList.add('active');
-    }
-    
-    if (pageId === 'dashboard' && window.loadDashboardPage) {
-        console.log('加载仪表板');
-        window.loadDashboardPage(currentDays);
-    } else if (pageId === 'users' && window.loadUsersPage) {
-        console.log('加载用户管理');
-        window.loadUsersPage();
-    } else if (pageId === 'kyc' && window.loadKycPage) {
-        console.log('加载KYC页面');
-        window.loadKycPage();
-    } else if (pageId === 'emailverify' && window.loadEmailVerifyPage) {
-        console.log('加载Email验证页面');
-        window.loadEmailVerifyPage();
-    } else if (pageId === 'trial' && window.loadTrialPage) {
-        window.loadTrialPage();
-    } else if (pageId === 'withdrawals' && window.loadWithdrawalsPage) {
-        console.log('加载提现页面');
-        window.loadWithdrawalsPage();
-    } else if (pageId === 'vip' && window.loadVipPage) {
-        window.loadVipPage();
-    } else if (pageId === 'setorders' && window.loadSetordersPage) {
-        window.loadSetordersPage();
-    } else if (pageId === 'orders' && window.loadOrdersPage) {
-        window.loadOrdersPage();
-    } else if (pageId === 'orderpool' && window.loadOrderPoolPage) {
-        window.loadOrderPoolPage();
-    } else if (pageId === 'animated' && window.loadAnimatedPage) {
-        window.loadAnimatedPage();
-    } else if (pageId === 'signin' && window.loadSigninPage) {
-        window.loadSigninPage();
-    } else if (pageId === 'content' && window.loadContentPage) {
-        window.loadContentPage();
-    }
-}
+function initNotificationEvents() {
+    var bellBtn = document.getElementById('notificationBellBtn');
+    var dropdown = document.getElementById('notificationDropdown');
+    var clearBtn = document.getElementById('clearAllNotificationsBtn');
 
-// ============================================================
-// 🔥 初始化
-// ============================================================
-document.addEventListener('DOMContentLoaded', function() {
-    renderSidebarNav();
-    initTabBar();
-    
-    document.querySelectorAll('.nav-item').forEach(el => {
-        if (el.dataset.page === currentActivePage) {
-            el.classList.add('active');
-        }
-    });
-    
-    loadNotificationCounts();
-    
-    setTimeout(function() {
-        loadNotifications();
-        if (typeof updateNotificationUI === 'function') {
-            updateNotificationUI();
-        }
-        updateGlobalNotificationBadge();
-        console.log('🔔 通知 UI 已刷新，当前:', window.notifications.length, '条');
-    }, 500);
-});
-
-// 启动实时订阅
-setTimeout(() => {
-    initGlobalRealtime();
-}, 2000);
-
-// 检查登录状态
-if (localStorage.getItem('admin_logged_in') !== 'true') {
-    window.location.href = 'admin-login.html';
-}
-
-// ============================================================
-// 🔥 Tab 标签栏渲染（确保右侧按钮始终存在）
-// ============================================================
-function renderTabBar() {
-    const container = document.getElementById('tabBarContainer');
-    if (!container) {
-        initTabBar();
-        return;
-    }
-
-    // ✅ 如果右侧容器不存在，重建整个 Tab Bar
-    const rightWrapper = container.querySelector('#tabBarRightWrapper');
-    if (!rightWrapper) {
-        console.log('⚠️ 右侧容器丢失，重新初始化 Tab Bar');
-        initTabBar();
-        // ✅ 重要：重建后立即返回，不再继续操作旧容器
-        return;
-    }
-
-    // ✅ 确保 tabsWrapper 存在
-    let tabsWrapper = container.querySelector('#tabsWrapper');
-    if (!tabsWrapper) {
-        tabsWrapper = document.createElement('div');
-        tabsWrapper.id = 'tabsWrapper';
-        tabsWrapper.style.cssText = `
-            display: flex;
-            align-items: center;
-            gap: 2px;
-            flex: 1;
-            overflow-x: auto;
-            overflow-y: hidden;
-            height: 100%;
-            scrollbar-width: thin;
-            min-width: 0;
-        `;
-        container.insertBefore(tabsWrapper, rightWrapper);
-    }
-
-    // ✅ 清空 tabsWrapper，只保留 tab 标签
-    tabsWrapper.innerHTML = '';
-
-    if (tabs.length === 0) {
-        const empty = document.createElement('span');
-        empty.className = 'empty-tab';
-        empty.textContent = '点击侧边栏打开页面';
-        empty.style.cssText = 'color:rgba(255,255,255,0.08);font-size:12px;padding:0 8px;';
-        tabsWrapper.appendChild(empty);
-        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-        return;
-    }
-
-    // 渲染 tab 标签
-    tabs.forEach(tab => {
-        const tabEl = document.createElement('button');
-        tabEl.className = 'tab-item';
-        tabEl.dataset.tabId = tab.id;
-        tabEl.dataset.pageId = tab.pageId;
-
-        const isActive = tab.id === activeTabId;
-        if (isActive) tabEl.classList.add('active');
-
-        // ✅ 新代码
-const countKey = tab.pageId === 'emailverify' ? 'email' : 
-                 tab.pageId === 'withdrawals' ? 'withdrawal' : 
-                 tab.pageId;
-const count = notificationCounts[countKey] || 0;
-const hasUnread = count > 0 && !readNotifications[countKey];
-        if (hasUnread) tabEl.classList.add('has-notification');
-
-        const pageDef = PAGE_DEFS[tab.pageId];
-        const icon = pageDef ? pageDef.icon : 'fa-file';
-
-        tabEl.innerHTML = `
-            <i class="fas ${icon}"></i>
-            <span>${tab.label}</span>
-            ${hasUnread ? `<span class="tab-badge">${count}</span>` : ''}
-            <button class="tab-close" data-tab-id="${tab.id}" title="关闭标签">
-                <i class="fas fa-times"></i>
-            </button>
-        `;
-
-        tabEl.addEventListener('click', function(e) {
-            if (e.target.closest('.tab-close')) return;
-            switchTab(tab.id);
-        });
-
-        const closeBtn = tabEl.querySelector('.tab-close');
-        closeBtn.addEventListener('click', function(e) {
+    if (bellBtn) {
+        bellBtn.addEventListener('click', function(e) {
             e.stopPropagation();
-            closeTab(tab.id);
+            if (dropdown.style.display === 'block') {
+                dropdown.style.display = 'none';
+            } else {
+                dropdown.style.display = 'block';
+                if (typeof updateNotificationUI === 'function') {
+                    updateNotificationUI();
+                }
+            }
         });
+    }
 
-        tabsWrapper.appendChild(tabEl);
+    document.addEventListener('click', function(e) {
+        var container = document.querySelector('.notification-container');
+        if (container && !container.contains(e.target) && dropdown) {
+            dropdown.style.display = 'none';
+        }
     });
 
-    updatePageVisibility();
-}
-
-function updatePageVisibility() {
-    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-
-    const activeTab = tabs.find(t => t.id === activeTabId);
-    if (activeTab) {
-        const pageEl = document.getElementById('page_' + activeTab.pageId);
-        if (pageEl) {
-            pageEl.classList.add('active');
-            loadPageContent(activeTab.pageId);
-        }
-    }
-}
-
-let loadedPages = {};
-
-function loadPageContent(pageId) {
-    if (loadedPages[pageId]) return;
-    loadedPages[pageId] = true;
-
-    const pageMap = {
-        'dashboard': 'loadDashboardPage',
-        'users': 'loadUsersPage',
-        'kyc': 'loadKycPage',
-        'emailverify': 'loadEmailVerifyPage',
-        'trial': 'loadTrialPage',
-        'withdrawals': 'loadWithdrawalsPage',
-        'vip': 'loadVipPage',
-        'setorders': 'loadSetordersPage',
-        'orders': 'loadOrdersPage',
-        'orderpool': 'loadOrderPoolPage',
-        'animated': 'loadAnimatedPage',
-        'signin': 'loadSigninPage',
-        'content': 'loadContentPage'
-    };
-
-    const fnName = pageMap[pageId];
-    if (fnName && window[fnName]) {
-        console.log(`📄 加载页面: ${pageId}`);
-        if (pageId === 'dashboard') {
-            window[fnName](currentDays || 1);
-        } else {
-            window[fnName]();
-        }
-    }
-}
-
-function openTab(pageId) {
-    const existing = tabs.find(t => t.pageId === pageId);
-    if (existing) {
-        switchTab(existing.id);
-        return;
-    }
-
-    const pageDef = PAGE_DEFS[pageId];
-    if (!pageDef) return;
-
-    const newTab = {
-        id: ++tabIdCounter,
-        pageId: pageId,
-        label: pageDef.label,
-        notificationCount: notificationCounts[pageId] || 0
-    };
-
-    tabs.push(newTab);
-    activeTabId = newTab.id;
-    renderTabBar();
-
-    const container = document.getElementById('tabBarContainer');
-    const newTabEl = container.querySelector(`.tab-item[data-tab-id="${newTab.id}"]`);
-    if (newTabEl) {
-        newTabEl.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
-    }
-}
-
-function switchTab(tabId) {
-    const tab = tabs.find(t => t.id === tabId);
-    if (!tab) return;
-
-    const pageId = tab.pageId;
-    const countKey = pageId === 'emailverify' ? 'email' : 
-                     pageId === 'withdrawals' ? 'withdrawal' : 
-                     pageId;
-    
-    if (notificationCounts[countKey] > 0 && !readNotifications[countKey]) {
-        readNotifications[countKey] = true;
-        renderTabBar();
-    }
-
-    if (activeTabId === tabId) return;
-    activeTabId = tabId;
-    renderTabBar();
-}
-
-function closeTab(tabId) {
-    const index = tabs.findIndex(t => t.id === tabId);
-    if (index === -1) return;
-
-    tabs.splice(index, 1);
-
-    if (tabs.length === 0) {
-        activeTabId = null;
-    } else if (activeTabId === tabId) {
-        const newIndex = Math.min(index, tabs.length - 1);
-        activeTabId = tabs[newIndex].id;
-    }
-
-    renderTabBar();
-}
-
-// ============================================================
-// 🔥 初始化 Tab Bar（带全局通知按钮）- 强制重建版
-// ============================================================
-function initTabBar() {
-    // ✅ 强制重建：如果已存在，先删除再重新创建
-    const existingContainer = document.getElementById('tabBarContainer');
-    if (existingContainer) {
-        existingContainer.remove();
-        console.log('🔄 删除旧的 Tab Bar 容器，重新创建');
-    }
-
-    const main = document.querySelector('.main');
-    if (!main) {
-        setTimeout(initTabBar, 500);
-        return;
-    }
-
-    const container = document.createElement('div');
-    container.id = 'tabBarContainer';
-    container.className = 'tab-bar-container';
-    container.style.cssText = `
-        display: flex !important;
-        align-items: center !important;
-        background: rgba(12, 16, 28, 0.92) !important;
-        border-bottom: 1px solid rgba(214, 178, 94, 0.08) !important;
-        padding: 0 12px !important;
-        height: 50px !important;
-        overflow-x: auto !important;
-        overflow-y: hidden !important;
-        flex-shrink: 0 !important;
-        gap: 2px !important;
-        position: sticky !important;
-        top: 0 !important;
-        z-index: 100 !important;
-        scrollbar-width: thin !important;
-        box-shadow: 0 2px 20px rgba(0,0,0,0.3), inset 0 1px 0 rgba(214, 178, 94, 0.04) !important;
-        margin: -24px -32px 20px -32px !important;
-        padding-left: 20px !important;
-        padding-right: 16px !important;
-        min-height: 50px !important;
-    `;
-
-    // ============================================================
-    // ✅ 左侧：Tab 标签区域
-    // ============================================================
-    const tabsWrapper = document.createElement('div');
-    tabsWrapper.id = 'tabsWrapper';
-    tabsWrapper.style.cssText = `
-        display: flex;
-        align-items: center;
-        gap: 2px;
-        flex: 1;
-        overflow-x: auto;
-        overflow-y: hidden;
-        height: 100%;
-        scrollbar-width: thin;
-        min-width: 0;
-    `;
-    container.appendChild(tabsWrapper);
-
-    // ============================================================
-    // ✅ 右侧：通知按钮 + 添加按钮
-    // ============================================================
-    const rightWrapper = document.createElement('div');
-    rightWrapper.id = 'tabBarRightWrapper';
-    rightWrapper.style.cssText = `
-        display: flex !important;
-        align-items: center !important;
-        gap: 6px !important;
-        flex-shrink: 0 !important;
-        margin-left: auto !important;
-        padding-left: 12px !important;
-        height: 100% !important;
-        border-left: 1px solid rgba(255,255,255,0.04) !important;
-    `;
-
-    // --- 通知按钮 ---
-    const notifContainer = document.createElement('div');
-    notifContainer.id = 'globalNotificationContainer';
-    notifContainer.style.cssText = `
-        position: relative !important;
-        display: flex !important;
-        align-items: center !important;
-        height: 100% !important;
-    `;
-
-    const notifBtn = document.createElement('button');
-    notifBtn.id = 'globalNotificationBtn';
-    notifBtn.innerHTML = '<i class="fas fa-bell"></i>';
-    notifBtn.title = '通知';
-    notifBtn.style.cssText = `
-        display: flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-        width: 34px !important;
-        height: 34px !important;
-        border-radius: 6px !important;
-        border: 1px solid rgba(255,255,255,0.06) !important;
-        background: rgba(255,255,255,0.02) !important;
-        color: rgba(255,255,255,0.2) !important;
-        cursor: pointer !important;
-        font-size: 16px !important;
-        transition: 0.25s !important;
-        flex-shrink: 0 !important;
-        font-family: 'Inter', sans-serif !important;
-        position: relative !important;
-    `;
-    notifBtn.addEventListener('click', function(e) {
-        e.stopPropagation();
-        toggleNotificationDropdown();
-    });
-
-    // 通知角标
-    const badge = document.createElement('span');
-    badge.id = 'globalNotificationBadge';
-    badge.style.cssText = `
-        position: absolute !important;
-        top: -4px !important;
-        right: -4px !important;
-        background: #e88080 !important;
-        color: #fff !important;
-        border-radius: 50% !important;
-        font-size: 9px !important;
-        font-weight: 700 !important;
-        min-width: 16px !important;
-        height: 16px !important;
-        display: none !important;
-        align-items: center !important;
-        justify-content: center !important;
-        padding: 0 4px !important;
-        border: 2px solid rgba(12, 16, 28, 0.8) !important;
-        font-family: 'Inter', sans-serif !important;
-        line-height: 1 !important;
-        z-index: 2 !important;
-    `;
-    notifBtn.appendChild(badge);
-
-    // ============================================================
-    // 🔥 通知下拉 - 使用 fixed 定位
-    // ============================================================
-    const dropdown = document.createElement('div');
-    dropdown.id = 'globalNotificationDropdown';
-    dropdown.style.cssText = `
-        display: none !important;
-        position: fixed !important;
-        top: 70px !important;
-        right: 20px !important;
-        width: 400px !important;
-        max-height: 500px !important;
-        background: rgba(16, 20, 34, 0.98) !important;
-        border-radius: 16px !important;
-        border: 1px solid rgba(255,255,255,0.06) !important;
-        box-shadow: 0 20px 60px rgba(0,0,0,0.8) !important;
-        overflow: hidden !important;
-        z-index: 99999 !important;
-        backdrop-filter: blur(20px) !important;
-        -webkit-backdrop-filter: blur(20px) !important;
-        font-family: 'Inter', sans-serif !important;
-    `;
-
-    // 在 initTabBar 中，修改 dropdown.innerHTML 里的 ID
-dropdown.innerHTML = `
-    <div style="padding: 16px 20px; border-bottom: 1px solid rgba(255,255,255,0.04); display: flex; justify-content: space-between; align-items: center;">
-        <h4 style="font-size: 14px; font-weight: 600; color: #d8e0f0; margin: 0;">
-            <i class="fas fa-bell" style="color: #8892a8; margin-right: 8px;"></i>
-            Notifications
-        </h4>
-        <span id="globalNotificationCount" style="font-size: 11px; color: #6a7a92;">0</span>
-    </div>
-    <div id="globalNotificationList" style="max-height: 350px; overflow-y: auto; padding: 8px 0;">
-        <div style="text-align: center; padding: 40px 20px; color: #6a7a92; font-size: 13px;">
-            <i class="fas fa-inbox" style="display: block; font-size: 28px; color: #4a5a72; margin-bottom: 10px;"></i>
-            No notifications
-        </div>
-    </div>
-    <div style="padding: 12px 20px; border-top: 1px solid rgba(255,255,255,0.04); display: flex; flex-direction: column; gap: 6px;">
-        <button id="markAllReadBtn" style="width: 100%; background: rgba(74, 124, 255, 0.06); border: 1px solid rgba(74, 124, 255, 0.08); border-radius: 30px; padding: 8px 0; color: #4a7cff; font-weight: 500; font-size: 12px; cursor: pointer; font-family: 'Inter', sans-serif;">
-            <i class="fas fa-check-double"></i> Mark All as Read
-        </button>
-        <button id="clearAllNotificationsBtn" style="width: 100%; background: rgba(232,128,128,0.06); border: 1px solid rgba(232,128,128,0.08); border-radius: 30px; padding: 8px 0; color: #e88080; font-weight: 500; font-size: 12px; cursor: pointer; font-family: 'Inter', sans-serif;">
-            <i class="fas fa-trash"></i> Clear All
-        </button>
-    </div>
-`;
-
-    // ✅ 把 dropdown 挂载到 body
-    document.body.appendChild(dropdown);
-    window._globalNotificationDropdown = dropdown;
-
-    notifContainer.appendChild(notifBtn);
-    rightWrapper.appendChild(notifContainer);
-
-    // --- + 添加按钮 ---
-    const addBtn = document.createElement('button');
-    addBtn.id = 'addTabBtn';
-    addBtn.innerHTML = '<i class="fas fa-plus"></i>';
-    addBtn.title = '打开新页面';
-    addBtn.style.cssText = `
-        display: flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-        width: 34px !important;
-        height: 34px !important;
-        border-radius: 6px !important;
-        border: 1px solid rgba(255,255,255,0.06) !important;
-        background: rgba(255,255,255,0.02) !important;
-        color: rgba(255,255,255,0.2) !important;
-        cursor: pointer !important;
-        font-size: 14px !important;
-        transition: 0.25s !important;
-        flex-shrink: 0 !important;
-        font-family: 'Inter', sans-serif !important;
-    `;
-    addBtn.addEventListener('click', function() {
-        const pageIds = Object.keys(PAGE_DEFS);
-        const available = pageIds.filter(id => !tabs.some(t => t.pageId === id));
-        if (available.length === 0) {
-            showToast('所有页面都已打开！', 'info');
-            return;
-        }
-        openTab(available[0]);
-    });
-
-    rightWrapper.appendChild(addBtn);
-    container.appendChild(rightWrapper);
-
-    // ============================================================
-    // ✅ 插入到页面
-    // ============================================================
-    main.insertBefore(container, main.firstChild);
-
-    // ============================================================
-    // ✅ 绑定事件
-    // ============================================================
-    setTimeout(function() {
-        const markAllBtn = dropdown.querySelector('#markAllReadBtn');
-        if (markAllBtn) {
-            markAllBtn.addEventListener('click', function(e) {
-                e.stopPropagation();
-                if (typeof window.markAllNotificationsRead === 'function') {
-                    window.markAllNotificationsRead();
+    if (clearBtn) {
+        clearBtn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            if (typeof showConfirm === 'function') {
+                showConfirm('Clear All Notifications', 'Are you sure you want to clear all notifications?', function() {
+                    if (typeof window.clearAllNotifications === 'function') {
+                        window.clearAllNotifications();
+                    }
+                });
+            } else {
+                if (typeof window.clearAllNotifications === 'function') {
+                    window.clearAllNotifications();
                 }
-            });
-        }
-        const clearBtn = dropdown.querySelector('#clearAllNotificationsBtn');
-        if (clearBtn) {
-            clearBtn.addEventListener('click', function(e) {
-                e.stopPropagation();
-                if (typeof showConfirm === 'function') {
-                    showConfirm('Clear All Notifications', 'Are you sure you want to clear all notifications?', function() {
-                        if (typeof window.clearAllNotifications === 'function') {
-                            window.clearAllNotifications();
-                        }
-                    });
-                }
-            });
-        }
-    }, 100);
-
-    // ============================================================
-    // ✅ 样式
-    // ============================================================
-    if (!document.getElementById('tab-bar-styles')) {
-        const newStyle = document.createElement('style');
-        newStyle.id = 'tab-bar-styles';
-        newStyle.textContent = `
-            .tab-item {
-                display: flex;
-                align-items: center;
-                gap: 8px;
-                padding: 6px 14px;
-                border-radius: 8px 8px 0 0;
-                background: rgba(255,255,255,0.02);
-                color: rgba(255,255,255,0.45);
-                font-size: 12px;
-                font-weight: 500;
-                cursor: pointer;
-                transition: all 0.25s ease;
-                white-space: nowrap;
-                flex-shrink: 0;
-                height: 42px;
-                border: none;
-                font-family: 'Inter', sans-serif;
-                position: relative;
-                user-select: none;
-                border-top: 1px solid transparent;
-                border-left: 1px solid transparent;
-                border-right: 1px solid transparent;
-                text-shadow: 0 1px 2px rgba(0,0,0,0.3);
             }
-            .tab-item i {
-                font-size: 13px;
-                color: rgba(255,255,255,0.2);
-                transition: 0.25s;
-            }
-            .tab-item:hover {
-                background: rgba(255,255,255,0.05);
-                color: rgba(255,255,255,0.6);
-                border-top-color: rgba(214,178,94,0.06);
-                border-left-color: rgba(214,178,94,0.04);
-                border-right-color: rgba(214,178,94,0.04);
-            }
-            .tab-item.active {
-                background: linear-gradient(180deg, rgba(214,178,94,0.08) 0%, rgba(214,178,94,0.02) 100%);
-                color: #F3D38B;
-                border-top: 1px solid rgba(214,178,94,0.2);
-                border-left: 1px solid rgba(214,178,94,0.06);
-                border-right: 1px solid rgba(214,178,94,0.06);
-                box-shadow: 0 -2px 16px rgba(214,178,94,0.04), inset 0 1px 0 rgba(214,178,94,0.06);
-            }
-            .tab-item.active i {
-                color: #D6B25E;
-                filter: drop-shadow(0 0 6px rgba(214,178,94,0.1));
-            }
-            .tab-item.active::after {
-                content: '';
-                position: absolute;
-                bottom: 0;
-                left: 15%;
-                width: 70%;
-                height: 2px;
-                background: linear-gradient(90deg, transparent, #D6B25E, #F3D38B, #D6B25E, transparent);
-                border-radius: 2px;
-                box-shadow: 0 0 12px rgba(214,178,94,0.15);
-            }
-            .tab-close {
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                width: 18px;
-                height: 18px;
-                border-radius: 4px;
-                border: none;
-                background: transparent;
-                color: rgba(255,255,255,0.15);
-                cursor: pointer;
-                font-size: 10px;
-                transition: 0.2s;
-                padding: 0;
-                margin-left: 2px;
-            }
-            .tab-close:hover {
-                background: rgba(232,128,128,0.15);
-                color: #e88080;
-                box-shadow: 0 0 12px rgba(232,128,128,0.05);
-            }
-            .tab-badge {
-                background: #4a7cff;
-                color: #fff;
-                font-size: 9px;
-                font-weight: 700;
-                min-width: 16px;
-                height: 16px;
-                padding: 0 5px;
-                border-radius: 40px;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                line-height: 1;
-                box-shadow: 0 0 12px rgba(74,124,255,0.3);
-                margin-left: 2px;
-                flex-shrink: 0;
-                border: 1px solid rgba(255,255,255,0.06);
-            }
-            .tab-item.has-notification {
-                color: #F3D38B;
-            }
-            .tab-item.has-notification i {
-                color: #D6B25E;
-                filter: drop-shadow(0 0 8px rgba(214,178,94,0.08));
-            }
-            .tab-add-btn:hover, .tab-notif-btn:hover {
-                border-color: rgba(214,178,94,0.2);
-                color: #D6B25E;
-                background: rgba(214,178,94,0.04);
-            }
-            .tab-bar-container::-webkit-scrollbar {
-                height: 2px;
-            }
-            .tab-bar-container::-webkit-scrollbar-thumb {
-                background: rgba(214,178,94,0.15);
-                border-radius: 4px;
-            }
-            #globalNotificationDropdown::-webkit-scrollbar {
-                width: 4px;
-            }
-            #globalNotificationDropdown::-webkit-scrollbar-thumb {
-                background: rgba(204,184,159,0.15);
-                border-radius: 4px;
-            }
-            #globalNotificationDropdown::-webkit-scrollbar-track {
-                background: transparent;
-            }
-            .notification-item:hover {
-                background: rgba(255,255,255,0.06) !important;
-                border-color: rgba(204,184,159,0.2) !important;
-            }
-            #notificationList::-webkit-scrollbar {
-                width: 4px;
-            }
-            #notificationList::-webkit-scrollbar-thumb {
-                background: rgba(204,184,159,0.15);
-                border-radius: 4px;
-            }
-            #notificationList::-webkit-scrollbar-track {
-                background: transparent;
-            }
-            #tabsWrapper:empty::after {
-                content: '点击侧边栏打开页面';
-                color: rgba(255,255,255,0.08);
-                font-size: 12px;
-                padding: 0 8px;
-            }
-        `;
-        document.head.appendChild(newStyle);
+        });
     }
-
-    // 默认打开 Dashboard
-    openTab('dashboard');
-
-    console.log('✅ Tab Bar 已初始化（通知按钮在右侧，下拉 fixed 定位）');
 }
-
-// 暴露给全局
-window.openTab = openTab;
-window.closeTab = closeTab;
-window.switchTab = switchTab;
-window.renderTabBar = renderTabBar;
-window.initTabBar = initTabBar;
-window.updateGlobalNotificationBadge = updateGlobalNotificationBadge;
-window.toggleNotificationDropdown = toggleNotificationDropdown;
-window.closeNotificationDropdown = closeNotificationDropdown;
-
-console.log('✅ admin-common.js 加载完成（带全局通知）');
