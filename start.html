@@ -209,7 +209,14 @@
         .platform-option.active { background: rgba(201,176,149,0.05); border-color: rgba(201,176,149,0.15); color: #C9B095; }
         .platform-option .opt-check { margin-left: auto; color: #C9B095; font-size: 12px; opacity: 0; transition: 0.2s; }
         .platform-option.active .opt-check { opacity: 1; }
-        .scroll-hint { font-size: 8px; color: rgba(255,255,255,0.03); text-align: center; margin-top: 4px; letter-spacing: 0.5px; }
+        .scroll-hint { 
+    font-size: 10px; 
+    color: rgba(255,255,255,0.2);  /* 从 0.03 改为 0.2 */
+    text-align: center; 
+    margin-top: 6px; 
+    letter-spacing: 0.5px; 
+    font-weight: 500;
+}
 
         /* ===== 状态和按钮 ===== */
         .action-area { display: flex; flex-direction: column; gap: 10px; }
@@ -353,20 +360,44 @@
         max-height: 105px; 
     }
     
-    /* ===== 按钮 ===== */
-    .btn-publish, .btn-close-modal { 
-        font-size: 11px; 
-        padding: 10px; 
+    /* ===== 滚动提示 - 调亮 ===== */
+    .scroll-hint { 
+        font-size: 9px; 
+        color: rgba(255,255,255,0.2); 
+        text-align: center;
+        margin-top: 4px;
+        letter-spacing: 0.5px;
+        font-weight: 500;
     }
+    
+    /* ===== 状态提示 - 居中 ===== */
+    .selection-status { 
+        font-size: 10px; 
+        text-align: center;
+        width: 100%;
+    }
+    
+    /* ===== 按钮 - 各占一半，居中 ===== */
     .modal-buttons { 
+        display: flex; 
         flex-direction: row; 
         gap: 8px; 
+        justify-content: center;
+        width: 100%;
     }
     .btn-publish { 
-        flex: 2; 
+        flex: 1; 
+        max-width: 50%; 
+        padding: 10px; 
+        font-size: 11px; 
+        justify-content: center;
     }
     .btn-close-modal { 
         flex: 1; 
+        max-width: 50%; 
+        padding: 10px; 
+        font-size: 11px; 
+        justify-content: center;
     }
     
     /* ===== 文字 ===== */
@@ -376,9 +407,6 @@
     .order-code { 
         font-size: 10px; 
         padding: 1px 8px; 
-    }
-    .selection-status { 
-        font-size: 10px; 
     }
 }
 
