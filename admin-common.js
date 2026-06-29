@@ -1,7 +1,5 @@
-// admin-dashboard.js - 完整版（完全静态，无动画，金属质感 #ccb89f）
-// 修改：图表固定显示30天数据，日期筛选按钮只影响统计卡片
+// admin-dashboard.js - 完整版（无重复声明，图表固定30天）
 let trendChart = null;
-let ringChart = null;
 let breatheInterval = null;
 let pulseInterval = null;
 let dashboardRefreshInterval = null;
@@ -111,7 +109,7 @@ function applyStatsData(data) {
 }
 
 // ============================================================
-// ✅ 修改：loadChartData 固定使用 30 天，移除 days 参数
+// 修改：loadChartData 固定使用 30 天
 // ============================================================
 async function loadChartData(force) {
     force = force || false;
@@ -127,7 +125,7 @@ async function loadChartData(force) {
         return;
     }
     try {
-        // ✅ 固定使用 30 天
+        // 固定使用 30 天
         var days = 30;
         
         var depositsRes = await sb.from('deposits')
@@ -321,7 +319,7 @@ function applyConversionData(data, days) {
     }
 }
 
-// ========== 初始化环形进度条（静态金属质感 #ccb89f） ==========
+// ========== 初始化环形进度条 ==========
 function initWaveRing() {
     var container = document.getElementById('waveRingContainer');
     if (!container) return;
@@ -332,7 +330,6 @@ function initWaveRing() {
     container.style.position = 'relative';
     container.style.margin = '0 auto';
     
-    // 使用 SVG 绘制静态金属环形进度条
     var svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
     svg.setAttribute('viewBox', '0 0 220 220');
     svg.style.cssText = 'width:100%;height:100%;transform:rotate(-90deg);position:relative;z-index:2;';
@@ -354,16 +351,12 @@ function initWaveRing() {
                 <stop offset="100%" stop-color="#ccb89f"/>
             </linearGradient>
         </defs>
-        <!-- 背景圆环 -->
         <circle cx="110" cy="110" r="95" fill="none" stroke="rgba(204,184,159,0.06)" stroke-width="12"/>
-        <!-- 进度圆环（金属质感 #ccb89f） -->
         <circle cx="110" cy="110" r="95" fill="none" stroke="url(#progressGrad)" stroke-width="12" stroke-linecap="round" stroke-dasharray="596.9" stroke-dashoffset="596.9" filter="drop-shadow(0 0 20px rgba(204,184,159,0.15))" class="progress-ring" style="transition: stroke-dashoffset 1s ease;"/>
-        <!-- 外圈装饰光晕 -->
         <circle cx="110" cy="110" r="100" fill="none" stroke="rgba(204,184,159,0.03)" stroke-width="1"/>
     `;
     container.appendChild(svg);
     
-    // 中心文字（百分比 + 标签）
     var centerText = document.createElement('div');
     centerText.style.cssText = 'position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;pointer-events:none;z-index:10;';
     centerText.innerHTML = `
@@ -372,7 +365,6 @@ function initWaveRing() {
     `;
     container.appendChild(centerText);
     
-    // 等待数据加载后更新进度
     setTimeout(function() {
         var progressRing = container.querySelector('.progress-ring');
         if (progressRing) {
@@ -591,17 +583,16 @@ window.handleActivityClick = function(type) {
 };
 
 // ============================================================
-// ✅ 修改：refreshDashboard 中图表调用不传 days 参数
+// 修改：refreshDashboard 中图表不传 days 参数（固定30天）
 // ============================================================
 async function refreshDashboard(days, force) {
     days = days || currentDays;
     force = force || false;
     
-    // ✅ 图表固定加载30天数据，不受 days 参数影响
     await Promise.all([
         loadQuickCards(),
-        loadStatsData(days, force),    // 统计卡片跟随日期筛选
-        loadChartData(force),           // 图表固定30天
+        loadStatsData(days, force),
+        loadChartData(force),
         loadConversionData(days, force),
         loadActivityTimeline(force),
         loadRecentRegistrations()
@@ -631,7 +622,7 @@ async function refreshDashboard(days, force) {
 }
 
 // ============================================================
-// initTrendChart - 细线条 + 小圆点（极简样式）
+// initTrendChart
 // ============================================================
 function initTrendChart() {
     var dom = document.getElementById('trendChart');
@@ -715,7 +706,6 @@ function initTrendChart() {
     
     console.log('趋势线图初始化完成（细线条 + 小圆点）');
     
-    // 清除旧的脉冲动画
     if (pulseInterval) {
         clearInterval(pulseInterval);
         pulseInterval = null;
@@ -738,7 +728,7 @@ function bindDateFilters() {
 }
 
 // ============================================================
-// loadDashboardPage - 图表初始化时固定30天
+// loadDashboardPage - 主入口
 // ============================================================
 function loadDashboardPage(days) {
     days = days || 1;
@@ -753,15 +743,12 @@ function loadDashboardPage(days) {
     dashboardRendered = true;
     
     container.innerHTML = `
-        <!-- ========== Notification 按钮 ========== -->
         <div class="notification-container" style="display: flex; justify-content: flex-start; margin-bottom: 16px; position: relative;">
             <div style="position: relative; display: inline-block;">
                 <button id="notificationBellBtn" style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06); border-radius: 50%; width: 44px; height: 44px; color: #d8e0f0; cursor: pointer; position: relative; transition: all 0.3s; font-size: 18px; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 20px rgba(0,0,0,0.2);">
                     <i class="fas fa-bell"></i>
                     <span id="notificationBadge" style="position: absolute; top: -4px; right: -4px; background: #e88080; color: #fff; border-radius: 50%; font-size: 10px; font-weight: 700; min-width: 18px; height: 18px; display: none; align-items: center; justify-content: center; padding: 0 4px; border: 2px solid rgba(12, 16, 28, 0.8);">0</span>
                 </button>
-                
-                <!-- Notification Dropdown -->
                 <div id="notificationDropdown" style="display: none; position: absolute; top: 52px; left: 0; width: 400px; max-height: 500px; background: rgba(16, 20, 34, 0.98); border-radius: 16px; border: 1px solid rgba(255,255,255,0.06); box-shadow: 0 20px 60px rgba(0,0,0,0.6); overflow: hidden; z-index: 1000; backdrop-filter: blur(20px);">
                     <div style="padding: 16px 20px; border-bottom: 1px solid rgba(255,255,255,0.04); display: flex; justify-content: space-between; align-items: center;">
                         <h4 style="font-size: 14px; font-weight: 600; color: #d8e0f0; margin: 0;">
@@ -785,7 +772,6 @@ function loadDashboardPage(days) {
             </div>
         </div>
 
-        <!-- 日期过滤器 -->
         <div style="display: flex; justify-content: flex-end; gap: 10px; margin-bottom: 24px; flex-wrap: wrap;">
             <button class="date-filter-btn active" data-days="1" style="background: linear-gradient(145deg, rgba(20,24,40,0.6), rgba(10,12,24,0.4)); border: 1px solid rgba(180,180,200,0.06); border-radius: 30px; padding: 8px 20px; color: #8892a8; cursor: pointer; transition: all 0.3s; font-size: 13px; font-weight: 500; font-family: 'Inter', sans-serif; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">Today</button>
             <button class="date-filter-btn" data-days="7" style="background: linear-gradient(145deg, rgba(20,24,40,0.6), rgba(10,12,24,0.4)); border: 1px solid rgba(180,180,200,0.06); border-radius: 30px; padding: 8px 20px; color: #8892a8; cursor: pointer; transition: all 0.3s; font-size: 13px; font-weight: 500; font-family: 'Inter', sans-serif; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">7 Days</button>
@@ -793,7 +779,6 @@ function loadDashboardPage(days) {
             <button class="date-filter-btn" data-days="-1" style="background: linear-gradient(145deg, rgba(20,24,40,0.6), rgba(10,12,24,0.4)); border: 1px solid rgba(180,180,200,0.06); border-radius: 30px; padding: 8px 20px; color: #8892a8; cursor: pointer; transition: all 0.3s; font-size: 13px; font-weight: 500; font-family: 'Inter', sans-serif; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">All Time</button>
         </div>
         
-        <!-- 快捷卡片 -->
         <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px;">
             <div onclick="showPage('kyc')" style="background: linear-gradient(145deg, rgba(20,24,40,0.85), rgba(10,12,24,0.6)); border-radius: 16px; padding: 18px 16px; border: 1px solid rgba(180,180,200,0.06); cursor: pointer; transition: all 0.3s; position: relative; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.04);">
                 <div style="position: absolute; top: -15%; right: -5%; width: 75%; height: 75%; background: radial-gradient(ellipse at 70% 20%, rgba(255,255,255,0.10), transparent 70%); pointer-events: none; border-radius: 50%;"></div>
@@ -825,7 +810,6 @@ function loadDashboardPage(days) {
             </div>
         </div>
         
-        <!-- 统计卡片 -->
         <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px;">
             <div style="background: linear-gradient(145deg, rgba(20,24,40,0.85), rgba(10,12,24,0.6)); border-radius: 16px; padding: 18px 20px; border: 1px solid rgba(180,180,200,0.06); transition: all 0.3s; position: relative; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.04);">
                 <div style="position: absolute; top: -15%; right: -5%; width: 75%; height: 75%; background: radial-gradient(ellipse at 70% 20%, rgba(255,255,255,0.10), transparent 70%); pointer-events: none; border-radius: 50%;"></div>
@@ -861,19 +845,16 @@ function loadDashboardPage(days) {
             </div>
         </div>
         
-        <!-- 图表区域 -->
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 28px;">
-            <!-- 趋势图 -->
-<div style="background: linear-gradient(145deg, rgba(20,24,40,0.85), rgba(10,12,24,0.6)); backdrop-filter: blur(8px); border-radius: 20px; padding: 20px; border: 1px solid rgba(180,180,200,0.06); box-shadow: 0 4px 20px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.04); position: relative; overflow: hidden;">
-    <div style="position: absolute; top: -15%; right: -5%; width: 75%; height: 75%; background: radial-gradient(ellipse at 70% 20%, rgba(255,255,255,0.06), transparent 70%); pointer-events: none; border-radius: 50%;"></div>
-    <div style="position: absolute; top: 0; left: 0; right: 0; height: 1px; background: linear-gradient(90deg, transparent, rgba(180,180,200,0.08), transparent);"></div>
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; position: relative; z-index: 1;">
-        <div style="font-size: 16px; font-weight: 600; color: #d8dff0;">D&W Trend</div>
-    </div>
-    <div id="trendChart" style="height: 320px; width: 100%; position: relative; z-index: 1;"></div>
-</div>
+            <div style="background: linear-gradient(145deg, rgba(20,24,40,0.85), rgba(10,12,24,0.6)); backdrop-filter: blur(8px); border-radius: 20px; padding: 20px; border: 1px solid rgba(180,180,200,0.06); box-shadow: 0 4px 20px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.04); position: relative; overflow: hidden;">
+                <div style="position: absolute; top: -15%; right: -5%; width: 75%; height: 75%; background: radial-gradient(ellipse at 70% 20%, rgba(255,255,255,0.06), transparent 70%); pointer-events: none; border-radius: 50%;"></div>
+                <div style="position: absolute; top: 0; left: 0; right: 0; height: 1px; background: linear-gradient(90deg, transparent, rgba(180,180,200,0.08), transparent);"></div>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; position: relative; z-index: 1;">
+                    <div style="font-size: 16px; font-weight: 600; color: #d8dff0;">D&W Trend</div>
+                </div>
+                <div id="trendChart" style="height: 320px; width: 100%; position: relative; z-index: 1;"></div>
+            </div>
             
-            <!-- 转化率卡片 -->
             <div style="background: linear-gradient(145deg, rgba(20,24,40,0.85), rgba(10,12,24,0.6)); backdrop-filter: blur(8px); border-radius: 20px; padding: 20px; border: 1px solid rgba(180,180,200,0.06); box-shadow: 0 4px 20px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.04); position: relative; overflow: hidden;">
                 <div style="position: absolute; top: -15%; right: -5%; width: 75%; height: 75%; background: radial-gradient(ellipse at 70% 20%, rgba(255,255,255,0.06), transparent 70%); pointer-events: none; border-radius: 50%;"></div>
                 <div style="position: absolute; top: 0; left: 0; right: 0; height: 1px; background: linear-gradient(90deg, transparent, rgba(180,180,200,0.08), transparent);"></div>
@@ -948,7 +929,6 @@ function loadDashboardPage(days) {
             </div>
         </div>
         
-        <!-- 实时活动 -->
         <div style="background: linear-gradient(145deg, rgba(20,24,40,0.85), rgba(10,12,24,0.6)); backdrop-filter: blur(8px); border-radius: 20px; padding: 20px; border: 1px solid rgba(180,180,200,0.06); box-shadow: 0 4px 20px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.04); position: relative; overflow: hidden;">
             <div style="position: absolute; top: -15%; right: -5%; width: 75%; height: 75%; background: radial-gradient(ellipse at 70% 20%, rgba(255,255,255,0.06), transparent 70%); pointer-events: none; border-radius: 50%;"></div>
             <div style="position: absolute; top: 0; left: 0; right: 0; height: 1px; background: linear-gradient(90deg, transparent, rgba(180,180,200,0.08), transparent);"></div>
@@ -1024,7 +1004,7 @@ function loadDashboardPage(days) {
         refreshDashboard(days, true);
         initNotificationEvents();
         
-        // ✅ 确保图表加载30天数据
+        // 确保图表加载30天数据
         setTimeout(function() {
             loadChartData(true);
         }, 500);
@@ -1042,7 +1022,7 @@ window.refreshDashboardData = function(days) {
 };
 
 // ============================================================
-// 辅助函数（如果不存在则定义）
+// 辅助函数
 // ============================================================
 if (typeof escapeHtml !== 'function') {
     window.escapeHtml = function(str) {
@@ -1082,7 +1062,7 @@ if (typeof formatTime !== 'function') {
 }
 
 // ============================================================
-// 🔥 Notification 事件绑定（使用 admin-common.js 中的函数）
+// Notification 事件绑定
 // ============================================================
 function initNotificationEvents() {
     var bellBtn = document.getElementById('notificationBellBtn');
