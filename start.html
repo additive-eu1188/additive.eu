@@ -133,12 +133,13 @@
 
         /* ===== 左右布局 - 选择区域 ===== */
         .selection-section {
-            background: rgba(0,0,0,0.18);
-            border-radius: 14px;
-            padding: 14px 18px 16px;
-            margin-bottom: 10px;
-            border: 1px solid rgba(255,255,255,0.02);
-        }
+    background: rgba(0,0,0,0.18);
+    border-radius: 14px;
+    padding: 14px 18px 16px;
+    margin-bottom: 10px;
+    border: 1px solid rgba(255,255,255,0.02);
+    display: block;  /* ← 确保是块级 */
+}
         .selection-row {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -229,8 +230,10 @@
     display: flex; 
     flex-direction: column; 
     gap: 10px; 
-    margin-top: 4px;
-    align-items: center;  /* ← 新增这行 */
+    margin-top: 8px;
+    align-items: center;
+    width: 100%;        /* ← 新增：占满宽度 */
+    grid-column: 1 / -1; /* ← 新增：跨两列 */
 }
         .selection-status {
     text-align: center;
@@ -374,6 +377,7 @@
     }
     .selection-section { 
         padding: 12px 12px 14px; 
+        display: block;  /* ← 新增：确保是块级 */
     }
     .quality-option, .platform-option { 
         padding: 8px 10px; 
@@ -393,12 +397,23 @@
         font-weight: 500;
     }
     
+    /* ===== Action Area - 跨列居中 ===== */
+    .action-area {
+        width: 100%;
+        grid-column: 1 / -1;   /* ← 跨两列 */
+        align-items: center;
+        margin-top: 8px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+    
     /* ===== 状态提示 - 居中 + 上方缝隙 ===== */
     .selection-status { 
         font-size: 10px; 
         text-align: center;
         width: 100%;
-        padding-top: 14px;   /* ← 增加上方缝隙 */
+        padding-top: 14px;     /* ← 增加上方缝隙 */
     }
     
     /* ===== 按钮 - 居中，各占一半 ===== */
@@ -408,20 +423,20 @@
         gap: 8px; 
         justify-content: center;
         width: 100%;
-        max-width: 100%;     /* ← 手机端取消最大宽度限制 */
-        padding: 0 6px;      /* ← 左右留一点边距 */
-        margin: 0 auto;      /* ← 居中 */
+        max-width: 100%;
+        padding: 0 6px;
+        margin: 0 auto;
     }
     .btn-publish { 
         flex: 1; 
-        max-width: 48%;      /* ← 从 50% 改为 48%，留出间隙 */
+        max-width: 48%;        /* ← 从 50% 改为 48%，留出间隙 */
         padding: 10px; 
         font-size: 11px; 
         justify-content: center;
     }
     .btn-close-modal { 
         flex: 1; 
-        max-width: 48%;      /* ← 从 50% 改为 48% */
+        max-width: 48%;        /* ← 从 50% 改为 48% */
         padding: 10px; 
         font-size: 11px; 
         justify-content: center;
