@@ -377,7 +377,7 @@
     }
     .selection-section { 
         padding: 12px 12px 14px; 
-        display: block;  /* ← 新增：确保是块级 */
+        display: block;  /* ← 确保是块级 */
     }
     .quality-option, .platform-option { 
         padding: 8px 10px; 
@@ -395,6 +395,14 @@
         margin-top: 4px;
         letter-spacing: 0.5px;
         font-weight: 500;
+    }
+    
+    /* ===== Progress 进度条 - 跨列居中 ===== */
+    .progress-container {
+        grid-column: 1 / -1;   /* ← 跨两列 */
+        display: block;
+        width: 100%;
+        margin: 6px 0 4px 0;
     }
     
     /* ===== Action Area - 跨列居中 ===== */
