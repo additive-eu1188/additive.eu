@@ -77,28 +77,34 @@
         .order-modal::-webkit-scrollbar-thumb { background: rgba(201,176,149,0.15); border-radius: 4px; }
         .order-modal::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px; background: linear-gradient(90deg, transparent, rgba(201,176,149,0.15), rgba(201,176,149,0.4), rgba(201,176,149,0.15), transparent); }
         .modal-body { padding: 22px 26px 18px; }
-        .order-image { width: 100%; height: 150px; background: #0a0e1a; border-radius: 14px; display: flex; align-items: center; justify-content: center; overflow: hidden; margin-bottom: 10px; border: 1px solid rgba(255,255,255,0.03); }
+        .order-image { width: 100%; height: 150px; background: #0a0e1a; border-radius: 14px; display: flex; align-items: center; justify-content: center; overflow: hidden; margin-bottom: 10px; border: 1px solid rgba(255,255,255,0.03); position: relative; }
         .order-image img { width: 100%; height: 100%; object-fit: cover; }
         .order-image i { font-size: 40px; color: rgba(201,176,149,0.08); }
         .order-header { text-align: center; margin-bottom: 10px; }
         .order-name { font-size: 18px; font-weight: 700; color: #ffffff; letter-spacing: -0.2px; }
         .order-code {
-    font-size: 13px;
-    color: #C9B095;
+    position: absolute;
+    bottom: 12px;
+    right: 14px;
+    font-size: 12px;
+    color: #e8d5c0;
     font-family: 'Courier New', monospace;
     letter-spacing: 1px;
-    margin-top: 2px;
-    background: rgba(201, 176, 149, 0.06);
-    padding: 2px 14px;
+    background: rgba(10, 14, 30, 0.85);
+    backdrop-filter: blur(4px);
+    padding: 4px 14px;
     border-radius: 20px;
+    border: 1px solid rgba(204, 178, 153, 0.25);
+    box-shadow: 0 2px 12px rgba(0,0,0,0.3);
+    text-shadow: 0 1px 4px rgba(0,0,0,0.4);
+    z-index: 5;
     display: inline-block;
-    border: 1px solid rgba(201, 176, 149, 0.08);
-    text-align: center;
+    font-weight: 500;
 }
 .order-code i {
     margin-right: 6px;
     font-size: 11px;
-    color: rgba(201, 176, 149, 0.3);
+    color: rgba(201, 176, 149, 0.4);
 }
 
         /* ===== 左右布局 - 价格明细 ===== */
@@ -130,7 +136,7 @@
             background: rgba(0,0,0,0.18);
             border-radius: 14px;
             padding: 14px 18px 16px;
-            margin-bottom: 16px;
+            margin-bottom: 10px;
             border: 1px solid rgba(255,255,255,0.02);
         }
         .selection-row {
@@ -155,8 +161,8 @@
             font-family: 'Inter', sans-serif;
             text-align: left;
         }
-        .quality-option:hover { background: rgba(255,255,255,0.04); border-color: rgba(255,255,255,0.06); color: rgba(255,255,255,0.45); }
-        .quality-option.active { background: rgba(201,176,149,0.05); border-color: rgba(201,176,149,0.15); color: #C9B095; }
+        .quality-option:hover { background: rgba(255,255,255,0.08); border-color: rgba(255,255,255,0.15); color: rgba(255,255,255,0.7); }
+        .quality-option.active { background: rgba(201,176,149,0.15); border-color: rgba(201,176,149,0.35); color: #C9B095; box-shadow: 0 0 16px rgba(201,176,149,0.05); }
 
         /* 右侧 - 平台列表 (3个可见，可滚动) */
         .platform-wrapper { position: relative; }
@@ -205,8 +211,8 @@
         .platform-option .p-icon.hrs { background: #e30613; color: #fff; }
         .platform-option .p-icon.airbnb { background: #ff5a5f; color: #fff; }
         .platform-option .p-icon.hotels { background: #1a237e; color: #fff; }
-        .platform-option:hover { background: rgba(255,255,255,0.04); border-color: rgba(255,255,255,0.06); color: rgba(255,255,255,0.45); }
-        .platform-option.active { background: rgba(201,176,149,0.05); border-color: rgba(201,176,149,0.15); color: #C9B095; }
+        .platform-option:hover { background: rgba(255,255,255,0.08); border-color: rgba(255,255,255,0.15); color: rgba(255,255,255,0.7); }
+        .platform-option.active { background: rgba(201,176,149,0.15); border-color: rgba(201,176,149,0.35); color: #C9B095; box-shadow: 0 0 16px rgba(201,176,149,0.05); }
         .platform-option .opt-check { margin-left: auto; color: #C9B095; font-size: 12px; opacity: 0; transition: 0.2s; }
         .platform-option.active .opt-check { opacity: 1; }
         .scroll-hint { 
@@ -219,7 +225,7 @@
 }
 
         /* ===== 状态和按钮 ===== */
-        .action-area { display: flex; flex-direction: column; gap: 10px; }
+        .action-area { display: flex; flex-direction: column; gap: 10px; margin-top: 4px; }
         .selection-status {
     text-align: center;
     font-size: 12px;
@@ -228,12 +234,14 @@
     transition: 0.3s;
     letter-spacing: 0.3px;
     font-weight: 500;
+    padding-top: 6px;
 }
 .selection-status.ready { color: rgba(74,222,128,0.4); }
 
-        .modal-buttons { display: flex; gap: 12px; }
+        .modal-buttons { display: flex; gap: 12px; justify-content: center; width: 100%; }
         .btn-publish {
-            flex: 2;
+            flex: 1;
+            max-width: 50%;
             background: linear-gradient(135deg, #C9B095, #b8944a);
             border: none;
             padding: 12px;
@@ -257,6 +265,7 @@
 
         .btn-close-modal {
             flex: 1;
+            max-width: 50%;
             background: rgba(255,255,255,0.02);
             border: 1px solid rgba(255,255,255,0.03);
             padding: 12px;
@@ -403,10 +412,6 @@
     /* ===== 文字 ===== */
     .order-name { 
         font-size: 14px; 
-    }
-    .order-code { 
-        font-size: 10px; 
-        padding: 1px 8px; 
     }
 }
 
@@ -1568,15 +1573,12 @@ if (/Mobi|Android|iPhone/i.test(navigator.userAgent)) {
                 <!-- Order Image -->
                 <div class="order-image">
                     ${order.imageUrl ? '<img src="' + order.imageUrl + '" onerror="handleImageError(this)">' : '<i class="fas fa-hotel"></i>'}
+                    <div class="order-code"><i class="fas fa-tag"></i> ${escapeHtml(order.displayOrderCode || order.orderCode || '')}</div>
                 </div>
                 
                 <!-- Order Header -->
                 <div class="order-header">
                     <div class="order-name">${escapeHtml(order.accommodationName || 'Hotel Task')}</div>
-                    <div class="order-code" style="font-size:13px; color:#C9B095; font-family:'Courier New',monospace; letter-spacing:1px; margin-top:2px; background:rgba(201,176,149,0.06); padding:2px 14px; border-radius:20px; display:inline-block; border:1px solid rgba(201,176,149,0.08);">
-                        <i class="fas fa-tag" style="margin-right:6px; font-size:11px; color:rgba(201,176,149,0.3);"></i> 
-                        ${escapeHtml(order.displayOrderCode || order.orderCode || '')}
-                    </div>
                 </div>
                 
                 <!-- 价格明细 -->
@@ -2265,8 +2267,7 @@ if (/Mobi|Android|iPhone/i.test(navigator.userAgent)) {
         }
 
         // ============================================================
-        // Main entry: open order
-        // ============================================================
+        // Main entry: open order        // ============================================================
         async function openOrderModal() {
             var user = getCurrentUser();
             if (!user) {
