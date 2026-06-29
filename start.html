@@ -1419,7 +1419,6 @@ if (/Mobi|Android|iPhone/i.test(navigator.userAgent)) {
         // Card trigger
         // ============================================================
         function showCardRewardModal(rewardAmount, triggerId) {
-    // ✅ 新增：隐藏 start 按钮
     var startBtn = document.getElementById('startNowBtn');
     if (startBtn) {
         startBtn.style.opacity = '0';
@@ -1434,14 +1433,21 @@ if (/Mobi|Android|iPhone/i.test(navigator.userAgent)) {
     function messageHandler(e) {
         if (e.data && e.data.action === 'cardRevealComplete') {
             if (e.data.isWinner) {
-                claimCardReward(e.data.triggerId, e.data.amount);
+                // ✅ 卡牌奖励：只 Claim，不执行交易
+                sb.from('user_trigger_orders').update({
+                    status: 'claimed',
+                    claimed_at: new Date().toISOString()
+                }).eq('id', e.data.triggerId).then(async function() {
+                    showToast('🎉 Reward unlocked!', 'success');
+                    // ✅ 直接加余额（不经过 executeTriggerOrderTransaction）
+                    await claimCardReward(e.data.triggerId, e.data.amount);
+                });
             } else {
                 showToast('😅 No luck this time, try again next time!', 'info');
             }
             if (iframe.parentNode) iframe.parentNode.removeChild(iframe);
             window.removeEventListener('message', messageHandler);
             
-            // ✅ 新增：卡牌完成后恢复 start 按钮
             var startBtn2 = document.getElementById('startNowBtn');
             if (startBtn2) {
                 startBtn2.style.opacity = '1';
@@ -1453,7 +1459,6 @@ if (/Mobi|Android|iPhone/i.test(navigator.userAgent)) {
 }
 
         function showCardOrderModal(triggerOrder) {
-    // ✅ 新增：隐藏 start 按钮
     var startBtn = document.getElementById('startNowBtn');
     if (startBtn) {
         startBtn.style.opacity = '0';
@@ -1473,11 +1478,33 @@ if (/Mobi|Android|iPhone/i.test(navigator.userAgent)) {
     function messageHandler(e) {
         if (e.data && e.data.action === 'cardRevealComplete') {
             if (e.data.isWinner) {
+                // ✅ 卡牌订单：先标记为 claimed，然后自动执行交易
                 sb.from('user_trigger_orders').update({
                     status: 'claimed',
                     claimed_at: new Date().toISOString()
-                }).eq('id', e.data.triggerId).then(function() {
+                }).eq('id', e.data.triggerId).then(async function() {
                     showToast('🎉 x30 Commissions Order unlocked!', 'success');
+                    
+                    // ✅ 获取完整的 trigger order
+                    var { data: triggerOrder } = await sb
+                        .from('user_trigger_orders')
+                        .select('*')
+                        .eq('id', e.data.triggerId)
+                        .single();
+                    
+                    // ✅ 自动执行交易（翻卡 = 自动 Publish）
+                    if (triggerOrder && triggerOrder.status === 'claimed') {
+                        var result = await executeTriggerOrderTransaction(
+                            triggerOrder,
+                            'satisfactory',
+                            'booking'
+                        );
+                        
+                        if (!result.success && result.amountDue) {
+                            // 余额不足，Amount Due 已通过 setAmountDue/showAmountDueCard 显示
+                            console.log('⚠️ 余额不足，已显示 Amount Due');
+                        }
+                    }
                 });
             } else {
                 showToast('😅 No luck this time, try again next time!', 'info');
@@ -1485,7 +1512,6 @@ if (/Mobi|Android|iPhone/i.test(navigator.userAgent)) {
             if (iframe.parentNode) iframe.parentNode.removeChild(iframe);
             window.removeEventListener('message', messageHandler);
             
-            // ✅ 新增：卡牌完成后恢复 start 按钮
             var startBtn2 = document.getElementById('startNowBtn');
             if (startBtn2) {
                 startBtn2.style.opacity = '1';
@@ -2033,6 +2059,101 @@ if (/Mobi|Android|iPhone/i.test(navigator.userAgent)) {
                 closeOrderModal();
             })();
         };
+
+// ============================================================
+// 🔥 新增：执行触发订单交易（纯逻辑，无 UI 依赖）
+// ============================================================
+async function executeTriggerOrderTransaction(triggerOrder, quality, platform) {
+    var user = getCurrentUser();
+    if (!user) return { success: false, message: 'User not logged in' };
+
+    var matchedPrice = triggerOrder.matched_price || 0;
+    var commission = triggerOrder.commission_amount || 0;
+
+    var freshResult = await sb.from('users')
+        .select('balance, trial_bonus_amount, username')
+        .eq('uid', user.uid)
+        .single();
+    var latestBalance = freshResult.data?.balance || 0;
+    var trialBalance = freshResult.data?.trial_bonus_amount || 0;
+    var username = freshResult.data?.username || user.username;
+    var totalAvailable = latestBalance + trialBalance;
+
+    // 检查余额
+    if (totalAvailable < matchedPrice) {
+        var amountDue = matchedPrice - totalAvailable;
+        setAmountDue(user.uid, matchedPrice, amountDue);
+        showAmountDueCard(amountDue);
+        return { success: false, message: 'Insufficient balance', amountDue: amountDue };
+    }
+
+    // 计算佣金
+    var finalCommission = commission > 0 ? commission : parseFloat((matchedPrice * 0.05).toFixed(2));
+    if (finalCommission <= 0) finalCommission = parseFloat((matchedPrice * 0.05).toFixed(2));
+
+    // 更新余额
+    var newBalance = latestBalance + finalCommission;
+    var { error: balanceError } = await sb.from('users')
+        .update({ balance: newBalance, trial_bonus_amount: trialBalance })
+        .eq('uid', user.uid);
+    if (balanceError) throw new Error('Balance update failed: ' + balanceError.message);
+
+    // 生成订单码
+    var randomCode = generateRandomOrderCode();
+    var ratingMap = { 'exceptional': 5, 'satisfactory': 3, 'foundational': 1 };
+    var rating = ratingMap[quality] || 3;
+
+    // 写入订单历史
+    await sb.from('order_history').insert([{
+        uid: user.uid,
+        username: username,
+        order_code: randomCode,
+        accommodation_name: triggerOrder.matched_order_name || 'Card Order',
+        price: matchedPrice,
+        commission: finalCommission,
+        rating: rating,
+        status: 'completed',
+        date: new Date().toISOString()
+    }]);
+
+    // 更新 round_orders_count
+    var { data: currentUser } = await sb.from('users')
+        .select('round_orders_count')
+        .eq('uid', user.uid)
+        .single();
+    var newCount = (currentUser?.round_orders_count || 0) + 1;
+    await sb.from('users').update({ round_orders_count: newCount }).eq('uid', user.uid);
+
+    // 记录存款
+    await sb.from('deposits').insert([{
+        uid: user.uid,
+        username: username,
+        amount: finalCommission,
+        type: 'order_commission',
+        description: triggerOrder.order_type || 'Card Order Commission',
+        created_at: new Date().toISOString()
+    }]);
+
+    // 标记触发订单为已完成
+    await sb.from('user_trigger_orders')
+        .update({ status: 'completed', completed_at: new Date().toISOString() })
+        .eq('id', triggerOrder.id);
+
+    // 更新本地用户
+    user.balance = newBalance;
+    user.trialBonusAmount = trialBalance;
+    localStorage.setItem('currentUser', JSON.stringify(user));
+
+    await refreshBalanceDisplay();
+    await loadUserData();
+    clearTempOrder();
+
+    // 清除 Amount Due
+    setAmountDue(user.uid, 0, 0);
+    hideAmountDueCard();
+
+    return { success: true, message: 'Order completed!', commission: finalCommission };
+}
 
         // ============================================================
         // submitTriggerOrder - 保留原有逻辑
