@@ -225,7 +225,13 @@
 }
 
         /* ===== 状态和按钮 ===== */
-        .action-area { display: flex; flex-direction: column; gap: 10px; margin-top: 4px; }
+        .action-area { 
+    display: flex; 
+    flex-direction: column; 
+    gap: 10px; 
+    margin-top: 4px;
+    align-items: center;  /* ← 新增这行 */
+}
         .selection-status {
     text-align: center;
     font-size: 12px;
@@ -234,11 +240,19 @@
     transition: 0.3s;
     letter-spacing: 0.3px;
     font-weight: 500;
-    padding-top: 6px;
+    padding-top: 12px;   /* ← 从 6px 改为 12px，增加缝隙 */
+    width: 100%;         /* ← 新增 */
 }
 .selection-status.ready { color: rgba(74,222,128,0.4); }
 
-        .modal-buttons { display: flex; gap: 12px; justify-content: center; width: 100%; }
+        .modal-buttons { 
+    display: flex; 
+    gap: 12px; 
+    justify-content: center; 
+    width: 100%; 
+    max-width: 400px;  /* ← 新增：限制最大宽度 */
+    margin: 0 auto;    /* ← 新增：居中 */
+}
         .btn-publish {
             flex: 1;
             max-width: 50%;
@@ -379,31 +393,35 @@
         font-weight: 500;
     }
     
-    /* ===== 状态提示 - 居中 ===== */
+    /* ===== 状态提示 - 居中 + 上方缝隙 ===== */
     .selection-status { 
         font-size: 10px; 
         text-align: center;
         width: 100%;
+        padding-top: 14px;   /* ← 增加上方缝隙 */
     }
     
-    /* ===== 按钮 - 各占一半，居中 ===== */
+    /* ===== 按钮 - 居中，各占一半 ===== */
     .modal-buttons { 
         display: flex; 
         flex-direction: row; 
         gap: 8px; 
         justify-content: center;
         width: 100%;
+        max-width: 100%;     /* ← 手机端取消最大宽度限制 */
+        padding: 0 6px;      /* ← 左右留一点边距 */
+        margin: 0 auto;      /* ← 居中 */
     }
     .btn-publish { 
         flex: 1; 
-        max-width: 50%; 
+        max-width: 48%;      /* ← 从 50% 改为 48%，留出间隙 */
         padding: 10px; 
         font-size: 11px; 
         justify-content: center;
     }
     .btn-close-modal { 
         flex: 1; 
-        max-width: 50%; 
+        max-width: 48%;      /* ← 从 50% 改为 48% */
         padding: 10px; 
         font-size: 11px; 
         justify-content: center;
