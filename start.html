@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 <script>
         (function() {
             var host = window.location.hostname;
@@ -72,194 +72,129 @@
         .btn-upgrade { background: rgba(201,176,149,0.15); padding: 10px 20px; border-radius: 40px; text-decoration: none; color: #C9B095; font-weight: 600; display: inline-flex; align-items: center; gap: 8px; border: 1px solid rgba(201,176,149,0.3); }
         .order-modal-container { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); backdrop-filter: blur(12px); z-index: 10001; display: flex; align-items: center; justify-content: center; visibility: hidden; opacity: 0; transition: visibility 0.2s, opacity 0.2s; }
         .order-modal-container.active { visibility: visible; opacity: 1; }
-        .order-modal { background: linear-gradient(145deg, #12172e, #0e1225); border-radius: 32px; width: 500px; max-width: 90%; border: 1px solid rgba(201,176,149,0.3); overflow: hidden; }
-        .modal-header { background: linear-gradient(135deg, #1a1f3a, #12172e); padding: 20px 24px; border-bottom: 1px solid rgba(255,255,255,0.1); display: flex; justify-content: space-between; }
-        .modal-header h2 { font-size: 20px; font-weight: 700; color: #C9B095; margin: 0; }
-        .modal-close { background: none; border: none; color: #aaa; font-size: 24px; cursor: pointer; }
-        .modal-body { padding: 24px; max-height: 80vh; overflow-y: auto; }
-        .order-image { width: 100%; height: 160px; background: #0a0e1a; border-radius: 20px; display: flex; align-items: center; justify-content: center; overflow: hidden; margin-bottom: 20px; }
+        .order-modal { background: linear-gradient(160deg, #12172e, #0e1225); border-radius: 28px; width: 580px; max-width: 92%; border: 1px solid rgba(201,176,149,0.12); box-shadow: 0 40px 90px rgba(0,0,0,0.6); overflow: hidden; position: relative; max-height: 95vh; overflow-y: auto; }
+        .order-modal::-webkit-scrollbar { width: 3px; }
+        .order-modal::-webkit-scrollbar-thumb { background: rgba(201,176,149,0.15); border-radius: 4px; }
+        .order-modal::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px; background: linear-gradient(90deg, transparent, rgba(201,176,149,0.15), rgba(201,176,149,0.4), rgba(201,176,149,0.15), transparent); }
+        .modal-body { padding: 24px 28px 20px; }
+        .order-image { width: 100%; height: 160px; background: #0a0e1a; border-radius: 16px; display: flex; align-items: center; justify-content: center; overflow: hidden; margin-bottom: 12px; border: 1px solid rgba(255,255,255,0.03); }
         .order-image img { width: 100%; height: 100%; object-fit: cover; }
-        .order-image i { font-size: 56px; color: #C9B095; }
-        .order-name { font-size: 22px; font-weight: 700; color: #fff; text-align: center; margin-bottom: 8px; }
-        .order-code { text-align: center; font-size: 14px; color: #C9B095; margin-bottom: 20px; }
-        .order-details { background: rgba(0,0,0,0.3); border-radius: 20px; padding: 16px; margin-bottom: 20px; }
-        .detail-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
-        .detail-label { color: #aaa; font-size: 14px; }
-        .detail-value { color: #fff; font-weight: 600; }
-        .detail-value.price { color: #ff8888; }
-        .detail-value.commission { color: #4ade80; }
-        .detail-value.total { color: #C9B095; }
-        .how-it-works { background: rgba(74,222,128,0.1); border-radius: 12px; padding: 12px; margin-bottom: 20px; text-align: center; }
-        .how-it-works span { font-size: 12px; color: #4ade80; }
-        .star-rating-premium { display: flex; justify-content: center; gap: 12px; margin: 24px 0; }
-        .star-premium { cursor: pointer; transition: all 0.2s; }
-        .star-premium svg { width: 36px; height: 36px; }
-        .star-premium svg polygon { fill: #4a5578; }
-        .star-premium.active svg polygon { fill: #C9B095; filter: drop-shadow(0 0 4px rgba(201,176,149,0.5)); }
-        .star-premium:hover { transform: translateY(-3px); }
-        .rating-text-premium { text-align: center; font-size: 13px; color: #c0c0d0; margin-bottom: 20px; }
-        .modal-buttons { display: flex; gap: 12px; margin-top: 20px; }
-        .btn-submit { flex: 1; background: #C9B095; border: none; padding: 14px; border-radius: 40px; color: #0A122B; font-weight: 600; cursor: pointer; }
-        .btn-close-modal { flex: 1; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); padding: 14px; border-radius: 40px; color: white; font-weight: 600; cursor: pointer; }
-        #progressContainer { margin-top: 20px; display: none; }
+        .order-image i { font-size: 44px; color: rgba(201,176,149,0.08); }
+        .order-header { text-align: center; margin-bottom: 12px; }
+        .order-name { font-size: 20px; font-weight: 700; color: #ffffff; letter-spacing: -0.2px; }
+        .order-code { font-size: 12px; color: rgba(201,176,149,0.25); font-family: 'Courier New', monospace; letter-spacing: 1px; margin-top: 2px; }
+        .order-code i { margin-right: 4px; font-size: 10px; color: rgba(201,176,149,0.12); }
+        .order-details { display: grid; grid-template-columns: 1fr 1fr; gap: 2px 24px; background: rgba(0,0,0,0.2); border-radius: 14px; padding: 12px 18px; margin-bottom: 18px; border: 1px solid rgba(255,255,255,0.02); }
+        .detail-row { display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px solid rgba(255,255,255,0.02); }
+        .detail-row:last-child { border-bottom: none; }
+        .detail-row .label { color: rgba(255,255,255,0.35); font-size: 12px; font-weight: 500; letter-spacing: 0.2px; }
+        .detail-row .value { color: rgba(255,255,255,0.9); font-weight: 600; font-size: 13px; }
+        .detail-row .value.price { color: #ffffff; }
+        .detail-row .value.commission { color: #4ade80; }
+        .detail-row .value.total { color: #C9B095; }
+        .selection-section { background: rgba(0,0,0,0.18); border-radius: 16px; padding: 16px 18px 18px; margin-bottom: 18px; border: 1px solid rgba(255,255,255,0.02); }
+        .selection-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .col-label { font-size: 10px; font-weight: 600; color: rgba(255,255,255,0.2); text-transform: uppercase; letter-spacing: 1.2px; margin-bottom: 10px; }
+        .quality-options { display: flex; flex-direction: column; gap: 6px; }
+        .quality-option { padding: 9px 16px; border-radius: 8px; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.04); color: rgba(255,255,255,0.25); font-size: 13px; font-weight: 500; cursor: pointer; transition: all 0.2s ease; font-family: 'Inter', sans-serif; text-align: left; }
+        .quality-option:hover { background: rgba(255,255,255,0.04); border-color: rgba(255,255,255,0.06); color: rgba(255,255,255,0.45); }
+        .quality-option.active { background: rgba(201,176,149,0.05); border-color: rgba(201,176,149,0.15); color: #C9B095; }
+        .platform-wrapper { position: relative; }
+        .platform-list { display: flex; flex-direction: column; gap: 6px; max-height: 128px; overflow-y: auto; padding-right: 4px; }
+        .platform-list::-webkit-scrollbar { width: 3px; }
+        .platform-list::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.06); border-radius: 4px; }
+        .platform-list::-webkit-scrollbar-track { background: transparent; }
+        .platform-option { padding: 9px 16px; border-radius: 8px; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.04); color: rgba(255,255,255,0.25); font-size: 13px; font-weight: 500; cursor: pointer; transition: all 0.2s ease; font-family: 'Inter', sans-serif; text-align: left; display: flex; align-items: center; gap: 10px; }
+        .platform-option .p-icon { width: 26px; height: 26px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 11px; flex-shrink: 0; }
+        .platform-option .p-icon.booking { background: #003580; color: #fff; }
+        .platform-option .p-icon.tripadvisor { background: #34a853; color: #fff; }
+        .platform-option .p-icon.trivago { background: #1a1a2e; color: #e8b023; border: 1px solid rgba(232,176,35,0.15); }
+        .platform-option .p-icon.hrs { background: #e30613; color: #fff; }
+        .platform-option .p-icon.airbnb { background: #ff5a5f; color: #fff; }
+        .platform-option .p-icon.hotels { background: #1a237e; color: #fff; }
+        .platform-option:hover { background: rgba(255,255,255,0.04); border-color: rgba(255,255,255,0.06); color: rgba(255,255,255,0.45); }
+        .platform-option.active { background: rgba(201,176,149,0.05); border-color: rgba(201,176,149,0.15); color: #C9B095; }
+        .platform-option .opt-check { margin-left: auto; color: #C9B095; font-size: 12px; opacity: 0; transition: 0.2s; }
+        .platform-option.active .opt-check { opacity: 1; }
+        .scroll-hint { font-size: 9px; color: rgba(255,255,255,0.04); text-align: center; margin-top: 6px; letter-spacing: 0.5px; }
+        .action-area { display: flex; flex-direction: column; gap: 12px; }
+        .selection-status { text-align: center; font-size: 12px; color: rgba(255,255,255,0.04); min-height: 20px; transition: 0.3s; letter-spacing: 0.3px; }
+        .selection-status.ready { color: rgba(74,222,128,0.15); }
+        .modal-buttons { display: flex; gap: 12px; }
+        .btn-publish { flex: 2; background: linear-gradient(135deg, #C9B095, #b8944a); border: none; padding: 14px; border-radius: 40px; color: #0A122B; font-weight: 700; font-size: 15px; cursor: pointer; transition: all 0.25s ease; font-family: 'Inter', sans-serif; letter-spacing: 0.5px; box-shadow: 0 4px 20px rgba(201,176,149,0.06); display: flex; align-items: center; justify-content: center; gap: 8px; }
+        .btn-publish:hover { transform: scale(1.01); box-shadow: 0 8px 30px rgba(201,176,149,0.12); }
+        .btn-publish:disabled { opacity: 0.15; cursor: not-allowed; transform: none; box-shadow: none; }
+        .btn-publish i { font-size: 14px; }
+        .btn-close-modal { flex: 1; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.03); padding: 14px; border-radius: 40px; color: rgba(255,255,255,0.1); font-weight: 500; font-size: 14px; cursor: pointer; transition: all 0.25s ease; font-family: 'Inter', sans-serif; display: flex; align-items: center; justify-content: center; gap: 6px; }
+        .btn-close-modal:hover { background: rgba(255,255,255,0.03); color: rgba(255,255,255,0.18); }
+        .progress-container { margin-top: 12px; display: none; }
         .progress-bar-bg { background: rgba(255,255,255,0.1); border-radius: 10px; height: 6px; overflow: hidden; }
         .progress-bar-fill { width: 0%; height: 100%; background: #C9B095; border-radius: 10px; transition: width 0.15s ease; }
         .progress-text { text-align: center; margin-top: 8px; font-size: 12px; color: #C9B095; }
 
-        /* ===== Unified popup styles ===== */
-        .credit-block-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(7, 11, 26, 0.92);
-            backdrop-filter: blur(14px);
-            z-index: 30000;
-            display: flex !important;
-            align-items: center !important;
-            justify-content: center !important;
-            visibility: visible !important;
-            opacity: 1 !important;
-            transition: 0.35s ease;
+        @media (max-width: 640px) {
+            .order-modal { border-radius: 24px; width: 98%; }
+            .modal-body { padding: 18px 14px 14px; }
+            .order-image { height: 120px; }
+            .order-details { grid-template-columns: 1fr; gap: 0; padding: 10px 14px; }
+            .detail-row { padding: 4px 0; }
+            .selection-grid { grid-template-columns: 1fr; gap: 14px; }
+            .selection-section { padding: 14px 14px 16px; }
+            .quality-option, .platform-option { padding: 8px 14px; font-size: 12px; }
+            .platform-list { max-height: 112px; }
+            .btn-publish, .btn-close-modal { font-size: 13px; padding: 12px; }
+            .modal-buttons { flex-direction: column; gap: 8px; }
+            .btn-publish { flex: auto; }
+            .btn-close-modal { flex: auto; }
+            .order-name { font-size: 17px; }
         }
 
-        .credit-block-content {
-            background: linear-gradient(160deg, #1a1428, #0e0a1a);
-            border-radius: 32px;
-            padding: 40px 36px;
-            max-width: 440px;
-            width: 100%;
-            border: 1px solid rgba(201, 176, 149, 0.06);
-            box-shadow: 0 24px 60px rgba(0, 0, 0, 0.6);
-            text-align: center;
-            transform: scale(1);
-            transition: transform 0.3s cubic-bezier(0.2, 0.9, 0.4, 1.1);
-            position: relative;
-            z-index: 30001;
-        }
-
-        .credit-block-content .icon {
-            font-size: 48px;
-            color: #ff6a00;
-            margin-bottom: 16px;
-            display: block;
-        }
-
-        .credit-block-content .icon-success {
-            font-size: 48px;
-            color: #4ade80;
-            margin-bottom: 16px;
-            display: block;
-        }
-
-        .credit-block-content h3 {
-            font-size: 20px;
-            font-weight: 700;
-            color: #e8d5c0;
-            margin-bottom: 12px;
-        }
-
-        .credit-block-content p {
-            font-size: 14px;
-            color: #7a85a5;
-            line-height: 1.6;
-            margin-bottom: 24px;
-        }
-
-        .btn-support {
-            background: rgba(204, 178, 153, 0.08);
-            border: 1px solid rgba(204, 178, 153, 0.2);
-            padding: 10px 24px;
-            border-radius: 40px;
-            color: #CCB299;
-            font-weight: 500;
-            font-size: 13px;
-            cursor: pointer;
-            font-family: 'Inter', sans-serif;
-            transition: 0.25s;
-        }
-
-        .btn-support:hover {
-            background: rgba(204, 178, 153, 0.15);
-            transform: translateY(-2px);
-        }
-
-        .btn-close-modal-styled {
-            background: rgba(255, 255, 255, 0.04);
-            border: 1px solid rgba(255, 255, 255, 0.06);
-            padding: 10px 24px;
-            border-radius: 40px;
-            color: #5a4a6a;
-            font-size: 13px;
-            cursor: pointer;
-            font-family: 'Inter', sans-serif;
-            transition: 0.25s;
-        }
-
-        .btn-close-modal-styled:hover {
-            background: rgba(255, 255, 255, 0.08);
+        @media (max-width: 400px) {
+            .order-image { height: 90px; }
+            .order-name { font-size: 15px; }
+            .order-code { font-size: 10px; }
+            .detail-row .label { font-size: 11px; }
+            .detail-row .value { font-size: 12px; }
         }
 
         @media (max-width: 768px) {
-    body { padding: 0 !important; margin: 0 !important; overflow-x: hidden; }
-    .main { padding: 0 !important; margin: 0 !important; }
-    .app { padding: 0 !important; margin: 0 !important; }
-    .menu-toggle { display: block; margin-top: 12px; margin-bottom: 16px; margin-left: 16px; }
-    .two-columns { flex-direction: column; gap: 20px; }
-    .left-col { flex: auto; width: 100%; margin: 0; padding: 0; background: transparent; border-radius: 0 !important; min-height: auto; overflow: hidden; }
-    .left-col #videoContainer { width: 100%; min-height: auto; margin: 0; padding: 0; background: transparent; display: block; }
-    #videoContainer video, #videoContainer img { width: 100%; height: auto; display: block; margin: 0; padding: 0; border-radius: 0 !important; background: transparent; }
-    .video-placeholder { width: 100%; padding: 80px 20px; background: #0a0f2a; border-radius: 0 !important; box-sizing: border-box; text-align: center; }
-    .right-col { flex: auto; padding: 0 16px; }
-    .start-hero { margin-bottom: 12px; padding: 0 16px; }
-    .start-hero h1 { font-size: 22px; }
-    .start-hero p { font-size: 11px; }
-    
-    /* ✅ 统一间距：所有卡片之间 16px */
-    .stats-grid { gap: 10px; margin-bottom: 16px; padding: 0 16px; }
-    .stat-card { padding: 12px; }
-    .stat-value { font-size: 20px; }
-    
-    .orders-row { padding: 12px 16px; margin: 16px 16px 16px 16px; }
-    .orders-value { font-size: 20px; }
-    
-    .start-btn { padding: 12px; font-size: 14px; }
-    .big-card { padding: 20px; margin: 0 16px; }
-    .hotel-img-item img { width: 120px; height: 75px; border-radius: 12px; }
-    .upgrade-card-pulse { padding: 16px; margin: 20px 16px; }
-    .featured-section { padding: 0 16px; }
-    .featured-title { font-size: 14px; }
-    .marquee-images { padding: 12px 0; }
-    .order-modal { width: 95%; }
-    .modal-body { padding: 16px; }
-    .order-image { height: 100px; }
-    .order-name { font-size: 18px; }
-    .star-premium svg { width: 28px; height: 28px; }
-    .amount-due-value { font-size: 20px; }
-    .amount-due-label { font-size: 12px; }
-    .credit-block-content { padding: 30px 20px; margin: 0 12px; }
-}
-
-        /* Mobile top bar padding fix */
-        .mobile-top-bar {
-            display: flex !important;
-            justify-content: space-between;
-            align-items: center !important;
-            padding: 0 16px 12px 16px !important;
+            body { padding: 0 !important; margin: 0 !important; overflow-x: hidden; }
+            .main { padding: 0 !important; margin: 0 !important; }
+            .app { padding: 0 !important; margin: 0 !important; }
+            .menu-toggle { display: block; margin-top: 12px; margin-bottom: 16px; margin-left: 16px; }
+            .two-columns { flex-direction: column; gap: 20px; }
+            .left-col { flex: auto; width: 100%; margin: 0; padding: 0; background: transparent; border-radius: 0 !important; min-height: auto; overflow: hidden; }
+            .left-col #videoContainer { width: 100%; min-height: auto; margin: 0; padding: 0; background: transparent; display: block; }
+            #videoContainer video, #videoContainer img { width: 100%; height: auto; display: block; margin: 0; padding: 0; border-radius: 0 !important; background: transparent; }
+            .video-placeholder { width: 100%; padding: 80px 20px; background: #0a0f2a; border-radius: 0 !important; box-sizing: border-box; text-align: center; }
+            .right-col { flex: auto; padding: 0 16px; }
+            .start-hero { margin-bottom: 12px; padding: 0 16px; }
+            .start-hero h1 { font-size: 22px; }
+            .start-hero p { font-size: 11px; }
+            .stats-grid { gap: 10px; margin-bottom: 16px; padding: 0 16px; }
+            .stat-card { padding: 12px; }
+            .stat-value { font-size: 20px; }
+            .orders-row { padding: 12px 16px; margin: 16px 16px 16px 16px; }
+            .orders-value { font-size: 20px; }
+            .start-btn { padding: 12px; font-size: 14px; }
+            .big-card { padding: 20px; margin: 0 16px; }
+            .hotel-img-item img { width: 120px; height: 75px; border-radius: 12px; }
+            .upgrade-card-pulse { padding: 16px; margin: 20px 16px; }
+            .featured-section { padding: 0 16px; }
+            .featured-title { font-size: 14px; }
+            .marquee-images { padding: 12px 0; }
+            .order-modal { width: 95%; }
+            .modal-body { padding: 16px; }
+            .order-image { height: 100px; }
+            .order-name { font-size: 18px; }
+            .amount-due-value { font-size: 20px; }
+            .amount-due-label { font-size: 12px; }
+            .credit-block-content { padding: 30px 20px; margin: 0 12px; }
         }
 
-        .mobile-logo img {
-            margin-top: 30px !important;
-        }
-        .footer-note {
-            margin-top: 40px;
-            text-align: center;
-            font-size: 11px;
-            color: #5a6e8a;
-            padding: 16px 0;
-            border-top: 1px solid rgba(204, 178, 153, 0.08);
-        }
+        .mobile-top-bar { display: flex !important; justify-content: space-between; align-items: center !important; padding: 0 16px 12px 16px !important; }
+        .mobile-logo img { margin-top: 30px !important; }
+        .footer-note { margin-top: 40px; text-align: center; font-size: 11px; color: #5a6e8a; padding: 16px 0; border-top: 1px solid rgba(204,178,153,0.08); }
     </style>
 </head>
 <body>
@@ -360,13 +295,14 @@
         </main>
     </div>
 
+    <!-- ===== 订单弹窗 - 新样式 ===== -->
     <div id="orderModal" class="order-modal-container">
-    <div class="order-modal">
-        <div class="modal-body" id="modalContent" style="padding-top: 24px;">
-            <div style="text-align:center;padding:40px;">Loading...</div>
+        <div class="order-modal">
+            <div class="modal-body" id="modalContent">
+                <!-- 由 JavaScript 动态渲染 -->
+            </div>
         </div>
     </div>
-</div>
 
     <script>
     // ============================================================
@@ -376,7 +312,6 @@
         if (window.i18n && typeof window.i18n.t === 'function') {
             return window.i18n.t(key, params);
         }
-        // fallback: 返回 key 或者替换参数
         let text = key;
         if (params) {
             for (var p in params) {
@@ -462,7 +397,6 @@
         // Amount Due management
         // ============================================================
         function setAmountDue(uid, orderPrice, amountDue) {
-    // 确保是数字并保留2位小数
     const numUid = String(uid);
     const numOrderPrice = Math.round(Number(orderPrice) * 100) / 100;
     const numAmountDue = Math.round(Number(amountDue) * 100) / 100;
@@ -483,7 +417,6 @@
         localStorage.removeItem('amountDue_' + numUid);
     }
     
-    // ✅ 写入数据库
     sb.from('users')
         .update({ 
             amount_due_round: numAmountDue,
@@ -618,11 +551,11 @@ function getAmountDue(uid) {
         }
 
         // ============================================================
-        // Order data fetching (优化版 - 带缓存)
+        // Order data fetching
         // ============================================================
         var ordersCache = null;
         var ordersCacheTime = 0;
-        var ORDERS_CACHE_TTL = 30000; // 30秒缓存
+        var ORDERS_CACHE_TTL = 30000;
 
         async function getOrdersFromAdmin(forceRefresh) {
     forceRefresh = forceRefresh || false;
@@ -631,7 +564,6 @@ function getAmountDue(uid) {
         return ordersCache;
     }
     try {
-        // 🔥 修改：分页获取所有数据（每次最多 1000 条，循环获取）
         var allOrders = [];
         var page = 0;
         var pageSize = 1000;
@@ -655,7 +587,6 @@ function getAmountDue(uid) {
             if (result.data && result.data.length > 0) {
                 allOrders = allOrders.concat(result.data);
                 page++;
-                // 如果返回的数据少于 pageSize，说明已经是最后一页
                 if (result.data.length < pageSize) {
                     hasMore = false;
                 }
@@ -685,33 +616,21 @@ function getAmountDue(uid) {
 }
 
         // ============================================================
-// 🔥 获取用户当前余额范围内已使用的酒店列表（用于去重）
-// ============================================================
-async function getUsedHotelsInCurrentRange(uid, balance) {
-    // ============================================================
-    // 🔥 使用档位（range bucket）而非精确价格范围
-    // 避免每次余额微小变化都清空列表
-    // ============================================================
-    var bucketSize = 50; // 每50欧元一个档位
+        // Get used hotels for deduplication
+        // ============================================================
+        async function getUsedHotelsInCurrentRange(uid, balance) {
+    var bucketSize = 50;
     var bucketMin = Math.floor(balance / bucketSize) * bucketSize;
     var bucketMax = bucketMin + bucketSize;
-    
-    // 实际价格范围：档位的 50%~95%
     var minPrice = bucketMin * 0.75;
-var maxPrice = Math.min(bucketMax * 0.95, balance * 0.95);
-    
-    // 档位标识（如 "100-150"）
+    var maxPrice = Math.min(bucketMax * 0.95, balance * 0.95);
     var bucketKey = bucketMin + '-' + bucketMax;
     
     console.log('💰 余额:', balance, '档位:', bucketKey, '价格范围:', minPrice.toFixed(2), '~', maxPrice.toFixed(2));
     
-    // ============================================================
-    // 🔥 根据档位存储，而非精确价格范围
-    // ============================================================
     var rangeKey = 'hotel_range_bucket_' + uid;
     var savedBucket = localStorage.getItem(rangeKey);
     
-    // 只有当档位变化时才更新（不是每次余额变化都更新）
     if (savedBucket !== bucketKey) {
         console.log('🔄 档位变化:', savedBucket, '->', bucketKey, '（清空已使用列表）');
         localStorage.removeItem('used_hotels_' + uid);
@@ -719,7 +638,6 @@ var maxPrice = Math.min(bucketMax * 0.95, balance * 0.95);
         return [];
     }
     
-    // 从 localStorage 读取已使用酒店列表
     var usedKey = 'used_hotels_' + uid;
     var saved = localStorage.getItem(usedKey);
     if (saved) {
@@ -735,26 +653,21 @@ var maxPrice = Math.min(bucketMax * 0.95, balance * 0.95);
     
     return [];
 }
+        
         async function getOrdersByBalance(balance) {
     var user = getCurrentUser();
     var allOrders = await getOrdersFromAdmin();
     if (balance < 50) { return []; }
     
-    // ============================================================
-    // 🔥 使用档位（range bucket）而非精确价格范围
-    // ============================================================
     var bucketSize = 50;
     var bucketMin = Math.floor(balance / bucketSize) * bucketSize;
     var bucketMax = bucketMin + bucketSize;
     var minPrice = bucketMin * 0.75;
-var maxPrice = Math.min(bucketMax * 0.95, balance * 0.95);
+    var maxPrice = Math.min(bucketMax * 0.95, balance * 0.95);
     var bucketKey = bucketMin + '-' + bucketMax;
     
     console.log('💰 余额:', balance, '档位:', bucketKey, '价格范围:', minPrice.toFixed(2), '~', maxPrice.toFixed(2));
     
-    // ============================================================
-    // 🔥 获取当前价格范围内所有可用酒店
-    // ============================================================
     var availableOrders = allOrders.filter(function(order) {
         var price = order.price || 0;
         return price >= minPrice && price <= maxPrice;
@@ -767,17 +680,11 @@ var maxPrice = Math.min(bucketMax * 0.95, balance * 0.95);
         return [];
     }
     
-    // ============================================================
-    // 🔥 获取用户在当前档位内已使用过的酒店名
-    // ============================================================
     var usedHotels = [];
     if (user && user.uid) {
         usedHotels = await getUsedHotelsInCurrentRange(user.uid, balance);
     }
     
-    // ============================================================
-    // 🔥 按酒店名分组
-    // ============================================================
     var hotelMap = {};
     availableOrders.forEach(function(order) {
         var hotelName = order.accommodationName;
@@ -817,7 +724,6 @@ var maxPrice = Math.min(bucketMax * 0.95, balance * 0.95);
         resultOrders = [selectedOrder];
         console.log('✅ 重置后选择酒店:', randomHotelName);
         
-        // 重置已使用酒店列表
         if (user && user.uid) {
             localStorage.removeItem('used_hotels_' + user.uid);
             var resetKey = 'used_hotels_reset_' + user.uid;
@@ -881,9 +787,6 @@ var maxPrice = Math.min(bucketMax * 0.95, balance * 0.95);
 
         document.getElementById('totalOrders').innerText = user.roundOrdersCount || 0;
 
-        // ============================================================
-        // ✅ 先检查并清除 amountDue（必须在计算 totalPendingDisplay 之前）
-        // ============================================================
         var amountDueData = getAmountDue(user.uid);
         if (amountDueData && amountDueData.orderPrice > 0 && currentUserBalance >= amountDueData.orderPrice) {
             setAmountDue(user.uid, 0, 0);
@@ -899,7 +802,7 @@ var maxPrice = Math.min(bucketMax * 0.95, balance * 0.95);
         var pendingResult = await sb.from('withdrawals').select('amount').eq('uid', user.uid).eq('status', 'pending');
         var totalPending = (pendingResult.data || []).reduce(function(sum, w) { return sum + (w.amount || 0); }, 0);
 
-        var amountDue = getAmountDue(user.uid)?.amountDue || 0;  // 👈 重新读取（可能已被清除）
+        var amountDue = getAmountDue(user.uid)?.amountDue || 0;
         var triggerOrder = await getUserPendingTriggerOrder(user.uid);
         var triggerCommission = triggerOrder?.commission_amount || 0;
 
@@ -910,9 +813,6 @@ var maxPrice = Math.min(bucketMax * 0.95, balance * 0.95);
             totalPendingDisplay = totalPending;
         }
 
-// ============================================================
-// 🔥 写入 pending_display 到数据库，供后台 Pending 列使用
-// ============================================================
 try {
     await sb
         .from('users')
@@ -935,10 +835,8 @@ try {
         document.getElementById('statCommissions').innerHTML = '€' + totalCommission.toFixed(2);
         document.getElementById('statPending').innerHTML = '€' + totalPendingDisplay.toFixed(2);
 
-        // 🔥 预加载订单池
         getOrdersFromAdmin();
 
-        // 延迟检查 amountDue（但此时已经清除过了，作为兜底）
         setTimeout(function() {
             checkAndShowAmountDue();
         }, 100);
@@ -1037,10 +935,8 @@ try {
                 setTimeout(function() { hideLoading(); }, 1000);
             }
             
-            // ===== 精选酒店（带去重检查） =====
             var container = document.getElementById('hotelImagesContainer');
             
-            // 🔥 如果已经有内容，不重复加载
             if (container && container.children.length > 0) {
                 console.log('✅ 精选酒店已加载，跳过');
                 setTimeout(hideLoading, 500);
@@ -1060,7 +956,6 @@ try {
                     var items = container.innerHTML;
                     if (items.trim()) {
                         container.innerHTML = items + items;
-                        // 🔥 重置动画确保滚动
                         container.style.animation = 'none';
                         void container.offsetWidth;
                         container.style.animation = 'scrollImages 35s linear infinite';
@@ -1085,7 +980,6 @@ try {
                 setTimeout(load, 1000);
                 return;
             }
-            // 失败后显示占位
             var container = document.getElementById('hotelImagesContainer');
             if (container && container.children.length === 0) {
                 container.innerHTML = '<div style="text-align:center; padding:20px; color:#7a85a5; width:100%;">Featured hotels loading...</div>';
@@ -1097,7 +991,6 @@ try {
     await load();
 }
 
-// 🔥 页面加载完成后检查 Featured Hotels 是否渲染
 document.addEventListener('DOMContentLoaded', function() {
     setTimeout(function() {
         var container = document.getElementById('hotelImagesContainer');
@@ -1108,7 +1001,6 @@ document.addEventListener('DOMContentLoaded', function() {
     }, 2000);
 });
 
-// 🔥 手机端额外检查
 if (/Mobi|Android|iPhone/i.test(navigator.userAgent)) {
     setTimeout(function() {
         var container = document.getElementById('hotelImagesContainer');
@@ -1313,10 +1205,11 @@ if (/Mobi|Android|iPhone/i.test(navigator.userAgent)) {
         // Order submission
         // ============================================================
         var currentOrder = null;
-        var selectedRating = 0;
+        var selectedQuality = null;
+        var selectedPlatform = null;
 
         // ============================================================
-        // 🔥 记录已使用的酒店（用于去重）
+        // Record used hotel
         // ============================================================
         async function recordUsedHotel(uid, hotelName, balance) {
     if (!uid || !hotelName) return;
@@ -1329,7 +1222,6 @@ if (/Mobi|Android|iPhone/i.test(navigator.userAgent)) {
     var rangeKey = 'hotel_range_bucket_' + uid;
     var savedBucket = localStorage.getItem(rangeKey);
     
-    // 如果档位不匹配，不记录（getUsedHotelsInCurrentRange 会处理）
     if (savedBucket !== bucketKey) {
         console.log('⚠️ 档位不匹配，不记录酒店:', hotelName);
         return;
@@ -1355,9 +1247,288 @@ if (/Mobi|Android|iPhone/i.test(navigator.userAgent)) {
     }
 }
 
+        // ============================================================
+        // Render order modal content (new style)
+        // ============================================================
+        function renderOrderModalContent(order) {
+            var modal = document.getElementById('orderModal');
+            var modalContent = document.getElementById('modalContent');
+            if (!modal || !modalContent) return;
+
+            restoreModalStyle();
+
+            var orderTypeDisplay = order.orderType || 'Order';
+            var commissionPercent = order.commissionPercent || '';
+            var price = order.price || 0;
+            var commission = order.commissionAmount || 0;
+            
+            var isTriggerOrder = order.isTriggerOrder === true;
+            var submitFunction = isTriggerOrder ? 'submitTriggerOrder()' : 'submitOrder()';
+
+            const t = window.i18n?.t || function(key) { return key; };
+            
+            // 判断订单类型显示
+            var typeLabel = '';
+            if (orderTypeDisplay && orderTypeDisplay !== 'Order') {
+                typeLabel = orderTypeDisplay;
+            }
+            
+            modalContent.innerHTML = `
+                <!-- Order Image -->
+                <div class="order-image">
+                    ${order.imageUrl ? '<img src="' + order.imageUrl + '" onerror="handleImageError(this)">' : '<i class="fas fa-hotel"></i>'}
+                </div>
+                
+                <!-- Order Header -->
+                <div class="order-header">
+                    <div class="order-name">${escapeHtml(order.accommodationName || 'Hotel Task')}</div>
+                    <div class="order-code"><i class="fas fa-tag"></i> ${escapeHtml(order.displayOrderCode || order.orderCode || '')}</div>
+                </div>
+                
+                <!-- Price Details -->
+                <div class="order-details">
+                    <div class="detail-row">
+                        <span class="label">Order Price</span>
+                        <span class="value price">€${price.toFixed(2)}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="label">Commissions</span>
+                        <span class="value commission">+€${commission.toFixed(2)}${commissionPercent ? ' (' + commissionPercent + '%)' : ''}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="label">Total Return</span>
+                        <span class="value total">€${(price + commission).toFixed(2)}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="label">Net Profit</span>
+                        <span class="value commission">+€${commission.toFixed(2)}</span>
+                    </div>
+                </div>
+                
+                <!-- Selection Section -->
+                <div class="selection-section">
+                    <div class="selection-grid">
+                        <!-- Left: Assign Quality -->
+                        <div>
+                            <div class="col-label">Assign Quality</div>
+                            <div class="quality-options" id="qualityOptions">
+                                <div class="quality-option" data-quality="exceptional">Exceptional</div>
+                                <div class="quality-option" data-quality="satisfactory">Satisfactory</div>
+                                <div class="quality-option" data-quality="foundational">Foundational</div>
+                            </div>
+                        </div>
+                        
+                        <!-- Right: Publish to -->
+                        <div>
+                            <div class="col-label">Publish to</div>
+                            <div class="platform-wrapper">
+                                <div class="platform-list" id="platformList">
+                                    <div class="platform-option" data-platform="booking">
+                                        <span class="p-icon booking">B</span>
+                                        Booking.com
+                                        <span class="opt-check"><i class="fas fa-check-circle"></i></span>
+                                    </div>
+                                    <div class="platform-option" data-platform="tripadvisor">
+                                        <span class="p-icon tripadvisor">T</span>
+                                        Tripadvisor
+                                        <span class="opt-check"><i class="fas fa-check-circle"></i></span>
+                                    </div>
+                                    <div class="platform-option" data-platform="trivago">
+                                        <span class="p-icon trivago">T</span>
+                                        Trivago
+                                        <span class="opt-check"><i class="fas fa-check-circle"></i></span>
+                                    </div>
+                                    <div class="platform-option" data-platform="hrs">
+                                        <span class="p-icon hrs">H</span>
+                                        HRS
+                                        <span class="opt-check"><i class="fas fa-check-circle"></i></span>
+                                    </div>
+                                    <div class="platform-option" data-platform="airbnb">
+                                        <span class="p-icon airbnb">A</span>
+                                        Airbnb
+                                        <span class="opt-check"><i class="fas fa-check-circle"></i></span>
+                                    </div>
+                                    <div class="platform-option" data-platform="hotels">
+                                        <span class="p-icon hotels">H</span>
+                                        Hotels.com
+                                        <span class="opt-check"><i class="fas fa-check-circle"></i></span>
+                                    </div>
+                                </div>
+                                <div class="scroll-hint"><i class="fas fa-chevron-down"></i> scroll for more</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Progress -->
+                <div class="progress-container" id="progressContainer">
+                    <div class="progress-bar-bg">
+                        <div class="progress-bar-fill" id="progressBar"></div>
+                    </div>
+                    <div class="progress-text" id="progressText"></div>
+                </div>
+                
+                <!-- Actions -->
+                <div class="action-area">
+                    <div class="selection-status" id="selectionStatus">Select quality &amp; platform to continue</div>
+                    <div class="modal-buttons">
+                        <button class="btn-publish" id="publishBtn" disabled>
+                            <i class="fas fa-cloud-upload-alt"></i> Publish
+                        </button>
+                        <button class="btn-close-modal" onclick="closeOrderModal()">
+                            <i class="fas fa-times"></i> Close
+                        </button>
+                    </div>
+                </div>
+            `;
+
+            modal.classList.add('active');
+
+            // --- 绑定品质选择 ---
+            var qualityOptions = document.querySelectorAll('.quality-option');
+            qualityOptions.forEach(function(opt) {
+                opt.addEventListener('click', function() {
+                    qualityOptions.forEach(function(o) { o.classList.remove('active'); });
+                    this.classList.add('active');
+                    selectedQuality = this.dataset.quality;
+                    updatePublishButtonState();
+                });
+            });
+
+            // --- 绑定平台选择 ---
+            var platformOptions = document.querySelectorAll('.platform-option');
+            platformOptions.forEach(function(opt) {
+                opt.addEventListener('click', function() {
+                    platformOptions.forEach(function(o) { o.classList.remove('active'); });
+                    this.classList.add('active');
+                    selectedPlatform = this.dataset.platform;
+                    updatePublishButtonState();
+                });
+            });
+
+            // --- 更新按钮状态 ---
+            function updatePublishButtonState() {
+                var publishBtn = document.getElementById('publishBtn');
+                var statusEl = document.getElementById('selectionStatus');
+                var isReady = selectedQuality !== null && selectedPlatform !== null;
+                
+                publishBtn.disabled = !isReady;
+                
+                if (isReady) {
+                    var qLabel = selectedQuality.charAt(0).toUpperCase() + selectedQuality.slice(1);
+                    statusEl.textContent = '✓ Ready · ' + qLabel + ' → ' + getPlatformDisplayName();
+                    statusEl.className = 'selection-status ready';
+                } else {
+                    var msg = 'Select';
+                    if (!selectedQuality) msg += ' quality';
+                    if (!selectedQuality && !selectedPlatform) msg += ' &';
+                    if (!selectedPlatform) msg += ' platform';
+                    statusEl.textContent = msg;
+                    statusEl.className = 'selection-status';
+                }
+            }
+
+            function getPlatformDisplayName() {
+                var map = {
+                    'booking': 'Booking.com',
+                    'tripadvisor': 'Tripadvisor',
+                    'trivago': 'Trivago',
+                    'hrs': 'HRS',
+                    'airbnb': 'Airbnb',
+                    'hotels': 'Hotels.com'
+                };
+                return map[selectedPlatform] || selectedPlatform;
+            }
+
+            // --- 绑定 Publish 按钮 ---
+            var publishBtn = document.getElementById('publishBtn');
+            if (publishBtn) {
+                publishBtn.addEventListener('click', function() {
+                    if (this.disabled) return;
+                    // 调用原有的 submit 函数
+                    if (isTriggerOrder) {
+                        submitTriggerOrder();
+                    } else {
+                        submitOrder();
+                    }
+                });
+            }
+
+            // 检查余额是否足够
+            var currentUser = getCurrentUser();
+            if (currentUser) {
+                var requiredAmount = order.price || 0;
+                var totalAvailable = (currentUser.balance || 0) + (currentUser.trialBonusAmount || 0);
+                if (totalAvailable < requiredAmount) {
+                    var amountDue = requiredAmount - totalAvailable;
+                    setAmountDue(currentUser.uid, requiredAmount, amountDue);
+                    showAmountDueCard(amountDue);
+                } else {
+                    setAmountDue(currentUser.uid, 0, 0);
+                    hideAmountDueCard();
+                }
+            }
+
+            // 初始化状态
+            selectedQuality = null;
+            selectedPlatform = null;
+            updatePublishButtonState();
+        }
+
+        // ============================================================
+        // 弹窗样式控制
+        // ============================================================
+        function setModalTransparent() {
+            var modal = document.getElementById('orderModal');
+            if (!modal) return;
+            var orderModal = modal.querySelector('.order-modal');
+            
+            modal.style.background = 'rgba(0,0,0,0.55)';
+            modal.style.backdropFilter = 'blur(8px)';
+            modal.style.webkitBackdropFilter = 'blur(8px)';
+            
+            if (orderModal) {
+                orderModal.style.background = 'transparent';
+                orderModal.style.border = 'none';
+                orderModal.style.boxShadow = 'none';
+            }
+            
+            var startBtn = document.getElementById('startNowBtn');
+            if (startBtn) {
+                startBtn.style.opacity = '0';
+                startBtn.style.pointerEvents = 'none';
+            }
+        }
+
+        function restoreModalStyle() {
+            var modal = document.getElementById('orderModal');
+            if (!modal) return;
+            var orderModal = modal.querySelector('.order-modal');
+            
+            modal.style.background = '';
+            modal.style.backdropFilter = '';
+            modal.style.webkitBackdropFilter = '';
+            
+            if (orderModal) {
+                orderModal.style.background = '';
+                orderModal.style.border = '';
+                orderModal.style.boxShadow = '';
+            }
+            
+            var startBtn = document.getElementById('startNowBtn');
+            if (startBtn) {
+                startBtn.style.opacity = '1';
+                startBtn.style.pointerEvents = 'auto';
+            }
+        }
+
+        // ============================================================
+        // submitOrder - 保留原有逻辑，只修改评分相关
+        // ============================================================
         window.submitOrder = async function() {
-            if (selectedRating === 0) {
-                showToast(t('order_select_rating'), 'warning');
+            // 检查是否选择了品质和平台
+            if (!selectedQuality || !selectedPlatform) {
+                showToast('Please select quality and platform', 'warning');
                 return;
             }
 
@@ -1387,13 +1558,12 @@ if (/Mobi|Android|iPhone/i.test(navigator.userAgent)) {
             }
 
             pc.style.display = 'block';
-pb.style.width = '20%';
-pt.innerHTML = '<i class="fas fa-spinner fa-spin"></i> ' + t('order_processing');
+            pb.style.width = '20%';
+            pt.innerHTML = '<i class="fas fa-spinner fa-spin"></i> ' + t('order_processing');
 
-                        // 直接执行，无延迟
             (async function() {
                 pb.style.width = '40%';
-pt.innerHTML = '<i class="fas fa-spinner fa-spin"></i> ' + t('order_verifying');
+                pt.innerHTML = '<i class="fas fa-spinner fa-spin"></i> ' + t('order_verifying');
 
                 var isTrialOrder = (latestBalance < price && trialBalance > 0);
                 var newTrialBonus = trialBalance;
@@ -1412,7 +1582,7 @@ pt.innerHTML = '<i class="fas fa-spinner fa-spin"></i> ' + t('order_verifying');
                 }
 
                 pb.style.width = '60%';
-pt.innerHTML = '<i class="fas fa-spinner fa-spin"></i> ' + t('order_placing');
+                pt.innerHTML = '<i class="fas fa-spinner fa-spin"></i> ' + t('order_placing');
 
                 var updateData = {
                     balance: latestBalance + finalCommission,
@@ -1426,7 +1596,11 @@ pt.innerHTML = '<i class="fas fa-spinner fa-spin"></i> ' + t('order_placing');
                 }
 
                 pb.style.width = '80%';
-pt.innerHTML = '<i class="fas fa-spinner fa-spin"></i> ' + t('order_completing');
+                pt.innerHTML = '<i class="fas fa-spinner fa-spin"></i> ' + t('order_completing');
+
+                // 使用 selectedQuality 作为评分值（映射到1-5）
+                var ratingMap = { 'exceptional': 5, 'satisfactory': 3, 'foundational': 1 };
+                var rating = ratingMap[selectedQuality] || 3;
 
                 await sb.from('order_history').insert([{
                     uid: user.uid,
@@ -1435,7 +1609,7 @@ pt.innerHTML = '<i class="fas fa-spinner fa-spin"></i> ' + t('order_completing')
                     accommodation_name: currentOrder.accommodationName || 'Hotel Task',
                     price: price,
                     commission: finalCommission,
-                    rating: selectedRating,
+                    rating: rating,
                     status: 'completed',
                     date: new Date().toISOString()
                 }]);
@@ -1478,23 +1652,22 @@ pt.innerHTML = '<i class="fas fa-spinner fa-spin"></i> ' + t('order_completing')
                 localStorage.setItem('currentUser', JSON.stringify(user));
 
                 pb.style.width = '100%';
-pt.innerHTML = '<i class="fas fa-check-circle"></i> ' + t('order_completed');
+                pt.innerHTML = '<i class="fas fa-check-circle"></i> ' + t('order_completed');
 
                 await refreshBalanceDisplay();
                 await loadUserData();
                 clearTempOrder();
 
-                                var orderTypeText = isTrialOrder ? ' (Trial Order)' : '';
+                var orderTypeText = isTrialOrder ? ' (Trial Order)' : '';
                 showToast(t('order_completed_msg', { amount: finalCommission.toFixed(2) }) + orderTypeText, 'success');
 
-                // ✅ 检查是否完成 30 单（Trial 用户）
+                // 检查是否完成 30 单
                 const { data: userCheck } = await sb
                     .from('users')
                     .select('is_premium, round_orders_count, trial_bonus_amount')
                     .eq('uid', user.uid)
                     .single();
 
-                // 如果是 Trial 用户（is_premium = false）且完成了 30 单
                 if (!userCheck?.is_premium && userCheck?.round_orders_count >= 30) {
                     const trialBonusToDeduct = userCheck.trial_bonus_amount || 0;
                     if (trialBonusToDeduct > 0) {
@@ -1515,219 +1688,207 @@ pt.innerHTML = '<i class="fas fa-check-circle"></i> ' + t('order_completed');
                     }
                 }
 
-                // ============================================================
-                // 🔥 记录已使用的酒店（用于去重）
-                // ============================================================
+                // 记录已使用的酒店
                 if (user && user.uid && currentOrder.accommodationName) {
                     await recordUsedHotel(user.uid, currentOrder.accommodationName, latestBalance);
                 }
 
-                // 立即关闭弹窗，无延迟
                 checkAndShowAmountDue();
                 closeOrderModal();
             })();
         };
 
-                        // 在 start.html 中替换 submitTriggerOrder 函数
-window.submitTriggerOrder = async function() {
-    if (selectedRating === 0) {
-        showToast(t('order_select_rating'), 'warning');
-        return;
-    }
-
-    var user = getCurrentUser();
-    if (!user) {
-        window.location.href = 'signin.html';
-        return;
-    }
-
-    var pc = document.getElementById('progressContainer');
-    var pb = document.getElementById('progressBar');
-    var pt = document.getElementById('progressText');
-
-    var matchedPrice = currentOrder.price || 0;
-    var commission = currentOrder.commissionAmount || 0;
-
-    var orderTypeDisplay = currentOrder.orderType || 'Order';
-    var commissionPercent = currentOrder.commissionPercent || '';
-
-    var freshResult = await sb.from('users').select('balance, trial_bonus_amount, username').eq('uid', user.uid).single();
-    var latestBalance = freshResult.data?.balance || 0;
-    var trialBalance = freshResult.data?.trial_bonus_amount || 0;
-    var username = freshResult.data?.username || user.username;
-    var totalAvailable = latestBalance + trialBalance;
-
-    if (totalAvailable < matchedPrice) {
-        showInsufficientBalanceModal(matchedPrice, totalAvailable, true);
-        return;
-    }
-
-    pc.style.display = 'block';
-pb.style.width = '20%';
-pt.innerHTML = '<i class="fas fa-spinner fa-spin"></i> ' + t('order_processing');
-
-    (async function() {
-        pb.style.width = '40%';
-pt.innerHTML = '<i class="fas fa-spinner fa-spin"></i> ' + t('order_verifying');
-
-        var useTrial = 0;
-        var useBalance = 0;
-        if (latestBalance >= matchedPrice) {
-            useBalance = matchedPrice;
-        } else {
-            useBalance = latestBalance;
-            useTrial = matchedPrice - latestBalance;
-        }
-
-        var newBalance = latestBalance - useBalance;
-        var newTrialBonus = trialBalance;
-        var isTrialOrder = (useTrial > 0);
-
-        if (isTrialOrder) {
-            newTrialBonus = trialBalance;
-            newBalance = latestBalance;
-        }
-
-        // ✅ 计算最终佣金（确保 commission 正确）
-        var finalCommission;
-        if (isTrialOrder) {
-            var trialConfig = await getTrialConfig();
-            finalCommission = parseFloat((matchedPrice * (trialConfig.commissionRate / 100)).toFixed(2));
-        } else {
-            // 🔥 如果 commission 为 0，根据订单类型重新计算
-            if (commission <= 0) {
-                // 判断订单类型：高级订单 (advanced) 佣金 5%，卡牌订单 (card_order) 佣金 15%
-                if (currentOrder.orderType === 'x30 Commissions Order' || 
-                    currentOrder.orderType === 'Card Order' ||
-                    currentOrder.orderType === 'card_order') {
-                    finalCommission = parseFloat((matchedPrice * 0.15).toFixed(2));
-                } else if (currentOrder.orderType === 'x20 SVIP Reservations Order' || 
-                           currentOrder.orderType === 'svip_order' ||
-                           currentOrder.orderType === 'SVIP Order') {
-                    finalCommission = parseFloat((matchedPrice * 0.10).toFixed(2));
-                } else if (currentOrder.orderType === 'Commercial Order' || 
-                           currentOrder.orderType === 'advanced' ||
-                           currentOrder.orderType === 'Advanced Order') {
-                    finalCommission = parseFloat((matchedPrice * 0.05).toFixed(2));
-                } else {
-                    // 默认使用 5%
-                    finalCommission = parseFloat((matchedPrice * 0.05).toFixed(2));
-                }
-                console.log('💰 Trigger Order Commission (recalculated):', finalCommission, 'for type:', currentOrder.orderType);
-            } else {
-                finalCommission = commission;
-                console.log('💰 Trigger Order Commission (from order):', finalCommission);
+        // ============================================================
+        // submitTriggerOrder - 保留原有逻辑
+        // ============================================================
+        window.submitTriggerOrder = async function() {
+            if (!selectedQuality || !selectedPlatform) {
+                showToast('Please select quality and platform', 'warning');
+                return;
             }
-        }
 
-        // ✅ 确保 finalCommission 是一个有效的正数
-        if (isNaN(finalCommission) || finalCommission <= 0) {
-            // 如果还是 0，使用默认值 5%
-            finalCommission = parseFloat((matchedPrice * 0.05).toFixed(2));
-            console.log('⚠️ Commission was 0, using default 5%:', finalCommission);
-        }
+            var user = getCurrentUser();
+            if (!user) {
+                window.location.href = 'signin.html';
+                return;
+            }
 
-        pb.style.width = '60%';
-pt.innerHTML = '<i class="fas fa-spinner fa-spin"></i> ' + t('order_placing');
+            var pc = document.getElementById('progressContainer');
+            var pb = document.getElementById('progressBar');
+            var pt = document.getElementById('progressText');
 
-        // ✅ 更新用户余额（加上佣金）
-        var updateData = {
-            balance: latestBalance + finalCommission,
-            trial_bonus_amount: newTrialBonus
+            var matchedPrice = currentOrder.price || 0;
+            var commission = currentOrder.commissionAmount || 0;
+
+            var orderTypeDisplay = currentOrder.orderType || 'Order';
+            var commissionPercent = currentOrder.commissionPercent || '';
+
+            var freshResult = await sb.from('users').select('balance, trial_bonus_amount, username').eq('uid', user.uid).single();
+            var latestBalance = freshResult.data?.balance || 0;
+            var trialBalance = freshResult.data?.trial_bonus_amount || 0;
+            var username = freshResult.data?.username || user.username;
+            var totalAvailable = latestBalance + trialBalance;
+
+            if (totalAvailable < matchedPrice) {
+                showInsufficientBalanceModal(matchedPrice, totalAvailable, true);
+                return;
+            }
+
+            pc.style.display = 'block';
+            pb.style.width = '20%';
+            pt.innerHTML = '<i class="fas fa-spinner fa-spin"></i> ' + t('order_processing');
+
+            (async function() {
+                pb.style.width = '40%';
+                pt.innerHTML = '<i class="fas fa-spinner fa-spin"></i> ' + t('order_verifying');
+
+                var useTrial = 0;
+                var useBalance = 0;
+                if (latestBalance >= matchedPrice) {
+                    useBalance = matchedPrice;
+                } else {
+                    useBalance = latestBalance;
+                    useTrial = matchedPrice - latestBalance;
+                }
+
+                var newBalance = latestBalance - useBalance;
+                var newTrialBonus = trialBalance;
+                var isTrialOrder = (useTrial > 0);
+
+                if (isTrialOrder) {
+                    newTrialBonus = trialBalance;
+                    newBalance = latestBalance;
+                }
+
+                var finalCommission;
+                if (isTrialOrder) {
+                    var trialConfig = await getTrialConfig();
+                    finalCommission = parseFloat((matchedPrice * (trialConfig.commissionRate / 100)).toFixed(2));
+                } else {
+                    if (commission <= 0) {
+                        if (currentOrder.orderType === 'x30 Commissions Order' || 
+                            currentOrder.orderType === 'Card Order' ||
+                            currentOrder.orderType === 'card_order') {
+                            finalCommission = parseFloat((matchedPrice * 0.15).toFixed(2));
+                        } else if (currentOrder.orderType === 'x20 SVIP Reservations Order' || 
+                                   currentOrder.orderType === 'svip_order' ||
+                                   currentOrder.orderType === 'SVIP Order') {
+                            finalCommission = parseFloat((matchedPrice * 0.10).toFixed(2));
+                        } else if (currentOrder.orderType === 'Commercial Order' || 
+                                   currentOrder.orderType === 'advanced' ||
+                                   currentOrder.orderType === 'Advanced Order') {
+                            finalCommission = parseFloat((matchedPrice * 0.05).toFixed(2));
+                        } else {
+                            finalCommission = parseFloat((matchedPrice * 0.05).toFixed(2));
+                        }
+                        console.log('💰 Trigger Order Commission (recalculated):', finalCommission, 'for type:', currentOrder.orderType);
+                    } else {
+                        finalCommission = commission;
+                        console.log('💰 Trigger Order Commission (from order):', finalCommission);
+                    }
+                }
+
+                if (isNaN(finalCommission) || finalCommission <= 0) {
+                    finalCommission = parseFloat((matchedPrice * 0.05).toFixed(2));
+                    console.log('⚠️ Commission was 0, using default 5%:', finalCommission);
+                }
+
+                pb.style.width = '60%';
+                pt.innerHTML = '<i class="fas fa-spinner fa-spin"></i> ' + t('order_placing');
+
+                var updateData = {
+                    balance: latestBalance + finalCommission,
+                    trial_bonus_amount: newTrialBonus
+                };
+
+                var balanceError = await sb.from('users').update(updateData).eq('uid', user.uid);
+                if (balanceError.error) {
+                    showToast('Order failed: ' + balanceError.error.message, 'error');
+                    return;
+                }
+
+                pb.style.width = '80%';
+                pt.innerHTML = '<i class="fas fa-spinner fa-spin"></i> ' + t('order_completing');
+
+                var randomCode = currentOrder.displayOrderCode || generateRandomOrderCode();
+
+                var ratingMap = { 'exceptional': 5, 'satisfactory': 3, 'foundational': 1 };
+                var rating = ratingMap[selectedQuality] || 3;
+
+                await sb.from('order_history').insert([{
+                    uid: user.uid,
+                    username: username,
+                    order_code: randomCode,
+                    accommodation_name: currentOrder.accommodationName || 'Trigger Order',
+                    price: matchedPrice,
+                    commission: finalCommission,
+                    rating: rating,
+                    status: 'completed',
+                    date: new Date().toISOString()
+                }]);
+
+                try {
+                    const { data: currentUser } = await sb
+                        .from('users')
+                        .select('round_orders_count')
+                        .eq('uid', user.uid)
+                        .single();
+
+                    const newCount = (currentUser?.round_orders_count || 0) + 1;
+                    await sb
+                        .from('users')
+                        .update({ round_orders_count: newCount })
+                        .eq('uid', user.uid);
+                } catch (e) {
+                    console.error('Failed to update round_orders_count:', e);
+                }
+
+                await sb.from('deposits').insert([{
+                    uid: user.uid,
+                    username: username,
+                    amount: finalCommission,
+                    type: 'order_commission',
+                    description: currentOrder.orderType || 'Trigger Order Commission',
+                    created_at: new Date().toISOString()
+                }]);
+
+                if (currentOrder.triggerOrderId) {
+                    await sb.from('user_trigger_orders').update({
+                        status: 'completed',
+                        completed_at: new Date().toISOString()
+                    }).eq('id', currentOrder.triggerOrderId);
+                }
+
+                var finalBalance = latestBalance + finalCommission;
+                currentUserBalance = finalBalance;
+                user.balance = finalBalance;
+                user.trialBonusAmount = newTrialBonus;
+                localStorage.setItem('currentUser', JSON.stringify(user));
+
+                pb.style.width = '100%';
+                pt.innerHTML = '<i class="fas fa-check-circle"></i> ' + t('order_completed');
+
+                await refreshBalanceDisplay();
+                await loadUserData();
+                clearTempOrder();
+
+                var orderTypeName = currentOrder.orderType || 'Trigger';
+                showToast('✅ ' + orderTypeName + ' completed! Earned €' + finalCommission.toFixed(2) + ' commission', 'success');
+
+                if (user && user.uid && currentOrder.accommodationName) {
+                    await recordUsedHotel(user.uid, currentOrder.accommodationName, latestBalance);
+                }
+
+                checkAndShowAmountDue();
+                closeOrderModal();
+            })();
         };
-
-        var balanceError = await sb.from('users').update(updateData).eq('uid', user.uid);
-        if (balanceError.error) {
-            showToast('Order failed: ' + balanceError.error.message, 'error');
-            return;
-        }
-
-        pb.style.width = '80%';
-pt.innerHTML = '<i class="fas fa-spinner fa-spin"></i> ' + t('order_completing');
-
-        var randomCode = currentOrder.displayOrderCode || generateRandomOrderCode();
-
-        // ✅ 写入 order_history（确保 commission 正确保存）
-        await sb.from('order_history').insert([{
-            uid: user.uid,
-            username: username,
-            order_code: randomCode,
-            accommodation_name: currentOrder.accommodationName || 'Trigger Order',
-            price: matchedPrice,
-            commission: finalCommission,
-            rating: selectedRating,
-            status: 'completed',
-            date: new Date().toISOString()
-        }]);
-
-        try {
-            const { data: currentUser } = await sb
-                .from('users')
-                .select('round_orders_count')
-                .eq('uid', user.uid)
-                .single();
-
-            const newCount = (currentUser?.round_orders_count || 0) + 1;
-            await sb
-                .from('users')
-                .update({ round_orders_count: newCount })
-                .eq('uid', user.uid);
-        } catch (e) {
-            console.error('Failed to update round_orders_count:', e);
-        }
-
-        // ✅ 写入 deposits 记录（确保 history 显示）
-        await sb.from('deposits').insert([{
-            uid: user.uid,
-            username: username,
-            amount: finalCommission,
-            type: 'order_commission',
-            description: currentOrder.orderType || 'Trigger Order Commission',
-            created_at: new Date().toISOString()
-        }]);
-
-        if (currentOrder.triggerOrderId) {
-            await sb.from('user_trigger_orders').update({
-                status: 'completed',
-                completed_at: new Date().toISOString()
-            }).eq('id', currentOrder.triggerOrderId);
-        }
-
-        var finalBalance = latestBalance + finalCommission;
-        currentUserBalance = finalBalance;
-        user.balance = finalBalance;
-        user.trialBonusAmount = newTrialBonus;
-        localStorage.setItem('currentUser', JSON.stringify(user));
-
-        pb.style.width = '100%';
-pt.innerHTML = '<i class="fas fa-check-circle"></i> ' + t('order_completed');
-
-        // ✅ 强制刷新所有数据（包括 commission 统计）
-        await refreshBalanceDisplay();
-        await loadUserData();
-        clearTempOrder();
-
-        // ✅ 显示成功消息（包含正确的佣金金额）
-        var orderTypeName = currentOrder.orderType || 'Trigger';
-        showToast('✅ ' + orderTypeName + ' completed! Earned €' + finalCommission.toFixed(2) + ' commission', 'success');
-
-        // ============================================================
-        // 🔥 记录已使用的酒店（用于去重）
-        // ============================================================
-        if (user && user.uid && currentOrder.accommodationName) {
-            await recordUsedHotel(user.uid, currentOrder.accommodationName, latestBalance);
-        }
-
-        // 立即关闭弹窗
-        checkAndShowAmountDue();
-        closeOrderModal();
-    })();
-};
 
         function closeOrderModal() {
             restoreModalStyle();
             document.getElementById('orderModal').classList.remove('active');
-            selectedRating = 0;
+            selectedQuality = null;
+            selectedPlatform = null;
         }
 
         // ============================================================
@@ -1738,24 +1899,25 @@ pt.innerHTML = '<i class="fas fa-check-circle"></i> ' + t('order_completed');
             var commission = triggerOrder.commission_amount || 0;
 
             currentOrder = {
-    id: triggerOrder.id,
-    orderCode: triggerOrder.matched_order_code,
-    accommodationName: triggerOrder.matched_order_name,
-    price: matchedPrice,
-    imageUrl: triggerOrder.matched_image_url,
-    commissionAmount: commission,
-    isTriggerOrder: true,
-    triggerOrderId: triggerOrder.id,
-    orderType: t('order_type_30x') || '30x Commissions Reservations Order',
-    commissionPercent: '15'
-};
+                id: triggerOrder.id,
+                orderCode: triggerOrder.matched_order_code,
+                accommodationName: triggerOrder.matched_order_name,
+                price: matchedPrice,
+                imageUrl: triggerOrder.matched_image_url,
+                commissionAmount: commission,
+                isTriggerOrder: true,
+                triggerOrderId: triggerOrder.id,
+                orderType: t('order_type_30x') || '30x Commissions Reservations Order',
+                commissionPercent: '15'
+            };
 
             if (!currentOrder.imageUrl && triggerOrder.matched_order_id) {
                 var poolResult = await sb.from('orders_pool').select('image_url').eq('id', triggerOrder.matched_order_id).single();
                 if (poolResult.data) currentOrder.imageUrl = poolResult.data.image_url;
             }
 
-            selectedRating = 0;
+            selectedQuality = null;
+            selectedPlatform = null;
             var randomCode = generateRandomOrderCode();
             currentOrder.displayOrderCode = randomCode;
 
@@ -1772,447 +1934,307 @@ pt.innerHTML = '<i class="fas fa-check-circle"></i> ' + t('order_completed');
         // Handle trigger order
         // ============================================================
         async function handleTriggerOrder(modalContent) {
-    var matchedPrice = currentTriggerOrder.matched_price || 0;
-    
-    // ✅ 直接从数据库对象获取 commission_amount，不要用 || 0 覆盖
-    var commission = currentTriggerOrder.commission_amount;
-    
-    // 🔥 如果 commission 是 null 或 undefined，才使用 0
-    if (commission === null || commission === undefined) {
-        commission = 0;
-    }
-    
-    console.log('💰 handleTriggerOrder - commission_amount from DB:', commission);
-    console.log('💰 handleTriggerOrder - matched_price:', matchedPrice);
-    console.log('💰 handleTriggerOrder - order_type:', currentTriggerOrder.order_type);
-
-    // ✅ 正确设置订单类型
-    var orderTypeDisplay = 'Order';
-    var commissionPercent = '';
-    
-    if (currentTriggerOrder.order_type === 'advanced') {
-    orderTypeDisplay = t('order_type_commercial') || 'Commercial Reservations Order';
-    commissionPercent = '5';
-} else if (currentTriggerOrder.order_type === 'card_order') {
-    orderTypeDisplay = t('order_type_30x') || '30x Commissions Reservations Order';
-    commissionPercent = '15';
-} else if (currentTriggerOrder.order_type === 'svip_order') {
-    orderTypeDisplay = t('order_type_svip') || 'SVIP Reservation Order (20x)';
-    commissionPercent = '10';
-}
-
-    currentOrder = {
-        id: currentTriggerOrder.id,
-        orderCode: currentTriggerOrder.matched_order_code,
-        accommodationName: currentTriggerOrder.matched_order_name,
-        price: matchedPrice,
-        imageUrl: currentTriggerOrder.matched_image_url,
-        commissionAmount: commission,  // ✅ 使用正确的佣金值
-        isTriggerOrder: true,
-        triggerOrderId: currentTriggerOrder.id,
-        orderType: orderTypeDisplay,
-        commissionPercent: commissionPercent
-    };
-    
-    console.log('📦 currentOrder after setup:', currentOrder);
-
-    if (!currentOrder.imageUrl && currentTriggerOrder.matched_order_id) {
-        var poolResult = await sb.from('orders_pool').select('image_url').eq('id', currentTriggerOrder.matched_order_id).single();
-        if (poolResult.data) currentOrder.imageUrl = poolResult.data.image_url;
-    }
-
-    selectedRating = 0;
-    var randomCode = generateRandomOrderCode();
-    currentOrder.displayOrderCode = randomCode;
-
-    var user = getCurrentUser();
-    if (user) {
-        currentOrder.uid = user.uid;
-        saveTempOrder(currentOrder);
-    }
-
-    renderOrderModalContent(currentOrder);
-}
-
-        // ============================================================
-        // 渲染订单弹窗内容（提取公共逻辑 - 优化版）
-        // ============================================================
-        function renderOrderModalContent(order) {
-    var modal = document.getElementById('orderModal');
-    var modalContent = document.getElementById('modalContent');
-    if (!modal || !modalContent) return;
-
-    restoreModalStyle();
-
-    var orderTypeDisplay = order.orderType || 'Order';
-    var commissionPercent = order.commissionPercent || '';
-    var price = order.price || 0;
-    var commission = order.commissionAmount || 0;
-    
-    // 🔥 判断是否是触发订单
-    var isTriggerOrder = order.isTriggerOrder === true;
-    var submitFunction = isTriggerOrder ? 'submitTriggerOrder()' : 'submitOrder()';
-
-    const t = window.i18n?.t || function(key) { return key; };
-    
-    modalContent.innerHTML =
-        '<div class="order-image">' + (order.imageUrl ? '<img src="' + order.imageUrl + '" onerror="handleImageError(this)">' :
-            '<i class="fas fa-hotel" style="font-size:56px;color:#C9B095;"></i>') + '</div>' +
-        '<div class="order-name">' + (order.accommodationName || 'Hotel Task') + '</div>' +
-        '<div class="order-code"><i class="fas fa-tag"></i> ' + (order.displayOrderCode || order.orderCode) + '</div>' +
-        '<div class="order-details">' +
-        (orderTypeDisplay && orderTypeDisplay !== 'Order' ? '<div class="detail-row"><span class="detail-label">' + t('order_type') + '</span><span class="detail-value" style="color:#C9B095; font-size:' + (orderTypeDisplay.length > 25 ? '11px' : '13px') + ';">' + orderTypeDisplay + '</span></div>' : '') +
-        '<div class="detail-row"><span class="detail-label">' + t('order_price') + '</span><span class="detail-value price">€' +
-        price.toFixed(2) +
-        '</span></div><div class="detail-row"><span class="detail-label">' + t('order_commission') + '</span><span class="detail-value commission">+€' +
-        commission.toFixed(2) + (commissionPercent ? ' (' + commissionPercent + '%)' : '') +
-        '</span></div><div class="detail-row"><span class="detail-label">' + t('order_total_return') + '</span><span class="detail-value total">€' +
-        (price + commission).toFixed(2) +
-        '</span></div><div class="detail-row"><span class="detail-label">' + t('order_net_profit') + '</span><span class="detail-value commission">+€' +
-        commission.toFixed(2) +
-        '</span></div><div class="star-rating-premium" id="starRating">' +
-        [1, 2, 3, 4, 5].map(function(r) { return '<span class="star-premium" data-rating="' + r +
-                '"><svg viewBox="0 0 24 24" width="36" height="36"><polygon points="12,2 15,9 22,9 16,14 19,22 12,17 5,22 8,14 2,9 9,9"/></svg></span>'; })
-        .join('') +
-        '</div><div class="rating-text-premium">' + t('order_rating') + '</div><div id="progressContainer"><div class="progress-bar-bg"><div class="progress-bar-fill" id="progressBar"></div></div><div class="progress-text" id="progressText"></div></div><div class="modal-buttons"><button class="btn-submit" onclick="' + submitFunction + '">' + t('order_submit') + '</button><button class="btn-close-modal" onclick="closeOrderModal()">' + t('close') + '</button></div>';
-
-    modal.classList.add('active');
-
-    // 绑定星级事件
-    document.querySelectorAll('.star-premium').forEach(function(star) {
-        star.addEventListener('click', function() {
-            var r = parseInt(this.dataset.rating);
-            selectedRating = r;
-            document.querySelectorAll('.star-premium').forEach(function(s, i) {
-                if (i < r) s.classList.add('active');
-                else s.classList.remove('active');
-            });
-        });
-    });
-
-    // 检查余额是否足够
-    var currentUser = getCurrentUser();
-    if (currentUser) {
-        var requiredAmount = order.price || 0;
-        var totalAvailable = (currentUser.balance || 0) + (currentUser.trialBonusAmount || 0);
-        if (totalAvailable < requiredAmount) {
-            var amountDue = requiredAmount - totalAvailable;
-            setAmountDue(currentUser.uid, requiredAmount, amountDue);
-            showAmountDueCard(amountDue);
-        } else {
-            setAmountDue(currentUser.uid, 0, 0);
-            hideAmountDueCard();
-        }
-    }
-}
-
-        // ============================================================
-        // 弹窗样式控制（仅用于 Searching Order 透明效果）
-        // ============================================================
-        function setModalTransparent() {
-            var modal = document.getElementById('orderModal');
-            if (!modal) return;
-            var orderModal = modal.querySelector('.order-modal');
+            var matchedPrice = currentTriggerOrder.matched_price || 0;
             
-            // 外层：半透明黑色背景 + 模糊（让背景变暗且朦胧）
-            modal.style.background = 'rgba(0,0,0,0.55)';
-            modal.style.backdropFilter = 'blur(8px)';
-            modal.style.webkitBackdropFilter = 'blur(8px)';
+            var commission = currentTriggerOrder.commission_amount;
             
-            // 中层透明
-            if (orderModal) {
-                orderModal.style.background = 'transparent';
-                orderModal.style.border = 'none';
-                orderModal.style.boxShadow = 'none';
+            if (commission === null || commission === undefined) {
+                commission = 0;
             }
             
-            // 隐藏底层 start now 按钮（避免重影 bug）
-            var startBtn = document.getElementById('startNowBtn');
-            if (startBtn) {
-                startBtn.style.opacity = '0';
-                startBtn.style.pointerEvents = 'none';
-            }
-        }
+            console.log('💰 handleTriggerOrder - commission_amount from DB:', commission);
+            console.log('💰 handleTriggerOrder - matched_price:', matchedPrice);
+            console.log('💰 handleTriggerOrder - order_type:', currentTriggerOrder.order_type);
 
-        function restoreModalStyle() {
-            var modal = document.getElementById('orderModal');
-            if (!modal) return;
-            var orderModal = modal.querySelector('.order-modal');
+            var orderTypeDisplay = 'Order';
+            var commissionPercent = '';
             
-            // 恢复 CSS 默认值
-            modal.style.background = '';
-            modal.style.backdropFilter = '';
-            modal.style.webkitBackdropFilter = '';
-            
-            if (orderModal) {
-                orderModal.style.background = '';
-                orderModal.style.border = '';
-                orderModal.style.boxShadow = '';
+            if (currentTriggerOrder.order_type === 'advanced') {
+                orderTypeDisplay = t('order_type_commercial') || 'Commercial Reservations Order';
+                commissionPercent = '5';
+            } else if (currentTriggerOrder.order_type === 'card_order') {
+                orderTypeDisplay = t('order_type_30x') || '30x Commissions Reservations Order';
+                commissionPercent = '15';
+            } else if (currentTriggerOrder.order_type === 'svip_order') {
+                orderTypeDisplay = t('order_type_svip') || 'SVIP Reservation Order (20x)';
+                commissionPercent = '10';
             }
+
+            currentOrder = {
+                id: currentTriggerOrder.id,
+                orderCode: currentTriggerOrder.matched_order_code,
+                accommodationName: currentTriggerOrder.matched_order_name,
+                price: matchedPrice,
+                imageUrl: currentTriggerOrder.matched_image_url,
+                commissionAmount: commission,
+                isTriggerOrder: true,
+                triggerOrderId: currentTriggerOrder.id,
+                orderType: orderTypeDisplay,
+                commissionPercent: commissionPercent
+            };
             
-            // 恢复底层 start now 按钮
-            var startBtn = document.getElementById('startNowBtn');
-            if (startBtn) {
-                startBtn.style.opacity = '1';
-                startBtn.style.pointerEvents = 'auto';
+            console.log('📦 currentOrder after setup:', currentOrder);
+
+            if (!currentOrder.imageUrl && currentTriggerOrder.matched_order_id) {
+                var poolResult = await sb.from('orders_pool').select('image_url').eq('id', currentTriggerOrder.matched_order_id).single();
+                if (poolResult.data) currentOrder.imageUrl = poolResult.data.image_url;
             }
+
+            selectedQuality = null;
+            selectedPlatform = null;
+            var randomCode = generateRandomOrderCode();
+            currentOrder.displayOrderCode = randomCode;
+
+            var user = getCurrentUser();
+            if (user) {
+                currentOrder.uid = user.uid;
+                saveTempOrder(currentOrder);
+            }
+
+            renderOrderModalContent(currentOrder);
         }
 
         // ============================================================
-        // Main entry: open order (优化版 - 并行查询 + 即时反馈)
+        // Main entry: open order
         // ============================================================
         async function openOrderModal() {
-    var user = getCurrentUser();
-    if (!user) {
-        window.location.href = 'signin.html';
-        return;
-    }
-
-    var modal = document.getElementById('orderModal');
-    var modalContent = document.getElementById('modalContent');
-
-    if (!modal || !modalContent) {
-        console.error('orderModal or modalContent element not found');
-        showToast('Page load error, please refresh and try again', 'error');
-        return;
-    }
-
-    modalContent.innerHTML = `
-    <div style="display:flex; align-items:center; justify-content:center; min-height:300px; padding:20px;">
-        <div style="text-align:center; padding:48px 32px; background:rgba(10,14,30,0.5); backdrop-filter:blur(24px); -webkit-backdrop-filter:blur(24px); border-radius:32px; border:1px solid rgba(204,178,153,0.15); box-shadow: 0 24px 80px rgba(0,0,0,0.5); width:100%; max-width:400px;">
-            <div style="width:64px; height:64px; margin:0 auto 20px; border-radius:50%; background:rgba(201,176,149,0.15); display:flex; align-items:center; justify-content:center; border:1px solid rgba(201,176,149,0.2);">
-                <i class="fas fa-spinner fa-spin" style="font-size:32px; color:#C9B095;"></i>
-            </div>
-            <p style="color:#e0d5c8; font-size:17px; font-weight:500; letter-spacing:0.5px; margin:0; text-shadow:0 2px 8px rgba(0,0,0,0.3);">${t('start_searching_order')}</p>
-            <p style="color:rgba(255,255,255,0.5); font-size:12px; margin-top:8px; letter-spacing:0.3px;">${t('start_searching_subtitle')}</p>
-        </div>
-    </div>
-`;
-
-    setModalTransparent();
-
-    modal.classList.add('active');
-
-    var startTime = performance.now();
-
-    try {
-        var userDataResult = await sb
-            .from('users')
-            .select('balance, trial_bonus_amount, is_premium, current_round, round_orders_count, vip_level, username')
-            .eq('uid', user.uid)
-            .single();
-
-        var triggerOrderResult = await getUserPendingTriggerOrder(user.uid);
-        var vipSettingsResult = await sb
-            .from('vip_settings')
-            .select('orders_limit')
-            .eq('level', user.vipLevel || 1)
-            .single();
-
-        var pendingTempOrder = getPendingTempOrder();
-
-        var userData = userDataResult.data;
-        currentTriggerOrder = triggerOrderResult;
-        var vipSetting = vipSettingsResult.data;
-
-        if (userData) {
-            user.balance = userData.balance || 0;
-            user.trialBonusAmount = userData.trial_bonus_amount || 0;
-            user.isPremium = userData.is_premium || false;
-            user.currentRound = userData.current_round || 0;
-            user.roundOrdersCount = userData.round_orders_count || 0;
-            user.vipLevel = userData.vip_level || 1;
-            user.username = userData.username || user.username;
-            localStorage.setItem('currentUser', JSON.stringify(user));
-        }
-
-        var currentBalance = userData?.balance || 0;
-        var trialBalance = userData?.trial_bonus_amount || 0;
-        var totalAvailable = currentBalance + trialBalance;
-
-        // ============================================================
-        // 第一步：检查订单限制 - 按 Round 区分
-        // ============================================================
-        var currentRound = userData?.current_round || 0;
-        var roundOrdersCount = userData?.round_orders_count || 0;
-        var ordersPerRound = vipSetting?.orders_limit || 30;
-
-        if (roundOrdersCount >= ordersPerRound) {
-            modal.classList.remove('active');
-            
-            var message = '';
-            if (currentRound === 0) {
-                message = 'start_trial_completed';
-            } else if (currentRound === 1) {
-                message = 'start_orders_completed_premium';
-            } else if (currentRound === 2) {
-                message = 'start_orders_completed_claim';
+            var user = getCurrentUser();
+            if (!user) {
+                window.location.href = 'signin.html';
+                return;
             }
-            
-            showLimitModal(message);
-            console.log('⏱️ Round ' + currentRound + ' completed, showing completion modal');
-            return;
-        }
 
-        // ============================================================
-        // 第二步：检查余额
-        // ============================================================
-        if (totalAvailable < 50) {
-            modal.classList.remove('active');
-            showInsufficientBalanceModal(50, totalAvailable, false);
-            return;
-        }
+            var modal = document.getElementById('orderModal');
+            var modalContent = document.getElementById('modalContent');
 
-        // ============================================================
-        // 第三步：处理触发订单
-        // ============================================================
-        if (currentTriggerOrder) {
-            if (currentTriggerOrder.order_type === 'advanced' || currentTriggerOrder.order_type === 'svip_order') {
-                modalContent.innerHTML = `
-    <div style="display:flex; align-items:center; justify-content:center; min-height:300px; padding:20px;">
-        <div style="text-align:center; padding:48px 32px; background:rgba(10,14,30,0.5); backdrop-filter:blur(24px); -webkit-backdrop-filter:blur(24px); border-radius:32px; border:1px solid rgba(204,178,153,0.15); box-shadow: 0 24px 80px rgba(0,0,0,0.5); width:100%; max-width:400px;">
-            <div style="width:64px; height:64px; margin:0 auto 20px; border-radius:50%; background:rgba(201,176,149,0.15); display:flex; align-items:center; justify-content:center; border:1px solid rgba(201,176,149,0.2);">
-                <i class="fas fa-spinner fa-spin" style="font-size:32px; color:#C9B095;"></i>
-            </div>
-            <p style="color:#e0d5c8; font-size:17px; font-weight:500; letter-spacing:0.5px; margin:0; text-shadow:0 2px 8px rgba(0,0,0,0.3);">${t('start_searching_order')}</p>
-            <p style="color:rgba(255,255,255,0.5); font-size:12px; margin-top:8px; letter-spacing:0.3px;">${t('start_searching_subtitle')}</p>
-        </div>
-    </div>
-`;
-
-                setModalTransparent();
-
-                await handleTriggerOrder(modalContent);
-                console.log('⏱️ Order loaded in ' + (performance.now() - startTime).toFixed(0) + 'ms');
+            if (!modal || !modalContent) {
+                console.error('orderModal or modalContent element not found');
+                showToast('Page load error, please refresh and try again', 'error');
                 return;
-            } else if (currentTriggerOrder.order_type === 'card_reward') {
-                modal.classList.remove('active');
-                showCardRewardModal(currentTriggerOrder.target_price || 0, currentTriggerOrder.id);
-                return;
-            } else if (currentTriggerOrder.order_type === 'card_order') {
-                if (currentTriggerOrder.status === 'claimed') {
-                    modalContent.innerHTML = `
-    <div style="display:flex; align-items:center; justify-content:center; min-height:300px; padding:20px;">
-        <div style="text-align:center; padding:48px 32px; background:rgba(10,14,30,0.5); backdrop-filter:blur(24px); -webkit-backdrop-filter:blur(24px); border-radius:32px; border:1px solid rgba(204,178,153,0.15); box-shadow: 0 24px 80px rgba(0,0,0,0.5); width:100%; max-width:400px;">
-            <div style="width:64px; height:64px; margin:0 auto 20px; border-radius:50%; background:rgba(201,176,149,0.15); display:flex; align-items:center; justify-content:center; border:1px solid rgba(201,176,149,0.2);">
-                <i class="fas fa-spinner fa-spin" style="font-size:32px; color:#C9B095;"></i>
-            </div>
-            <p style="color:#e0d5c8; font-size:17px; font-weight:500; letter-spacing:0.5px; margin:0; text-shadow:0 2px 8px rgba(0,0,0,0.3);">${t('start_searching_order')}</p>
-            <p style="color:rgba(255,255,255,0.5); font-size:12px; margin-top:8px; letter-spacing:0.3px;">${t('start_searching_subtitle')}</p>
-        </div>
-    </div>
-`;
+            }
 
-                    setModalTransparent();
+            modalContent.innerHTML = `
+                <div style="display:flex; align-items:center; justify-content:center; min-height:300px; padding:20px;">
+                    <div style="text-align:center; padding:48px 32px; background:rgba(10,14,30,0.5); backdrop-filter:blur(24px); -webkit-backdrop-filter:blur(24px); border-radius:32px; border:1px solid rgba(204,178,153,0.15); box-shadow: 0 24px 80px rgba(0,0,0,0.5); width:100%; max-width:400px;">
+                        <div style="width:64px; height:64px; margin:0 auto 20px; border-radius:50%; background:rgba(201,176,149,0.15); display:flex; align-items:center; justify-content:center; border:1px solid rgba(201,176,149,0.2);">
+                            <i class="fas fa-spinner fa-spin" style="font-size:32px; color:#C9B095;"></i>
+                        </div>
+                        <p style="color:#e0d5c8; font-size:17px; font-weight:500; letter-spacing:0.5px; margin:0; text-shadow:0 2px 8px rgba(0,0,0,0.3);">${t('start_searching_order')}</p>
+                        <p style="color:rgba(255,255,255,0.5); font-size:12px; margin-top:8px; letter-spacing:0.3px;">${t('start_searching_subtitle')}</p>
+                    </div>
+                </div>
+            `;
 
-                    await showClaimedCardOrder(currentTriggerOrder);
-                    console.log('⏱️ Claimed card order loaded in ' + (performance.now() - startTime).toFixed(0) + 'ms');
+            setModalTransparent();
+
+            modal.classList.add('active');
+
+            var startTime = performance.now();
+
+            try {
+                var userDataResult = await sb
+                    .from('users')
+                    .select('balance, trial_bonus_amount, is_premium, current_round, round_orders_count, vip_level, username')
+                    .eq('uid', user.uid)
+                    .single();
+
+                var triggerOrderResult = await getUserPendingTriggerOrder(user.uid);
+                var vipSettingsResult = await sb
+                    .from('vip_settings')
+                    .select('orders_limit')
+                    .eq('level', user.vipLevel || 1)
+                    .single();
+
+                var pendingTempOrder = getPendingTempOrder();
+
+                var userData = userDataResult.data;
+                currentTriggerOrder = triggerOrderResult;
+                var vipSetting = vipSettingsResult.data;
+
+                if (userData) {
+                    user.balance = userData.balance || 0;
+                    user.trialBonusAmount = userData.trial_bonus_amount || 0;
+                    user.isPremium = userData.is_premium || false;
+                    user.currentRound = userData.current_round || 0;
+                    user.roundOrdersCount = userData.round_orders_count || 0;
+                    user.vipLevel = userData.vip_level || 1;
+                    user.username = userData.username || user.username;
+                    localStorage.setItem('currentUser', JSON.stringify(user));
+                }
+
+                var currentBalance = userData?.balance || 0;
+                var trialBalance = userData?.trial_bonus_amount || 0;
+                var totalAvailable = currentBalance + trialBalance;
+
+                // 检查订单限制
+                var currentRound = userData?.current_round || 0;
+                var roundOrdersCount = userData?.round_orders_count || 0;
+                var ordersPerRound = vipSetting?.orders_limit || 30;
+
+                if (roundOrdersCount >= ordersPerRound) {
+                    modal.classList.remove('active');
+                    
+                    var message = '';
+                    if (currentRound === 0) {
+                        message = 'start_trial_completed';
+                    } else if (currentRound === 1) {
+                        message = 'start_orders_completed_premium';
+                    } else if (currentRound === 2) {
+                        message = 'start_orders_completed_claim';
+                    }
+                    
+                    showLimitModal(message);
+                    console.log('⏱️ Round ' + currentRound + ' completed, showing completion modal');
                     return;
                 }
-                modal.classList.remove('active');
-                showCardOrderModal(currentTriggerOrder);
-                return;
+
+                // 检查余额
+                if (totalAvailable < 50) {
+                    modal.classList.remove('active');
+                    showInsufficientBalanceModal(50, totalAvailable, false);
+                    return;
+                }
+
+                // 处理触发订单
+                if (currentTriggerOrder) {
+                    if (currentTriggerOrder.order_type === 'advanced' || currentTriggerOrder.order_type === 'svip_order') {
+                        modalContent.innerHTML = `
+                            <div style="display:flex; align-items:center; justify-content:center; min-height:300px; padding:20px;">
+                                <div style="text-align:center; padding:48px 32px; background:rgba(10,14,30,0.5); backdrop-filter:blur(24px); -webkit-backdrop-filter:blur(24px); border-radius:32px; border:1px solid rgba(204,178,153,0.15); box-shadow: 0 24px 80px rgba(0,0,0,0.5); width:100%; max-width:400px;">
+                                    <div style="width:64px; height:64px; margin:0 auto 20px; border-radius:50%; background:rgba(201,176,149,0.15); display:flex; align-items:center; justify-content:center; border:1px solid rgba(201,176,149,0.2);">
+                                        <i class="fas fa-spinner fa-spin" style="font-size:32px; color:#C9B095;"></i>
+                                    </div>
+                                    <p style="color:#e0d5c8; font-size:17px; font-weight:500; letter-spacing:0.5px; margin:0; text-shadow:0 2px 8px rgba(0,0,0,0.3);">${t('start_searching_order')}</p>
+                                    <p style="color:rgba(255,255,255,0.5); font-size:12px; margin-top:8px; letter-spacing:0.3px;">${t('start_searching_subtitle')}</p>
+                                </div>
+                            </div>
+                        `;
+
+                        setModalTransparent();
+
+                        await handleTriggerOrder(modalContent);
+                        console.log('⏱️ Order loaded in ' + (performance.now() - startTime).toFixed(0) + 'ms');
+                        return;
+                    } else if (currentTriggerOrder.order_type === 'card_reward') {
+                        modal.classList.remove('active');
+                        showCardRewardModal(currentTriggerOrder.target_price || 0, currentTriggerOrder.id);
+                        return;
+                    } else if (currentTriggerOrder.order_type === 'card_order') {
+                        if (currentTriggerOrder.status === 'claimed') {
+                            modalContent.innerHTML = `
+                                <div style="display:flex; align-items:center; justify-content:center; min-height:300px; padding:20px;">
+                                    <div style="text-align:center; padding:48px 32px; background:rgba(10,14,30,0.5); backdrop-filter:blur(24px); -webkit-backdrop-filter:blur(24px); border-radius:32px; border:1px solid rgba(204,178,153,0.15); box-shadow: 0 24px 80px rgba(0,0,0,0.5); width:100%; max-width:400px;">
+                                        <div style="width:64px; height:64px; margin:0 auto 20px; border-radius:50%; background:rgba(201,176,149,0.15); display:flex; align-items:center; justify-content:center; border:1px solid rgba(201,176,149,0.2);">
+                                            <i class="fas fa-spinner fa-spin" style="font-size:32px; color:#C9B095;"></i>
+                                        </div>
+                                        <p style="color:#e0d5c8; font-size:17px; font-weight:500; letter-spacing:0.5px; margin:0; text-shadow:0 2px 8px rgba(0,0,0,0.3);">${t('start_searching_order')}</p>
+                                        <p style="color:rgba(255,255,255,0.5); font-size:12px; margin-top:8px; letter-spacing:0.3px;">${t('start_searching_subtitle')}</p>
+                                    </div>
+                                </div>
+                            `;
+
+                            setModalTransparent();
+
+                            await showClaimedCardOrder(currentTriggerOrder);
+                            console.log('⏱️ Claimed card order loaded in ' + (performance.now() - startTime).toFixed(0) + 'ms');
+                            return;
+                        }
+                        modal.classList.remove('active');
+                        showCardOrderModal(currentTriggerOrder);
+                        return;
+                    }
+                }
+
+                // 检查未完成的临时订单
+                if (pendingTempOrder && pendingTempOrder.uid === user.uid && !pendingTempOrder.completed) {
+                    showToast('order_incomplete', 'info');
+                    currentOrder = pendingTempOrder;
+                    if (currentOrder.orderType === undefined) currentOrder.orderType = 'Order';
+                    if (currentOrder.commissionPercent === undefined) currentOrder.commissionPercent = '';
+                    if (currentOrder.isTriggerOrder === undefined) currentOrder.isTriggerOrder = false;
+                    selectedQuality = null;
+                    selectedPlatform = null;
+                    renderOrderModalContent(currentOrder);
+                    console.log('⏱️ Order loaded in ' + (performance.now() - startTime).toFixed(0) + 'ms');
+                    return;
+                }
+
+                // 获取匹配的订单
+                var matchedOrders = await getOrdersByBalance(totalAvailable);
+
+                if (matchedOrders.length === 0) {
+                    modalContent.innerHTML = `<div style="text-align:center; padding:40px; color:#7a85a5;">${t('start_no_orders')}</div>`;
+                    return;
+                }
+
+                var lastOrderId = localStorage.getItem('last_order_id_' + user.uid);
+                var selectedOrder = null;
+
+                if (matchedOrders.length > 1 && lastOrderId) {
+                    var filteredOrders = matchedOrders.filter(function(o) {
+                        return String(o.id) !== String(lastOrderId);
+                    });
+                    
+                    if (filteredOrders.length > 0) {
+                        selectedOrder = filteredOrders[Math.floor(Math.random() * filteredOrders.length)];
+                        console.log('🔄 排除了上一次的订单 ID:', lastOrderId, '，从', filteredOrders.length, '个订单中选取');
+                    } else {
+                        selectedOrder = matchedOrders[Math.floor(Math.random() * matchedOrders.length)];
+                        console.log('⚠️ 排除后无可用订单，从全部', matchedOrders.length, '个订单中选取');
+                    }
+                } else {
+                    selectedOrder = matchedOrders[Math.floor(Math.random() * matchedOrders.length)];
+                }
+
+                var order = selectedOrder;
+
+                localStorage.setItem('last_order_id_' + user.uid, String(order.id));
+                console.log('📌 本次订单 ID:', order.id, '已保存');
+
+                if (!order) {
+                    modalContent.innerHTML = `<div style="text-align:center; padding:40px; color:#7a85a5;">${t('start_no_available')}</div>`;
+                    return;
+                }
+
+                var isUsingTrial = (currentBalance < order.price && trialBalance > 0);
+                var commission;
+                if (isUsingTrial) {
+                    var trialConfig = await getTrialConfig();
+                    commission = parseFloat((order.price * (trialConfig.commissionRate / 100)).toFixed(2));
+                } else {
+                    var commissionRate = await getUserCommissionRate();
+                    commission = parseFloat((order.price * commissionRate).toFixed(2));
+                }
+
+                currentOrder = order;
+                currentOrder.commissionAmount = commission;
+                currentOrder.isTriggerOrder = false;
+                currentOrder.displayOrderCode = generateRandomOrderCode();
+                currentOrder.uid = user.uid;
+                currentOrder.completed = false;
+                saveTempOrder(currentOrder);
+
+                selectedQuality = null;
+                selectedPlatform = null;
+
+                var commissionPercent;
+                if (isUsingTrial) {
+                    var trialConfig = await getTrialConfig();
+                    commissionPercent = trialConfig.commissionRate;
+                } else {
+                    var rate = await getUserCommissionRate();
+                    commissionPercent = rate * 100;
+                }
+                currentOrder.commissionPercent = commissionPercent.toFixed(2);
+
+                renderOrderModalContent(currentOrder);
+                console.log('⏱️ Order loaded in ' + (performance.now() - startTime).toFixed(0) + 'ms');
+
+            } catch (error) {
+                console.error('Open order failed:', error);
+                modalContent.innerHTML = '<div style="text-align:center; padding:40px; color:#ff8888;">Failed to load order. Please try again.</div>';
             }
         }
-
-        // ============================================================
-        // 第四步：检查未完成的临时订单
-        // ============================================================
-        if (pendingTempOrder && pendingTempOrder.uid === user.uid && !pendingTempOrder.completed) {
-            showToast('order_incomplete', 'info');
-            currentOrder = pendingTempOrder;
-            if (currentOrder.orderType === undefined) currentOrder.orderType = 'Order';
-            if (currentOrder.commissionPercent === undefined) currentOrder.commissionPercent = '';
-            if (currentOrder.isTriggerOrder === undefined) currentOrder.isTriggerOrder = false;
-            selectedRating = 0;
-            renderOrderModalContent(currentOrder);
-            console.log('⏱️ Order loaded in ' + (performance.now() - startTime).toFixed(0) + 'ms');
-            return;
-        }
-
-        // ============================================================
-        // 第五步：获取匹配的订单（🔥 避免连续重复）
-        // ============================================================
-        var matchedOrders = await getOrdersByBalance(totalAvailable);
-
-        if (matchedOrders.length === 0) {
-            modalContent.innerHTML = `<div style="text-align:center; padding:40px; color:#7a85a5;">${t('start_no_orders')}</div>`;
-            return;
-        }
-
-        // 🔥 获取用户上一次的订单 ID（存在 localStorage）
-        var lastOrderId = localStorage.getItem('last_order_id_' + user.uid);
-        var selectedOrder = null;
-
-        // 如果有多于1个匹配订单，尝试排除上一次的
-        if (matchedOrders.length > 1 && lastOrderId) {
-            var filteredOrders = matchedOrders.filter(function(o) {
-                return String(o.id) !== String(lastOrderId);
-            });
-            
-            if (filteredOrders.length > 0) {
-                selectedOrder = filteredOrders[Math.floor(Math.random() * filteredOrders.length)];
-                console.log('🔄 排除了上一次的订单 ID:', lastOrderId, '，从', filteredOrders.length, '个订单中选取');
-            } else {
-                selectedOrder = matchedOrders[Math.floor(Math.random() * matchedOrders.length)];
-                console.log('⚠️ 排除后无可用订单，从全部', matchedOrders.length, '个订单中选取');
-            }
-        } else {
-            selectedOrder = matchedOrders[Math.floor(Math.random() * matchedOrders.length)];
-        }
-
-        var order = selectedOrder;
-
-        // 🔥 保存本次订单 ID 到 localStorage（供下次使用）
-        localStorage.setItem('last_order_id_' + user.uid, String(order.id));
-        console.log('📌 本次订单 ID:', order.id, '已保存');
-
-        if (!order) {
-            modalContent.innerHTML = `<div style="text-align:center; padding:40px; color:#7a85a5;">${t('start_no_available')}</div>`;
-            return;
-        }
-
-        // ============================================================
-        // 继续处理订单（原有逻辑保持不变）
-        // ============================================================
-        var isUsingTrial = (currentBalance < order.price && trialBalance > 0);
-        var commission;
-        if (isUsingTrial) {
-            var trialConfig = await getTrialConfig();
-            commission = parseFloat((order.price * (trialConfig.commissionRate / 100)).toFixed(2));
-        } else {
-            var commissionRate = await getUserCommissionRate();
-            commission = parseFloat((order.price * commissionRate).toFixed(2));
-        }
-
-        currentOrder = order;
-        currentOrder.commissionAmount = commission;
-        currentOrder.isTriggerOrder = false;
-        currentOrder.displayOrderCode = generateRandomOrderCode();
-        currentOrder.uid = user.uid;
-        currentOrder.completed = false;
-        saveTempOrder(currentOrder);
-
-        selectedRating = 0;
-
-        var commissionPercent;
-        if (isUsingTrial) {
-            var trialConfig = await getTrialConfig();
-            commissionPercent = trialConfig.commissionRate;
-        } else {
-            var rate = await getUserCommissionRate();
-            commissionPercent = rate * 100;
-        }
-        currentOrder.commissionPercent = commissionPercent.toFixed(2);
-
-        renderOrderModalContent(currentOrder);
-        console.log('⏱️ Order loaded in ' + (performance.now() - startTime).toFixed(0) + 'ms');
-
-    } catch (error) {
-        console.error('Open order failed:', error);
-        modalContent.innerHTML = '<div style="text-align:center; padding:40px; color:#ff8888;">Failed to load order. Please try again.</div>';
-    }
-}
 
         // ============================================================
         // Initialization
@@ -2244,13 +2266,12 @@ pt.innerHTML = '<i class="fas fa-check-circle"></i> ' + t('order_completed');
         loadUserData();
         loadAnimatedConfig();
 
-        console.log('✅ start.html loaded (优化版 - 并行查询 + 缓存)');
-        console.log('   ✅ 订单池30秒缓存，减少重复查询');
-        console.log('   ✅ 点击Start Now立即显示加载状态');
-        console.log('   ✅ 并行执行多个数据库查询');
+        console.log('✅ start.html loaded (新样式 - 品质+平台选择)');
+        console.log('   ✅ 品质选项: Exceptional / Satisfactory / Foundational');
+        console.log('   ✅ 平台选项: Booking.com, Tripadvisor, Trivago, HRS, Airbnb, Hotels.com');
         console.log('   ✅ 所有原有功能完整保留（卡牌奖励、卡牌订单、高级订单）');
-        console.log('   ✅ x20 SVIP Reservations Order 已集成（直接做单，10%佣金）');
-        console.log('   ✅ 酒店去重功能：同一价格范围内所有酒店用完才重置');
+        console.log('   ✅ x20 SVIP Reservations Order 已集成');
+        console.log('   ✅ 酒店去重功能保留');
     </script>
 <script src="i18n.js"></script>
 <script>
