@@ -697,8 +697,8 @@ async function getUsedHotelsInCurrentRange(uid, balance) {
     var bucketMax = bucketMin + bucketSize;
     
     // 实际价格范围：档位的 50%~95%
-    var minPrice = bucketMin * 0.5;
-    var maxPrice = Math.min(bucketMax * 0.95, balance * 0.95);
+    var minPrice = bucketMin * 0.75;
+var maxPrice = Math.min(bucketMax * 0.95, balance * 0.95);
     
     // 档位标识（如 "100-150"）
     var bucketKey = bucketMin + '-' + bucketMax;
@@ -746,8 +746,8 @@ async function getUsedHotelsInCurrentRange(uid, balance) {
     var bucketSize = 50;
     var bucketMin = Math.floor(balance / bucketSize) * bucketSize;
     var bucketMax = bucketMin + bucketSize;
-    var minPrice = bucketMin * 0.5;
-    var maxPrice = Math.min(bucketMax * 0.95, balance * 0.95);
+    var minPrice = bucketMin * 0.75;
+var maxPrice = Math.min(bucketMax * 0.95, balance * 0.95);
     var bucketKey = bucketMin + '-' + bucketMax;
     
     console.log('💰 余额:', balance, '档位:', bucketKey, '价格范围:', minPrice.toFixed(2), '~', maxPrice.toFixed(2));
