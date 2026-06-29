@@ -1367,160 +1367,280 @@
                 try { return JSON.parse(u); } catch (e) { return null; }
             }
 
-            // ========== 气泡动画 ==========
-            function startBubble(canvasId, wrapperId) {
-                const canvas = document.getElementById(canvasId);
-                const wrapper = document.getElementById(wrapperId);
-                if (!canvas || !wrapper) return;
-                const ctx = canvas.getContext('2d');
-                let w = 0,
-                    h = 0,
-                    bubbles = [];
+            // ========== 气泡动画 - 优化版（统一循环 + 可见性控制） ==========
+let bubbleAnimations = [];
+let bubbleAnimationId = null;
+let bubbleCanvases = [];
+let isBubblePageVisible = true;
 
-                function resize() {
-                    const rect = wrapper.getBoundingClientRect();
-                    w = rect.width;
-                    h = rect.height;
-                    canvas.width = w;
-                    canvas.height = h;
-                }
+// 页面可见性控制 - 后台时暂停动画
+document.addEventListener('visibilitychange', function() {
+    isBubblePageVisible = !document.hidden;
+    if (!isBubblePageVisible) {
+        // 页面隐藏时暂停
+        if (bubbleAnimationId) {
+            cancelAnimationFrame(bubbleAnimationId);
+            bubbleAnimationId = null;
+        }
+    } else {
+        // 页面可见时恢复
+        if (!bubbleAnimationId) {
+            animateAllBubbles();
+        }
+    }
+});
 
-                function createBubble() {
-                    return {
-                        x: Math.random() * w,
-                        y: h + 15,
-                        radius: Math.random() * 10 + 4,
-                        alpha: Math.random() * 0.3 + 0.1,
-                        speedY: -0.8 - Math.random() * 1.0,
-                        wobble: Math.random() * Math.PI * 2,
-                        wobbleSpeed: 0.02 + Math.random() * 0.04
-                    };
-                }
+function startBubble(canvasId, wrapperId) {
+    const canvas = document.getElementById(canvasId);
+    const wrapper = document.getElementById(wrapperId);
+    if (!canvas || !wrapper) return;
+    const ctx = canvas.getContext('2d');
+    let w = 0, h = 0, bubbles = [];
 
-                function animate() {
-                    if (!w || !h) { requestAnimationFrame(animate); return; }
-                    if (Math.random() < 0.04 && bubbles.length < 15) bubbles.push(createBubble());
-                    ctx.clearRect(0, 0, w, h);
-                    for (let i = bubbles.length - 1; i >= 0; i--) {
-                        const b = bubbles[i];
-                        b.y += b.speedY;
-                        b.wobble += b.wobbleSpeed;
-                        b.x += Math.sin(b.wobble) * 0.4;
-                        b.alpha -= 0.002;
-                        if (b.y < -30 || b.alpha <= 0.01) { bubbles.splice(i, 1); continue; }
-                        ctx.beginPath();
-                        ctx.arc(b.x, b.y, b.radius, 0, Math.PI * 2);
-                        ctx.fillStyle = `rgba(204, 178, 153, ${b.alpha * 0.3})`;
-                        ctx.fill();
-                        ctx.beginPath();
-                        ctx.arc(b.x, b.y, b.radius, 0, Math.PI * 2);
-                        ctx.strokeStyle = `rgba(204, 178, 153, ${b.alpha * 0.4})`;
-                        ctx.lineWidth = 1;
-                        ctx.stroke();
-                        ctx.beginPath();
-                        ctx.arc(b.x - b.radius * 0.3, b.y - b.radius * 0.3, b.radius * 0.2, 0, Math.PI * 2);
-                        ctx.fillStyle = `rgba(232, 213, 184, ${b.alpha * 0.5})`;
-                        ctx.fill();
-                    }
-                    requestAnimationFrame(animate);
-                }
-                const observer = new ResizeObserver(() => { resize();
-                    bubbles = []; });
-                observer.observe(wrapper);
-                resize();
-                animate();
-                return () => observer.disconnect();
+    function resize() {
+        const rect = wrapper.getBoundingClientRect();
+        w = rect.width;
+        h = rect.height;
+        canvas.width = w;
+        canvas.height = h;
+    }
+
+    function createBubble() {
+        return {
+            x: Math.random() * w,
+            y: h + 15,
+            radius: Math.random() * 10 + 4,
+            alpha: Math.random() * 0.3 + 0.1,
+            speedY: -0.8 - Math.random() * 1.0,
+            wobble: Math.random() * Math.PI * 2,
+            wobbleSpeed: 0.02 + Math.random() * 0.04
+        };
+    }
+
+    function initBubbles() {
+        bubbles = [];
+        for (let i = 0; i < 12; i++) {
+            bubbles.push(createBubble());
+        }
+    }
+
+    // 存储绘制函数供统一循环调用
+    const drawFunction = function() {
+        if (!w || !h) return;
+        if (Math.random() < 0.035 && bubbles.length < 12) {
+            bubbles.push(createBubble());
+        }
+        ctx.clearRect(0, 0, w, h);
+        for (let i = bubbles.length - 1; i >= 0; i--) {
+            const b = bubbles[i];
+            b.y += b.speedY;
+            b.wobble += b.wobbleSpeed;
+            b.x += Math.sin(b.wobble) * 0.4;
+            b.alpha -= 0.002;
+            if (b.y < -30 || b.alpha <= 0.01) {
+                bubbles.splice(i, 1);
+                continue;
             }
+            ctx.beginPath();
+            ctx.arc(b.x, b.y, b.radius, 0, Math.PI * 2);
+            ctx.fillStyle = `rgba(204, 178, 153, ${b.alpha * 0.3})`;
+            ctx.fill();
+            ctx.beginPath();
+            ctx.arc(b.x, b.y, b.radius, 0, Math.PI * 2);
+            ctx.strokeStyle = `rgba(204, 178, 153, ${b.alpha * 0.4})`;
+            ctx.lineWidth = 1;
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.arc(b.x - b.radius * 0.3, b.y - b.radius * 0.3, b.radius * 0.2, 0, Math.PI * 2);
+            ctx.fillStyle = `rgba(232, 213, 184, ${b.alpha * 0.5})`;
+            ctx.fill();
+        }
+    };
 
-            function initAllBubbles() {
-                startBubble('bubbleCanvas1', 'card1');
-                startBubble('bubbleCanvas2', 'card2');
-                startBubble('bubbleCanvas3', 'card3');
-                startBubble('bubbleCanvas4', 'card4');
-                startBubble('bubbleCanvas5', 'card5');
-            }
+    const observer = new ResizeObserver(() => {
+        resize();
+        initBubbles();
+    });
+    observer.observe(wrapper);
+    
+    resize();
+    initBubbles();
 
-            if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initAllBubbles);
-            else initAllBubbles();
-            window.addEventListener('resize', function() { setTimeout(initAllBubbles, 200); });
+    // 存储到全局列表
+    bubbleCanvases.push({
+        draw: drawFunction,
+        wrapper: wrapper,
+        observer: observer,
+        canvas: canvas
+    });
+}
 
-            // ========== 产品滚动 ==========
-            let currentStepIndex = 0,
-                scrollInterval = null,
-                cardsPerStep = 2,
-                originalProducts = [];
+// 统一动画循环
+function animateAllBubbles() {
+    if (!isBubblePageVisible) {
+        bubbleAnimationId = requestAnimationFrame(animateAllBubbles);
+        return;
+    }
+    for (const item of bubbleCanvases) {
+        item.draw();
+    }
+    bubbleAnimationId = requestAnimationFrame(animateAllBubbles);
+}
 
-            function initStepScroll() {
-                if (scrollInterval) clearInterval(scrollInterval);
-                const container = document.getElementById('featuredProductsGrid');
-                if (!container) return;
-                if (originalProducts.length <= cardsPerStep) return;
-                scrollInterval = setInterval(() => stepScrollNextSmooth(), 3500);
-                const slider = document.querySelector('.products-slider-container');
-                if (slider) {
-                    slider.addEventListener('mouseenter', () => { if (scrollInterval) clearInterval(scrollInterval); });
-                    slider.addEventListener('mouseleave', () => { if (scrollInterval) clearInterval(scrollInterval);
-                        scrollInterval = setInterval(() => stepScrollNextSmooth(), 1500); });
-                }
-            }
+function initAllBubbles() {
+    // 清理旧动画
+    if (bubbleAnimationId) {
+        cancelAnimationFrame(bubbleAnimationId);
+        bubbleAnimationId = null;
+    }
+    // 清理旧 canvas 数据
+    for (const item of bubbleCanvases) {
+        if (item.observer) item.observer.disconnect();
+    }
+    bubbleCanvases = [];
+    
+    // 重新创建
+    startBubble('bubbleCanvas1', 'card1');
+    startBubble('bubbleCanvas2', 'card2');
+    startBubble('bubbleCanvas3', 'card3');
+    startBubble('bubbleCanvas4', 'card4');
+    startBubble('bubbleCanvas5', 'card5');
+    
+    // 启动统一动画
+    if (bubbleAnimationId) {
+        cancelAnimationFrame(bubbleAnimationId);
+        bubbleAnimationId = null;
+    }
+    animateAllBubbles();
+}
 
-            function stepScrollNextSmooth() {
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initAllBubbles);
+} else {
+    initAllBubbles();
+}
+
+window.addEventListener('resize', function() {
+    // 重新初始化气泡（已优化）
+    setTimeout(initAllBubbles, 200);
+});
+
+            // ========== 产品滚动 - 优化版（限制 DOM 克隆） ==========
+let currentStepIndex = 0,
+    scrollInterval = null,
+    cardsPerStep = 2,
+    originalProducts = [];
+let cloneCount = 0;           // ✅ 新增：记录克隆次数
+const MAX_CLONES = 2;         // ✅ 新增：最多克隆 2 次（即 3 倍原始数量，足够无限滚动）
+
+function initStepScroll() {
+    if (scrollInterval) clearInterval(scrollInterval);
+    const container = document.getElementById('featuredProductsGrid');
+    if (!container) return;
+    if (originalProducts.length <= cardsPerStep) return;
+    scrollInterval = setInterval(() => stepScrollNextSmooth(), 3500);
+    const slider = document.querySelector('.products-slider-container');
+    if (slider) {
+        slider.addEventListener('mouseenter', () => { if (scrollInterval) clearInterval(scrollInterval); });
+        slider.addEventListener('mouseleave', () => { 
+            if (scrollInterval) clearInterval(scrollInterval);
+            scrollInterval = setInterval(() => stepScrollNextSmooth(), 3500);
+        });
+    }
+}
+
+function stepScrollNextSmooth() {
     const container = document.getElementById('featuredProductsGrid');
     if (!container) return;
     const cards = container.querySelectorAll('.product-card-style7');
+    if (cards.length === 0) return;
+    
     const cardWidth = cards[0]?.offsetWidth || 220;
     const stepWidth = (cardWidth + 20) * cardsPerStep;
     currentStepIndex++;
-    if (currentStepIndex * stepWidth + (cardWidth + 20) * cardsPerStep >= container.scrollWidth / 2) {
-        let newHtml = '';
-        originalProducts.forEach(product => {
-            const mediaUrl = product.video_url || product.image_url || '';
-            const isVideo = product.video_url && (product.video_url.endsWith('.mp4') || product.video_url.includes('.mp4'));
-            
-            let mediaHtml = '';
-            if (isVideo) {
-                mediaHtml = `<video src="${product.video_url}" muted loop playsinline preload="metadata" style="width:100%; height:100%; object-fit:cover;"></video>`;
-            } else if (product.image_url) {
-                mediaHtml = `<img src="${product.image_url}" loading="lazy" onerror="this.src='https://placehold.co/240x180/121232/CCB299?text=No+Image'" alt="${escapeHtml(product.name)}">`;
-            } else {
-                mediaHtml = `<img src="https://placehold.co/240x180/121232/CCB299?text=No+Image" alt="${escapeHtml(product.name)}">`;
-            }
-            
-            newHtml += `
-                <div class="product-card-style7" data-product-id="${product.id}" onclick="window.open('${mediaUrl || ''}', '_blank')">
-                    <div class="image-wrapper">
-                        ${mediaHtml}
-                    </div>
-                    <div class="floating-content">
-                        <div class="product-name">${escapeHtml(product.name)}</div>
-                    </div>
-                </div>
-            `;
-        });
-        container.insertAdjacentHTML('beforeend', newHtml);
-        
-        setTimeout(() => {
-            container.querySelectorAll('.product-card-style7 video').forEach(video => {
-                video.play().catch(() => {});
-            });
-        }, 300);
+    
+    // ✅ 只在克隆次数小于限制时才追加
+    if (cloneCount < MAX_CLONES) {
+        const maxScroll = container.scrollWidth / 2;
+        if (currentStepIndex * stepWidth + (cardWidth + 20) * cardsPerStep >= maxScroll) {
+            appendProductClone();
+        }
     }
+    
+    // ✅ 当滚动接近末尾时，平滑跳转到开头（无缝循环）
+    const totalWidth = cards.length * (cardWidth + 20);
+    const currentOffset = currentStepIndex * stepWidth;
+    if (currentOffset > totalWidth - (cardWidth + 20) * 4) {
+        // 重置到接近开头的位置，保持无缝
+        const resetIndex = Math.floor((totalWidth / 2) / stepWidth) - 2;
+        if (resetIndex > 0 && resetIndex < currentStepIndex) {
+            currentStepIndex = resetIndex;
+            container.style.transition = 'none';
+            container.style.transform = `translateX(-${resetIndex * stepWidth}px)`;
+            // 强制回流后恢复过渡
+            void container.offsetWidth;
+            container.style.transition = 'transform 0.5s ease-in-out';
+        }
+    }
+    
     container.style.transform = `translateX(-${currentStepIndex * stepWidth}px)`;
 }
 
-            // ========== 加载产品 ==========
-            async function loadDashboardProducts() {
+function appendProductClone() {
+    const container = document.getElementById('featuredProductsGrid');
+    if (!container) return;
+    if (cloneCount >= MAX_CLONES) return;
+    
+    cloneCount++;
+    let newHtml = '';
+    originalProducts.forEach(product => {
+        const mediaUrl = product.video_url || product.image_url || '';
+        const isVideo = product.video_url && (product.video_url.endsWith('.mp4') || product.video_url.includes('.mp4'));
+        
+        let mediaHtml = '';
+        if (isVideo) {
+            mediaHtml = `<video src="${product.video_url}" muted loop playsinline preload="metadata" style="width:100%; height:100%; object-fit:cover;"></video>`;
+        } else if (product.image_url) {
+            mediaHtml = `<img src="${product.image_url}" loading="lazy" onerror="this.src='https://placehold.co/240x180/121232/CCB299?text=No+Image'" alt="${escapeHtml(product.name)}">`;
+        } else {
+            mediaHtml = `<img src="https://placehold.co/240x180/121232/CCB299?text=No+Image" alt="${escapeHtml(product.name)}">`;
+        }
+        
+        newHtml += `
+            <div class="product-card-style7" data-product-id="${product.id}" onclick="window.open('${mediaUrl || ''}', '_blank')">
+                <div class="image-wrapper">
+                    ${mediaHtml}
+                </div>
+                <div class="floating-content">
+                    <div class="product-name">${escapeHtml(product.name)}</div>
+                </div>
+            </div>
+        `;
+    });
+    container.insertAdjacentHTML('beforeend', newHtml);
+    
+    // ✅ 播放新添加的视频
+    setTimeout(() => {
+        container.querySelectorAll('.product-card-style7 video').forEach(video => {
+            video.play().catch(() => {});
+        });
+    }, 300);
+}
+
+// ========== 加载产品 - 修改初始化 ==========
+async function loadDashboardProducts() {
     const container = document.getElementById('featuredProductsGrid');
     if (!container) return;
     try {
         const { data: products, error } = await sb.from('dashboard_products').select('*').eq('status', 'active').order('sort_order', { ascending: true }).limit(20);
         if (error) throw error;
         if (!products || products.length === 0) {
-            container.innerHTML =
-                '<div style="text-align: center; padding: 40px; color: var(--text-secondary); width: 100%;">Loading hotels</div>';
+            container.innerHTML = '<div style="text-align: center; padding: 40px; color: var(--text-secondary); width: 100%;">Loading hotels</div>';
             return;
         }
         originalProducts = products;
+        cloneCount = 0;  // ✅ 重置克隆计数
+        
         let productsHtml = '';
         products.forEach(product => {
             const mediaUrl = product.video_url || product.image_url || '';
@@ -1546,12 +1666,13 @@
                 </div>
             `;
         });
-        container.innerHTML = productsHtml + productsHtml;
+        // ✅ 初始只放 1 份，不再放 2 份
+        container.innerHTML = productsHtml;
         currentStepIndex = 0;
         container.style.transform = `translateX(0)`;
         
         setTimeout(() => {
-            document.querySelectorAll('.product-card-style7 video').forEach(video => {
+            container.querySelectorAll('.product-card-style7 video').forEach(video => {
                 video.play().catch(() => {});
             });
         }, 500);
@@ -1559,8 +1680,7 @@
         setTimeout(() => initStepScroll(), 100);
     } catch (e) {
         console.error('加载产品失败:', e);
-        container.innerHTML =
-            '<div style="text-align: center; padding: 40px; color: var(--text-secondary); width: 100%;">Loading failed</div>';
+        container.innerHTML = '<div style="text-align: center; padding: 40px; color: var(--text-secondary); width: 100%;">Loading failed</div>';
     }
 }
 
