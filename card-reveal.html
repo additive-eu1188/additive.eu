@@ -3,14 +3,14 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
-    <title>卡牌揭晓 · 完整流程</title>
+    <title>卡牌揭晓</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700;14..32,800&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             background: radial-gradient(circle at 10% 20%, #0a0f2a, #050814);
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            font-family: 'Inter', sans-serif;
             min-height: 100vh;
             display: flex;
             align-items: center;
@@ -20,7 +20,6 @@
             overflow: hidden;
             position: relative;
         }
-
         .stage {
             position: relative;
             width: 100%;
@@ -32,67 +31,40 @@
             justify-content: center;
         }
 
-        /* ===== 粒子流 ===== */
-        .stream-container {
-            position: absolute;
-            inset: 0;
-            z-index: 1;
-            pointer-events: none;
-            overflow: visible;
-        }
-
-        .stream-particle {
-            position: absolute;
-            border-radius: 50%;
-            background: #b8944a;
-            will-change: transform, opacity;
-            transform: translate3d(0, 0, 0);
-            backface-visibility: hidden;
-            opacity: 0;
-            transition: all 1.2s cubic-bezier(0.15, 0.85, 0.3, 1.05);
-        }
-
-        /* ===== 星空粒子（炸开后遍布屏幕，然后消失） ===== */
-        .star-particle {
-            position: fixed;
-            border-radius: 50%;
-            pointer-events: none;
-            z-index: 2;
-            will-change: transform, opacity;
-            transform: translate3d(0, 0, 0);
-            backface-visibility: hidden;
-            opacity: 0;
-            transition: none;
-        }
-
-        /* ===== 卡牌容器 ===== */
         .cards-grid {
-            display: flex;
-            gap: 28px;
-            justify-content: center;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            grid-template-rows: auto auto;
+            gap: 16px 20px;
+            justify-items: center;
             align-items: center;
-            flex-wrap: wrap;
             width: 100%;
-            padding: 20px;
+            max-width: 400px;
+            padding: 10px;
             position: relative;
             z-index: 10;
+            margin: 0 auto;
         }
-
         .card-item {
-            width: 200px;
-            height: 300px;
+            width: 160px;
+            height: 240px;
             perspective: 2000px;
             cursor: default;
             position: relative;
-            flex-shrink: 0;
             border-radius: 20px;
             opacity: 0;
             transform: scale(0.85) translateY(20px);
             transition: none;
             pointer-events: none;
+            z-index: 1;
             will-change: transform, opacity;
             backface-visibility: hidden;
         }
+        .card-item:nth-child(3) {
+            grid-column: 1 / -1;
+            justify-self: center;
+        }
+
         .card-item.show {
             opacity: 1 !important;
             transform: scale(1) translateY(0) !important;
@@ -109,10 +81,7 @@
             transform-style: preserve-3d;
             transition: transform 0.7s cubic-bezier(0.2, 0.8, 0.2, 1);
             border-radius: 20px;
-            will-change: transform;
-            backface-visibility: hidden;
         }
-
         .face {
             position: absolute;
             inset: 0;
@@ -121,13 +90,10 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            padding: 28px 24px;
+            padding: 20px 16px;
             border-radius: 20px;
             overflow: hidden;
-            -webkit-backface-visibility: hidden;
         }
-
-        /* ===== 正面 ===== */
         .face-front {
             background: linear-gradient(160deg, #0a0e1f 0%, #0f1a3a 35%, #1a0e2a 65%, #0a0e1f 100%);
             border: 1px solid rgba(184, 148, 74, 0.2);
@@ -135,43 +101,25 @@
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(184, 148, 74, 0.06);
         }
         .face-front .crown-img {
-            width: 60px;
-            height: 60px;
+            width: 44px;
+            height: 44px;
             object-fit: contain;
-            margin-bottom: 16px;
-            z-index: 3;
-            position: relative;
+            margin-bottom: 12px;
             filter: drop-shadow(0 0 30px rgba(184, 148, 74, 0.15));
-            transition: filter 0.3s ease;
-        }
-        .card-item.show:hover .face-front .crown-img {
-            filter: drop-shadow(0 0 40px rgba(184, 148, 74, 0.25));
         }
         .face-front span {
-            font-size: 14px;
+            font-size: 12px;
             color: rgba(184, 148, 74, 0.35);
             letter-spacing: 2px;
             font-weight: 500;
-            z-index: 3;
-            position: relative;
         }
         .face-front .diamond-icon {
-            font-size: 46px;
+            font-size: 32px;
             color: rgba(184, 148, 74, 0.20);
-            margin-top: 10px;
-            z-index: 3;
-            position: relative;
+            margin-top: 8px;
             text-shadow: 0 0 30px rgba(184, 148, 74, 0.08);
-            transition: all 0.4s ease;
-            filter: drop-shadow(0 0 20px rgba(184, 148, 74, 0.05));
-        }
-        .card-item.show:hover .face-front .diamond-icon {
-            color: rgba(184, 148, 74, 0.30);
-            text-shadow: 0 0 40px rgba(184, 148, 74, 0.12);
-            transform: scale(1.05);
         }
 
-        /* ===== 背面 ===== */
         .face-back {
             background: linear-gradient(160deg, #0a0e1f 0%, #0f1a3a 35%, #1a0e2a 65%, #0a0e1f 100%);
             border: 1px solid rgba(184, 148, 74, 0.3);
@@ -179,60 +127,48 @@
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(184, 148, 74, 0.08), inset 0 -1px 0 rgba(0, 0, 0, 0.4);
         }
         .face-back .icon {
-            font-size: 44px;
+            font-size: 32px;
             color: #c4a86a;
-            margin-bottom: 12px;
+            margin-bottom: 10px;
             filter: drop-shadow(0 0 16px rgba(184, 148, 74, 0.12));
-            z-index: 3;
-            position: relative;
         }
         .face-back .amount {
-            font-size: 48px;
+            font-size: 32px;
             font-weight: 800;
             color: #d4b87a;
             text-shadow: 0 0 24px rgba(184, 148, 74, 0.06);
             line-height: 1.1;
             margin-bottom: 4px;
-            z-index: 3;
-            position: relative;
             letter-spacing: 1px;
         }
         .face-back .divider-line {
-            width: 40px;
+            width: 32px;
             height: 1px;
-            margin: 10px 0 8px;
+            margin: 8px 0 6px;
             background: linear-gradient(90deg, transparent, rgba(184, 148, 74, 0.35), transparent);
-            z-index: 3;
-            position: relative;
         }
         .face-back .label {
-            font-size: 12px;
-            letter-spacing: 2.5px;
+            font-size: 10px;
+            letter-spacing: 2px;
             text-transform: uppercase;
             font-weight: 600;
             color: rgba(184, 148, 74, 0.45);
-            z-index: 3;
-            position: relative;
         }
         .face-back .stars {
             color: rgba(184, 148, 74, 0.15);
-            font-size: 10px;
-            letter-spacing: 4px;
-            margin-top: 6px;
-            z-index: 3;
-            position: relative;
+            font-size: 9px;
+            letter-spacing: 3px;
+            margin-top: 4px;
         }
         .face-back .bottom-tag {
             position: absolute;
-            bottom: 16px;
+            bottom: 12px;
             left: 50%;
             transform: translateX(-50%);
-            font-size: 9px;
+            font-size: 8px;
             font-weight: 600;
-            padding: 4px 14px;
+            padding: 3px 12px;
             border-radius: 20px;
-            z-index: 5;
-            letter-spacing: 0.5px;
             background: rgba(184, 148, 74, 0.05);
             color: rgba(184, 148, 74, 0.35);
             border: 1px solid rgba(184, 148, 74, 0.06);
@@ -240,8 +176,8 @@
         .face-back .bottom-tag i { margin-right: 4px; }
         .face-back .shield-bg {
             position: absolute;
-            width: 140px;
-            height: 160px;
+            width: 120px;
+            height: 140px;
             border: 1px solid rgba(184, 148, 74, 0.03);
             border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
             transform: rotate(45deg);
@@ -250,10 +186,10 @@
         }
         .face-back .inner-border {
             position: absolute;
-            top: 16px;
-            left: 16px;
-            right: 16px;
-            bottom: 16px;
+            top: 12px;
+            left: 12px;
+            right: 12px;
+            bottom: 12px;
             border: 1px solid rgba(184, 148, 74, 0.04);
             border-radius: 12px;
             pointer-events: none;
@@ -264,34 +200,33 @@
 
         .card-item.float-anim {
             animation: cardFloatLight 3.6s ease-in-out infinite;
-            will-change: transform;
-            backface-visibility: hidden;
         }
         .card-item.float-anim:nth-child(1) { animation-delay: 0s; }
         .card-item.float-anim:nth-child(2) { animation-delay: 0.5s; }
         .card-item.float-anim:nth-child(3) { animation-delay: 1.0s; }
-
         @keyframes cardFloatLight {
             0% { transform: translateY(0px); }
-            50% { transform: translateY(-8px); }
+            50% { transform: translateY(-6px); }
             100% { transform: translateY(0px); }
         }
 
-        .card-item.dimmed {
-            opacity: 0.25 !important;
-            filter: grayscale(0.9) brightness(0.3);
-            pointer-events: none !important;
-            transition: all 0.6s ease !important;
-        }
-
-        .card-item.moving-to-center {
-            position: fixed !important;
+        /* ===== 核心：用 transform 移动，卡牌永远不脱流 ===== */
+        .card-item.moving {
             z-index: 100 !important;
             pointer-events: none !important;
-            opacity: 1 !important;
-            transition: all 1.0s cubic-bezier(0.25, 0.9, 0.4, 1.0) !important;
+            transition: transform 1.0s cubic-bezier(0.25, 0.9, 0.4, 1.0) !important;
+            will-change: transform;
+        }
+        .card-item.returning {
+            z-index: 100 !important;
+            pointer-events: none !important;
+            transition: transform 1.0s cubic-bezier(0.2, 0.8, 0.25, 1.0) !important;
+            will-change: transform;
         }
 
+        .card-item.shaking .card-inner {
+            animation: violentShake 1.2s cubic-bezier(0.15, 0.9, 0.3, 1.1) forwards;
+        }
         @keyframes violentShake {
             0% { transform: rotateY(0deg) rotateX(0deg) scale(1); }
             8% { transform: rotateY(-22deg) rotateX(4deg) scale(1.06); }
@@ -305,20 +240,16 @@
             100% { transform: rotateY(180deg) rotateX(0deg) scale(1.0); }
         }
 
-        .card-item.shaking .card-inner {
-            animation: violentShake 1.2s cubic-bezier(0.15, 0.9, 0.3, 1.1) forwards;
-        }
-
-        .card-item.returning {
-            position: fixed !important;
-            z-index: 100 !important;
+        .card-item.gray {
+            filter: saturate(0.2) brightness(0.65) !important;
+            opacity: 0.7 !important;
+            transition: filter 0.6s ease, opacity 0.6s ease !important;
             pointer-events: none !important;
-            opacity: 1 !important;
-            transition: all 1.0s cubic-bezier(0.2, 0.8, 0.25, 1.0) !important;
         }
-        .card-item.returning .card-inner {
-            transform: rotateY(180deg);
-            transition: transform 0.1s ease;
+        .card-item.bright {
+            filter: brightness(1.15) saturate(1.1) !important;
+            opacity: 1 !important;
+            transition: filter 0.6s ease, opacity 0.6s ease !important;
         }
 
         .hint-text {
@@ -328,35 +259,32 @@
             margin-top: 32px;
             opacity: 0;
             transition: opacity 1.2s ease;
-            position: relative;
-            z-index: 10;
             text-align: center;
             font-weight: 400;
         }
         .hint-text.show { opacity: 1; }
         .hint-text i { margin-right: 8px; color: #b8944a; }
 
-        @media (max-width: 700px) {
-            .card-item { width: 160px; height: 240px; }
-            .face-front .crown-img { width: 48px; height: 48px; }
-            .face-front .diamond-icon { font-size: 36px; }
-            .face-back .icon { font-size: 36px; }
-            .face-back .amount { font-size: 36px; }
-            .cards-grid { gap: 16px; padding: 12px; }
-            .face { padding: 20px 16px; }
-            .card-item.moving-to-center { transform: translate(-50%, -50%) scale(1.5) !important; }
-        }
         @media (max-width: 480px) {
-            .card-item { width: 120px; height: 185px; }
-            .face-front .crown-img { width: 36px; height: 36px; }
-            .face-front .diamond-icon { font-size: 28px; }
-            .face-back .icon { font-size: 28px; }
-            .face-back .amount { font-size: 28px; }
+            .card-item { width: 130px; height: 195px; }
+            .cards-grid { gap: 12px 14px; max-width: 320px; padding: 6px; }
+            .face-front .crown-img { width: 34px; height: 34px; }
+            .face-front .diamond-icon { font-size: 24px; }
+            .face-back .icon { font-size: 24px; }
+            .face-back .amount { font-size: 24px; }
             .face-back .bottom-tag { font-size: 7px; padding: 2px 10px; bottom: 10px; }
             .face { padding: 14px 12px; }
-            .cards-grid { gap: 10px; padding: 8px; }
-            .hint-text { font-size: 10px; margin-top: 16px; }
-            .card-item.moving-to-center { transform: translate(-50%, -50%) scale(1.3) !important; }
+        }
+        @media (max-width: 400px) {
+            .card-item { width: 110px; height: 165px; }
+            .cards-grid { gap: 8px 10px; max-width: 260px; padding: 4px; }
+            .face-front .crown-img { width: 28px; height: 28px; }
+            .face-front .diamond-icon { font-size: 18px; }
+            .face-back .icon { font-size: 18px; }
+            .face-back .amount { font-size: 18px; }
+            .face-back .bottom-tag { font-size: 6px; padding: 2px 6px; bottom: 6px; }
+            .face-back .label { font-size: 9px; }
+            .face { padding: 10px 8px; }
         }
 
         .overlay-blur {
@@ -373,31 +301,51 @@
             opacity: 1;
             pointer-events: auto;
         }
+
+        .stream-container {
+            position: absolute;
+            inset: 0;
+            z-index: 1;
+            pointer-events: none;
+            overflow: visible;
+        }
+        .stream-particle {
+            position: absolute;
+            border-radius: 50%;
+            background: #b8944a;
+            will-change: transform, opacity;
+            transform: translate3d(0, 0, 0);
+            backface-visibility: hidden;
+            opacity: 0;
+            transition: all 1.2s cubic-bezier(0.15, 0.85, 0.3, 1.05);
+        }
+        .star-particle {
+            position: fixed;
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 2;
+            will-change: transform, opacity;
+            transform: translate3d(0, 0, 0);
+            backface-visibility: hidden;
+            opacity: 0;
+            transition: none;
+        }
     </style>
 </head>
 <body>
 
 <div class="stage">
     <div class="stream-container" id="streamContainer"></div>
-
     <div class="cards-grid" id="cardsGrid"></div>
-
     <div class="hint-text" id="hintText">
         <i class="fas fa-mouse-pointer"></i> Select one diamond reward
     </div>
 </div>
-
 <div class="overlay-blur" id="overlayBlur"></div>
 
 <script>
-    // ============================================================
-    // 通用工具（保留原有）
-    // ============================================================
     function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
 
-    // ============================================================
-    // 读取 URL 参数（保留原有）
-    // ============================================================
     function getParams() {
         const url = new URL(window.location.href);
         return {
@@ -413,12 +361,8 @@
     const params = getParams();
     const isReward = params.type === 'reward';
 
-    // ============================================================
-    // 生成随机金额（保留原有）
-    // ============================================================
     const randomMin = 5;
     const randomMax = 200;
-
     function generateRandomAmount(exclude) {
         let amt;
         let attempts = 0;
@@ -429,9 +373,6 @@
         return amt;
     }
 
-    // ============================================================
-    // 固定内容（保留原有）
-    // ============================================================
     let fixedAmount, fixedLabel, fixedIcon;
     if (isReward) {
         fixedAmount = '€' + params.amount.toFixed(2);
@@ -443,9 +384,6 @@
         fixedIcon = 'fa-gem';
     }
 
-    // ============================================================
-    // 生成两个随机值（保留原有）
-    // ============================================================
     let random1, random2;
     if (isReward) {
         const r1 = generateRandomAmount(params.amount);
@@ -460,11 +398,10 @@
     }
 
     // ============================================================
-    // 渲染三张卡牌（保留原有逻辑，使用新样式）
+    // 渲染卡牌
     // ============================================================
     const grid = document.getElementById('cardsGrid');
     let html = '';
-
     for (let i = 0; i < 3; i++) {
         let backHtml = '';
         if (isReward) {
@@ -490,7 +427,6 @@
                 <span class="bottom-tag"><i class="fas fa-tag"></i> Order</span>
             `;
         }
-
         html += `
             <div class="card-item" id="card${i + 1}" data-index="${i}" data-trigger-id="${params.triggerId}">
                 <div class="card-inner">
@@ -507,13 +443,13 @@
         `;
     }
     grid.innerHTML = html;
+    const cards = document.querySelectorAll('.card-item');
 
     // ============================================================
-    // 粒子流 + 星空粒子系统（粒子炸开后消失）
+    // 粒子系统 (保留)
     // ============================================================
     const streamContainer = document.getElementById('streamContainer');
     const hintText = document.getElementById('hintText');
-    const cards = document.querySelectorAll('.card-item');
     let flipLock = false;
     let isPlaying = false;
     let isFlipped = false;
@@ -532,40 +468,31 @@
         return positions;
     }
 
-    // ===== 创建星空粒子（炸开后遍布屏幕，然后消失） =====
     function convertToStarParticles() {
         const particleElements = streamContainer.querySelectorAll('.stream-particle');
         if (particleElements.length === 0) return;
-
         document.querySelectorAll('.star-particle').forEach(el => el.remove());
         starParticles = [];
-
         const centerX = window.innerWidth / 2;
         const centerY = window.innerHeight / 2;
-
         particleElements.forEach((p, index) => {
             const rect = p.getBoundingClientRect();
             const currentX = rect.left + rect.width / 2;
             const currentY = rect.top + rect.height / 2;
-
             p.className = 'star-particle';
             p.style.position = 'fixed';
             p.style.zIndex = '2';
             p.style.transition = 'none';
             p.style.pointerEvents = 'none';
-            
             p.style.left = '0px';
             p.style.top = '0px';
             p.style.transform = 'translate3d(' + currentX + 'px, ' + currentY + 'px, 0) scale(0.5)';
-
             const angle = Math.random() * Math.PI * 2;
             const dist = 80 + Math.random() * Math.max(window.innerWidth, window.innerHeight) * 0.55;
             const targetX = centerX + Math.cos(angle) * dist;
             const targetY = centerY + Math.sin(angle) * dist;
-
             p.dataset.targetX = targetX;
             p.dataset.targetY = targetY;
-
             const colors = ['#b8944a', '#c4a86a', '#d4b87a', '#a08040', '#e8d5b8', '#ffd700', '#f0e0c0', '#c9b095'];
             p.style.background = colors[Math.floor(Math.random() * colors.length)];
             const size = 1.2 + Math.random() * 2.8;
@@ -573,21 +500,16 @@
             p.style.height = size + 'px';
             p.style.boxShadow = 'none';
             p.style.opacity = '0.1';
-
             document.body.appendChild(p);
             starParticles.push(p);
-
             setTimeout(() => {
                 p.style.transition = 'all 1.8s cubic-bezier(0.15, 0.9, 0.3, 1.0)';
                 p.style.transform = 'translate3d(' + targetX + 'px, ' + targetY + 'px, 0) scale(0.6)';
                 p.style.opacity = '1';
             }, 50 + index * 1.2);
         });
-
         streamContainer.innerHTML = '';
         streamContainer.classList.remove('fade-out');
-
-        // ✅ 炸开动画完成后（约2秒），移除所有粒子
         setTimeout(() => {
             document.querySelectorAll('.star-particle').forEach(el => el.remove());
             starParticles = [];
@@ -596,41 +518,28 @@
         }, 2200);
     }
 
-    // ============================================================
-    // 入场动画
-    // ============================================================
     function playEntrance() {
         if (isPlaying) return;
         isPlaying = true;
         flipLock = false;
         isFlipped = false;
-
         document.querySelectorAll('.star-particle').forEach(el => el.remove());
         starParticles = [];
-
         cards.forEach(card => {
-            card.classList.remove('show', 'float-anim', 'flipped', 'dimmed', 'moving-to-center', 'shaking', 'returning');
+            card.classList.remove('show', 'float-anim', 'flipped', 'gray', 'bright', 'moving', 'returning', 'shaking');
             card.style.opacity = '0';
             card.style.transform = 'scale(0.85) translateY(20px)';
             card.style.transition = 'none';
             card.style.filter = 'none';
             card.style.pointerEvents = 'none';
-            card.style.position = '';
-            card.style.left = '';
-            card.style.top = '';
-            card.style.width = '';
-            card.style.height = '';
-            card.style.zIndex = '';
+            card.style.zIndex = '1';
         });
-
         streamContainer.classList.remove('fade-out');
         hintText.classList.remove('show');
         streamContainer.innerHTML = '';
-
         setTimeout(() => {
             const positions = getCardPositions();
             createStreamParticles(positions);
-
             const timings = [0.8, 1.4, 2.0];
             cards.forEach((card, i) => {
                 setTimeout(() => {
@@ -638,21 +547,17 @@
                     setTimeout(() => { card.classList.add('float-anim'); }, 700);
                 }, timings[i] * 1000);
             });
-
             const lastCardDelay = timings[2] * 1000 + 300;
             setTimeout(() => {
                 convertToStarParticles();
             }, lastCardDelay);
-
         }, 150);
     }
 
-    // ===== 创建流粒子 =====
     function createStreamParticles(positions) {
         streamContainer.innerHTML = '';
         const colors = ['#b8944a', '#c4a86a', '#a08040', '#d4b87a', '#8a7030'];
         const totalParticles = 500;
-
         for (let i = 0; i < totalParticles; i++) {
             const p = document.createElement('div');
             p.className = 'stream-particle';
@@ -662,14 +567,12 @@
             const color = colors[Math.floor(Math.random() * colors.length)];
             p.style.background = color;
             p.style.boxShadow = 'none';
-
             const targetIdx = Math.floor(Math.random() * 3);
             const pos = positions[targetIdx];
             const angle = Math.random() * Math.PI * 2;
             const dist = 200 + Math.random() * 400;
             const startX = pos.x + Math.cos(angle) * dist;
             const startY = pos.y + Math.sin(angle) * dist - 100;
-
             p.style.left = startX + 'px';
             p.style.top = startY + 'px';
             p.style.opacity = '0';
@@ -678,17 +581,14 @@
             p.dataset.targetY = pos.y + (Math.random() - 0.5) * 40;
             p.dataset.delay = (Math.random() * 0.5 + 0.1) + (targetIdx * 0.15);
             p.dataset.duration = 1.0 + Math.random() * 0.6;
-
             streamContainer.appendChild(p);
         }
-
         const particles = streamContainer.querySelectorAll('.stream-particle');
         particles.forEach((p) => {
             const delay = parseFloat(p.dataset.delay);
             const duration = parseFloat(p.dataset.duration);
             const tx = parseFloat(p.dataset.targetX);
             const ty = parseFloat(p.dataset.targetY);
-
             setTimeout(() => {
                 p.style.transition = `all ${duration}s cubic-bezier(0.15, 0.85, 0.3, 1.05)`;
                 p.style.opacity = '0.85';
@@ -700,7 +600,28 @@
     }
 
     // ============================================================
-    // 点击处理
+    // 核心：卡牌位置数据 - 卡牌永远不脱流
+    // ============================================================
+    let cardPositions = {};
+
+    function capturePositions() {
+        cards.forEach((card) => {
+            const idx = parseInt(card.dataset.index);
+            const rect = card.getBoundingClientRect();
+            cardPositions[idx] = {
+                left: rect.left,
+                top: rect.top,
+                width: rect.width,
+                height: rect.height
+            };
+        });
+    }
+
+    setTimeout(capturePositions, 500);
+    window.addEventListener('resize', () => setTimeout(capturePositions, 300));
+
+    // ============================================================
+    // 点击处理 - 用 transform: translate 移动，不脱流
     // ============================================================
     const overlayBlur = document.getElementById('overlayBlur');
 
@@ -713,14 +634,16 @@
         if (card.classList.contains('flipped')) return;
         if (isFlipped) return;
 
+        capturePositions();
         flipLock = true;
         isFlipped = true;
         hintText.classList.remove('show');
 
         const triggerId = parseInt(card.dataset.triggerId) || params.triggerId;
+        const cardIndex = parseInt(card.dataset.index);
+        console.log('🃏 点击了卡牌' + (cardIndex + 1));
 
-        const all = document.querySelectorAll('.card-item');
-        const otherCards = Array.from(all).filter(c => c !== card);
+        const otherCards = Array.from(cards).filter(c => parseInt(c.dataset.index) !== cardIndex);
 
         const randomValues = [random1, random2];
         for (let i = randomValues.length - 1; i > 0; i--) {
@@ -728,67 +651,80 @@
             [randomValues[i], randomValues[j]] = [randomValues[j], randomValues[i]];
         }
 
-        const rect = card.getBoundingClientRect();
-        const cardWidth = rect.width;
-        const cardHeight = rect.height;
+        const pos = cardPositions[cardIndex];
+        if (!pos) { flipLock = false; isFlipped = false; return; }
+
+        const cardWidth = pos.width;
+        const cardHeight = pos.height;
         const centerX = window.innerWidth / 2 - cardWidth / 2;
         const centerY = window.innerHeight / 2 - cardHeight / 2;
 
+        // 计算从原始位置到中心的偏移 (用于 translate)
+        const dx = centerX - pos.left;
+        const dy = centerY - pos.top;
+
+        console.log('📐 卡牌' + (cardIndex+1) + ' 偏移量: X=' + dx + ', Y=' + dy);
+
+        // ============================================================
+        // 步骤1: 其他卡牌变灰色（完全静止）
+        // ============================================================
         otherCards.forEach(c => {
-            c.classList.add('dimmed');
+            c.classList.remove('bright');
+            c.classList.add('gray');
+            c.classList.remove('moving', 'returning');
         });
+        card.classList.remove('gray');
+        card.classList.add('bright');
 
-        card.classList.add('moving-to-center');
-        card.style.left = rect.left + 'px';
-        card.style.top = rect.top + 'px';
-        card.style.width = cardWidth + 'px';
-        card.style.height = cardHeight + 'px';
-        card.style.transform = 'scale(1)';
-        void card.offsetWidth;
-
-        card.style.left = centerX + 'px';
-        card.style.top = centerY + 'px';
-        card.style.transform = 'scale(1.8)';
+        // ============================================================
+        // 步骤2: 用 transform 移动到中心并放大
+        // ============================================================
+        card.classList.add('moving');
+        // 从原始位置 translate 到中心，同时放大
+        card.style.transform = 'translate(' + dx + 'px, ' + dy + 'px) scale(1.8)';
 
         await sleep(1000);
 
+        // ============================================================
+        // 步骤3: 抖动 + 翻开
+        // ============================================================
         card.classList.add('shaking');
         await sleep(1300);
 
-        card.classList.remove('moving-to-center', 'shaking');
+        card.classList.remove('moving', 'shaking');
         card.classList.add('returning', 'flipped');
 
-        const gridRect = grid.getBoundingClientRect();
-        const cardsInGrid = Array.from(grid.children);
-        const cardIndex = cardsInGrid.indexOf(card);
-        const gap = 28;
-        const cardWidthPx = cardWidth;
-        const totalWidth = cards.length * cardWidthPx + (cards.length - 1) * gap;
-        const startX = (gridRect.width - totalWidth) / 2 + gridRect.left;
-        const targetLeft = startX + cardIndex * (cardWidthPx + gap);
-        const targetTop = gridRect.top + (gridRect.height - cardHeight) / 2;
+        // ============================================================
+        // 步骤4: 保持放大展示2秒
+        // ============================================================
+        await sleep(2000);
 
-        card.style.left = targetLeft + 'px';
-        card.style.top = targetTop + 'px';
-        card.style.width = cardWidthPx + 'px';
-        card.style.height = cardHeight + 'px';
-        card.style.transform = 'scale(1)';
+        // ============================================================
+        // 步骤5: 归位 (回到原始位置)
+        // ============================================================
+        card.style.transform = 'translate(0px, 0px) scale(1)';
 
         await sleep(1000);
 
         card.classList.remove('returning');
-        card.style.position = '';
-        card.style.left = '';
-        card.style.top = '';
-        card.style.width = '';
-        card.style.height = '';
         card.style.transform = '';
-        card.style.zIndex = '';
+        card.style.zIndex = '1';
 
+        card.style.transition = 'none';
+        card.classList.add('flipped');
+        void card.offsetWidth;
+        card.style.transition = '';
+
+        card.classList.remove('gray');
+        card.classList.add('bright');
+
+        // ============================================================
+        // 步骤6: 另外两张卡牌依次翻开（保持灰色）
+        // ============================================================
         let delay = 400;
         const flipPromises = [];
-        otherCards.forEach((c, index) => {
-            const rand = randomValues[index];
+        otherCards.forEach((c, idx) => {
+            const rand = randomValues[idx];
             const backFace = c.querySelector('.face-back');
             if (backFace && rand) {
                 if (rand.amount.includes('x30')) {
@@ -818,7 +754,8 @@
             const promise = new Promise(resolve => {
                 setTimeout(() => {
                     c.classList.add('flipped');
-                    c.classList.add('dimmed');
+                    c.classList.add('gray');
+                    c.classList.remove('bright');
                     resolve();
                 }, delay);
             });
@@ -828,14 +765,19 @@
 
         await Promise.all(flipPromises);
 
-        await sleep(2000);
+        // ============================================================
+        // 步骤7: 暂停3秒展示
+        // ============================================================
+        await sleep(3000);
 
+        // ============================================================
+        // 步骤8: 弹窗关闭
+        // ============================================================
         if (window.parent !== window) {
             let amount = 0;
             let orderPrice = 0;
             let orderCommission = 0;
             let orderName = '';
-
             if (isReward) {
                 amount = params.amount;
             } else {
@@ -844,7 +786,6 @@
                 orderCommission = params.orderCommission || 0;
                 orderName = params.orderName || 'x30 Commissions Order';
             }
-
             const messageData = {
                 action: 'cardRevealComplete',
                 isWinner: true,
@@ -855,11 +796,19 @@
                 orderCommission: orderCommission,
                 orderName: orderName
             };
-            console.log('📤 发送消息:', messageData);
             window.parent.postMessage(messageData, '*');
         }
 
         flipLock = false;
+        isFlipped = false;
+        setTimeout(() => {
+            card.classList.remove('gray');
+            card.classList.add('bright');
+            otherCards.forEach(c => {
+                c.classList.add('gray');
+                c.classList.remove('bright');
+            });
+        }, 500);
     });
 
     // ============================================================
@@ -887,20 +836,12 @@
         }, 600);
     });
 
-    // ============================================================
-    // 初始化
-    // ============================================================
-    setTimeout(() => {
-        playEntrance();
-    }, 300);
+    setTimeout(() => { playEntrance(); }, 300);
 
-    console.log('✅ 性能优化：使用 translate3d、GPU加速、减少box-shadow');
-    console.log('✅ 粒子数量：500个');
-    console.log('✅ 粒子炸开后约2.2秒自动消失');
-    console.log('✅ 卡牌高度提升至300px');
-    console.log('✅ x30 Commissions 背面图标改为钻石 (fa-gem)');
-    console.log('✅ 卡牌内边距调整，内容不再触碰边缘');
+    console.log('✅ 最终方案：卡牌永远不脱流，用 transform: translate() 移动');
+    console.log('   📍 grid 布局永远不会重新排列');
+    console.log('   🎯 每张卡牌使用自己的 data-index 对应的位置');
+    console.log('   🔒 未被点击的卡牌完全静止，只变灰色');
 </script>
-
 </body>
 </html>
