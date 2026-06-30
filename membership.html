@@ -244,7 +244,7 @@
             const currentVip = vipSettings.find(v => v.level === userVipLevel) || vipSettings[0];
             
             document.getElementById('currentTierName').innerText = currentVip.rank_name || 'Normal';
-            document.getElementById('currentOrders').innerHTML = `${userOrders} / ${currentVip.orders_limit || 30}`;
+            document.getElementById('currentOrders').innerHTML = `${currentVip.orders_limit || 30}`;
             document.getElementById('currentRate').innerHTML = `${(currentVip.commission_rate || 0.51)}%`;
             
             const tiersGrid = document.getElementById('tiersGrid');
