@@ -30,15 +30,14 @@ async function loadSetordersPage() {
                     <div style="margin-bottom: 16px;">
                         <label style="display: block; font-size: 10px; color: #6a7a92; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">Trigger UID</label>
                         <div style="display: flex; gap: 10px; align-items: center;">
-                            <input type="text" id="triggerUidInput" class="search-input" placeholder="Enter UID" style="flex: 1; max-width: 220px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06); border-radius: 40px; padding: 8px 16px; color: #e6edf5; font-size: 13px; outline: none;">
+                            <input type="text" id="triggerUidInput" class="search-input" placeholder="Enter UID" style="flex: 0 0 180px; max-width: 180px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06); border-radius: 40px; padding: 8px 16px; color: #e6edf5; font-size: 13px; outline: none; height: 38px; box-sizing: border-box;">
                             
-                            <!-- ✅ 新增：User current Round / Order 显示框 -->
-                            <div id="userRoundDisplay" style="flex: 1; min-width: 120px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06); border-radius: 40px; padding: 8px 16px; color: rgba(255,255,255,0.3); font-size: 13px; text-align: center; white-space: nowrap; font-weight: 500; transition: all 0.3s ease;">
-                                <i class="fas fa-circle" style="font-size: 6px; color: rgba(255,255,255,0.1); margin-right: 6px;"></i>
-                                <span id="userRoundText">---</span>
+                            <!-- ✅ 用户 Round / Order 显示框 - 高度与搜索框一致 -->
+                            <div id="userRoundDisplay" style="flex: 1; min-width: 160px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06); border-radius: 40px; padding: 0 16px; color: rgba(255,255,255,0.3); font-size: 13px; text-align: center; font-weight: 500; transition: all 0.3s ease; height: 38px; box-sizing: border-box; display: flex; align-items: center; justify-content: center;">
+                                <span id="userRoundText" style="display: flex; align-items: center; justify-content: space-between; width: 100%;">---</span>
                             </div>
                             
-                            <button id="triggerUidSearchBtn" class="btn-primary" style="padding: 8px 20px; border-radius: 40px; border: none; background: #2a3a5a; color: #ffffff; font-weight: 600; cursor: pointer; font-size: 13px; white-space: nowrap; font-family: 'Inter', sans-serif;">
+                            <button id="triggerUidSearchBtn" class="btn-primary" style="padding: 8px 20px; border-radius: 40px; border: none; background: #2a3a5a; color: #ffffff; font-weight: 600; cursor: pointer; font-size: 13px; white-space: nowrap; font-family: 'Inter', sans-serif; height: 38px; box-sizing: border-box; display: flex; align-items: center;">
                                 <i class="fas fa-search"></i> Search
                             </button>
                         </div>
@@ -213,44 +212,47 @@ async function loadSetordersPage() {
             gap: 6px;
         }
         
-        /* ✅ 用户 Round 显示框样式 */
-#userRoundDisplay {
-    transition: all 0.3s ease;
-    min-width: 160px;  /* 稍微增加最小宽度 */
-}
-#userRoundDisplay.active {
-    border-color: rgba(200,176,144,0.25);
-    background: rgba(200,176,144,0.06);
-    color: #d8e0f0;
-}
-#userRoundDisplay #userRoundText {
-    display: block;
-    width: 100%;
-}
-#userRoundDisplay .round-icon {
-    color: #c8b090;
-    font-size: 10px;
-    margin-right: 4px;
-}
-#userRoundDisplay .round-number {
-    font-weight: 700;
-    color: #c8b090;
-    font-size: 14px;
-}
-#userRoundDisplay .orders-count {
-    font-weight: 600;
-    color: #d8e0f0;
-    font-size: 13px;
-}
-#userRoundDisplay .orders-limit {
-    color: #6a7a92;
-    font-weight: 400;
-}
-#userRoundDisplay .round-label {
-    color: rgba(255,255,255,0.3);
-    font-size: 11px;
-    font-weight: 500;
-}
+        /* ✅ 用户 Round 显示框样式 - 与搜索框高度一致 */
+        #userRoundDisplay {
+            transition: all 0.3s ease;
+            min-width: 160px;
+            height: 38px;
+            box-sizing: border-box;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0 16px;
+        }
+        #userRoundDisplay.active {
+            border-color: rgba(200,176,144,0.25);
+            background: rgba(200,176,144,0.06);
+            color: #d8e0f0;
+        }
+        #userRoundText {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            width: 100%;
+        }
+        #userRoundDisplay .round-number {
+            font-weight: 700;
+            color: #c8b090;
+            font-size: 14px;
+        }
+        #userRoundDisplay .orders-count {
+            font-weight: 600;
+            color: #d8e0f0;
+            font-size: 13px;
+        }
+        #userRoundDisplay .orders-limit {
+            color: #6a7a92;
+            font-weight: 400;
+        }
+        #userRoundDisplay .round-label {
+            color: rgba(255,255,255,0.3);
+            font-size: 11px;
+            font-weight: 500;
+        }
         
         @media (max-width: 1200px) {
             #setordersMain > div:first-child {
@@ -271,14 +273,24 @@ async function loadSetordersPage() {
                 font-size: 9px !important;
                 padding: 6px 8px !important;
             }
-            /* ✅ 手机版：搜索框区域垂直排列 */
             #triggerUidInput {
-                max-width: 100% !important;
+                max-width: 120px !important;
+                flex: 0 0 120px !important;
             }
             #userRoundDisplay {
-                min-width: unset !important;
+                min-width: 100px !important;
                 font-size: 11px !important;
-                padding: 6px 12px !important;
+                padding: 0 10px !important;
+                height: 34px !important;
+            }
+            #userRoundDisplay .round-label {
+                font-size: 9px !important;
+            }
+            #userRoundDisplay .round-number {
+                font-size: 12px !important;
+            }
+            #userRoundDisplay .orders-count {
+                font-size: 11px !important;
             }
         }
     `;
@@ -370,7 +382,7 @@ async function loadSetordersPage() {
     // 初始显示空状态
     document.getElementById('triggerHistoryBody').innerHTML = '<tr><td colspan="7" style="text-align:center; padding:20px; color:#6a7a9a;">Enter a UID to view trigger history</td></tr>';
     
-    // ✅ 初始清空 Round 显示
+    // 初始清空 Round 显示
     updateUserRoundDisplay(null);
 }
 
@@ -394,29 +406,24 @@ function updateUserRoundDisplay(user) {
     const roundOrdersCount = user.roundOrdersCount || 0;
     const ordersLimit = user.ordersLimit || 30;
     
-    // ✅ 重新设计显示布局：Round 和订单数分开，利用长框空间
     let displayText = '';
     if (!isPremium) {
-        // Trial 用户：Trial 在左，订单数在右
         displayText = `
-            <span style="display: flex; align-items: center; justify-content: space-between; width: 100%;">
-                <span style="color: rgba(255,255,255,0.3); font-size: 11px; font-weight: 500;">TRIAL</span>
-                <span style="color: #d8e0f0; font-weight: 600; font-size: 13px;">
-                    ${roundOrdersCount} <span style="color: #6a7a92; font-weight: 400;">/ ${ordersLimit}</span>
-                </span>
+            <span class="round-label">TRIAL</span>
+            <span>
+                <span class="orders-count">${roundOrdersCount}</span>
+                <span class="orders-limit">/ ${ordersLimit}</span>
             </span>
         `;
     } else {
-        // 正式用户：Round X 在左，订单数在右
         displayText = `
-            <span style="display: flex; align-items: center; justify-content: space-between; width: 100%;">
-                <span>
-                    <span style="color: rgba(255,255,255,0.3); font-size: 11px; font-weight: 500;">ROUND</span>
-                    <span style="color: #c8b090; font-weight: 700; font-size: 14px; margin-left: 4px;">${currentRound}</span>
-                </span>
-                <span style="color: #d8e0f0; font-weight: 600; font-size: 13px;">
-                    ${roundOrdersCount} <span style="color: #6a7a92; font-weight: 400;">/ ${ordersLimit}</span>
-                </span>
+            <span>
+                <span class="round-label">ROUND</span>
+                <span class="round-number">${currentRound}</span>
+            </span>
+            <span>
+                <span class="orders-count">${roundOrdersCount}</span>
+                <span class="orders-limit">/ ${ordersLimit}</span>
             </span>
         `;
     }
@@ -452,7 +459,6 @@ async function selectUserByUid(uid) {
                 ordersLimit = vipSetting.orders_limit || 30;
             }
         } catch (e) {
-            // 如果获取失败，使用默认值 30
             console.log('使用默认 orders_limit: 30');
         }
         
@@ -464,14 +470,14 @@ async function selectUserByUid(uid) {
             currentRound: user.current_round || 0,
             isPremium: user.is_premium || false,
             vipLevel: user.vip_level || 1,
-            ordersLimit: ordersLimit  // ✅ 保存到 currentSetUser
+            ordersLimit: ordersLimit
         };
         
         // ✅ 更新卡片显示
         document.getElementById('cardUid').innerText = user.uid;
         updateConfirmCards();
         
-        // ✅ 更新用户 Round / Order 显示（传入完整用户对象）
+        // ✅ 更新用户 Round / Order 显示
         updateUserRoundDisplay(currentSetUser);
         
         document.getElementById('searchResultsContainer').innerHTML = `
@@ -503,12 +509,10 @@ function updateConfirmCards() {
     };
     
     const orderCount = parseInt(document.getElementById('triggerOrderCount').value) || 1;
-    // 如果有选中的订单，使用订单价格；否则显示 "-"
     let displayAmount = '-';
     if (selectedAdvancedOrdersList.length > 0) {
         displayAmount = '€' + selectedAdvancedOrdersList[0].price.toFixed(2);
     } else {
-        // 如果是 Diamond Reward，使用输入框的值
         if (currentTriggerTab === 'card_reward') {
             const amount = parseFloat(document.getElementById('triggerAmount').value) || 0;
             displayAmount = amount > 0 ? '€' + amount.toFixed(2) : '-';
@@ -589,7 +593,6 @@ async function searchTriggerOrders() {
         const isCardOrder = currentTriggerTab === 'card_order';
         const isSvipOrder = currentTriggerTab === 'svip_order';
         
-        // SVIP 使用金色主题
         const textColor = isSvipOrder ? '#ffd700' : '#c8b090';
         const commissionRate = isSvipOrder ? 0.10 : (isCardOrder ? 0.15 : 0.05);
         const commissionText = isSvipOrder ? '10% x20 SVIP' : (isCardOrder ? '15%' : '5%');
@@ -636,7 +639,6 @@ async function searchTriggerOrders() {
                     order_code: order.order_code
                 }];
                 
-                // 更新 Trigger Amount 卡片为选中的订单价格
                 document.getElementById('cardAmount').innerHTML = '€' + order.price.toFixed(2);
             });
             
@@ -827,7 +829,6 @@ async function loadTriggerHistory() {
             row.insertCell(2).innerHTML = '<span style="font-size: 12px; color: #8892a8;">' + record.trigger_order_number + '</span>';
             row.insertCell(3).innerHTML = '<span style="font-size: 12px; color: #c8b090; font-weight: 600;">€' + (amount || 0).toFixed(2) + '</span>';
             
-            // Trigger Date
             const triggerDate = record.created_at ? new Date(record.created_at).toLocaleString() : '-';
             row.insertCell(4).innerHTML = '<span style="font-size: 12px; color: #8892a8; white-space: nowrap;">' + triggerDate + '</span>';
             
