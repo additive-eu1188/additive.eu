@@ -493,26 +493,31 @@
 
 // ✅ 显示奖励弹窗
 function showRewardModal(amount) {
-    console.log('🎉 showRewardModal called, amount:', amount);
+    console.log('🎉 showRewardModal 被调用！金额:', amount);
     
     var modal = document.getElementById('rewardModal');
     var display = document.getElementById('rewardAmountDisplay');
     
+    console.log('🔍 modal 元素:', modal);
+    console.log('🔍 display 元素:', display);
+    
     if (display) {
         display.textContent = '€' + amount.toFixed(2);
+        console.log('💰 金额显示已更新:', display.textContent);
     }
     
     if (modal) {
-        // ✅ 强制显示
         modal.style.display = 'flex';
         modal.style.visibility = 'visible';
         modal.style.opacity = '1';
         modal.style.pointerEvents = 'auto';
+        console.log('✅ 奖励弹窗已显示');
         
         var closeBtn = document.getElementById('rewardCloseBtn');
         if (closeBtn) {
             closeBtn.onclick = function(e) {
                 e.stopPropagation();
+                console.log('🔘 Close 按钮点击');
                 if (window.parent !== window) {
                     window.parent.postMessage({
                         action: 'rewardModalClosed'
@@ -524,6 +529,7 @@ function showRewardModal(amount) {
         }
         modal.onclick = function(e) {
             if (e.target === modal) {
+                console.log('🔘 背景点击');
                 if (window.parent !== window) {
                     window.parent.postMessage({
                         action: 'rewardModalClosed'
@@ -534,7 +540,7 @@ function showRewardModal(amount) {
             }
         };
     } else {
-        console.error('❌ rewardModal element not found!');
+        console.error('❌ rewardModal 元素不存在！');
     }
 }
 
@@ -971,6 +977,8 @@ if (!isReward) {
         // ============================================================
 // 步骤8: 弹窗关闭
 // ============================================================
+console.log('🔍 Step 8: isReward =', isReward, 'params.amount =', params.amount);
+
 if (window.parent !== window) {
     let amount = 0;
     let orderPrice = 0;
@@ -978,10 +986,12 @@ if (window.parent !== window) {
     let orderName = '';
     if (isReward) {
         amount = params.amount;
+        console.log('🎯 卡牌奖励分支，调用 showRewardModal，金额:', amount);
         // ✅ 卡牌奖励：显示弹窗，不发送 postMessage
         showRewardModal(amount);
         // 不发送 postMessage，用户点击 Close 后跳转
     } else {
+        console.log('🎯 卡牌订单分支');
         // 卡牌订单：发送 postMessage，父页面处理
         amount = params.orderCommission;
         orderPrice = params.orderPrice || 0;
