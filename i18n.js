@@ -239,8 +239,8 @@ if (typeof window._i18n_loaded === 'undefined') {
             'dashboard_svip': 'SVIP',
 
             // ==================== Start ====================
-            'start_title': 'Start Tasks',
-            'start_subtitle': 'Explore curated hotel tasks with a clean premium experience.',
+            'start_title': 'Begin Publish',
+            'start_subtitle': 'Explore curated various hotel accommodation with a clean premium experiences.',
             'start_balance': 'BALANCE',
             'start_commissions': 'COMMISSIONS',
             'start_pending': 'PENDING',
@@ -887,8 +887,8 @@ if (typeof window._i18n_loaded === 'undefined') {
             'dashboard_svip': 'SVIP',
 
             // ==================== Start ====================
-            'start_title': 'Aufgaben starten',
-            'start_subtitle': 'Entdecken Sie kuratierte Hotelaufgaben mit einem erstklassigen Premium-Erlebnis.',
+            'start_title': 'Veröffentlichung beginnen',
+           'start_subtitle': 'Entdecken Sie kuratierte verschiedene Hotelunterkünfte mit einem erstklassigen Premium-Erlebnis.',
             'start_balance': 'GUTHABEN',
             'start_commissions': 'PROVISIONEN',
             'start_pending': 'AUSSTEHEND',
@@ -1535,8 +1535,8 @@ if (typeof window._i18n_loaded === 'undefined') {
             'dashboard_svip': 'SVIP',
 
             // ==================== Start ====================
-            'start_title': 'Inizia Compiti',
-            'start_subtitle': 'Esplora compiti hotel curati con un\'esperienza premium.',
+            'start_title': 'Inizia Pubblicazione',
+'start_subtitle': 'Esplora varie sistemazioni alberghiere curate con un\'esperienza premium e pulita.',
             'start_balance': 'SALDO',
             'start_commissions': 'COMMISSIONI',
             'start_pending': 'IN SOSPESO',
