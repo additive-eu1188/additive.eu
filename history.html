@@ -269,12 +269,13 @@
             color: #5a6a82;
         }
         .history-item-new .row-2 .platform-logo {
-            width: 16px;
-            height: 16px;
-            border-radius: 3px;
-            object-fit: cover;
-            border: 1px solid rgba(255,255,255,0.06);
-        }
+    width: 28px;
+    height: 28px;
+    border-radius: 4px;
+    object-fit: contain;
+    background: transparent;
+    border: none;
+}
         .history-item-new .row-2 .platform-name {
             font-size: 10px;
             color: #8892a8;
@@ -634,9 +635,18 @@ container.innerHTML = '<div class="empty-state"><i class="fas fa-clipboard-list"
                 const date = new Date(order.date);
                 const formattedDate = date.toLocaleDateString() + ' ' + date.toLocaleTimeString();
                 
-                // 获取 assign_type 和 platform 信息（从 order 中读取，如果有的话）
-                const assignType = order.assign_type || 'Exceptional';
-                const platformName = order.platform_name || 'Booking.com';
+                // 获取 assign_type 和 platform 信息
+// assign_type: order 表中存储的是 quality 值 (exceptional, satisfactory, foundational)
+const qualityMap = {
+    'exceptional': 'Exceptional',
+    'satisfactory': 'Satisfactory',
+    'foundational': 'Foundational'
+};
+const assignType = qualityMap[order.assign_type] || order.assign_type || 'Exceptional';
+
+// platform_name: 直接使用 order 中存储的值
+const platformName = order.platform_name || 'Booking.com';
+
                 // 根据平台名称获取对应的 logo
                 const platformLogos = {
                     'Booking.com': 'booking.png',
@@ -673,7 +683,7 @@ container.innerHTML = '<div class="empty-state"><i class="fas fa-clipboard-list"
                         <span class="assign-type">${escapeHtml(assignType)}</span>
                         <span class="dot"></span>
                         <span class="published-label">${t('history_published_to')}</span>
-                        <img src="${platformLogo}" class="platform-logo" alt="" onerror="this.style.display='none'">
+                        <img src="${platformLogo}" class="platform-logo" alt="" onerror="this.style.display='none'" style="width:28px;height:28px;object-fit:contain;border:none;background:transparent;border-radius:4px;">
                         <span class="platform-name">${escapeHtml(platformName)}</span>
                         <span class="dot"></span>
                         <span class="date-text"><i class="fas fa-calendar"></i> ${formattedDate}</span>
