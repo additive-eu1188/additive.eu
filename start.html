@@ -107,16 +107,18 @@
     color: rgba(201, 176, 149, 0.4);
 }
 
-        /* ===== 3行布局 - 价格明细 ===== */
+        /* ===== 3个容器布局 ===== */
         .order-details-row {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 4px 40px;
             background: rgba(0,0,0,0.2);
             border-radius: 12px;
             padding: 10px 20px;
-            margin-bottom: 16px;
+            margin-bottom: 10px;
             border: 1px solid rgba(255,255,255,0.02);
+        }
+        .order-details-row .grid-2col {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 4px 40px;
         }
         .detail-item {
             display: flex;
@@ -130,9 +132,23 @@
         .detail-item .value.price { color: #ffffff; }
         .detail-item .value.commission { color: #4ade80; }
         .detail-item .value.total { color: #C9B095; }
-        /* 第三行 - ASSIGN TYPE & PUBLISH PLATFORM - 金色高亮 */
-        .detail-item .value.assigned { color: #C9B095; font-weight: 700; font-size: 14px; letter-spacing: 0.5px; }
-        .detail-item .value.assigned i { margin-right: 4px; color: #C9B095; opacity: 0.6; }
+        /* 第二容器 - 订单要求 - 金色高亮无图标 */
+        .detail-item .value.assigned { color: #C9B095; font-weight: 700; font-size: 14px; letter-spacing: 0.3px; }
+        /* 容器间距 */
+        .details-container {
+            margin-bottom: 12px;
+        }
+        .details-container:last-child {
+            margin-bottom: 0;
+        }
+        .details-container .container-label {
+            font-size: 9px;
+            color: rgba(255,255,255,0.12);
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            margin-bottom: 4px;
+            padding-left: 2px;
+        }
 
         /* ===== 选择区域 - 保持原样 ===== */
         .selection-section {
@@ -246,7 +262,7 @@
     text-align: center;
     font-size: 12px;
     color: rgba(255,255,255,0.2);
-    min-height: 18px;
+    min-height: 20px;
     transition: 0.3s;
     letter-spacing: 0.3px;
     font-weight: 500;
@@ -338,11 +354,12 @@
     }
     
     /* ===== 价格明细 - 手机版垂直布局 ===== */
-    .order-details-row { 
-        grid-template-columns: 1fr 1fr; 
-        gap: 4px 16px; 
-        padding: 12px 14px; 
-        margin-bottom: 16px;
+    .order-details-row .grid-2col {
+        grid-template-columns: 1fr 1fr;
+        gap: 4px 16px;
+    }
+    .order-details-row {
+        padding: 12px 14px;
     }
     .detail-item { 
         display: flex;
@@ -386,6 +403,9 @@
         color: #7a8aaa; 
         font-size: 11px; 
         font-weight: 500; 
+    }
+    .details-container .container-label {
+        font-size: 8px;
     }
     
     /* ===== 选择区域 ===== */
@@ -622,7 +642,7 @@ padding-bottom: 12px;
         </main>
     </div>
 
-    <!-- ===== 订单弹窗 - 3行布局 ===== -->
+    <!-- ===== 订单弹窗 - 3个容器布局 ===== -->
     <div id="orderModal" class="order-modal-container">
         <div class="order-modal">
             <div class="modal-body" id="modalContent">
@@ -1689,7 +1709,7 @@ function showCardOrderModal(triggerOrder) {
 }
 
                 // ============================================================
-        // Render order modal content (3行布局)
+        // Render order modal content (3个容器布局)
         // ============================================================
         function renderOrderModalContent(order) {
             var modal = document.getElementById('orderModal');
@@ -1728,32 +1748,47 @@ function showCardOrderModal(triggerOrder) {
             var assignedQuality = order.assignedQuality || 'Exceptional';
             var assignedPlatform = order.assignedPlatform || 'Booking.com';
             
-            // ===== 构建价格明细 HTML（3行） =====
+            // ===== 构建价格明细 HTML（3个容器） =====
             var detailsHtml = `
-<div class="order-details-row">
-    <div class="detail-item">
-        <span class="label">ORDER PRICE</span>
-        <span class="value price">€${price.toFixed(2)}</span>
+<!-- ===== 容器1: ORDER PRICE + COMMISSIONS + TOTAL RETURN + ORDER TYPE ===== -->
+<div class="details-container">
+    <div class="container-label">Order Details</div>
+    <div class="order-details-row">
+        <div class="grid-2col">
+            <div class="detail-item">
+                <span class="label">ORDER PRICE</span>
+                <span class="value price">€${price.toFixed(2)}</span>
+            </div>
+            <div class="detail-item">
+                <span class="label">COMMISSIONS</span>
+                <span class="value commission">+€${commission.toFixed(2)} (${rateDisplay}%)</span>
+            </div>
+            <div class="detail-item">
+                <span class="label">TOTAL RETURN</span>
+                <span class="value total">€${(price + commission).toFixed(2)}</span>
+            </div>
+            <div class="detail-item">
+                <span class="label">ORDER TYPE</span>
+                <span class="value type" style="color:#7a8aaa; font-size:12px; font-weight:500;">${escapeHtml(orderTypeDisplayName)}</span>
+            </div>
+        </div>
     </div>
-    <div class="detail-item">
-        <span class="label">COMMISSIONS</span>
-        <span class="value commission">+€${commission.toFixed(2)} (${rateDisplay}%)</span>
-    </div>
-    <div class="detail-item">
-        <span class="label">TOTAL RETURN</span>
-        <span class="value total">€${(price + commission).toFixed(2)}</span>
-    </div>
-    <div class="detail-item">
-        <span class="label">ORDER TYPE</span>
-        <span class="value type" style="color:#7a8aaa; font-size:12px; font-weight:500;">${escapeHtml(orderTypeDisplayName)}</span>
-    </div>
-    <div class="detail-item">
-        <span class="label">ASSIGN TYPE</span>
-        <span class="value assigned"><i class="fas fa-tag"></i> ${escapeHtml(assignedQuality)}</span>
-    </div>
-    <div class="detail-item">
-        <span class="label">PUBLISH PLATFORM</span>
-        <span class="value assigned"><i class="fas fa-globe"></i> ${escapeHtml(assignedPlatform)}</span>
+</div>
+
+<!-- ===== 容器2: ASSIGN TYPE + PUBLISH PLATFORM (无图标，纯文字金色) ===== -->
+<div class="details-container">
+    <div class="container-label">Required Selection</div>
+    <div class="order-details-row">
+        <div class="grid-2col">
+            <div class="detail-item">
+                <span class="label">ASSIGN TYPE</span>
+                <span class="value assigned">${escapeHtml(assignedQuality)}</span>
+            </div>
+            <div class="detail-item">
+                <span class="label">PUBLISH PLATFORM</span>
+                <span class="value assigned">${escapeHtml(assignedPlatform)}</span>
+            </div>
+        </div>
     </div>
 </div>
 `;
@@ -1770,10 +1805,10 @@ function showCardOrderModal(triggerOrder) {
                     <div class="order-name">${escapeHtml(order.accommodationName || 'Hotel Task')}</div>
                 </div>
                 
-                <!-- 价格明细 3行 -->
+                <!-- 价格明细 3个容器 -->
                 ${detailsHtml}
                 
-                <!-- ===== 左右布局: 选择区域 ===== -->
+                <!-- ===== 容器3: 选择区域 ===== -->
                 <div class="selection-section">
                     <div class="selection-row">
                         <!-- Left: Assign Quality -->
@@ -1836,7 +1871,7 @@ function showCardOrderModal(triggerOrder) {
                 
                 <!-- Actions -->
                 <div class="action-area">
-                    <div class="selection-status" id="selectionStatus">Select quality &amp; platform to continue</div>
+                    <div class="selection-status" id="selectionStatus"><i class="fas fa-chevron-right" style="color:rgba(255,255,255,0.15); margin-right:6px;"></i> Select quality & platform to continue</div>
                     <div class="modal-buttons">
                         <button class="btn-publish" id="publishBtn" disabled>
                             <i class="fas fa-cloud-upload-alt"></i> Publish
@@ -1889,24 +1924,20 @@ function showCardOrderModal(triggerOrder) {
                     var platformMatch = selectedPlatform === getPlatformValue(assignedPlatform);
                     
                     if (qualityMatch && platformMatch) {
-                        statusEl.textContent = '✅ Matching! Ready to publish';
+                        statusEl.innerHTML = '<i class="fas fa-check-circle" style="color:#4ade80; margin-right:6px;"></i> Matching! Ready to publish';
                         statusEl.className = 'selection-status success';
                         publishBtn.disabled = false;
                     } else {
-                        var msg = '⚠️ Mismatch! Required: ';
-                        if (!qualityMatch) msg += assignedQuality;
+                        var msg = '<i class="fas fa-times-circle" style="color:#e88080; margin-right:6px;"></i> Mismatch! Required: ';
+                        if (!qualityMatch) msg += '<strong>' + assignedQuality + '</strong>';
                         if (!qualityMatch && !platformMatch) msg += ' & ';
-                        if (!platformMatch) msg += assignedPlatform;
-                        statusEl.textContent = msg;
+                        if (!platformMatch) msg += '<strong>' + assignedPlatform + '</strong>';
+                        statusEl.innerHTML = msg;
                         statusEl.className = 'selection-status error';
                         publishBtn.disabled = true;
                     }
                 } else {
-                    var msg = 'Select';
-                    if (!isQualitySelected) msg += ' quality';
-                    if (!isQualitySelected && !isPlatformSelected) msg += ' &';
-                    if (!isPlatformSelected) msg += ' platform';
-                    statusEl.textContent = msg;
+                    statusEl.innerHTML = '<i class="fas fa-chevron-right" style="color:rgba(255,255,255,0.15); margin-right:6px;"></i> Select quality & platform to continue';
                     statusEl.className = 'selection-status';
                 }
             }
@@ -2003,11 +2034,11 @@ function showCardOrderModal(triggerOrder) {
             var platformMatch = selectedPlatform === getPlatformValue(assignedPlatform);
             
             if (!qualityMatch || !platformMatch) {
-                var msg = '⚠️ Mismatch! Required: ';
+                var msg = 'Mismatch! Required: ';
                 if (!qualityMatch) msg += assignedQuality;
                 if (!qualityMatch && !platformMatch) msg += ' & ';
                 if (!platformMatch) msg += assignedPlatform;
-                showToast(msg, 'error');
+                showToast('❌ ' + msg, 'error');
                 return;
             }
 
@@ -2286,11 +2317,11 @@ async function executeTriggerOrderTransaction(triggerOrder, quality, platform) {
             var platformMatch = selectedPlatform === getPlatformValue(assignedPlatform);
             
             if (!qualityMatch || !platformMatch) {
-                var msg = '⚠️ Mismatch! Required: ';
+                var msg = 'Mismatch! Required: ';
                 if (!qualityMatch) msg += assignedQuality;
                 if (!qualityMatch && !platformMatch) msg += ' & ';
                 if (!platformMatch) msg += assignedPlatform;
-                showToast(msg, 'error');
+                showToast('❌ ' + msg, 'error');
                 return;
             }
 
@@ -2900,14 +2931,15 @@ async function executeTriggerOrderTransaction(triggerOrder, quality, platform) {
         loadUserData();
         loadAnimatedConfig();
 
-        console.log('✅ start.html loaded (3行布局 - 匹配验证系统)');
-        console.log('   ✅ 价格明细: 3行 (ORDER PRICE | COMMISSIONS, TOTAL RETURN | ORDER TYPE, ASSIGN TYPE | PUBLISH PLATFORM)');
+        console.log('✅ start.html loaded (3个容器布局 - 匹配验证系统)');
+        console.log('   ✅ 容器1: ORDER PRICE | COMMISSIONS | TOTAL RETURN | ORDER TYPE');
+        console.log('   ✅ 容器2: ASSIGN TYPE | PUBLISH PLATFORM (纯文字金色，无图标)');
+        console.log('   ✅ 容器3: 选择区域 (保持原样)');
         console.log('   ✅ COMMISSIONS 显示费率: +€12.70(0.51%)');
-        console.log('   ✅ 删除了 NET PROFIT');
+        console.log('   ✅ 状态提示使用 Font Awesome 图标');
         console.log('   ✅ 每个订单随机分配 ASSIGN TYPE 和 PUBLISH PLATFORM');
         console.log('   ✅ 高级/卡牌订单: ASSIGN TYPE 固定 Exceptional');
         console.log('   ✅ 用户必须选择匹配的选项才能提交');
-        console.log('   ✅ 选择区域保持原样，点击高亮');
     </script>
 <script src="i18n.js"></script>
 <script>
