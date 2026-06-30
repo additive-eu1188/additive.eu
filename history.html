@@ -57,14 +57,14 @@
             color: #C9B095;
         }
         .history-list {
-    background: rgba(20, 30, 55, 0.4);
-    backdrop-filter: blur(8px);
-    border-radius: 20px;
-    overflow: hidden;
-    border: 1px solid rgba(201, 176, 149, 0.1);
-    max-height: 600px;   /* 从 450px 改为 600px */
-    overflow-y: auto;
-}
+            background: rgba(20, 30, 55, 0.4);
+            backdrop-filter: blur(8px);
+            border-radius: 20px;
+            overflow: hidden;
+            border: 1px solid rgba(201, 176, 149, 0.1);
+            max-height: 600px;
+            overflow-y: auto;
+        }
         .history-item {
             display: flex;
             justify-content: space-between;
@@ -185,6 +185,150 @@
             color: #5a6e8a;
             padding: 16px 0;
             border-top: 1px solid rgba(204, 178, 153, 0.08);
+        }
+
+        /* ===== 新记录条样式 ===== */
+        .history-item-new {
+            background: rgba(20, 30, 55, 0.5);
+            backdrop-filter: blur(8px);
+            border-radius: 16px;
+            padding: 14px 18px;
+            margin-bottom: 10px;
+            border: 1px solid rgba(201, 176, 149, 0.06);
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .history-item-new:hover {
+            border-color: rgba(201, 176, 149, 0.2);
+            background: rgba(20, 30, 55, 0.7);
+        }
+        .history-item-new .row-1 {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .history-item-new .row-1 .hotel-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            background: rgba(201, 176, 149, 0.08);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+        .history-item-new .row-1 .hotel-icon i {
+            font-size: 14px;
+            color: #C9B095;
+        }
+        .history-item-new .row-1 .hotel-name {
+            font-size: 14px;
+            font-weight: 600;
+            color: #ffffff;
+            flex: 1;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .history-item-new .row-1 .order-code {
+            font-size: 10px;
+            color: #8892a8;
+            background: rgba(255,255,255,0.06);
+            padding: 1px 10px;
+            border-radius: 20px;
+            border: 1px solid rgba(255,255,255,0.06);
+            font-family: 'Courier New', monospace;
+            flex-shrink: 0;
+        }
+        .history-item-new .row-2 {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 4px;
+            padding-left: 42px;
+            flex-wrap: wrap;
+        }
+        .history-item-new .row-2 .assign-type {
+            font-size: 11px;
+            font-weight: 500;
+            color: #C9B095;
+        }
+        .history-item-new .row-2 .dot {
+            width: 2px;
+            height: 2px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.08);
+            flex-shrink: 0;
+        }
+        .history-item-new .row-2 .published-label {
+            font-size: 10px;
+            color: #5a6a82;
+        }
+        .history-item-new .row-2 .platform-logo {
+            width: 16px;
+            height: 16px;
+            border-radius: 3px;
+            object-fit: cover;
+            border: 1px solid rgba(255,255,255,0.06);
+        }
+        .history-item-new .row-2 .platform-name {
+            font-size: 10px;
+            color: #8892a8;
+        }
+        .history-item-new .row-2 .date-text {
+            font-size: 10px;
+            color: #5a6a82;
+        }
+        .history-item-new .row-2 .date-text i {
+            margin-right: 4px;
+            font-size: 10px;
+        }
+        .history-item-new .row-3 {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px solid rgba(255,255,255,0.04);
+            padding-left: 42px;
+        }
+        .history-item-new .row-3 .commission {
+            font-size: 16px;
+            font-weight: 700;
+            color: #4ade80;
+        }
+        .history-item-new .row-3 .price-text {
+            font-size: 12px;
+            color: #8892a8;
+        }
+        .history-item-new .row-3 .price-text span {
+            color: #ffffff;
+            font-weight: 500;
+        }
+
+        @media (max-width: 400px) {
+            .history-item-new .row-2 {
+                gap: 6px;
+            }
+            .history-item-new .row-2 .platform-name {
+                font-size: 9px;
+            }
+            .history-item-new .row-2 .assign-type {
+                font-size: 10px;
+            }
+            .history-item-new .row-1 .hotel-name {
+                font-size: 13px;
+            }
+            .history-item-new .row-1 .order-code {
+                font-size: 9px;
+                padding: 1px 8px;
+            }
+            .history-item-new .row-3 .commission {
+                font-size: 15px;
+            }
+            .history-item-new .row-3 .price-text {
+                font-size: 11px;
+            }
         }
     </style>
 </head>
@@ -359,11 +503,10 @@ body.innerHTML = `
     deposits.forEach(d => {
         let typeName = '', icon = '';
         if (d.type === 'manual') { 
-    typeName = t('history_deposit');  // ✅ 直接使用翻译，不拼接 description
+    typeName = t('history_deposit');
     icon = 'fas fa-plus-circle'; 
 }
         else if (d.type === 'deposit_bonus') { 
-    // 根据 description 匹配翻译
     if (d.description && d.description.includes('New Member')) {
         typeName = t('history_deposit_new_member');
     } else if (d.description && d.description.includes('Deposit')) {
@@ -480,29 +623,53 @@ container.innerHTML = '<div class="empty-state"><i class="fas fa-clipboard-list"
             orders.forEach(order => {
                 const date = new Date(order.date);
                 const formattedDate = date.toLocaleDateString() + ' ' + date.toLocaleTimeString();
-                const rating = order.rating || 0;
-                let starsHtml = '';
-                for (let i = 1; i <= 5; i++) {
-                    starsHtml += `<i class="fas fa-star" style="color: ${i <= rating ? '#C9B095' : '#4a5578'}; font-size: 11px;"></i>`;
-                }
+                
+                // 获取 assign_type 和 platform 信息（从 order 中读取，如果有的话）
+                const assignType = order.assign_type || 'Exceptional';
+                const platformName = order.platform_name || 'Booking.com';
+                // 根据平台名称获取对应的 logo
+                const platformLogos = {
+                    'Booking.com': 'booking.png',
+                    'Tripadvisor': 'tripadvisor.png',
+                    'Trivago': 'trivago.png',
+                    'HRS': 'hrs.png',
+                    'Airbnb': 'airbnb.png',
+                    'Hotels.com': 'hotelscom.png'
+                };
+                const logoFile = platformLogos[platformName] || 'booking.png';
+                const platformLogo = `https://qgmbzdfnwsdosdqphlxk.supabase.co/storage/v1/object/public/publish-hotel-img/${logoFile}`;
+                
                 const item = document.createElement('div');
-                item.className = 'history-item';
-                item.style.cursor = 'pointer';
+                item.className = 'history-item-new';
                 item.onclick = () => showOrderDetail(order);
+                
+                // 根据订单类型决定佣金颜色
+                const isSvip = order.order_type === 'svip_order' || order.order_type === 'SVIP Order';
+                const commissionColor = isSvip ? '#ffd700' : '#4ade80';
+                
                 item.innerHTML = `
-                    <div class="history-info">
-                        <i class="fas fa-hotel" style="color: #C9B095;"></i>
-                        <div>
-                            <div class="history-title">${order.accommodation_name || 'Hotel Task'} <span class="history-tag">${order.order_code || 'N/A'}</span></div>
-                            <div class="order-stats">
-                                <span><i class="fas fa-star"></i> ${starsHtml}</span>
-                                <span><i class="fas fa-calendar"></i> ${formattedDate}</span>
-                            </div>
+                    <!-- 第一行：酒店图标 + 酒店名称 + Order Code -->
+                    <div class="row-1">
+                        <div class="hotel-icon">
+                            <i class="fas fa-hotel"></i>
                         </div>
+                        <span class="hotel-name">${escapeHtml(order.accommodation_name || 'Hotel Task')}</span>
+                        <span class="order-code">${order.order_code || 'N/A'}</span>
                     </div>
-                    <div class="order-detail-row" style="flex-direction: column; align-items: flex-end;">
-                        <div class="history-amount positive">+€${(order.commission || 0).toFixed(2)}</div>
-                        <div class="history-date" style="font-size: 10px;">Price: €${(order.price || 0).toFixed(2)}</div>
+                    <!-- 第二行：Assign Type / Published To + 做单时间 -->
+                    <div class="row-2">
+                        <span class="assign-type">${escapeHtml(assignType)}</span>
+                        <span class="dot"></span>
+                        <span class="published-label">Published to</span>
+                        <img src="${platformLogo}" class="platform-logo" alt="" onerror="this.style.display='none'">
+                        <span class="platform-name">${escapeHtml(platformName)}</span>
+                        <span class="dot"></span>
+                        <span class="date-text"><i class="fas fa-calendar"></i> ${formattedDate}</span>
+                    </div>
+                    <!-- 第三行：佣金 + 价格 -->
+                    <div class="row-3">
+                        <span class="commission" style="color:${commissionColor};">+€${(order.commission || 0).toFixed(2)}</span>
+                        <span class="price-text">Price: <span>€${(order.price || 0).toFixed(2)}</span></span>
                     </div>
                 `;
                 container.appendChild(item);
