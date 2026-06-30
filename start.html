@@ -283,24 +283,30 @@
         .btn-close-modal {
     flex: 1;
     max-width: 50%;
-    background: rgba(255, 255, 255, 0.08);  /* ← 从 0.02 改为 0.08 */
-    border: 1px solid rgba(255, 255, 255, 0.10);  /* ← 从 0.03 改为 0.10 */
-    padding: 12px;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.10);
+    padding: 12px 20px;
     border-radius: 40px;
-    color: rgba(255, 255, 255, 0.35);  /* ← 从 0.1 改为 0.35 */
+    color: rgba(255, 255, 255, 0.35);
     font-weight: 500;
     font-size: 13px;
     cursor: pointer;
     transition: all 0.25s ease;
     font-family: 'Inter', sans-serif;
-    display: flex;
+    display: inline-flex;
     align-items: center;
     justify-content: center;
-    gap: 6px;
+    gap: 8px;
 }
+
+.btn-close-modal i {
+    font-size: 14px;
+    transform: translateY(1.5px);  /* ← 向下移动 1.5px，让 X 和文字水平对齐 */
+}
+
 .btn-close-modal:hover {
-    background: rgba(255, 255, 255, 0.14);  /* ← 从 0.03 改为 0.14 */
-    color: rgba(255, 255, 255, 0.55);  /* ← 从 0.18 改为 0.55 */
+    background: rgba(255, 255, 255, 0.14);
+    color: rgba(255, 255, 255, 0.55);
 }
 
         .progress-container { margin-top: 10px; display: none; }
