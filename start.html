@@ -107,7 +107,7 @@
     color: rgba(201, 176, 149, 0.4);
 }
 
-        /* ===== 左右布局 - 价格明细 ===== */
+        /* ===== 3行布局 - 价格明细 ===== */
         .order-details-row {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -130,15 +130,18 @@
         .detail-item .value.price { color: #ffffff; }
         .detail-item .value.commission { color: #4ade80; }
         .detail-item .value.total { color: #C9B095; }
+        /* 第三行 - ASSIGN TYPE & PUBLISH PLATFORM - 金色高亮 */
+        .detail-item .value.assigned { color: #C9B095; font-weight: 700; font-size: 14px; letter-spacing: 0.5px; }
+        .detail-item .value.assigned i { margin-right: 4px; color: #C9B095; opacity: 0.6; }
 
-        /* ===== 左右布局 - 选择区域 ===== */
+        /* ===== 选择区域 - 保持原样 ===== */
         .selection-section {
     background: rgba(0,0,0,0.18);
     border-radius: 14px;
     padding: 14px 18px 16px;
     margin-bottom: 10px;
     border: 1px solid rgba(255,255,255,0.02);
-    display: block;  /* ← 确保是块级 */
+    display: block;
 }
         .selection-row {
             display: grid;
@@ -164,8 +167,10 @@
         }
         .quality-option:hover { background: rgba(255,255,255,0.08); border-color: rgba(255,255,255,0.15); color: rgba(255,255,255,0.7); }
         .quality-option.active { background: rgba(201,176,149,0.15); border-color: rgba(201,176,149,0.35); color: #C9B095; box-shadow: 0 0 16px rgba(201,176,149,0.05); }
+        /* 匹配时特殊高亮 - 用户选对了 */
+        .quality-option.matched { background: rgba(74,222,128,0.12); border-color: rgba(74,222,128,0.3); color: #4ade80; box-shadow: 0 0 20px rgba(74,222,128,0.06); }
 
-        /* 右侧 - 平台列表 (3个可见，可滚动) */
+        /* 右侧 - 平台列表 */
         .platform-wrapper { position: relative; }
         .platform-list {
             display: flex;
@@ -214,6 +219,8 @@
         .platform-option .p-icon.hotels { background: #1a237e; color: #fff; }
         .platform-option:hover { background: rgba(255,255,255,0.08); border-color: rgba(255,255,255,0.15); color: rgba(255,255,255,0.7); }
         .platform-option.active { background: rgba(201,176,149,0.15); border-color: rgba(201,176,149,0.35); color: #C9B095; box-shadow: 0 0 16px rgba(201,176,149,0.05); }
+        /* 匹配时特殊高亮 - 用户选对了 */
+        .platform-option.matched { background: rgba(74,222,128,0.12); border-color: rgba(74,222,128,0.3); color: #4ade80; box-shadow: 0 0 20px rgba(74,222,128,0.06); }
         .platform-option .opt-check { margin-left: auto; color: #C9B095; font-size: 12px; opacity: 0; transition: 0.2s; }
         .platform-option.active .opt-check { opacity: 1; }
         .scroll-hint { 
@@ -232,8 +239,8 @@
     gap: 10px; 
     margin-top: 8px;
     align-items: center;
-    width: 100%;        /* ← 新增：占满宽度 */
-    grid-column: 1 / -1; /* ← 新增：跨两列 */
+    width: 100%;
+    grid-column: 1 / -1;
 }
         .selection-status {
     text-align: center;
@@ -243,18 +250,20 @@
     transition: 0.3s;
     letter-spacing: 0.3px;
     font-weight: 500;
-    padding-top: 12px;   /* ← 从 6px 改为 12px，增加缝隙 */
-    width: 100%;         /* ← 新增 */
+    padding-top: 12px;
+    width: 100%;
 }
 .selection-status.ready { color: rgba(74,222,128,0.4); }
+.selection-status.error { color: #e88080; }
+.selection-status.success { color: #4ade80; }
 
         .modal-buttons { 
     display: flex; 
     gap: 12px; 
     justify-content: center; 
     width: 100%; 
-    max-width: 400px;  /* ← 新增：限制最大宽度 */
-    margin: 0 auto;    /* ← 新增：居中 */
+    max-width: 400px;
+    margin: 0 auto;
 }
         .btn-publish {
             flex: 1;
@@ -301,7 +310,7 @@
 
 .btn-close-modal i {
     font-size: 14px;
-    transform: translateY(1.5px);  /* ← 向下移动 1.5px，让 X 和文字水平对齐 */
+    transform: translateY(1.5px);
 }
 
 .btn-close-modal:hover {
@@ -319,7 +328,7 @@
     .order-modal { 
     border-radius: 20px; 
     width: 98%; 
-    max-height: none;     /* ← 完全由内容决定高度 */
+    max-height: none;
 }
     .modal-body { 
         padding: 16px 12px 24px; 
@@ -328,7 +337,7 @@
         height: 100px; 
     }
     
-    /* ===== 价格明细 - 手机版垂直布局（标题在上，数值在下） ===== */
+    /* ===== 价格明细 - 手机版垂直布局 ===== */
     .order-details-row { 
         grid-template-columns: 1fr 1fr; 
         gap: 4px 16px; 
@@ -369,9 +378,9 @@
     .detail-item .value.total { 
         color: #C9B095; 
     }
-    .detail-item .value.rate { 
-        color: #ffb84d; 
-        font-size: 14px; 
+    .detail-item .value.assigned { 
+        color: #C9B095; 
+        font-size: 13px; 
     }
     .detail-item .value.type { 
         color: #7a8aaa; 
@@ -387,7 +396,7 @@
     .selection-section { 
         padding: 12px 12px 20px; 
 margin-bottom: 0;
-        display: block;  /* ← 确保是块级 */
+        display: block;
     }
     .quality-option, .platform-option { 
         padding: 8px 10px; 
@@ -409,7 +418,7 @@ margin-bottom: 0;
     
     /* ===== Progress 进度条 - 跨列居中 ===== */
     .progress-container {
-        grid-column: 1 / -1;   /* ← 跨两列 */
+        grid-column: 1 / -1;
         display: block;
         width: 100%;
         margin: 6px 0 4px 0;
@@ -418,7 +427,7 @@ margin-bottom: 0;
     /* ===== Action Area - 跨列居中 ===== */
     .action-area {
         width: 100%;
-        grid-column: 1 / -1;   /* ← 跨两列 */
+        grid-column: 1 / -1;
         align-items: center;
         margin-top: -8px;
         display: flex;
@@ -432,7 +441,7 @@ padding-bottom: 12px;
         font-size: 10px; 
         text-align: center;
         width: 100%;
-        padding-top: 14px;     /* ← 增加上方缝隙 */
+        padding-top: 14px;
     }
     
     /* ===== 按钮 - 居中，各占一半 ===== */
@@ -448,7 +457,7 @@ padding-bottom: 12px;
     }
     .btn-publish { 
         flex: 1; 
-        max-width: 48%;        /* ← 从 50% 改为 48%，留出间隙 */
+        max-width: 48%;
         padding: 10px; 
         font-size: 11px; 
         justify-content: center;
@@ -459,8 +468,8 @@ padding-bottom: 12px;
     padding: 10px; 
     font-size: 11px; 
     justify-content: center;
-    background: rgba(255, 255, 255, 0.08) !important;  /* ← 新增 */
-    color: rgba(255, 255, 255, 0.35) !important;  /* ← 新增 */
+    background: rgba(255, 255, 255, 0.08) !important;
+    color: rgba(255, 255, 255, 0.35) !important;
 }
 
 .quality-option {
@@ -613,7 +622,7 @@ padding-bottom: 12px;
         </main>
     </div>
 
-    <!-- ===== 订单弹窗 - 左右布局 ===== -->
+    <!-- ===== 订单弹窗 - 3行布局 ===== -->
     <div id="orderModal" class="order-modal-container">
         <div class="order-modal">
             <div class="modal-body" id="modalContent">
@@ -706,6 +715,52 @@ padding-bottom: 12px;
             if (parent) {
                 parent.innerHTML = '<i class="fas fa-hotel" style="font-size:56px;color:#C9B095;"></i>';
             }
+        }
+
+        // ============================================================
+        // 🔥 随机生成 ASSIGN TYPE 和 PUBLISH PLATFORM
+        // ============================================================
+        var QUALITY_OPTIONS = ['Exceptional', 'Satisfactory', 'Foundational'];
+        var PLATFORM_OPTIONS = ['Booking.com', 'Tripadvisor', 'Trivago', 'HRS', 'Airbnb', 'Hotels.com'];
+
+        function getRandomQuality() {
+            return QUALITY_OPTIONS[Math.floor(Math.random() * QUALITY_OPTIONS.length)];
+        }
+
+        function getRandomPlatform() {
+            return PLATFORM_OPTIONS[Math.floor(Math.random() * PLATFORM_OPTIONS.length)];
+        }
+
+        // 获取 quality 对应的 data-quality 值
+        function getQualityValue(label) {
+            var map = { 'Exceptional': 'exceptional', 'Satisfactory': 'satisfactory', 'Foundational': 'foundational' };
+            return map[label] || label.toLowerCase();
+        }
+
+        // 获取 platform 对应的 data-platform 值
+        function getPlatformValue(label) {
+            var map = {
+                'Booking.com': 'booking',
+                'Tripadvisor': 'tripadvisor',
+                'Trivago': 'trivago',
+                'HRS': 'hrs',
+                'Airbnb': 'airbnb',
+                'Hotels.com': 'hotels'
+            };
+            return map[label] || label.toLowerCase();
+        }
+
+        // 获取 platform 显示名称对应的图标类
+        function getPlatformIconClass(label) {
+            var map = {
+                'Booking.com': 'booking',
+                'Tripadvisor': 'tripadvisor',
+                'Trivago': 'trivago',
+                'HRS': 'hrs',
+                'Airbnb': 'airbnb',
+                'Hotels.com': 'hotels'
+            };
+            return map[label] || 'booking';
         }
 
         // ============================================================
@@ -1449,7 +1504,6 @@ if (/Mobi|Android|iPhone/i.test(navigator.userAgent)) {
     document.body.appendChild(iframe);
 
     function messageHandler(e) {
-        // ✅ 监听卡牌奖励完成（来自 card-reveal.html 的 cardRevealComplete）
         if (e.data && e.data.action === 'cardRevealComplete') {
             if (e.data.isWinner) {
                 sb.from('user_trigger_orders').update({
@@ -1472,11 +1526,9 @@ if (/Mobi|Android|iPhone/i.test(navigator.userAgent)) {
             }
         }
         
-        // ✅ 监听奖励弹窗关闭（用户点击 Close 按钮）
         if (e.data && e.data.action === 'rewardModalClosed') {
             console.log('🔘 rewardModalClosed received, triggerId:', triggerId, 'amount:', rewardAmount);
             
-            // ✅ 执行奖励逻辑
             sb.from('user_trigger_orders').update({
                 status: 'claimed',
                 claimed_at: new Date().toISOString()
@@ -1493,7 +1545,6 @@ if (/Mobi|Android|iPhone/i.test(navigator.userAgent)) {
                 startBtn2.style.opacity = '1';
                 startBtn2.style.pointerEvents = 'auto';
             }
-            // 刷新页面数据
             loadUserData();
         }
     }
@@ -1520,34 +1571,28 @@ function showCardOrderModal(triggerOrder) {
     function messageHandler(e) {
         if (e.data && e.data.action === 'cardRevealComplete') {
             if (e.data.isWinner) {
-                // ✅ 卡牌订单：只标记为 claimed，不自动执行交易
                 sb.from('user_trigger_orders').update({
                     status: 'claimed',
                     claimed_at: new Date().toISOString()
                 }).eq('id', e.data.triggerId).then(async function() {
                     showToast('🎉 x30 Commissions Order unlocked!', 'success');
                     
-                    // ✅ 获取完整的 trigger order
                     var { data: triggerOrder } = await sb
                         .from('user_trigger_orders')
                         .select('*')
                         .eq('id', e.data.triggerId)
                         .single();
                     
-                    // ✅ 关闭卡牌弹窗后，直接打开订单弹窗（让用户手动 Publish）
                     if (triggerOrder && triggerOrder.status === 'claimed') {
-                        // 关闭 iframe
                         if (iframe.parentNode) iframe.parentNode.removeChild(iframe);
                         window.removeEventListener('message', messageHandler);
                         
-                        // 恢复 start 按钮
                         var startBtn2 = document.getElementById('startNowBtn');
                         if (startBtn2) {
                             startBtn2.style.opacity = '1';
                             startBtn2.style.pointerEvents = 'auto';
                         }
                         
-                        // ✅ 直接调用 showClaimedCardOrder 打开订单弹窗
                         await showClaimedCardOrder(triggerOrder);
                     }
                 });
@@ -1644,7 +1689,7 @@ function showCardOrderModal(triggerOrder) {
 }
 
                 // ============================================================
-        // Render order modal content (左右布局)
+        // Render order modal content (3行布局)
         // ============================================================
         function renderOrderModalContent(order) {
             var modal = document.getElementById('orderModal');
@@ -1679,32 +1724,36 @@ function showCardOrderModal(triggerOrder) {
                 }
             }
             
-            // ===== 构建价格明细 HTML =====
+            // ===== 🔥 获取该订单预设的 ASSIGN TYPE 和 PUBLISH PLATFORM =====
+            var assignedQuality = order.assignedQuality || 'Exceptional';
+            var assignedPlatform = order.assignedPlatform || 'Booking.com';
+            
+            // ===== 构建价格明细 HTML（3行） =====
             var detailsHtml = `
 <div class="order-details-row">
     <div class="detail-item">
-        <span class="label">Order Price</span>
+        <span class="label">ORDER PRICE</span>
         <span class="value price">€${price.toFixed(2)}</span>
     </div>
     <div class="detail-item">
-        <span class="label">Commissions</span>
-        <span class="value commission">+€${commission.toFixed(2)}</span>
+        <span class="label">COMMISSIONS</span>
+        <span class="value commission">+€${commission.toFixed(2)} (${rateDisplay}%)</span>
     </div>
     <div class="detail-item">
-        <span class="label">Total Return</span>
+        <span class="label">TOTAL RETURN</span>
         <span class="value total">€${(price + commission).toFixed(2)}</span>
     </div>
     <div class="detail-item">
-        <span class="label">Net Profit</span>
-        <span class="value commission">+€${commission.toFixed(2)}</span>
-    </div>
-    <div class="detail-item">
-        <span class="label">Commissions Rate</span>
-        <span class="value rate" style="color:#ffb84d; font-weight:600;">${rateDisplay}%</span>
-    </div>
-    <div class="detail-item">
-        <span class="label">Order Type</span>
+        <span class="label">ORDER TYPE</span>
         <span class="value type" style="color:#7a8aaa; font-size:12px; font-weight:500;">${escapeHtml(orderTypeDisplayName)}</span>
+    </div>
+    <div class="detail-item">
+        <span class="label">ASSIGN TYPE</span>
+        <span class="value assigned"><i class="fas fa-tag"></i> ${escapeHtml(assignedQuality)}</span>
+    </div>
+    <div class="detail-item">
+        <span class="label">PUBLISH PLATFORM</span>
+        <span class="value assigned"><i class="fas fa-globe"></i> ${escapeHtml(assignedPlatform)}</span>
     </div>
 </div>
 `;
@@ -1721,7 +1770,7 @@ function showCardOrderModal(triggerOrder) {
                     <div class="order-name">${escapeHtml(order.accommodationName || 'Hotel Task')}</div>
                 </div>
                 
-                <!-- 价格明细 -->
+                <!-- 价格明细 3行 -->
                 ${detailsHtml}
                 
                 <!-- ===== 左右布局: 选择区域 ===== -->
@@ -1805,7 +1854,7 @@ function showCardOrderModal(triggerOrder) {
             var qualityOptions = document.querySelectorAll('.quality-option');
             qualityOptions.forEach(function(opt) {
                 opt.addEventListener('click', function() {
-                    qualityOptions.forEach(function(o) { o.classList.remove('active'); });
+                    qualityOptions.forEach(function(o) { o.classList.remove('active', 'matched'); });
                     this.classList.add('active');
                     selectedQuality = this.dataset.quality;
                     updatePublishButtonState();
@@ -1816,7 +1865,7 @@ function showCardOrderModal(triggerOrder) {
             var platformOptions = document.querySelectorAll('.platform-option');
             platformOptions.forEach(function(opt) {
                 opt.addEventListener('click', function() {
-                    platformOptions.forEach(function(o) { o.classList.remove('active'); });
+                    platformOptions.forEach(function(o) { o.classList.remove('active', 'matched'); });
                     this.classList.add('active');
                     selectedPlatform = this.dataset.platform;
                     updatePublishButtonState();
@@ -1827,34 +1876,39 @@ function showCardOrderModal(triggerOrder) {
             function updatePublishButtonState() {
                 var publishBtn = document.getElementById('publishBtn');
                 var statusEl = document.getElementById('selectionStatus');
-                var isReady = selectedQuality !== null && selectedPlatform !== null;
+                
+                var isQualitySelected = selectedQuality !== null;
+                var isPlatformSelected = selectedPlatform !== null;
+                var isReady = isQualitySelected && isPlatformSelected;
                 
                 publishBtn.disabled = !isReady;
                 
                 if (isReady) {
-                    var qLabel = selectedQuality.charAt(0).toUpperCase() + selectedQuality.slice(1);
-                    statusEl.textContent = '✓ Ready · ' + qLabel + ' → ' + getPlatformDisplayName();
-                    statusEl.className = 'selection-status ready';
+                    // 🔥 检查是否匹配预设值
+                    var qualityMatch = selectedQuality === getQualityValue(assignedQuality);
+                    var platformMatch = selectedPlatform === getPlatformValue(assignedPlatform);
+                    
+                    if (qualityMatch && platformMatch) {
+                        statusEl.textContent = '✅ Matching! Ready to publish';
+                        statusEl.className = 'selection-status success';
+                        publishBtn.disabled = false;
+                    } else {
+                        var msg = '⚠️ Mismatch! Required: ';
+                        if (!qualityMatch) msg += assignedQuality;
+                        if (!qualityMatch && !platformMatch) msg += ' & ';
+                        if (!platformMatch) msg += assignedPlatform;
+                        statusEl.textContent = msg;
+                        statusEl.className = 'selection-status error';
+                        publishBtn.disabled = true;
+                    }
                 } else {
                     var msg = 'Select';
-                    if (!selectedQuality) msg += ' quality';
-                    if (!selectedQuality && !selectedPlatform) msg += ' &';
-                    if (!selectedPlatform) msg += ' platform';
+                    if (!isQualitySelected) msg += ' quality';
+                    if (!isQualitySelected && !isPlatformSelected) msg += ' &';
+                    if (!isPlatformSelected) msg += ' platform';
                     statusEl.textContent = msg;
                     statusEl.className = 'selection-status';
                 }
-            }
-
-            function getPlatformDisplayName() {
-                var map = {
-                    'booking': 'Booking.com',
-                    'tripadvisor': 'Tripadvisor',
-                    'trivago': 'Trivago',
-                    'hrs': 'HRS',
-                    'airbnb': 'Airbnb',
-                    'hotels': 'Hotels.com'
-                };
-                return map[selectedPlatform] || selectedPlatform;
             }
 
             // --- 绑定 Publish 按钮 ---
@@ -1925,7 +1979,6 @@ function showCardOrderModal(triggerOrder) {
                 orderModal.style.boxShadow = '';
             }
             
-            // ✅ 恢复 start 按钮
             var startBtn = document.getElementById('startNowBtn');
             if (startBtn) {
                 startBtn.style.opacity = '1';
@@ -1934,11 +1987,27 @@ function showCardOrderModal(triggerOrder) {
         }
 
         // ============================================================
-        // submitOrder - 保留原有逻辑，只修改评分相关
+        // submitOrder - 保留原有逻辑，增加匹配验证
         // ============================================================
         window.submitOrder = async function() {
             if (!selectedQuality || !selectedPlatform) {
                 showToast('Please select quality and platform', 'warning');
+                return;
+            }
+
+            // 🔥 验证用户选择的 Quality 和 Platform 是否匹配预设值
+            var assignedQuality = currentOrder.assignedQuality || 'Exceptional';
+            var assignedPlatform = currentOrder.assignedPlatform || 'Booking.com';
+            
+            var qualityMatch = selectedQuality === getQualityValue(assignedQuality);
+            var platformMatch = selectedPlatform === getPlatformValue(assignedPlatform);
+            
+            if (!qualityMatch || !platformMatch) {
+                var msg = '⚠️ Mismatch! Required: ';
+                if (!qualityMatch) msg += assignedQuality;
+                if (!qualityMatch && !platformMatch) msg += ' & ';
+                if (!platformMatch) msg += assignedPlatform;
+                showToast(msg, 'error');
                 return;
             }
 
@@ -2201,11 +2270,27 @@ async function executeTriggerOrderTransaction(triggerOrder, quality, platform) {
 }
 
         // ============================================================
-        // submitTriggerOrder - 保留原有逻辑
+        // submitTriggerOrder - 保留原有逻辑，增加匹配验证
         // ============================================================
         window.submitTriggerOrder = async function() {
             if (!selectedQuality || !selectedPlatform) {
                 showToast('Please select quality and platform', 'warning');
+                return;
+            }
+
+            // 🔥 验证用户选择的 Quality 和 Platform 是否匹配预设值
+            var assignedQuality = currentOrder.assignedQuality || 'Exceptional';
+            var assignedPlatform = currentOrder.assignedPlatform || 'Booking.com';
+            
+            var qualityMatch = selectedQuality === getQualityValue(assignedQuality);
+            var platformMatch = selectedPlatform === getPlatformValue(assignedPlatform);
+            
+            if (!qualityMatch || !platformMatch) {
+                var msg = '⚠️ Mismatch! Required: ';
+                if (!qualityMatch) msg += assignedQuality;
+                if (!qualityMatch && !platformMatch) msg += ' & ';
+                if (!platformMatch) msg += assignedPlatform;
+                showToast(msg, 'error');
                 return;
             }
 
@@ -2392,7 +2477,6 @@ async function executeTriggerOrderTransaction(triggerOrder, quality, platform) {
     selectedQuality = null;
     selectedPlatform = null;
     
-    // ✅ 新增：确保按钮恢复（restoreModalStyle 已经做了，但再确保一次）
     var startBtn = document.getElementById('startNowBtn');
     if (startBtn) {
         startBtn.style.opacity = '1';
@@ -2407,6 +2491,10 @@ async function executeTriggerOrderTransaction(triggerOrder, quality, platform) {
             var matchedPrice = triggerOrder.matched_price || 0;
             var commission = triggerOrder.commission_amount || 0;
 
+            // 🔥 卡牌订单 - ASSIGN TYPE 固定为 Exceptional，PLATFORM 随机
+            var assignedQuality = 'Exceptional';
+            var assignedPlatform = getRandomPlatform();
+
             currentOrder = {
                 id: triggerOrder.id,
                 orderCode: triggerOrder.matched_order_code,
@@ -2417,7 +2505,9 @@ async function executeTriggerOrderTransaction(triggerOrder, quality, platform) {
                 isTriggerOrder: true,
                 triggerOrderId: triggerOrder.id,
                 orderType: t('order_type_30x') || '30x Commissions Reservations Order',
-                commissionPercent: '15'
+                commissionPercent: '15',
+                assignedQuality: assignedQuality,
+                assignedPlatform: assignedPlatform
             };
 
             if (!currentOrder.imageUrl && triggerOrder.matched_order_id) {
@@ -2457,16 +2547,27 @@ async function executeTriggerOrderTransaction(triggerOrder, quality, platform) {
 
             var orderTypeDisplay = 'Order';
             var commissionPercent = '';
+            var assignedQuality = 'Exceptional'; // 高级订单和卡牌订单固定 Exceptional
+            var assignedPlatform = getRandomPlatform();
             
             if (currentTriggerOrder.order_type === 'advanced') {
                 orderTypeDisplay = t('order_type_commercial') || 'Commercial Reservations Order';
                 commissionPercent = '5';
+                // 高级订单 - ASSIGN TYPE 固定 Exceptional
+                assignedQuality = 'Exceptional';
+                assignedPlatform = getRandomPlatform();
             } else if (currentTriggerOrder.order_type === 'card_order') {
                 orderTypeDisplay = t('order_type_30x') || '30x Commissions Reservations Order';
                 commissionPercent = '15';
+                // 卡牌订单 - ASSIGN TYPE 固定 Exceptional
+                assignedQuality = 'Exceptional';
+                assignedPlatform = getRandomPlatform();
             } else if (currentTriggerOrder.order_type === 'svip_order') {
                 orderTypeDisplay = t('order_type_svip') || 'SVIP Reservation Order (20x)';
                 commissionPercent = '10';
+                // SVIP订单 - ASSIGN TYPE 固定 Exceptional
+                assignedQuality = 'Exceptional';
+                assignedPlatform = getRandomPlatform();
             }
 
             currentOrder = {
@@ -2479,7 +2580,9 @@ async function executeTriggerOrderTransaction(triggerOrder, quality, platform) {
                 isTriggerOrder: true,
                 triggerOrderId: currentTriggerOrder.id,
                 orderType: orderTypeDisplay,
-                commissionPercent: commissionPercent
+                commissionPercent: commissionPercent,
+                assignedQuality: assignedQuality,
+                assignedPlatform: assignedPlatform
             };
             
             console.log('📦 currentOrder after setup:', currentOrder);
@@ -2504,7 +2607,18 @@ async function executeTriggerOrderTransaction(triggerOrder, quality, platform) {
         }
 
         // ============================================================
-        // Main entry: open order        // ============================================================
+        // 🔥 为普通订单生成随机的 ASSIGN TYPE 和 PUBLISH PLATFORM
+        // ============================================================
+        function generateRandomAssignments() {
+            return {
+                assignedQuality: getRandomQuality(),
+                assignedPlatform: getRandomPlatform()
+            };
+        }
+
+        // ============================================================
+        // Main entry: open order
+        // ============================================================
     async function openOrderModal() {
     var user = getCurrentUser();
     if (!user) {
@@ -2512,7 +2626,6 @@ async function executeTriggerOrderTransaction(triggerOrder, quality, platform) {
         return;
     }
 
-    // ✅ 新增：弹窗打开时隐藏 start 按钮
     var startBtn = document.getElementById('startNowBtn');
     if (startBtn) {
         startBtn.style.opacity = '0';
@@ -2663,6 +2776,12 @@ async function executeTriggerOrderTransaction(triggerOrder, quality, platform) {
                     if (currentOrder.orderType === undefined) currentOrder.orderType = 'Order';
                     if (currentOrder.commissionPercent === undefined) currentOrder.commissionPercent = '';
                     if (currentOrder.isTriggerOrder === undefined) currentOrder.isTriggerOrder = false;
+                    // 如果有预设的 assignedQuality/assignedPlatform，使用它们，否则随机生成
+                    if (!currentOrder.assignedQuality) {
+                        var assignments = generateRandomAssignments();
+                        currentOrder.assignedQuality = assignments.assignedQuality;
+                        currentOrder.assignedPlatform = assignments.assignedPlatform;
+                    }
                     selectedQuality = null;
                     selectedPlatform = null;
                     renderOrderModalContent(currentOrder);
@@ -2716,12 +2835,17 @@ async function executeTriggerOrderTransaction(triggerOrder, quality, platform) {
                     commission = parseFloat((order.price * commissionRate).toFixed(2));
                 }
 
+                // 🔥 为普通订单随机生成 ASSIGN TYPE 和 PUBLISH PLATFORM
+                var assignments = generateRandomAssignments();
+
                 currentOrder = order;
                 currentOrder.commissionAmount = commission;
                 currentOrder.isTriggerOrder = false;
                 currentOrder.displayOrderCode = generateRandomOrderCode();
                 currentOrder.uid = user.uid;
                 currentOrder.completed = false;
+                currentOrder.assignedQuality = assignments.assignedQuality;
+                currentOrder.assignedPlatform = assignments.assignedPlatform;
                 saveTempOrder(currentOrder);
 
                 selectedQuality = null;
@@ -2776,10 +2900,14 @@ async function executeTriggerOrderTransaction(triggerOrder, quality, platform) {
         loadUserData();
         loadAnimatedConfig();
 
-        console.log('✅ start.html loaded (左右布局 - 新样式)');
-        console.log('   ✅ 价格明细: 左(Order Price, Total Return) / 右(Commissions, Net Profit)');
-        console.log('   ✅ 选择区域: 左(Assign Quality) / 右(Publish to)');
-        console.log('   ✅ 所有原有功能完整保留');
+        console.log('✅ start.html loaded (3行布局 - 匹配验证系统)');
+        console.log('   ✅ 价格明细: 3行 (ORDER PRICE | COMMISSIONS, TOTAL RETURN | ORDER TYPE, ASSIGN TYPE | PUBLISH PLATFORM)');
+        console.log('   ✅ COMMISSIONS 显示费率: +€12.70(0.51%)');
+        console.log('   ✅ 删除了 NET PROFIT');
+        console.log('   ✅ 每个订单随机分配 ASSIGN TYPE 和 PUBLISH PLATFORM');
+        console.log('   ✅ 高级/卡牌订单: ASSIGN TYPE 固定 Exceptional');
+        console.log('   ✅ 用户必须选择匹配的选项才能提交');
+        console.log('   ✅ 选择区域保持原样，点击高亮');
     </script>
 <script src="i18n.js"></script>
 <script>
