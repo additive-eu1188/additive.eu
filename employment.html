@@ -68,6 +68,7 @@
             border-radius: 16px;
             overflow: hidden;
             border: 1px solid rgba(201, 176, 149, 0.1);
+            cursor: pointer;
         }
         .content-card .image-grid-container .image-item .img-wrapper {
             position: relative;
@@ -132,6 +133,111 @@
             margin-bottom: 16px;
             display: block;
         }
+
+        /* ===== 图片查看器弹窗 ===== */
+        .image-viewer-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.95);
+            backdrop-filter: blur(12px);
+            z-index: 10001;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            visibility: hidden;
+            opacity: 0;
+            transition: all 0.3s ease;
+        }
+        .image-viewer-modal.active {
+            visibility: visible;
+            opacity: 1;
+        }
+        .image-viewer-content {
+            position: relative;
+            max-width: 90vw;
+            max-height: 90vh;
+            border-radius: 16px;
+            overflow: hidden;
+            background: rgba(20, 30, 55, 0.3);
+            border: 1px solid rgba(201, 176, 149, 0.2);
+        }
+        .image-viewer-content img {
+            max-width: 90vw;
+            max-height: 85vh;
+            display: block;
+            object-fit: contain;
+            border-radius: 16px;
+        }
+        .image-viewer-close {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            background: rgba(0,0,0,0.6);
+            border: none;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: 0.2s;
+            z-index: 10;
+        }
+        .image-viewer-close:hover {
+            background: rgba(201,176,149,0.5);
+            transform: scale(1.05);
+        }
+        .image-viewer-counter {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0,0,0,0.6);
+            padding: 4px 16px;
+            border-radius: 20px;
+            font-size: 13px;
+            color: #C9B095;
+            z-index: 10;
+        }
+        .image-viewer-nav {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(0,0,0,0.5);
+            border: none;
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            color: white;
+            font-size: 20px;
+            cursor: pointer;
+            transition: 0.2s;
+            z-index: 10;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .image-viewer-nav:hover {
+            background: rgba(201,176,149,0.3);
+        }
+        .image-viewer-prev { left: 16px; }
+        .image-viewer-next { right: 16px; }
+        @media (max-width: 768px) {
+            .image-viewer-nav {
+                width: 36px;
+                height: 36px;
+                font-size: 16px;
+            }
+            .image-viewer-prev { left: 8px; }
+            .image-viewer-next { right: 8px; }
+        }
+
         .footer-note {
             margin-top: 40px;
             text-align: center;
@@ -206,6 +312,17 @@
         </main>
     </div>
 
+    <!-- ===== 图片查看器弹窗 ===== -->
+    <div id="imageViewerModal" class="image-viewer-modal" onclick="closeImageViewerOutside(event)">
+        <div class="image-viewer-content">
+            <button class="image-viewer-close" onclick="closeImageViewer()">&times;</button>
+            <img id="viewerImage" src="" alt="Contract Image">
+            <div class="image-viewer-counter" id="viewerCounter"></div>
+            <button class="image-viewer-nav image-viewer-prev" onclick="prevImage()"><i class="fas fa-chevron-left"></i></button>
+            <button class="image-viewer-nav image-viewer-next" onclick="nextImage()"><i class="fas fa-chevron-right"></i></button>
+        </div>
+    </div>
+
     <script>
         function toggleMenu() {
             const sidebar = document.getElementById('sidebar');
@@ -249,6 +366,93 @@
             parent.appendChild(div);
         }
 
+        // ===== 图片查看器 =====
+        let viewerImages = [];
+        let viewerCurrentIndex = 0;
+
+        function openImageViewer(url, index, allImages) {
+            viewerImages = allImages || [];
+            viewerCurrentIndex = index || 0;
+            const modal = document.getElementById('imageViewerModal');
+            const img = document.getElementById('viewerImage');
+            const counter = document.getElementById('viewerCounter');
+            
+            img.src = url;
+            img.onerror = function() {
+                this.src = 'https://placehold.co/800x1000/1a1f3a/C9B095?text=Image+Not+Available';
+            };
+            
+            if (viewerImages.length > 1) {
+                counter.textContent = `${viewerCurrentIndex + 1} / ${viewerImages.length}`;
+                counter.style.display = 'block';
+                document.querySelector('.image-viewer-prev').style.display = 'flex';
+                document.querySelector('.image-viewer-next').style.display = 'flex';
+            } else {
+                counter.style.display = 'none';
+                document.querySelector('.image-viewer-prev').style.display = 'none';
+                document.querySelector('.image-viewer-next').style.display = 'none';
+            }
+            
+            modal.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeImageViewer() {
+            const modal = document.getElementById('imageViewerModal');
+            modal.classList.remove('active');
+            document.body.style.overflow = '';
+        }
+
+        function closeImageViewerOutside(e) {
+            if (e.target === e.currentTarget) {
+                closeImageViewer();
+            }
+        }
+
+        function prevImage() {
+            if (viewerImages.length === 0) return;
+            viewerCurrentIndex = (viewerCurrentIndex - 1 + viewerImages.length) % viewerImages.length;
+            const img = document.getElementById('viewerImage');
+            img.src = viewerImages[viewerCurrentIndex];
+            document.getElementById('viewerCounter').textContent = `${viewerCurrentIndex + 1} / ${viewerImages.length}`;
+        }
+
+        function nextImage() {
+            if (viewerImages.length === 0) return;
+            viewerCurrentIndex = (viewerCurrentIndex + 1) % viewerImages.length;
+            const img = document.getElementById('viewerImage');
+            img.src = viewerImages[viewerCurrentIndex];
+            document.getElementById('viewerCounter').textContent = `${viewerCurrentIndex + 1} / ${viewerImages.length}`;
+        }
+
+        // ESC 键关闭
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') closeImageViewer();
+        });
+
+        // ===== 从元素打开图片查看器 =====
+        function openImageViewerFromElement(element) {
+            const imgWrapper = element.querySelector('.img-wrapper img');
+            if (!imgWrapper) return;
+            const url = imgWrapper.src;
+            
+            const allItems = document.querySelectorAll('.image-item');
+            const allImages = [];
+            let currentIndex = 0;
+            
+            allItems.forEach((item, idx) => {
+                const img = item.querySelector('.img-wrapper img');
+                if (img) {
+                    allImages.push(img.src);
+                    if (img.src === url) {
+                        currentIndex = idx;
+                    }
+                }
+            });
+            
+            openImageViewer(url, currentIndex, allImages);
+        }
+
         async function loadContent() {
             const container = document.getElementById('contentContainer');
 
@@ -282,10 +486,10 @@
                         images.forEach((url, index) => {
                             const escapedUrl = escapeHtml(url);
                             imagesHtml += `
-    <div class="image-item">
+    <div class="image-item" onclick="openImageViewerFromElement(this)">
         <div class="img-wrapper">
             <img src="${escapedUrl}" alt="Employment Contract Image ${index + 1}" 
-                 style="position:absolute; top:0; left:0; width:100%; height:100%; object-fit:cover;" 
+                 style="position:absolute; top:0; left:0; width:100%; height:100%; object-fit:cover; cursor:pointer;" 
                  onerror="handleImageError(this, ${index + 1})">
             <span class="image-number">${index + 1} / ${images.length}</span>
         </div>
