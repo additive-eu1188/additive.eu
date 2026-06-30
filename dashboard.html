@@ -186,269 +186,475 @@
         .uid-badge { font-size: 11px; color: var(--text-secondary); background: rgba(204,178,153,0.1); display: inline-block; padding: 4px 10px; border-radius: 20px; }
         .premium-tag { background: rgba(204,178,153,0.08); border: 1px solid var(--accent-gold-border); padding: 4px 12px; border-radius: 40px; font-size: 11px; font-weight: 600; color: var(--accent-gold); }
 
-        /* ===== 玫瑰金借记卡样式（与 withdrawal 一致） ===== */
-.card-rosegold {
-    background: linear-gradient(160deg, #1a0a0a 0%, #3a1818 20%, #5a2828 40%, #7a3838 55%, #5a2828 70%, #3a1818 85%, #1a0a0a 100%);
-    border-radius: 20px;
-    padding: 22px 22px 20px 22px;
-    border: 1px solid rgba(201, 149, 149, 0.3);
-    position: relative;
-    overflow: visible;
-    min-height: 200px;
-    box-shadow: 0 20px 60px rgba(0,0,0,0.6), 0 0 80px rgba(201,149,149,0.06), inset 0 1px 0 rgba(201,149,149,0.2), inset 0 -1px 0 rgba(0,0,0,0.2), inset 0 2px 4px rgba(201,149,149,0.04), inset 0 -2px 4px rgba(0,0,0,0.1);
-    isolation: isolate;
-    display: flex;
-    flex-direction: column;
-    margin-bottom: 24px;
-}
+        /* ===== 玫瑰金借记卡样式 ===== */
+        .card-rosegold {
+            background: linear-gradient(160deg, #1a0a0a 0%, #3a1818 20%, #5a2828 40%, #7a3838 55%, #5a2828 70%, #3a1818 85%, #1a0a0a 100%);
+            border-radius: 20px;
+            padding: 22px 22px 20px 22px;
+            border: 1px solid rgba(201, 149, 149, 0.3);
+            position: relative;
+            overflow: visible;
+            min-height: 200px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.6), 0 0 80px rgba(201,149,149,0.06), inset 0 1px 0 rgba(201,149,149,0.2), inset 0 -1px 0 rgba(0,0,0,0.2), inset 0 2px 4px rgba(201,149,149,0.04), inset 0 -2px 4px rgba(0,0,0,0.1);
+            isolation: isolate;
+            display: flex;
+            flex-direction: column;
+            margin-bottom: 24px;
+        }
 
-/* 顶部金属高光条 */
-.card-rosegold::after {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 10%;
-    right: 10%;
-    height: 1px;
-    background: linear-gradient(90deg, transparent, rgba(201,149,149,0.3), rgba(255,255,255,0.15), rgba(201,149,149,0.3), transparent);
-    pointer-events: none;
-    z-index: 2;
-    border-radius: 50%;
-}
+        .card-rosegold::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 10%;
+            right: 10%;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(201,149,149,0.3), rgba(255,255,255,0.15), rgba(201,149,149,0.3), transparent);
+            pointer-events: none;
+            z-index: 2;
+            border-radius: 50%;
+        }
 
-/* 背景光晕 */
-.card-rosegold::before {
-    content: '';
-    position: absolute;
-    top: -20%;
-    left: -10%;
-    width: 65%;
-    height: 80%;
-    background: radial-gradient(ellipse, rgba(201,149,149,0.1), transparent 70%);
-    pointer-events: none;
-    border-radius: 50%;
-    z-index: 0;
-}
+        .card-rosegold::before {
+            content: '';
+            position: absolute;
+            top: -20%;
+            left: -10%;
+            width: 65%;
+            height: 80%;
+            background: radial-gradient(ellipse, rgba(201,149,149,0.1), transparent 70%);
+            pointer-events: none;
+            border-radius: 50%;
+            z-index: 0;
+        }
 
-/* 右上角发光圆点 */
-.pulse-dot-wrapper {
-    position: absolute;
-    top: 16px;
-    right: 18px;
-    z-index: 5;
-    width: 28px;
-    height: 28px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
+        .pulse-dot-wrapper {
+            position: absolute;
+            top: 16px;
+            right: 18px;
+            z-index: 5;
+            width: 28px;
+            height: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
 
-.pulse-dot {
-    width: 10px;
-    height: 10px;
-    border-radius: 50%;
-    background: radial-gradient(circle at 30% 30%, #e8c0c0, #d4a0a0, #b08080);
-    box-shadow: 0 0 12px rgba(201,149,149,0.3), inset 0 1px 0 rgba(255,255,255,0.15);
-    position: relative;
-    z-index: 2;
-    flex-shrink: 0;
-}
+        .pulse-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: radial-gradient(circle at 30% 30%, #e8c0c0, #d4a0a0, #b08080);
+            box-shadow: 0 0 12px rgba(201,149,149,0.3), inset 0 1px 0 rgba(255,255,255,0.15);
+            position: relative;
+            z-index: 2;
+            flex-shrink: 0;
+        }
 
-.pulse-ring {
-    position: absolute;
-    border-radius: 50%;
-    border: 1px solid rgba(201, 149, 149, 0.15);
-    width: 100%;
-    height: 100%;
-    top: 0;
-    left: 0;
-    animation: pulseRing 3s ease-out infinite;
-    opacity: 0;
-}
-.pulse-ring:nth-child(2) { animation-delay: 1s; }
-.pulse-ring:nth-child(3) { animation-delay: 2s; }
+        .pulse-ring {
+            position: absolute;
+            border-radius: 50%;
+            border: 1px solid rgba(201, 149, 149, 0.15);
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            animation: pulseRing 3s ease-out infinite;
+            opacity: 0;
+        }
+        .pulse-ring:nth-child(2) { animation-delay: 1s; }
+        .pulse-ring:nth-child(3) { animation-delay: 2s; }
 
-@keyframes pulseRing {
-    0% { transform: scale(0.8); opacity: 0.8; border-color: rgba(201,149,149,0.25); }
-    100% { transform: scale(1.8); opacity: 0; border-color: rgba(201,149,149,0); }
-}
+        @keyframes pulseRing {
+            0% { transform: scale(0.8); opacity: 0.8; border-color: rgba(201,149,149,0.25); }
+            100% { transform: scale(1.8); opacity: 0; border-color: rgba(201,149,149,0); }
+        }
 
-/* 卡片中间的 Logo - 水印效果 */
-.card-rosegold .card-logo-overlay {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    z-index: 0;
-    opacity: 0.15;
-    pointer-events: none;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 70%;
-    height: 70%;
-}
-.card-rosegold .card-logo-overlay img {
-    width: 100%;
-    height: 100%;
-    object-fit: contain;
-    max-width: 180px;
-    max-height: 130px;
-    filter: grayscale(0.3) brightness(1.1);
-}
+        .card-rosegold .card-logo-overlay {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 0;
+            opacity: 0.15;
+            pointer-events: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 70%;
+            height: 70%;
+        }
+        .card-rosegold .card-logo-overlay img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            max-width: 180px;
+            max-height: 130px;
+            filter: grayscale(0.3) brightness(1.1);
+        }
 
-/* 卡片头部 */
-.card-rosegold .card-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 6px;
-    position: relative;
-    z-index: 1;
-    flex-shrink: 0;
-}
-.card-rosegold .card-header .left {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
-.card-rosegold .card-header .left i {
-    font-size: 18px;
-    color: #d4a0a0;
-    filter: drop-shadow(0 0 8px rgba(201,149,149,0.08));
-}
-.card-rosegold .card-header .left span {
-    font-size: 10px;
-    color: #d4b0b0;
-    letter-spacing: 2px;
-    font-weight: 600;
-    text-shadow: 0 1px 4px rgba(0,0,0,0.3);
-}
+        .card-rosegold .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 6px;
+            position: relative;
+            z-index: 1;
+            flex-shrink: 0;
+        }
+        .card-rosegold .card-header .left {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .card-rosegold .card-header .left i {
+            font-size: 18px;
+            color: #d4a0a0;
+            filter: drop-shadow(0 0 8px rgba(201,149,149,0.08));
+        }
+        .card-rosegold .card-header .left span {
+            font-size: 10px;
+            color: #d4b0b0;
+            letter-spacing: 2px;
+            font-weight: 600;
+            text-shadow: 0 1px 4px rgba(0,0,0,0.3);
+        }
 
-/* 卡片内容包装器 */
-.card-rosegold .card-content-wrapper {
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    flex: 1;
-    min-height: 110px;
-    position: relative;
-    z-index: 1;
-}
+        .card-rosegold .card-content-wrapper {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            flex: 1;
+            min-height: 110px;
+            position: relative;
+            z-index: 1;
+        }
 
-/* 余额 - 亮金属银 */
-.card-rosegold .card-balance {
-    font-family: 'Inter', sans-serif;
-    font-weight: 800;
-    font-size: 42px;
-    text-align: left;
-    padding: 14px 0 14px 4px;
-    position: relative;
-    z-index: 1;
-    text-shadow: 0 2px 8px rgba(0,0,0,0.4), 0 0 40px rgba(200,200,230,0.08);
-    background: linear-gradient(180deg, #ffffff 0%, #f0f0f8 15%, #e0e0ea 30%, #d0d0dc 45%, #e8e8f2 60%, #f5f5fa 75%, #ffffff 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-    filter: drop-shadow(0 2px 8px rgba(0,0,0,0.3)) drop-shadow(0 0 40px rgba(200,210,240,0.08));
-    line-height: 1.3;
-    flex-shrink: 0;
-    letter-spacing: -0.5px;
-}
+        .card-rosegold .card-balance {
+            font-family: 'Inter', sans-serif;
+            font-weight: 800;
+            font-size: 42px;
+            text-align: left;
+            padding: 14px 0 14px 4px;
+            position: relative;
+            z-index: 1;
+            text-shadow: 0 2px 8px rgba(0,0,0,0.4), 0 0 40px rgba(200,200,230,0.08);
+            background: linear-gradient(180deg, #ffffff 0%, #f0f0f8 15%, #e0e0ea 30%, #d0d0dc 45%, #e8e8f2 60%, #f5f5fa 75%, #ffffff 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            filter: drop-shadow(0 2px 8px rgba(0,0,0,0.3)) drop-shadow(0 0 40px rgba(200,210,240,0.08));
+            line-height: 1.3;
+            flex-shrink: 0;
+            letter-spacing: -0.5px;
+        }
 
-/* 分隔线 */
-.card-rosegold .card-divider {
-    height: 1px;
-    background: linear-gradient(90deg, transparent, rgba(201,149,149,0.08), rgba(201,149,149,0.15), rgba(201,149,149,0.08), transparent);
-    margin: 4px 0 8px 0;
-    position: relative;
-    z-index: 1;
-    box-shadow: 0 1px 2px rgba(0,0,0,0.1);
-    flex-shrink: 0;
-}
+        .card-rosegold .card-divider {
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(201,149,149,0.08), rgba(201,149,149,0.15), rgba(201,149,149,0.08), transparent);
+            margin: 4px 0 8px 0;
+            position: relative;
+            z-index: 1;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+            flex-shrink: 0;
+        }
 
-/* 底部 */
-.card-rosegold .card-footer {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-end;
-    position: relative;
-    z-index: 1;
-    margin-top: auto;
-    padding-top: 2px;
-    flex-shrink: 0;
-}
-.card-rosegold .card-footer .user-section .label {
-    font-size: 9px;
-    color: #8a6060;
-    text-transform: uppercase;
-    letter-spacing: 1.5px;
-    font-weight: 600;
-}
-.card-rosegold .card-footer .user-section .label i {
-    margin-right: 4px;
-    font-size: 9px;
-    color: #8a6060;
-}
-.card-rosegold .card-footer .user-section .value {
-    font-size: 16px;
-    font-weight: 700;
-    color: #f0e0e0;
-    margin-top: 2px;
-    text-shadow: 0 1px 4px rgba(0,0,0,0.4);
-    letter-spacing: 0.5px;
-}
-.card-rosegold .card-footer .balance-section {
-    text-align: right;
-    cursor: pointer;
-}
-.card-rosegold .card-footer .balance-section .label {
-    font-size: 9px;
-    color: #8a6060;
-    text-transform: uppercase;
-    letter-spacing: 1.5px;
-    font-weight: 600;
-}
-.card-rosegold .card-footer .balance-section .label i {
-    margin-right: 4px;
-    font-size: 9px;
-    color: #8a6060;
-}
-.card-rosegold .card-footer .balance-section .value {
-    font-size: 16px;
-    font-weight: 700;
-    background: linear-gradient(135deg, #f0e0e0 0%, #e0c8c8 40%, #d4b0b0 70%, #e0c8c8 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-    margin-top: 2px;
-    text-shadow: 0 2px 12px rgba(201,149,149,0.1);
-    letter-spacing: 0.3px;
-}
+        .card-rosegold .card-footer-new {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            position: relative;
+            z-index: 1;
+            margin-top: auto;
+            padding-top: 2px;
+            flex-shrink: 0;
+        }
 
-/* 装饰光晕 */
-.card-rosegold .glow-orb {
-    position: absolute;
-    bottom: -20px;
-    right: -20px;
-    width: 140px;
-    height: 140px;
-    background: radial-gradient(circle, rgba(201,149,149,0.06), transparent 70%);
-    border-radius: 50%;
-    pointer-events: none;
-    z-index: 0;
-}
-.card-rosegold .glow-orb-top {
-    position: absolute;
-    top: -30px;
-    left: -30px;
-    width: 100px;
-    height: 100px;
-    background: radial-gradient(circle, rgba(201,149,149,0.03), transparent 70%);
-    border-radius: 50%;
-    pointer-events: none;
-    z-index: 0;
-}
+        .card-rosegold .card-footer-new .footer-left {
+            display: flex;
+            flex-direction: column;
+        }
+        .card-rosegold .card-footer-new .footer-left .label {
+            font-size: 9px;
+            color: #8a6060;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            font-weight: 600;
+        }
+        .card-rosegold .card-footer-new .footer-left .label i {
+            margin-right: 4px;
+            font-size: 9px;
+            color: #8a6060;
+        }
+        .card-rosegold .card-footer-new .footer-left .value {
+            font-size: 16px;
+            font-weight: 700;
+            color: #f0e0e0;
+            margin-top: 2px;
+            text-shadow: 0 1px 4px rgba(0,0,0,0.4);
+            letter-spacing: 0.5px;
+        }
+
+        .card-rosegold .card-footer-new .footer-right {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            text-align: right;
+        }
+        .card-rosegold .card-footer-new .footer-right .vip-level {
+            font-size: 14px;
+            font-weight: 700;
+            color: #CCB299;
+            margin-bottom: 2px;
+        }
+        .card-rosegold .card-footer-new .footer-right .action-link {
+            font-size: 13px;
+            font-weight: 600;
+            color: #CCB299;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+        .card-rosegold .card-footer-new .footer-right .action-link:hover {
+            opacity: 0.7;
+        }
+
+        .card-rosegold .glow-orb {
+            position: absolute;
+            bottom: -20px;
+            right: -20px;
+            width: 140px;
+            height: 140px;
+            background: radial-gradient(circle, rgba(201,149,149,0.06), transparent 70%);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 0;
+        }
+        .card-rosegold .glow-orb-top {
+            position: absolute;
+            top: -30px;
+            left: -30px;
+            width: 100px;
+            height: 100px;
+            background: radial-gradient(circle, rgba(201,149,149,0.03), transparent 70%);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* ===== 红色玫瑰金借记卡 - Amount Due ===== */
+        .card-rosegold-red {
+            background: linear-gradient(160deg, #1a0505 0%, #3a1010 20%, #5a1818 40%, #7a2020 55%, #5a1818 70%, #3a1010 85%, #1a0505 100%);
+            border-radius: 20px;
+            padding: 22px 22px 20px 22px;
+            border: 1px solid rgba(255, 80, 80, 0.35);
+            position: relative;
+            overflow: visible;
+            min-height: 200px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.6), 0 0 80px rgba(255,80,80,0.08), inset 0 1px 0 rgba(255,80,80,0.2), inset 0 -1px 0 rgba(0,0,0,0.2), inset 0 2px 4px rgba(255,80,80,0.04), inset 0 -2px 4px rgba(0,0,0,0.1);
+            isolation: isolate;
+            display: flex;
+            flex-direction: column;
+            margin-bottom: 24px;
+        }
+
+        .card-rosegold-red::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 10%;
+            right: 10%;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(255,80,80,0.3), rgba(255,150,150,0.15), rgba(255,80,80,0.3), transparent);
+            pointer-events: none;
+            z-index: 2;
+            border-radius: 50%;
+        }
+
+        .card-rosegold-red::before {
+            content: '';
+            position: absolute;
+            top: -20%;
+            left: -10%;
+            width: 65%;
+            height: 80%;
+            background: radial-gradient(ellipse, rgba(255,80,80,0.12), transparent 70%);
+            pointer-events: none;
+            border-radius: 50%;
+            z-index: 0;
+        }
+
+        .card-rosegold-red .card-logo-overlay {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 0;
+            opacity: 0.10;
+            pointer-events: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 70%;
+            height: 70%;
+        }
+        .card-rosegold-red .card-logo-overlay img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            max-width: 180px;
+            max-height: 130px;
+            filter: grayscale(0.3) brightness(1.1);
+        }
+
+        .card-rosegold-red .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 6px;
+            position: relative;
+            z-index: 1;
+            flex-shrink: 0;
+        }
+        .card-rosegold-red .card-header .left {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .card-rosegold-red .card-header .left i {
+            font-size: 18px;
+            color: #ff8080;
+            filter: drop-shadow(0 0 8px rgba(255,80,80,0.1));
+        }
+        .card-rosegold-red .card-header .left span {
+            font-size: 10px;
+            color: #ff9090;
+            letter-spacing: 2px;
+            font-weight: 600;
+            text-shadow: 0 1px 4px rgba(0,0,0,0.3);
+        }
+
+        .card-rosegold-red .card-content-wrapper {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            flex: 1;
+            min-height: 110px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .card-rosegold-red .card-amount-red {
+            font-family: 'Inter', sans-serif;
+            font-weight: 800;
+            font-size: 42px;
+            text-align: left;
+            padding: 14px 0 14px 4px;
+            position: relative;
+            z-index: 1;
+            text-shadow: 0 2px 8px rgba(0,0,0,0.4), 0 0 40px rgba(255,80,80,0.08);
+            background: linear-gradient(180deg, #ffd0d0 0%, #ffb0b0 30%, #ff8080 55%, #f06060 80%, #e05050 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            filter: drop-shadow(0 2px 8px rgba(0,0,0,0.3)) drop-shadow(0 0 40px rgba(255,80,80,0.06));
+            line-height: 1.3;
+            flex-shrink: 0;
+            letter-spacing: -0.5px;
+        }
+
+        .card-rosegold-red .card-divider {
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(255,80,80,0.10), rgba(255,80,80,0.18), rgba(255,80,80,0.10), transparent);
+            margin: 4px 0 8px 0;
+            position: relative;
+            z-index: 1;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+            flex-shrink: 0;
+        }
+
+        .card-rosegold-red .card-footer-new {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            position: relative;
+            z-index: 1;
+            margin-top: auto;
+            padding-top: 2px;
+            flex-shrink: 0;
+        }
+
+        .card-rosegold-red .card-footer-new .footer-left {
+            display: flex;
+            flex-direction: column;
+        }
+        .card-rosegold-red .card-footer-new .footer-left .label {
+            font-size: 9px;
+            color: #8a4040;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            font-weight: 600;
+        }
+        .card-rosegold-red .card-footer-new .footer-left .label i {
+            margin-right: 4px;
+            font-size: 9px;
+            color: #8a4040;
+        }
+        .card-rosegold-red .card-footer-new .footer-left .value {
+            font-size: 16px;
+            font-weight: 700;
+            color: #ffb0b0;
+            margin-top: 2px;
+            text-shadow: 0 1px 4px rgba(0,0,0,0.4);
+            letter-spacing: 0.5px;
+        }
+
+        .card-rosegold-red .card-footer-new .footer-right {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            text-align: right;
+        }
+        .card-rosegold-red .card-footer-new .footer-right .vip-level {
+            font-size: 14px;
+            font-weight: 700;
+            color: transparent;
+            opacity: 0;
+            pointer-events: none;
+            margin-bottom: 2px;
+        }
+        .card-rosegold-red .card-footer-new .footer-right .action-link {
+            font-size: 13px;
+            font-weight: 600;
+            color: #ff8080;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+        .card-rosegold-red .card-footer-new .footer-right .action-link:hover {
+            opacity: 0.7;
+        }
+
+        .card-rosegold-red .glow-orb {
+            position: absolute;
+            bottom: -20px;
+            right: -20px;
+            width: 140px;
+            height: 140px;
+            background: radial-gradient(circle, rgba(255,80,80,0.08), transparent 70%);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 0;
+        }
+        .card-rosegold-red .glow-orb-top {
+            position: absolute;
+            top: -30px;
+            left: -30px;
+            width: 100px;
+            height: 100px;
+            background: radial-gradient(circle, rgba(255,80,80,0.04), transparent 70%);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 0;
+        }
 
         /* ========== 图表样式 ========== */
         .chart-container {
@@ -524,7 +730,6 @@
             overflow: hidden;
             cursor: pointer;
         }
-        /* Total Earnings 卡片不显示手型光标 */
         #card1 {
             cursor: default;
         }
@@ -566,7 +771,7 @@
         .product-card-style7 .image-wrapper { position: relative; height: 160px; overflow: hidden; border-radius: 16px 16px 0 0; }
         .product-card-style7 .image-wrapper img { width: 100%; height: 100%; object-fit: cover; }
         .product-card-style7 .floating-content {
-    background: rgba(18, 18, 50, 0.35);  /* 👈 改成 0.35 更透明 */
+    background: rgba(18, 18, 50, 0.35);
     backdrop-filter: blur(8px);
     margin: -16px 12px 0 12px;
     padding: 12px;
@@ -733,7 +938,7 @@
     .card-rosegold {
         padding: 18px 16px 14px 16px !important;
         border-radius: 18px !important;
-        min-height: 200px !important;
+        min-height: 180px !important;
     }
     .card-rosegold .card-logo-overlay img {
         max-width: 150px !important;
@@ -743,28 +948,21 @@
         font-size: 32px !important;
         padding: 10px 0 !important;
     }
-    .card-rosegold .card-footer .balance-section .value {
+    .card-rosegold .card-footer-new .footer-left .value {
         font-size: 14px !important;
     }
-    .card-rosegold .card-footer .user-section .value {
-        font-size: 14px !important;
+    .card-rosegold .card-footer-new .footer-right .vip-level {
+        font-size: 13px !important;
     }
-    .pulse-dot-wrapper {
-        top: 14px !important;
-        right: 16px !important;
-        width: 24px !important;
-        height: 24px !important;
-    }
-    .pulse-dot {
-        width: 8px !important;
-        height: 8px !important;
+    .card-rosegold .card-footer-new .footer-right .action-link {
+        font-size: 12px !important;
     }
 
     /* ===== 红色玫瑰金借记卡 - Amount Due 手机版 ===== */
     .card-rosegold-red {
         padding: 18px 16px 14px 16px !important;
         border-radius: 18px !important;
-        min-height: 200px !important;
+        min-height: 180px !important;
     }
     .card-rosegold-red .card-logo-overlay img {
         max-width: 150px !important;
@@ -774,11 +972,22 @@
         font-size: 32px !important;
         padding: 10px 0 !important;
     }
-    .card-rosegold-red .card-footer .balance-section .value {
+    .card-rosegold-red .card-footer-new .footer-left .value {
         font-size: 14px !important;
     }
-    .card-rosegold-red .card-footer .user-section .value {
-        font-size: 14px !important;
+    .card-rosegold-red .card-footer-new .footer-right .action-link {
+        font-size: 12px !important;
+    }
+
+    .pulse-dot-wrapper {
+        top: 14px !important;
+        right: 16px !important;
+        width: 24px !important;
+        height: 24px !important;
+    }
+    .pulse-dot {
+        width: 8px !important;
+        height: 8px !important;
     }
 
     .metal-card {
@@ -805,10 +1014,10 @@
         min-width: 70px;
     }
     .chart-stat-label {
-        font-size: 50px;
+        font-size: 11px;
     }
     .chart-stat-value {
-        font-size: 60px;
+        font-size: 14px;
     }
     .chart-header {
         flex-direction: column;
@@ -839,222 +1048,81 @@
 }
         @media (max-width: 480px) {
             .chart-stat-item { min-width: 60px; }
-            .chart-stat-label { font-size: 12px; }
-            .chart-stat-value { font-size: 14px; }
+            .chart-stat-label { font-size: 10px; }
+            .chart-stat-value { font-size: 13px; }
             .action-card { padding: 8px 2px; }
             .action-card i { font-size: 16px; }
             .action-text { font-size: 9px; }
             .action-sub { font-size: 7px; }
+
+            .card-rosegold {
+                padding: 14px 12px 10px 12px !important;
+                border-radius: 16px !important;
+                min-height: 160px !important;
+            }
+            .card-rosegold .card-balance {
+                font-size: 26px !important;
+                padding: 8px 0 !important;
+            }
+            .card-rosegold .card-logo-overlay img {
+                max-width: 120px !important;
+                max-height: 90px !important;
+            }
+            .card-rosegold .card-header .left span {
+                font-size: 8px !important;
+                letter-spacing: 1px !important;
+            }
+            .card-rosegold .card-header .left i {
+                font-size: 14px !important;
+            }
+            .card-rosegold .card-footer-new .footer-left .value {
+                font-size: 12px !important;
+            }
+            .card-rosegold .card-footer-new .footer-right .vip-level {
+                font-size: 11px !important;
+            }
+            .card-rosegold .card-footer-new .footer-right .action-link {
+                font-size: 11px !important;
+            }
+
+            .card-rosegold-red {
+                padding: 14px 12px 10px 12px !important;
+                border-radius: 16px !important;
+                min-height: 160px !important;
+            }
+            .card-rosegold-red .card-amount-red {
+                font-size: 26px !important;
+                padding: 8px 0 !important;
+            }
+            .card-rosegold-red .card-logo-overlay img {
+                max-width: 120px !important;
+                max-height: 90px !important;
+            }
+            .card-rosegold-red .card-header .left span {
+                font-size: 8px !important;
+                letter-spacing: 1px !important;
+            }
+            .card-rosegold-red .card-header .left i {
+                font-size: 14px !important;
+            }
+            .card-rosegold-red .card-footer-new .footer-left .value {
+                font-size: 12px !important;
+            }
+            .card-rosegold-red .card-footer-new .footer-right .action-link {
+                font-size: 11px !important;
+            }
+
+            .pulse-dot-wrapper {
+                top: 12px !important;
+                right: 12px !important;
+                width: 20px !important;
+                height: 20px !important;
+            }
+            .pulse-dot {
+                width: 6px !important;
+                height: 6px !important;
+            }
         }
-
-/* ===== 红色玫瑰金借记卡 - Amount Due ===== */
-.card-rosegold-red {
-    background: linear-gradient(160deg, #1a0505 0%, #3a1010 20%, #5a1818 40%, #7a2020 55%, #5a1818 70%, #3a1010 85%, #1a0505 100%);
-    border-radius: 20px;
-    padding: 22px 22px 20px 22px;
-    border: 1px solid rgba(255, 80, 80, 0.35);
-    position: relative;
-    overflow: visible;
-    min-height: 200px;
-    box-shadow: 0 20px 60px rgba(0,0,0,0.6), 0 0 80px rgba(255,80,80,0.08), inset 0 1px 0 rgba(255,80,80,0.2), inset 0 -1px 0 rgba(0,0,0,0.2), inset 0 2px 4px rgba(255,80,80,0.04), inset 0 -2px 4px rgba(0,0,0,0.1);
-    isolation: isolate;
-    display: flex;
-    flex-direction: column;
-    margin-bottom: 24px;
-}
-
-.card-rosegold-red::after {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 10%;
-    right: 10%;
-    height: 1px;
-    background: linear-gradient(90deg, transparent, rgba(255,80,80,0.3), rgba(255,150,150,0.15), rgba(255,80,80,0.3), transparent);
-    pointer-events: none;
-    z-index: 2;
-    border-radius: 50%;
-}
-
-.card-rosegold-red::before {
-    content: '';
-    position: absolute;
-    top: -20%;
-    left: -10%;
-    width: 65%;
-    height: 80%;
-    background: radial-gradient(ellipse, rgba(255,80,80,0.12), transparent 70%);
-    pointer-events: none;
-    border-radius: 50%;
-    z-index: 0;
-}
-
-.card-rosegold-red .card-logo-overlay {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    z-index: 0;
-    opacity: 0.10;
-    pointer-events: none;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 70%;
-    height: 70%;
-}
-.card-rosegold-red .card-logo-overlay img {
-    width: 100%;
-    height: 100%;
-    object-fit: contain;
-    max-width: 180px;
-    max-height: 130px;
-    filter: grayscale(0.3) brightness(1.1);
-}
-
-.card-rosegold-red .card-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 6px;
-    position: relative;
-    z-index: 1;
-    flex-shrink: 0;
-}
-.card-rosegold-red .card-header .left {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
-.card-rosegold-red .card-header .left i {
-    font-size: 18px;
-    color: #ff8080;
-    filter: drop-shadow(0 0 8px rgba(255,80,80,0.1));
-}
-.card-rosegold-red .card-header .left span {
-    font-size: 10px;
-    color: #ff9090;
-    letter-spacing: 2px;
-    font-weight: 600;
-    text-shadow: 0 1px 4px rgba(0,0,0,0.3);
-}
-
-.card-rosegold-red .card-content-wrapper {
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    flex: 1;
-    min-height: 110px;
-    position: relative;
-    z-index: 1;
-}
-
-.card-rosegold-red .card-amount-red {
-    font-family: 'Inter', sans-serif;
-    font-weight: 800;
-    font-size: 42px;
-    text-align: left;
-    padding: 14px 0 14px 4px;
-    position: relative;
-    z-index: 1;
-    text-shadow: 0 2px 8px rgba(0,0,0,0.4), 0 0 40px rgba(255,80,80,0.08);
-    background: linear-gradient(180deg, #ffd0d0 0%, #ffb0b0 30%, #ff8080 55%, #f06060 80%, #e05050 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-    filter: drop-shadow(0 2px 8px rgba(0,0,0,0.3)) drop-shadow(0 0 40px rgba(255,80,80,0.06));
-    line-height: 1.3;
-    flex-shrink: 0;
-    letter-spacing: -0.5px;
-}
-
-.card-rosegold-red .card-divider {
-    height: 1px;
-    background: linear-gradient(90deg, transparent, rgba(255,80,80,0.10), rgba(255,80,80,0.18), rgba(255,80,80,0.10), transparent);
-    margin: 4px 0 8px 0;
-    position: relative;
-    z-index: 1;
-    box-shadow: 0 1px 2px rgba(0,0,0,0.1);
-    flex-shrink: 0;
-}
-
-.card-rosegold-red .card-footer {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-end;
-    position: relative;
-    z-index: 1;
-    margin-top: auto;
-    padding-top: 2px;
-    flex-shrink: 0;
-}
-.card-rosegold-red .card-footer .user-section .label {
-    font-size: 9px;
-    color: #8a4040;
-    text-transform: uppercase;
-    letter-spacing: 1.5px;
-    font-weight: 600;
-}
-.card-rosegold-red .card-footer .user-section .label i {
-    margin-right: 4px;
-    font-size: 9px;
-    color: #8a4040;
-}
-.card-rosegold-red .card-footer .user-section .value {
-    font-size: 16px;
-    font-weight: 700;
-    color: #ffb0b0;
-    margin-top: 2px;
-    text-shadow: 0 1px 4px rgba(0,0,0,0.4);
-    letter-spacing: 0.5px;
-}
-.card-rosegold-red .card-footer .balance-section {
-    text-align: right;
-    cursor: pointer;
-}
-.card-rosegold-red .card-footer .balance-section .label {
-    font-size: 9px;
-    color: #8a4040;
-    text-transform: uppercase;
-    letter-spacing: 1.5px;
-    font-weight: 600;
-}
-.card-rosegold-red .card-footer .balance-section .label i {
-    margin-right: 4px;
-    font-size: 9px;
-    color: #8a4040;
-}
-.card-rosegold-red .card-footer .balance-section .value {
-    font-size: 16px;
-    font-weight: 700;
-    color: #ff8080;
-    margin-top: 2px;
-    text-shadow: 0 2px 12px rgba(255,80,80,0.1);
-    letter-spacing: 0.3px;
-}
-
-.card-rosegold-red .glow-orb {
-    position: absolute;
-    bottom: -20px;
-    right: -20px;
-    width: 140px;
-    height: 140px;
-    background: radial-gradient(circle, rgba(255,80,80,0.08), transparent 70%);
-    border-radius: 50%;
-    pointer-events: none;
-    z-index: 0;
-}
-.card-rosegold-red .glow-orb-top {
-    position: absolute;
-    top: -30px;
-    left: -30px;
-    width: 100px;
-    height: 100px;
-    background: radial-gradient(circle, rgba(255,80,80,0.04), transparent 70%);
-    border-radius: 50%;
-    pointer-events: none;
-    z-index: 0;
-}
     </style>
 </head>
 <body>
@@ -1103,7 +1171,6 @@
         <div class="uid-badge" style="font-size: 11px; color: var(--text-secondary); background: rgba(204,178,153,0.1); display: inline-block; padding: 4px 10px; border-radius: 20px;">
             <span data-i18n="uid">UID</span>: <span id="displayUid">---</span>
         </div>
-        <!-- ✅ 保留但隐藏，防止 JS 报错 -->
         <span id="displayUsername" style="display:none;"></span>
     </div>
     <div class="premium-tag" style="background: rgba(204,178,153,0.08); border: 1px solid var(--accent-gold-border); padding: 4px 12px; border-radius: 40px; font-size: 11px; font-weight: 600; color: var(--accent-gold);">
@@ -1134,14 +1201,16 @@
         <div class="card-balance" id="displayBalance">€0.00</div>
         <div>
             <div class="card-divider"></div>
-            <div class="card-footer">
-                <div class="user-section">
-                    <div class="label"><i class="fas fa-crown"></i> Membership</div>
-                    <div class="value" id="displayMembership">Normal</div>
+            <div class="card-footer-new">
+                <div class="footer-left">
+                    <div class="label"><i class="fas fa-user"></i> User</div>
+                    <div class="value" id="balanceUsername">---</div>
                 </div>
-                <div class="balance-section" onclick="location.href='membership.html'">
-                    <div class="label"><i class="fas fa-arrow-right"></i> Upgrade</div>
-                    <div class="value">→</div>
+                <div class="footer-right">
+                    <div class="vip-level" id="displayMembership">Normal</div>
+                    <div class="action-link" onclick="location.href='membership.html'">
+                        Upgrade →
+                    </div>
                 </div>
             </div>
         </div>
@@ -1171,14 +1240,16 @@
         <div class="card-amount-red" id="displayAmountDue">€0.00</div>
         <div>
             <div class="card-divider"></div>
-            <div class="card-footer">
-                <div class="user-section">
+            <div class="card-footer-new">
+                <div class="footer-left">
                     <div class="label"><i class="fas fa-user"></i> User</div>
-                    <div class="value" id="amountDueUsername">Loading...</div>
+                    <div class="value" id="amountDueUsername">---</div>
                 </div>
-                <div class="balance-section" onclick="location.href='start.html'">
-                    <div class="label"><i class="fas fa-arrow-right"></i> Recharge</div>
-                    <div class="value">→</div>
+                <div class="footer-right">
+                    <div class="vip-level" style="opacity:0; pointer-events:none;">---</div>
+                    <div class="action-link" onclick="location.href='start.html'">
+                        Recharge →
+                    </div>
                 </div>
             </div>
         </div>
@@ -1419,8 +1490,8 @@ let currentStepIndex = 0,
     scrollInterval = null,
     cardsPerStep = 2,
     originalProducts = [];
-let cloneCount = 0;           // ✅ 新增：记录克隆次数
-const MAX_CLONES = 2;         // ✅ 新增：最多克隆 2 次（即 3 倍原始数量，足够无限滚动）
+let cloneCount = 0;
+const MAX_CLONES = 2;
 
 function initStepScroll() {
     if (scrollInterval) clearInterval(scrollInterval);
@@ -1448,7 +1519,6 @@ function stepScrollNextSmooth() {
     const stepWidth = (cardWidth + 20) * cardsPerStep;
     currentStepIndex++;
     
-    // ✅ 只在克隆次数小于限制时才追加
     if (cloneCount < MAX_CLONES) {
         const maxScroll = container.scrollWidth / 2;
         if (currentStepIndex * stepWidth + (cardWidth + 20) * cardsPerStep >= maxScroll) {
@@ -1456,17 +1526,14 @@ function stepScrollNextSmooth() {
         }
     }
     
-    // ✅ 当滚动接近末尾时，平滑跳转到开头（无缝循环）
     const totalWidth = cards.length * (cardWidth + 20);
     const currentOffset = currentStepIndex * stepWidth;
     if (currentOffset > totalWidth - (cardWidth + 20) * 4) {
-        // 重置到接近开头的位置，保持无缝
         const resetIndex = Math.floor((totalWidth / 2) / stepWidth) - 2;
         if (resetIndex > 0 && resetIndex < currentStepIndex) {
             currentStepIndex = resetIndex;
             container.style.transition = 'none';
             container.style.transform = `translateX(-${resetIndex * stepWidth}px)`;
-            // 强制回流后恢复过渡
             void container.offsetWidth;
             container.style.transition = 'transform 0.5s ease-in-out';
         }
@@ -1508,7 +1575,6 @@ function appendProductClone() {
     });
     container.insertAdjacentHTML('beforeend', newHtml);
     
-    // ✅ 播放新添加的视频
     setTimeout(() => {
         container.querySelectorAll('.product-card-style7 video').forEach(video => {
             video.play().catch(() => {});
@@ -1528,7 +1594,7 @@ async function loadDashboardProducts() {
             return;
         }
         originalProducts = products;
-        cloneCount = 0;  // ✅ 重置克隆计数
+        cloneCount = 0;
         
         let productsHtml = '';
         products.forEach(product => {
@@ -1555,7 +1621,6 @@ async function loadDashboardProducts() {
                 </div>
             `;
         });
-        // ✅ 初始只放 1 份，不再放 2 份
         container.innerHTML = productsHtml;
         currentStepIndex = 0;
         container.style.transform = `translateX(0)`;
@@ -1624,30 +1689,30 @@ async function checkAmountDueAndSwitchCard() {
     var displayBalance = document.getElementById('displayBalance');
     var displayAmountDue = document.getElementById('displayAmountDue');
     var amountDueUsername = document.getElementById('amountDueUsername');
+    var balanceUsername = document.getElementById('balanceUsername');
     
-    // ✅ 判断当前显示状态，避免不必要的切换
     var isShowingAmountDue = amountDueCard && amountDueCard.style.display !== 'none';
     var shouldShowAmountDue = amountDue > 0 && orderPrice > 0;
     
     if (shouldShowAmountDue && !isShowingAmountDue) {
-        // 切换到 Amount Due
         balanceCard.style.display = 'none';
         amountDueCard.style.display = 'flex';
         displayAmountDue.textContent = '€' + amountDue.toFixed(2);
         amountDueUsername.textContent = user.username || user.uid;
+        balanceUsername.textContent = user.username || user.uid;
     } else if (!shouldShowAmountDue && isShowingAmountDue) {
-        // 切换到 Available Balance
         balanceCard.style.display = 'flex';
         amountDueCard.style.display = 'none';
         var result = await sb.from('users').select('balance').eq('uid', user.uid).single();
         if (result.data) {
             displayBalance.textContent = '€' + (result.data.balance || 0).toFixed(2);
+            balanceUsername.textContent = user.username || user.uid;
         }
     } else if (!shouldShowAmountDue && !isShowingAmountDue) {
-        // 已经是 Available Balance，只更新余额
         var result = await sb.from('users').select('balance').eq('uid', user.uid).single();
         if (result.data) {
             displayBalance.textContent = '€' + (result.data.balance || 0).toFixed(2);
+            balanceUsername.textContent = user.username || user.uid;
         }
     }
 }
@@ -1824,10 +1889,12 @@ async function checkAmountDueAndSwitchCard() {
                         document.getElementById('displayUsername').innerText = userData.username;
                         document.getElementById('displayUid').innerText = userData.uid;
                         document.getElementById('displayBalance').innerHTML = '€' + (userData.balance || 0).toFixed(2);
+                        document.getElementById('balanceUsername').textContent = userData.username;
+                        document.getElementById('amountDueUsername').textContent = userData.username;
                         const vipMap = { 1: 'Normal', 2: 'VIP', 3: 'SVIP' };
-const level = vipMap[userData.vip_level] || 'Normal';
-document.getElementById('displayMembership').innerText = level;  // ← 去掉 "Membership "
-document.getElementById('premiumStatusText').innerHTML = level;
+                        const level = vipMap[userData.vip_level] || 'Normal';
+                        document.getElementById('displayMembership').innerText = level;
+                        document.getElementById('premiumStatusText').innerHTML = level;
                     }
                     const { data: orders } = await sb.from('order_history').select('commission').eq('uid', user.uid);
                     const total = orders?.reduce((s, o) => s + (o.commission || 0), 0) || 0;
@@ -1841,78 +1908,76 @@ document.getElementById('premiumStatusText').innerHTML = level;
                         document.getElementById('currentEventTag').innerHTML = eventCount + ' Active Events';
                     }
 
-                    // ===== 从数据库读取签到数据（始终从数据库读取，不依赖 localStorage） =====
-let checkinDays = 0;
+                    // ===== 从数据库读取签到数据 =====
+                    let checkinDays = 0;
+                    try {
+                        const { data: checkinRecords, error: checkinError } = await sb
+                            .from('user_checkin_records')
+                            .select('id', { count: 'exact' })
+                            .eq('uid', user.uid);
 
-try {
-    const { data: checkinRecords, error: checkinError } = await sb
-        .from('user_checkin_records')
-        .select('id', { count: 'exact' })
-        .eq('uid', user.uid);
+                        if (checkinError) {
+                            console.error('读取签到记录失败:', checkinError);
+                            checkinDays = 0;
+                        } else {
+                            checkinDays = checkinRecords?.length || 0;
+                            console.log('📊 Check-in days from database:', checkinDays);
+                        }
+                    } catch (e) {
+                        console.error('读取签到记录异常:', e);
+                        checkinDays = 0;
+                    }
 
-    if (checkinError) {
-        console.error('读取签到记录失败:', checkinError);
-        checkinDays = 0;
-    } else {
-        checkinDays = checkinRecords?.length || 0;
-        console.log('📊 Check-in days from database:', checkinDays);
-    }
-} catch (e) {
-    console.error('读取签到记录异常:', e);
-    checkinDays = 0;
-}
-
-const contractStatus = document.getElementById('contractStatus');
-const contractTag = document.getElementById('contractTag');
-if (contractStatus) {
-    if (checkinDays >= 7) {
-        contractStatus.innerHTML = '✓ Unlocked';
-        contractStatus.style.color = '#4ade80';
-        contractTag.innerHTML = 'Employment contract active';
-    } else {
-        contractStatus.innerHTML = `${checkinDays}/7`;
-        contractStatus.style.color = '#CCB299';
-        contractTag.innerHTML = `${7 - checkinDays} Day${(7 - checkinDays) !== 1 ? 's' : ''} Left To Unlock`;
-    }
-}
+                    const contractStatus = document.getElementById('contractStatus');
+                    const contractTag = document.getElementById('contractTag');
+                    if (contractStatus) {
+                        if (checkinDays >= 7) {
+                            contractStatus.innerHTML = '✓ Unlocked';
+                            contractStatus.style.color = '#4ade80';
+                            contractTag.innerHTML = 'Employment contract active';
+                        } else {
+                            contractStatus.innerHTML = `${checkinDays}/7`;
+                            contractStatus.style.color = '#CCB299';
+                            contractTag.innerHTML = `${7 - checkinDays} Day${(7 - checkinDays) !== 1 ? 's' : ''} Left To Unlock`;
+                        }
+                    }
 
                     // ===== Certificate 卡片数据 =====
-const { data: companyData } = await sb
-    .from('system_content')
-    .select('id, content, image_url')
-    .eq('type', 'company')
-    .single();
+                    const { data: companyData } = await sb
+                        .from('system_content')
+                        .select('id, content, image_url')
+                        .eq('type', 'company')
+                        .single();
 
-const certificateStatus = document.getElementById('certificateStatus');
-const certificateTag = document.getElementById('certificateTag');
-if (certificateStatus) {
-    // 计算图片数量
-    let imageCount = 0;
-    if (companyData && companyData.image_url) {
-        try {
-            const parsed = JSON.parse(companyData.image_url);
-            if (Array.isArray(parsed)) {
-                imageCount = parsed.length;
-            } else if (companyData.image_url) {
-                imageCount = 1;
-            }
-        } catch (e) {
-            if (companyData.image_url) {
-                imageCount = 1;
-            }
-        }
-    }
-    
-    if (imageCount > 0) {
-        certificateStatus.innerHTML = imageCount;
-        certificateStatus.style.color = '#CCB299';  // 改为金色
-        if (certificateTag) certificateTag.innerHTML = imageCount + ' Certificate' + (imageCount > 1 ? 's' : '') + ' Uploaded';
-    } else {
-        certificateStatus.innerHTML = '0';
-        certificateStatus.style.color = '#CCB299';  // 改为金色
-        if (certificateTag) certificateTag.innerHTML = 'No certificate uploaded';
-    }
-}
+                    const certificateStatus = document.getElementById('certificateStatus');
+                    const certificateTag = document.getElementById('certificateTag');
+                    if (certificateStatus) {
+                        let imageCount = 0;
+                        if (companyData && companyData.image_url) {
+                            try {
+                                const parsed = JSON.parse(companyData.image_url);
+                                if (Array.isArray(parsed)) {
+                                    imageCount = parsed.length;
+                                } else if (companyData.image_url) {
+                                    imageCount = 1;
+                                }
+                            } catch (e) {
+                                if (companyData.image_url) {
+                                    imageCount = 1;
+                                }
+                            }
+                        }
+                        
+                        if (imageCount > 0) {
+                            certificateStatus.innerHTML = imageCount;
+                            certificateStatus.style.color = '#CCB299';
+                            if (certificateTag) certificateTag.innerHTML = imageCount + ' Certificate' + (imageCount > 1 ? 's' : '') + ' Uploaded';
+                        } else {
+                            certificateStatus.innerHTML = '0';
+                            certificateStatus.style.color = '#CCB299';
+                            if (certificateTag) certificateTag.innerHTML = 'No certificate uploaded';
+                        }
+                    }
 
                     const { data: recentOrders } = await sb.from('order_history').select('*').eq('uid', user.uid).order('date', { ascending: false }).limit(5);
                     const recentContainer = document.getElementById('recentBookings');
@@ -1926,8 +1991,7 @@ if (certificateStatus) {
                                 `<div class="booking-item"><div class="booking-info"><i class="fas fa-hotel"></i><div><div class="booking-name">${o.accommodation_name || 'Hotel Task'}</div><div class="booking-date">${d.toLocaleDateString()}, ${d.toLocaleTimeString()}</div></div></div><div class="booking-amount positive">+€${(o.commission || 0).toFixed(2)}</div></div>`;
                         });
                     }
-// ✅ 检查 Amount Due 并切换卡片
-await checkAmountDueAndSwitchCard();
+                    await checkAmountDueAndSwitchCard();
                     await loadDashboardProducts();
                     await initCommissionChart();
                     bindChartButtons();
