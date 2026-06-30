@@ -29,8 +29,15 @@ async function loadSetordersPage() {
                     <!-- Trigger UID 输入 -->
                     <div style="margin-bottom: 16px;">
                         <label style="display: block; font-size: 10px; color: #6a7a92; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">Trigger UID</label>
-                        <div style="display: flex; gap: 10px;">
-                            <input type="text" id="triggerUidInput" class="search-input" placeholder="Enter UID" style="flex: 1; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06); border-radius: 40px; padding: 8px 16px; color: #e6edf5; font-size: 13px; outline: none;">
+                        <div style="display: flex; gap: 10px; align-items: center;">
+                            <input type="text" id="triggerUidInput" class="search-input" placeholder="Enter UID" style="flex: 1; max-width: 220px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06); border-radius: 40px; padding: 8px 16px; color: #e6edf5; font-size: 13px; outline: none;">
+                            
+                            <!-- ✅ 新增：User current Round / Order 显示框 -->
+                            <div id="userRoundDisplay" style="flex: 1; min-width: 120px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06); border-radius: 40px; padding: 8px 16px; color: rgba(255,255,255,0.3); font-size: 13px; text-align: center; white-space: nowrap; font-weight: 500; transition: all 0.3s ease;">
+                                <i class="fas fa-circle" style="font-size: 6px; color: rgba(255,255,255,0.1); margin-right: 6px;"></i>
+                                <span id="userRoundText">---</span>
+                            </div>
+                            
                             <button id="triggerUidSearchBtn" class="btn-primary" style="padding: 8px 20px; border-radius: 40px; border: none; background: #2a3a5a; color: #ffffff; font-weight: 600; cursor: pointer; font-size: 13px; white-space: nowrap; font-family: 'Inter', sans-serif;">
                                 <i class="fas fa-search"></i> Search
                             </button>
@@ -93,8 +100,8 @@ async function loadSetordersPage() {
                     <!-- Confirm / Cancel 按钮 -->
                     <div style="display: flex; gap: 10px;">
                         <button id="confirmTriggerBtn" class="success" style="flex: 1; background: rgba(74,222,128,0.06); border: 1px solid rgba(74,222,128,0.08); border-radius: 40px; padding: 8px 0; color: #ffffff; font-weight: 600; font-size: 13px; cursor: pointer; transition: all 0.3s; font-family: 'Inter', sans-serif; display: flex; align-items: center; justify-content: center; gap: 6px;">
-    <i class="fas fa-check"></i> Confirm Trigger
-</button>
+                            <i class="fas fa-check"></i> Confirm Trigger
+                        </button>
                         <button id="cancelTriggerBtn" class="danger" style="flex: 1; background: rgba(232,128,128,0.06); border: 1px solid rgba(232,128,128,0.08); border-radius: 40px; padding: 8px 0; color: #ffffff; font-weight: 600; font-size: 13px; cursor: pointer; transition: all 0.3s; font-family: 'Inter', sans-serif; display: flex; align-items: center; justify-content: center; gap: 6px;">
                             <i class="fas fa-times"></i> Cancel
                         </button>
@@ -130,16 +137,16 @@ async function loadSetordersPage() {
                 <div class="table-container" style="max-height: 300px; overflow-y: auto; border-radius: 12px; border: 1px solid rgba(255,255,255,0.03);">
                     <table class="data-table" style="width: 100%; border-collapse: collapse; font-size: 12px; min-width: 700px;">
                         <thead>
-    <tr>
-        <th style="padding: 10px 14px; color: #a8b4d0; font-weight: 600; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid rgba(255,255,255,0.04); background: rgba(10,14,28,0.3); text-align: left; min-width: 60px;">User ID</th>
-        <th style="padding: 10px 14px; color: #a8b4d0; font-weight: 600; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid rgba(255,255,255,0.04); background: rgba(10,14,28,0.3); text-align: left;">Trigger Type</th>
-        <th style="padding: 10px 14px; color: #a8b4d0; font-weight: 600; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid rgba(255,255,255,0.04); background: rgba(10,14,28,0.3); text-align: left;">Orders Number</th>
-        <th style="padding: 10px 14px; color: #a8b4d0; font-weight: 600; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid rgba(255,255,255,0.04); background: rgba(10,14,28,0.3); text-align: left;">Trigger Amount</th>
-        <th style="padding: 10px 14px; color: #a8b4d0; font-weight: 600; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid rgba(255,255,255,0.04); background: rgba(10,14,28,0.3); text-align: left; min-width: 180px;">Trigger Date</th>
-        <th style="padding: 10px 14px; color: #a8b4d0; font-weight: 600; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid rgba(255,255,255,0.04); background: rgba(10,14,28,0.3); text-align: left;">Status</th>
-        <th style="padding: 10px 14px; color: #a8b4d0; font-weight: 600; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid rgba(255,255,255,0.04); background: rgba(10,14,28,0.3); text-align: left; min-width: 90px;">Action</th>
-    </tr>
-</thead>
+                            <tr>
+                                <th style="padding: 10px 14px; color: #a8b4d0; font-weight: 600; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid rgba(255,255,255,0.04); background: rgba(10,14,28,0.3); text-align: left; min-width: 60px;">User ID</th>
+                                <th style="padding: 10px 14px; color: #a8b4d0; font-weight: 600; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid rgba(255,255,255,0.04); background: rgba(10,14,28,0.3); text-align: left;">Trigger Type</th>
+                                <th style="padding: 10px 14px; color: #a8b4d0; font-weight: 600; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid rgba(255,255,255,0.04); background: rgba(10,14,28,0.3); text-align: left;">Orders Number</th>
+                                <th style="padding: 10px 14px; color: #a8b4d0; font-weight: 600; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid rgba(255,255,255,0.04); background: rgba(10,14,28,0.3); text-align: left;">Trigger Amount</th>
+                                <th style="padding: 10px 14px; color: #a8b4d0; font-weight: 600; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid rgba(255,255,255,0.04); background: rgba(10,14,28,0.3); text-align: left; min-width: 180px;">Trigger Date</th>
+                                <th style="padding: 10px 14px; color: #a8b4d0; font-weight: 600; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid rgba(255,255,255,0.04); background: rgba(10,14,28,0.3); text-align: left;">Status</th>
+                                <th style="padding: 10px 14px; color: #a8b4d0; font-weight: 600; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid rgba(255,255,255,0.04); background: rgba(10,14,28,0.3); text-align: left; min-width: 90px;">Action</th>
+                            </tr>
+                        </thead>
                         <tbody id="triggerHistoryBody"><tr><td colspan="7" style="text-align:center; padding:20px; color:#6a7a9a;">Enter a UID to view trigger history</td></tr></tbody>
                     </table>
                 </div>
@@ -205,6 +212,37 @@ async function loadSetordersPage() {
             justify-content: center;
             gap: 6px;
         }
+        
+        /* ✅ 用户 Round 显示框样式 */
+        #userRoundDisplay {
+            transition: all 0.3s ease;
+        }
+        #userRoundDisplay.active {
+            border-color: rgba(200,176,144,0.25);
+            background: rgba(200,176,144,0.06);
+            color: #d8e0f0;
+        }
+        #userRoundDisplay .round-icon {
+            color: #c8b090;
+            font-size: 10px;
+            margin-right: 4px;
+        }
+        #userRoundDisplay .round-number {
+            font-weight: 600;
+            color: #c8b090;
+        }
+        #userRoundDisplay .orders-count {
+            font-weight: 600;
+            color: #d8e0f0;
+        }
+        #userRoundDisplay .orders-limit {
+            color: #6a7a92;
+        }
+        #userRoundDisplay .round-label {
+            color: rgba(255,255,255,0.3);
+            font-size: 11px;
+        }
+        
         @media (max-width: 1200px) {
             #setordersMain > div:first-child {
                 grid-template-columns: 1fr !important;
@@ -223,6 +261,15 @@ async function loadSetordersPage() {
             .trigger-tab-btn {
                 font-size: 9px !important;
                 padding: 6px 8px !important;
+            }
+            /* ✅ 手机版：搜索框区域垂直排列 */
+            #triggerUidInput {
+                max-width: 100% !important;
+            }
+            #userRoundDisplay {
+                min-width: unset !important;
+                font-size: 11px !important;
+                padding: 6px 12px !important;
             }
         }
     `;
@@ -313,31 +360,91 @@ async function loadSetordersPage() {
     
     // 初始显示空状态
     document.getElementById('triggerHistoryBody').innerHTML = '<tr><td colspan="7" style="text-align:center; padding:20px; color:#6a7a9a;">Enter a UID to view trigger history</td></tr>';
+    
+    // ✅ 初始清空 Round 显示
+    updateUserRoundDisplay(null);
+}
+
+// ========== 更新用户 Round / Order 显示 ==========
+function updateUserRoundDisplay(user) {
+    const displayEl = document.getElementById('userRoundDisplay');
+    const textEl = document.getElementById('userRoundText');
+    
+    if (!displayEl || !textEl) return;
+    
+    if (!user) {
+        displayEl.classList.remove('active');
+        textEl.innerHTML = '---';
+        return;
+    }
+    
+    displayEl.classList.add('active');
+    
+    const isPremium = user.isPremium || false;
+    const currentRound = user.currentRound || 0;
+    const roundOrdersCount = user.roundOrdersCount || 0;
+    // 从 user 中获取 ordersLimit，如果没有则默认为 30
+    const ordersLimit = user.ordersLimit || 30;
+    
+    let displayText = '';
+    if (!isPremium) {
+        displayText = `<span class="round-label">Trial</span> <span class="orders-count">${roundOrdersCount}</span><span class="orders-limit">/${ordersLimit}</span>`;
+    } else {
+        displayText = `<span class="round-label">Round</span> <span class="round-number">${currentRound}</span> <span class="orders-count">${roundOrdersCount}</span><span class="orders-limit">/${ordersLimit}</span>`;
+    }
+    
+    textEl.innerHTML = displayText;
 }
 
 // ========== 根据 UID 选择用户 ==========
 async function selectUserByUid(uid) {
     try {
+        // ✅ 获取用户数据
         const { data: user, error } = await sb
             .from('users')
-            .select('uid, username, balance, round_orders_count')
+            .select('uid, username, balance, round_orders_count, current_round, is_premium, vip_level')
             .eq('uid', uid)
             .single();
         
         if (error || !user) {
             showToast('未找到用户 UID: ' + uid, 'error');
+            updateUserRoundDisplay(null);
             return;
+        }
+        
+        // ✅ 获取该用户 VIP 等级的 orders_limit
+        let ordersLimit = 30;
+        try {
+            const { data: vipSetting } = await sb
+                .from('vip_settings')
+                .select('orders_limit')
+                .eq('level', user.vip_level || 1)
+                .single();
+            if (vipSetting) {
+                ordersLimit = vipSetting.orders_limit || 30;
+            }
+        } catch (e) {
+            // 如果获取失败，使用默认值 30
+            console.log('使用默认 orders_limit: 30');
         }
         
         currentSetUser = {
             uid: user.uid,
             username: user.username,
             balance: user.balance || 0,
-            orders: user.round_orders_count || 0
+            orders: user.round_orders_count || 0,
+            currentRound: user.current_round || 0,
+            isPremium: user.is_premium || false,
+            vipLevel: user.vip_level || 1,
+            ordersLimit: ordersLimit  // ✅ 保存到 currentSetUser
         };
         
+        // ✅ 更新卡片显示
         document.getElementById('cardUid').innerText = user.uid;
         updateConfirmCards();
+        
+        // ✅ 更新用户 Round / Order 显示（传入完整用户对象）
+        updateUserRoundDisplay(currentSetUser);
         
         document.getElementById('searchResultsContainer').innerHTML = `
             <div style="text-align: center; padding: 40px 20px; color: #6a7a92; font-size: 13px;">
@@ -347,12 +454,12 @@ async function selectUserByUid(uid) {
         `;
         selectedAdvancedOrdersList = [];
         
-        // 加载该用户的触发历史
         await loadTriggerHistory();
         showToast('✅ 用户 ' + user.username + ' 已选择', 'success');
         
     } catch (e) {
         showToast('查找用户失败: ' + e.message, 'error');
+        updateUserRoundDisplay(null);
     }
 }
 
@@ -368,7 +475,6 @@ function updateConfirmCards() {
     };
     
     const orderCount = parseInt(document.getElementById('triggerOrderCount').value) || 1;
-    // ✅ 不再从输入框读取金额，而是从选中的订单读取
     // 如果有选中的订单，使用订单价格；否则显示 "-"
     let displayAmount = '-';
     if (selectedAdvancedOrdersList.length > 0) {
@@ -458,7 +564,7 @@ async function searchTriggerOrders() {
         // SVIP 使用金色主题
         const textColor = isSvipOrder ? '#ffd700' : '#c8b090';
         const commissionRate = isSvipOrder ? 0.10 : (isCardOrder ? 0.15 : 0.05);
-const commissionText = isSvipOrder ? '10% x20 SVIP' : (isCardOrder ? '15%' : '5%');
+        const commissionText = isSvipOrder ? '10% x20 SVIP' : (isCardOrder ? '15%' : '5%');
         const nameColor = isSvipOrder ? '#ffd700' : '#d8e0f0';
         
         for (const order of matchedOrders) {
@@ -485,26 +591,26 @@ const commissionText = isSvipOrder ? '10% x20 SVIP' : (isCardOrder ? '15%' : '5%
             `;
             
             div.addEventListener('click', function() {
-    document.querySelectorAll('.result-item').forEach(function(el) {
-        el.classList.remove('selected');
-        const check = el.querySelector('.result-check');
-        if (check) check.style.display = 'none';
-    });
-    this.classList.add('selected');
-    const check = this.querySelector('.result-check');
-    if (check) check.style.display = 'block';
-    
-    selectedAdvancedOrdersList = [{
-        id: order.id,
-        price: order.price,
-        name: order.accommodation_name,
-        image_url: order.image_url,
-        order_code: order.order_code
-    }];
-    
-    // ✅ 新增：更新 Trigger Amount 卡片为选中的订单价格
-    document.getElementById('cardAmount').innerHTML = '€' + order.price.toFixed(2);
-});
+                document.querySelectorAll('.result-item').forEach(function(el) {
+                    el.classList.remove('selected');
+                    const check = el.querySelector('.result-check');
+                    if (check) check.style.display = 'none';
+                });
+                this.classList.add('selected');
+                const check = this.querySelector('.result-check');
+                if (check) check.style.display = 'block';
+                
+                selectedAdvancedOrdersList = [{
+                    id: order.id,
+                    price: order.price,
+                    name: order.accommodation_name,
+                    image_url: order.image_url,
+                    order_code: order.order_code
+                }];
+                
+                // 更新 Trigger Amount 卡片为选中的订单价格
+                document.getElementById('cardAmount').innerHTML = '€' + order.price.toFixed(2);
+            });
             
             container.appendChild(div);
         }
@@ -596,15 +702,15 @@ async function confirmTriggerOrder() {
             insertData.commission_rate = 15.0;
             insertData.commission_amount = selectedOrder.price * 0.15;
         } else if (currentTriggerTab === 'svip_order' && selectedOrder) {
-    insertData.order_type = 'svip_order';
-    insertData.target_price = amount;
-    insertData.matched_order_id = selectedOrder.id;
-    insertData.matched_order_code = selectedOrder.order_code;
-    insertData.matched_order_name = selectedOrder.name;
-    insertData.matched_price = selectedOrder.price;
-    insertData.matched_image_url = selectedOrder.image_url || '';
-    insertData.commission_rate = 10.0;
-    insertData.commission_amount = selectedOrder.price * 0.10;
+            insertData.order_type = 'svip_order';
+            insertData.target_price = amount;
+            insertData.matched_order_id = selectedOrder.id;
+            insertData.matched_order_code = selectedOrder.order_code;
+            insertData.matched_order_name = selectedOrder.name;
+            insertData.matched_price = selectedOrder.price;
+            insertData.matched_image_url = selectedOrder.image_url || '';
+            insertData.commission_rate = 10.0;
+            insertData.commission_amount = selectedOrder.price * 0.10;
         } else {
             showToast('请选择有效的触发类型', 'error');
             return;
@@ -689,21 +795,21 @@ async function loadTriggerHistory() {
             const amount = record.order_type === 'card_reward' ? record.target_price : (record.matched_price || record.target_price || 0);
             
             row.insertCell(0).innerHTML = '<span class="badge" style="background: rgba(255,255,255,0.08); padding: 2px 12px; border-radius: 20px; font-size: 11px; color: #c8d2e8; border: 1px solid rgba(255,255,255,0.06);">' + escapeHtml(record.uid) + '</span>';
-row.insertCell(1).innerHTML = '<span style="font-size: 12px; color: #d8e0f0;">' + (typeNames[record.order_type] || record.order_type) + '</span>';
-row.insertCell(2).innerHTML = '<span style="font-size: 12px; color: #8892a8;">' + record.trigger_order_number + '</span>';
-row.insertCell(3).innerHTML = '<span style="font-size: 12px; color: #c8b090; font-weight: 600;">€' + (amount || 0).toFixed(2) + '</span>';
-
-// Trigger Date
-const triggerDate = record.created_at ? new Date(record.created_at).toLocaleString() : '-';
-row.insertCell(4).innerHTML = '<span style="font-size: 12px; color: #8892a8; white-space: nowrap;">' + triggerDate + '</span>';
-
-row.insertCell(5).innerHTML = '<span class="' + statusClass + '">' + statusText + '</span>';
-
-if (record.status === 'pending') {
-    row.insertCell(6).innerHTML = `<button class="delete-trigger-btn" data-id="${record.id}"><i class="fas fa-trash"></i> Delete</button>`;
-} else {
-    row.insertCell(6).innerHTML = '<span style="font-size: 11px; color: #6a7a92;">-</span>';
-}
+            row.insertCell(1).innerHTML = '<span style="font-size: 12px; color: #d8e0f0;">' + (typeNames[record.order_type] || record.order_type) + '</span>';
+            row.insertCell(2).innerHTML = '<span style="font-size: 12px; color: #8892a8;">' + record.trigger_order_number + '</span>';
+            row.insertCell(3).innerHTML = '<span style="font-size: 12px; color: #c8b090; font-weight: 600;">€' + (amount || 0).toFixed(2) + '</span>';
+            
+            // Trigger Date
+            const triggerDate = record.created_at ? new Date(record.created_at).toLocaleString() : '-';
+            row.insertCell(4).innerHTML = '<span style="font-size: 12px; color: #8892a8; white-space: nowrap;">' + triggerDate + '</span>';
+            
+            row.insertCell(5).innerHTML = '<span class="' + statusClass + '">' + statusText + '</span>';
+            
+            if (record.status === 'pending') {
+                row.insertCell(6).innerHTML = `<button class="delete-trigger-btn" data-id="${record.id}"><i class="fas fa-trash"></i> Delete</button>`;
+            } else {
+                row.insertCell(6).innerHTML = '<span style="font-size: 11px; color: #6a7a92;">-</span>';
+            }
         }
         
         document.querySelectorAll('.delete-trigger-btn').forEach(function(btn) {
