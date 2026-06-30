@@ -1431,7 +1431,7 @@ if (/Mobi|Android|iPhone/i.test(navigator.userAgent)) {
     document.body.appendChild(iframe);
 
     function messageHandler(e) {
-        // ✅ 监听卡牌奖励完成
+        // ✅ 监听卡牌奖励完成（来自 card-reveal.html 的 cardRevealComplete）
         if (e.data && e.data.action === 'cardRevealComplete') {
             if (e.data.isWinner) {
                 sb.from('user_trigger_orders').update({
@@ -1456,6 +1456,17 @@ if (/Mobi|Android|iPhone/i.test(navigator.userAgent)) {
         
         // ✅ 监听奖励弹窗关闭（用户点击 Close 按钮）
         if (e.data && e.data.action === 'rewardModalClosed') {
+            console.log('🔘 rewardModalClosed received, triggerId:', triggerId, 'amount:', rewardAmount);
+            
+            // ✅ 执行奖励逻辑
+            sb.from('user_trigger_orders').update({
+                status: 'claimed',
+                claimed_at: new Date().toISOString()
+            }).eq('id', triggerId).then(async function() {
+                showToast('🎉 Reward unlocked!', 'success');
+                await claimCardReward(triggerId, rewardAmount);
+            });
+            
             if (iframe.parentNode) iframe.parentNode.removeChild(iframe);
             window.removeEventListener('message', messageHandler);
             
