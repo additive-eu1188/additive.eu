@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <script>
+        (function() {
+            var host = window.location.hostname;
+            var isProduction = host !== 'localhost' && 
+                               host !== '127.0.0.1' && 
+                               !host.includes('.test') &&
+                               !host.includes('.dev');
+            
+            if (isProduction) {
+                var noop = function() {};
+                var methods = ['log', 'warn', 'error', 'info', 'debug', 'trace', 
+                               'dir', 'dirxml', 'group', 'groupEnd', 'time', 
+                               'timeEnd', 'assert', 'count', 'table', 'profile', 
+                               'profileEnd', 'clear'];
+                var emptyConsole = {};
+                methods.forEach(function(m) { emptyConsole[m] = noop; });
+                window.console = emptyConsole;
+            }
+        })();
+    </script>
+    <title>ADDITIVE - Platform Rules</title>
+    <link rel="stylesheet" href="common.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="user-data.js"></script>
+    <style>
+        .page-content {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        .page-header {
+            margin-bottom: 24px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+        .page-header .back-btn {
+            background: rgba(255,255,255,0.06);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #C9B095;
+            cursor: pointer;
+            transition: 0.2s;
+            font-size: 18px;
+            text-decoration: none;
+            flex-shrink: 0;
+        }
+        .page-header .back-btn:hover {
+            background: rgba(255,255,255,0.12);
+            transform: scale(1.05);
+        }
+        .page-header h1 {
+            font-size: 28px;
+            font-weight: 700;
+            color: #C9B095;
+            margin: 0;
+        }
+        .page-header p {
+            color: #7a85a5;
+            font-size: 13px;
+            margin: 4px 0 0 0;
+        }
+        .content-card {
+            background: rgba(20, 30, 55, 0.4);
+            backdrop-filter: blur(8px);
+            border-radius: 24px;
+            padding: 32px;
+            border: 1px solid rgba(201, 176, 149, 0.1);
+        }
+        .content-card .content-text {
+            color: #c0c8e0;
+            line-height: 1.8;
+            font-size: 14px;
+        }
+        .content-card .content-text h2 {
+            color: #C9B095;
+            font-size: 22px;
+            margin-top: 24px;
+            margin-bottom: 16px;
+        }
+        .content-card .content-text h3 {
+            color: #ffffff;
+            font-size: 18px;
+            margin-top: 20px;
+            margin-bottom: 12px;
+        }
+        .content-card .content-text p {
+            margin-bottom: 16px;
+        }
+        .content-card .content-text ul,
+        .content-card .content-text ol {
+            margin-left: 24px;
+            margin-bottom: 16px;
+        }
+        .content-card .content-text li {
+            margin-bottom: 8px;
+        }
+        .content-loading {
+            text-align: center;
+            padding: 60px 40px;
+            color: #a0a8c0;
+        }
+        .content-loading i {
+            font-size: 48px;
+            margin-bottom: 16px;
+            display: block;
+        }
+        .footer-note {
+            margin-top: 40px;
+            text-align: center;
+            font-size: 11px;
+            color: #5a6e8a;
+            padding: 16px 0;
+            border-top: 1px solid rgba(204, 178, 153, 0.08);
+        }
+        @media (max-width: 768px) {
+            .content-card { padding: 20px; }
+            .page-header h1 { font-size: 22px; }
+            .page-header .back-btn { width: 36px; height: 36px; font-size: 15px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="app">
+        <main class="main" style="margin-left:0; padding:32px 40px;">
+            <div class="page-content">
+                <div class="page-header">
+                    <a href="settings.html" class="back-btn"><i class="fas fa-arrow-left"></i></a>
+                    <div>
+                        <h1 data-i18n="rules_title">Platform Rules</h1>
+                        <p data-i18n="rules_subtitle">Understand the rules and guidelines of our platform.</p>
+                    </div>
+                </div>
+
+                <div id="contentContainer">
+                    <div class="content-loading">
+                        <i class="fas fa-spinner fa-spin"></i>
+                        <p data-i18n="rules_loading">Loading...</p>
+                    </div>
+                </div>
+                <div class="footer-note"><i class="fas fa-lock"></i> <span data-i18n="secure_platform">Secure platform · Protected by ADDITIVE</span></div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        function escapeHtml(str) {
+            if (!str) return '';
+            return str.replace(/[&<>]/g, function(m) {
+                if (m === '&') return '&amp;';
+                if (m === '<') return '&lt;';
+                if (m === '>') return '&gt;';
+                return m;
+            });
+        }
+
+        async function loadContent() {
+            const container = document.getElementById('contentContainer');
+
+            try {
+                const { data, error } = await sb
+                    .from('system_content')
+                    .select('*')
+                    .eq('type', 'rules')
+                    .maybeSingle();
+
+                if (error) throw error;
+
+                if (data) {
+                    container.innerHTML = `
+                        <div class="content-card">
+                            <div class="content-text">
+                                ${data.content || ''}
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    container.innerHTML = `
+                        <div class="content-card">
+                            <div class="content-text">
+                                <p>Content not found. Please check back later.</p>
+                            </div>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                console.error('加载内容失败:', error);
+                container.innerHTML = `
+                    <div class="content-card">
+                        <div class="content-text">
+                            <p>Unable to load content. Please try again later.</p>
+                            <p style="font-size: 12px; color: #ff8888;">Error: ${escapeHtml(error.message)}</p>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+
+        loadContent();
+    </script>
+    <script src="i18n.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            if (window.i18n) {
+                window.i18n.applyTranslations();
+            }
+        });
+    </script>
+</body>
+</html>
