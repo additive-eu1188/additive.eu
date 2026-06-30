@@ -1870,24 +1870,24 @@ function showCardOrderModal(triggerOrder) {
             var detailsHtml = `
 <!-- ===== 容器1: Order Details (十字分界线) ===== -->
 <div class="details-container">
-    <div class="container-label">Order Details</div>
+    <div class="container-label" data-i18n="order_details">Order Details</div>
     <div class="order-details-row">
         <div class="cross-grid">
             <div class="cross-item">
-                <span class="label">ORDER PRICE</span>
+                <span class="label" data-i18n="order_price">ORDER PRICE</span>
                 <span class="value price">€${price.toFixed(2)}</span>
             </div>
             <div class="cross-item">
-                <span class="label">COMMISSIONS</span>
+                <span class="label" data-i18n="commissions">COMMISSIONS</span>
                 <span class="value commission">+€${commission.toFixed(2)} (${rateDisplay}%)</span>
             </div>
             <div class="cross-item">
-                <span class="label">TOTAL RETURN</span>
+                <span class="label" data-i18n="total_return">TOTAL RETURN</span>
                 <span class="value total">€${(price + commission).toFixed(2)}</span>
             </div>
             <div class="cross-item">
-                <span class="label">ORDER TYPE</span>
-                <span class="value type" style="color:#7a8aaa; font-size:12px; font-weight:500;">${escapeHtml(orderTypeDisplayName)}</span>
+                <span class="label" data-i18n="order_type_label">ORDER TYPE</span>
+                <span class="value type" style="color:#7a8aaa; font-size:12px; font-weight:500;" data-i18n="${orderTypeDisplayName === 'Normal Order' ? 'normal_order' : orderTypeDisplayName === 'Card Order' ? 'card_order' : orderTypeDisplayName === 'SVIP Order' ? 'svip_order' : 'commercial_order'}">${escapeHtml(orderTypeDisplayName)}</span>
             </div>
         </div>
     </div>
@@ -1895,15 +1895,15 @@ function showCardOrderModal(triggerOrder) {
 
 <!-- ===== 容器2: Required Selection (中间一条竖线) ===== -->
 <div class="details-container">
-    <div class="container-label">Required Selection</div>
+    <div class="container-label" data-i18n="required_selection">Required Selection</div>
     <div class="order-details-row">
         <div class="cross-grid-2col">
             <div class="cross-item">
-                <span class="label">ASSIGN TYPE</span>
+                <span class="label" data-i18n="assign_type">ASSIGN TYPE</span>
                 <span class="value assigned">${escapeHtml(assignedQuality)}</span>
             </div>
             <div class="cross-item">
-                <span class="label">PUBLISH PLATFORM</span>
+                <span class="label" data-i18n="publish_platform">PUBLISH PLATFORM</span>
                 <span class="value assigned">${escapeHtml(assignedPlatform)}</span>
             </div>
         </div>
@@ -1931,17 +1931,17 @@ function showCardOrderModal(triggerOrder) {
                     <div class="selection-row">
                         <!-- Left: Assign Quality -->
                         <div>
-                            <div class="col-label">Assign Quality</div>
+                            <div class="col-label" data-i18n="assign_quality">Assign Quality</div>
                             <div class="quality-options" id="qualityOptions">
-                                <div class="quality-option" data-quality="exceptional">Exceptional</div>
-                                <div class="quality-option" data-quality="satisfactory">Satisfactory</div>
-                                <div class="quality-option" data-quality="foundational">Foundational</div>
+                                <div class="quality-option" data-quality="exceptional" data-i18n="exceptional">Exceptional</div>
+                                <div class="quality-option" data-quality="satisfactory" data-i18n="satisfactory">Satisfactory</div>
+                                <div class="quality-option" data-quality="foundational" data-i18n="foundational">Foundational</div>
                             </div>
                         </div>
                         
                         <!-- Right: Publish to -->
 <div>
-    <div class="col-label">Publish to</div>
+    <div class="col-label" data-i18n="publish_to">Publish to</div>
     <div class="platform-wrapper">
         <div class="platform-list" id="platformList">
             <div class="platform-option" data-platform="booking">
@@ -1975,7 +1975,7 @@ function showCardOrderModal(triggerOrder) {
                 <span class="opt-check"><i class="fas fa-check-circle"></i></span>
             </div>
         </div>
-        <div class="scroll-hint"><i class="fas fa-chevron-down"></i> scroll for more</div>
+        <div class="scroll-hint"><i class="fas fa-chevron-down"></i> <span data-i18n="scroll_for_more">scroll for more</span></div>
     </div>
 </div>
                 
@@ -1989,13 +1989,13 @@ function showCardOrderModal(triggerOrder) {
                 
                 <!-- Actions -->
                 <div class="action-area">
-                    <div class="selection-status" id="selectionStatus"><i class="fas fa-chevron-right" style="color:rgba(255,255,255,0.15); margin-right:6px;"></i> Select quality & platform to continue</div>
+                    <div class="selection-status" id="selectionStatus"><i class="fas fa-chevron-right" style="color:rgba(255,255,255,0.15); margin-right:6px;"></i> <span data-i18n="select_quality_platform">Select quality & platform to continue</span></div>
                     <div class="modal-buttons">
                         <button class="btn-publish" id="publishBtn" disabled>
-                            <i class="fas fa-cloud-upload-alt"></i> Publish
-                        </button>
+    <i class="fas fa-cloud-upload-alt"></i> <span data-i18n="publish">Publish</span>
+</button>
                         <button class="btn-close-modal" onclick="closeOrderModal()">
-    <i class="fas fa-times"></i><span style="margin-left: 6px;">Close</span>
+    <i class="fas fa-times"></i><span style="margin-left: 6px;" data-i18n="close">Close</span>
 </button>
                     </div>
                 </div>
@@ -2042,11 +2042,11 @@ function showCardOrderModal(triggerOrder) {
                     var platformMatch = selectedPlatform === getPlatformValue(assignedPlatform);
                     
                     if (qualityMatch && platformMatch) {
-                        statusEl.innerHTML = '<i class="fas fa-check-circle" style="color:#4ade80; margin-right:6px;"></i> Matching! Ready to publish';
+                        statusEl.innerHTML = '<i class="fas fa-check-circle" style="color:#4ade80; margin-right:6px;"></i> ' + t('matching_ready');
                         statusEl.className = 'selection-status success';
                         publishBtn.disabled = false;
                     } else {
-                        var msg = '<i class="fas fa-times-circle" style="color:#e88080; margin-right:6px;"></i> Mismatch! Required: ';
+                        var msg = '<i class="fas fa-times-circle" style="color:#e88080; margin-right:6px;"></i> ' + t('mismatch_required') + ' ';
                         if (!qualityMatch) msg += '<strong>' + assignedQuality + '</strong>';
                         if (!qualityMatch && !platformMatch) msg += ' & ';
                         if (!platformMatch) msg += '<strong>' + assignedPlatform + '</strong>';
@@ -2055,7 +2055,7 @@ function showCardOrderModal(triggerOrder) {
                         publishBtn.disabled = true;
                     }
                 } else {
-                    statusEl.innerHTML = '<i class="fas fa-chevron-right" style="color:rgba(255,255,255,0.15); margin-right:6px;"></i> Select quality & platform to continue';
+                    statusEl.innerHTML = '<i class="fas fa-chevron-right" style="color:rgba(255,255,255,0.15); margin-right:6px;"></i> ' + t('select_quality_platform');
                     statusEl.className = 'selection-status';
                 }
             }
@@ -2140,7 +2140,7 @@ function showCardOrderModal(triggerOrder) {
         // ============================================================
         window.submitOrder = async function() {
             if (!selectedQuality || !selectedPlatform) {
-                showToast('Please select quality and platform', 'warning');
+                showToast(t('please_select_quality_platform'), 'warning');
                 return;
             }
 
@@ -2286,7 +2286,7 @@ function showCardOrderModal(triggerOrder) {
                 clearTempOrder();
 
                 var orderTypeText = isTrialOrder ? ' (Trial Order)' : '';
-                showToast(t('order_completed_msg', { amount: finalCommission.toFixed(2) }) + orderTypeText, 'success');
+                showToast(t('order_completed_commission', { amount: finalCommission.toFixed(2) }) + orderTypeText, 'success');
 
                 const { data: userCheck } = await sb
                     .from('users')
