@@ -354,6 +354,8 @@ if (typeof window._i18n_loaded === 'undefined') {
             'history_withdrawal_approved': 'Withdrawal (approved)',
             'history_withdrawal_rejected': 'Withdrawal (rejected)',
             'history_transaction': 'Transaction',
+'history_published_to': 'Published to',
+'history_price_label': 'Price',
 
             // ==================== Checkin ====================
             'checkin_title': 'SIGN IN',
@@ -1033,6 +1035,8 @@ if (typeof window._i18n_loaded === 'undefined') {
             'history_withdrawal_approved': 'Auszahlung (genehmigt)',
             'history_withdrawal_rejected': 'Auszahlung (abgelehnt)',
             'history_transaction': 'Transaktion',
+'history_published_to': 'Veröffentlicht auf',
+'history_price_label': 'Preis',
 
             // ==================== Checkin ====================
             'checkin_title': 'ANMELDEN',
@@ -1712,6 +1716,8 @@ if (typeof window._i18n_loaded === 'undefined') {
             'history_withdrawal_approved': 'Prelievo (approvato)',
             'history_withdrawal_rejected': 'Prelievo (rifiutato)',
             'history_transaction': 'Transazione',
+'history_published_to': 'Pubblicato su',
+'history_price_label': 'Prezzo',
 
             // ==================== Checkin ====================
             'checkin_title': 'REGISTRATI',
