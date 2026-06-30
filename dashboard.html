@@ -1135,15 +1135,15 @@
         <div>
             <div class="card-divider"></div>
             <div class="card-footer">
-                <div class="user-section">
-                    <div class="label"><i class="fas fa-crown"></i> Membership</div>
-                    <div class="value" id="displayMembership">Normal</div>
-                </div>
-                <div class="balance-section" onclick="location.href='membership.html'">
-                    <div class="label"><i class="fas fa-arrow-right"></i> Upgrade</div>
-                    <div class="value">→</div>
-                </div>
-            </div>
+    <div class="user-section" style="text-align: left;">
+        <div class="label" style="font-size: 9px; color: #8a6060; text-transform: uppercase; letter-spacing: 1.5px; font-weight: 600;">Membership</div>
+        <div class="value" id="displayMembership" style="font-size: 16px; font-weight: 700; color: #f0e0e0; margin-top: 2px; text-shadow: 0 1px 4px rgba(0,0,0,0.4); letter-spacing: 0.5px;">Normal</div>
+    </div>
+    <div class="balance-section" style="text-align: right;">
+        <div class="label" style="font-size: 9px; color: #8a6060; text-transform: uppercase; letter-spacing: 1.5px; font-weight: 600;">Username</div>
+        <div class="value" id="balanceUsername" style="font-size: 16px; font-weight: 700; color: #f0e0e0; margin-top: 2px; text-shadow: 0 1px 4px rgba(0,0,0,0.4); letter-spacing: 0.5px;">Loading...</div>
+        <div style="margin-top: 4px;">
+            <span onclick="location.href='membership.html'" style="cursor: pointer; color: #d4a0a0; font-size: 13px; font-weight: 600; background: rgba(212,160,160,0.08); padding: 2px 14px; border-radius: 20px; border: 1px solid rgba(212,160,160,0.15); transition: 0.2s; display: inline-block;">Upgrade →</span>
         </div>
     </div>
 </div>
@@ -1172,13 +1172,16 @@
         <div>
             <div class="card-divider"></div>
             <div class="card-footer">
-                <div class="user-section">
-                    <div class="label"><i class="fas fa-user"></i> User</div>
-                    <div class="value" id="amountDueUsername">Loading...</div>
+                <div class="user-section" style="text-align: left;">
+                    <div class="label" style="font-size: 9px; color: #8a4040; text-transform: uppercase; letter-spacing: 1.5px; font-weight: 600;">Membership</div>
+                    <div class="value" id="amountDueMembership" style="font-size: 16px; font-weight: 700; color: #ffb0b0; margin-top: 2px; text-shadow: 0 1px 4px rgba(0,0,0,0.4); letter-spacing: 0.5px;">Normal</div>
                 </div>
-                <div class="balance-section" onclick="location.href='start.html'">
-                    <div class="label"><i class="fas fa-arrow-right"></i> Recharge</div>
-                    <div class="value">→</div>
+                <div class="balance-section" style="text-align: right;">
+                    <div class="label" style="font-size: 9px; color: #8a4040; text-transform: uppercase; letter-spacing: 1.5px; font-weight: 600;">Username</div>
+                    <div class="value" id="amountDueUsername" style="font-size: 16px; font-weight: 700; color: #ffb0b0; margin-top: 2px; text-shadow: 0 1px 4px rgba(0,0,0,0.4); letter-spacing: 0.5px;">Loading...</div>
+                    <div style="margin-top: 4px;">
+                        <span onclick="location.href='start.html'" style="cursor: pointer; color: #ff8080; font-size: 13px; font-weight: 600; background: rgba(255,128,128,0.08); padding: 2px 14px; border-radius: 20px; border: 1px solid rgba(255,128,128,0.15); transition: 0.2s; display: inline-block;">Recharge →</span>
+                    </div>
                 </div>
             </div>
         </div>
@@ -1815,127 +1818,137 @@ async function checkAmountDueAndSwitchCard() {
             }
 
             // ========== 主加载函数 ==========
-            async function loadDashboard() {
-                const user = getCurrentUser();
-                if (!user) { window.location.href = 'signin.html'; return; }
-                try {
-                    const { data: userData } = await sb.from('users').select('*').eq('uid', user.uid).single();
-                    if (userData) {
-                        document.getElementById('displayUsername').innerText = userData.username;
-                        document.getElementById('displayUid').innerText = userData.uid;
-                        document.getElementById('displayBalance').innerHTML = '€' + (userData.balance || 0).toFixed(2);
-                        const vipMap = { 1: 'Normal', 2: 'VIP', 3: 'SVIP' };
-const level = vipMap[userData.vip_level] || 'Normal';
-document.getElementById('displayMembership').innerText = level;  // ← 去掉 "Membership "
-document.getElementById('premiumStatusText').innerHTML = level;
-                    }
-                    const { data: orders } = await sb.from('order_history').select('commission').eq('uid', user.uid);
-                    const total = orders?.reduce((s, o) => s + (o.commission || 0), 0) || 0;
-                    document.getElementById('totalEarnings').innerHTML = '€' + total.toFixed(2);
+async function loadDashboard() {
+    const user = getCurrentUser();
+    if (!user) { window.location.href = 'signin.html'; return; }
+    try {
+        const { data: userData } = await sb.from('users').select('*').eq('uid', user.uid).single();
+        if (userData) {
+            document.getElementById('displayUsername').innerText = userData.username;
+            document.getElementById('displayUid').innerText = userData.uid;
+            document.getElementById('displayBalance').innerHTML = '€' + (userData.balance || 0).toFixed(2);
+            
+            // ✅ 设置两个卡片的 Username
+            document.getElementById('balanceUsername').innerText = userData.username;
+            document.getElementById('amountDueUsername').innerText = userData.username;
+            
+            const vipMap = { 1: 'Normal', 2: 'VIP', 3: 'SVIP' };
+            const level = vipMap[userData.vip_level] || 'Normal';
+            
+            // ✅ 设置两个卡片的 Membership
+            document.getElementById('displayMembership').innerText = level;
+            document.getElementById('amountDueMembership').innerText = level;
+            document.getElementById('premiumStatusText').innerHTML = level;
+        }
+        
+        const { data: orders } = await sb.from('order_history').select('commission').eq('uid', user.uid);
+        const total = orders?.reduce((s, o) => s + (o.commission || 0), 0) || 0;
+        document.getElementById('totalEarnings').innerHTML = '€' + total.toFixed(2);
 
-                    const { data: events } = await sb.from('events').select('id').eq('status', 'active');
-                    const eventCount = events?.length || 0;
-                    const currentEventValue = document.getElementById('currentEventValue');
-                    if (currentEventValue) {
-                        currentEventValue.innerHTML = eventCount;
-                        document.getElementById('currentEventTag').innerHTML = eventCount + ' Active Events';
-                    }
+        const { data: events } = await sb.from('events').select('id').eq('status', 'active');
+        const eventCount = events?.length || 0;
+        const currentEventValue = document.getElementById('currentEventValue');
+        if (currentEventValue) {
+            currentEventValue.innerHTML = eventCount;
+            document.getElementById('currentEventTag').innerHTML = eventCount + ' Active Events';
+        }
 
-                    // ===== 从数据库读取签到数据（始终从数据库读取，不依赖 localStorage） =====
-let checkinDays = 0;
+        // ===== 从数据库读取签到数据（始终从数据库读取，不依赖 localStorage） =====
+        let checkinDays = 0;
 
-try {
-    const { data: checkinRecords, error: checkinError } = await sb
-        .from('user_checkin_records')
-        .select('id', { count: 'exact' })
-        .eq('uid', user.uid);
-
-    if (checkinError) {
-        console.error('读取签到记录失败:', checkinError);
-        checkinDays = 0;
-    } else {
-        checkinDays = checkinRecords?.length || 0;
-        console.log('📊 Check-in days from database:', checkinDays);
-    }
-} catch (e) {
-    console.error('读取签到记录异常:', e);
-    checkinDays = 0;
-}
-
-const contractStatus = document.getElementById('contractStatus');
-const contractTag = document.getElementById('contractTag');
-if (contractStatus) {
-    if (checkinDays >= 7) {
-        contractStatus.innerHTML = '✓ Unlocked';
-        contractStatus.style.color = '#4ade80';
-        contractTag.innerHTML = 'Employment contract active';
-    } else {
-        contractStatus.innerHTML = `${checkinDays}/7`;
-        contractStatus.style.color = '#CCB299';
-        contractTag.innerHTML = `${7 - checkinDays} Day${(7 - checkinDays) !== 1 ? 's' : ''} Left To Unlock`;
-    }
-}
-
-                    // ===== Certificate 卡片数据 =====
-const { data: companyData } = await sb
-    .from('system_content')
-    .select('id, content, image_url')
-    .eq('type', 'company')
-    .single();
-
-const certificateStatus = document.getElementById('certificateStatus');
-const certificateTag = document.getElementById('certificateTag');
-if (certificateStatus) {
-    // 计算图片数量
-    let imageCount = 0;
-    if (companyData && companyData.image_url) {
         try {
-            const parsed = JSON.parse(companyData.image_url);
-            if (Array.isArray(parsed)) {
-                imageCount = parsed.length;
-            } else if (companyData.image_url) {
-                imageCount = 1;
+            const { data: checkinRecords, error: checkinError } = await sb
+                .from('user_checkin_records')
+                .select('id', { count: 'exact' })
+                .eq('uid', user.uid);
+
+            if (checkinError) {
+                console.error('读取签到记录失败:', checkinError);
+                checkinDays = 0;
+            } else {
+                checkinDays = checkinRecords?.length || 0;
+                console.log('📊 Check-in days from database:', checkinDays);
             }
         } catch (e) {
-            if (companyData.image_url) {
-                imageCount = 1;
+            console.error('读取签到记录异常:', e);
+            checkinDays = 0;
+        }
+
+        const contractStatus = document.getElementById('contractStatus');
+        const contractTag = document.getElementById('contractTag');
+        if (contractStatus) {
+            if (checkinDays >= 7) {
+                contractStatus.innerHTML = '✓ Unlocked';
+                contractStatus.style.color = '#4ade80';
+                contractTag.innerHTML = 'Employment contract active';
+            } else {
+                contractStatus.innerHTML = `${checkinDays}/7`;
+                contractStatus.style.color = '#CCB299';
+                contractTag.innerHTML = `${7 - checkinDays} Day${(7 - checkinDays) !== 1 ? 's' : ''} Left To Unlock`;
             }
         }
-    }
-    
-    if (imageCount > 0) {
-        certificateStatus.innerHTML = imageCount;
-        certificateStatus.style.color = '#CCB299';  // 改为金色
-        if (certificateTag) certificateTag.innerHTML = imageCount + ' Certificate' + (imageCount > 1 ? 's' : '') + ' Uploaded';
-    } else {
-        certificateStatus.innerHTML = '0';
-        certificateStatus.style.color = '#CCB299';  // 改为金色
-        if (certificateTag) certificateTag.innerHTML = 'No certificate uploaded';
+
+        // ===== Certificate 卡片数据 =====
+        const { data: companyData } = await sb
+            .from('system_content')
+            .select('id, content, image_url')
+            .eq('type', 'company')
+            .single();
+
+        const certificateStatus = document.getElementById('certificateStatus');
+        const certificateTag = document.getElementById('certificateTag');
+        if (certificateStatus) {
+            let imageCount = 0;
+            if (companyData && companyData.image_url) {
+                try {
+                    const parsed = JSON.parse(companyData.image_url);
+                    if (Array.isArray(parsed)) {
+                        imageCount = parsed.length;
+                    } else if (companyData.image_url) {
+                        imageCount = 1;
+                    }
+                } catch (e) {
+                    if (companyData.image_url) {
+                        imageCount = 1;
+                    }
+                }
+            }
+            
+            if (imageCount > 0) {
+                certificateStatus.innerHTML = imageCount;
+                certificateStatus.style.color = '#CCB299';
+                if (certificateTag) certificateTag.innerHTML = imageCount + ' Certificate' + (imageCount > 1 ? 's' : '') + ' Uploaded';
+            } else {
+                certificateStatus.innerHTML = '0';
+                certificateStatus.style.color = '#CCB299';
+                if (certificateTag) certificateTag.innerHTML = 'No certificate uploaded';
+            }
+        }
+
+        const { data: recentOrders } = await sb.from('order_history').select('*').eq('uid', user.uid).order('date', { ascending: false }).limit(5);
+        const recentContainer = document.getElementById('recentBookings');
+        if (!recentOrders || recentOrders.length === 0) {
+            recentContainer.innerHTML = '<div class="empty-bookings"><i class="fas fa-calendar-alt"></i><p>No bookings yet</p><span>Start your first task to see recent bookings here</span></div>';
+        } else {
+            recentContainer.innerHTML = '';
+            recentOrders.forEach(o => {
+                const d = new Date(o.date);
+                recentContainer.innerHTML +=
+                    `<div class="booking-item"><div class="booking-info"><i class="fas fa-hotel"></i><div><div class="booking-name">${o.accommodation_name || 'Hotel Task'}</div><div class="booking-date">${d.toLocaleDateString()}, ${d.toLocaleTimeString()}</div></div></div><div class="booking-amount positive">+€${(o.commission || 0).toFixed(2)}</div></div>`;
+            });
+        }
+
+        // ✅ 检查 Amount Due 并切换卡片
+        await checkAmountDueAndSwitchCard();
+        await loadDashboardProducts();
+        await initCommissionChart();
+        bindChartButtons();
+        initNavClickClose();
+    } catch (e) {
+        console.error('加载数据失败:', e);
     }
 }
-
-                    const { data: recentOrders } = await sb.from('order_history').select('*').eq('uid', user.uid).order('date', { ascending: false }).limit(5);
-                    const recentContainer = document.getElementById('recentBookings');
-                    if (!recentOrders || recentOrders.length === 0) recentContainer.innerHTML =
-                        '<div class="empty-bookings"><i class="fas fa-calendar-alt"></i><p>No bookings yet</p><span>Start your first task to see recent bookings here</span></div>';
-                    else {
-                        recentContainer.innerHTML = '';
-                        recentOrders.forEach(o => {
-                            const d = new Date(o.date);
-                            recentContainer.innerHTML +=
-                                `<div class="booking-item"><div class="booking-info"><i class="fas fa-hotel"></i><div><div class="booking-name">${o.accommodation_name || 'Hotel Task'}</div><div class="booking-date">${d.toLocaleDateString()}, ${d.toLocaleTimeString()}</div></div></div><div class="booking-amount positive">+€${(o.commission || 0).toFixed(2)}</div></div>`;
-                        });
-                    }
-// ✅ 检查 Amount Due 并切换卡片
-await checkAmountDueAndSwitchCard();
-                    await loadDashboardProducts();
-                    await initCommissionChart();
-                    bindChartButtons();
-                    initNavClickClose();
-                } catch (e) { console.error('加载数据失败:', e); }
-            }
-            loadDashboard();
-        })();
+})();
     </script>
 <script src="i18n.js"></script>
 <script>
