@@ -1440,18 +1440,6 @@ function escapeHtml(str) {
     });
 }
 
-function showToast(msg, type) {
-    if (typeof window.showToast === 'function') {
-        window.showToast(msg, type);
-    } else {
-        console.log(`[${type}]`, msg);
-        // 使用简单的 alert 作为 fallback
-        if (type === 'error') alert('❌ ' + msg);
-        else if (type === 'success') alert('✅ ' + msg);
-        else alert(msg);
-    }
-}
-
 function showConfirm(title, message, onConfirm) {
     if (typeof window.showConfirm === 'function') {
         window.showConfirm(title, message, onConfirm);
