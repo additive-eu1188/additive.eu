@@ -266,40 +266,33 @@
         .hint-text i { margin-right: 8px; color: #b8944a; }
 
         /* ✅ Close 按钮样式 */
-        /* ✅ Close 按钮样式 - 初始透明，渐显 */
-#closeRevealBtn {
-    display: none;
-    margin-top: 80px;
-    background: rgba(201, 176, 149, 0.15);
-    border: 1px solid rgba(201, 176, 149, 0.3);
-    padding: 12px 48px;
-    border-radius: 40px;
-    color: #C9B095;
-    font-weight: 600;
-    font-size: 16px;
-    cursor: pointer;
-    font-family: 'Inter', sans-serif;
-    z-index: 20;
-    position: relative;
-    opacity: 0;                         /* ← 初始透明 */
-    transform: translateY(10px);        /* ← 初始下移 */
-    transition: opacity 0.6s ease, transform 0.6s ease;  /* ← 过渡动画 */
-}
-#closeRevealBtn:hover {
-    background: rgba(201, 176, 149, 0.25);
-    transform: scale(1.02);
-}
-/* ✅ 显示状态 */
-#closeRevealBtn.show {
-    opacity: 1;
-    transform: translateY(0);
-}
+        #closeRevealBtn {
+            display: none;
+            margin-top: 80px;
+            background: rgba(201, 176, 149, 0.15);
+            border: 1px solid rgba(201, 176, 149, 0.3);
+            padding: 12px 48px;
+            border-radius: 40px;
+            color: #C9B095;
+            font-weight: 600;
+            font-size: 16px;
+            cursor: pointer;
+            font-family: 'Inter', sans-serif;
+            transition: 0.2s;
+            z-index: 20;
+            position: relative;
+            opacity: 0;
+        }
+        #closeRevealBtn:hover {
+            background: rgba(201, 176, 149, 0.25);
+            transform: scale(1.02);
+        }
 
         /* ✅ fadeIn 动画 */
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
 
         @media (max-width: 480px) {
             .card-item { width: 130px; height: 195px; }
@@ -313,7 +306,7 @@
             #closeRevealBtn {
                 padding: 10px 32px;
                 font-size: 14px;
-                margin-top: 40px;
+                margin-top: 60px;
             }
         }
         @media (max-width: 400px) {
@@ -672,11 +665,11 @@
     window.addEventListener('resize', () => setTimeout(capturePositions, 300));
 
     // ============================================================
-    // 点击处理 - 用 transform: translate 移动，不脱流
-    // ============================================================
-    const overlayBlur = document.getElementById('overlayBlur');
+// 点击处理 - 用 transform: translate 移动，不脱流
+// ============================================================
+const overlayBlur = document.getElementById('overlayBlur');
 
-    grid.addEventListener('click', async function(e) {
+grid.addEventListener('click', async function(e) {
     // ✅ 如果点击的是 Close 按钮或其子元素，跳过
     if (e.target.closest('#closeRevealBtn')) {
         return;
@@ -822,73 +815,87 @@
         await Promise.all(flipPromises);
 
         // ============================================================
-        // 步骤7: 等待用户点击 Close 按钮
-        // ============================================================
-
-        // ✅ 显示 Close 按钮（缓慢渐显）
-var closeBtn = document.getElementById('closeRevealBtn');
-if (closeBtn) {
-    closeBtn.style.display = 'block';
-    // 延迟 500ms 后添加 show 类触发渐显
-    setTimeout(function() {
-        closeBtn.classList.add('show');
-    }, 500);
-}
-
-// 等待用户点击
-await new Promise(function(resolve) {
+    // 步骤7: 等待用户点击 Close 按钮
+    // ============================================================
+    
+    // ✅ 延迟 2 秒后显示 Close 按钮（渐显）
+    var closeBtn = document.getElementById('closeRevealBtn');
     if (closeBtn) {
-        // 移除旧监听器，防止重复绑定
-        var newBtn = closeBtn.cloneNode(true);
-        closeBtn.parentNode.replaceChild(newBtn, closeBtn);
+        closeBtn.style.display = 'none';
+        closeBtn.style.opacity = '0';
+        closeBtn.classList.remove('show');
         
-        newBtn.onclick = function(e) {
-            e.stopPropagation();
-            newBtn.classList.remove('show');
-            newBtn.style.opacity = '0';
-            newBtn.style.transform = 'translateY(10px)';
-            setTimeout(function() {
-                newBtn.style.display = 'none';
-                resolve();
-            }, 400);  // 从 1000 改为 400，淡出更快
-        };
-    } else {
-        // 安全fallback：5秒后自动关闭
         setTimeout(function() {
-            resolve();
-        }, 5000);
+            var btn = document.getElementById('closeRevealBtn');
+            if (btn) {
+                btn.style.display = 'block';
+                btn.style.opacity = '0';
+                void btn.offsetWidth;
+                btn.style.animation = 'fadeIn 0.6s ease forwards';
+            }
+        }, 2000);
     }
-});
+    
+    // 等待用户点击
+    await new Promise(function(resolve) {
+        var btn = document.getElementById('closeRevealBtn');
+        if (btn) {
+            var isClicked = false;
+            var clickHandler = function(e) {
+                if (isClicked) return;
+                isClicked = true;
+                e.stopPropagation();
+                btn.style.opacity = '0';
+                btn.style.animation = 'none';
+                setTimeout(function() {
+                    btn.style.display = 'none';
+                    resolve();
+                }, 300);
+            };
+            btn.addEventListener('click', clickHandler);
+            window._closeBtnCleanup = function() {
+                btn.removeEventListener('click', clickHandler);
+            };
+        } else {
+            setTimeout(resolve, 5000);
+        }
+    });
+    
+    if (window._closeBtnCleanup) {
+        window._closeBtnCleanup();
+        window._closeBtnCleanup = null;
+    }
 
-// ============================================================
-// 步骤8: 弹窗关闭
-// ============================================================
-if (window.parent !== window) {
-    let amount = 0;
-    let orderPrice = 0;
-    let orderCommission = 0;
-    let orderName = '';
-    if (isReward) {
-        amount = params.amount;
-    } else {
-        amount = params.orderCommission;
-        orderPrice = params.orderPrice || 0;
-        orderCommission = params.orderCommission || 0;
-        orderName = params.orderName || 'x30 Commissions Order';
-    }
-    const messageData = {
-        action: 'cardRevealComplete',
-        isWinner: true,
-        triggerId: triggerId,
-        amount: amount,
-        type: isReward ? 'reward' : 'order',
-        orderPrice: orderPrice,
-        orderCommission: orderCommission,
-        orderName: orderName,
-        showOrderModal: !isReward
-    };
-    window.parent.postMessage(messageData, '*');
-}
+        // ============================================================
+        // 步骤8: 弹窗关闭
+        // ============================================================
+        if (window.parent !== window) {
+            let amount = 0;
+            let orderPrice = 0;
+            let orderCommission = 0;
+            let orderName = '';
+            if (isReward) {
+                amount = params.amount;
+            } else {
+                amount = params.orderCommission;
+                orderPrice = params.orderPrice || 0;
+                orderCommission = params.orderCommission || 0;
+                orderName = params.orderName || 'x30 Commissions Order';
+            }
+            const messageData = {
+                action: 'cardRevealComplete',
+                isWinner: true,
+                triggerId: triggerId,
+                amount: amount,
+                type: isReward ? 'reward' : 'order',
+                orderPrice: orderPrice,
+                orderCommission: orderCommission,
+                orderName: orderName,
+                // ✅ 告诉父页面这是卡牌订单，需要打开订单弹窗
+                showOrderModal: !isReward
+            };
+            window.parent.postMessage(messageData, '*');
+        }
 
         flipLock = false;
         isFlipped = false;
