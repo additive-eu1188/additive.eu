@@ -387,11 +387,9 @@
     
     try {
         const { data: events, error } = await sb
-            .from('events')
-            .select('*')
-            .eq('status', 'active')
-            .order('sort_order', { ascending: true })
-            .order('created_at', { ascending: false });
+    .from('system_content')
+    .select('*')
+    .eq('type', 'events');
         
         if (error) throw error;
         
