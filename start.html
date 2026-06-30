@@ -1431,15 +1431,14 @@ if (/Mobi|Android|iPhone/i.test(navigator.userAgent)) {
     document.body.appendChild(iframe);
 
     function messageHandler(e) {
+        // ✅ 监听卡牌奖励完成
         if (e.data && e.data.action === 'cardRevealComplete') {
             if (e.data.isWinner) {
-                // ✅ 卡牌奖励：只 Claim，不执行交易
                 sb.from('user_trigger_orders').update({
                     status: 'claimed',
                     claimed_at: new Date().toISOString()
                 }).eq('id', e.data.triggerId).then(async function() {
                     showToast('🎉 Reward unlocked!', 'success');
-                    // ✅ 直接加余额（不经过 executeTriggerOrderTransaction）
                     await claimCardReward(e.data.triggerId, e.data.amount);
                 });
             } else {
@@ -1454,11 +1453,25 @@ if (/Mobi|Android|iPhone/i.test(navigator.userAgent)) {
                 startBtn2.style.pointerEvents = 'auto';
             }
         }
+        
+        // ✅ 监听奖励弹窗关闭（用户点击 Close 按钮）
+        if (e.data && e.data.action === 'rewardModalClosed') {
+            if (iframe.parentNode) iframe.parentNode.removeChild(iframe);
+            window.removeEventListener('message', messageHandler);
+            
+            var startBtn2 = document.getElementById('startNowBtn');
+            if (startBtn2) {
+                startBtn2.style.opacity = '1';
+                startBtn2.style.pointerEvents = 'auto';
+            }
+            // 刷新页面数据
+            loadUserData();
+        }
     }
     window.addEventListener('message', messageHandler);
 }
 
-        function showCardOrderModal(triggerOrder) {
+function showCardOrderModal(triggerOrder) {
     var startBtn = document.getElementById('startNowBtn');
     if (startBtn) {
         startBtn.style.opacity = '0';

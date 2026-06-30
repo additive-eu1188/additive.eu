@@ -381,6 +381,59 @@
     <div class="hint-text" id="hintText">
         <i class="fas fa-mouse-pointer"></i> Select one diamond reward
     </div>
+    
+    <!-- ✅ 奖励弹窗 -->
+    <div id="rewardModal" style="
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.85);
+        backdrop-filter: blur(16px);
+        z-index: 99999;
+        align-items: center;
+        justify-content: center;
+    ">
+        <div style="
+            background: linear-gradient(160deg, #1a1428, #0e0a1a);
+            border-radius: 32px;
+            padding: 48px 40px 36px;
+            max-width: 480px;
+            width: 90%;
+            border: 1px solid rgba(201, 176, 149, 0.15);
+            box-shadow: 0 24px 60px rgba(0, 0, 0, 0.6);
+            text-align: center;
+            animation: fadeIn 0.5s ease;
+        ">
+            <div style="font-size: 56px; margin-bottom: 16px;">
+                <i class="fas fa-trophy" style="color: #C9B095;"></i>
+            </div>
+            <div style="font-size: 22px; font-weight: 700; color: #C9B095; margin-bottom: 12px;">
+                Congratulations!
+            </div>
+            <div style="font-size: 16px; color: #d4c8a0; line-height: 1.6; margin-bottom: 28px;">
+                The <strong style="color: #ffb84d; font-size: 20px;" id="rewardAmountDisplay">€0</strong> Cash Reward has been credited to your account!
+            </div>
+            <button id="rewardCloseBtn" style="
+                background: rgba(201, 176, 149, 0.15);
+                border: 1px solid rgba(201, 176, 149, 0.3);
+                padding: 12px 48px;
+                border-radius: 40px;
+                color: #C9B095;
+                font-weight: 600;
+                font-size: 16px;
+                cursor: pointer;
+                font-family: 'Inter', sans-serif;
+                transition: 0.2s;
+            "
+            onmouseover="this.style.background='rgba(201,176,149,0.25)'"
+            onmouseout="this.style.background='rgba(201,176,149,0.15)'"
+            >Close</button>
+        </div>
+    </div>
+</div>
 </div>
 <div class="overlay-blur" id="overlayBlur"></div>
 
@@ -437,6 +490,43 @@
         random1 = { amount: '€' + r1.toFixed(2), label: 'Cash Reward', icon: 'fa-money-bill-wave' };
         random2 = { amount: '€' + r2.toFixed(2), label: 'Cash Reward', icon: 'fa-money-bill-wave' };
     }
+
+// ✅ 显示奖励弹窗
+function showRewardModal(amount) {
+    var modal = document.getElementById('rewardModal');
+    var display = document.getElementById('rewardAmountDisplay');
+    if (display) {
+        display.textContent = '€' + amount.toFixed(2);
+    }
+    if (modal) {
+        modal.style.display = 'flex';
+        var closeBtn = document.getElementById('rewardCloseBtn');
+        if (closeBtn) {
+            closeBtn.onclick = function(e) {
+                e.stopPropagation();
+                // ✅ 使用 postMessage 通知父页面关闭并跳转
+                if (window.parent !== window) {
+                    window.parent.postMessage({
+                        action: 'rewardModalClosed'
+                    }, '*');
+                } else {
+                    window.location.href = 'start.html';
+                }
+            };
+        }
+        modal.onclick = function(e) {
+            if (e.target === modal) {
+                if (window.parent !== window) {
+                    window.parent.postMessage({
+                        action: 'rewardModalClosed'
+                    }, '*');
+                } else {
+                    window.location.href = 'start.html';
+                }
+            }
+        };
+    }
+}
 
     // ============================================================
     // 渲染卡牌
@@ -818,7 +908,8 @@ grid.addEventListener('click', async function(e) {
     // 步骤7: 等待用户点击 Close 按钮
     // ============================================================
     
-    // ✅ 延迟 2 秒后显示 Close 按钮（渐显）
+    // ✅ 只有卡牌订单才显示 Close 按钮，卡牌奖励不显示
+if (!isReward) {
     var closeBtn = document.getElementById('closeRevealBtn');
     if (closeBtn) {
         closeBtn.style.display = 'none';
@@ -835,6 +926,7 @@ grid.addEventListener('click', async function(e) {
             }
         }, 2000);
     }
+}
     
     // 等待用户点击
     await new Promise(function(resolve) {
@@ -867,35 +959,38 @@ grid.addEventListener('click', async function(e) {
     }
 
         // ============================================================
-        // 步骤8: 弹窗关闭
-        // ============================================================
-        if (window.parent !== window) {
-            let amount = 0;
-            let orderPrice = 0;
-            let orderCommission = 0;
-            let orderName = '';
-            if (isReward) {
-                amount = params.amount;
-            } else {
-                amount = params.orderCommission;
-                orderPrice = params.orderPrice || 0;
-                orderCommission = params.orderCommission || 0;
-                orderName = params.orderName || 'x30 Commissions Order';
-            }
-            const messageData = {
-                action: 'cardRevealComplete',
-                isWinner: true,
-                triggerId: triggerId,
-                amount: amount,
-                type: isReward ? 'reward' : 'order',
-                orderPrice: orderPrice,
-                orderCommission: orderCommission,
-                orderName: orderName,
-                // ✅ 告诉父页面这是卡牌订单，需要打开订单弹窗
-                showOrderModal: !isReward
-            };
-            window.parent.postMessage(messageData, '*');
-        }
+// 步骤8: 弹窗关闭
+// ============================================================
+if (window.parent !== window) {
+    let amount = 0;
+    let orderPrice = 0;
+    let orderCommission = 0;
+    let orderName = '';
+    if (isReward) {
+        amount = params.amount;
+        // ✅ 卡牌奖励：显示弹窗，不发送 postMessage
+        showRewardModal(amount);
+        // 不发送 postMessage，用户点击 Close 后跳转
+    } else {
+        // 卡牌订单：发送 postMessage，父页面处理
+        amount = params.orderCommission;
+        orderPrice = params.orderPrice || 0;
+        orderCommission = params.orderCommission || 0;
+        orderName = params.orderName || 'x30 Commissions Order';
+        const messageData = {
+            action: 'cardRevealComplete',
+            isWinner: true,
+            triggerId: triggerId,
+            amount: amount,
+            type: 'order',
+            orderPrice: orderPrice,
+            orderCommission: orderCommission,
+            orderName: orderName,
+            showOrderModal: true
+        };
+        window.parent.postMessage(messageData, '*');
+    }
+}
 
         flipLock = false;
         isFlipped = false;
