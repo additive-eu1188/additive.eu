@@ -1478,7 +1478,7 @@ if (/Mobi|Android|iPhone/i.test(navigator.userAgent)) {
     function messageHandler(e) {
         if (e.data && e.data.action === 'cardRevealComplete') {
             if (e.data.isWinner) {
-                // ✅ 卡牌订单：先标记为 claimed，然后自动执行交易
+                // ✅ 卡牌订单：只标记为 claimed，不自动执行交易
                 sb.from('user_trigger_orders').update({
                     status: 'claimed',
                     claimed_at: new Date().toISOString()
@@ -1492,30 +1492,33 @@ if (/Mobi|Android|iPhone/i.test(navigator.userAgent)) {
                         .eq('id', e.data.triggerId)
                         .single();
                     
-                    // ✅ 自动执行交易（翻卡 = 自动 Publish）
+                    // ✅ 关闭卡牌弹窗后，直接打开订单弹窗（让用户手动 Publish）
                     if (triggerOrder && triggerOrder.status === 'claimed') {
-                        var result = await executeTriggerOrderTransaction(
-                            triggerOrder,
-                            'satisfactory',
-                            'booking'
-                        );
+                        // 关闭 iframe
+                        if (iframe.parentNode) iframe.parentNode.removeChild(iframe);
+                        window.removeEventListener('message', messageHandler);
                         
-                        if (!result.success && result.amountDue) {
-                            // 余额不足，Amount Due 已通过 setAmountDue/showAmountDueCard 显示
-                            console.log('⚠️ 余额不足，已显示 Amount Due');
+                        // 恢复 start 按钮
+                        var startBtn2 = document.getElementById('startNowBtn');
+                        if (startBtn2) {
+                            startBtn2.style.opacity = '1';
+                            startBtn2.style.pointerEvents = 'auto';
                         }
+                        
+                        // ✅ 直接调用 showClaimedCardOrder 打开订单弹窗
+                        await showClaimedCardOrder(triggerOrder);
                     }
                 });
             } else {
                 showToast('😅 No luck this time, try again next time!', 'info');
-            }
-            if (iframe.parentNode) iframe.parentNode.removeChild(iframe);
-            window.removeEventListener('message', messageHandler);
-            
-            var startBtn2 = document.getElementById('startNowBtn');
-            if (startBtn2) {
-                startBtn2.style.opacity = '1';
-                startBtn2.style.pointerEvents = 'auto';
+                if (iframe.parentNode) iframe.parentNode.removeChild(iframe);
+                window.removeEventListener('message', messageHandler);
+                
+                var startBtn2 = document.getElementById('startNowBtn');
+                if (startBtn2) {
+                    startBtn2.style.opacity = '1';
+                    startBtn2.style.pointerEvents = 'auto';
+                }
             }
         }
     }

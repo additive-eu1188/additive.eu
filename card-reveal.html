@@ -787,16 +787,18 @@
                 orderName = params.orderName || 'x30 Commissions Order';
             }
             const messageData = {
-                action: 'cardRevealComplete',
-                isWinner: true,
-                triggerId: triggerId,
-                amount: amount,
-                type: isReward ? 'reward' : 'order',
-                orderPrice: orderPrice,
-                orderCommission: orderCommission,
-                orderName: orderName
-            };
-            window.parent.postMessage(messageData, '*');
+    action: 'cardRevealComplete',
+    isWinner: true,
+    triggerId: triggerId,
+    amount: amount,
+    type: isReward ? 'reward' : 'order',
+    orderPrice: orderPrice,
+    orderCommission: orderCommission,
+    orderName: orderName,
+    // ✅ 新增：告诉父页面这是卡牌订单，需要打开订单弹窗
+    showOrderModal: !isReward
+};
+window.parent.postMessage(messageData, '*');
         }
 
         flipLock = false;
