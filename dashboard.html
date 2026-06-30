@@ -186,7 +186,7 @@
         .uid-badge { font-size: 11px; color: var(--text-secondary); background: rgba(204,178,153,0.1); display: inline-block; padding: 4px 10px; border-radius: 20px; }
         .premium-tag { background: rgba(204,178,153,0.08); border: 1px solid var(--accent-gold-border); padding: 4px 12px; border-radius: 40px; font-size: 11px; font-weight: 600; color: var(--accent-gold); }
 
-        /* ===== 玫瑰金借记卡样式 ===== */
+                /* ===== 玫瑰金借记卡样式 ===== */
         .card-rosegold {
             background: linear-gradient(160deg, #1a0a0a 0%, #3a1818 20%, #5a2828 40%, #7a3838 55%, #5a2828 70%, #3a1818 85%, #1a0a0a 100%);
             border-radius: 20px;
@@ -359,93 +359,87 @@
             flex-shrink: 0;
         }
 
-        /* ===== 分割线上方：VIP（右侧） ===== */
-        .card-footer-top {
+        /* ===== VIP 行 - 在分割线上方 ===== */
+        .vip-row {
             display: flex;
             justify-content: space-between;
-            align-items: flex-end;
-            position: relative;
-            z-index: 1;
+            align-items: center;
             padding-bottom: 2px;
             flex-shrink: 0;
         }
 
-        .card-footer-top .footer-right {
+        .vip-row-right {
             display: flex;
             flex-direction: column;
             align-items: flex-end;
             text-align: right;
         }
-        .card-footer-top .footer-right .vip-level {
+
+        .vip-level {
             font-size: 14px;
             font-weight: 700;
-            margin-bottom: 0;
         }
 
-        /* ===== 分割线下方：User（左侧）+ 按钮（右侧） ===== */
-        .card-footer-bottom {
+        /* ===== User 行 - 在分割线下方 ===== */
+        .user-row {
             display: flex;
             justify-content: space-between;
             align-items: flex-end;
-            position: relative;
-            z-index: 1;
             padding-top: 6px;
             flex-shrink: 0;
         }
 
-        .card-footer-bottom .footer-left {
+        .user-row-left {
             display: flex;
             flex-direction: column;
         }
-        .card-footer-bottom .footer-left .label {
+        .user-row-left .label {
             font-size: 9px;
             text-transform: uppercase;
             letter-spacing: 1.5px;
             font-weight: 600;
         }
-        .card-footer-bottom .footer-left .label i {
+        .user-row-left .label i {
             margin-right: 4px;
             font-size: 9px;
         }
-        .card-footer-bottom .footer-left .value {
+        .user-row-left .value {
             font-size: 16px;
             font-weight: 700;
             margin-top: 2px;
             text-shadow: 0 1px 4px rgba(0,0,0,0.4);
         }
 
-        .card-footer-bottom .footer-right {
+        .user-row-right {
             display: flex;
             flex-direction: column;
             align-items: flex-end;
             text-align: right;
         }
-        .card-footer-bottom .footer-right .action-link {
+        .user-row-right .action-link {
             font-size: 13px;
             font-weight: 600;
             cursor: pointer;
             transition: opacity 0.2s;
         }
-        .card-footer-bottom .footer-right .action-link:hover {
+        .user-row-right .action-link:hover {
             opacity: 0.7;
         }
 
-        /* ===== 金色卡片 - 分割线上方颜色 ===== */
-        .card-rosegold .card-footer-top .footer-right .vip-level {
+        /* ===== 金色卡片颜色 ===== */
+        .card-rosegold .vip-row-right .vip-level {
             color: #CCB299;
         }
-
-        /* ===== 金色卡片 - 分割线下方颜色 ===== */
-        .card-rosegold .card-footer-bottom .footer-left .label {
+        .card-rosegold .user-row-left .label {
             color: #8a6060;
         }
-        .card-rosegold .card-footer-bottom .footer-left .label i {
+        .card-rosegold .user-row-left .label i {
             color: #8a6060;
         }
-        .card-rosegold .card-footer-bottom .footer-left .value {
+        .card-rosegold .user-row-left .value {
             color: #f0e0e0;
         }
-        .card-rosegold .card-footer-bottom .footer-right .action-link {
+        .card-rosegold .user-row-right .action-link {
             color: #CCB299;
         }
 
@@ -603,24 +597,22 @@
             flex-shrink: 0;
         }
 
-        /* ===== 红色卡片 - 分割线上方颜色（隐藏） ===== */
-        .card-rosegold-red .card-footer-top .footer-right .vip-level {
+        /* ===== 红色卡片颜色 ===== */
+        .card-rosegold-red .vip-row-right .vip-level {
             color: transparent;
             opacity: 0;
             pointer-events: none;
         }
-
-        /* ===== 红色卡片 - 分割线下方颜色 ===== */
-        .card-rosegold-red .card-footer-bottom .footer-left .label {
+        .card-rosegold-red .user-row-left .label {
             color: #8a4040;
         }
-        .card-rosegold-red .card-footer-bottom .footer-left .label i {
+        .card-rosegold-red .user-row-left .label i {
             color: #8a4040;
         }
-        .card-rosegold-red .card-footer-bottom .footer-left .value {
+        .card-rosegold-red .user-row-left .value {
             color: #ffb0b0;
         }
-        .card-rosegold-red .card-footer-bottom .footer-right .action-link {
+        .card-rosegold-red .user-row-right .action-link {
             color: #ff8080;
         }
 
@@ -1170,97 +1162,99 @@
                 </div>
             </div>
 
-            <!-- ===== 玫瑰金借记卡 - Available Balance（默认显示） ===== -->
-            <div class="card-rosegold" id="balanceCard" style="display:none;">
-                <div class="glow-orb"></div>
-                <div class="glow-orb-top"></div>
-                <div class="pulse-dot-wrapper">
-                    <span class="pulse-ring"></span>
-                    <span class="pulse-ring"></span>
-                    <span class="pulse-ring"></span>
-                    <span class="pulse-dot"></span>
+            <!-- ===== 玫瑰金借记卡 - Available Balance ===== -->
+<div class="card-rosegold" id="balanceCard" style="display:none;">
+    <div class="glow-orb"></div>
+    <div class="glow-orb-top"></div>
+    <div class="pulse-dot-wrapper">
+        <span class="pulse-ring"></span>
+        <span class="pulse-ring"></span>
+        <span class="pulse-ring"></span>
+        <span class="pulse-dot"></span>
+    </div>
+    <div class="card-logo-overlay">
+        <img src="creditcardlogo.png" alt="logo" onerror="this.style.display='none'">
+    </div>
+    <div class="card-header">
+        <div class="left">
+            <i class="fas fa-wallet"></i>
+            <span data-i18n="dashboard_balance">AVAILABLE BALANCE</span>
+        </div>
+    </div>
+    <div class="card-content-wrapper">
+        <div class="card-balance" id="displayBalance">€0.00</div>
+        <div>
+            <!-- VIP 在分割线上方 -->
+            <div class="vip-row">
+                <div class="vip-row-left"></div>
+                <div class="vip-row-right">
+                    <span class="vip-level" id="displayMembership">Normal</span>
                 </div>
-                <div class="card-logo-overlay">
-                    <img src="creditcardlogo.png" alt="logo" onerror="this.style.display='none'">
+            </div>
+            <!-- 分割线 -->
+            <div class="card-divider"></div>
+            <!-- User 在分割线下方 -->
+            <div class="user-row">
+                <div class="user-row-left">
+                    <div class="label"><i class="fas fa-user"></i> User</div>
+                    <div class="value" id="balanceUsername">---</div>
                 </div>
-                <div class="card-header">
-                    <div class="left">
-                        <i class="fas fa-wallet"></i>
-                        <span data-i18n="dashboard_balance">AVAILABLE BALANCE</span>
-                    </div>
-                </div>
-                <div class="card-content-wrapper">
-                    <div class="card-balance" id="displayBalance">€0.00</div>
-                    <div>
-                        <div class="card-divider"></div>
-                        <!-- 分割线上方：VIP（右侧） -->
-                        <div class="card-footer-top">
-                            <div class="footer-left"></div>
-                            <div class="footer-right">
-                                <div class="vip-level" id="displayMembership">Normal</div>
-                            </div>
-                        </div>
-                        <!-- 分割线下方：User（左侧）+ 按钮（右侧） -->
-                        <div class="card-footer-bottom">
-                            <div class="footer-left">
-                                <div class="label"><i class="fas fa-user"></i> User</div>
-                                <div class="value" id="balanceUsername">---</div>
-                            </div>
-                            <div class="footer-right">
-                                <div class="action-link" onclick="location.href='membership.html'">
-                                    Upgrade →
-                                </div>
-                            </div>
-                        </div>
+                <div class="user-row-right">
+                    <div class="action-link" onclick="location.href='membership.html'">
+                        Upgrade →
                     </div>
                 </div>
             </div>
+        </div>
+    </div>
+</div>
 
-            <!-- ===== 红色玫瑰金借记卡 - Amount Due（默认隐藏） ===== -->
-            <div class="card-rosegold-red" id="amountDueCard" style="display:none;">
-                <div class="glow-orb"></div>
-                <div class="glow-orb-top"></div>
-                <div class="pulse-dot-wrapper">
-                    <span class="pulse-ring"></span>
-                    <span class="pulse-ring"></span>
-                    <span class="pulse-ring"></span>
-                    <span class="pulse-dot"></span>
+<!-- ===== 红色玫瑰金借记卡 - Amount Due ===== -->
+<div class="card-rosegold-red" id="amountDueCard" style="display:none;">
+    <div class="glow-orb"></div>
+    <div class="glow-orb-top"></div>
+    <div class="pulse-dot-wrapper">
+        <span class="pulse-ring"></span>
+        <span class="pulse-ring"></span>
+        <span class="pulse-ring"></span>
+        <span class="pulse-dot"></span>
+    </div>
+    <div class="card-logo-overlay">
+        <img src="creditcardlogo.png" alt="logo" onerror="this.style.display='none'">
+    </div>
+    <div class="card-header">
+        <div class="left">
+            <i class="fas fa-exclamation-triangle"></i>
+            <span>AMOUNT DUE</span>
+        </div>
+    </div>
+    <div class="card-content-wrapper">
+        <div class="card-amount-red" id="displayAmountDue">€0.00</div>
+        <div>
+            <!-- VIP 在分割线上方（隐藏） -->
+            <div class="vip-row">
+                <div class="vip-row-left"></div>
+                <div class="vip-row-right">
+                    <span class="vip-level" style="opacity:0; pointer-events:none;">---</span>
                 </div>
-                <div class="card-logo-overlay">
-                    <img src="creditcardlogo.png" alt="logo" onerror="this.style.display='none'">
+            </div>
+            <!-- 分割线 -->
+            <div class="card-divider"></div>
+            <!-- User 在分割线下方 -->
+            <div class="user-row">
+                <div class="user-row-left">
+                    <div class="label"><i class="fas fa-user"></i> User</div>
+                    <div class="value" id="amountDueUsername">---</div>
                 </div>
-                <div class="card-header">
-                    <div class="left">
-                        <i class="fas fa-exclamation-triangle"></i>
-                        <span>AMOUNT DUE</span>
-                    </div>
-                </div>
-                <div class="card-content-wrapper">
-                    <div class="card-amount-red" id="displayAmountDue">€0.00</div>
-                    <div>
-                        <div class="card-divider"></div>
-                        <!-- 分割线上方：VIP（右侧，隐藏） -->
-                        <div class="card-footer-top">
-                            <div class="footer-left"></div>
-                            <div class="footer-right">
-                                <div class="vip-level" style="opacity:0; pointer-events:none;">---</div>
-                            </div>
-                        </div>
-                        <!-- 分割线下方：User（左侧）+ 按钮（右侧） -->
-                        <div class="card-footer-bottom">
-                            <div class="footer-left">
-                                <div class="label"><i class="fas fa-user"></i> User</div>
-                                <div class="value" id="amountDueUsername">---</div>
-                            </div>
-                            <div class="footer-right">
-                                <div class="action-link" onclick="location.href='start.html'">
-                                    Recharge →
-                                </div>
-                            </div>
-                        </div>
+                <div class="user-row-right">
+                    <div class="action-link" onclick="location.href='start.html'">
+                        Recharge →
                     </div>
                 </div>
             </div>
+        </div>
+    </div>
+</div>
 
             <div class="action-row">
                 <div class="action-card" onclick="location.href='withdrawal.html'"><i class="fas fa-arrow-right-to-bracket"></i><div class="action-text" data-i18n="dashboard_withdraw">Withdraw</div><div class="action-sub" data-i18n="withdrawal_min_amount">Request payout</div></div>
