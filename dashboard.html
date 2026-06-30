@@ -1098,16 +1098,17 @@
                 </div>
             </div>
 
-            <div class="welcome-header">
-                <div>
-                    <h1><span data-i18n="dashboard_welcome">Welcome</span>, <span class="username" id="displayUsername">Loading...</span></h1>
-<div class="uid-badge"><span data-i18n="uid">UID</span>: <span id="displayUid">---</span></div>
-                </div>
-                <div class="premium-tag"><i class="fas fa-gem"></i> <span data-i18n="dashboard_operator_access">OPERATOR ACCESS</span></div>
-            </div>
+            <div class="welcome-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; flex-wrap: wrap; gap: 16px;">
+    <div class="uid-badge" style="font-size: 11px; color: var(--text-secondary); background: rgba(204,178,153,0.1); display: inline-block; padding: 4px 10px; border-radius: 20px;">
+        <span data-i18n="uid">UID</span>: <span id="displayUid">---</span>
+    </div>
+    <div class="premium-tag" style="background: rgba(204,178,153,0.08); border: 1px solid var(--accent-gold-border); padding: 4px 12px; border-radius: 40px; font-size: 11px; font-weight: 600; color: var(--accent-gold);">
+        <i class="fas fa-gem"></i> <span data-i18n="dashboard_operator_access">OPERATOR ACCESS</span>
+    </div>
+</div>
 
             <!-- ===== 玫瑰金借记卡 - Available Balance（默认显示） ===== -->
-<div class="card-rosegold" id="balanceCard">
+<div class="card-rosegold" id="balanceCard" style="display:none;">
     <div class="glow-orb"></div>
     <div class="glow-orb-top"></div>
     <div class="pulse-dot-wrapper">
@@ -1366,6 +1367,53 @@
                 if (!u) return null;
                 try { return JSON.parse(u); } catch (e) { return null; }
             }
+
+            // ============================================================
+            // 🔥 立即执行：页面加载时判断显示哪个卡片（消除闪烁）
+            // ============================================================
+            (function() {
+                var userStr = localStorage.getItem('currentUser');
+                if (!userStr) return;
+                
+                try {
+                    var user = JSON.parse(userStr);
+                    var amountDueData = localStorage.getItem('amountDue_' + user.uid);
+                    var amountDue = 0;
+                    var orderPrice = 0;
+                    
+                    if (amountDueData) {
+                        try {
+                            var parsed = JSON.parse(amountDueData);
+                            if (Date.now() - parsed.timestamp < 7 * 24 * 60 * 60 * 1000) {
+                                amountDue = parsed.amountDue || 0;
+                                orderPrice = parsed.orderPrice || 0;
+                            }
+                        } catch (e) {}
+                    }
+                    
+                    var balanceCard = document.getElementById('balanceCard');
+                    var amountDueCard = document.getElementById('amountDueCard');
+                    var displayAmountDue = document.getElementById('displayAmountDue');
+                    var amountDueUsername = document.getElementById('amountDueUsername');
+                    
+                    if (amountDue > 0 && orderPrice > 0) {
+                        if (balanceCard) balanceCard.style.display = 'none';
+                        if (amountDueCard) {
+                            amountDueCard.style.display = 'flex';
+                            if (displayAmountDue) displayAmountDue.textContent = '€' + amountDue.toFixed(2);
+                            if (amountDueUsername) amountDueUsername.textContent = user.username || user.uid;
+                        }
+                    } else {
+                        if (balanceCard) balanceCard.style.display = 'flex';
+                        if (amountDueCard) amountDueCard.style.display = 'none';
+                    }
+                } catch (e) {
+                    var balanceCard = document.getElementById('balanceCard');
+                    var amountDueCard = document.getElementById('amountDueCard');
+                    if (balanceCard) balanceCard.style.display = 'flex';
+                    if (amountDueCard) amountDueCard.style.display = 'none';
+                }
+            })();
 
             // ========== 气泡动画 - 优化版（统一循环 + 可见性控制） ==========
 let bubbleAnimations = [];
@@ -1726,7 +1774,6 @@ async function checkAmountDueAndSwitchCard() {
     var user = getCurrentUser();
     if (!user) return;
     
-    // 从 localStorage 获取 amountDue
     var amountDueData = getAmountDue(user.uid);
     var amountDue = amountDueData?.amountDue || 0;
     var orderPrice = amountDueData?.orderPrice || 0;
@@ -1737,17 +1784,26 @@ async function checkAmountDueAndSwitchCard() {
     var displayAmountDue = document.getElementById('displayAmountDue');
     var amountDueUsername = document.getElementById('amountDueUsername');
     
-    if (amountDue > 0 && orderPrice > 0) {
-        // 显示 Amount Due 卡片
+    // ✅ 判断当前显示状态，避免不必要的切换
+    var isShowingAmountDue = amountDueCard && amountDueCard.style.display !== 'none';
+    var shouldShowAmountDue = amountDue > 0 && orderPrice > 0;
+    
+    if (shouldShowAmountDue && !isShowingAmountDue) {
+        // 切换到 Amount Due
         balanceCard.style.display = 'none';
         amountDueCard.style.display = 'flex';
         displayAmountDue.textContent = '€' + amountDue.toFixed(2);
         amountDueUsername.textContent = user.username || user.uid;
-    } else {
-        // 显示 Available Balance 卡片
+    } else if (!shouldShowAmountDue && isShowingAmountDue) {
+        // 切换到 Available Balance
         balanceCard.style.display = 'flex';
         amountDueCard.style.display = 'none';
-        // 更新余额
+        var result = await sb.from('users').select('balance').eq('uid', user.uid).single();
+        if (result.data) {
+            displayBalance.textContent = '€' + (result.data.balance || 0).toFixed(2);
+        }
+    } else if (!shouldShowAmountDue && !isShowingAmountDue) {
+        // 已经是 Available Balance，只更新余额
         var result = await sb.from('users').select('balance').eq('uid', user.uid).single();
         if (result.data) {
             displayBalance.textContent = '€' + (result.data.balance || 0).toFixed(2);
