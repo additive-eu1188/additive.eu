@@ -2368,16 +2368,18 @@ async function executeTriggerOrderTransaction(triggerOrder, quality, platform) {
 
     // 写入订单历史
     await sb.from('order_history').insert([{
-        uid: user.uid,
-        username: username,
-        order_code: randomCode,
-        accommodation_name: triggerOrder.matched_order_name || 'Card Order',
-        price: matchedPrice,
-        commission: finalCommission,
-        rating: rating,
-        status: 'completed',
-        date: new Date().toISOString()
-    }]);
+    uid: user.uid,
+    username: username,
+    order_code: randomCode,
+    accommodation_name: currentOrder.accommodationName || 'Hotel Task',
+    price: matchedPrice,
+    commission: finalCommission,
+    rating: rating,
+    status: 'completed',
+    date: new Date().toISOString(),
+    assign_type: selectedQuality,        // ← 新增，比如 'exceptional'
+    platform_name: selectedPlatformName  // ← 新增，比如 'Booking.com'
+}]);
 
     // 更新 round_orders_count
     var { data: currentUser } = await sb.from('users')
