@@ -265,40 +265,33 @@
         .hint-text.show { opacity: 1; }
         .hint-text i { margin-right: 8px; color: #b8944a; }
 
-        /* ✅ Close 按钮样式 - 位置下移，增加间距 */
-#closeRevealBtn {
-    display: none;
-    margin-top: 50px;  /* 从 30px 改为 50px，离卡牌更远 */
-    background: rgba(201, 176, 149, 0.15);
-    border: 1px solid rgba(201, 176, 149, 0.3);
-    padding: 12px 48px;
-    border-radius: 40px;
-    color: #C9B095;
-    font-weight: 600;
-    font-size: 16px;
-    cursor: pointer;
-    font-family: 'Inter', sans-serif;
-    transition: all 0.3s ease;
-    z-index: 20;
-    position: relative;
-    opacity: 0;  /* 初始透明 */
-    transform: translateY(10px);
-}
-#closeRevealBtn:hover {
-    background: rgba(201, 176, 149, 0.25);
-    transform: scale(1.02);
-}
-/* ✅ 显示时的动画 - 缓慢渐变出现 */
-#closeRevealBtn.show {
-    display: block;
-    opacity: 1;
-    transform: translateY(0);
-    animation: closeBtnFadeIn 0.8s ease forwards;
-}
-@keyframes closeBtnFadeIn {
-    0% { opacity: 0; transform: translateY(15px); }
-    100% { opacity: 1; transform: translateY(0); }
-}
+        /* ✅ Close 按钮样式 */
+        #closeRevealBtn {
+            display: none;
+            margin-top: 30px;
+            background: rgba(201, 176, 149, 0.15);
+            border: 1px solid rgba(201, 176, 149, 0.3);
+            padding: 12px 48px;
+            border-radius: 40px;
+            color: #C9B095;
+            font-weight: 600;
+            font-size: 16px;
+            cursor: pointer;
+            font-family: 'Inter', sans-serif;
+            transition: 0.2s;
+            z-index: 20;
+            position: relative;
+        }
+        #closeRevealBtn:hover {
+            background: rgba(201, 176, 149, 0.25);
+            transform: scale(1.02);
+        }
+
+        /* ✅ fadeIn 动画 */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
 
         @media (max-width: 480px) {
             .card-item { width: 130px; height: 195px; }
@@ -312,7 +305,7 @@
             #closeRevealBtn {
                 padding: 10px 32px;
                 font-size: 14px;
-                margin-top: 40px;
+                margin-top: 20px;
             }
         }
         @media (max-width: 400px) {
@@ -328,7 +321,7 @@
             #closeRevealBtn {
                 padding: 8px 24px;
                 font-size: 12px;
-                margin-top: 32px;
+                margin-top: 16px;
             }
         }
 
@@ -676,8 +669,13 @@
     const overlayBlur = document.getElementById('overlayBlur');
 
     grid.addEventListener('click', async function(e) {
-        const card = e.target.closest('.card-item');
-        if (!card) return;
+    // ✅ 如果点击的是 Close 按钮或其子元素，跳过
+    if (e.target.closest('#closeRevealBtn')) {
+        return;
+    }
+    
+    const card = e.target.closest('.card-item');
+    if (!card) return;
         if (flipLock) return;
         if (isPlaying) return;
         if (!card.classList.contains('show')) return;
@@ -816,51 +814,33 @@
         await Promise.all(flipPromises);
 
         // ============================================================
-// 步骤7: 所有卡牌翻开后，等待用户点击 Close 按钮
-// ============================================================
+        // 步骤7: 等待用户点击 Close 按钮
+        // ============================================================
 
-// ✅ 在所有卡牌翻开后（延迟500ms），缓慢显示 Close 按钮
-var closeBtn = document.getElementById('closeRevealBtn');
-if (closeBtn) {
-    // 先重置状态
-    closeBtn.style.display = 'none';
-    closeBtn.classList.remove('show');
-    closeBtn.style.opacity = '0';
-    closeBtn.style.transform = 'translateY(10px)';
-    
-    // 延迟300ms后显示（让用户先看清卡牌结果）
-    setTimeout(function() {
-        closeBtn.style.display = 'block';
-        // 使用 requestAnimationFrame 确保 display 生效后再添加 class
-        requestAnimationFrame(function() {
-            closeBtn.classList.add('show');
+        // 显示 Close 按钮
+        var closeBtn = document.getElementById('closeRevealBtn');
+        if (closeBtn) {
+            closeBtn.style.display = 'block';
+            closeBtn.style.animation = 'fadeIn 0.3s ease';
+        }
+
+        // 等待用户点击
+        await new Promise(function(resolve) {
+            if (closeBtn) {
+                // 移除旧监听器，防止重复绑定
+                var newBtn = closeBtn.cloneNode(true);
+                closeBtn.parentNode.replaceChild(newBtn, closeBtn);
+                
+                newBtn.onclick = function(e) {
+                    e.stopPropagation();
+                    newBtn.style.display = 'none';
+                    resolve();
+                };
+            } else {
+                // 安全fallback：5秒后自动关闭
+                setTimeout(resolve, 5000);
+            }
         });
-    }, 300);
-}
-
-// 等待用户点击
-await new Promise(function(resolve) {
-    if (closeBtn) {
-        // 移除旧监听器，防止重复绑定
-        var newBtn = closeBtn.cloneNode(true);
-        closeBtn.parentNode.replaceChild(newBtn, closeBtn);
-        
-        newBtn.onclick = function(e) {
-            e.stopPropagation();
-            // 点击后淡出
-            newBtn.classList.remove('show');
-            newBtn.style.opacity = '0';
-            newBtn.style.transform = 'translateY(10px)';
-            setTimeout(function() {
-                newBtn.style.display = 'none';
-                resolve();
-            }, 400);
-        };
-    } else {
-        // 安全fallback：5秒后自动关闭
-        setTimeout(resolve, 5000);
-    }
-});
 
         // ============================================================
         // 步骤8: 弹窗关闭
