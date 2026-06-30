@@ -1,5 +1,5 @@
 // admin-content.js - 内容管理页面（完整修复版）
-// 所有 Events 统一使用 system_content 表
+// 所有内容统一使用 system_content 表
 
 // ============================================================
 // 全局状态
@@ -419,7 +419,7 @@ async function loadContentPage() {
 // ============================================================
 async function loadAllContentData() {
     try {
-        // 1. 加载 Events - 从 system_content 读取 type = 'events'
+        // 1. 加载 Events
         const { data: events, error: eventsError } = await sb
             .from('system_content')
             .select('*')
@@ -510,7 +510,7 @@ function getContentImageUrl(item) {
 }
 
 // ============================================================
-// 渲染内容列表
+// 渲染内容列表（所有类型都有删除按钮）
 // ============================================================
 function renderContentList() {
     const container = document.getElementById('contentListContainer');
@@ -519,6 +519,7 @@ function renderContentList() {
     const tab = currentContentTab;
     let items = [];
     let title = '';
+    let typeKey = '';
 
     if (tab === 'events') {
         items = eventsList.map(e => ({
@@ -531,6 +532,7 @@ function renderContentList() {
             imageUrl: getContentImageUrl(e)
         }));
         title = 'Events';
+        typeKey = 'event';
     } else if (tab === 'certificate') {
         const d = contentData.certificate;
         items = d ? [{
@@ -543,6 +545,7 @@ function renderContentList() {
             imageUrl: getContentImageUrl(d)
         }] : [];
         title = 'Certificate & Company Profile';
+        typeKey = 'certificate';
     } else if (tab === 'contract') {
         const d = contentData.contract;
         items = d ? [{
@@ -555,6 +558,7 @@ function renderContentList() {
             imageUrl: getContentImageUrl(d)
         }] : [];
         title = 'Employment Contract';
+        typeKey = 'contract';
     } else if (tab === 'tc') {
         const d = contentData.tc;
         items = d ? [{
@@ -567,6 +571,7 @@ function renderContentList() {
             imageUrl: getContentImageUrl(d)
         }] : [];
         title = 'Terms & Conditions';
+        typeKey = 'tc';
     } else if (tab === 'privacy') {
         const d = contentData.privacy;
         items = d ? [{
@@ -579,6 +584,7 @@ function renderContentList() {
             imageUrl: getContentImageUrl(d)
         }] : [];
         title = 'Privacy & Security';
+        typeKey = 'privacy';
     } else if (tab === 'rules') {
         const d = contentData.rules;
         items = d ? [{
@@ -591,6 +597,7 @@ function renderContentList() {
             imageUrl: getContentImageUrl(d)
         }] : [];
         title = 'Platform Rules';
+        typeKey = 'rules';
     }
 
     if (items.length === 0) {
@@ -619,7 +626,7 @@ function renderContentList() {
         }
 
         html += `
-            <div class="content-item" data-id="${item.id}" data-type="${item.type}" data-index="${index}" draggable="${isArrangeMode}">
+            <div class="content-item" data-id="${item.id}" data-type="${item.type}" data-tab="${tab}" data-index="${index}" draggable="${isArrangeMode}">
                 ${isArrangeMode ? `<span class="drag-handle"><i class="fas fa-grip-vertical"></i></span>` : ''}
                 ${thumbHtml}
                 <div class="item-info">
@@ -631,9 +638,9 @@ function renderContentList() {
                     <button class="btn-edit" onclick="openEditContentModal('${item.type}', '${item.id}')">
                         <i class="fas fa-edit"></i> Edit
                     </button>
-                    ${item.type === 'event' ? `<button class="btn-delete" onclick="deleteEventItem('${item.id}')">
+                    <button class="btn-delete" onclick="deleteContentItem('${item.type}', '${item.id}')">
                         <i class="fas fa-trash"></i> Delete
-                    </button>` : ''}
+                    </button>
                 </div>
             </div>
         `;
@@ -650,11 +657,9 @@ function renderContentList() {
 }
 
 // ============================================================
-// 拖拽排序功能（暂时禁用，因为 system_content 没有 sort_order）
+// 拖拽排序功能（暂时禁用）
 // ============================================================
 function setupDragAndDrop(container) {
-    // 拖拽功能暂时禁用，因为 system_content 表没有 sort_order 字段
-    // 保留空函数避免报错
     console.log('拖拽排序暂时禁用');
 }
 
@@ -679,28 +684,39 @@ function toggleArrangeMode() {
 }
 
 // ============================================================
-// 删除 Event（从 system_content 删除）
+// 删除内容（统一删除函数，支持所有类型）
 // ============================================================
-window.deleteEventItem = function(id) {
+window.deleteContentItem = function(type, id) {
+    // 获取友好的类型名称
+    const typeNames = {
+        'event': 'Event',
+        'certificate': 'Certificate',
+        'contract': 'Contract',
+        'tc': 'Terms & Conditions',
+        'privacy': 'Privacy Policy',
+        'rules': 'Platform Rules'
+    };
+    const typeName = typeNames[type] || 'Content';
+
     if (typeof window.showConfirm === 'function') {
-        window.showConfirm('Delete Event', 'Are you sure you want to delete this event?', async function() {
+        window.showConfirm('Delete ' + typeName, 'Are you sure you want to delete this ' + typeName + '?', async function() {
             try {
                 await sb.from('system_content').delete().eq('id', parseInt(id));
                 await loadAllContentData();
                 renderContentList();
-                showToast('Event deleted', 'success');
+                showToast(typeName + ' deleted successfully', 'success');
             } catch (e) {
                 showToast('Delete failed: ' + e.message, 'error');
             }
         });
     } else {
-        if (confirm('Delete this event?')) {
+        if (confirm('Delete this ' + typeName + '?')) {
             (async function() {
                 try {
                     await sb.from('system_content').delete().eq('id', parseInt(id));
                     await loadAllContentData();
                     renderContentList();
-                    showToast('Event deleted', 'success');
+                    showToast(typeName + ' deleted successfully', 'success');
                 } catch (e) {
                     showToast('Delete failed: ' + e.message, 'error');
                 }
@@ -716,6 +732,17 @@ function openAddContentModal() {
     editorContent = '';
     editorImages = [];
 
+    // 获取当前标签的友好名称
+    const tabNames = {
+        'events': 'Event',
+        'certificate': 'Certificate',
+        'contract': 'Contract',
+        'tc': 'Terms & Conditions',
+        'privacy': 'Privacy Policy',
+        'rules': 'Platform Rules'
+    };
+    const tabName = tabNames[currentContentTab] || 'Content';
+
     const modalHtml = `
         <div id="addContentModal" class="modal-overlay" style="visibility: visible; opacity: 1; display: flex; align-items: center; justify-content: center; z-index: 20000;">
             <div class="modal-card" style="width: 820px; max-width: 94%; max-height: 90vh; overflow-y: auto; background: linear-gradient(160deg, #1a1428, #0e0a1a); border: 1px solid rgba(200,176,144,0.1); border-radius: 24px; padding: 28px 30px; box-shadow: 0 30px 80px rgba(0,0,0,0.6);">
@@ -723,7 +750,7 @@ function openAddContentModal() {
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
                     <h3 style="font-size: 18px; font-weight: 600; color: #d8e0f0; margin: 0;">
                         <i class="fas fa-plus" style="color: #c8b090; margin-right: 10px;"></i>
-                        Add Event
+                        Add ${tabName}
                     </h3>
                     <button onclick="closeContentModal()" style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06); border-radius: 50%; width: 32px; height: 32px; color: #6a7a92; cursor: pointer; font-size: 16px; display: flex; align-items: center; justify-content: center;">
                         <i class="fas fa-times"></i>
@@ -731,8 +758,8 @@ function openAddContentModal() {
                 </div>
 
                 <div style="margin-bottom: 16px;">
-                    <label style="display: block; font-size: 11px; color: #6a7a92; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">Event Title</label>
-                    <input type="text" id="eventTitleInput" placeholder="Enter event title..." style="width: 100%; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06); border-radius: 10px; padding: 10px 16px; color: #d8e0f0; font-size: 14px; outline: none; font-family: 'Inter', sans-serif;">
+                    <label style="display: block; font-size: 11px; color: #6a7a92; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">Title</label>
+                    <input type="text" id="eventTitleInput" placeholder="Enter title..." style="width: 100%; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06); border-radius: 10px; padding: 10px 16px; color: #d8e0f0; font-size: 14px; outline: none; font-family: 'Inter', sans-serif;">
                 </div>
 
                 <div style="margin-bottom: 4px;">
@@ -926,7 +953,7 @@ window.previewContent = function() {
     if (!editor) return;
 
     const content = editor.innerHTML;
-    const title = document.getElementById('eventTitleInput')?.value || 'Untitled Event';
+    const title = document.getElementById('eventTitleInput')?.value || 'Untitled';
 
     const previewHtml = `
         <div class="preview-modal active" id="previewModal">
@@ -965,7 +992,7 @@ window.closePreview = function() {
 };
 
 // ============================================================
-// 发布内容 (Post Content) - 统一使用 system_content
+// 发布内容 (Post Content)
 // ============================================================
 window.postContent = async function() {
     const title = document.getElementById('eventTitleInput')?.value.trim();
@@ -987,41 +1014,20 @@ window.postContent = async function() {
     try {
         const imageUrlsJson = JSON.stringify(editorImages);
 
-        // 如果是 Events 标签 - 保存到 system_content
-        if (currentContentTab === 'events') {
-            const newEvent = {
-                type: 'events',
-                title: title,
-                content: content,
-                image_url: imageUrlsJson,
-                created_at: new Date().toISOString(),
-                updated_at: new Date().toISOString()
-            };
+        // 映射当前 tab 到 type
+        const typeMap = {
+            'events': 'events',
+            'certificate': 'company',
+            'contract': 'contract',
+            'tc': 'tc',
+            'privacy': 'privacy',
+            'rules': 'rules'
+        };
+        const type = typeMap[currentContentTab] || currentContentTab;
 
-            const { error } = await sb
-                .from('system_content')
-                .insert([newEvent]);
-
-            if (error) throw error;
-
-            await loadAllContentData();
-            renderContentList();
-            closeContentModal();
-            showToast('✅ Event posted successfully!', 'success');
-
-        } else {
-            // 其他内容类型 (Certificate, Contract, T&C, Privacy, Rules)
-            const typeMap = {
-                'certificate': 'company',
-                'contract': 'contract',
-                'tc': 'tc',
-                'privacy': 'privacy',
-                'rules': 'rules'
-            };
-            const type = typeMap[currentContentTab] || currentContentTab;
-
+        // 检查是否已存在（非 events 类型只能有一条记录）
+        if (currentContentTab !== 'events') {
             const existing = contentData[currentContentTab];
-
             if (existing) {
                 const { error } = await sb
                     .from('system_content')
@@ -1034,26 +1040,35 @@ window.postContent = async function() {
                     .eq('id', existing.id);
 
                 if (error) throw error;
-            } else {
-                const { error } = await sb
-                    .from('system_content')
-                    .insert([{
-                        type: type,
-                        title: title,
-                        content: content,
-                        image_url: imageUrlsJson,
-                        created_at: new Date().toISOString(),
-                        updated_at: new Date().toISOString()
-                    }]);
 
-                if (error) throw error;
+                await loadAllContentData();
+                renderContentList();
+                closeContentModal();
+                showToast('✅ Content updated successfully!', 'success');
+                return;
             }
-
-            await loadAllContentData();
-            renderContentList();
-            closeContentModal();
-            showToast('✅ Content posted successfully!', 'success');
         }
+
+        // 新增记录
+        const newContent = {
+            type: type,
+            title: title,
+            content: content,
+            image_url: imageUrlsJson,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+        };
+
+        const { error } = await sb
+            .from('system_content')
+            .insert([newContent]);
+
+        if (error) throw error;
+
+        await loadAllContentData();
+        renderContentList();
+        closeContentModal();
+        showToast('✅ Content posted successfully!', 'success');
 
     } catch (e) {
         console.error('Post failed:', e);
@@ -1222,7 +1237,7 @@ window.previewEditContent = function() {
 };
 
 // ============================================================
-// 更新内容 - 统一使用 system_content
+// 更新内容
 // ============================================================
 window.updateContent = async function(type, id) {
     const title = document.getElementById('editTitleInput')?.value.trim();
@@ -1240,59 +1255,17 @@ window.updateContent = async function(type, id) {
     try {
         const imageUrlsJson = JSON.stringify(editorImages);
 
-        // Event 类型 - 更新 system_content
-        if (type === 'event') {
-            const { error } = await sb
-                .from('system_content')
-                .update({
-                    title: title,
-                    content: content,
-                    image_url: imageUrlsJson,
-                    updated_at: new Date().toISOString()
-                })
-                .eq('id', parseInt(id));
+        const { error } = await sb
+            .from('system_content')
+            .update({
+                title: title,
+                content: content,
+                image_url: imageUrlsJson,
+                updated_at: new Date().toISOString()
+            })
+            .eq('id', parseInt(id));
 
-            if (error) throw error;
-
-        } else {
-            // 其他类型
-            const typeMap = {
-                'certificate': 'company',
-                'contract': 'contract',
-                'tc': 'tc',
-                'privacy': 'privacy',
-                'rules': 'rules'
-            };
-            const dbType = typeMap[type] || type;
-
-            const existing = contentData[type];
-            if (existing) {
-                const { error } = await sb
-                    .from('system_content')
-                    .update({
-                        title: title,
-                        content: content,
-                        image_url: imageUrlsJson,
-                        updated_at: new Date().toISOString()
-                    })
-                    .eq('id', existing.id);
-
-                if (error) throw error;
-            } else {
-                const { error } = await sb
-                    .from('system_content')
-                    .insert([{
-                        type: dbType,
-                        title: title,
-                        content: content,
-                        image_url: imageUrlsJson,
-                        created_at: new Date().toISOString(),
-                        updated_at: new Date().toISOString()
-                    }]);
-
-                if (error) throw error;
-            }
-        }
+        if (error) throw error;
 
         await loadAllContentData();
         renderContentList();
@@ -1343,8 +1316,7 @@ window.loadContentPage = loadContentPage;
 window.renderContentList = renderContentList;
 window.loadAllContentData = loadAllContentData;
 
-console.log('✅ admin-content.js loaded (完整修复版 - 统一使用 system_content)');
-console.log('   - Events 使用 system_content 表 (type = events)');
-console.log('   - 支持添加、编辑、删除');
-console.log('   - 富文本编辑器带图片上传');
-console.log('   - 拖拽排序暂时禁用');
+console.log('✅ admin-content.js loaded (完整修复版)');
+console.log('   - 所有内容类型都有删除按钮');
+console.log('   - 统一使用 system_content 表');
+console.log('   - 支持添加、编辑、删除所有类型');
