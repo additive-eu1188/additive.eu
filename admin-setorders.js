@@ -214,34 +214,43 @@ async function loadSetordersPage() {
         }
         
         /* ✅ 用户 Round 显示框样式 */
-        #userRoundDisplay {
-            transition: all 0.3s ease;
-        }
-        #userRoundDisplay.active {
-            border-color: rgba(200,176,144,0.25);
-            background: rgba(200,176,144,0.06);
-            color: #d8e0f0;
-        }
-        #userRoundDisplay .round-icon {
-            color: #c8b090;
-            font-size: 10px;
-            margin-right: 4px;
-        }
-        #userRoundDisplay .round-number {
-            font-weight: 600;
-            color: #c8b090;
-        }
-        #userRoundDisplay .orders-count {
-            font-weight: 600;
-            color: #d8e0f0;
-        }
-        #userRoundDisplay .orders-limit {
-            color: #6a7a92;
-        }
-        #userRoundDisplay .round-label {
-            color: rgba(255,255,255,0.3);
-            font-size: 11px;
-        }
+#userRoundDisplay {
+    transition: all 0.3s ease;
+    min-width: 160px;  /* 稍微增加最小宽度 */
+}
+#userRoundDisplay.active {
+    border-color: rgba(200,176,144,0.25);
+    background: rgba(200,176,144,0.06);
+    color: #d8e0f0;
+}
+#userRoundDisplay #userRoundText {
+    display: block;
+    width: 100%;
+}
+#userRoundDisplay .round-icon {
+    color: #c8b090;
+    font-size: 10px;
+    margin-right: 4px;
+}
+#userRoundDisplay .round-number {
+    font-weight: 700;
+    color: #c8b090;
+    font-size: 14px;
+}
+#userRoundDisplay .orders-count {
+    font-weight: 600;
+    color: #d8e0f0;
+    font-size: 13px;
+}
+#userRoundDisplay .orders-limit {
+    color: #6a7a92;
+    font-weight: 400;
+}
+#userRoundDisplay .round-label {
+    color: rgba(255,255,255,0.3);
+    font-size: 11px;
+    font-weight: 500;
+}
         
         @media (max-width: 1200px) {
             #setordersMain > div:first-child {
@@ -383,14 +392,33 @@ function updateUserRoundDisplay(user) {
     const isPremium = user.isPremium || false;
     const currentRound = user.currentRound || 0;
     const roundOrdersCount = user.roundOrdersCount || 0;
-    // 从 user 中获取 ordersLimit，如果没有则默认为 30
     const ordersLimit = user.ordersLimit || 30;
     
+    // ✅ 重新设计显示布局：Round 和订单数分开，利用长框空间
     let displayText = '';
     if (!isPremium) {
-        displayText = `<span class="round-label">Trial</span> <span class="orders-count">${roundOrdersCount}</span><span class="orders-limit">/${ordersLimit}</span>`;
+        // Trial 用户：Trial 在左，订单数在右
+        displayText = `
+            <span style="display: flex; align-items: center; justify-content: space-between; width: 100%;">
+                <span style="color: rgba(255,255,255,0.3); font-size: 11px; font-weight: 500;">TRIAL</span>
+                <span style="color: #d8e0f0; font-weight: 600; font-size: 13px;">
+                    ${roundOrdersCount} <span style="color: #6a7a92; font-weight: 400;">/ ${ordersLimit}</span>
+                </span>
+            </span>
+        `;
     } else {
-        displayText = `<span class="round-label">Round</span> <span class="round-number">${currentRound}</span> <span class="orders-count">${roundOrdersCount}</span><span class="orders-limit">/${ordersLimit}</span>`;
+        // 正式用户：Round X 在左，订单数在右
+        displayText = `
+            <span style="display: flex; align-items: center; justify-content: space-between; width: 100%;">
+                <span>
+                    <span style="color: rgba(255,255,255,0.3); font-size: 11px; font-weight: 500;">ROUND</span>
+                    <span style="color: #c8b090; font-weight: 700; font-size: 14px; margin-left: 4px;">${currentRound}</span>
+                </span>
+                <span style="color: #d8e0f0; font-weight: 600; font-size: 13px;">
+                    ${roundOrdersCount} <span style="color: #6a7a92; font-weight: 400;">/ ${ordersLimit}</span>
+                </span>
+            </span>
+        `;
     }
     
     textEl.innerHTML = displayText;
