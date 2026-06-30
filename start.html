@@ -108,40 +108,130 @@
 }
 
         /* ===== 3个容器布局 ===== */
-        .order-details-row {
-            background: rgba(0,0,0,0.2);
-            border-radius: 12px;
-            padding: 10px 20px;
-            margin-bottom: 10px;
-            border: 1px solid rgba(255,255,255,0.02);
-        }
-        .order-details-row .grid-2col {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 4px 40px;
-        }
-        .detail-item {
-            display: flex;
-            justify-content: space-between;
-            padding: 4px 0;
-            border-bottom: 1px solid rgba(255,255,255,0.02);
-        }
-        .detail-item:last-child { border-bottom: none; }
-        .detail-item .label { color: rgba(255,255,255,0.35); font-size: 12px; font-weight: 500; }
-        .detail-item .value { color: rgba(255,255,255,0.9); font-weight: 600; font-size: 13px; }
-        .detail-item .value.price { color: #ffffff; }
-        .detail-item .value.commission { color: #4ade80; }
-        .detail-item .value.total { color: #C9B095; }
-        /* 第二容器 - 订单要求 - 金色高亮无图标 */
-.detail-item .value.assigned { color: #C9B095; font-weight: 700; font-size: 18px; letter-spacing: 0.3px; }
-        /* 容器间距 */
-        .details-container {
-            margin-bottom: 12px;
-        }
-        .details-container:last-child {
-            margin-bottom: 0;
-        }
-        .details-container .container-label {
+.order-details-row {
+    background: rgba(0,0,0,0.2);
+    border-radius: 12px;
+    padding: 6px 12px;
+    margin-bottom: 10px;
+    border: 1px solid rgba(255,255,255,0.02);
+}
+
+/* ===== 十字分界线网格 (4项) ===== */
+.cross-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: 1fr 1fr;
+    gap: 0;
+}
+.cross-item {
+    display: flex;
+    flex-direction: column;
+    padding: 10px 8px;
+    position: relative;
+}
+.cross-item .label {
+    color: rgba(255,255,255,0.35);
+    font-size: 12px;
+    font-weight: 500;
+    margin-bottom: 2px;
+    letter-spacing: 0.3px;
+}
+.cross-item .value {
+    font-weight: 600;
+    font-size: 13px;
+    color: rgba(255,255,255,0.9);
+}
+.cross-item .value.price { color: #ffffff; }
+.cross-item .value.commission { color: #4ade80; }
+.cross-item .value.total { color: #C9B095; }
+.cross-item .value.type { color: #7a8aaa; font-size: 12px; font-weight: 500; }
+
+/* 第二容器 - 订单要求 - 金色高亮无图标 */
+.cross-item .value.assigned {
+    color: #C9B095;
+    font-weight: 700;
+    font-size: 18px;
+    letter-spacing: 0.3px;
+}
+
+/* ===== 十字分界线：中心相连 · 两端淡出 ===== */
+/* 竖线：第1列右边，从中心向上下淡出 */
+.cross-item:nth-child(1)::after,
+.cross-item:nth-child(3)::after {
+    content: '';
+    position: absolute;
+    right: 0;
+    top: 0;
+    height: 100%;
+    width: 1px;
+    background: linear-gradient(180deg, 
+        transparent 0%, 
+        rgba(255,255,255,0.10) 30%, 
+        rgba(255,255,255,0.12) 50%, 
+        rgba(255,255,255,0.10) 70%, 
+        transparent 100%
+    );
+}
+/* 横线：第1行底部，从中心向左右淡出 */
+.cross-item:nth-child(1)::before,
+.cross-item:nth-child(2)::before {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 1px;
+    background: linear-gradient(90deg, 
+        transparent 0%, 
+        rgba(255,255,255,0.10) 30%, 
+        rgba(255,255,255,0.12) 50%, 
+        rgba(255,255,255,0.10) 70%, 
+        transparent 100%
+    );
+}
+/* 第3、4项不需要横线 */
+.cross-item:nth-child(3)::before,
+.cross-item:nth-child(4)::before {
+    display: none;
+}
+
+/* ===== 2列网格 (只有竖线) ===== */
+.cross-grid-2col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0;
+}
+.cross-grid-2col .cross-item {
+    display: flex;
+    flex-direction: column;
+    padding: 10px 8px;
+    position: relative;
+}
+/* 只有一条竖线，从中心向上下淡出 */
+.cross-grid-2col .cross-item:first-child::after {
+    content: '';
+    position: absolute;
+    right: 0;
+    top: 0;
+    height: 100%;
+    width: 1px;
+    background: linear-gradient(180deg, 
+        transparent 0%, 
+        rgba(255,255,255,0.08) 30%, 
+        rgba(255,255,255,0.10) 50%, 
+        rgba(255,255,255,0.08) 70%, 
+        transparent 100%
+    );
+}
+
+/* 容器间距 */
+.details-container {
+    margin-bottom: 12px;
+}
+.details-container:last-child {
+    margin-bottom: 0;
+}
+.details-container .container-label {
     font-size: 12px;
     color: rgba(255,255,255,0.5);
     text-transform: uppercase;
@@ -355,59 +445,85 @@
     }
     
     /* ===== 价格明细 - 手机版垂直布局 ===== */
-    .order-details-row .grid-2col {
-        grid-template-columns: 1fr 1fr;
-        gap: 4px 16px;
-    }
-    .order-details-row {
-        padding: 12px 14px;
-    }
-    .detail-item { 
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        padding: 6px 0;
-        gap: 2px;
-        border-bottom: 1px solid rgba(255,255,255,0.02);
-    }
-    .detail-item:last-child { 
-        border-bottom: none; 
-    }
-    
-    .detail-item .label { 
-        font-size: 10px; 
-        color: rgba(255,255,255,0.45);
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-        font-weight: 600;
-    }
-    .detail-item .value { 
-        font-size: 15px; 
-        font-weight: 700; 
-        color: rgba(255,255,255,0.95);
-    }
-    .detail-item .value.price { 
-        color: #ffffff; 
-        font-size: 15px; 
-    }
-    .detail-item .value.commission { 
-        color: #4ade80; 
-    }
-    .detail-item .value.total { 
-        color: #C9B095; 
-    }
-    .detail-item .value.assigned { 
+.cross-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 0;
+}
+.cross-grid-2col {
+    grid-template-columns: 1fr 1fr;
+    gap: 0;
+}
+.order-details-row {
+    padding: 6px 10px;
+}
+.cross-item { 
+    padding: 8px 6px;
+}
+.cross-item .label { 
+    font-size: 10px; 
+    color: rgba(255,255,255,0.45);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: 600;
+}
+.cross-item .value { 
+    font-size: 15px; 
+    font-weight: 700; 
+    color: rgba(255,255,255,0.95);
+}
+.cross-item .value.price { 
+    color: #ffffff; 
+    font-size: 15px; 
+}
+.cross-item .value.commission { 
+    color: #4ade80; 
+}
+.cross-item .value.total { 
+    color: #C9B095; 
+}
+.cross-item .value.assigned { 
     color: #C9B095; 
     font-size: 16px; 
 }
-    .detail-item .value.type { 
-        color: #7a8aaa; 
-        font-size: 11px; 
-        font-weight: 500; 
-    }
-    .details-container .container-label {
+.cross-item .value.type { 
+    color: #7a8aaa; 
+    font-size: 11px; 
+    font-weight: 500; 
+}
+.details-container .container-label {
     font-size: 10px;
     color: rgba(255,255,255,0.5);
+}
+
+/* 手机版分界线稍微淡一点 */
+.cross-item:nth-child(1)::after,
+.cross-item:nth-child(3)::after {
+    background: linear-gradient(180deg, 
+        transparent 0%, 
+        rgba(255,255,255,0.06) 30%, 
+        rgba(255,255,255,0.08) 50%, 
+        rgba(255,255,255,0.06) 70%, 
+        transparent 100%
+    );
+}
+.cross-item:nth-child(1)::before,
+.cross-item:nth-child(2)::before {
+    background: linear-gradient(90deg, 
+        transparent 0%, 
+        rgba(255,255,255,0.06) 30%, 
+        rgba(255,255,255,0.08) 50%, 
+        rgba(255,255,255,0.06) 70%, 
+        transparent 100%
+    );
+}
+.cross-grid-2col .cross-item:first-child::after {
+    background: linear-gradient(180deg, 
+        transparent 0%, 
+        rgba(255,255,255,0.06) 30%, 
+        rgba(255,255,255,0.08) 50%, 
+        rgba(255,255,255,0.06) 70%, 
+        transparent 100%
+    );
 }
     
     /* ===== 选择区域 ===== */
@@ -1750,26 +1866,26 @@ function showCardOrderModal(triggerOrder) {
             var assignedQuality = order.assignedQuality || 'Exceptional';
             var assignedPlatform = order.assignedPlatform || 'Booking.com';
             
-            // ===== 构建价格明细 HTML（3个容器） =====
+                        // ===== 容器1: ORDER PRICE + COMMISSIONS + TOTAL RETURN + ORDER TYPE =====
             var detailsHtml = `
-<!-- ===== 容器1: ORDER PRICE + COMMISSIONS + TOTAL RETURN + ORDER TYPE ===== -->
+<!-- ===== 容器1: Order Details (十字分界线) ===== -->
 <div class="details-container">
     <div class="container-label">Order Details</div>
     <div class="order-details-row">
-        <div class="grid-2col">
-            <div class="detail-item">
+        <div class="cross-grid">
+            <div class="cross-item">
                 <span class="label">ORDER PRICE</span>
                 <span class="value price">€${price.toFixed(2)}</span>
             </div>
-            <div class="detail-item">
+            <div class="cross-item">
                 <span class="label">COMMISSIONS</span>
                 <span class="value commission">+€${commission.toFixed(2)} (${rateDisplay}%)</span>
             </div>
-            <div class="detail-item">
+            <div class="cross-item">
                 <span class="label">TOTAL RETURN</span>
                 <span class="value total">€${(price + commission).toFixed(2)}</span>
             </div>
-            <div class="detail-item">
+            <div class="cross-item">
                 <span class="label">ORDER TYPE</span>
                 <span class="value type" style="color:#7a8aaa; font-size:12px; font-weight:500;">${escapeHtml(orderTypeDisplayName)}</span>
             </div>
@@ -1777,16 +1893,16 @@ function showCardOrderModal(triggerOrder) {
     </div>
 </div>
 
-<!-- ===== 容器2: ASSIGN TYPE + PUBLISH PLATFORM (无图标，纯文字金色) ===== -->
+<!-- ===== 容器2: Required Selection (中间一条竖线) ===== -->
 <div class="details-container">
     <div class="container-label">Required Selection</div>
     <div class="order-details-row">
-        <div class="grid-2col">
-            <div class="detail-item">
+        <div class="cross-grid-2col">
+            <div class="cross-item">
                 <span class="label">ASSIGN TYPE</span>
                 <span class="value assigned">${escapeHtml(assignedQuality)}</span>
             </div>
-            <div class="detail-item">
+            <div class="cross-item">
                 <span class="label">PUBLISH PLATFORM</span>
                 <span class="value assigned">${escapeHtml(assignedPlatform)}</span>
             </div>
