@@ -441,12 +441,13 @@ async function loadContentPage() {
 // ============================================================
 async function loadAllContentData() {
     try {
-        // 1. 加载 Events
-        const { data: events } = await sb
-            .from('events')
-            .select('*')
-            .order('sort_order', { ascending: true });
-        eventsList = events || [];
+        // 1. 加载 Events（从 system_content 表读取）
+const { data: events } = await sb
+    .from('system_content')
+    .select('*')
+    .eq('type', 'events')
+    .order('id', { ascending: true });
+eventsList = events || [];
 
         // 2. 加载 Certificate (Company Profile)
         const { data: cert } = await sb
@@ -506,11 +507,8 @@ async function loadAllContentData() {
 // ============================================================
 function getContentImageUrl(item) {
     if (!item) return null;
-    
-    // 如果 item 有 image_url 字段
     if (item.image_url) {
         try {
-            // 尝试解析 JSON 数组
             const parsed = JSON.parse(item.image_url);
             if (Array.isArray(parsed) && parsed.length > 0) {
                 return parsed[0];
@@ -519,18 +517,11 @@ function getContentImageUrl(item) {
                 return parsed;
             }
         } catch (e) {
-            // 不是 JSON，直接作为 URL
             if (typeof item.image_url === 'string' && item.image_url.startsWith('http')) {
                 return item.image_url;
             }
         }
     }
-    
-    // 如果 item 有 image 字段（兼容旧数据）
-    if (item.image && typeof item.image === 'string' && item.image.startsWith('http')) {
-        return item.image;
-    }
-    
     return null;
 }
 
