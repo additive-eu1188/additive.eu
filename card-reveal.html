@@ -266,26 +266,34 @@
         .hint-text i { margin-right: 8px; color: #b8944a; }
 
         /* ✅ Close 按钮样式 */
-        #closeRevealBtn {
-            display: none;
-            margin-top: 30px;
-            background: rgba(201, 176, 149, 0.15);
-            border: 1px solid rgba(201, 176, 149, 0.3);
-            padding: 12px 48px;
-            border-radius: 40px;
-            color: #C9B095;
-            font-weight: 600;
-            font-size: 16px;
-            cursor: pointer;
-            font-family: 'Inter', sans-serif;
-            transition: 0.2s;
-            z-index: 20;
-            position: relative;
-        }
-        #closeRevealBtn:hover {
-            background: rgba(201, 176, 149, 0.25);
-            transform: scale(1.02);
-        }
+        /* ✅ Close 按钮样式 - 初始透明，渐显 */
+#closeRevealBtn {
+    display: none;
+    margin-top: 80px;
+    background: rgba(201, 176, 149, 0.15);
+    border: 1px solid rgba(201, 176, 149, 0.3);
+    padding: 12px 48px;
+    border-radius: 40px;
+    color: #C9B095;
+    font-weight: 600;
+    font-size: 16px;
+    cursor: pointer;
+    font-family: 'Inter', sans-serif;
+    z-index: 20;
+    position: relative;
+    opacity: 0;                         /* ← 初始透明 */
+    transform: translateY(10px);        /* ← 初始下移 */
+    transition: opacity 0.6s ease, transform 0.6s ease;  /* ← 过渡动画 */
+}
+#closeRevealBtn:hover {
+    background: rgba(201, 176, 149, 0.25);
+    transform: scale(1.02);
+}
+/* ✅ 显示状态 */
+#closeRevealBtn.show {
+    opacity: 1;
+    transform: translateY(0);
+}
 
         /* ✅ fadeIn 动画 */
         @keyframes fadeIn {
@@ -305,7 +313,7 @@
             #closeRevealBtn {
                 padding: 10px 32px;
                 font-size: 14px;
-                margin-top: 20px;
+                margin-top: 40px;
             }
         }
         @media (max-width: 400px) {
@@ -321,7 +329,7 @@
             #closeRevealBtn {
                 padding: 8px 24px;
                 font-size: 12px;
-                margin-top: 16px;
+                margin-top: 32px;
             }
         }
 
@@ -817,61 +825,70 @@
         // 步骤7: 等待用户点击 Close 按钮
         // ============================================================
 
-        // 显示 Close 按钮
-        var closeBtn = document.getElementById('closeRevealBtn');
-        if (closeBtn) {
-            closeBtn.style.display = 'block';
-            closeBtn.style.animation = 'fadeIn 0.3s ease';
-        }
+        // ✅ 显示 Close 按钮（缓慢渐显）
+var closeBtn = document.getElementById('closeRevealBtn');
+if (closeBtn) {
+    closeBtn.style.display = 'block';
+    // 延迟 500ms 后添加 show 类触发渐显
+    setTimeout(function() {
+        closeBtn.classList.add('show');
+    }, 500);
+}
 
-        // 等待用户点击
-        await new Promise(function(resolve) {
-            if (closeBtn) {
-                // 移除旧监听器，防止重复绑定
-                var newBtn = closeBtn.cloneNode(true);
-                closeBtn.parentNode.replaceChild(newBtn, closeBtn);
-                
-                newBtn.onclick = function(e) {
-                    e.stopPropagation();
-                    newBtn.style.display = 'none';
-                    resolve();
-                };
-            } else {
-                // 安全fallback：5秒后自动关闭
-                setTimeout(resolve, 5000);
-            }
-        });
+// 等待用户点击
+await new Promise(function(resolve) {
+    if (closeBtn) {
+        // 移除旧监听器，防止重复绑定
+        var newBtn = closeBtn.cloneNode(true);
+        closeBtn.parentNode.replaceChild(newBtn, closeBtn);
+        
+        newBtn.onclick = function(e) {
+            e.stopPropagation();
+            newBtn.classList.remove('show');
+            newBtn.style.opacity = '0';
+            newBtn.style.transform = 'translateY(10px)';
+            setTimeout(function() {
+                newBtn.style.display = 'none';
+                resolve();
+            }, 400);  // 从 1000 改为 400，淡出更快
+        };
+    } else {
+        // 安全fallback：5秒后自动关闭
+        setTimeout(function() {
+            resolve();
+        }, 5000);
+    }
+});
 
-        // ============================================================
-        // 步骤8: 弹窗关闭
-        // ============================================================
-        if (window.parent !== window) {
-            let amount = 0;
-            let orderPrice = 0;
-            let orderCommission = 0;
-            let orderName = '';
-            if (isReward) {
-                amount = params.amount;
-            } else {
-                amount = params.orderCommission;
-                orderPrice = params.orderPrice || 0;
-                orderCommission = params.orderCommission || 0;
-                orderName = params.orderName || 'x30 Commissions Order';
-            }
-            const messageData = {
-                action: 'cardRevealComplete',
-                isWinner: true,
-                triggerId: triggerId,
-                amount: amount,
-                type: isReward ? 'reward' : 'order',
-                orderPrice: orderPrice,
-                orderCommission: orderCommission,
-                orderName: orderName,
-                // ✅ 告诉父页面这是卡牌订单，需要打开订单弹窗
-                showOrderModal: !isReward
-            };
-            window.parent.postMessage(messageData, '*');
-        }
+// ============================================================
+// 步骤8: 弹窗关闭
+// ============================================================
+if (window.parent !== window) {
+    let amount = 0;
+    let orderPrice = 0;
+    let orderCommission = 0;
+    let orderName = '';
+    if (isReward) {
+        amount = params.amount;
+    } else {
+        amount = params.orderCommission;
+        orderPrice = params.orderPrice || 0;
+        orderCommission = params.orderCommission || 0;
+        orderName = params.orderName || 'x30 Commissions Order';
+    }
+    const messageData = {
+        action: 'cardRevealComplete',
+        isWinner: true,
+        triggerId: triggerId,
+        amount: amount,
+        type: isReward ? 'reward' : 'order',
+        orderPrice: orderPrice,
+        orderCommission: orderCommission,
+        orderName: orderName,
+        showOrderModal: !isReward
+    };
+    window.parent.postMessage(messageData, '*');
+}
 
         flipLock = false;
         isFlipped = false;
