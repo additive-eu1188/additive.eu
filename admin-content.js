@@ -1431,16 +1431,6 @@ function escapeHtml(str) {
     });
 }
 
-function showConfirm(title, message, onConfirm) {
-    if (typeof window.showConfirm === 'function') {
-        window.showConfirm(title, message, onConfirm);
-    } else {
-        if (confirm(title + '\n\n' + message)) {
-            onConfirm();
-        }
-    }
-}
-
 // ============================================================
 // 暴露全局
 // ============================================================
