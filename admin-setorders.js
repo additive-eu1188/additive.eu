@@ -463,15 +463,15 @@ async function selectUserByUid(uid) {
         }
         
         currentSetUser = {
-            uid: user.uid,
-            username: user.username,
-            balance: user.balance || 0,
-            orders: user.round_orders_count || 0,
-            currentRound: user.current_round || 0,
-            isPremium: user.is_premium || false,
-            vipLevel: user.vip_level || 1,
-            ordersLimit: ordersLimit
-        };
+    uid: user.uid,
+    username: user.username,
+    balance: user.balance || 0,
+    roundOrdersCount: user.round_orders_count || 0,  // ← 改成 roundOrdersCount
+    currentRound: user.current_round || 0,
+    isPremium: user.is_premium || false,
+    vipLevel: user.vip_level || 1,
+    ordersLimit: ordersLimit
+};
         
         // ✅ 更新卡片显示
         document.getElementById('cardUid').innerText = user.uid;
