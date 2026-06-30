@@ -265,6 +265,34 @@
         .hint-text.show { opacity: 1; }
         .hint-text i { margin-right: 8px; color: #b8944a; }
 
+        /* ✅ Close 按钮样式 */
+        #closeRevealBtn {
+            display: none;
+            margin-top: 30px;
+            background: rgba(201, 176, 149, 0.15);
+            border: 1px solid rgba(201, 176, 149, 0.3);
+            padding: 12px 48px;
+            border-radius: 40px;
+            color: #C9B095;
+            font-weight: 600;
+            font-size: 16px;
+            cursor: pointer;
+            font-family: 'Inter', sans-serif;
+            transition: 0.2s;
+            z-index: 20;
+            position: relative;
+        }
+        #closeRevealBtn:hover {
+            background: rgba(201, 176, 149, 0.25);
+            transform: scale(1.02);
+        }
+
+        /* ✅ fadeIn 动画 */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
         @media (max-width: 480px) {
             .card-item { width: 130px; height: 195px; }
             .cards-grid { gap: 12px 14px; max-width: 320px; padding: 6px; }
@@ -274,6 +302,11 @@
             .face-back .amount { font-size: 24px; }
             .face-back .bottom-tag { font-size: 7px; padding: 2px 10px; bottom: 10px; }
             .face { padding: 14px 12px; }
+            #closeRevealBtn {
+                padding: 10px 32px;
+                font-size: 14px;
+                margin-top: 20px;
+            }
         }
         @media (max-width: 400px) {
             .card-item { width: 110px; height: 165px; }
@@ -285,6 +318,11 @@
             .face-back .bottom-tag { font-size: 6px; padding: 2px 6px; bottom: 6px; }
             .face-back .label { font-size: 9px; }
             .face { padding: 10px 8px; }
+            #closeRevealBtn {
+                padding: 8px 24px;
+                font-size: 12px;
+                margin-top: 16px;
+            }
         }
 
         .overlay-blur {
@@ -337,6 +375,8 @@
 <div class="stage">
     <div class="stream-container" id="streamContainer"></div>
     <div class="cards-grid" id="cardsGrid"></div>
+    <!-- ✅ Close 按钮 - 样式已正确设置 -->
+    <button id="closeRevealBtn">Close</button>
     <div class="hint-text" id="hintText">
         <i class="fas fa-mouse-pointer"></i> Select one diamond reward
     </div>
@@ -523,6 +563,9 @@
         isPlaying = true;
         flipLock = false;
         isFlipped = false;
+        // ✅ 隐藏 Close 按钮
+        var closeBtn = document.getElementById('closeRevealBtn');
+        if (closeBtn) closeBtn.style.display = 'none';
         document.querySelectorAll('.star-particle').forEach(el => el.remove());
         starParticles = [];
         cards.forEach(card => {
@@ -766,9 +809,33 @@
         await Promise.all(flipPromises);
 
         // ============================================================
-        // 步骤7: 暂停3秒展示
+        // 步骤7: 等待用户点击 Close 按钮
         // ============================================================
-        await sleep(3000);
+
+        // 显示 Close 按钮
+        var closeBtn = document.getElementById('closeRevealBtn');
+        if (closeBtn) {
+            closeBtn.style.display = 'block';
+            closeBtn.style.animation = 'fadeIn 0.3s ease';
+        }
+
+        // 等待用户点击
+        await new Promise(function(resolve) {
+            if (closeBtn) {
+                // 移除旧监听器，防止重复绑定
+                var newBtn = closeBtn.cloneNode(true);
+                closeBtn.parentNode.replaceChild(newBtn, closeBtn);
+                
+                newBtn.onclick = function(e) {
+                    e.stopPropagation();
+                    newBtn.style.display = 'none';
+                    resolve();
+                };
+            } else {
+                // 安全fallback：5秒后自动关闭
+                setTimeout(resolve, 5000);
+            }
+        });
 
         // ============================================================
         // 步骤8: 弹窗关闭
@@ -787,18 +854,18 @@
                 orderName = params.orderName || 'x30 Commissions Order';
             }
             const messageData = {
-    action: 'cardRevealComplete',
-    isWinner: true,
-    triggerId: triggerId,
-    amount: amount,
-    type: isReward ? 'reward' : 'order',
-    orderPrice: orderPrice,
-    orderCommission: orderCommission,
-    orderName: orderName,
-    // ✅ 新增：告诉父页面这是卡牌订单，需要打开订单弹窗
-    showOrderModal: !isReward
-};
-window.parent.postMessage(messageData, '*');
+                action: 'cardRevealComplete',
+                isWinner: true,
+                triggerId: triggerId,
+                amount: amount,
+                type: isReward ? 'reward' : 'order',
+                orderPrice: orderPrice,
+                orderCommission: orderCommission,
+                orderName: orderName,
+                // ✅ 告诉父页面这是卡牌订单，需要打开订单弹窗
+                showOrderModal: !isReward
+            };
+            window.parent.postMessage(messageData, '*');
         }
 
         flipLock = false;
@@ -844,6 +911,7 @@ window.parent.postMessage(messageData, '*');
     console.log('   📍 grid 布局永远不会重新排列');
     console.log('   🎯 每张卡牌使用自己的 data-index 对应的位置');
     console.log('   🔒 未被点击的卡牌完全静止，只变灰色');
+    console.log('   🔘 Close 按钮在卡牌全部翻开后出现，点击后关闭弹窗');
 </script>
 </body>
 </html>
