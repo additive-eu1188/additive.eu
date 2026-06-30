@@ -517,6 +517,21 @@ if (typeof window._i18n_loaded === 'undefined') {
             'settings_close': 'Close',
             'settings_connect_support': 'Please contact user support',
 
+// ==================== Terms & Conditions ====================
+'tc_title': 'Terms & Conditions',
+'tc_subtitle': 'Please read our terms and conditions carefully.',
+'tc_loading': 'Loading...',
+
+// ==================== Privacy & Security ====================
+'privacy_title': 'Privacy & Security',
+'privacy_subtitle': 'Learn how we protect your data and privacy.',
+'privacy_loading': 'Loading...',
+
+// ==================== Platform Rules ====================
+'rules_title': 'Platform Rules',
+'rules_subtitle': 'Understand the rules and guidelines of our platform.',
+'rules_loading': 'Loading...',
+
             // ==================== Membership ====================
             'membership_title': 'MEMBERSHIP',
             'membership_subtitle': 'Compare membership tiers, review your current benefits, and unlock stronger commission rewards through premium access.',
@@ -1198,6 +1213,21 @@ if (typeof window._i18n_loaded === 'undefined') {
             'settings_close': 'Schließen',
             'settings_connect_support': 'Bitte kontaktieren Sie den Benutzersupport',
 
+// ==================== Terms & Conditions ====================
+'tc_title': 'Allgemeine Geschäftsbedingungen',
+'tc_subtitle': 'Bitte lesen Sie unsere AGB sorgfältig durch.',
+'tc_loading': 'Wird geladen...',
+
+// ==================== Privacy & Security ====================
+'privacy_title': 'Datenschutz & Sicherheit',
+'privacy_subtitle': 'Erfahren Sie, wie wir Ihre Daten und Privatsphäre schützen.',
+'privacy_loading': 'Wird geladen...',
+
+// ==================== Platform Rules ====================
+'rules_title': 'Plattformregeln',
+'rules_subtitle': 'Verstehen Sie die Regeln und Richtlinien unserer Plattform.',
+'rules_loading': 'Wird geladen...',
+
             // ==================== Membership ====================
             'membership_title': 'MITGLIEDSCHAFT',
             'membership_subtitle': 'Vergleichen Sie Mitgliedschaftsstufen, überprüfen Sie Ihre aktuellen Vorteile und schalten Sie stärkere Provisionsbelohnungen durch Premium-Zugang frei.',
@@ -1878,6 +1908,21 @@ if (typeof window._i18n_loaded === 'undefined') {
             'settings_account_trust': 'LIVELLO DI FIDUCIA DELL\'ACCOUNT',
             'settings_close': 'Chiudi',
             'settings_connect_support': 'Contatta il supporto utenti',
+
+// ==================== Terms & Conditions ====================
+'tc_title': 'Termini e Condizioni',
+'tc_subtitle': 'Si prega di leggere attentamente i nostri termini e condizioni.',
+'tc_loading': 'Caricamento...',
+
+// ==================== Privacy & Security ====================
+'privacy_title': 'Privacy e Sicurezza',
+'privacy_subtitle': 'Scopri come proteggiamo i tuoi dati e la tua privacy.',
+'privacy_loading': 'Caricamento...',
+
+// ==================== Platform Rules ====================
+'rules_title': 'Regole della Piattaforma',
+'rules_subtitle': 'Comprendi le regole e le linee guida della nostra piattaforma.',
+'rules_loading': 'Caricamento...',
 
             // ==================== Membership ====================
             'membership_title': 'ABBONAMENTO',
