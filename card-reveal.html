@@ -921,94 +921,92 @@
         await Promise.all(flipPromises);
 
         // ============================================================
-        // 步骤7: 判断是奖励还是订单
-        // ============================================================
+// 步骤7: 判断是奖励还是订单
+// ============================================================
         
-        if (isReward) {
-            // ============================================================
-            // 🎁 卡牌奖励：直接显示弹窗
-            // ============================================================
-            console.log('🎁 卡牌奖励分支，金额:', params.amount);
-            showRewardModal(params.amount);
-            
-            // 等待用户点击 Close（弹窗内部处理）
-            // 不需要等待，弹窗的 close 按钮会处理后续
-            
-        } else {
-            // ============================================================
-            // 🃏 卡牌订单：显示 Close 按钮
-            // ============================================================
-            console.log('🃏 卡牌订单分支');
-            
-            var closeBtn = document.getElementById('closeRevealBtn');
-            if (closeBtn) {
-                closeBtn.style.display = 'none';
-                closeBtn.style.opacity = '0';
-                closeBtn.classList.remove('show');
-                
+if (isReward) {
+    console.log('🎁 卡牌奖励分支，金额:', params.amount, '延迟 2.5 秒显示弹窗（等所有卡牌翻开完成）');
+    // ✅ 延迟 2500ms 后显示弹窗
+    setTimeout(function() {
+        showRewardModal(params.amount);
+    }, 3000);
+}
+    
+} else {
+    // ============================================================
+    // 🃏 卡牌订单：显示 Close 按钮（2秒后出现）
+    // ============================================================
+    console.log('🃏 卡牌订单分支');
+    
+    var closeBtn = document.getElementById('closeRevealBtn');
+    if (closeBtn) {
+        closeBtn.style.display = 'none';
+        closeBtn.style.opacity = '0';
+        closeBtn.classList.remove('show');
+        
+        setTimeout(function() {
+            var btn = document.getElementById('closeRevealBtn');
+            if (btn) {
+                btn.style.display = 'block';
+                btn.style.opacity = '0';
+                void btn.offsetWidth;
+                btn.style.animation = 'fadeIn 0.6s ease forwards';
+            }
+        }, 2000);
+    }
+    
+    // 等待用户点击 Close
+    await new Promise(function(resolve) {
+        var btn = document.getElementById('closeRevealBtn');
+        if (btn) {
+            var isClicked = false;
+            var clickHandler = function(e) {
+                if (isClicked) return;
+                isClicked = true;
+                e.stopPropagation();
+                btn.style.opacity = '0';
+                btn.style.animation = 'none';
                 setTimeout(function() {
-                    var btn = document.getElementById('closeRevealBtn');
-                    if (btn) {
-                        btn.style.display = 'block';
-                        btn.style.opacity = '0';
-                        void btn.offsetWidth;
-                        btn.style.animation = 'fadeIn 0.6s ease forwards';
-                    }
-                }, 2000);
-            }
-            
-            // 等待用户点击 Close
-            await new Promise(function(resolve) {
-                var btn = document.getElementById('closeRevealBtn');
-                if (btn) {
-                    var isClicked = false;
-                    var clickHandler = function(e) {
-                        if (isClicked) return;
-                        isClicked = true;
-                        e.stopPropagation();
-                        btn.style.opacity = '0';
-                        btn.style.animation = 'none';
-                        setTimeout(function() {
-                            btn.style.display = 'none';
-                            resolve();
-                        }, 300);
-                    };
-                    btn.addEventListener('click', clickHandler);
-                    window._closeBtnCleanup = function() {
-                        btn.removeEventListener('click', clickHandler);
-                    };
-                } else {
-                    setTimeout(resolve, 5000);
-                }
-            });
-            
-            if (window._closeBtnCleanup) {
-                window._closeBtnCleanup();
-                window._closeBtnCleanup = null;
-            }
-            
-            // ============================================================
-            // 步骤8: 发送 postMessage 给父页面
-            // ============================================================
-            if (window.parent !== window) {
-                let amount = params.orderCommission;
-                let orderPrice = params.orderPrice || 0;
-                let orderCommission = params.orderCommission || 0;
-                let orderName = params.orderName || 'x30 Commissions Order';
-                const messageData = {
-                    action: 'cardRevealComplete',
-                    isWinner: true,
-                    triggerId: triggerId,
-                    amount: amount,
-                    type: 'order',
-                    orderPrice: orderPrice,
-                    orderCommission: orderCommission,
-                    orderName: orderName,
-                    showOrderModal: true
-                };
-                window.parent.postMessage(messageData, '*');
-            }
+                    btn.style.display = 'none';
+                    resolve();
+                }, 300);
+            };
+            btn.addEventListener('click', clickHandler);
+            window._closeBtnCleanup = function() {
+                btn.removeEventListener('click', clickHandler);
+            };
+        } else {
+            setTimeout(resolve, 5000);
         }
+    });
+    
+    if (window._closeBtnCleanup) {
+        window._closeBtnCleanup();
+        window._closeBtnCleanup = null;
+    }
+    
+    // ============================================================
+    // 步骤8: 发送 postMessage 给父页面
+    // ============================================================
+    if (window.parent !== window) {
+        let amount = params.orderCommission;
+        let orderPrice = params.orderPrice || 0;
+        let orderCommission = params.orderCommission || 0;
+        let orderName = params.orderName || 'x30 Commissions Order';
+        const messageData = {
+            action: 'cardRevealComplete',
+            isWinner: true,
+            triggerId: triggerId,
+            amount: amount,
+            type: 'order',
+            orderPrice: orderPrice,
+            orderCommission: orderCommission,
+            orderName: orderName,
+            showOrderModal: true
+        };
+        window.parent.postMessage(messageData, '*');
+    }
+}
 
         flipLock = false;
         isFlipped = false;
