@@ -1882,168 +1882,124 @@
             }
 
             // ========== 主加载函数 ==========
-async function loadDashboard() {
-    const user = getCurrentUser();
-    if (!user) { window.location.href = 'signin.html'; return; }
-    try {
-        const { data: userData } = await sb.from('users').select('*').eq('uid', user.uid).single();
-        if (userData) {
-            // 更新本地用户数据
-            user.balance = userData.balance || 0;
-            user.username = userData.username;
-            user.vipLevel = userData.vip_level || 1;
-            localStorage.setItem('currentUser', JSON.stringify(user));
-            
-            document.getElementById('displayUsername').innerText = userData.username;
-            document.getElementById('displayUid').innerText = userData.uid;
-            document.getElementById('displayBalance').innerHTML = '€' + (userData.balance || 0).toFixed(2);
-            document.getElementById('balanceUsername').textContent = userData.username;
-            document.getElementById('amountDueUsername').textContent = userData.username;
-            const vipMap = { 1: 'Normal', 2: 'VIP', 3: 'SVIP' };
-            const level = vipMap[userData.vip_level] || 'Normal';
-            document.getElementById('displayMembership').innerText = level;
-            document.getElementById('premiumStatusText').innerHTML = level;
-        }
-
-        // ✅ 强制从数据库同步 Amount Due 状态
-        await syncAmountDueFromDatabase(user.uid);
-
-        // ✅ 检查 Amount Due 并切换卡片
-        await checkAmountDueAndSwitchCard();
-
-        const { data: orders } = await sb.from('order_history').select('commission').eq('uid', user.uid);
-        const total = orders?.reduce((s, o) => s + (o.commission || 0), 0) || 0;
-        document.getElementById('totalEarnings').innerHTML = '€' + total.toFixed(2);
-
-        const { data: events } = await sb.from('events').select('id').eq('status', 'active');
-        const eventCount = events?.length || 0;
-        const currentEventValue = document.getElementById('currentEventValue');
-        if (currentEventValue) {
-            currentEventValue.innerHTML = eventCount;
-            document.getElementById('currentEventTag').innerHTML = eventCount + ' Active Events';
-        }
-
-        // ===== 从数据库读取签到数据 =====
-        let checkinDays = 0;
-        try {
-            const { data: checkinRecords, error: checkinError } = await sb
-                .from('user_checkin_records')
-                .select('id', { count: 'exact' })
-                .eq('uid', user.uid);
-
-            if (checkinError) {
-                console.error('读取签到记录失败:', checkinError);
-                checkinDays = 0;
-            } else {
-                checkinDays = checkinRecords?.length || 0;
-                console.log('📊 Check-in days from database:', checkinDays);
-            }
-        } catch (e) {
-            console.error('读取签到记录异常:', e);
-            checkinDays = 0;
-        }
-
-        const contractStatus = document.getElementById('contractStatus');
-        const contractTag = document.getElementById('contractTag');
-        if (contractStatus) {
-            if (checkinDays >= 7) {
-                contractStatus.innerHTML = '✓ Unlocked';
-                contractStatus.style.color = '#4ade80';
-                contractTag.innerHTML = 'Employment contract active';
-            } else {
-                contractStatus.innerHTML = `${checkinDays}/7`;
-                contractStatus.style.color = '#CCB299';
-                contractTag.innerHTML = `${7 - checkinDays} Day${(7 - checkinDays) !== 1 ? 's' : ''} Left To Unlock`;
-            }
-        }
-
-        // ===== Certificate 卡片数据 =====
-        const { data: companyData } = await sb
-            .from('system_content')
-            .select('id, content, image_url')
-            .eq('type', 'company')
-            .single();
-
-        const certificateStatus = document.getElementById('certificateStatus');
-        const certificateTag = document.getElementById('certificateTag');
-        if (certificateStatus) {
-            let imageCount = 0;
-            if (companyData && companyData.image_url) {
+            async function loadDashboard() {
+                const user = getCurrentUser();
+                if (!user) { window.location.href = 'signin.html'; return; }
                 try {
-                    const parsed = JSON.parse(companyData.image_url);
-                    if (Array.isArray(parsed)) {
-                        imageCount = parsed.length;
-                    } else if (companyData.image_url) {
-                        imageCount = 1;
+                    const { data: userData } = await sb.from('users').select('*').eq('uid', user.uid).single();
+                    if (userData) {
+                        document.getElementById('displayUsername').innerText = userData.username;
+                        document.getElementById('displayUid').innerText = userData.uid;
+                        document.getElementById('displayBalance').innerHTML = '€' + (userData.balance || 0).toFixed(2);
+                        document.getElementById('balanceUsername').textContent = userData.username;
+                        document.getElementById('amountDueUsername').textContent = userData.username;
+                        const vipMap = { 1: 'Normal', 2: 'VIP', 3: 'SVIP' };
+                        const level = vipMap[userData.vip_level] || 'Normal';
+                        document.getElementById('displayMembership').innerText = level;
+                        document.getElementById('premiumStatusText').innerHTML = level;
                     }
-                } catch (e) {
-                    if (companyData.image_url) {
-                        imageCount = 1;
+                    const { data: orders } = await sb.from('order_history').select('commission').eq('uid', user.uid);
+                    const total = orders?.reduce((s, o) => s + (o.commission || 0), 0) || 0;
+                    document.getElementById('totalEarnings').innerHTML = '€' + total.toFixed(2);
+
+                    const { data: events } = await sb.from('events').select('id').eq('status', 'active');
+                    const eventCount = events?.length || 0;
+                    const currentEventValue = document.getElementById('currentEventValue');
+                    if (currentEventValue) {
+                        currentEventValue.innerHTML = eventCount;
+                        document.getElementById('currentEventTag').innerHTML = eventCount + ' Active Events';
                     }
-                }
+
+                    // ===== 从数据库读取签到数据 =====
+                    let checkinDays = 0;
+                    try {
+                        const { data: checkinRecords, error: checkinError } = await sb
+                            .from('user_checkin_records')
+                            .select('id', { count: 'exact' })
+                            .eq('uid', user.uid);
+
+                        if (checkinError) {
+                            console.error('读取签到记录失败:', checkinError);
+                            checkinDays = 0;
+                        } else {
+                            checkinDays = checkinRecords?.length || 0;
+                            console.log('📊 Check-in days from database:', checkinDays);
+                        }
+                    } catch (e) {
+                        console.error('读取签到记录异常:', e);
+                        checkinDays = 0;
+                    }
+
+                    const contractStatus = document.getElementById('contractStatus');
+                    const contractTag = document.getElementById('contractTag');
+                    if (contractStatus) {
+                        if (checkinDays >= 7) {
+                            contractStatus.innerHTML = '✓ Unlocked';
+                            contractStatus.style.color = '#4ade80';
+                            contractTag.innerHTML = 'Employment contract active';
+                        } else {
+                            contractStatus.innerHTML = `${checkinDays}/7`;
+                            contractStatus.style.color = '#CCB299';
+                            contractTag.innerHTML = `${7 - checkinDays} Day${(7 - checkinDays) !== 1 ? 's' : ''} Left To Unlock`;
+                        }
+                    }
+
+                    // ===== Certificate 卡片数据 =====
+                    const { data: companyData } = await sb
+                        .from('system_content')
+                        .select('id, content, image_url')
+                        .eq('type', 'company')
+                        .single();
+
+                    const certificateStatus = document.getElementById('certificateStatus');
+                    const certificateTag = document.getElementById('certificateTag');
+                    if (certificateStatus) {
+                        let imageCount = 0;
+                        if (companyData && companyData.image_url) {
+                            try {
+                                const parsed = JSON.parse(companyData.image_url);
+                                if (Array.isArray(parsed)) {
+                                    imageCount = parsed.length;
+                                } else if (companyData.image_url) {
+                                    imageCount = 1;
+                                }
+                            } catch (e) {
+                                if (companyData.image_url) {
+                                    imageCount = 1;
+                                }
+                            }
+                        }
+                        
+                        if (imageCount > 0) {
+                            certificateStatus.innerHTML = imageCount;
+                            certificateStatus.style.color = '#CCB299';
+                            if (certificateTag) certificateTag.innerHTML = imageCount + ' Certificate' + (imageCount > 1 ? 's' : '') + ' Uploaded';
+                        } else {
+                            certificateStatus.innerHTML = '0';
+                            certificateStatus.style.color = '#CCB299';
+                            if (certificateTag) certificateTag.innerHTML = 'No certificate uploaded';
+                        }
+                    }
+
+                    const { data: recentOrders } = await sb.from('order_history').select('*').eq('uid', user.uid).order('date', { ascending: false }).limit(5);
+                    const recentContainer = document.getElementById('recentBookings');
+                    if (!recentOrders || recentOrders.length === 0) recentContainer.innerHTML =
+                        '<div class="empty-bookings"><i class="fas fa-calendar-alt"></i><p>No bookings yet</p><span>Start your first task to see recent bookings here</span></div>';
+                    else {
+                        recentContainer.innerHTML = '';
+                        recentOrders.forEach(o => {
+                            const d = new Date(o.date);
+                            recentContainer.innerHTML +=
+                                `<div class="booking-item"><div class="booking-info"><i class="fas fa-hotel"></i><div><div class="booking-name">${o.accommodation_name || 'Hotel Task'}</div><div class="booking-date">${d.toLocaleDateString()}, ${d.toLocaleTimeString()}</div></div></div><div class="booking-amount positive">+€${(o.commission || 0).toFixed(2)}</div></div>`;
+                        });
+                    }
+                    await checkAmountDueAndSwitchCard();
+                    await loadDashboardProducts();
+                    await initCommissionChart();
+                    bindChartButtons();
+                    initNavClickClose();
+                } catch (e) { console.error('加载数据失败:', e); }
             }
-            
-            if (imageCount > 0) {
-                certificateStatus.innerHTML = imageCount;
-                certificateStatus.style.color = '#CCB299';
-                if (certificateTag) certificateTag.innerHTML = imageCount + ' Certificate' + (imageCount > 1 ? 's' : '') + ' Uploaded';
-            } else {
-                certificateStatus.innerHTML = '0';
-                certificateStatus.style.color = '#CCB299';
-                if (certificateTag) certificateTag.innerHTML = 'No certificate uploaded';
-            }
-        }
-
-        const { data: recentOrders } = await sb.from('order_history').select('*').eq('uid', user.uid).order('date', { ascending: false }).limit(5);
-        const recentContainer = document.getElementById('recentBookings');
-        if (!recentOrders || recentOrders.length === 0) recentContainer.innerHTML =
-            '<div class="empty-bookings"><i class="fas fa-calendar-alt"></i><p>No bookings yet</p><span>Start your first task to see recent bookings here</span></div>';
-        else {
-            recentContainer.innerHTML = '';
-            recentOrders.forEach(o => {
-                const d = new Date(o.date);
-                recentContainer.innerHTML +=
-                    `<div class="booking-item"><div class="booking-info"><i class="fas fa-hotel"></i><div><div class="booking-name">${o.accommodation_name || 'Hotel Task'}</div><div class="booking-date">${d.toLocaleDateString()}, ${d.toLocaleTimeString()}</div></div></div><div class="booking-amount positive">+€${(o.commission || 0).toFixed(2)}</div></div>`;
-            });
-        }
-        await loadDashboardProducts();
-        await initCommissionChart();
-        bindChartButtons();
-        initNavClickClose();
-    } catch (e) { console.error('加载数据失败:', e); }
-}
-
-// ============================================================
-// 🔥 新增：从数据库同步 Amount Due 状态
-// ============================================================
-async function syncAmountDueFromDatabase(uid) {
-    try {
-        const { data: userData } = await sb
-            .from('users')
-            .select('amount_due_round, amount_due_orders_count, balance')
-            .eq('uid', uid)
-            .single();
-
-        if (userData) {
-            const amountDueRound = userData.amount_due_round || 0;
-            const amountDueOrdersCount = userData.amount_due_orders_count || 0;
-            const totalAmountDue = amountDueRound + amountDueOrdersCount;
-            const balance = userData.balance || 0;
-
-            console.log('📊 从数据库同步 Amount Due:', { totalAmountDue, balance });
-
-            if (totalAmountDue > 0 && balance >= amountDueRound) {
-                localStorage.removeItem('amountDue_' + uid);
-                console.log('✅ 余额足够，已清除 Amount Due');
-            } else if (totalAmountDue === 0) {
-                localStorage.removeItem('amountDue_' + uid);
-                console.log('✅ 没有 Amount Due');
-            }
-        }
-    } catch (e) {
-        console.error('同步 Amount Due 失败:', e);
-    }
-}
             loadDashboard();
 
 // ============================================================
