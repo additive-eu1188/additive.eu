@@ -383,19 +383,19 @@
     </div>
     
     <!-- ✅ 奖励弹窗 -->
-    <div id="rewardModal" style="
-        display: none;
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: rgba(0, 0, 0, 0.85);
-        backdrop-filter: blur(16px);
-        z-index: 99999;
-        align-items: center;
-        justify-content: center;
-    ">
+<div id="rewardModal" style="
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.85);
+    backdrop-filter: blur(16px);
+    z-index: 99999;
+    align-items: center;
+    justify-content: center;
+">
         <div style="
             background: linear-gradient(160deg, #1a1428, #0e0a1a);
             border-radius: 32px;
@@ -493,18 +493,26 @@
 
 // ✅ 显示奖励弹窗
 function showRewardModal(amount) {
+    console.log('🎉 showRewardModal called, amount:', amount);
+    
     var modal = document.getElementById('rewardModal');
     var display = document.getElementById('rewardAmountDisplay');
+    
     if (display) {
         display.textContent = '€' + amount.toFixed(2);
     }
+    
     if (modal) {
+        // ✅ 强制显示
         modal.style.display = 'flex';
+        modal.style.visibility = 'visible';
+        modal.style.opacity = '1';
+        modal.style.pointerEvents = 'auto';
+        
         var closeBtn = document.getElementById('rewardCloseBtn');
         if (closeBtn) {
             closeBtn.onclick = function(e) {
                 e.stopPropagation();
-                // ✅ 使用 postMessage 通知父页面关闭并跳转
                 if (window.parent !== window) {
                     window.parent.postMessage({
                         action: 'rewardModalClosed'
@@ -525,6 +533,8 @@ function showRewardModal(amount) {
                 }
             }
         };
+    } else {
+        console.error('❌ rewardModal element not found!');
     }
 }
 
