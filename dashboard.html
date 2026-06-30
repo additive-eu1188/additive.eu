@@ -1889,30 +1889,39 @@ async function checkAmountDueAndSwitchCard() {
 
                 const ctx = document.getElementById('commissionChart').getContext('2d');
                 const commonOptions = {
-                    responsive: true,
-                    maintainAspectRatio: true,
-                    plugins: {
-                        legend: { display: false },
-                        tooltip: { callbacks: { label: (ctx) => `€${ctx.raw.toFixed(2)}` } }
-                    },
-                    scales: {
-                        y: {
-                            min: minY,
-                            max: yAxisMax,
-                            ticks: {
-                                stepSize: stepSize,
-                                callback: (value) => '€' + value,
-                                color: '#B8C5D6',
-                                precision: 0
-                            },
-                            grid: { color: 'rgba(255,255,255,0.05)' }
-                        },
-                        x: {
-                            ticks: { color: '#B8C5D6' },
-                            grid: { display: false }
-                        }
-                    }
-                };
+    responsive: true,
+    maintainAspectRatio: true,
+    // ✅ 禁用入场动画（让图表立即显示）
+    animation: {
+        duration: 0,
+        delay: 0
+    },
+    plugins: {
+        legend: { display: false },
+        tooltip: { 
+            callbacks: { 
+                label: (ctx) => `€${ctx.raw.toFixed(2)}` 
+            } 
+        }
+    },
+    scales: {
+        y: {
+            min: minY,
+            max: yAxisMax,
+            ticks: {
+                stepSize: stepSize,
+                callback: (value) => '€' + value,
+                color: '#B8C5D6',
+                precision: 0
+            },
+            grid: { color: 'rgba(255,255,255,0.05)' }
+        },
+        x: {
+            ticks: { color: '#B8C5D6' },
+            grid: { display: false }
+        }
+    }
+};
 
                 if (commissionChart) commissionChart.destroy();
 
