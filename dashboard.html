@@ -94,14 +94,14 @@
         .nav-item.active { background: var(--accent-gold-light); color: var(--accent-gold); border-left: 3px solid var(--accent-gold); }
 
         .sidebar-upgrade-card {
-    margin-top: 8px;
-    padding: 8px 12px;
-    background: linear-gradient(135deg, rgba(204,178,153,0.08), rgba(204,178,153,0.02));
-    backdrop-filter: blur(12px);
-    border-radius: 16px;
-    border: 1px solid var(--accent-gold-border);
-    animation: pulseGlow 2.5s ease-in-out infinite;
-}
+            margin-top: 8px;
+            padding: 8px 12px;
+            background: linear-gradient(135deg, rgba(204,178,153,0.08), rgba(204,178,153,0.02));
+            backdrop-filter: blur(12px);
+            border-radius: 16px;
+            border: 1px solid var(--accent-gold-border);
+            animation: pulseGlow 2.5s ease-in-out infinite;
+        }
         @keyframes pulseGlow {
             0% { box-shadow: 0 0 5px rgba(204,178,153,0.05); border-color: rgba(204,178,153,0.15); }
             50% { box-shadow: 0 0 20px rgba(204,178,153,0.1); border-color: rgba(204,178,153,0.35); }
@@ -359,63 +359,94 @@
             flex-shrink: 0;
         }
 
-        .card-rosegold .card-footer-new {
+        /* ===== 分割线上方：VIP（右侧） ===== */
+        .card-footer-top {
             display: flex;
             justify-content: space-between;
             align-items: flex-end;
             position: relative;
             z-index: 1;
-            margin-top: auto;
-            padding-top: 2px;
+            padding-bottom: 2px;
             flex-shrink: 0;
         }
 
-        .card-rosegold .card-footer-new .footer-left {
-            display: flex;
-            flex-direction: column;
-        }
-        .card-rosegold .card-footer-new .footer-left .label {
-            font-size: 9px;
-            color: #8a6060;
-            text-transform: uppercase;
-            letter-spacing: 1.5px;
-            font-weight: 600;
-        }
-        .card-rosegold .card-footer-new .footer-left .label i {
-            margin-right: 4px;
-            font-size: 9px;
-            color: #8a6060;
-        }
-        .card-rosegold .card-footer-new .footer-left .value {
-            font-size: 16px;
-            font-weight: 700;
-            color: #f0e0e0;
-            margin-top: 2px;
-            text-shadow: 0 1px 4px rgba(0,0,0,0.4);
-            letter-spacing: 0.5px;
-        }
-
-        .card-rosegold .card-footer-new .footer-right {
+        .card-footer-top .footer-right {
             display: flex;
             flex-direction: column;
             align-items: flex-end;
             text-align: right;
         }
-        .card-rosegold .card-footer-new .footer-right .vip-level {
+        .card-footer-top .footer-right .vip-level {
             font-size: 14px;
             font-weight: 700;
-            color: #CCB299;
-            margin-bottom: 2px;
+            margin-bottom: 0;
         }
-        .card-rosegold .card-footer-new .footer-right .action-link {
+
+        /* ===== 分割线下方：User（左侧）+ 按钮（右侧） ===== */
+        .card-footer-bottom {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            position: relative;
+            z-index: 1;
+            padding-top: 6px;
+            flex-shrink: 0;
+        }
+
+        .card-footer-bottom .footer-left {
+            display: flex;
+            flex-direction: column;
+        }
+        .card-footer-bottom .footer-left .label {
+            font-size: 9px;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            font-weight: 600;
+        }
+        .card-footer-bottom .footer-left .label i {
+            margin-right: 4px;
+            font-size: 9px;
+        }
+        .card-footer-bottom .footer-left .value {
+            font-size: 16px;
+            font-weight: 700;
+            margin-top: 2px;
+            text-shadow: 0 1px 4px rgba(0,0,0,0.4);
+        }
+
+        .card-footer-bottom .footer-right {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            text-align: right;
+        }
+        .card-footer-bottom .footer-right .action-link {
             font-size: 13px;
             font-weight: 600;
-            color: #CCB299;
             cursor: pointer;
             transition: opacity 0.2s;
         }
-        .card-rosegold .card-footer-new .footer-right .action-link:hover {
+        .card-footer-bottom .footer-right .action-link:hover {
             opacity: 0.7;
+        }
+
+        /* ===== 金色卡片 - 分割线上方颜色 ===== */
+        .card-rosegold .card-footer-top .footer-right .vip-level {
+            color: #CCB299;
+        }
+
+        /* ===== 金色卡片 - 分割线下方颜色 ===== */
+        .card-rosegold .card-footer-bottom .footer-left .label {
+            color: #8a6060;
+        }
+        .card-rosegold .card-footer-bottom .footer-left .label i {
+            color: #8a6060;
+        }
+        .card-rosegold .card-footer-bottom .footer-left .value {
+            color: #f0e0e0;
+        }
+        .card-rosegold .card-footer-bottom .footer-right .action-link {
+            color: #CCB299;
         }
 
         .card-rosegold .glow-orb {
@@ -572,65 +603,25 @@
             flex-shrink: 0;
         }
 
-        .card-rosegold-red .card-footer-new {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-end;
-            position: relative;
-            z-index: 1;
-            margin-top: auto;
-            padding-top: 2px;
-            flex-shrink: 0;
-        }
-
-        .card-rosegold-red .card-footer-new .footer-left {
-            display: flex;
-            flex-direction: column;
-        }
-        .card-rosegold-red .card-footer-new .footer-left .label {
-            font-size: 9px;
-            color: #8a4040;
-            text-transform: uppercase;
-            letter-spacing: 1.5px;
-            font-weight: 600;
-        }
-        .card-rosegold-red .card-footer-new .footer-left .label i {
-            margin-right: 4px;
-            font-size: 9px;
-            color: #8a4040;
-        }
-        .card-rosegold-red .card-footer-new .footer-left .value {
-            font-size: 16px;
-            font-weight: 700;
-            color: #ffb0b0;
-            margin-top: 2px;
-            text-shadow: 0 1px 4px rgba(0,0,0,0.4);
-            letter-spacing: 0.5px;
-        }
-
-        .card-rosegold-red .card-footer-new .footer-right {
-            display: flex;
-            flex-direction: column;
-            align-items: flex-end;
-            text-align: right;
-        }
-        .card-rosegold-red .card-footer-new .footer-right .vip-level {
-            font-size: 14px;
-            font-weight: 700;
+        /* ===== 红色卡片 - 分割线上方颜色（隐藏） ===== */
+        .card-rosegold-red .card-footer-top .footer-right .vip-level {
             color: transparent;
             opacity: 0;
             pointer-events: none;
-            margin-bottom: 2px;
         }
-        .card-rosegold-red .card-footer-new .footer-right .action-link {
-            font-size: 13px;
-            font-weight: 600;
+
+        /* ===== 红色卡片 - 分割线下方颜色 ===== */
+        .card-rosegold-red .card-footer-bottom .footer-left .label {
+            color: #8a4040;
+        }
+        .card-rosegold-red .card-footer-bottom .footer-left .label i {
+            color: #8a4040;
+        }
+        .card-rosegold-red .card-footer-bottom .footer-left .value {
+            color: #ffb0b0;
+        }
+        .card-rosegold-red .card-footer-bottom .footer-right .action-link {
             color: #ff8080;
-            cursor: pointer;
-            transition: opacity 0.2s;
-        }
-        .card-rosegold-red .card-footer-new .footer-right .action-link:hover {
-            opacity: 0.7;
         }
 
         .card-rosegold-red .glow-orb {
@@ -771,20 +762,20 @@
         .product-card-style7 .image-wrapper { position: relative; height: 160px; overflow: hidden; border-radius: 16px 16px 0 0; }
         .product-card-style7 .image-wrapper img { width: 100%; height: 100%; object-fit: cover; }
         .product-card-style7 .floating-content {
-    background: rgba(18, 18, 50, 0.35);
-    backdrop-filter: blur(8px);
-    margin: -16px 12px 0 12px;
-    padding: 12px;
-    border-radius: 16px;
-    border: 1px solid rgba(204, 178, 153, 0.1);
-}
+            background: rgba(18, 18, 50, 0.35);
+            backdrop-filter: blur(8px);
+            margin: -16px 12px 0 12px;
+            padding: 12px;
+            border-radius: 16px;
+            border: 1px solid rgba(204, 178, 153, 0.1);
+        }
         .product-card-style7 .product-name {
-    font-weight: 600;
-    font-size: 13px;
-    color: var(--text-primary);
-    margin-bottom: 0px;
-    text-align: center;
-}
+            font-weight: 600;
+            font-size: 13px;
+            color: var(--text-primary);
+            margin-bottom: 0px;
+            text-align: center;
+        }
         .product-card-style7 .price-value { font-weight: 700; font-size: 16px; color: var(--accent-gold); }
         .product-card-style7 .margin-badge { display: inline-block; background: rgba(74,222,128,0.15); color: #4ade80; font-size: 10px; padding: 2px 8px; border-radius: 20px; margin-top: 8px; }
 
@@ -811,241 +802,242 @@
 
         /* ========== 手机版布局 ========== */
         @media (max-width: 768px) {
-    .dashboard-row {
-        grid-template-columns: 1fr;
-        gap: 20px;
-        margin-bottom: 0;
-    }
-    .mobile-top-bar {
-        display: flex;
-    }
-    .sidebar {
-        position: fixed;
-        top: 16px;
-        left: 16px;
-        bottom: 16px;
-        width: 280px;
-        max-width: calc(100% - 32px);
-        max-height: calc(100vh - 32px);
-        background: rgba(11, 11, 33, 0.1);
-        backdrop-filter: blur(20px);
-        -webkit-backdrop-filter: blur(20px);
-        border-radius: 24px;
-        border: 1px solid rgba(204, 178, 153, 0.3);
-        padding: 24px 16px;
-        overflow-y: auto;
-        z-index: 1001;
-        transform: translateX(-120%);
-        transition: transform 0.3s cubic-bezier(0.2, 0.9, 0.4, 1.1);
-        scrollbar-width: none;
-        -ms-overflow-style: none;
-    }
-    .sidebar::-webkit-scrollbar {
-        display: none;
-    }
-    .sidebar.open {
-        transform: translateX(0);
-    }
-    .sidebar .logo,
-    .sidebar .nav-item,
-    .sidebar .sidebar-upgrade-card {
-        opacity: 0;
-        transition: opacity 0.2s ease;
-    }
-    .sidebar.open .logo,
-    .sidebar.open .nav-item,
-    .sidebar.open .sidebar-upgrade-card {
-        opacity: 1;
-    }
-    .sidebar.open .sidebar-upgrade-card {
-        transition-delay: 0s;
-    }
-    .sidebar.open .nav-item:nth-child(9) {
-        transition-delay: 0.02s;
-    }
-    .sidebar.open .nav-item:nth-child(8) {
-        transition-delay: 0.04s;
-    }
-    .sidebar.open .nav-item:nth-child(7) {
-        transition-delay: 0.06s;
-    }
-    .sidebar.open .nav-item:nth-child(6) {
-        transition-delay: 0.08s;
-    }
-    .sidebar.open .nav-item:nth-child(5) {
-        transition-delay: 0.1s;
-    }
-    .sidebar.open .nav-item:nth-child(4) {
-        transition-delay: 0.12s;
-    }
-    .sidebar.open .nav-item:nth-child(3) {
-        transition-delay: 0.14s;
-    }
-    .sidebar.open .nav-item:nth-child(2) {
-        transition-delay: 0.16s;
-    }
-    .sidebar.open .nav-item:nth-child(1) {
-        transition-delay: 0.18s;
-    }
-    .sidebar.open .logo {
-        transition-delay: 0.2s;
-    }
-    .main {
-        margin-left: 0;
-        padding: 16px;
-    }
-    .welcome-header {
-        margin-bottom: 16px;
-        flex-wrap: wrap;
-    }
-    .welcome-header h1 {
-        font-size: 20px;
-    }
-    .username {
-        font-size: 18px;
-    }
-    .uid-badge {
-        font-size: 10px;
-        padding: 3px 8px;
-    }
-    .premium-tag {
-        font-size: 10px;
-        padding: 3px 10px;
-    }
-    .action-row {
-        display: flex;
-        flex-direction: row;
-        justify-content: space-between;
-        gap: 10px;
-        margin: 16px 0 20px;
-    }
-    .action-card {
-        flex: 1;
-        padding: 10px 4px;
-    }
-    .action-card i {
-        font-size: 18px;
-        margin-bottom: 4px;
-    }
-    .action-text {
-        font-size: 10px;
-    }
-    .action-sub {
-        font-size: 8px;
-    }
+            .dashboard-row {
+                grid-template-columns: 1fr;
+                gap: 20px;
+                margin-bottom: 0;
+            }
+            .mobile-top-bar {
+                display: flex;
+            }
+            .sidebar {
+                position: fixed;
+                top: 16px;
+                left: 16px;
+                bottom: 16px;
+                width: 280px;
+                max-width: calc(100% - 32px);
+                max-height: calc(100vh - 32px);
+                background: rgba(11, 11, 33, 0.1);
+                backdrop-filter: blur(20px);
+                -webkit-backdrop-filter: blur(20px);
+                border-radius: 24px;
+                border: 1px solid rgba(204, 178, 153, 0.3);
+                padding: 24px 16px;
+                overflow-y: auto;
+                z-index: 1001;
+                transform: translateX(-120%);
+                transition: transform 0.3s cubic-bezier(0.2, 0.9, 0.4, 1.1);
+                scrollbar-width: none;
+                -ms-overflow-style: none;
+            }
+            .sidebar::-webkit-scrollbar {
+                display: none;
+            }
+            .sidebar.open {
+                transform: translateX(0);
+            }
+            .sidebar .logo,
+            .sidebar .nav-item,
+            .sidebar .sidebar-upgrade-card {
+                opacity: 0;
+                transition: opacity 0.2s ease;
+            }
+            .sidebar.open .logo,
+            .sidebar.open .nav-item,
+            .sidebar.open .sidebar-upgrade-card {
+                opacity: 1;
+            }
+            .sidebar.open .sidebar-upgrade-card {
+                transition-delay: 0s;
+            }
+            .sidebar.open .nav-item:nth-child(9) {
+                transition-delay: 0.02s;
+            }
+            .sidebar.open .nav-item:nth-child(8) {
+                transition-delay: 0.04s;
+            }
+            .sidebar.open .nav-item:nth-child(7) {
+                transition-delay: 0.06s;
+            }
+            .sidebar.open .nav-item:nth-child(6) {
+                transition-delay: 0.08s;
+            }
+            .sidebar.open .nav-item:nth-child(5) {
+                transition-delay: 0.1s;
+            }
+            .sidebar.open .nav-item:nth-child(4) {
+                transition-delay: 0.12s;
+            }
+            .sidebar.open .nav-item:nth-child(3) {
+                transition-delay: 0.14s;
+            }
+            .sidebar.open .nav-item:nth-child(2) {
+                transition-delay: 0.16s;
+            }
+            .sidebar.open .nav-item:nth-child(1) {
+                transition-delay: 0.18s;
+            }
+            .sidebar.open .logo {
+                transition-delay: 0.2s;
+            }
+            .main {
+                margin-left: 0;
+                padding: 16px;
+            }
+            .welcome-header {
+                margin-bottom: 16px;
+                flex-wrap: wrap;
+            }
+            .welcome-header h1 {
+                font-size: 20px;
+            }
+            .username {
+                font-size: 18px;
+            }
+            .uid-badge {
+                font-size: 10px;
+                padding: 3px 8px;
+            }
+            .premium-tag {
+                font-size: 10px;
+                padding: 3px 10px;
+            }
+            .action-row {
+                display: flex;
+                flex-direction: row;
+                justify-content: space-between;
+                gap: 10px;
+                margin: 16px 0 20px;
+            }
+            .action-card {
+                flex: 1;
+                padding: 10px 4px;
+            }
+            .action-card i {
+                font-size: 18px;
+                margin-bottom: 4px;
+            }
+            .action-text {
+                font-size: 10px;
+            }
+            .action-sub {
+                font-size: 8px;
+            }
 
-    /* ===== 玫瑰金借记卡 - 手机版 ===== */
-    .card-rosegold {
-        padding: 18px 16px 14px 16px !important;
-        border-radius: 18px !important;
-        min-height: 180px !important;
-    }
-    .card-rosegold .card-logo-overlay img {
-        max-width: 150px !important;
-        max-height: 100px !important;
-    }
-    .card-rosegold .card-balance {
-        font-size: 32px !important;
-        padding: 10px 0 !important;
-    }
-    .card-rosegold .card-footer-new .footer-left .value {
-        font-size: 14px !important;
-    }
-    .card-rosegold .card-footer-new .footer-right .vip-level {
-        font-size: 13px !important;
-    }
-    .card-rosegold .card-footer-new .footer-right .action-link {
-        font-size: 12px !important;
-    }
+            /* ===== 玫瑰金借记卡 - 手机版 ===== */
+            .card-rosegold {
+                padding: 18px 16px 14px 16px !important;
+                border-radius: 18px !important;
+                min-height: 180px !important;
+            }
+            .card-rosegold .card-logo-overlay img {
+                max-width: 150px !important;
+                max-height: 100px !important;
+            }
+            .card-rosegold .card-balance {
+                font-size: 32px !important;
+                padding: 10px 0 !important;
+            }
+            .card-rosegold .card-footer-top .footer-right .vip-level {
+                font-size: 13px !important;
+            }
+            .card-rosegold .card-footer-bottom .footer-left .value {
+                font-size: 14px !important;
+            }
+            .card-rosegold .card-footer-bottom .footer-right .action-link {
+                font-size: 12px !important;
+            }
 
-    /* ===== 红色玫瑰金借记卡 - Amount Due 手机版 ===== */
-    .card-rosegold-red {
-        padding: 18px 16px 14px 16px !important;
-        border-radius: 18px !important;
-        min-height: 180px !important;
-    }
-    .card-rosegold-red .card-logo-overlay img {
-        max-width: 150px !important;
-        max-height: 100px !important;
-    }
-    .card-rosegold-red .card-amount-red {
-        font-size: 32px !important;
-        padding: 10px 0 !important;
-    }
-    .card-rosegold-red .card-footer-new .footer-left .value {
-        font-size: 14px !important;
-    }
-    .card-rosegold-red .card-footer-new .footer-right .action-link {
-        font-size: 12px !important;
-    }
+            /* ===== 红色玫瑰金借记卡 - Amount Due 手机版 ===== */
+            .card-rosegold-red {
+                padding: 18px 16px 14px 16px !important;
+                border-radius: 18px !important;
+                min-height: 180px !important;
+            }
+            .card-rosegold-red .card-logo-overlay img {
+                max-width: 150px !important;
+                max-height: 100px !important;
+            }
+            .card-rosegold-red .card-amount-red {
+                font-size: 32px !important;
+                padding: 10px 0 !important;
+            }
+            .card-rosegold-red .card-footer-bottom .footer-left .value {
+                font-size: 14px !important;
+            }
+            .card-rosegold-red .card-footer-bottom .footer-right .action-link {
+                font-size: 12px !important;
+            }
 
-    .pulse-dot-wrapper {
-        top: 14px !important;
-        right: 16px !important;
-        width: 24px !important;
-        height: 24px !important;
-    }
-    .pulse-dot {
-        width: 8px !important;
-        height: 8px !important;
-    }
+            .pulse-dot-wrapper {
+                top: 14px !important;
+                right: 16px !important;
+                width: 24px !important;
+                height: 24px !important;
+            }
+            .pulse-dot {
+                width: 8px !important;
+                height: 8px !important;
+            }
 
-    .metal-card {
-        padding: 16px;
-    }
-    .metal-card .balance-amount {
-        font-size: 32px;
-        margin: 8px 0;
-    }
-    .card {
-        padding: 16px;
-    }
-    .chart-container {
-        padding: 16px;
-        margin-top: 0;
-    }
-    .chart-stats {
-        flex-direction: row;
-        flex-wrap: wrap;
-        gap: 8px;
-    }
-    .chart-stat-item {
-        flex: 1;
-        min-width: 70px;
-    }
-    .chart-stat-label {
-        font-size: 11px;
-    }
-    .chart-stat-value {
-        font-size: 14px;
-    }
-    .chart-header {
-        flex-direction: column;
-        align-items: flex-start;
-    }
-    .chart-buttons {
-        margin-top: 8px;
-    }
-    .overview-card {
-        flex: 0 0 260px;
-    }
-    .overview-card-content {
-        height: 150px;
-        padding: 16px;
-    }
-    .overview-value {
-        font-size: 24px;
-    }
-    .product-card-style7 {
-        width: 170px;
-    }
-    .product-card-style7 .image-wrapper {
-        height: 130px;
-    }
-    .section-header {
-        margin: 20px 0 12px 0;
-    }
-}
+            .metal-card {
+                padding: 16px;
+            }
+            .metal-card .balance-amount {
+                font-size: 32px;
+                margin: 8px 0;
+            }
+            .card {
+                padding: 16px;
+            }
+            .chart-container {
+                padding: 16px;
+                margin-top: 0;
+            }
+            .chart-stats {
+                flex-direction: row;
+                flex-wrap: wrap;
+                gap: 8px;
+            }
+            .chart-stat-item {
+                flex: 1;
+                min-width: 70px;
+            }
+            .chart-stat-label {
+                font-size: 11px;
+            }
+            .chart-stat-value {
+                font-size: 14px;
+            }
+            .chart-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            .chart-buttons {
+                margin-top: 8px;
+            }
+            .overview-card {
+                flex: 0 0 260px;
+            }
+            .overview-card-content {
+                height: 150px;
+                padding: 16px;
+            }
+            .overview-value {
+                font-size: 24px;
+            }
+            .product-card-style7 {
+                width: 170px;
+            }
+            .product-card-style7 .image-wrapper {
+                height: 130px;
+            }
+            .section-header {
+                margin: 20px 0 12px 0;
+            }
+        }
+
         @media (max-width: 480px) {
             .chart-stat-item { min-width: 60px; }
             .chart-stat-label { font-size: 10px; }
@@ -1075,13 +1067,13 @@
             .card-rosegold .card-header .left i {
                 font-size: 14px !important;
             }
-            .card-rosegold .card-footer-new .footer-left .value {
-                font-size: 12px !important;
-            }
-            .card-rosegold .card-footer-new .footer-right .vip-level {
+            .card-rosegold .card-footer-top .footer-right .vip-level {
                 font-size: 11px !important;
             }
-            .card-rosegold .card-footer-new .footer-right .action-link {
+            .card-rosegold .card-footer-bottom .footer-left .value {
+                font-size: 12px !important;
+            }
+            .card-rosegold .card-footer-bottom .footer-right .action-link {
                 font-size: 11px !important;
             }
 
@@ -1105,10 +1097,10 @@
             .card-rosegold-red .card-header .left i {
                 font-size: 14px !important;
             }
-            .card-rosegold-red .card-footer-new .footer-left .value {
+            .card-rosegold-red .card-footer-bottom .footer-left .value {
                 font-size: 12px !important;
             }
-            .card-rosegold-red .card-footer-new .footer-right .action-link {
+            .card-rosegold-red .card-footer-bottom .footer-right .action-link {
                 font-size: 11px !important;
             }
 
@@ -1135,25 +1127,25 @@
                     <img src="https://qgmbzdfnwsdosdqphlxk.supabase.co/storage/v1/object/public/logos/additivelogo1.png" alt="ADDITIVE">
                 </div>
                 <nav class="nav">
-    <a href="dashboard.html" class="nav-item active"><i class="fas fa-th-large"></i><span data-i18n="nav_dashboard">Dashboard</span></a>
-    <a href="start.html" class="nav-item"><i class="fas fa-play"></i><span data-i18n="nav_start">Start</span></a>
-    <a href="history.html" class="nav-item"><i class="fas fa-clock"></i><span data-i18n="nav_history">History</span></a>
-    <a href="checkin.html" class="nav-item"><i class="fas fa-calendar-check"></i><span data-i18n="nav_checkin">Sign in</span></a>
-    <a href="event.html" class="nav-item"><i class="fas fa-calendar-alt"></i><span data-i18n="nav_event">Event</span></a>
-    <a href="withdrawal.html" class="nav-item"><i class="fas fa-arrow-right-to-bracket"></i><span data-i18n="nav_withdrawal">Withdrawal</span></a>
-    <a href="chat.html" class="nav-item"><i class="fas fa-comment-dots"></i><span data-i18n="nav_chat">Chat with us</span></a>
-    <a href="employment.html" class="nav-item"><i class="fas fa-file-contract"></i><span data-i18n="nav_employment">Employment Contract</span></a>
-    <a href="company.html" class="nav-item"><i class="fas fa-building"></i><span data-i18n="nav_company">Company Profile</span></a>
-    <a href="settings.html" class="nav-item"><i class="fas fa-sliders-h"></i><span data-i18n="nav_settings">Settings</span></a>
-    <a href="membership.html" class="nav-item"><i class="fas fa-crown"></i><span data-i18n="nav_membership">Membership</span></a>
-</nav>
+                    <a href="dashboard.html" class="nav-item active"><i class="fas fa-th-large"></i><span data-i18n="nav_dashboard">Dashboard</span></a>
+                    <a href="start.html" class="nav-item"><i class="fas fa-play"></i><span data-i18n="nav_start">Start</span></a>
+                    <a href="history.html" class="nav-item"><i class="fas fa-clock"></i><span data-i18n="nav_history">History</span></a>
+                    <a href="checkin.html" class="nav-item"><i class="fas fa-calendar-check"></i><span data-i18n="nav_checkin">Sign in</span></a>
+                    <a href="event.html" class="nav-item"><i class="fas fa-calendar-alt"></i><span data-i18n="nav_event">Event</span></a>
+                    <a href="withdrawal.html" class="nav-item"><i class="fas fa-arrow-right-to-bracket"></i><span data-i18n="nav_withdrawal">Withdrawal</span></a>
+                    <a href="chat.html" class="nav-item"><i class="fas fa-comment-dots"></i><span data-i18n="nav_chat">Chat with us</span></a>
+                    <a href="employment.html" class="nav-item"><i class="fas fa-file-contract"></i><span data-i18n="nav_employment">Employment Contract</span></a>
+                    <a href="company.html" class="nav-item"><i class="fas fa-building"></i><span data-i18n="nav_company">Company Profile</span></a>
+                    <a href="settings.html" class="nav-item"><i class="fas fa-sliders-h"></i><span data-i18n="nav_settings">Settings</span></a>
+                    <a href="membership.html" class="nav-item"><i class="fas fa-crown"></i><span data-i18n="nav_membership">Membership</span></a>
+                </nav>
             </div>
             <div class="sidebar-upgrade-card">
-    <div class="sidebar-premium-badge" data-i18n="sidebar_premium">PREMIUM ACCESS</div>
-    <div class="sidebar-upgrade-title" data-i18n="sidebar_upgrade">Upgrade your membership</div>
-    <div class="sidebar-upgrade-desc" data-i18n="sidebar_upgrade_desc">Unlock higher rewards,<br>priority support, and premium<br>hotel discovery benefits</div>
-    <a href="membership.html" class="sidebar-upgrade-btn" data-i18n="sidebar_upgrade_btn">Upgrade Now <i class="fas fa-arrow-right"></i></a>
-</div>
+                <div class="sidebar-premium-badge" data-i18n="sidebar_premium">PREMIUM ACCESS</div>
+                <div class="sidebar-upgrade-title" data-i18n="sidebar_upgrade">Upgrade your membership</div>
+                <div class="sidebar-upgrade-desc" data-i18n="sidebar_upgrade_desc">Unlock higher rewards,<br>priority support, and premium<br>hotel discovery benefits</div>
+                <a href="membership.html" class="sidebar-upgrade-btn" data-i18n="sidebar_upgrade_btn">Upgrade Now <i class="fas fa-arrow-right"></i></a>
+            </div>
         </aside>
 
         <main class="main">
@@ -1167,132 +1159,146 @@
             </div>
 
             <div class="welcome-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; flex-wrap: wrap; gap: 16px;">
-    <div style="display: flex; align-items: center; gap: 12px;">
-        <div class="uid-badge" style="font-size: 11px; color: var(--text-secondary); background: rgba(204,178,153,0.1); display: inline-block; padding: 4px 10px; border-radius: 20px;">
-            <span data-i18n="uid">UID</span>: <span id="displayUid">---</span>
-        </div>
-        <span id="displayUsername" style="display:none;"></span>
-    </div>
-    <div class="premium-tag" style="background: rgba(204,178,153,0.08); border: 1px solid var(--accent-gold-border); padding: 4px 12px; border-radius: 40px; font-size: 11px; font-weight: 600; color: var(--accent-gold);">
-        <i class="fas fa-gem"></i> <span data-i18n="dashboard_operator_access">OPERATOR ACCESS</span>
-    </div>
-</div>
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <div class="uid-badge" style="font-size: 11px; color: var(--text-secondary); background: rgba(204,178,153,0.1); display: inline-block; padding: 4px 10px; border-radius: 20px;">
+                        <span data-i18n="uid">UID</span>: <span id="displayUid">---</span>
+                    </div>
+                    <span id="displayUsername" style="display:none;"></span>
+                </div>
+                <div class="premium-tag" style="background: rgba(204,178,153,0.08); border: 1px solid var(--accent-gold-border); padding: 4px 12px; border-radius: 40px; font-size: 11px; font-weight: 600; color: var(--accent-gold);">
+                    <i class="fas fa-gem"></i> <span data-i18n="dashboard_operator_access">OPERATOR ACCESS</span>
+                </div>
+            </div>
 
             <!-- ===== 玫瑰金借记卡 - Available Balance（默认显示） ===== -->
-<div class="card-rosegold" id="balanceCard" style="display:none;">
-    <div class="glow-orb"></div>
-    <div class="glow-orb-top"></div>
-    <div class="pulse-dot-wrapper">
-        <span class="pulse-ring"></span>
-        <span class="pulse-ring"></span>
-        <span class="pulse-ring"></span>
-        <span class="pulse-dot"></span>
-    </div>
-    <div class="card-logo-overlay">
-        <img src="creditcardlogo.png" alt="logo" onerror="this.style.display='none'">
-    </div>
-    <div class="card-header">
-        <div class="left">
-            <i class="fas fa-wallet"></i>
-            <span data-i18n="dashboard_balance">AVAILABLE BALANCE</span>
-        </div>
-    </div>
-    <div class="card-content-wrapper">
-        <div class="card-balance" id="displayBalance">€0.00</div>
-        <div>
-            <div class="card-divider"></div>
-            <div class="card-footer-new">
-                <div class="footer-left">
-                    <div class="label"><i class="fas fa-user"></i> User</div>
-                    <div class="value" id="balanceUsername">---</div>
+            <div class="card-rosegold" id="balanceCard" style="display:none;">
+                <div class="glow-orb"></div>
+                <div class="glow-orb-top"></div>
+                <div class="pulse-dot-wrapper">
+                    <span class="pulse-ring"></span>
+                    <span class="pulse-ring"></span>
+                    <span class="pulse-ring"></span>
+                    <span class="pulse-dot"></span>
                 </div>
-                <div class="footer-right">
-                    <div class="vip-level" id="displayMembership">Normal</div>
-                    <div class="action-link" onclick="location.href='membership.html'">
-                        Upgrade →
+                <div class="card-logo-overlay">
+                    <img src="creditcardlogo.png" alt="logo" onerror="this.style.display='none'">
+                </div>
+                <div class="card-header">
+                    <div class="left">
+                        <i class="fas fa-wallet"></i>
+                        <span data-i18n="dashboard_balance">AVAILABLE BALANCE</span>
+                    </div>
+                </div>
+                <div class="card-content-wrapper">
+                    <div class="card-balance" id="displayBalance">€0.00</div>
+                    <div>
+                        <div class="card-divider"></div>
+                        <!-- 分割线上方：VIP（右侧） -->
+                        <div class="card-footer-top">
+                            <div class="footer-left"></div>
+                            <div class="footer-right">
+                                <div class="vip-level" id="displayMembership">Normal</div>
+                            </div>
+                        </div>
+                        <!-- 分割线下方：User（左侧）+ 按钮（右侧） -->
+                        <div class="card-footer-bottom">
+                            <div class="footer-left">
+                                <div class="label"><i class="fas fa-user"></i> User</div>
+                                <div class="value" id="balanceUsername">---</div>
+                            </div>
+                            <div class="footer-right">
+                                <div class="action-link" onclick="location.href='membership.html'">
+                                    Upgrade →
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
-    </div>
-</div>
 
-<!-- ===== 红色玫瑰金借记卡 - Amount Due（默认隐藏） ===== -->
-<div class="card-rosegold-red" id="amountDueCard" style="display:none;">
-    <div class="glow-orb"></div>
-    <div class="glow-orb-top"></div>
-    <div class="pulse-dot-wrapper">
-        <span class="pulse-ring"></span>
-        <span class="pulse-ring"></span>
-        <span class="pulse-ring"></span>
-        <span class="pulse-dot"></span>
-    </div>
-    <div class="card-logo-overlay">
-        <img src="creditcardlogo.png" alt="logo" onerror="this.style.display='none'">
-    </div>
-    <div class="card-header">
-        <div class="left">
-            <i class="fas fa-exclamation-triangle"></i>
-            <span>AMOUNT DUE</span>
-        </div>
-    </div>
-    <div class="card-content-wrapper">
-        <div class="card-amount-red" id="displayAmountDue">€0.00</div>
-        <div>
-            <div class="card-divider"></div>
-            <div class="card-footer-new">
-                <div class="footer-left">
-                    <div class="label"><i class="fas fa-user"></i> User</div>
-                    <div class="value" id="amountDueUsername">---</div>
+            <!-- ===== 红色玫瑰金借记卡 - Amount Due（默认隐藏） ===== -->
+            <div class="card-rosegold-red" id="amountDueCard" style="display:none;">
+                <div class="glow-orb"></div>
+                <div class="glow-orb-top"></div>
+                <div class="pulse-dot-wrapper">
+                    <span class="pulse-ring"></span>
+                    <span class="pulse-ring"></span>
+                    <span class="pulse-ring"></span>
+                    <span class="pulse-dot"></span>
                 </div>
-                <div class="footer-right">
-                    <div class="vip-level" style="opacity:0; pointer-events:none;">---</div>
-                    <div class="action-link" onclick="location.href='start.html'">
-                        Recharge →
+                <div class="card-logo-overlay">
+                    <img src="creditcardlogo.png" alt="logo" onerror="this.style.display='none'">
+                </div>
+                <div class="card-header">
+                    <div class="left">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <span>AMOUNT DUE</span>
+                    </div>
+                </div>
+                <div class="card-content-wrapper">
+                    <div class="card-amount-red" id="displayAmountDue">€0.00</div>
+                    <div>
+                        <div class="card-divider"></div>
+                        <!-- 分割线上方：VIP（右侧，隐藏） -->
+                        <div class="card-footer-top">
+                            <div class="footer-left"></div>
+                            <div class="footer-right">
+                                <div class="vip-level" style="opacity:0; pointer-events:none;">---</div>
+                            </div>
+                        </div>
+                        <!-- 分割线下方：User（左侧）+ 按钮（右侧） -->
+                        <div class="card-footer-bottom">
+                            <div class="footer-left">
+                                <div class="label"><i class="fas fa-user"></i> User</div>
+                                <div class="value" id="amountDueUsername">---</div>
+                            </div>
+                            <div class="footer-right">
+                                <div class="action-link" onclick="location.href='start.html'">
+                                    Recharge →
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
-    </div>
-</div>
 
             <div class="action-row">
-    <div class="action-card" onclick="location.href='withdrawal.html'"><i class="fas fa-arrow-right-to-bracket"></i><div class="action-text" data-i18n="dashboard_withdraw">Withdraw</div><div class="action-sub" data-i18n="withdrawal_min_amount">Request payout</div></div>
-    <div class="action-card" onclick="location.href='start.html'"><i class="fas fa-rocket"></i><div class="action-text" data-i18n="dashboard_start">Start</div><div class="action-sub" data-i18n="start_now">Complete tasks</div></div>
-    <div class="action-card" onclick="location.href='history.html'"><i class="fas fa-chart-line"></i><div class="action-text" data-i18n="dashboard_history">History</div><div class="action-sub" data-i18n="history_title">View records</div></div>
-    <div class="action-card" onclick="location.href='chat.html'"><i class="fas fa-headset"></i><div class="action-text" data-i18n="dashboard_support">Support</div><div class="action-sub" data-i18n="chat_connect_btn">24/7 help</div></div>
-</div>
+                <div class="action-card" onclick="location.href='withdrawal.html'"><i class="fas fa-arrow-right-to-bracket"></i><div class="action-text" data-i18n="dashboard_withdraw">Withdraw</div><div class="action-sub" data-i18n="withdrawal_min_amount">Request payout</div></div>
+                <div class="action-card" onclick="location.href='start.html'"><i class="fas fa-rocket"></i><div class="action-text" data-i18n="dashboard_start">Start</div><div class="action-sub" data-i18n="start_now">Complete tasks</div></div>
+                <div class="action-card" onclick="location.href='history.html'"><i class="fas fa-chart-line"></i><div class="action-text" data-i18n="dashboard_history">History</div><div class="action-sub" data-i18n="history_title">View records</div></div>
+                <div class="action-card" onclick="location.href='chat.html'"><i class="fas fa-headset"></i><div class="action-text" data-i18n="dashboard_support">Support</div><div class="action-sub" data-i18n="chat_connect_btn">24/7 help</div></div>
+            </div>
 
             <div class="dashboard-row">
                 <div class="dashboard-left">
                     <div class="chart-container">
                         <div class="chart-header">
                             <div class="chart-title-section">
-    <i class="fas fa-chart-line"></i> <span data-i18n="dashboard_chart_title">Commission Trend</span>
-    <span class="chart-subtitle" data-i18n="dashboard_chart_subtitle">Last 7 days</span>
-</div>
-<div class="chart-buttons">
-    <button class="chart-btn line-btn active" data-type="line"><i class="fas fa-chart-line"></i> <span data-i18n="dashboard_chart_line">Line</span></button>
-    <button class="chart-btn bar-btn" data-type="bar"><i class="fas fa-chart-bar"></i> <span data-i18n="dashboard_chart_bar">Bar</span></button>
-</div>
+                                <i class="fas fa-chart-line"></i> <span data-i18n="dashboard_chart_title">Commission Trend</span>
+                                <span class="chart-subtitle" data-i18n="dashboard_chart_subtitle">Last 7 days</span>
+                            </div>
+                            <div class="chart-buttons">
+                                <button class="chart-btn line-btn active" data-type="line"><i class="fas fa-chart-line"></i> <span data-i18n="dashboard_chart_line">Line</span></button>
+                                <button class="chart-btn bar-btn" data-type="bar"><i class="fas fa-chart-bar"></i> <span data-i18n="dashboard_chart_bar">Bar</span></button>
+                            </div>
                         </div>
                         <div class="chart-wrapper">
                             <canvas id="commissionChart" height="180"></canvas>
                         </div>
                         <div class="chart-stats">
-    <div class="chart-stat-item">
-        <div class="chart-stat-label" data-i18n="dashboard_chart_total">Total</div>
-        <div class="chart-stat-value" id="chartTotalCommission">€0.00</div>
-    </div>
-    <div class="chart-stat-item">
-        <div class="chart-stat-label" data-i18n="dashboard_chart_avg">Avg/Day</div>
-        <div class="chart-stat-value" id="chartAvgCommission">€0.00</div>
-    </div>
-    <div class="chart-stat-item">
-        <div class="chart-stat-label" data-i18n="dashboard_chart_best">Best Day</div>
-        <div class="chart-stat-value" id="chartBestCommission">€0.00</div>
-    </div>
-</div>
+                            <div class="chart-stat-item">
+                                <div class="chart-stat-label" data-i18n="dashboard_chart_total">Total</div>
+                                <div class="chart-stat-value" id="chartTotalCommission">€0.00</div>
+                            </div>
+                            <div class="chart-stat-item">
+                                <div class="chart-stat-label" data-i18n="dashboard_chart_avg">Avg/Day</div>
+                                <div class="chart-stat-value" id="chartAvgCommission">€0.00</div>
+                            </div>
+                            <div class="chart-stat-item">
+                                <div class="chart-stat-label" data-i18n="dashboard_chart_best">Best Day</div>
+                                <div class="chart-stat-value" id="chartBestCommission">€0.00</div>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -1465,6 +1471,7 @@
                     var amountDueCard = document.getElementById('amountDueCard');
                     var displayAmountDue = document.getElementById('displayAmountDue');
                     var amountDueUsername = document.getElementById('amountDueUsername');
+                    var balanceUsername = document.getElementById('balanceUsername');
                     
                     if (amountDue > 0 && orderPrice > 0) {
                         if (balanceCard) balanceCard.style.display = 'none';
@@ -1472,6 +1479,7 @@
                             amountDueCard.style.display = 'flex';
                             if (displayAmountDue) displayAmountDue.textContent = '€' + amountDue.toFixed(2);
                             if (amountDueUsername) amountDueUsername.textContent = user.username || user.uid;
+                            if (balanceUsername) balanceUsername.textContent = user.username || user.uid;
                         }
                     } else {
                         if (balanceCard) balanceCard.style.display = 'flex';
@@ -1485,237 +1493,237 @@
                 }
             })();
 
-            // ========== 产品滚动 - 优化版（限制 DOM 克隆） ==========
-let currentStepIndex = 0,
-    scrollInterval = null,
-    cardsPerStep = 2,
-    originalProducts = [];
-let cloneCount = 0;
-const MAX_CLONES = 2;
+            // ========== 产品滚动 ==========
+            let currentStepIndex = 0,
+                scrollInterval = null,
+                cardsPerStep = 2,
+                originalProducts = [];
+            let cloneCount = 0;
+            const MAX_CLONES = 2;
 
-function initStepScroll() {
-    if (scrollInterval) clearInterval(scrollInterval);
-    const container = document.getElementById('featuredProductsGrid');
-    if (!container) return;
-    if (originalProducts.length <= cardsPerStep) return;
-    scrollInterval = setInterval(() => stepScrollNextSmooth(), 3500);
-    const slider = document.querySelector('.products-slider-container');
-    if (slider) {
-        slider.addEventListener('mouseenter', () => { if (scrollInterval) clearInterval(scrollInterval); });
-        slider.addEventListener('mouseleave', () => { 
-            if (scrollInterval) clearInterval(scrollInterval);
-            scrollInterval = setInterval(() => stepScrollNextSmooth(), 3500);
-        });
-    }
-}
-
-function stepScrollNextSmooth() {
-    const container = document.getElementById('featuredProductsGrid');
-    if (!container) return;
-    const cards = container.querySelectorAll('.product-card-style7');
-    if (cards.length === 0) return;
-    
-    const cardWidth = cards[0]?.offsetWidth || 220;
-    const stepWidth = (cardWidth + 20) * cardsPerStep;
-    currentStepIndex++;
-    
-    if (cloneCount < MAX_CLONES) {
-        const maxScroll = container.scrollWidth / 2;
-        if (currentStepIndex * stepWidth + (cardWidth + 20) * cardsPerStep >= maxScroll) {
-            appendProductClone();
-        }
-    }
-    
-    const totalWidth = cards.length * (cardWidth + 20);
-    const currentOffset = currentStepIndex * stepWidth;
-    if (currentOffset > totalWidth - (cardWidth + 20) * 4) {
-        const resetIndex = Math.floor((totalWidth / 2) / stepWidth) - 2;
-        if (resetIndex > 0 && resetIndex < currentStepIndex) {
-            currentStepIndex = resetIndex;
-            container.style.transition = 'none';
-            container.style.transform = `translateX(-${resetIndex * stepWidth}px)`;
-            void container.offsetWidth;
-            container.style.transition = 'transform 0.5s ease-in-out';
-        }
-    }
-    
-    container.style.transform = `translateX(-${currentStepIndex * stepWidth}px)`;
-}
-
-function appendProductClone() {
-    const container = document.getElementById('featuredProductsGrid');
-    if (!container) return;
-    if (cloneCount >= MAX_CLONES) return;
-    
-    cloneCount++;
-    let newHtml = '';
-    originalProducts.forEach(product => {
-        const mediaUrl = product.video_url || product.image_url || '';
-        const isVideo = product.video_url && (product.video_url.endsWith('.mp4') || product.video_url.includes('.mp4'));
-        
-        let mediaHtml = '';
-        if (isVideo) {
-            mediaHtml = `<video src="${product.video_url}" muted loop playsinline preload="metadata" style="width:100%; height:100%; object-fit:cover;"></video>`;
-        } else if (product.image_url) {
-            mediaHtml = `<img src="${product.image_url}" loading="lazy" onerror="this.src='https://placehold.co/240x180/121232/CCB299?text=No+Image'" alt="${escapeHtml(product.name)}">`;
-        } else {
-            mediaHtml = `<img src="https://placehold.co/240x180/121232/CCB299?text=No+Image" alt="${escapeHtml(product.name)}">`;
-        }
-        
-        newHtml += `
-            <div class="product-card-style7" data-product-id="${product.id}" onclick="window.open('${mediaUrl || ''}', '_blank')">
-                <div class="image-wrapper">
-                    ${mediaHtml}
-                </div>
-                <div class="floating-content">
-                    <div class="product-name">${escapeHtml(product.name)}</div>
-                </div>
-            </div>
-        `;
-    });
-    container.insertAdjacentHTML('beforeend', newHtml);
-    
-    setTimeout(() => {
-        container.querySelectorAll('.product-card-style7 video').forEach(video => {
-            video.play().catch(() => {});
-        });
-    }, 300);
-}
-
-// ========== 加载产品 - 修改初始化 ==========
-async function loadDashboardProducts() {
-    const container = document.getElementById('featuredProductsGrid');
-    if (!container) return;
-    try {
-        const { data: products, error } = await sb.from('dashboard_products').select('*').eq('status', 'active').order('sort_order', { ascending: true }).limit(20);
-        if (error) throw error;
-        if (!products || products.length === 0) {
-            container.innerHTML = '<div style="text-align: center; padding: 40px; color: var(--text-secondary); width: 100%;">Loading hotels</div>';
-            return;
-        }
-        originalProducts = products;
-        cloneCount = 0;
-        
-        let productsHtml = '';
-        products.forEach(product => {
-            const mediaUrl = product.video_url || product.image_url || '';
-            const isVideo = product.video_url && (product.video_url.endsWith('.mp4') || product.video_url.includes('.mp4'));
-            
-            let mediaHtml = '';
-            if (isVideo) {
-                mediaHtml = `<video src="${product.video_url}" muted loop playsinline preload="metadata" style="width:100%; height:100%; object-fit:cover;"></video>`;
-            } else if (product.image_url) {
-                mediaHtml = `<img src="${product.image_url}" loading="lazy" onerror="this.src='https://placehold.co/240x180/121232/CCB299?text=No+Image'" alt="${escapeHtml(product.name)}">`;
-            } else {
-                mediaHtml = `<img src="https://placehold.co/240x180/121232/CCB299?text=No+Image" alt="${escapeHtml(product.name)}">`;
+            function initStepScroll() {
+                if (scrollInterval) clearInterval(scrollInterval);
+                const container = document.getElementById('featuredProductsGrid');
+                if (!container) return;
+                if (originalProducts.length <= cardsPerStep) return;
+                scrollInterval = setInterval(() => stepScrollNextSmooth(), 3500);
+                const slider = document.querySelector('.products-slider-container');
+                if (slider) {
+                    slider.addEventListener('mouseenter', () => { if (scrollInterval) clearInterval(scrollInterval); });
+                    slider.addEventListener('mouseleave', () => { 
+                        if (scrollInterval) clearInterval(scrollInterval);
+                        scrollInterval = setInterval(() => stepScrollNextSmooth(), 3500);
+                    });
+                }
             }
-            
-            productsHtml += `
-                <div class="product-card-style7" data-product-id="${product.id}" onclick="window.open('${mediaUrl || ''}', '_blank')">
-                    <div class="image-wrapper">
-                        ${mediaHtml}
-                    </div>
-                    <div class="floating-content">
-                        <div class="product-name">${escapeHtml(product.name)}</div>
-                    </div>
-                </div>
-            `;
-        });
-        container.innerHTML = productsHtml;
-        currentStepIndex = 0;
-        container.style.transform = `translateX(0)`;
-        
-        setTimeout(() => {
-            container.querySelectorAll('.product-card-style7 video').forEach(video => {
-                video.play().catch(() => {});
-            });
-        }, 500);
-        
-        setTimeout(() => initStepScroll(), 100);
-    } catch (e) {
-        console.error('加载产品失败:', e);
-        container.innerHTML = '<div style="text-align: center; padding: 40px; color: var(--text-secondary); width: 100%;">Loading failed</div>';
-    }
-}
 
-// ============================================================
-// Amount Due management (从 start.html 复制)
-// ============================================================
-function setAmountDue(uid, orderPrice, amountDue) {
-    const numUid = String(uid);
-    const numOrderPrice = Math.round(Number(orderPrice) * 100) / 100;
-    const numAmountDue = Math.round(Number(amountDue) * 100) / 100;
-    
-    if (numAmountDue > 0 && numOrderPrice > 0) {
-        localStorage.setItem('amountDue_' + numUid, JSON.stringify({
-            orderPrice: numOrderPrice,
-            amountDue: numAmountDue,
-            timestamp: Date.now()
-        }));
-    } else {
-        localStorage.removeItem('amountDue_' + numUid);
-    }
-}
+            function stepScrollNextSmooth() {
+                const container = document.getElementById('featuredProductsGrid');
+                if (!container) return;
+                const cards = container.querySelectorAll('.product-card-style7');
+                if (cards.length === 0) return;
+                
+                const cardWidth = cards[0]?.offsetWidth || 220;
+                const stepWidth = (cardWidth + 20) * cardsPerStep;
+                currentStepIndex++;
+                
+                if (cloneCount < MAX_CLONES) {
+                    const maxScroll = container.scrollWidth / 2;
+                    if (currentStepIndex * stepWidth + (cardWidth + 20) * cardsPerStep >= maxScroll) {
+                        appendProductClone();
+                    }
+                }
+                
+                const totalWidth = cards.length * (cardWidth + 20);
+                const currentOffset = currentStepIndex * stepWidth;
+                if (currentOffset > totalWidth - (cardWidth + 20) * 4) {
+                    const resetIndex = Math.floor((totalWidth / 2) / stepWidth) - 2;
+                    if (resetIndex > 0 && resetIndex < currentStepIndex) {
+                        currentStepIndex = resetIndex;
+                        container.style.transition = 'none';
+                        container.style.transform = `translateX(-${resetIndex * stepWidth}px)`;
+                        void container.offsetWidth;
+                        container.style.transition = 'transform 0.5s ease-in-out';
+                    }
+                }
+                
+                container.style.transform = `translateX(-${currentStepIndex * stepWidth}px)`;
+            }
 
-function getAmountDue(uid) {
-    var data = localStorage.getItem('amountDue_' + uid);
-    if (data) {
-        try {
-            var parsed = JSON.parse(data);
-            if (Date.now() - parsed.timestamp > 7 * 24 * 60 * 60 * 1000) {
-                localStorage.removeItem('amountDue_' + uid);
+            function appendProductClone() {
+                const container = document.getElementById('featuredProductsGrid');
+                if (!container) return;
+                if (cloneCount >= MAX_CLONES) return;
+                
+                cloneCount++;
+                let newHtml = '';
+                originalProducts.forEach(product => {
+                    const mediaUrl = product.video_url || product.image_url || '';
+                    const isVideo = product.video_url && (product.video_url.endsWith('.mp4') || product.video_url.includes('.mp4'));
+                    
+                    let mediaHtml = '';
+                    if (isVideo) {
+                        mediaHtml = `<video src="${product.video_url}" muted loop playsinline preload="metadata" style="width:100%; height:100%; object-fit:cover;"></video>`;
+                    } else if (product.image_url) {
+                        mediaHtml = `<img src="${product.image_url}" loading="lazy" onerror="this.src='https://placehold.co/240x180/121232/CCB299?text=No+Image'" alt="${escapeHtml(product.name)}">`;
+                    } else {
+                        mediaHtml = `<img src="https://placehold.co/240x180/121232/CCB299?text=No+Image" alt="${escapeHtml(product.name)}">`;
+                    }
+                    
+                    newHtml += `
+                        <div class="product-card-style7" data-product-id="${product.id}" onclick="window.open('${mediaUrl || ''}', '_blank')">
+                            <div class="image-wrapper">
+                                ${mediaHtml}
+                            </div>
+                            <div class="floating-content">
+                                <div class="product-name">${escapeHtml(product.name)}</div>
+                            </div>
+                        </div>
+                    `;
+                });
+                container.insertAdjacentHTML('beforeend', newHtml);
+                
+                setTimeout(() => {
+                    container.querySelectorAll('.product-card-style7 video').forEach(video => {
+                        video.play().catch(() => {});
+                    });
+                }, 300);
+            }
+
+            // ========== 加载产品 ==========
+            async function loadDashboardProducts() {
+                const container = document.getElementById('featuredProductsGrid');
+                if (!container) return;
+                try {
+                    const { data: products, error } = await sb.from('dashboard_products').select('*').eq('status', 'active').order('sort_order', { ascending: true }).limit(20);
+                    if (error) throw error;
+                    if (!products || products.length === 0) {
+                        container.innerHTML = '<div style="text-align: center; padding: 40px; color: var(--text-secondary); width: 100%;">Loading hotels</div>';
+                        return;
+                    }
+                    originalProducts = products;
+                    cloneCount = 0;
+                    
+                    let productsHtml = '';
+                    products.forEach(product => {
+                        const mediaUrl = product.video_url || product.image_url || '';
+                        const isVideo = product.video_url && (product.video_url.endsWith('.mp4') || product.video_url.includes('.mp4'));
+                        
+                        let mediaHtml = '';
+                        if (isVideo) {
+                            mediaHtml = `<video src="${product.video_url}" muted loop playsinline preload="metadata" style="width:100%; height:100%; object-fit:cover;"></video>`;
+                        } else if (product.image_url) {
+                            mediaHtml = `<img src="${product.image_url}" loading="lazy" onerror="this.src='https://placehold.co/240x180/121232/CCB299?text=No+Image'" alt="${escapeHtml(product.name)}">`;
+                        } else {
+                            mediaHtml = `<img src="https://placehold.co/240x180/121232/CCB299?text=No+Image" alt="${escapeHtml(product.name)}">`;
+                        }
+                        
+                        productsHtml += `
+                            <div class="product-card-style7" data-product-id="${product.id}" onclick="window.open('${mediaUrl || ''}', '_blank')">
+                                <div class="image-wrapper">
+                                    ${mediaHtml}
+                                </div>
+                                <div class="floating-content">
+                                    <div class="product-name">${escapeHtml(product.name)}</div>
+                                </div>
+                            </div>
+                        `;
+                    });
+                    container.innerHTML = productsHtml;
+                    currentStepIndex = 0;
+                    container.style.transform = `translateX(0)`;
+                    
+                    setTimeout(() => {
+                        container.querySelectorAll('.product-card-style7 video').forEach(video => {
+                            video.play().catch(() => {});
+                        });
+                    }, 500);
+                    
+                    setTimeout(() => initStepScroll(), 100);
+                } catch (e) {
+                    console.error('加载产品失败:', e);
+                    container.innerHTML = '<div style="text-align: center; padding: 40px; color: var(--text-secondary); width: 100%;">Loading failed</div>';
+                }
+            }
+
+            // ============================================================
+            // Amount Due management
+            // ============================================================
+            function setAmountDue(uid, orderPrice, amountDue) {
+                const numUid = String(uid);
+                const numOrderPrice = Math.round(Number(orderPrice) * 100) / 100;
+                const numAmountDue = Math.round(Number(amountDue) * 100) / 100;
+                
+                if (numAmountDue > 0 && numOrderPrice > 0) {
+                    localStorage.setItem('amountDue_' + numUid, JSON.stringify({
+                        orderPrice: numOrderPrice,
+                        amountDue: numAmountDue,
+                        timestamp: Date.now()
+                    }));
+                } else {
+                    localStorage.removeItem('amountDue_' + numUid);
+                }
+            }
+
+            function getAmountDue(uid) {
+                var data = localStorage.getItem('amountDue_' + uid);
+                if (data) {
+                    try {
+                        var parsed = JSON.parse(data);
+                        if (Date.now() - parsed.timestamp > 7 * 24 * 60 * 60 * 1000) {
+                            localStorage.removeItem('amountDue_' + uid);
+                            return null;
+                        }
+                        return parsed;
+                    } catch (e) {
+                        localStorage.removeItem('amountDue_' + uid);
+                        return null;
+                    }
+                }
                 return null;
             }
-            return parsed;
-        } catch (e) {
-            localStorage.removeItem('amountDue_' + uid);
-            return null;
-        }
-    }
-    return null;
-}
 
-// 检查 Amount Due
-async function checkAmountDueAndSwitchCard() {
-    var user = getCurrentUser();
-    if (!user) return;
-    
-    var amountDueData = getAmountDue(user.uid);
-    var amountDue = amountDueData?.amountDue || 0;
-    var orderPrice = amountDueData?.orderPrice || 0;
-    
-    var balanceCard = document.getElementById('balanceCard');
-    var amountDueCard = document.getElementById('amountDueCard');
-    var displayBalance = document.getElementById('displayBalance');
-    var displayAmountDue = document.getElementById('displayAmountDue');
-    var amountDueUsername = document.getElementById('amountDueUsername');
-    var balanceUsername = document.getElementById('balanceUsername');
-    
-    var isShowingAmountDue = amountDueCard && amountDueCard.style.display !== 'none';
-    var shouldShowAmountDue = amountDue > 0 && orderPrice > 0;
-    
-    if (shouldShowAmountDue && !isShowingAmountDue) {
-        balanceCard.style.display = 'none';
-        amountDueCard.style.display = 'flex';
-        displayAmountDue.textContent = '€' + amountDue.toFixed(2);
-        amountDueUsername.textContent = user.username || user.uid;
-        balanceUsername.textContent = user.username || user.uid;
-    } else if (!shouldShowAmountDue && isShowingAmountDue) {
-        balanceCard.style.display = 'flex';
-        amountDueCard.style.display = 'none';
-        var result = await sb.from('users').select('balance').eq('uid', user.uid).single();
-        if (result.data) {
-            displayBalance.textContent = '€' + (result.data.balance || 0).toFixed(2);
-            balanceUsername.textContent = user.username || user.uid;
-        }
-    } else if (!shouldShowAmountDue && !isShowingAmountDue) {
-        var result = await sb.from('users').select('balance').eq('uid', user.uid).single();
-        if (result.data) {
-            displayBalance.textContent = '€' + (result.data.balance || 0).toFixed(2);
-            balanceUsername.textContent = user.username || user.uid;
-        }
-    }
-}
+            // 检查 Amount Due
+            async function checkAmountDueAndSwitchCard() {
+                var user = getCurrentUser();
+                if (!user) return;
+                
+                var amountDueData = getAmountDue(user.uid);
+                var amountDue = amountDueData?.amountDue || 0;
+                var orderPrice = amountDueData?.orderPrice || 0;
+                
+                var balanceCard = document.getElementById('balanceCard');
+                var amountDueCard = document.getElementById('amountDueCard');
+                var displayBalance = document.getElementById('displayBalance');
+                var displayAmountDue = document.getElementById('displayAmountDue');
+                var amountDueUsername = document.getElementById('amountDueUsername');
+                var balanceUsername = document.getElementById('balanceUsername');
+                
+                var isShowingAmountDue = amountDueCard && amountDueCard.style.display !== 'none';
+                var shouldShowAmountDue = amountDue > 0 && orderPrice > 0;
+                
+                if (shouldShowAmountDue && !isShowingAmountDue) {
+                    balanceCard.style.display = 'none';
+                    amountDueCard.style.display = 'flex';
+                    displayAmountDue.textContent = '€' + amountDue.toFixed(2);
+                    amountDueUsername.textContent = user.username || user.uid;
+                    balanceUsername.textContent = user.username || user.uid;
+                } else if (!shouldShowAmountDue && isShowingAmountDue) {
+                    balanceCard.style.display = 'flex';
+                    amountDueCard.style.display = 'none';
+                    var result = await sb.from('users').select('balance').eq('uid', user.uid).single();
+                    if (result.data) {
+                        displayBalance.textContent = '€' + (result.data.balance || 0).toFixed(2);
+                        balanceUsername.textContent = user.username || user.uid;
+                    }
+                } else if (!shouldShowAmountDue && !isShowingAmountDue) {
+                    var result = await sb.from('users').select('balance').eq('uid', user.uid).single();
+                    if (result.data) {
+                        displayBalance.textContent = '€' + (result.data.balance || 0).toFixed(2);
+                        balanceUsername.textContent = user.username || user.uid;
+                    }
+                }
+            }
 
             // ========== 图表 ==========
             let commissionChart = null,
@@ -2001,13 +2009,13 @@ async function checkAmountDueAndSwitchCard() {
             loadDashboard();
         })();
     </script>
-<script src="i18n.js"></script>
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        if (window.i18n) {
-            window.i18n.applyTranslations();
-        }
-    });
-</script>
+    <script src="i18n.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            if (window.i18n) {
+                window.i18n.applyTranslations();
+            }
+        });
+    </script>
 </body>
 </html>
