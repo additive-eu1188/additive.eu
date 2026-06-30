@@ -512,7 +512,7 @@
                 const { data, error } = await sb
                     .from('system_content')
                     .select('*')
-                    .eq('type', 'event')
+                    .eq('type', 'events')
                     .maybeSingle();
 
                 if (error) throw error;
