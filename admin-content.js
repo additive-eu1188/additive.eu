@@ -827,7 +827,6 @@ async function uploadCertificateImage(file) {
 // ============================================================
 // 3. Employment Contract (多图 + 内容)
 // ============================================================
-let contractData = null;
 
 async function loadContractContent() {
     const { data, error } = await sb
