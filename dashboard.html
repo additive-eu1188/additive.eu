@@ -2004,43 +2004,40 @@ document.getElementById('premiumStatusText').innerHTML = level;
                         document.getElementById('currentEventTag').innerHTML = eventCount + ' Active Events';
                     }
 
-                    // 从本地存储读取签到数据
+                    // ===== 从数据库读取签到数据（始终从数据库读取，不依赖 localStorage） =====
 let checkinDays = 0;
-const savedCheckin = localStorage.getItem('additive_checkin');
-if (savedCheckin) {
-    try {
-        const checkinData = JSON.parse(savedCheckin);
-        // claimedDays 是数组，长度就是已签到的天数
-        checkinDays = checkinData.claimedDays ? checkinData.claimedDays.length : 0;
-        console.log('📊 Check-in days from localStorage:', checkinDays, checkinData.claimedDays);
-    } catch (e) {
-        console.error('读取签到数据失败:', e);
-        // 备用方案：从数据库读取
-        const { data: checkinRecords } = await sb.from('user_checkin_records')
-            .select('id', { count: 'exact' })
-            .eq('uid', user.uid);
-        checkinDays = checkinRecords?.length || 0;
-    }
-} else {
-    // 如果本地没有数据，从数据库读取
-    const { data: checkinRecords } = await sb.from('user_checkin_records')
+
+try {
+    const { data: checkinRecords, error: checkinError } = await sb
+        .from('user_checkin_records')
         .select('id', { count: 'exact' })
         .eq('uid', user.uid);
-    checkinDays = checkinRecords?.length || 0;
+
+    if (checkinError) {
+        console.error('读取签到记录失败:', checkinError);
+        checkinDays = 0;
+    } else {
+        checkinDays = checkinRecords?.length || 0;
+        console.log('📊 Check-in days from database:', checkinDays);
+    }
+} catch (e) {
+    console.error('读取签到记录异常:', e);
+    checkinDays = 0;
 }
-                    const contractStatus = document.getElementById('contractStatus');
-                    const contractTag = document.getElementById('contractTag');
-                    if (contractStatus) {
-                        if (checkinDays >= 7) {
-                            contractStatus.innerHTML = '✓ Unlocked';
-                            contractStatus.style.color = '#4ade80';
-                            contractTag.innerHTML = 'Employment contract active';
-                        } else {
-                            contractStatus.innerHTML = `${checkinDays}/7`;
-                            contractStatus.style.color = '#CCB299';
-                            contractTag.innerHTML = `${7 - checkinDays} Day${(7 - checkinDays) !== 1 ? 's' : ''} Left To Unlock`;
-                        }
-                    }
+
+const contractStatus = document.getElementById('contractStatus');
+const contractTag = document.getElementById('contractTag');
+if (contractStatus) {
+    if (checkinDays >= 7) {
+        contractStatus.innerHTML = '✓ Unlocked';
+        contractStatus.style.color = '#4ade80';
+        contractTag.innerHTML = 'Employment contract active';
+    } else {
+        contractStatus.innerHTML = `${checkinDays}/7`;
+        contractStatus.style.color = '#CCB299';
+        contractTag.innerHTML = `${7 - checkinDays} Day${(7 - checkinDays) !== 1 ? 's' : ''} Left To Unlock`;
+    }
+}
 
                     // ===== Certificate 卡片数据 =====
 const { data: companyData } = await sb
