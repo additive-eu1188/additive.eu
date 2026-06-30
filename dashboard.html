@@ -1235,7 +1235,6 @@
                 <!-- 卡片1: Total Earnings - 无跳转 -->
                 <div class="overview-card" id="card1">
                     <div class="overview-card-content">
-                        <canvas id="bubbleCanvas1" class="bubble-canvas"></canvas>
                         <i class="fas fa-coins card-icon"></i>
                         <div class="overview-label" data-i18n="dashboard_total_earnings">TOTAL EARNINGS</div>
                         <div class="overview-value" id="totalEarnings">€0.00</div>
@@ -1246,7 +1245,6 @@
                 <!-- 卡片2: Active Events - 跳转 event.html -->
                 <div class="overview-card" id="card2" onclick="window.location.href='event.html'">
                     <div class="overview-card-content">
-                        <canvas id="bubbleCanvas2" class="bubble-canvas"></canvas>
                         <i class="fas fa-calendar-alt card-icon"></i>
                         <div class="overview-label" data-i18n="dashboard_active_events">ACTIVE EVENTS</div>
                         <div class="overview-value" id="currentEventValue">0</div>
@@ -1257,7 +1255,6 @@
                 <!-- 卡片3: Premium Status - 跳转 membership.html -->
                 <div class="overview-card" id="card3" onclick="window.location.href='membership.html'">
                     <div class="overview-card-content">
-                        <canvas id="bubbleCanvas3" class="bubble-canvas"></canvas>
                         <i class="fas fa-gem card-icon"></i>
                         <div class="overview-label" data-i18n="dashboard_premium_status">PREMIUM STATUS</div>
                         <div class="overview-value" id="premiumStatusText">Normal</div>
@@ -1268,7 +1265,6 @@
                 <!-- 卡片4: Employment Contract - 跳转 employment.html -->
                 <div class="overview-card" id="card4" onclick="window.location.href='employment.html'">
                     <div class="overview-card-content">
-                        <canvas id="bubbleCanvas4" class="bubble-canvas"></canvas>
                         <i class="fas fa-file-contract card-icon"></i>
                         <div class="overview-label" data-i18n="dashboard_contract">EMPLOYMENT CONTRACT</div>
                         <div class="overview-value" id="contractStatus">0/7</div>
@@ -1279,7 +1275,6 @@
                 <!-- 卡片5: Certificate - 跳转 company.html -->
                 <div class="overview-card" id="card5" onclick="window.location.href='company.html'">
                     <div class="overview-card-content">
-                        <canvas id="bubbleCanvas5" class="bubble-canvas"></canvas>
                         <i class="fas fa-certificate card-icon"></i>
                         <div class="overview-label" data-i18n="dashboard_certificate">CERTIFICATE</div>
                         <div class="overview-value" id="certificateStatus">✓</div>
@@ -1418,164 +1413,6 @@
                     if (amountDueCard) amountDueCard.style.display = 'none';
                 }
             })();
-
-            // ========== 气泡动画 - 优化版（统一循环 + 可见性控制） ==========
-let bubbleAnimations = [];
-let bubbleAnimationId = null;
-let bubbleCanvases = [];
-let isBubblePageVisible = true;
-
-// 页面可见性控制 - 后台时暂停动画
-document.addEventListener('visibilitychange', function() {
-    isBubblePageVisible = !document.hidden;
-    if (!isBubblePageVisible) {
-        // 页面隐藏时暂停
-        if (bubbleAnimationId) {
-            cancelAnimationFrame(bubbleAnimationId);
-            bubbleAnimationId = null;
-        }
-    } else {
-        // 页面可见时恢复
-        if (!bubbleAnimationId) {
-            animateAllBubbles();
-        }
-    }
-});
-
-function startBubble(canvasId, wrapperId) {
-    const canvas = document.getElementById(canvasId);
-    const wrapper = document.getElementById(wrapperId);
-    if (!canvas || !wrapper) return;
-    const ctx = canvas.getContext('2d');
-    let w = 0, h = 0, bubbles = [];
-
-    function resize() {
-        const rect = wrapper.getBoundingClientRect();
-        w = rect.width;
-        h = rect.height;
-        canvas.width = w;
-        canvas.height = h;
-    }
-
-    function createBubble() {
-        return {
-            x: Math.random() * w,
-            y: h + 15,
-            radius: Math.random() * 10 + 4,
-            alpha: Math.random() * 0.3 + 0.1,
-            speedY: -0.8 - Math.random() * 1.0,
-            wobble: Math.random() * Math.PI * 2,
-            wobbleSpeed: 0.02 + Math.random() * 0.04
-        };
-    }
-
-    function initBubbles() {
-        bubbles = [];
-        for (let i = 0; i < 12; i++) {
-            bubbles.push(createBubble());
-        }
-    }
-
-    // 存储绘制函数供统一循环调用
-    const drawFunction = function() {
-        if (!w || !h) return;
-        if (Math.random() < 0.035 && bubbles.length < 12) {
-            bubbles.push(createBubble());
-        }
-        ctx.clearRect(0, 0, w, h);
-        for (let i = bubbles.length - 1; i >= 0; i--) {
-            const b = bubbles[i];
-            b.y += b.speedY;
-            b.wobble += b.wobbleSpeed;
-            b.x += Math.sin(b.wobble) * 0.4;
-            b.alpha -= 0.002;
-            if (b.y < -30 || b.alpha <= 0.01) {
-                bubbles.splice(i, 1);
-                continue;
-            }
-            ctx.beginPath();
-            ctx.arc(b.x, b.y, b.radius, 0, Math.PI * 2);
-            ctx.fillStyle = `rgba(204, 178, 153, ${b.alpha * 0.3})`;
-            ctx.fill();
-            ctx.beginPath();
-            ctx.arc(b.x, b.y, b.radius, 0, Math.PI * 2);
-            ctx.strokeStyle = `rgba(204, 178, 153, ${b.alpha * 0.4})`;
-            ctx.lineWidth = 1;
-            ctx.stroke();
-            ctx.beginPath();
-            ctx.arc(b.x - b.radius * 0.3, b.y - b.radius * 0.3, b.radius * 0.2, 0, Math.PI * 2);
-            ctx.fillStyle = `rgba(232, 213, 184, ${b.alpha * 0.5})`;
-            ctx.fill();
-        }
-    };
-
-    const observer = new ResizeObserver(() => {
-        resize();
-        initBubbles();
-    });
-    observer.observe(wrapper);
-    
-    resize();
-    initBubbles();
-
-    // 存储到全局列表
-    bubbleCanvases.push({
-        draw: drawFunction,
-        wrapper: wrapper,
-        observer: observer,
-        canvas: canvas
-    });
-}
-
-// 统一动画循环
-function animateAllBubbles() {
-    if (!isBubblePageVisible) {
-        bubbleAnimationId = requestAnimationFrame(animateAllBubbles);
-        return;
-    }
-    for (const item of bubbleCanvases) {
-        item.draw();
-    }
-    bubbleAnimationId = requestAnimationFrame(animateAllBubbles);
-}
-
-function initAllBubbles() {
-    // 清理旧动画
-    if (bubbleAnimationId) {
-        cancelAnimationFrame(bubbleAnimationId);
-        bubbleAnimationId = null;
-    }
-    // 清理旧 canvas 数据
-    for (const item of bubbleCanvases) {
-        if (item.observer) item.observer.disconnect();
-    }
-    bubbleCanvases = [];
-    
-    // 重新创建
-    startBubble('bubbleCanvas1', 'card1');
-    startBubble('bubbleCanvas2', 'card2');
-    startBubble('bubbleCanvas3', 'card3');
-    startBubble('bubbleCanvas4', 'card4');
-    startBubble('bubbleCanvas5', 'card5');
-    
-    // 启动统一动画
-    if (bubbleAnimationId) {
-        cancelAnimationFrame(bubbleAnimationId);
-        bubbleAnimationId = null;
-    }
-    animateAllBubbles();
-}
-
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initAllBubbles);
-} else {
-    initAllBubbles();
-}
-
-window.addEventListener('resize', function() {
-    // 重新初始化气泡（已优化）
-    setTimeout(initAllBubbles, 200);
-});
 
             // ========== 产品滚动 - 优化版（限制 DOM 克隆） ==========
 let currentStepIndex = 0,
