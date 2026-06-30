@@ -1,7 +1,5 @@
-// admin-content.js - 内容管理页面（完整版）
-// 风格与 Withdrawal 页面一致
-// 支持 6 个内容模块：Events, Certificate, Contract, T&C, Privacy, Rules
-// ✅ 列表中显示图片预览
+// admin-content.js - 内容管理页面（完整修复版）
+// 所有 Events 统一使用 system_content 表
 
 // ============================================================
 // 全局状态
@@ -24,13 +22,11 @@ async function loadContentPage() {
     const container = document.getElementById('page_content');
     if (!container) return;
 
-    // 加载所有内容数据
     await loadAllContentData();
 
     container.innerHTML = `
         <div class="card" style="background: rgba(12, 16, 28, 0.6); backdrop-filter: blur(16px); border-radius: 20px; border: 1px solid rgba(255,255,255,0.04); padding: 24px;">
             
-            <!-- ===== 页面标题 ===== -->
             <div class="withdraw-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 24px;">
                 <div>
                     <h2 style="font-size: 18px; font-weight: 600; color: #d8e0f0; margin: 0;">
@@ -48,7 +44,6 @@ async function loadContentPage() {
                 </div>
             </div>
 
-            <!-- ===== 6 个内容按钮 ===== -->
             <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 24px; padding: 6px; background: rgba(255,255,255,0.02); border-radius: 16px; border: 1px solid rgba(255,255,255,0.04);">
                 <button class="content-tab-btn active" data-tab="events" style="flex: 1; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06); border-radius: 30px; padding: 10px 16px; color: rgba(255,255,255,0.3); cursor: pointer; font-size: 13px; font-weight: 500; transition: all 0.2s; font-family: 'Inter', sans-serif; text-align: center; min-width: 80px;">
                     <i class="fas fa-calendar-alt"></i> Events
@@ -70,7 +65,6 @@ async function loadContentPage() {
                 </button>
             </div>
 
-            <!-- ===== 操作栏 ===== -->
             <div id="contentActionBar" style="display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 20px; align-items: center;">
                 <button id="addContentBtn" class="success" style="background: rgba(74,222,128,0.06); border: 1px solid rgba(74,222,128,0.08); border-radius: 40px; padding: 8px 20px; color: #4ade80; font-weight: 600; font-size: 13px; cursor: pointer; transition: all 0.3s; font-family: 'Inter', sans-serif; display: inline-flex; align-items: center; gap: 6px;">
                     <i class="fas fa-plus"></i> Add Event
@@ -81,9 +75,7 @@ async function loadContentPage() {
                 <span id="arrangeHint" style="font-size: 11px; color: #6a7a92; display: none;">Drag items to reorder</span>
             </div>
 
-            <!-- ===== 内容列表 ===== -->
             <div id="contentListContainer" style="background: rgba(255,255,255,0.02); border-radius: 16px; border: 1px solid rgba(255,255,255,0.04); min-height: 200px; padding: 4px;">
-                <!-- 由 JavaScript 动态渲染 -->
             </div>
         </div>
     `;
@@ -225,7 +217,6 @@ async function loadContentPage() {
             color: #e88080;
         }
 
-        /* 富文本编辑器 */
         .editor-toolbar {
             display: flex;
             gap: 4px;
@@ -250,11 +241,6 @@ async function loadContentPage() {
         .editor-toolbar button:hover {
             background: rgba(255,255,255,0.08);
             color: #d8e0f0;
-        }
-        .editor-toolbar button.active {
-            background: rgba(200,176,144,0.12);
-            color: #c8b090;
-            border-color: rgba(200,176,144,0.2);
         }
         .editor-content {
             background: rgba(0,0,0,0.15);
@@ -282,7 +268,6 @@ async function loadContentPage() {
         .editor-content ul, .editor-content ol { margin: 8px 0 12px 24px; }
         .editor-content li { margin-bottom: 4px; }
 
-        /* 预览弹窗 */
         .preview-modal {
             position: fixed;
             top: 0;
@@ -408,8 +393,7 @@ async function loadContentPage() {
     `;
     document.head.appendChild(style);
 
-    // ===== 绑定事件 =====
-    // 标签切换
+    // 绑定事件
     document.querySelectorAll('.content-tab-btn').forEach(btn => {
         btn.addEventListener('click', function() {
             document.querySelectorAll('.content-tab-btn').forEach(b => b.classList.remove('active'));
@@ -419,74 +403,74 @@ async function loadContentPage() {
         });
     });
 
-    // 添加内容
     document.getElementById('addContentBtn')?.addEventListener('click', openAddContentModal);
-
-    // 排列内容
     document.getElementById('arrangeContentBtn')?.addEventListener('click', toggleArrangeMode);
-
-    // 刷新
     document.getElementById('refreshContentBtn')?.addEventListener('click', async function() {
         await loadAllContentData();
         renderContentList();
         showToast('Content refreshed', 'success');
     });
 
-    // 初始渲染
     renderContentList();
 }
 
 // ============================================================
-// 加载所有内容数据
+// 加载所有内容数据（统一使用 system_content）
 // ============================================================
 async function loadAllContentData() {
     try {
-        // 1. 加载 Events（从 system_content 表读取）
-const { data: events } = await sb
-    .from('system_content')
-    .select('*')
-    .eq('type', 'events')
-    .order('id', { ascending: true });
-eventsList = events || [];
+        // 1. 加载 Events - 从 system_content 读取 type = 'events'
+        const { data: events, error: eventsError } = await sb
+            .from('system_content')
+            .select('*')
+            .eq('type', 'events')
+            .order('id', { ascending: true });
+
+        if (eventsError) {
+            console.error('加载 Events 失败:', eventsError);
+            eventsList = [];
+        } else {
+            eventsList = events || [];
+        }
 
         // 2. 加载 Certificate (Company Profile)
-        const { data: cert } = await sb
+        const { data: cert, error: certError } = await sb
             .from('system_content')
             .select('*')
             .eq('type', 'company')
-            .single();
+            .maybeSingle();
         contentData.certificate = cert || null;
 
         // 3. 加载 Contract
-        const { data: contract } = await sb
+        const { data: contract, error: contractError } = await sb
             .from('system_content')
             .select('*')
             .eq('type', 'contract')
-            .single();
+            .maybeSingle();
         contentData.contract = contract || null;
 
         // 4. 加载 T&C
-        const { data: tc } = await sb
+        const { data: tc, error: tcError } = await sb
             .from('system_content')
             .select('*')
             .eq('type', 'tc')
-            .single();
+            .maybeSingle();
         contentData.tc = tc || null;
 
         // 5. 加载 Privacy
-        const { data: privacy } = await sb
+        const { data: privacy, error: privacyError } = await sb
             .from('system_content')
             .select('*')
             .eq('type', 'privacy')
-            .single();
+            .maybeSingle();
         contentData.privacy = privacy || null;
 
         // 6. 加载 Rules
-        const { data: rules } = await sb
+        const { data: rules, error: rulesError } = await sb
             .from('system_content')
             .select('*')
             .eq('type', 'rules')
-            .single();
+            .maybeSingle();
         contentData.rules = rules || null;
 
         console.log('✅ 所有内容数据加载完成');
@@ -503,7 +487,7 @@ eventsList = events || [];
 }
 
 // ============================================================
-// ✅ 获取内容的图片 URL（支持多种格式）
+// 获取内容的图片 URL
 // ============================================================
 function getContentImageUrl(item) {
     if (!item) return null;
@@ -526,7 +510,7 @@ function getContentImageUrl(item) {
 }
 
 // ============================================================
-// 渲染内容列表（✅ 带图片预览）
+// 渲染内容列表
 // ============================================================
 function renderContentList() {
     const container = document.getElementById('contentListContainer');
@@ -540,8 +524,8 @@ function renderContentList() {
         items = eventsList.map(e => ({
             id: e.id,
             title: e.title || 'Untitled Event',
-            subtitle: e.event_date ? new Date(e.event_date).toLocaleDateString() : 'No date',
-            status: e.status || 'active',
+            subtitle: e.updated_at ? new Date(e.updated_at).toLocaleDateString() : 'No date',
+            status: 'active',
             type: 'event',
             data: e,
             imageUrl: getContentImageUrl(e)
@@ -627,7 +611,6 @@ function renderContentList() {
         const statusClass = item.status === 'active' ? 'status-active' : 'status-inactive';
         const statusText = item.status === 'active' ? 'Active' : 'Inactive';
         
-        // ✅ 生成图片缩略图
         let thumbHtml = '';
         if (item.imageUrl) {
             thumbHtml = `<img src="${item.imageUrl}" class="item-thumb" onerror="this.outerHTML='<div class=\\'item-thumb-placeholder\\'><i class=\\'fas fa-image\\'></i></div>'">`;
@@ -658,7 +641,6 @@ function renderContentList() {
 
     container.innerHTML = html;
 
-    // 拖拽事件
     if (isArrangeMode) {
         setupDragAndDrop(container);
         document.getElementById('arrangeHint').style.display = 'inline';
@@ -668,65 +650,14 @@ function renderContentList() {
 }
 
 // ============================================================
-// 拖拽排序功能
+// 拖拽排序功能（暂时禁用，因为 system_content 没有 sort_order）
 // ============================================================
 function setupDragAndDrop(container) {
-    const items = container.querySelectorAll('.content-item');
-
-    items.forEach(item => {
-        item.addEventListener('dragstart', function(e) {
-            this.classList.add('dragging');
-            e.dataTransfer.effectAllowed = 'move';
-            e.dataTransfer.setData('text/plain', this.dataset.index);
-        });
-
-        item.addEventListener('dragend', function(e) {
-            this.classList.remove('dragging');
-            document.querySelectorAll('.content-item').forEach(el => el.classList.remove('drag-over'));
-        });
-
-        item.addEventListener('dragover', function(e) {
-            e.preventDefault();
-            e.dataTransfer.dropEffect = 'move';
-            document.querySelectorAll('.content-item').forEach(el => el.classList.remove('drag-over'));
-            this.classList.add('drag-over');
-        });
-
-        item.addEventListener('dragleave', function(e) {
-            this.classList.remove('drag-over');
-        });
-
-        item.addEventListener('drop', function(e) {
-            e.preventDefault();
-            this.classList.remove('drag-over');
-
-            const fromIndex = parseInt(e.dataTransfer.getData('text/plain'));
-            const toIndex = parseInt(this.dataset.index);
-
-            if (fromIndex === toIndex) return;
-
-            // 重新排序 eventsList
-            const [movedItem] = eventsList.splice(fromIndex, 1);
-            eventsList.splice(toIndex, 0, movedItem);
-
-            // 更新 sort_order
-            eventsList.forEach((item, idx) => {
-                item.sort_order = idx;
-            });
-
-            // 保存到数据库
-            saveEventsOrder();
-
-            // 重新渲染
-            renderContentList();
-            showToast('Order updated', 'success');
-        });
-    });
+    // 拖拽功能暂时禁用，因为 system_content 表没有 sort_order 字段
+    // 保留空函数避免报错
+    console.log('拖拽排序暂时禁用');
 }
 
-// ============================================================
-// 切换排列模式
-// ============================================================
 function toggleArrangeMode() {
     const btn = document.getElementById('arrangeContentBtn');
     const isActive = btn.classList.contains('active');
@@ -742,48 +673,46 @@ function toggleArrangeMode() {
         btn.style.borderColor = 'rgba(200,176,144,0.3)';
         btn.style.background = 'rgba(200,176,144,0.08)';
         btn.style.color = '#ffffff';
+        showToast('Drag & drop disabled - coming soon', 'info');
         renderContentList();
     }
 }
 
 // ============================================================
-// 保存 Events 排序
-// ============================================================
-async function saveEventsOrder() {
-    try {
-        for (const event of eventsList) {
-            await sb
-                .from('events')
-                .update({ sort_order: event.sort_order || 0 })
-                .eq('id', event.id);
-        }
-        console.log('✅ Events order saved');
-    } catch (e) {
-        console.error('保存排序失败:', e);
-    }
-}
-
-// ============================================================
-// 删除 Event
+// 删除 Event（从 system_content 删除）
 // ============================================================
 window.deleteEventItem = function(id) {
-    showConfirm('Delete Event', 'Are you sure you want to delete this event?', async function() {
-        try {
-            await sb.from('events').delete().eq('id', parseInt(id));
-            await loadAllContentData();
-            renderContentList();
-            showToast('Event deleted', 'success');
-        } catch (e) {
-            showToast('Delete failed: ' + e.message, 'error');
+    if (typeof window.showConfirm === 'function') {
+        window.showConfirm('Delete Event', 'Are you sure you want to delete this event?', async function() {
+            try {
+                await sb.from('system_content').delete().eq('id', parseInt(id));
+                await loadAllContentData();
+                renderContentList();
+                showToast('Event deleted', 'success');
+            } catch (e) {
+                showToast('Delete failed: ' + e.message, 'error');
+            }
+        });
+    } else {
+        if (confirm('Delete this event?')) {
+            (async function() {
+                try {
+                    await sb.from('system_content').delete().eq('id', parseInt(id));
+                    await loadAllContentData();
+                    renderContentList();
+                    showToast('Event deleted', 'success');
+                } catch (e) {
+                    showToast('Delete failed: ' + e.message, 'error');
+                }
+            })();
         }
-    });
+    }
 };
 
 // ============================================================
-// 打开添加内容弹窗 (Add Event)
+// 打开添加内容弹窗
 // ============================================================
 function openAddContentModal() {
-    // 重置编辑器
     editorContent = '';
     editorImages = [];
 
@@ -791,7 +720,6 @@ function openAddContentModal() {
         <div id="addContentModal" class="modal-overlay" style="visibility: visible; opacity: 1; display: flex; align-items: center; justify-content: center; z-index: 20000;">
             <div class="modal-card" style="width: 820px; max-width: 94%; max-height: 90vh; overflow-y: auto; background: linear-gradient(160deg, #1a1428, #0e0a1a); border: 1px solid rgba(200,176,144,0.1); border-radius: 24px; padding: 28px 30px; box-shadow: 0 30px 80px rgba(0,0,0,0.6);">
                 
-                <!-- 标题 -->
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
                     <h3 style="font-size: 18px; font-weight: 600; color: #d8e0f0; margin: 0;">
                         <i class="fas fa-plus" style="color: #c8b090; margin-right: 10px;"></i>
@@ -802,13 +730,11 @@ function openAddContentModal() {
                     </button>
                 </div>
 
-                <!-- ===== 内容编辑器 ===== -->
                 <div style="margin-bottom: 16px;">
                     <label style="display: block; font-size: 11px; color: #6a7a92; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">Event Title</label>
                     <input type="text" id="eventTitleInput" placeholder="Enter event title..." style="width: 100%; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06); border-radius: 10px; padding: 10px 16px; color: #d8e0f0; font-size: 14px; outline: none; font-family: 'Inter', sans-serif;">
                 </div>
 
-                <!-- ===== 富文本工具栏 ===== -->
                 <div style="margin-bottom: 4px;">
                     <label style="display: block; font-size: 11px; color: #6a7a92; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">Content</label>
                     <div class="editor-toolbar">
@@ -832,12 +758,10 @@ function openAddContentModal() {
                     <div class="editor-content" id="eventEditor" contenteditable="true" placeholder="Write your content here..."></div>
                 </div>
 
-                <!-- ===== 图片上传预览 ===== -->
                 <div id="editorImagePreview" style="display: flex; gap: 8px; flex-wrap: wrap; margin: 8px 0 12px 0; padding: 8px; background: rgba(0,0,0,0.15); border-radius: 8px; min-height: 30px;">
                     <span style="font-size: 11px; color: #6a7a92;">Uploaded images will appear here</span>
                 </div>
 
-                <!-- ===== 操作按钮 ===== -->
                 <div style="display: flex; gap: 12px; margin-top: 16px; border-top: 1px solid rgba(255,255,255,0.04); padding-top: 16px;">
                     <button onclick="previewContent()" class="btn-primary" style="padding: 10px 24px; border-radius: 40px; border: 1px solid rgba(200,176,144,0.15); background: rgba(200,176,144,0.06); color: #c8b090; font-weight: 600; cursor: pointer; font-size: 13px; font-family: 'Inter', sans-serif; display: inline-flex; align-items: center; gap: 6px;">
                         <i class="fas fa-eye"></i> Preview
@@ -850,19 +774,16 @@ function openAddContentModal() {
                     </button>
                 </div>
 
-                <!-- ===== 状态提示 ===== -->
                 <div id="contentStatus" style="margin-top: 12px; font-size: 12px; color: #6a7a92; text-align: center;"></div>
             </div>
         </div>
     `;
 
-    // 移除旧弹窗
     const existing = document.getElementById('addContentModal');
     if (existing) existing.remove();
 
     document.body.insertAdjacentHTML('beforeend', modalHtml);
 
-    // 聚焦编辑器
     setTimeout(() => {
         const editor = document.getElementById('eventEditor');
         if (editor) editor.focus();
@@ -875,7 +796,6 @@ function openAddContentModal() {
 window.closeContentModal = function() {
     const modal = document.getElementById('addContentModal');
     if (modal) modal.remove();
-
     const preview = document.querySelector('.preview-modal');
     if (preview) preview.remove();
 };
@@ -920,9 +840,7 @@ window.uploadEditorImage = function() {
             try {
                 const url = await uploadContentImage(file);
                 if (url) {
-                    // 插入图片到编辑器
                     document.execCommand('insertImage', false, url);
-                    // 添加到预览列表
                     addImageToPreview(url);
                     showToast('Image uploaded', 'success');
                 }
@@ -967,7 +885,6 @@ function addImageToPreview(url) {
     const container = document.getElementById('editorImagePreview');
     if (!container) return;
 
-    // 移除占位文字
     const placeholder = container.querySelector('span');
     if (placeholder && container.children.length === 1) {
         container.innerHTML = '';
@@ -995,7 +912,6 @@ window.removeEditorImage = function(btn, url) {
     const div = btn.closest('div');
     if (div) div.remove();
 
-    // 如果没有图片了，恢复占位文字
     const container = document.getElementById('editorImagePreview');
     if (container && container.children.length === 0) {
         container.innerHTML = '<span style="font-size: 11px; color: #6a7a92;">Uploaded images will appear here</span>';
@@ -1030,13 +946,11 @@ window.previewContent = function() {
         </div>
     `;
 
-    // 移除旧的预览
     const existing = document.querySelector('.preview-modal');
     if (existing) existing.remove();
 
     document.body.insertAdjacentHTML('beforeend', previewHtml);
 
-    // 点击背景关闭
     document.getElementById('previewModal')?.addEventListener('click', function(e) {
         if (e.target === this) closePreview();
     });
@@ -1051,7 +965,7 @@ window.closePreview = function() {
 };
 
 // ============================================================
-// 发布内容 (Post Content)
+// 发布内容 (Post Content) - 统一使用 system_content
 // ============================================================
 window.postContent = async function() {
     const title = document.getElementById('eventTitleInput')?.value.trim();
@@ -1071,22 +985,22 @@ window.postContent = async function() {
     if (statusEl) statusEl.innerHTML = '<span style="color: #c8b090;"><i class="fas fa-spinner fa-spin"></i> Posting...</span>';
 
     try {
-        // 如果是 Events 标签
+        const imageUrlsJson = JSON.stringify(editorImages);
+
+        // 如果是 Events 标签 - 保存到 system_content
         if (currentContentTab === 'events') {
             const newEvent = {
+                type: 'events',
                 title: title,
                 content: content,
-                short_description: content.replace(/<[^>]*>/g, '').substring(0, 150),
-                image_url: editorImages.length > 0 ? JSON.stringify(editorImages) : '',
-                status: 'active',
-                sort_order: eventsList.length,
-                created_at: new Date().toISOString()
+                image_url: imageUrlsJson,
+                created_at: new Date().toISOString(),
+                updated_at: new Date().toISOString()
             };
 
-            const { data, error } = await sb
-                .from('events')
-                .insert([newEvent])
-                .select();
+            const { error } = await sb
+                .from('system_content')
+                .insert([newEvent]);
 
             if (error) throw error;
 
@@ -1106,9 +1020,7 @@ window.postContent = async function() {
             };
             const type = typeMap[currentContentTab] || currentContentTab;
 
-            // 检查是否已存在
             const existing = contentData[currentContentTab];
-            const imageUrlsJson = JSON.stringify(editorImages);
 
             if (existing) {
                 const { error } = await sb
@@ -1173,7 +1085,6 @@ window.openEditContentModal = function(type, id) {
         return;
     }
 
-    // 提取图片
     let images = [];
     if (item.image_url) {
         try {
@@ -1190,7 +1101,6 @@ window.openEditContentModal = function(type, id) {
         <div id="editContentModal" class="modal-overlay" style="visibility: visible; opacity: 1; display: flex; align-items: center; justify-content: center; z-index: 20000;">
             <div class="modal-card" style="width: 820px; max-width: 94%; max-height: 90vh; overflow-y: auto; background: linear-gradient(160deg, #1a1428, #0e0a1a); border: 1px solid rgba(200,176,144,0.1); border-radius: 24px; padding: 28px 30px; box-shadow: 0 30px 80px rgba(0,0,0,0.6);">
                 
-                <!-- 标题 -->
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
                     <h3 style="font-size: 18px; font-weight: 600; color: #d8e0f0; margin: 0;">
                         <i class="fas fa-edit" style="color: #c8b090; margin-right: 10px;"></i>
@@ -1201,13 +1111,11 @@ window.openEditContentModal = function(type, id) {
                     </button>
                 </div>
 
-                <!-- 标题输入 -->
                 <div style="margin-bottom: 16px;">
                     <label style="display: block; font-size: 11px; color: #6a7a92; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">Title</label>
                     <input type="text" id="editTitleInput" value="${escapeHtml(item.title || '')}" style="width: 100%; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06); border-radius: 10px; padding: 10px 16px; color: #d8e0f0; font-size: 14px; outline: none; font-family: 'Inter', sans-serif;">
                 </div>
 
-                <!-- 工具栏 -->
                 <div style="margin-bottom: 4px;">
                     <label style="display: block; font-size: 11px; color: #6a7a92; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">Content</label>
                     <div class="editor-toolbar">
@@ -1231,7 +1139,6 @@ window.openEditContentModal = function(type, id) {
                     <div class="editor-content" id="editEditor" contenteditable="true">${item.content || ''}</div>
                 </div>
 
-                <!-- 图片预览 -->
                 <div id="editImagePreview" style="display: flex; gap: 8px; flex-wrap: wrap; margin: 8px 0 12px 0; padding: 8px; background: rgba(0,0,0,0.15); border-radius: 8px; min-height: 30px;">
                     ${images.length > 0 ? images.map(url => `
                         <div style="position: relative; display: inline-block; width: 80px; height: 60px; border-radius: 6px; overflow: hidden; border: 1px solid rgba(255,255,255,0.06);">
@@ -1243,7 +1150,6 @@ window.openEditContentModal = function(type, id) {
                     `).join('') : '<span style="font-size: 11px; color: #6a7a92;">Uploaded images will appear here</span>'}
                 </div>
 
-                <!-- 操作按钮 -->
                 <div style="display: flex; gap: 12px; margin-top: 16px; border-top: 1px solid rgba(255,255,255,0.04); padding-top: 16px;">
                     <button onclick="previewEditContent()" class="btn-primary" style="padding: 10px 24px; border-radius: 40px; border: 1px solid rgba(200,176,144,0.15); background: rgba(200,176,144,0.06); color: #c8b090; font-weight: 600; cursor: pointer; font-size: 13px; font-family: 'Inter', sans-serif; display: inline-flex; align-items: center; gap: 6px;">
                         <i class="fas fa-eye"></i> Preview
@@ -1316,7 +1222,7 @@ window.previewEditContent = function() {
 };
 
 // ============================================================
-// 更新内容
+// 更新内容 - 统一使用 system_content
 // ============================================================
 window.updateContent = async function(type, id) {
     const title = document.getElementById('editTitleInput')?.value.trim();
@@ -1334,13 +1240,13 @@ window.updateContent = async function(type, id) {
     try {
         const imageUrlsJson = JSON.stringify(editorImages);
 
+        // Event 类型 - 更新 system_content
         if (type === 'event') {
             const { error } = await sb
-                .from('events')
+                .from('system_content')
                 .update({
                     title: title,
                     content: content,
-                    short_description: content.replace(/<[^>]*>/g, '').substring(0, 150),
                     image_url: imageUrlsJson,
                     updated_at: new Date().toISOString()
                 })
@@ -1359,7 +1265,6 @@ window.updateContent = async function(type, id) {
             };
             const dbType = typeMap[type] || type;
 
-            // 获取现有记录
             const existing = contentData[type];
             if (existing) {
                 const { error } = await sb
@@ -1438,10 +1343,8 @@ window.loadContentPage = loadContentPage;
 window.renderContentList = renderContentList;
 window.loadAllContentData = loadAllContentData;
 
-console.log('✅ admin-content.js loaded (完整版 - 带图片预览)');
-console.log('   - 支持 6 个内容模块');
-console.log('   - ✅ 列表中显示图片缩略图');
-console.log('   - 富文本编辑器带工具栏');
-console.log('   - 拖拽排序功能');
-console.log('   - 移动端预览功能');
-console.log('   - 与 Withdrawal 页面风格一致');
+console.log('✅ admin-content.js loaded (完整修复版 - 统一使用 system_content)');
+console.log('   - Events 使用 system_content 表 (type = events)');
+console.log('   - 支持添加、编辑、删除');
+console.log('   - 富文本编辑器带图片上传');
+console.log('   - 拖拽排序暂时禁用');

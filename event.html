@@ -387,11 +387,10 @@
     
     try {
         const { data: events, error } = await sb
-            .from('events')
+            .from('system_content')
             .select('*')
-            .eq('status', 'active')
-            .order('sort_order', { ascending: true })
-            .order('created_at', { ascending: false });
+            .eq('type', 'events')
+            .order('id', { ascending: true });
         
         if (error) throw error;
         
@@ -407,8 +406,18 @@
             card.className = 'event-card';
             card.onclick = () => showEventDetail(event);
             
-            const imageUrl = event.image_url || 'https://placehold.co/1080x1920/1a1f3a/C9B095?text=Event';
-            const eventDate = event.event_date ? new Date(event.event_date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) : 'Date TBA';
+            // 解析图片 URL
+            let imageUrl = 'https://placehold.co/1080x1920/1a1f3a/C9B095?text=Event';
+            if (event.image_url) {
+                try {
+                    const parsed = JSON.parse(event.image_url);
+                    if (Array.isArray(parsed) && parsed.length > 0) {
+                        imageUrl = parsed[0];
+                    }
+                } catch (e) {}
+            }
+            
+            const eventDate = event.created_at ? new Date(event.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) : 'Date TBA';
             
             card.innerHTML = `
                 <div class="event-image-wrapper">
@@ -417,8 +426,8 @@
                 <div class="event-content">
                     <div class="event-title">${escapeHtml(event.title)}</div>
                     <div class="event-date"><i class="fas fa-calendar-day"></i> ${eventDate}</div>
-                    <div class="event-description">${escapeHtml(event.short_description || event.description || '').substring(0, 100)}${(event.description || '').length > 100 ? '...' : ''}</div>
-                    <span class="event-badge"><i class="fas fa-tag"></i> ${event.badge || 'Promotion'}</span>
+                    <div class="event-description">${escapeHtml((event.content || '').replace(/<[^>]*>/g, '')).substring(0, 100)}${(event.content || '').length > 100 ? '...' : ''}</div>
+                    <span class="event-badge"><i class="fas fa-tag"></i> Promotion</span>
                 </div>
             `;
             container.appendChild(card);
