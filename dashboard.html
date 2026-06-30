@@ -186,6 +186,26 @@
         .uid-badge { font-size: 11px; color: var(--text-secondary); background: rgba(204,178,153,0.1); display: inline-block; padding: 4px 10px; border-radius: 20px; }
         .premium-tag { background: rgba(204,178,153,0.08); border: 1px solid var(--accent-gold-border); padding: 4px 12px; border-radius: 40px; font-size: 11px; font-weight: 600; color: var(--accent-gold); }
 
+/* 在现有样式后添加 */
+.uid-badge {
+    font-size: 11px;
+    color: var(--text-secondary);
+    background: rgba(204,178,153,0.1);
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    border: 1px solid rgba(204,178,153,0.06);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    text-shadow: 0 1px 4px rgba(0,0,0,0.2);
+}
+.uid-badge #displayUid {
+    color: var(--accent-gold);
+    font-weight: 700;
+}
+
                 /* ===== 玫瑰金借记卡样式 ===== */
         .card-rosegold {
             background: linear-gradient(160deg, #1a0a0a 0%, #3a1818 20%, #5a2828 40%, #7a3838 55%, #5a2828 70%, #3a1818 85%, #1a0a0a 100%);
@@ -1152,9 +1172,9 @@
 
             <div class="welcome-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; flex-wrap: wrap; gap: 16px;">
                 <div style="display: flex; align-items: center; gap: 12px;">
-                    <div class="uid-badge" style="font-size: 11px; color: var(--text-secondary); background: rgba(204,178,153,0.1); display: inline-block; padding: 4px 10px; border-radius: 20px;">
-                        <span data-i18n="uid">UID</span>: <span id="displayUid">---</span>
-                    </div>
+                    <div class="uid-badge" style="font-size: 11px; color: var(--text-secondary); background: rgba(204,178,153,0.1); display: inline-block; padding: 4px 10px; border-radius: 20px; font-weight: 600; letter-spacing: 0.5px; border: 1px solid rgba(204,178,153,0.06);">
+    <span data-i18n="operator_id">OPERATOR ID</span>: <span id="displayUid" style="color: var(--accent-gold); font-weight: 700;">---</span>
+</div>
                     <span id="displayUsername" style="display:none;"></span>
                 </div>
                 <div class="premium-tag" style="background: rgba(204,178,153,0.08); border: 1px solid var(--accent-gold-border); padding: 4px 12px; border-radius: 40px; font-size: 11px; font-weight: 600; color: var(--accent-gold);">
@@ -1178,7 +1198,7 @@
     <div class="card-header">
         <div class="left">
             <i class="fas fa-wallet"></i>
-            <span data-i18n="dashboard_balance">AVAILABLE BALANCE</span>
+            <span data-i18n="available_balance">AVAILABLE BALANCE</span>
         </div>
     </div>
     <div class="card-content-wrapper">
@@ -1196,13 +1216,13 @@
             <!-- User 在分割线下方 -->
             <div class="user-row">
                 <div class="user-row-left">
-                    <div class="label"><i class="fas fa-user"></i> User</div>
+                    <div class="label"><i class="fas fa-user"></i> <span data-i18n="user_label">User</span></div>
                     <div class="value" id="balanceUsername">---</div>
                 </div>
                 <div class="user-row-right">
                     <div class="action-link" onclick="location.href='membership.html'">
-                        Upgrade →
-                    </div>
+    <span data-i18n="upgrade">Upgrade</span> →
+</div>
                 </div>
             </div>
         </div>
@@ -1225,7 +1245,7 @@
     <div class="card-header">
         <div class="left">
             <i class="fas fa-exclamation-triangle"></i>
-            <span>AMOUNT DUE</span>
+            <span data-i18n="amount_due">AMOUNT DUE</span>
         </div>
     </div>
     <div class="card-content-wrapper">
@@ -1243,13 +1263,13 @@
             <!-- User 在分割线下方 -->
             <div class="user-row">
                 <div class="user-row-left">
-                    <div class="label"><i class="fas fa-user"></i> User</div>
+                    <div class="label"><i class="fas fa-user"></i> <span data-i18n="user_label">User</span></div>
                     <div class="value" id="amountDueUsername">---</div>
                 </div>
                 <div class="user-row-right">
                     <div class="action-link" onclick="location.href='start.html'">
-                        Recharge →
-                    </div>
+    <span data-i18n="recharge">Recharge</span> →
+</div>
                 </div>
             </div>
         </div>

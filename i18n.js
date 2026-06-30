@@ -237,6 +237,12 @@ if (typeof window._i18n_loaded === 'undefined') {
             'dashboard_normal': 'Normal',
             'dashboard_vip': 'VIP',
             'dashboard_svip': 'SVIP',
+'operator_id': 'BETREIBER-ID',
+'available_balance': 'VERFÜGBARES GUTHABEN',
+'amount_due': 'FÄLLIGER BETRAG',
+'upgrade': 'Upgraden',
+'recharge': 'Aufladen',
+'user_label': 'Benutzer',
 
             // ==================== Start ====================
             'start_title': 'Begin Publish',
@@ -910,6 +916,12 @@ if (typeof window._i18n_loaded === 'undefined') {
             'dashboard_normal': 'Normal',
             'dashboard_vip': 'VIP',
             'dashboard_svip': 'SVIP',
+'operator_id': 'ID OPERATORE',
+'available_balance': 'SALDO DISPONIBILE',
+'amount_due': 'IMPORTO DOVUTO',
+'upgrade': 'Aggiorna',
+'recharge': 'Ricarica',
+'user_label': 'Utente',
 
             // ==================== Start ====================
             'start_title': 'Veröffentlichung beginnen',
@@ -1583,6 +1595,12 @@ if (typeof window._i18n_loaded === 'undefined') {
             'dashboard_normal': 'Normale',
             'dashboard_vip': 'VIP',
             'dashboard_svip': 'SVIP',
+'operator_id': 'OPERATOR ID',
+'available_balance': 'AVAILABLE BALANCE',
+'amount_due': 'AMOUNT DUE',
+'upgrade': 'Upgrade',
+'recharge': 'Recharge',
+'user_label': 'User',
 
             // ==================== Start ====================
             'start_title': 'Inizia Pubblicazione',
