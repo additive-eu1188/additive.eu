@@ -2001,6 +2001,28 @@
                 } catch (e) { console.error('加载数据失败:', e); }
             }
             loadDashboard();
+
+// ============================================================
+            // 🔥 监听充值完成事件（从 start.html 触发）
+            // ============================================================
+            window.addEventListener('storage', function(e) {
+                if (e.key === 'refresh_start_page') {
+                    console.log('🔄 检测到充值完成，刷新 Dashboard 数据');
+                    localStorage.removeItem('refresh_start_page');
+                    loadDashboard();
+                    checkAmountDueAndSwitchCard();
+                }
+            });
+
+            document.addEventListener('visibilitychange', function() {
+                if (document.visibilityState === 'visible') {
+                    setTimeout(function() {
+                        console.log('🔄 页面可见，刷新 Dashboard 数据');
+                        loadDashboard();
+                        checkAmountDueAndSwitchCard();
+                    }, 500);
+                }
+            });
         })();
     </script>
     <script src="i18n.js"></script>
@@ -2010,6 +2032,8 @@
                 window.i18n.applyTranslations();
             }
         });
+
+
     </script>
 </body>
 </html>
