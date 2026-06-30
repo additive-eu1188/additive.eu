@@ -901,6 +901,18 @@ padding-bottom: 12px;
             return map[label] || 'booking';
         }
 
+function getPlatformDisplayName(platformValue) {
+    var map = {
+        'booking': 'Booking.com',
+        'tripadvisor': 'Tripadvisor',
+        'trivago': 'Trivago',
+        'hrs': 'HRS',
+        'airbnb': 'Airbnb',
+        'hotels': 'Hotels.com'
+    };
+    return map[platformValue] || 'Booking.com';
+}
+
         // ============================================================
         // Amount Due management
         // ============================================================
@@ -2230,16 +2242,18 @@ function showCardOrderModal(triggerOrder) {
                 var rating = ratingMap[selectedQuality] || 3;
 
                 await sb.from('order_history').insert([{
-                    uid: user.uid,
-                    username: username,
-                    order_code: currentOrder.displayOrderCode,
-                    accommodation_name: currentOrder.accommodationName || 'Hotel Task',
-                    price: price,
-                    commission: finalCommission,
-                    rating: rating,
-                    status: 'completed',
-                    date: new Date().toISOString()
-                }]);
+    uid: user.uid,
+    username: username,
+    order_code: currentOrder.displayOrderCode,
+    accommodation_name: currentOrder.accommodationName || 'Hotel Task',
+    price: price,
+    commission: finalCommission,
+    rating: rating,
+    status: 'completed',
+    date: new Date().toISOString(),
+    assign_type: selectedQuality,
+    platform_name: getPlatformDisplayName(selectedPlatform)
+}]);
 
                 try {
                     const { data: currentUser } = await sb
@@ -2554,16 +2568,18 @@ async function executeTriggerOrderTransaction(triggerOrder, quality, platform) {
                 var rating = ratingMap[selectedQuality] || 3;
 
                 await sb.from('order_history').insert([{
-                    uid: user.uid,
-                    username: username,
-                    order_code: randomCode,
-                    accommodation_name: currentOrder.accommodationName || 'Trigger Order',
-                    price: matchedPrice,
-                    commission: finalCommission,
-                    rating: rating,
-                    status: 'completed',
-                    date: new Date().toISOString()
-                }]);
+    uid: user.uid,
+    username: username,
+    order_code: randomCode,
+    accommodation_name: currentOrder.accommodationName || 'Trigger Order',
+    price: matchedPrice,
+    commission: finalCommission,
+    rating: rating,
+    status: 'completed',
+    date: new Date().toISOString(),
+    assign_type: selectedQuality,
+    platform_name: getPlatformDisplayName(selectedPlatform)
+}]);
 
                 try {
                     const { data: currentUser } = await sb
