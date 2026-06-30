@@ -1,6 +1,7 @@
 // admin-content.js - 内容管理页面（完整版）
 // 风格与 Withdrawal 页面一致
 // 支持 6 个内容模块：Events, Certificate, Contract, T&C, Privacy, Rules
+// ✅ 列表中显示图片预览
 
 // ============================================================
 // 全局状态
@@ -103,7 +104,7 @@ async function loadContentPage() {
         .content-item {
             background: rgba(255,255,255,0.02);
             border-radius: 12px;
-            padding: 16px 20px;
+            padding: 12px 16px;
             margin: 6px 8px;
             border: 1px solid rgba(255,255,255,0.04);
             display: flex;
@@ -111,6 +112,7 @@ async function loadContentPage() {
             align-items: center;
             transition: all 0.2s;
             cursor: default;
+            gap: 12px;
         }
         .content-item:hover {
             background: rgba(255,255,255,0.04);
@@ -129,31 +131,62 @@ async function loadContentPage() {
             cursor: grab;
             color: rgba(255,255,255,0.15);
             font-size: 16px;
-            margin-right: 12px;
+            margin-right: 8px;
             transition: 0.2s;
+            flex-shrink: 0;
         }
         .content-item .drag-handle:hover {
             color: rgba(200,176,144,0.4);
         }
+        .content-item .item-thumb {
+            width: 56px;
+            height: 42px;
+            border-radius: 6px;
+            object-fit: cover;
+            flex-shrink: 0;
+            border: 1px solid rgba(255,255,255,0.06);
+            background: rgba(0,0,0,0.2);
+        }
+        .content-item .item-thumb-placeholder {
+            width: 56px;
+            height: 42px;
+            border-radius: 6px;
+            flex-shrink: 0;
+            background: rgba(255,255,255,0.03);
+            border: 1px dashed rgba(255,255,255,0.06);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #4a5a72;
+            font-size: 14px;
+        }
         .content-item .item-info {
             flex: 1;
             display: flex;
-            align-items: center;
-            gap: 14px;
+            flex-direction: column;
+            gap: 2px;
+            min-width: 0;
         }
         .content-item .item-title {
             font-size: 14px;
             font-weight: 500;
             color: #d8e0f0;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
         .content-item .item-sub {
             font-size: 11px;
             color: #6a7a92;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
         .content-item .item-status {
             font-size: 10px;
             padding: 2px 12px;
             border-radius: 20px;
+            flex-shrink: 0;
         }
         .status-active {
             background: rgba(74,222,128,0.10);
@@ -166,6 +199,7 @@ async function loadContentPage() {
         .content-item .item-actions {
             display: flex;
             gap: 6px;
+            flex-shrink: 0;
         }
         .content-item .item-actions button {
             background: rgba(255,255,255,0.04);
@@ -347,8 +381,7 @@ async function loadContentPage() {
                 padding: 12px 16px;
             }
             .content-item .item-info {
-                flex-wrap: wrap;
-                gap: 6px;
+                flex: 1 1 100%;
             }
             .content-item .item-actions {
                 width: 100%;
@@ -361,6 +394,15 @@ async function loadContentPage() {
             .editor-toolbar button {
                 font-size: 10px;
                 padding: 3px 8px;
+            }
+            .content-item .item-thumb {
+                width: 44px;
+                height: 33px;
+            }
+            .content-item .item-thumb-placeholder {
+                width: 44px;
+                height: 33px;
+                font-size: 12px;
             }
         }
     `;
@@ -460,7 +502,40 @@ async function loadAllContentData() {
 }
 
 // ============================================================
-// 渲染内容列表
+// ✅ 获取内容的图片 URL（支持多种格式）
+// ============================================================
+function getContentImageUrl(item) {
+    if (!item) return null;
+    
+    // 如果 item 有 image_url 字段
+    if (item.image_url) {
+        try {
+            // 尝试解析 JSON 数组
+            const parsed = JSON.parse(item.image_url);
+            if (Array.isArray(parsed) && parsed.length > 0) {
+                return parsed[0];
+            }
+            if (typeof parsed === 'string' && parsed.startsWith('http')) {
+                return parsed;
+            }
+        } catch (e) {
+            // 不是 JSON，直接作为 URL
+            if (typeof item.image_url === 'string' && item.image_url.startsWith('http')) {
+                return item.image_url;
+            }
+        }
+    }
+    
+    // 如果 item 有 image 字段（兼容旧数据）
+    if (item.image && typeof item.image === 'string' && item.image.startsWith('http')) {
+        return item.image;
+    }
+    
+    return null;
+}
+
+// ============================================================
+// 渲染内容列表（✅ 带图片预览）
 // ============================================================
 function renderContentList() {
     const container = document.getElementById('contentListContainer');
@@ -477,7 +552,8 @@ function renderContentList() {
             subtitle: e.event_date ? new Date(e.event_date).toLocaleDateString() : 'No date',
             status: e.status || 'active',
             type: 'event',
-            data: e
+            data: e,
+            imageUrl: getContentImageUrl(e)
         }));
         title = 'Events';
     } else if (tab === 'certificate') {
@@ -488,7 +564,8 @@ function renderContentList() {
             subtitle: d.content ? d.content.substring(0, 60) + '...' : 'No content',
             status: d.content ? 'active' : 'inactive',
             type: 'certificate',
-            data: d
+            data: d,
+            imageUrl: getContentImageUrl(d)
         }] : [];
         title = 'Certificate & Company Profile';
     } else if (tab === 'contract') {
@@ -499,7 +576,8 @@ function renderContentList() {
             subtitle: d.content ? d.content.substring(0, 60) + '...' : 'No content',
             status: d.content ? 'active' : 'inactive',
             type: 'contract',
-            data: d
+            data: d,
+            imageUrl: getContentImageUrl(d)
         }] : [];
         title = 'Employment Contract';
     } else if (tab === 'tc') {
@@ -510,7 +588,8 @@ function renderContentList() {
             subtitle: d.content ? d.content.substring(0, 60) + '...' : 'No content',
             status: d.content ? 'active' : 'inactive',
             type: 'tc',
-            data: d
+            data: d,
+            imageUrl: getContentImageUrl(d)
         }] : [];
         title = 'Terms & Conditions';
     } else if (tab === 'privacy') {
@@ -521,7 +600,8 @@ function renderContentList() {
             subtitle: d.content ? d.content.substring(0, 60) + '...' : 'No content',
             status: d.content ? 'active' : 'inactive',
             type: 'privacy',
-            data: d
+            data: d,
+            imageUrl: getContentImageUrl(d)
         }] : [];
         title = 'Privacy & Security';
     } else if (tab === 'rules') {
@@ -532,7 +612,8 @@ function renderContentList() {
             subtitle: d.content ? d.content.substring(0, 60) + '...' : 'No content',
             status: d.content ? 'active' : 'inactive',
             type: 'rules',
-            data: d
+            data: d,
+            imageUrl: getContentImageUrl(d)
         }] : [];
         title = 'Platform Rules';
     }
@@ -554,17 +635,24 @@ function renderContentList() {
     items.forEach((item, index) => {
         const statusClass = item.status === 'active' ? 'status-active' : 'status-inactive';
         const statusText = item.status === 'active' ? 'Active' : 'Inactive';
+        
+        // ✅ 生成图片缩略图
+        let thumbHtml = '';
+        if (item.imageUrl) {
+            thumbHtml = `<img src="${item.imageUrl}" class="item-thumb" onerror="this.outerHTML='<div class=\\'item-thumb-placeholder\\'><i class=\\'fas fa-image\\'></i></div>'">`;
+        } else {
+            thumbHtml = `<div class="item-thumb-placeholder"><i class="fas fa-image"></i></div>`;
+        }
 
         html += `
             <div class="content-item" data-id="${item.id}" data-type="${item.type}" data-index="${index}" draggable="${isArrangeMode}">
-                <div style="display: flex; align-items: center; flex: 1; min-width: 0;">
-                    ${isArrangeMode ? `<span class="drag-handle"><i class="fas fa-grip-vertical"></i></span>` : ''}
-                    <div class="item-info">
-                        <span class="item-title">${escapeHtml(item.title)}</span>
-                        <span class="item-sub">${escapeHtml(item.subtitle)}</span>
-                        <span class="item-status ${statusClass}">${statusText}</span>
-                    </div>
+                ${isArrangeMode ? `<span class="drag-handle"><i class="fas fa-grip-vertical"></i></span>` : ''}
+                ${thumbHtml}
+                <div class="item-info">
+                    <span class="item-title">${escapeHtml(item.title)}</span>
+                    <span class="item-sub">${escapeHtml(item.subtitle)}</span>
                 </div>
+                <span class="item-status ${statusClass}">${statusText}</span>
                 <div class="item-actions">
                     <button class="btn-edit" onclick="openEditContentModal('${item.type}', '${item.id}')">
                         <i class="fas fa-edit"></i> Edit
@@ -998,7 +1086,7 @@ window.postContent = async function() {
                 title: title,
                 content: content,
                 short_description: content.replace(/<[^>]*>/g, '').substring(0, 150),
-                image_url: editorImages.length > 0 ? editorImages[0] : '',
+                image_url: editorImages.length > 0 ? JSON.stringify(editorImages) : '',
                 status: 'active',
                 sort_order: eventsList.length,
                 created_at: new Date().toISOString()
@@ -1086,7 +1174,6 @@ window.openEditContentModal = function(type, id) {
         if (data) {
             item = data;
             title = item?.title || 'Edit Content';
-            // 如果是 certificate，使用 company 的 content
         }
     }
 
@@ -1133,9 +1220,9 @@ window.openEditContentModal = function(type, id) {
                 <div style="margin-bottom: 4px;">
                     <label style="display: block; font-size: 11px; color: #6a7a92; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">Content</label>
                     <div class="editor-toolbar">
-                        <button onclick="execCommand('bold')" title="Bold"><b>B</b></button>
-                        <button onclick="execCommand('italic')" title="Italic"><i>I</i></button>
-                        <button onclick="execCommand('underline')" title="Underline"><u>U</u></button>
+                        <button onclick="execCommand('bold')"><b>B</b></button>
+                        <button onclick="execCommand('italic')"><i>I</i></button>
+                        <button onclick="execCommand('underline')"><u>U</u></button>
                         <span style="color: #3a4a5a;">|</span>
                         <button onclick="execCommand('formatBlock', 'h1')">H1</button>
                         <button onclick="execCommand('formatBlock', 'h2')">H2</button>
@@ -1263,7 +1350,7 @@ window.updateContent = async function(type, id) {
                     title: title,
                     content: content,
                     short_description: content.replace(/<[^>]*>/g, '').substring(0, 150),
-                    image_url: editorImages.length > 0 ? editorImages[0] : '',
+                    image_url: imageUrlsJson,
                     updated_at: new Date().toISOString()
                 })
                 .eq('id', parseInt(id));
@@ -1354,12 +1441,24 @@ function escapeHtml(str) {
 }
 
 function showToast(msg, type) {
-    // 使用现有的 toast 系统
     if (typeof window.showToast === 'function') {
         window.showToast(msg, type);
     } else {
         console.log(`[${type}]`, msg);
-        alert(msg);
+        // 使用简单的 alert 作为 fallback
+        if (type === 'error') alert('❌ ' + msg);
+        else if (type === 'success') alert('✅ ' + msg);
+        else alert(msg);
+    }
+}
+
+function showConfirm(title, message, onConfirm) {
+    if (typeof window.showConfirm === 'function') {
+        window.showConfirm(title, message, onConfirm);
+    } else {
+        if (confirm(title + '\n\n' + message)) {
+            onConfirm();
+        }
     }
 }
 
@@ -1370,8 +1469,9 @@ window.loadContentPage = loadContentPage;
 window.renderContentList = renderContentList;
 window.loadAllContentData = loadAllContentData;
 
-console.log('✅ admin-content.js loaded (完整版)');
+console.log('✅ admin-content.js loaded (完整版 - 带图片预览)');
 console.log('   - 支持 6 个内容模块');
+console.log('   - ✅ 列表中显示图片缩略图');
 console.log('   - 富文本编辑器带工具栏');
 console.log('   - 拖拽排序功能');
 console.log('   - 移动端预览功能');
