@@ -136,7 +136,7 @@
         <main class="main" style="margin-left:0; padding:32px 40px;">
             <div class="page-content">
                 <div class="page-header">
-                    <a href="settings.html" class="back-btn"><i class="fas fa-arrow-left"></i></a>
+                    <a href="#" class="back-btn" onclick="goBack(); return false;"><i class="fas fa-arrow-left"></i></a>
                     <div>
                         <h1 data-i18n="privacy_title">Privacy &amp; Security</h1>
                         <p data-i18n="privacy_subtitle">Learn how we protect your data and privacy.</p>
@@ -217,5 +217,30 @@
             }
         });
     </script>
+<script>
+function goBack() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const from = urlParams.get('from');
+    
+    if (from === 'index') {
+        window.location.href = 'index.html';
+        return;
+    } else if (from === 'settings') {
+        window.location.href = 'settings.html';
+        return;
+    }
+    
+    const referrer = document.referrer || '';
+    if (referrer.includes('settings.html')) {
+        window.location.href = 'settings.html';
+        return;
+    } else if (referrer.includes('index.html')) {
+        window.location.href = 'index.html';
+        return;
+    }
+    
+    window.history.back();
+}
+</script>
 </body>
 </html>
