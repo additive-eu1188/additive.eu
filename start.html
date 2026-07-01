@@ -1857,10 +1857,8 @@ function renderOrderModalContent(order) {
 
     const t = window.i18n?.t || function(key) { return key; };
     
-    // ===== 计算佣金率和订单类型 =====
     var rateDisplay = commissionPercent || '0.51';
     
-    // ===== Order Type 名称 - 使用 i18n 翻译 =====
     var orderTypeDisplayName = t('normal_publications') || 'Normal Publications';
     
     if (order.isTriggerOrder) {
@@ -1875,54 +1873,73 @@ function renderOrderModalContent(order) {
         }
     }
     
-    // ===== 🔥 获取该订单预设的 ASSIGN TYPE 和 PUBLISH PLATFORM =====
     var assignedQuality = order.assignedQuality || 'Exceptional';
     var assignedPlatform = order.assignedPlatform || 'Booking.com';
-    
-    // ===== 容器1: ORDER PRICE + COMMISSIONS + TOTAL RETURN + ORDER TYPE =====
-var detailsHtml = `
-<!-- ===== 容器1: Order Details (十字分界线) ===== -->
-<div class="details-container">
-    <div class="container-label">${t('order_details_title')}</div>
-    <div class="order-details-row">
-        <div class="cross-grid">
-            <div class="cross-item">
-                <span class="label">${t('order_price')}</span>
-                <span class="value price">€${price.toFixed(2)}</span>
-            </div>
-            <div class="cross-item">
-                <span class="label">${t('commissions_title')}</span>
-                <span class="value commission">+€${commission.toFixed(2)} (${rateDisplay}%)</span>
-            </div>
-            <div class="cross-item">
-                <span class="label">${t('total_return_title')}</span>
-                <span class="value total">€${(price + commission).toFixed(2)}</span>
-            </div>
-            <div class="cross-item">
-                <span class="label">${t('order_type_title')}</span>
-                <span class="value type" style="color:#7a8aaa; font-size:12px; font-weight:500;">${escapeHtml(orderTypeDisplayName)}</span>
-            </div>
-        </div>
-    </div>
-</div>
 
-<!-- ===== 容器2: Required Selection (中间一条竖线) ===== -->
-<div class="details-container">
-    <div class="container-label">${t('required_selection_title')}</div>
-    <div class="order-details-row">
-        <div class="cross-grid-2col">
-            <div class="cross-item">
-                <span class="label">${t('assign_type_title')}</span>
-                <span class="value assigned">${escapeHtml(assignedQuality)}</span>
+    // ===== 生成平台选项 HTML =====
+    var platformOptionsHtml = PLATFORM_OPTIONS.map(function(platform) {
+        var iconClass = getPlatformIconClass(platform);
+        var platformValue = getPlatformValue(platform);
+        return `
+            <div class="platform-option" data-platform="${platformValue}">
+                <span class="p-icon ${iconClass}">${platform.substring(0, 2)}</span>
+                ${platform}
+                <span class="opt-check"><i class="fas fa-check-circle"></i></span>
             </div>
-            <div class="cross-item">
-                <span class="label">${t('publish_platform_title')}</span>
-                <span class="value assigned">${escapeHtml(assignedPlatform)}</span>
+        `;
+    }).join('');
+
+    // ===== 生成品质选项 HTML =====
+    var qualityOptionsHtml = QUALITY_OPTIONS.map(function(quality) {
+        var qualityValue = getQualityValue(quality);
+        return `
+            <div class="quality-option" data-quality="${qualityValue}">${quality}</div>
+        `;
+    }).join('');
+
+    var detailsHtml = `
+        <!-- ===== 容器1: Order Details ===== -->
+        <div class="details-container">
+            <div class="container-label">${t('order_details_title')}</div>
+            <div class="order-details-row">
+                <div class="cross-grid">
+                    <div class="cross-item">
+                        <span class="label">${t('order_price')}</span>
+                        <span class="value price">€${price.toFixed(2)}</span>
+                    </div>
+                    <div class="cross-item">
+                        <span class="label">${t('commissions_title')}</span>
+                        <span class="value commission">+€${commission.toFixed(2)} (${rateDisplay}%)</span>
+                    </div>
+                    <div class="cross-item">
+                        <span class="label">${t('total_return_title')}</span>
+                        <span class="value total">€${(price + commission).toFixed(2)}</span>
+                    </div>
+                    <div class="cross-item">
+                        <span class="label">${t('order_type_title')}</span>
+                        <span class="value type" style="color:#7a8aaa; font-size:12px; font-weight:500;">${escapeHtml(orderTypeDisplayName)}</span>
+                    </div>
+                </div>
             </div>
         </div>
-    </div>
-</div>
-`;
+
+        <!-- ===== 容器2: Required Selection ===== -->
+        <div class="details-container">
+            <div class="container-label">${t('required_selection_title')}</div>
+            <div class="order-details-row">
+                <div class="cross-grid-2col">
+                    <div class="cross-item">
+                        <span class="label">${t('assign_type_title')}</span>
+                        <span class="value assigned">${escapeHtml(assignedQuality)}</span>
+                    </div>
+                    <div class="cross-item">
+                        <span class="label">${t('publish_platform_title')}</span>
+                        <span class="value assigned">${escapeHtml(assignedPlatform)}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
     
     modalContent.innerHTML = `
         <!-- Order Image -->
@@ -1936,55 +1953,52 @@ var detailsHtml = `
             <div class="order-name">${escapeHtml(order.accommodationName || 'Hotel Task')}</div>
         </div>
         
-        <!-- 价格明细 2个容器 -->
         ${detailsHtml}
         
         <!-- ===== 容器3: 选择区域 ===== -->
-<div class="selection-section">
-    <div class="selection-row">
-        <!-- Left: Assign Quality -->
-        <div>
-            <div class="col-label">${t('assign_quality_title')}</div>
-            <div class="quality-options" id="qualityOptions">
-                <div class="quality-option" data-quality="exceptional">${t('exceptional')}</div>
-                <div class="quality-option" data-quality="satisfactory">${t('satisfactory')}</div>
-                <div class="quality-option" data-quality="foundational">${t('foundational')}</div>
-            </div>
-        </div>
-        
-        <!-- Right: Publish to -->
-        <div>
-            <div class="col-label">${t('publish_to_title')}</div>
-            <div class="platform-wrapper">
-                <div class="platform-list" id="platformList">
-                    <!-- 平台选项保持不变 -->
+        <div class="selection-section">
+            <div class="selection-row">
+                <!-- Left: Assign Quality -->
+                <div>
+                    <div class="col-label">${t('assign_quality_title')}</div>
+                    <div class="quality-options" id="qualityOptions">
+                        ${qualityOptionsHtml}
+                    </div>
                 </div>
-                <div class="scroll-hint"><i class="fas fa-chevron-down"></i> ${t('scroll_for_more')}</div>
+                
+                <!-- Right: Publish to -->
+                <div>
+                    <div class="col-label">${t('publish_to_title')}</div>
+                    <div class="platform-wrapper">
+                        <div class="platform-list" id="platformList">
+                            ${platformOptionsHtml}
+                        </div>
+                        <div class="scroll-hint"><i class="fas fa-chevron-down"></i> ${t('scroll_for_more')}</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Progress -->
+            <div class="progress-container" id="progressContainer">
+                <div class="progress-bar-bg">
+                    <div class="progress-bar-fill" id="progressBar"></div>
+                </div>
+                <div class="progress-text" id="progressText"></div>
+            </div>
+            
+            <!-- Actions -->
+            <div class="action-area">
+                <div class="selection-status" id="selectionStatus"><i class="fas fa-chevron-right" style="color:rgba(255,255,255,0.15); margin-right:6px;"></i> ${t('select_quality_platform')}</div>
+                <div class="modal-buttons">
+                    <button class="btn-publish" id="publishBtn" disabled>
+                        <i class="fas fa-cloud-upload-alt"></i> ${t('publish_btn')}
+                    </button>
+                    <button class="btn-close-modal" onclick="closeOrderModal()">
+                        <i class="fas fa-times"></i><span style="margin-left: 6px;">${t('close_btn')}</span>
+                    </button>
+                </div>
             </div>
         </div>
-    </div>
-    
-    <!-- Progress -->
-    <div class="progress-container" id="progressContainer">
-        <div class="progress-bar-bg">
-            <div class="progress-bar-fill" id="progressBar"></div>
-        </div>
-        <div class="progress-text" id="progressText"></div>
-    </div>
-    
-    <!-- Actions -->
-    <div class="action-area">
-        <div class="selection-status" id="selectionStatus"><i class="fas fa-chevron-right" style="color:rgba(255,255,255,0.15); margin-right:6px;"></i> ${t('select_quality_platform')}</div>
-        <div class="modal-buttons">
-            <button class="btn-publish" id="publishBtn" disabled>
-                <i class="fas fa-cloud-upload-alt"></i> ${t('publish_btn')}
-            </button>
-            <button class="btn-close-modal" onclick="closeOrderModal()">
-                <i class="fas fa-times"></i><span style="margin-left: 6px;">${t('close_btn')}</span>
-            </button>
-        </div>
-    </div>
-</div>
     `;
 
     modal.classList.add('active');
@@ -2023,7 +2037,6 @@ var detailsHtml = `
         publishBtn.disabled = !isReady;
         
         if (isReady) {
-            // 🔥 检查是否匹配预设值
             var qualityMatch = selectedQuality === getQualityValue(assignedQuality);
             var platformMatch = selectedPlatform === getPlatformValue(assignedPlatform);
             
