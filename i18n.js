@@ -2224,7 +2224,7 @@ if (typeof window._i18n_loaded === 'undefined') {
     // ============================================================
     // i18n 管理器
     // ============================================================
-    let currentLang = localStorage.getItem('app_lang') || 'en';
+    let currentLang = localStorage.getItem('app_lang') || 'de';
 
     function translate(key, params = {}) {
         let text = TRANSLATIONS[currentLang]?.[key] || TRANSLATIONS.en[key] || key;
@@ -2262,18 +2262,23 @@ if (typeof window._i18n_loaded === 'undefined') {
     }
 
     function setLanguage(lang) {
-        if (TRANSLATIONS[lang]) {
-            currentLang = lang;
-            localStorage.setItem('app_lang', lang);
-            applyTranslations();
-            return true;
-        }
-        return false;
+    if (TRANSLATIONS[lang]) {
+        currentLang = lang;
+        localStorage.setItem('app_lang', lang);
+        applyTranslations();
+        // 🔥 更新语言切换按钮的显示
+        updateLangUI(lang);
+        return true;
     }
+    return false;
+}
 
     function getLanguage() {
-        return currentLang;
-    }
+    // 如果 localStorage 中没有保存，返回 'de'
+    var lang = localStorage.getItem('app_lang');
+    if (lang) return lang;
+    return 'de';
+}
 
     // 暴露给全局
     window.i18n = {
