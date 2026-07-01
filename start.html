@@ -1857,10 +1857,8 @@ function renderOrderModalContent(order) {
 
     const t = window.i18n?.t || function(key) { return key; };
     
-    // ===== 计算佣金率和订单类型 =====
     var rateDisplay = commissionPercent || '0.51';
     
-    // ===== Order Type 名称 - 使用 i18n 翻译 =====
     var orderTypeDisplayName = t('normal_publications') || 'Normal Publications';
     
     if (order.isTriggerOrder) {
@@ -1875,48 +1873,49 @@ function renderOrderModalContent(order) {
         }
     }
     
-    // ===== 🔥 获取该订单预设的 ASSIGN TYPE 和 PUBLISH PLATFORM =====
     var assignedQuality = order.assignedQuality || 'Exceptional';
     var assignedPlatform = order.assignedPlatform || 'Booking.com';
     
-    // ===== 容器1: ORDER PRICE + COMMISSIONS + TOTAL RETURN + ORDER TYPE =====
+    // ============================================================
+    // 🔥 关键修复：使用 t() 函数翻译所有动态文本
+    // ============================================================
     var detailsHtml = `
-<!-- ===== 容器1: Order Details (十字分界线) ===== -->
+<!-- ===== 容器1: Order Details ===== -->
 <div class="details-container">
-    <div class="container-label" data-i18n="order_details_title">Order Details</div>
+    <div class="container-label">${t('order_details_title')}</div>
     <div class="order-details-row">
         <div class="cross-grid">
             <div class="cross-item">
-                <span class="label" data-i18n="order_price">ORDER PRICE</span>
+                <span class="label">${t('order_price')}</span>
                 <span class="value price">€${price.toFixed(2)}</span>
             </div>
             <div class="cross-item">
-                <span class="label" data-i18n="commissions">COMMISSIONS</span>
+                <span class="label">${t('commissions')}</span>
                 <span class="value commission">+€${commission.toFixed(2)} (${rateDisplay}%)</span>
             </div>
             <div class="cross-item">
-                <span class="label" data-i18n="total_return">TOTAL RETURN</span>
+                <span class="label">${t('total_return')}</span>
                 <span class="value total">€${(price + commission).toFixed(2)}</span>
             </div>
             <div class="cross-item">
-                <span class="label" data-i18n="order_type_label">ORDER TYPE</span>
+                <span class="label">${t('order_type_label')}</span>
                 <span class="value type" style="color:#7a8aaa; font-size:12px; font-weight:500;">${escapeHtml(orderTypeDisplayName)}</span>
             </div>
         </div>
     </div>
 </div>
 
-<!-- ===== 容器2: Required Selection (中间一条竖线) ===== -->
+<!-- ===== 容器2: Required Selection ===== -->
 <div class="details-container">
-    <div class="container-label" data-i18n="required_selection_title">Required Selection</div>
+    <div class="container-label">${t('required_selection_title')}</div>
     <div class="order-details-row">
         <div class="cross-grid-2col">
             <div class="cross-item">
-                <span class="label" data-i18n="assign_type_title">ASSIGN TYPE</span>
+                <span class="label">${t('assign_type_title')}</span>
                 <span class="value assigned">${escapeHtml(assignedQuality)}</span>
             </div>
             <div class="cross-item">
-                <span class="label" data-i18n="publish_platform_title">PUBLISH PLATFORM</span>
+                <span class="label">${t('publish_platform_title')}</span>
                 <span class="value assigned">${escapeHtml(assignedPlatform)}</span>
             </div>
         </div>
@@ -1936,7 +1935,6 @@ function renderOrderModalContent(order) {
             <div class="order-name">${escapeHtml(order.accommodationName || 'Hotel Task')}</div>
         </div>
         
-        <!-- 价格明细 2个容器 -->
         ${detailsHtml}
         
         <!-- ===== 容器3: 选择区域 ===== -->
@@ -1944,17 +1942,17 @@ function renderOrderModalContent(order) {
             <div class="selection-row">
                 <!-- Left: Assign Quality -->
                 <div>
-                    <div class="col-label" data-i18n="assign_quality_title">Assign Quality</div>
+                    <div class="col-label">${t('assign_quality_title')}</div>
                     <div class="quality-options" id="qualityOptions">
-                        <div class="quality-option" data-quality="exceptional" data-i18n="exceptional">Exceptional</div>
-                        <div class="quality-option" data-quality="satisfactory" data-i18n="satisfactory">Satisfactory</div>
-                        <div class="quality-option" data-quality="foundational" data-i18n="foundational">Foundational</div>
+                        <div class="quality-option" data-quality="exceptional">${t('exceptional')}</div>
+                        <div class="quality-option" data-quality="satisfactory">${t('satisfactory')}</div>
+                        <div class="quality-option" data-quality="foundational">${t('foundational')}</div>
                     </div>
                 </div>
                 
                 <!-- Right: Publish to -->
                 <div>
-                    <div class="col-label" data-i18n="publish_to_title">Publish to</div>
+                    <div class="col-label">${t('publish_to_title')}</div>
                     <div class="platform-wrapper">
                         <div class="platform-list" id="platformList">
                             <div class="platform-option" data-platform="booking">
@@ -1988,7 +1986,7 @@ function renderOrderModalContent(order) {
                                 <span class="opt-check"><i class="fas fa-check-circle"></i></span>
                             </div>
                         </div>
-                        <div class="scroll-hint"><i class="fas fa-chevron-down"></i> <span data-i18n="scroll_for_more">scroll for more</span></div>
+                        <div class="scroll-hint"><i class="fas fa-chevron-down"></i> ${t('scroll_for_more')}</div>
                     </div>
                 </div>
             </div>
@@ -2003,13 +2001,13 @@ function renderOrderModalContent(order) {
             
             <!-- Actions -->
             <div class="action-area">
-                <div class="selection-status" id="selectionStatus"><i class="fas fa-chevron-right" style="color:rgba(255,255,255,0.15); margin-right:6px;"></i> <span data-i18n="select_quality_platform">Select quality & platform to continue</span></div>
+                <div class="selection-status" id="selectionStatus"><i class="fas fa-chevron-right" style="color:rgba(255,255,255,0.15); margin-right:6px;"></i> ${t('select_quality_platform')}</div>
                 <div class="modal-buttons">
                     <button class="btn-publish" id="publishBtn" disabled>
-                        <i class="fas fa-cloud-upload-alt"></i> <span data-i18n="publish_btn">Publish</span>
+                        <i class="fas fa-cloud-upload-alt"></i> ${t('publish_btn')}
                     </button>
                     <button class="btn-close-modal" onclick="closeOrderModal()">
-                        <i class="fas fa-times"></i><span style="margin-left: 6px;" data-i18n="close_btn">Close</span>
+                        <i class="fas fa-times"></i><span style="margin-left: 6px;">${t('close_btn')}</span>
                     </button>
                 </div>
             </div>
