@@ -57,7 +57,6 @@
             display: grid;
             grid-template-columns: 1fr;
             gap: 16px;
-            margin-bottom: 24px;
         }
         .content-card .image-grid-container .image-item {
             position: relative;
@@ -75,6 +74,7 @@
             width: 100%;
             padding-bottom: 143.11%;
             background: rgba(20, 30, 55, 0.3);
+            overflow: hidden;
         }
         .content-card .image-grid-container .image-item .img-wrapper img {
             position: absolute;
@@ -82,7 +82,8 @@
             left: 0;
             width: 100%;
             height: 100%;
-            object-fit: cover;
+            object-fit: contain;
+            background: #0f1428;
         }
         .content-card .image-grid-container .image-item .image-number {
             position: absolute;
@@ -94,20 +95,6 @@
             font-size: 11px;
             color: #a0a8c0;
             z-index: 2;
-        }
-        .content-card .content-text {
-            color: #c0c8e0;
-            line-height: 1.8;
-            font-size: 14px;
-        }
-        .content-card .content-text h2 {
-            color: #C9B095;
-            font-size: 22px;
-            margin-top: 0;
-            margin-bottom: 16px;
-        }
-        .content-card .content-text p {
-            margin-bottom: 16px;
         }
         .content-loading {
             text-align: center;
@@ -418,16 +405,16 @@
 
         // ===== 从元素打开图片查看器 =====
         function openImageViewerFromElement(element) {
-            const imgWrapper = element.querySelector('.img-wrapper img');
+            var imgWrapper = element.querySelector('.img-wrapper img');
             if (!imgWrapper) return;
-            const url = imgWrapper.src;
+            var url = imgWrapper.src;
             
-            const allItems = document.querySelectorAll('.image-item');
-            const allImages = [];
-            let currentIndex = 0;
+            var allItems = document.querySelectorAll('.image-item');
+            var allImages = [];
+            var currentIndex = 0;
             
             allItems.forEach(function(item, idx) {
-                const img = item.querySelector('.img-wrapper img');
+                var img = item.querySelector('.img-wrapper img');
                 if (img) {
                     allImages.push(img.src);
                     if (img.src === url) {
@@ -440,11 +427,11 @@
         }
 
         async function loadContent() {
-            const container = document.getElementById('contentContainer');
+            var container = document.getElementById('contentContainer');
 
             try {
-                // 🔥 获取所有 events（不加 .single()）
-                const { data: events, error } = await sb
+                // 🔥 获取所有 events
+                var { data: events, error } = await sb
                     .from('system_content')
                     .select('*')
                     .eq('type', 'events')
@@ -464,6 +451,7 @@
                     return;
                 }
 
+                // 🔥 每个 event 独立显示，不合并
                 var allHtml = '';
                 
                 events.forEach(function(event, index) {
@@ -489,8 +477,8 @@
                             imagesHtml += `
     <div class="image-item" onclick="openImageViewerFromElement(this)">
         <div class="img-wrapper">
-            <img src="${escapedUrl}" alt="${escapeHtml(event.title || 'Event')} Image ${imgIndex + 1}" 
-                 style="position:absolute; top:0; left:0; width:100%; height:100%; object-fit:cover; cursor:pointer;" 
+            <img src="${escapedUrl}" alt="Event Image ${imgIndex + 1}" 
+                 style="position:absolute; top:0; left:0; width:100%; height:100%; object-fit:contain; cursor:pointer; background:#0f1428;" 
                  onerror="handleImageError(this, ${imgIndex + 1})">
             <span class="image-number">${imgIndex + 1} / ${images.length}</span>
         </div>
@@ -507,13 +495,10 @@
                         `;
                     }
 
+                    // 🔥 每个 event 单独一个 content-card，没有标题，只有图片
                     allHtml += `
                         <div class="content-card" style="margin-bottom: 24px;">
                             ${imagesHtml}
-                            <div class="content-text">
-                                <h2>${escapeHtml(event.title || 'Event ' + (index + 1))}</h2>
-                                ${event.content || ''}
-                            </div>
                         </div>
                     `;
                 });
@@ -525,7 +510,7 @@
                 var t = window.i18n?.t || function(key) { return key; };
                 container.innerHTML = `
                     <div class="content-card">
-                        <div class="content-text">
+                        <div class="content-text" style="padding:20px; text-align:center; color:#a0a8c0;">
                             <p>${t('event_failed')}</p>
                             <p style="font-size: 12px; color: #ff8888;">Error: ${escapeHtml(error.message)}</p>
                         </div>
