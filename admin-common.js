@@ -1,75 +1,157 @@
-// admin-common.js - 完整版（已移除所有粒子动画，保留金属质感侧边栏）
+// admin-common.js - 完整版（已移除所有粒子动画，保留金属质感侧边栏 + 通知声音）
 const SUPABASE_URL = 'https://qgmbzdfnwsdosdqphlxk.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_zsJFjfNUO7NKp8ZH5KrXFQ_WZ8Q2Kym';
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+// ============================================================
+// 🔔 通知声音配置
+// ============================================================
+
+const NOTIFICATION_SOUNDS = {
+    kyc: 'https://qgmbzdfnwsdosdqphlxk.supabase.co/storage/v1/object/public/notification-sounds/kycverification.mp3',
+    withdrawal: 'https://qgmbzdfnwsdosdqphlxk.supabase.co/storage/v1/object/public/notification-sounds/withdrawal.mp3',
+    email: 'https://qgmbzdfnwsdosdqphlxk.supabase.co/storage/v1/object/public/notification-sounds/emailverification.mp3'
+};
+
+let audioCache = {};
+let audioContextUnlocked = false;
+
+// ============================================================
+// 🔥 通知声音播放函数（支持自动播放策略）
+// ============================================================
+
+function playNotificationSound(type) {
+    try {
+        const url = NOTIFICATION_SOUNDS[type];
+        if (!url) return;
+
+        // 创建或复用 Audio 对象
+        if (!audioCache[type]) {
+            audioCache[type] = new Audio(url);
+            audioCache[type].preload = 'auto';
+        }
+
+        const audio = audioCache[type];
+
+        // 尝试解锁音频上下文（绕开自动播放限制）
+        if (!audioContextUnlocked && typeof AudioContext !== 'undefined') {
+            const context = new (window.AudioContext || window.webkitAudioContext)();
+            if (context.state === 'suspended') {
+                context.resume().then(function() {
+                    audioContextUnlocked = true;
+                    console.log('🔊 音频上下文已解锁');
+                }).catch(function() {});
+            } else {
+                audioContextUnlocked = true;
+            }
+        }
+
+        // 重置并播放
+        audio.currentTime = 0;
+        var playPromise = audio.play();
+
+        if (playPromise !== undefined) {
+            playPromise.catch(function(error) {
+                console.log('🔇 播放被阻止（需要用户交互）:', error.message);
+            });
+        }
+    } catch (e) {
+        // 静默处理
+    }
+}
+
+// ============================================================
+// 🔥 用户交互时解锁音频（页面加载后第一次点击）
+// ============================================================
+
+function unlockAudioOnUserInteraction() {
+    var unlock = function() {
+        if (typeof AudioContext !== 'undefined') {
+            var context = new (window.AudioContext || window.webkitAudioContext)();
+            if (context.state === 'suspended') {
+                context.resume().then(function() {
+                    audioContextUnlocked = true;
+                    console.log('🔊 音频已通过用户交互解锁');
+                }).catch(function() {});
+            } else {
+                audioContextUnlocked = true;
+            }
+        }
+        document.removeEventListener('click', unlock);
+        document.removeEventListener('touchstart', unlock);
+    };
+
+    document.addEventListener('click', unlock);
+    document.addEventListener('touchstart', unlock);
+}
 
 // ============================================================
 // 🔥 性能检测（仅检测，无自动降级）
 // ============================================================
 
 function detectDevicePerformance() {
-    const isMobile = /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
-    const cores = navigator.hardwareConcurrency || 4;
-    const isLowEnd = cores <= 4;
-    const memory = navigator.deviceMemory || 4;
-    const isLowMemory = memory <= 4;
-    const isTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
-    const isLowPerformance = isMobile || isLowEnd || isLowMemory || isTouch;
+    var isMobile = /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
+    var cores = navigator.hardwareConcurrency || 4;
+    var isLowEnd = cores <= 4;
+    var memory = navigator.deviceMemory || 4;
+    var isLowMemory = memory <= 4;
+    var isTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+    var isLowPerformance = isMobile || isLowEnd || isLowMemory || isTouch;
     
-    console.log('📱 设备检测:', { isMobile, cores, memory, isTouch, isLowPerformance });
+    console.log('📱 设备检测:', { isMobile: isMobile, cores: cores, memory: memory, isTouch: isTouch, isLowPerformance: isLowPerformance });
     
-    return { isLowPerformance, isMobile, isLowEnd, isLowMemory, isTouch, cores, memory };
+    return { isLowPerformance: isLowPerformance, isMobile: isMobile, isLowEnd: isLowEnd, isLowMemory: isLowMemory, isTouch: isTouch, cores: cores, memory: memory };
 }
 
-const deviceInfo = detectDevicePerformance();
+var deviceInfo = detectDevicePerformance();
 
 // ============================================================
 // 通知数据
 // ============================================================
-let notificationCounts = {
-  dashboard: 0,
-  kyc: 0,
-  email: 0,
-  withdrawal: 0,
-  invitation: 0,
-  users: 0,
-  trial: 0,
-  vip: 0,
-  setorders: 0,
-  orders: 0,
-  orderpool: 0,
-  animated: 0,
-  signin: 0,
-  content: 0
+var notificationCounts = {
+    dashboard: 0,
+    kyc: 0,
+    email: 0,
+    withdrawal: 0,
+    invitation: 0,
+    users: 0,
+    trial: 0,
+    vip: 0,
+    setorders: 0,
+    orders: 0,
+    orderpool: 0,
+    animated: 0,
+    signin: 0,
+    content: 0
 };
 
-let readNotifications = {
-  dashboard: false,
-  kyc: false,
-  email: false,
-  withdrawal: false,
-  invitation: false,
-  users: false,
-  trial: false,
-  vip: false,
-  setorders: false,
-  orders: false,
-  orderpool: false,
-  animated: false,
-  signin: false,
-  content: false
+var readNotifications = {
+    dashboard: false,
+    kyc: false,
+    email: false,
+    withdrawal: false,
+    invitation: false,
+    users: false,
+    trial: false,
+    vip: false,
+    setorders: false,
+    orders: false,
+    orderpool: false,
+    animated: false,
+    signin: false,
+    content: false
 };
 
-let currentActivePage = 'dashboard';
+var currentActivePage = 'dashboard';
 
 // ============================================================
 // 🔥 全局 Tab 标签栏状态
 // ============================================================
-let tabs = [];
-let activeTabId = null;
-let tabIdCounter = 0;
+var tabs = [];
+var activeTabId = null;
+var tabIdCounter = 0;
 
-const PAGE_DEFS = {
+var PAGE_DEFS = {
     dashboard: { id: 'dashboard', label: 'Dashboard', icon: 'fa-chart-pie', pageId: 'dashboard' },
     users: { id: 'users', label: 'Users', icon: 'fa-users', pageId: 'users' },
     invitation: { id: 'invitation', label: 'Invitation Codes', icon: 'fa-qrcode', pageId: 'invitation' },
@@ -93,17 +175,15 @@ if (typeof window.notifications === 'undefined') {
     window.notifications = [];
 }
 
-// ✅ 用于防止重复通知的 Set
-let notifiedIds = new Set();
+var notifiedIds = new Set();
 
 function loadNotifications() {
     try {
-        const saved = localStorage.getItem('admin_notifications');
+        var saved = localStorage.getItem('admin_notifications');
         if (saved) {
-            const parsed = JSON.parse(saved);
+            var parsed = JSON.parse(saved);
             if (Array.isArray(parsed) && parsed.length > 0) {
                 window.notifications = parsed;
-                // 重建 notifiedIds
                 notifiedIds = new Set();
                 parsed.forEach(function(n) {
                     notifiedIds.add(n.id);
@@ -122,20 +202,18 @@ function saveNotifications() {
 }
 
 // ============================================================
-// 🔥 添加通知（防重复）
+// 🔥 添加通知（防重复 + 播放声音）
 // ============================================================
 function addNotification(notification) {
     if (typeof window.notifications === 'undefined') {
         window.notifications = [];
     }
     
-    // ✅ 检查是否已有相同 ID 的通知
     if (notifiedIds.has(notification.id)) {
         console.log('⏭️ 通知已存在，跳过:', notification.id);
         return;
     }
     
-    // ✅ 检查是否有相似的通知（防止几乎相同的通知重复）
     var similarExists = window.notifications.some(function(n) {
         if (n.type !== notification.type) return false;
         if (notification.type === 'kyc' && n.data && notification.data) {
@@ -161,7 +239,6 @@ function addNotification(notification) {
         return;
     }
     
-    // 添加到通知列表
     window.notifications.unshift(notification);
     notifiedIds.add(notification.id);
     
@@ -170,10 +247,14 @@ function addNotification(notification) {
     }
     saveNotifications();
     
-    // ✅ 重新加载所有计数
+    // 🔔 播放对应的通知声音
+    if (notification.type && NOTIFICATION_SOUNDS[notification.type]) {
+        playNotificationSound(notification.type);
+        console.log('🔊 播放通知声音:', notification.type);
+    }
+    
     loadNotificationCounts();
     
-    // 更新 UI
     if (typeof updateNotificationUI === 'function') {
         updateNotificationUI();
     }
@@ -187,9 +268,6 @@ loadNotifications();
 // 🔥 通知 UI 更新（同时更新 Dashboard 和 Tab Bar）
 // ============================================================
 function updateNotificationUI() {
-    // ============================================================
-    // 1. 更新 Dashboard 的通知下拉
-    // ============================================================
     var badge = document.getElementById('notificationBadge');
     var countEl = document.getElementById('notificationCount');
     var listEl = document.getElementById('notificationList');
@@ -198,18 +276,13 @@ function updateNotificationUI() {
         updateSingleNotificationList(listEl, badge, countEl);
     }
 
-    // ============================================================
-    // 2. 更新 Tab Bar 的全局通知下拉
-    // ============================================================
     var globalBadge = document.getElementById('globalNotificationBadge');
     var globalCountEl = document.getElementById('globalNotificationCount');
     var globalListEl = document.getElementById('globalNotificationList');
 
-    // 如果没有 globalNotificationList，创建它（兼容旧版本）
     if (!globalListEl) {
         var dropdown = document.getElementById('globalNotificationDropdown');
         if (dropdown) {
-            // 查找或创建 notificationList
             var existingList = dropdown.querySelector('#globalNotificationList');
             if (!existingList) {
                 var listContainer = dropdown.querySelector('#notificationList') || dropdown.querySelector('div[id*="notificationList"]');
@@ -217,7 +290,6 @@ function updateNotificationUI() {
                     listContainer.id = 'globalNotificationList';
                     globalListEl = listContainer;
                 } else {
-                    // 如果完全不存在，创建新的
                     var contentDiv = dropdown.querySelector('div[style*="max-height: 350px"]');
                     if (contentDiv) {
                         contentDiv.id = 'globalNotificationList';
@@ -233,13 +305,11 @@ function updateNotificationUI() {
     if (globalBadge && globalCountEl && globalListEl) {
         updateSingleNotificationList(globalListEl, globalBadge, globalCountEl);
     } else {
-        // 如果元素不存在，延迟重试
         setTimeout(function() {
             updateNotificationUI();
         }, 300);
     }
 
-    // 更新侧边栏
     updateSidebarBadges();
 }
 
@@ -275,7 +345,6 @@ function updateSingleNotificationList(listEl, badgeEl, countEl) {
         return;
     }
 
-    // ✅ 使用 Set 防止同一通知重复渲染
     var renderedIds = new Set();
     var html = '';
     
@@ -376,7 +445,6 @@ function toggleNotificationDropdown() {
     var dropdown = document.getElementById('globalNotificationDropdown');
     if (!dropdown) return;
     
-    // 切换显示
     if (dropdown.style.display === 'block') {
         dropdown.style.display = 'none';
         isNotificationDropdownOpen = false;
@@ -397,8 +465,6 @@ function closeNotificationDropdown() {
     }
 }
 
-
-// 点击外部关闭通知下拉
 document.addEventListener('click', function(e) {
     var container = document.getElementById('globalNotificationContainer');
     if (container && !container.contains(e.target)) {
@@ -436,7 +502,6 @@ window.clearAllNotifications = function() {
 // 🔥 获取模块的通知数量
 // ============================================================
 function getModuleNotificationCount(pageId) {
-    // 特殊映射：某些 pageId 对应不同的 notificationCounts key
     var countKeyMap = {
         'emailverify': 'email',
         'withdrawals': 'withdrawal',
@@ -512,177 +577,167 @@ function markModuleRead(pageId) {
 // 🔥 侧边栏渲染（带通知角标）
 // ============================================================
 function renderSidebarNav() {
-  const navList = document.querySelector('.nav-list');
-  if (!navList) return;
+    var navList = document.querySelector('.nav-list');
+    if (!navList) return;
 
-  navList.innerHTML = '';
+    navList.innerHTML = '';
 
-  const navItems = [
-    { id: 'dashboard', icon: 'fa-chart-pie', label: 'Dashboard' },
-    { id: 'users', icon: 'fa-users', label: 'Users Management' },
-    { id: 'invitation', icon: 'fa-qrcode', label: 'Invitation Codes' },
-    { id: 'kyc', icon: 'fa-id-card', label: 'KYC Verification' },
-    { id: 'emailverify', icon: 'fa-envelope', label: 'Email Verification' },
-    { id: 'trial', icon: 'fa-gift', label: 'Trial Bonus' },
-    { id: 'withdrawals', icon: 'fa-money-bill-wave', label: 'Withdrawal' },
-    { id: 'vip', icon: 'fa-crown', label: 'VIP Setting' },
-    { id: 'setorders', icon: 'fa-cog', label: 'Orders Trigger' },
-    { id: 'orders', icon: 'fa-clock', label: 'Orders History' },
-    { id: 'orderpool', icon: 'fa-hotel', label: 'Orders Pool' },
-    { id: 'animated', icon: 'fa-play-circle', label: 'Animated' },
-    { id: 'signin', icon: 'fa-calendar-check', label: 'Check In Bonus' },
-    { id: 'content', icon: 'fa-file-alt', label: 'Content Management' }
-  ];
+    var navItems = [
+        { id: 'dashboard', icon: 'fa-chart-pie', label: 'Dashboard' },
+        { id: 'users', icon: 'fa-users', label: 'Users Management' },
+        { id: 'invitation', icon: 'fa-qrcode', label: 'Invitation Codes' },
+        { id: 'kyc', icon: 'fa-id-card', label: 'KYC Verification' },
+        { id: 'emailverify', icon: 'fa-envelope', label: 'Email Verification' },
+        { id: 'trial', icon: 'fa-gift', label: 'Trial Bonus' },
+        { id: 'withdrawals', icon: 'fa-money-bill-wave', label: 'Withdrawal' },
+        { id: 'vip', icon: 'fa-crown', label: 'VIP Setting' },
+        { id: 'setorders', icon: 'fa-cog', label: 'Orders Trigger' },
+        { id: 'orders', icon: 'fa-clock', label: 'Orders History' },
+        { id: 'orderpool', icon: 'fa-hotel', label: 'Orders Pool' },
+        { id: 'animated', icon: 'fa-play-circle', label: 'Animated' },
+        { id: 'signin', icon: 'fa-calendar-check', label: 'Check In Bonus' },
+        { id: 'content', icon: 'fa-file-alt', label: 'Content Management' }
+    ];
 
-  navItems.forEach(item => {
-    const div = document.createElement('div');
-    div.className = 'nav-item';
-    div.setAttribute('data-page', item.id);
+    navItems.forEach(function(item) {
+        var div = document.createElement('div');
+        div.className = 'nav-item';
+        div.setAttribute('data-page', item.id);
 
-    const isActive = currentActivePage === item.id;
-    const count = getModuleNotificationCount(item.id);
-    const isRead = isModuleRead(item.id);
-    const hasUnread = count > 0 && !isRead;
+        var isActive = currentActivePage === item.id;
+        var count = getModuleNotificationCount(item.id);
+        var isRead = isModuleRead(item.id);
+        var hasUnread = count > 0 && !isRead;
 
-    if (isActive) div.classList.add('active');
-    if (hasUnread) div.classList.add('has-notification');
+        if (isActive) div.classList.add('active');
+        if (hasUnread) div.classList.add('has-notification');
 
-    div.innerHTML = `
-      <i class="fas ${item.icon}"></i>
-      <span class="nav-label">${item.label}</span>
-      ${hasUnread ? `<span class="badge-notify" id="badge-${item.id}">${count}</span>` : ''}
-    `;
+        div.innerHTML = `
+            <i class="fas ${item.icon}"></i>
+            <span class="nav-label">${item.label}</span>
+            ${hasUnread ? '<span class="badge-notify" id="badge-' + item.id + '">' + count + '</span>' : ''}
+        `;
 
-    div.addEventListener('click', function(e) {
-      e.stopPropagation();
-      const pageId = this.dataset.page;
+        div.addEventListener('click', function(e) {
+            e.stopPropagation();
+            var pageId = this.dataset.page;
 
-      // ✅ 标记该模块为已读
-      markModuleRead(pageId);
-      
-      // 移除角标
-      const badge = this.querySelector('.badge-notify');
-      if (badge) badge.remove();
-      this.classList.remove('has-notification');
+            markModuleRead(pageId);
+            
+            var badge = this.querySelector('.badge-notify');
+            if (badge) badge.remove();
+            this.classList.remove('has-notification');
 
-      document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-      this.classList.add('active');
-      currentActivePage = pageId;
+            document.querySelectorAll('.nav-item').forEach(function(n) { n.classList.remove('active'); });
+            this.classList.add('active');
+            currentActivePage = pageId;
 
-      openTab(pageId);
+            openTab(pageId);
+        });
+
+        navList.appendChild(div);
     });
-
-    navList.appendChild(div);
-  });
 }
 
 function updateSidebarBadges() {
-  renderSidebarNav();
-  document.querySelectorAll('.nav-item').forEach(el => {
-    if (el.dataset.page === currentActivePage) {
-      el.classList.add('active');
-    }
-  });
-  renderTabBar();
+    renderSidebarNav();
+    document.querySelectorAll('.nav-item').forEach(function(el) {
+        if (el.dataset.page === currentActivePage) {
+            el.classList.add('active');
+        }
+    });
+    renderTabBar();
 }
 
 function updateNotificationCount(moduleId, count) {
-  notificationCounts[moduleId] = count;
-  readNotifications[moduleId] = false;
-  updateSidebarBadges();
-  updateGlobalNotificationBadge();
+    notificationCounts[moduleId] = count;
+    readNotifications[moduleId] = false;
+    updateSidebarBadges();
+    updateGlobalNotificationBadge();
 
-  if (count > 0) {
-    const moduleNames = {
-      dashboard: 'Dashboard',
-      kyc: 'KYC Verification',
-      email: 'Email Verification',
-      withdrawal: 'Withdrawal',
-      invitation: 'Invitation Codes'
-    };
-    if (typeof showAmberNotification === 'function') {
-      showAmberNotification(
-        `📬 新通知 (${moduleNames[moduleId] || moduleId})`,
-        `您有 ${count} 条待处理通知`,
-        'info'
-      );
+    if (count > 0) {
+        var moduleNames = {
+            dashboard: 'Dashboard',
+            kyc: 'KYC Verification',
+            email: 'Email Verification',
+            withdrawal: 'Withdrawal',
+            invitation: 'Invitation Codes'
+        };
+        if (typeof showAmberNotification === 'function') {
+            showAmberNotification(
+                '📬 新通知 (' + (moduleNames[moduleId] || moduleId) + ')',
+                '您有 ' + count + ' 条待处理通知',
+                'info'
+            );
+        }
     }
-  }
 }
 
 async function loadNotificationCounts() {
-  try {
-    // 1. KYC 待审核数量
-    const kycRes = await sb.from('kyc_verifications').select('id', { count: 'exact', head: true }).eq('status', 'pending');
-    const kycCount = kycRes.count || 0;
+    try {
+        var kycRes = await sb.from('kyc_verifications').select('id', { count: 'exact', head: true }).eq('status', 'pending');
+        var kycCount = kycRes.count || 0;
 
-    // 2. Withdrawal 待处理数量
-    const withdrawalRes = await sb.from('withdrawals').select('id', { count: 'exact', head: true }).eq('status', 'pending');
-    const withdrawalCount = withdrawalRes.count || 0;
+        var withdrawalRes = await sb.from('withdrawals').select('id', { count: 'exact', head: true }).eq('status', 'pending');
+        var withdrawalCount = withdrawalRes.count || 0;
 
-    // 3. Email 待验证数量（code 为 null 且未验证）
-    const emailRes = await sb.from('email_verification_requests').select('id', { count: 'exact', head: true }).eq('is_verified', false).is('code', null);
-    const emailCount = emailRes.count || 0;
+        var emailRes = await sb.from('email_verification_requests').select('id', { count: 'exact', head: true }).eq('is_verified', false).is('code', null);
+        var emailCount = emailRes.count || 0;
 
-    // 4. Dashboard - IP 重复检测通知（从全局通知中统计未读的）
-    const ipNotifications = window.notifications?.filter(function(n) {
-      return n.type === 'ip' || n.type === 'ip_withdrawal';
-    }) || [];
-    const ipCount = ipNotifications.filter(function(n) {
-      return !n.read;
-    }).length;
+        var ipNotifications = window.notifications?.filter(function(n) {
+            return n.type === 'ip' || n.type === 'ip_withdrawal';
+        }) || [];
+        var ipCount = ipNotifications.filter(function(n) {
+            return !n.read;
+        }).length;
 
-    // 5. Dashboard 总通知数（所有未读通知）
-    const dashboardCount = kycCount + withdrawalCount + emailCount + ipCount;
+        var dashboardCount = kycCount + withdrawalCount + emailCount + ipCount;
 
-    // ✅ 更新 notificationCounts 对象
-    notificationCounts.dashboard = dashboardCount;
-    notificationCounts.kyc = kycCount;
-    notificationCounts.email = emailCount;
-    notificationCounts.withdrawal = withdrawalCount;
+        notificationCounts.dashboard = dashboardCount;
+        notificationCounts.kyc = kycCount;
+        notificationCounts.email = emailCount;
+        notificationCounts.withdrawal = withdrawalCount;
 
-    // ✅ 其他模块默认没有通知（可以后续扩展）
-    // notificationCounts.invitation, users, trial 等保持 0
+        console.log('📊 通知数量已更新:', notificationCounts);
 
-    console.log('📊 通知数量已更新:', notificationCounts);
+        updateSidebarBadges();
+        updateGlobalNotificationBadge();
+        renderTabBar();
 
-    // ✅ 更新侧边栏和标签栏
-    updateSidebarBadges();
-    updateGlobalNotificationBadge();
-    renderTabBar();
-
-  } catch (e) {
-    console.error('加载通知数量失败:', e);
-  }
+    } catch (e) {
+        console.error('加载通知数量失败:', e);
+    }
 }
 
 // ============================================================
 // 工具函数
 // ============================================================
-let currentDays = 1;
+var currentDays = 1;
 
 function toggleSidebar() { document.getElementById('sidebar')?.classList.toggle('open'); }
 window.toggleSidebar = toggleSidebar;
 
-function escapeHtml(str) { if(!str) return ''; return str.replace(/[&<>]/g, m => m === '&' ? '&amp;' : m === '<' ? '&lt;' : m === '>' ? '&gt;' : m); }
+function escapeHtml(str) { if(!str) return ''; return str.replace(/[&<>]/g, function(m) { return m === '&' ? '&amp;' : m === '<' ? '&lt;' : m === '>' ? '&gt;' : m; }); }
 
 function formatTime(dateStr) {
     if (!dateStr) return '刚刚';
-    const date = new Date(dateStr);
-    const now = new Date();
-    const diff = Math.floor((now - date) / 1000 / 60);
+    var date = new Date(dateStr);
+    var now = new Date();
+    var diff = Math.floor((now - date) / 1000 / 60);
     if (diff < 1) return '刚刚';
-    if (diff < 60) return `${diff}分钟前`;
-    if (diff < 1440) return `${Math.floor(diff / 60)}小时前`;
-    return `${Math.floor(diff / 1440)}天前`;
+    if (diff < 60) return diff + '分钟前';
+    if (diff < 1440) return Math.floor(diff / 60) + '小时前';
+    return Math.floor(diff / 1440) + '天前';
 }
 
-function animateNumber(element, target, prefix = '', suffix = '') {
+function animateNumber(element, target, prefix, suffix) {
     if (!element) return;
-    let current = 0;
-    const duration = 1500;
-    const step = target / (duration / 16);
-    const timer = setInterval(() => {
+    prefix = prefix || '';
+    suffix = suffix || '';
+    var current = 0;
+    var duration = 1500;
+    var step = target / (duration / 16);
+    var timer = setInterval(function() {
         current += step;
         if (current >= target) {
             element.innerText = prefix + target.toLocaleString() + suffix;
@@ -695,22 +750,23 @@ function animateNumber(element, target, prefix = '', suffix = '') {
 
 function getTrendHtml(current, previous) {
     if (previous === 0) return current > 0 ? '<span class="trend-up">↑ +100%</span>' : '<span class="trend-up">→ 0%</span>';
-    const percent = ((current - previous) / previous * 100).toFixed(1);
-    if (percent > 0) return `<span class="trend-up">↑ +${percent}%</span>`;
-    if (percent < 0) return `<span class="trend-down">↓ ${percent}%</span>`;
+    var percent = ((current - previous) / previous * 100).toFixed(1);
+    if (percent > 0) return '<span class="trend-up">↑ +' + percent + '%</span>';
+    if (percent < 0) return '<span class="trend-down">↓ ' + percent + '%</span>';
     return '<span>→ 0%</span>';
 }
 
 // ========== Toast 提示 ==========
-function showToast(message, type = 'success') {
-    const existingToast = document.querySelector('.custom-toast');
+function showToast(message, type) {
+    type = type || 'success';
+    var existingToast = document.querySelector('.custom-toast');
     if (existingToast) existingToast.remove();
     
-    const toast = document.createElement('div');
-    toast.className = `custom-toast custom-toast-${type}`;
+    var toast = document.createElement('div');
+    toast.className = 'custom-toast custom-toast-' + type;
     
-    let icon = 'fa-check-circle';
-    let bgColor = '#ffb84d';
+    var icon = 'fa-check-circle';
+    var bgColor = '#ffb84d';
     if (type === 'success') { icon = 'fa-check-circle'; bgColor = '#2ed15a'; }
     else if (type === 'error') { icon = 'fa-exclamation-circle'; bgColor = '#ff5a5a'; }
     else if (type === 'warning') { icon = 'fa-exclamation-triangle'; bgColor = '#ffb84d'; }
@@ -744,20 +800,20 @@ function showToast(message, type = 'success') {
     `;
     
     document.body.appendChild(toast);
-    setTimeout(() => { toast.style.transform = 'translateX(-50%) translateY(0)'; toast.style.opacity = '1'; }, 10);
-    setTimeout(() => {
+    setTimeout(function() { toast.style.transform = 'translateX(-50%) translateY(0)'; toast.style.opacity = '1'; }, 10);
+    setTimeout(function() {
         toast.style.transform = 'translateX(-50%) translateY(100px)';
         toast.style.opacity = '0';
-        setTimeout(() => toast.remove(), 300);
+        setTimeout(function() { toast.remove(); }, 300);
     }, 3000);
 }
 
 // ========== 确认弹窗 ==========
 function showConfirm(title, message, onConfirm, onCancel) {
-    const existingModal = document.querySelector('.custom-confirm');
+    var existingModal = document.querySelector('.custom-confirm');
     if (existingModal) existingModal.remove();
     
-    const modal = document.createElement('div');
+    var modal = document.createElement('div');
     modal.className = 'custom-confirm';
     modal.style.cssText = `
         position: fixed;
@@ -787,40 +843,40 @@ function showConfirm(title, message, onConfirm, onCancel) {
     `;
     
     document.body.appendChild(modal);
-    setTimeout(() => {
+    setTimeout(function() {
         modal.style.visibility = 'visible';
         modal.style.opacity = '1';
         modal.querySelector('div:last-child').style.transform = 'scale(1)';
     }, 10);
     
-    modal.querySelector('#confirm-cancel').onclick = () => {
+    modal.querySelector('#confirm-cancel').onclick = function() {
         modal.style.visibility = 'hidden';
         modal.style.opacity = '0';
-        setTimeout(() => modal.remove(), 300);
+        setTimeout(function() { modal.remove(); }, 300);
         if (onCancel) onCancel();
     };
     
-    modal.querySelector('#confirm-ok').onclick = () => {
+    modal.querySelector('#confirm-ok').onclick = function() {
         modal.style.visibility = 'hidden';
         modal.style.opacity = '0';
-        setTimeout(() => modal.remove(), 300);
+        setTimeout(function() { modal.remove(); }, 300);
         if (onConfirm) onConfirm();
     };
     
-    modal.querySelector('div:first-child').onclick = () => {
+    modal.querySelector('div:first-child').onclick = function() {
         modal.style.visibility = 'hidden';
         modal.style.opacity = '0';
-        setTimeout(() => modal.remove(), 300);
+        setTimeout(function() { modal.remove(); }, 300);
         if (onCancel) onCancel();
     };
 }
 
 // ========== 输入弹窗 ==========
 function showPrompt(title, placeholder, callback) {
-    const existingModal = document.querySelector('.custom-prompt');
+    var existingModal = document.querySelector('.custom-prompt');
     if (existingModal) existingModal.remove();
     
-    const modal = document.createElement('div');
+    var modal = document.createElement('div');
     modal.className = 'custom-prompt';
     modal.style.cssText = `
         position: fixed;
@@ -850,44 +906,43 @@ function showPrompt(title, placeholder, callback) {
     `;
     
     document.body.appendChild(modal);
-    setTimeout(() => {
+    setTimeout(function() {
         modal.style.visibility = 'visible';
         modal.style.opacity = '1';
         modal.querySelector('div:last-child').style.transform = 'scale(1)';
-        const input = document.getElementById('prompt-input');
+        var input = document.getElementById('prompt-input');
         input.focus();
     }, 10);
     
-    modal.querySelector('#prompt-cancel').onclick = () => {
+    modal.querySelector('#prompt-cancel').onclick = function() {
         modal.style.visibility = 'hidden';
         modal.style.opacity = '0';
-        setTimeout(() => modal.remove(), 300);
+        setTimeout(function() { modal.remove(); }, 300);
         if (callback) callback(null);
     };
     
-    modal.querySelector('#prompt-ok').onclick = () => {
-        const value = document.getElementById('prompt-input').value.trim();
+    modal.querySelector('#prompt-ok').onclick = function() {
+        var value = document.getElementById('prompt-input').value.trim();
         modal.style.visibility = 'hidden';
         modal.style.opacity = '0';
-        setTimeout(() => modal.remove(), 300);
+        setTimeout(function() { modal.remove(); }, 300);
         if (callback) callback(value);
     };
     
-    modal.querySelector('div:first-child').onclick = () => {
+    modal.querySelector('div:first-child').onclick = function() {
         modal.style.visibility = 'hidden';
         modal.style.opacity = '0';
-        setTimeout(() => modal.remove(), 300);
+        setTimeout(function() { modal.remove(); }, 300);
         if (callback) callback(null);
     };
     
-    document.getElementById('prompt-input').addEventListener('keypress', (e) => {
+    document.getElementById('prompt-input').addEventListener('keypress', function(e) {
         if (e.key === 'Enter') {
             modal.querySelector('#prompt-ok').click();
         }
     });
 }
 
-// 替换原生 alert
 window.originalAlert = window.alert;
 window.alert = function(message) {
     showToast(message, 'info');
@@ -895,13 +950,13 @@ window.alert = function(message) {
 
 // ========== 琥珀金风格通知 ==========
 window.showAmberNotification = function(title, message, type) {
-    console.log('🔔 显示琥珀通知:', { title, message, type });
+    console.log('🔔 显示琥珀通知:', { title: title, message: message, type: type });
     
-    const existingNotification = document.querySelector('.notification-amber');
+    var existingNotification = document.querySelector('.notification-amber');
     if (existingNotification) existingNotification.remove();
     
-    let icon = 'fa-info-circle';
-    let iconColor = '#ffb84d';
+    var icon = 'fa-info-circle';
+    var iconColor = '#ffb84d';
     
     if (type === 'withdrawal') {
         icon = 'fa-money-bill-wave';
@@ -911,7 +966,7 @@ window.showAmberNotification = function(title, message, type) {
         icon = 'fa-envelope';
     }
     
-    const notification = document.createElement('div');
+    var notification = document.createElement('div');
     notification.className = 'notification-amber';
     
     notification.style.cssText = `
@@ -953,26 +1008,26 @@ window.showAmberNotification = function(title, message, type) {
     
     document.body.appendChild(notification);
     
-    const closeBtn = notification.querySelector('.notification-close');
+    var closeBtn = notification.querySelector('.notification-close');
     if (closeBtn) {
-        closeBtn.onclick = (e) => {
+        closeBtn.onclick = function(e) {
             e.stopPropagation();
             notification.style.animation = 'slideOutRight 0.3s ease forwards';
-            setTimeout(() => notification.remove(), 300);
+            setTimeout(function() { notification.remove(); }, 300);
         };
     }
     
-    notification.onclick = (e) => {
+    notification.onclick = function(e) {
         if (e.target !== closeBtn && !closeBtn?.contains(e.target)) {
             notification.style.animation = 'slideOutRight 0.3s ease forwards';
-            setTimeout(() => notification.remove(), 300);
+            setTimeout(function() { notification.remove(); }, 300);
         }
     };
     
-    setTimeout(() => {
+    setTimeout(function() {
         if (notification.parentNode) {
             notification.style.animation = 'slideOutRight 0.3s ease forwards';
-            setTimeout(() => notification.remove(), 300);
+            setTimeout(function() { notification.remove(); }, 300);
         }
     }, 5000);
 };
@@ -980,7 +1035,7 @@ window.showAmberNotification = function(title, message, type) {
 function ensureAnimationStyles() {
     if (document.getElementById('notification-animation-styles')) return;
     
-    const style = document.createElement('style');
+    var style = document.createElement('style');
     style.id = 'notification-animation-styles';
     style.textContent = `
         @keyframes slideInRight {
@@ -1006,10 +1061,13 @@ if (document.readyState === 'loading') {
 }
 
 // ============================================================
-// 🔥 通知处理函数
+// 🔥 通知处理函数（带声音播放）
 // ============================================================
 function handleNewKyc(data) {
     console.log('📋 处理新KYC申请:', data);
+    
+    // 🔔 播放 KYC 通知声音
+    playNotificationSound('kyc');
     
     if (window.refreshDashboardData) {
         window.refreshDashboardData(currentDays);
@@ -1018,7 +1076,7 @@ function handleNewKyc(data) {
         window.loadKycPage();
     }
     
-    const notification = {
+    var notification = {
         id: 'kyc_' + data.id + '_' + Date.now(),
         type: 'kyc',
         title: '🪪 New KYC Application',
@@ -1029,13 +1087,12 @@ function handleNewKyc(data) {
     };
     addNotification(notification);
     
-    // ✅ loadNotificationCounts 内部会调用 updateSidebarBadges 和 renderTabBar
     loadNotificationCounts();
     
     if (window.showAmberNotification) {
         window.showAmberNotification(
             '📋 新KYC申请',
-            `用户 ${data.username || data.uid} 提交了身份验证申请`,
+            '用户 ' + (data.username || data.uid) + ' 提交了身份验证申请',
             'kyc'
         );
     }
@@ -1044,6 +1101,9 @@ function handleNewKyc(data) {
 function handleNewWithdrawal(data) {
     console.log('💰 处理新提现申请:', data);
     
+    // 🔔 播放 Withdrawal 通知声音
+    playNotificationSound('withdrawal');
+    
     if (window.refreshDashboardData) {
         window.refreshDashboardData(currentDays);
     }
@@ -1051,7 +1111,7 @@ function handleNewWithdrawal(data) {
         window.loadWithdrawalsPage();
     }
     
-    const notification = {
+    var notification = {
         id: 'withdrawal_' + data.id + '_' + Date.now(),
         type: 'withdrawal',
         title: '💳 New Withdrawal Request',
@@ -1067,7 +1127,7 @@ function handleNewWithdrawal(data) {
     if (window.showAmberNotification) {
         window.showAmberNotification(
             '💰 新提现申请',
-            `用户 ${data.username} 申请提现 €${data.amount}`,
+            '用户 ' + data.username + ' 申请提现 €' + data.amount,
             'withdrawal'
         );
     }
@@ -1076,17 +1136,20 @@ function handleNewWithdrawal(data) {
 function handleNewEmailRequest(data) {
     console.log('📧 处理新邮箱验证请求:', data.email);
     
+    // 🔔 播放 Email 通知声音
+    playNotificationSound('email');
+    
     if (window.refreshDashboardData) {
         window.refreshDashboardData(currentDays);
     }
-    const emailPage = document.getElementById('page_emailverify');
+    var emailPage = document.getElementById('page_emailverify');
     if (emailPage && emailPage.classList.contains('active')) {
         if (window.loadEmailVerifyPage) {
             window.loadEmailVerifyPage();
         }
     }
     
-    const notification = {
+    var notification = {
         id: 'email_' + data.id + '_' + Date.now(),
         type: 'email',
         title: '📧 New Email Verification',
@@ -1102,7 +1165,7 @@ function handleNewEmailRequest(data) {
     if (window.showAmberNotification) {
         window.showAmberNotification(
             '📧 新邮箱验证请求',
-            `用户 ${data.email} 请求邮箱验证，请设置验证码`,
+            '用户 ' + data.email + ' 请求邮箱验证，请设置验证码',
             'email'
         );
     }
@@ -1111,14 +1174,14 @@ function handleNewEmailRequest(data) {
 // ============================================================
 // 🔥 全局实时订阅
 // ============================================================
-let realtimeChannel = null;
-let pollingInterval = null;
-let lastNotified = {
+var realtimeChannel = null;
+var pollingInterval = null;
+var lastNotified = {
     kyc: null,
     withdrawal: null,
     email: null
 };
-let realtimeConnected = false;
+var realtimeConnected = false;
 
 function initGlobalRealtime() {
     console.log('🚀 正在启动全局实时订阅...');
@@ -1142,7 +1205,7 @@ function tryConnectRealtime() {
             .on(
                 'postgres_changes',
                 { event: 'INSERT', schema: 'public', table: 'kyc_verifications' },
-                (payload) => {
+                function(payload) {
                     console.log('🔔 [Realtime] 检测到新KYC申请:', payload.new);
                     realtimeConnected = true;
                     handleNewKyc(payload.new);
@@ -1151,7 +1214,7 @@ function tryConnectRealtime() {
             .on(
                 'postgres_changes',
                 { event: 'INSERT', schema: 'public', table: 'withdrawals' },
-                (payload) => {
+                function(payload) {
                     console.log('🔔 [Realtime] 检测到新提现申请:', payload.new);
                     realtimeConnected = true;
                     handleNewWithdrawal(payload.new);
@@ -1160,13 +1223,13 @@ function tryConnectRealtime() {
             .on(
                 'postgres_changes',
                 { event: 'INSERT', schema: 'public', table: 'email_verification_requests' },
-                (payload) => {
+                function(payload) {
                     console.log('🔔 [Realtime] 检测到新邮箱验证请求:', payload.new);
                     realtimeConnected = true;
                     handleNewEmailRequest(payload.new);
                 }
             )
-            .subscribe((status) => {
+            .subscribe(function(status) {
                 console.log('📡 全局实时订阅状态:', status);
                 if (status === 'SUBSCRIBED') {
                     realtimeConnected = true;
@@ -1191,33 +1254,33 @@ function startPollingFallback() {
 
 async function pollForUpdates() {
     try {
-        const { data: kycs } = await sb
+        var kycs = await sb
             .from('kyc_verifications')
             .select('*')
             .eq('status', 'pending')
             .order('uploaded_at', { ascending: false })
             .limit(1);
         
-        if (kycs && kycs.length > 0 && kycs[0].id !== lastNotified.kyc) {
-            console.log('🔔 [轮询] 检测到新KYC申请:', kycs[0].id);
-            lastNotified.kyc = kycs[0].id;
-            handleNewKyc(kycs[0]);
+        if (kycs.data && kycs.data.length > 0 && kycs.data[0].id !== lastNotified.kyc) {
+            console.log('🔔 [轮询] 检测到新KYC申请:', kycs.data[0].id);
+            lastNotified.kyc = kycs.data[0].id;
+            handleNewKyc(kycs.data[0]);
         }
         
-        const { data: withdrawals } = await sb
+        var withdrawals = await sb
             .from('withdrawals')
             .select('*')
             .eq('status', 'pending')
             .order('request_date', { ascending: false })
             .limit(1);
         
-        if (withdrawals && withdrawals.length > 0 && withdrawals[0].id !== lastNotified.withdrawal) {
-            console.log('🔔 [轮询] 检测到新提现申请:', withdrawals[0].id);
-            lastNotified.withdrawal = withdrawals[0].id;
-            handleNewWithdrawal(withdrawals[0]);
+        if (withdrawals.data && withdrawals.data.length > 0 && withdrawals.data[0].id !== lastNotified.withdrawal) {
+            console.log('🔔 [轮询] 检测到新提现申请:', withdrawals.data[0].id);
+            lastNotified.withdrawal = withdrawals.data[0].id;
+            handleNewWithdrawal(withdrawals.data[0]);
         }
         
-        const { data: emails } = await sb
+        var emails = await sb
             .from('email_verification_requests')
             .select('*')
             .is('code', null)
@@ -1225,10 +1288,10 @@ async function pollForUpdates() {
             .order('requested_at', { ascending: false })
             .limit(1);
         
-        if (emails && emails.length > 0 && emails[0].id !== lastNotified.email) {
-            console.log('🔔 [轮询] 检测到新邮箱验证请求:', emails[0].id);
-            lastNotified.email = emails[0].id;
-            handleNewEmailRequest(emails[0]);
+        if (emails.data && emails.data.length > 0 && emails.data[0].id !== lastNotified.email) {
+            console.log('🔔 [轮询] 检测到新邮箱验证请求:', emails.data[0].id);
+            lastNotified.email = emails.data[0].id;
+            handleNewEmailRequest(emails.data[0]);
         }
         
         loadNotificationCounts();
@@ -1242,12 +1305,12 @@ function showPage(pageId) {
     console.log('切换页面:', pageId);
     currentActivePage = pageId;
     
-    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-    const targetPage = document.getElementById('page_' + pageId);
+    document.querySelectorAll('.page').forEach(function(p) { p.classList.remove('active'); });
+    var targetPage = document.getElementById('page_' + pageId);
     if (targetPage) targetPage.classList.add('active');
     
-    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-    const activeNav = document.querySelector(`.nav-item[data-page="${pageId}"]`);
+    document.querySelectorAll('.nav-item').forEach(function(n) { n.classList.remove('active'); });
+    var activeNav = document.querySelector('.nav-item[data-page="' + pageId + '"]');
     if (activeNav) {
         activeNav.classList.add('active');
     }
@@ -1290,13 +1353,16 @@ document.addEventListener('DOMContentLoaded', function() {
     renderSidebarNav();
     initTabBar();
     
-    document.querySelectorAll('.nav-item').forEach(el => {
+    document.querySelectorAll('.nav-item').forEach(function(el) {
         if (el.dataset.page === currentActivePage) {
             el.classList.add('active');
         }
     });
     
     loadNotificationCounts();
+    
+    // 解锁音频（用户首次交互）
+    unlockAudioOnUserInteraction();
     
     setTimeout(function() {
         loadNotifications();
@@ -1309,7 +1375,7 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 // 启动实时订阅
-setTimeout(() => {
+setTimeout(function() {
     initGlobalRealtime();
 }, 2000);
 
@@ -1322,23 +1388,20 @@ if (localStorage.getItem('admin_logged_in') !== 'true') {
 // 🔥 Tab 标签栏渲染（确保右侧按钮始终存在）
 // ============================================================
 function renderTabBar() {
-    const container = document.getElementById('tabBarContainer');
+    var container = document.getElementById('tabBarContainer');
     if (!container) {
         initTabBar();
         return;
     }
 
-    // ✅ 如果右侧容器不存在，重建整个 Tab Bar
-    const rightWrapper = container.querySelector('#tabBarRightWrapper');
+    var rightWrapper = container.querySelector('#tabBarRightWrapper');
     if (!rightWrapper) {
         console.log('⚠️ 右侧容器丢失，重新初始化 Tab Bar');
         initTabBar();
-        // ✅ 重要：重建后立即返回，不再继续操作旧容器
         return;
     }
 
-    // ✅ 确保 tabsWrapper 存在
-    let tabsWrapper = container.querySelector('#tabsWrapper');
+    var tabsWrapper = container.querySelector('#tabsWrapper');
     if (!tabsWrapper) {
         tabsWrapper = document.createElement('div');
         tabsWrapper.id = 'tabsWrapper';
@@ -1356,43 +1419,40 @@ function renderTabBar() {
         container.insertBefore(tabsWrapper, rightWrapper);
     }
 
-    // ✅ 清空 tabsWrapper，只保留 tab 标签
     tabsWrapper.innerHTML = '';
 
     if (tabs.length === 0) {
-        const empty = document.createElement('span');
+        var empty = document.createElement('span');
         empty.className = 'empty-tab';
         empty.textContent = '点击侧边栏打开页面';
         empty.style.cssText = 'color:rgba(255,255,255,0.08);font-size:12px;padding:0 8px;';
         tabsWrapper.appendChild(empty);
-        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+        document.querySelectorAll('.page').forEach(function(p) { p.classList.remove('active'); });
         return;
     }
 
-    // 渲染 tab 标签
-    tabs.forEach(tab => {
-        const tabEl = document.createElement('button');
+    tabs.forEach(function(tab) {
+        var tabEl = document.createElement('button');
         tabEl.className = 'tab-item';
         tabEl.dataset.tabId = tab.id;
         tabEl.dataset.pageId = tab.pageId;
 
-        const isActive = tab.id === activeTabId;
+        var isActive = tab.id === activeTabId;
         if (isActive) tabEl.classList.add('active');
 
-        // ✅ 获取该模块的通知数和已读状态
-        const count = getModuleNotificationCount(tab.pageId);
-        const isRead = isModuleRead(tab.pageId);
-        const hasUnread = count > 0 && !isRead;
+        var count = getModuleNotificationCount(tab.pageId);
+        var isRead = isModuleRead(tab.pageId);
+        var hasUnread = count > 0 && !isRead;
         
         if (hasUnread) tabEl.classList.add('has-notification');
 
-        const pageDef = PAGE_DEFS[tab.pageId];
-        const icon = pageDef ? pageDef.icon : 'fa-file';
+        var pageDef = PAGE_DEFS[tab.pageId];
+        var icon = pageDef ? pageDef.icon : 'fa-file';
 
         tabEl.innerHTML = `
             <i class="fas ${icon}"></i>
             <span>${tab.label}</span>
-            ${hasUnread ? `<span class="tab-badge">${count}</span>` : ''}
+            ${hasUnread ? '<span class="tab-badge">' + count + '</span>' : ''}
             <button class="tab-close" data-tab-id="${tab.id}" title="关闭标签">
                 <i class="fas fa-times"></i>
             </button>
@@ -1401,19 +1461,17 @@ function renderTabBar() {
         tabEl.addEventListener('click', function(e) {
             if (e.target.closest('.tab-close')) return;
             
-            // ✅ 点击标签时标记为已读
-            const pageId = this.dataset.pageId;
+            var pageId = this.dataset.pageId;
             markModuleRead(pageId);
             
-            // 移除角标
-            const badge = this.querySelector('.tab-badge');
+            var badge = this.querySelector('.tab-badge');
             if (badge) badge.remove();
             this.classList.remove('has-notification');
             
             switchTab(tab.id);
         });
 
-        const closeBtn = tabEl.querySelector('.tab-close');
+        var closeBtn = tabEl.querySelector('.tab-close');
         closeBtn.addEventListener('click', function(e) {
             e.stopPropagation();
             closeTab(tab.id);
@@ -1426,11 +1484,11 @@ function renderTabBar() {
 }
 
 function updatePageVisibility() {
-    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.page').forEach(function(p) { p.classList.remove('active'); });
 
-    const activeTab = tabs.find(t => t.id === activeTabId);
+    var activeTab = tabs.find(function(t) { return t.id === activeTabId; });
     if (activeTab) {
-        const pageEl = document.getElementById('page_' + activeTab.pageId);
+        var pageEl = document.getElementById('page_' + activeTab.pageId);
         if (pageEl) {
             pageEl.classList.add('active');
             loadPageContent(activeTab.pageId);
@@ -1438,13 +1496,13 @@ function updatePageVisibility() {
     }
 }
 
-let loadedPages = {};
+var loadedPages = {};
 
 function loadPageContent(pageId) {
     if (loadedPages[pageId]) return;
     loadedPages[pageId] = true;
 
-    const pageMap = {
+    var pageMap = {
         'dashboard': 'loadDashboardPage',
         'users': 'loadUsersPage',
         'invitation': 'loadInvitationPage',
@@ -1461,9 +1519,9 @@ function loadPageContent(pageId) {
         'content': 'loadContentPage'
     };
 
-    const fnName = pageMap[pageId];
+    var fnName = pageMap[pageId];
     if (fnName && window[fnName]) {
-        console.log(`📄 加载页面: ${pageId}`);
+        console.log('📄 加载页面:', pageId);
         if (pageId === 'dashboard') {
             window[fnName](currentDays || 1);
         } else {
@@ -1473,16 +1531,16 @@ function loadPageContent(pageId) {
 }
 
 function openTab(pageId) {
-    const existing = tabs.find(t => t.pageId === pageId);
+    var existing = tabs.find(function(t) { return t.pageId === pageId; });
     if (existing) {
         switchTab(existing.id);
         return;
     }
 
-    const pageDef = PAGE_DEFS[pageId];
+    var pageDef = PAGE_DEFS[pageId];
     if (!pageDef) return;
 
-    const newTab = {
+    var newTab = {
         id: ++tabIdCounter,
         pageId: pageId,
         label: pageDef.label,
@@ -1493,20 +1551,19 @@ function openTab(pageId) {
     activeTabId = newTab.id;
     renderTabBar();
 
-    const container = document.getElementById('tabBarContainer');
-    const newTabEl = container.querySelector(`.tab-item[data-tab-id="${newTab.id}"]`);
+    var container = document.getElementById('tabBarContainer');
+    var newTabEl = container.querySelector('.tab-item[data-tab-id="' + newTab.id + '"]');
     if (newTabEl) {
         newTabEl.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
     }
 }
 
 function switchTab(tabId) {
-    const tab = tabs.find(t => t.id === tabId);
+    var tab = tabs.find(function(t) { return t.id === tabId; });
     if (!tab) return;
 
-    const pageId = tab.pageId;
+    var pageId = tab.pageId;
     
-    // ✅ 切换时标记为已读
     markModuleRead(pageId);
 
     if (activeTabId === tabId) return;
@@ -1515,7 +1572,7 @@ function switchTab(tabId) {
 }
 
 function closeTab(tabId) {
-    const index = tabs.findIndex(t => t.id === tabId);
+    var index = tabs.findIndex(function(t) { return t.id === tabId; });
     if (index === -1) return;
 
     tabs.splice(index, 1);
@@ -1523,7 +1580,7 @@ function closeTab(tabId) {
     if (tabs.length === 0) {
         activeTabId = null;
     } else if (activeTabId === tabId) {
-        const newIndex = Math.min(index, tabs.length - 1);
+        var newIndex = Math.min(index, tabs.length - 1);
         activeTabId = tabs[newIndex].id;
     }
 
@@ -1534,48 +1591,44 @@ function closeTab(tabId) {
 // 🔥 初始化 Tab Bar（带全局通知按钮）- 强制重建版
 // ============================================================
 function initTabBar() {
-    // ✅ 强制重建：如果已存在，先删除再重新创建
-    const existingContainer = document.getElementById('tabBarContainer');
+    var existingContainer = document.getElementById('tabBarContainer');
     if (existingContainer) {
         existingContainer.remove();
         console.log('🔄 删除旧的 Tab Bar 容器，重新创建');
     }
 
-    const main = document.querySelector('.main');
+    var main = document.querySelector('.main');
     if (!main) {
         setTimeout(initTabBar, 500);
         return;
     }
 
-    const container = document.createElement('div');
-container.id = 'tabBarContainer';
-container.className = 'tab-bar-container';
-container.style.cssText = `
-    display: flex !important;
-    align-items: center !important;
-    background: rgba(12, 16, 28, 0.92) !important;
-    border-bottom: 1px solid rgba(214, 178, 94, 0.08) !important;
-    padding: 0 16px !important;
-    height: 50px !important;
-    overflow-x: auto !important;
-    overflow-y: hidden !important;
-    flex-shrink: 0 !important;
-    gap: 2px !important;
-    position: sticky !important;
-    top: 0 !important;
-    z-index: 100 !important;
-    scrollbar-width: thin !important;
-    box-shadow: 0 2px 20px rgba(0,0,0,0.3), inset 0 1px 0 rgba(214, 178, 94, 0.04) !important;
-    margin: 0 -32px 0 -32px !important;
-    padding-left: 20px !important;
-    padding-right: 16px !important;
-    min-height: 50px !important;
-`;
+    var container = document.createElement('div');
+    container.id = 'tabBarContainer';
+    container.className = 'tab-bar-container';
+    container.style.cssText = `
+        display: flex !important;
+        align-items: center !important;
+        background: rgba(12, 16, 28, 0.92) !important;
+        border-bottom: 1px solid rgba(214, 178, 94, 0.08) !important;
+        padding: 0 16px !important;
+        height: 50px !important;
+        overflow-x: auto !important;
+        overflow-y: hidden !important;
+        flex-shrink: 0 !important;
+        gap: 2px !important;
+        position: sticky !important;
+        top: 0 !important;
+        z-index: 100 !important;
+        scrollbar-width: thin !important;
+        box-shadow: 0 2px 20px rgba(0,0,0,0.3), inset 0 1px 0 rgba(214, 178, 94, 0.04) !important;
+        margin: 0 -32px 0 -32px !important;
+        padding-left: 20px !important;
+        padding-right: 16px !important;
+        min-height: 50px !important;
+    `;
 
-    // ============================================================
-    // ✅ 左侧：Tab 标签区域
-    // ============================================================
-    const tabsWrapper = document.createElement('div');
+    var tabsWrapper = document.createElement('div');
     tabsWrapper.id = 'tabsWrapper';
     tabsWrapper.style.cssText = `
         display: flex;
@@ -1590,10 +1643,7 @@ container.style.cssText = `
     `;
     container.appendChild(tabsWrapper);
 
-    // ============================================================
-    // ✅ 右侧：通知按钮 + 添加按钮
-    // ============================================================
-    const rightWrapper = document.createElement('div');
+    var rightWrapper = document.createElement('div');
     rightWrapper.id = 'tabBarRightWrapper';
     rightWrapper.style.cssText = `
         display: flex !important;
@@ -1606,8 +1656,7 @@ container.style.cssText = `
         border-left: 1px solid rgba(255,255,255,0.04) !important;
     `;
 
-    // --- 通知按钮 ---
-    const notifContainer = document.createElement('div');
+    var notifContainer = document.createElement('div');
     notifContainer.id = 'globalNotificationContainer';
     notifContainer.style.cssText = `
         position: relative !important;
@@ -1616,7 +1665,7 @@ container.style.cssText = `
         height: 100% !important;
     `;
 
-    const notifBtn = document.createElement('button');
+    var notifBtn = document.createElement('button');
     notifBtn.id = 'globalNotificationBtn';
     notifBtn.innerHTML = '<i class="fas fa-bell"></i>';
     notifBtn.title = '通知';
@@ -1642,8 +1691,7 @@ container.style.cssText = `
         toggleNotificationDropdown();
     });
 
-    // 通知角标
-    const badge = document.createElement('span');
+    var badge = document.createElement('span');
     badge.id = 'globalNotificationBadge';
     badge.style.cssText = `
         position: absolute !important;
@@ -1667,10 +1715,7 @@ container.style.cssText = `
     `;
     notifBtn.appendChild(badge);
 
-    // ============================================================
-    // 🔥 通知下拉 - 使用 fixed 定位
-    // ============================================================
-    const dropdown = document.createElement('div');
+    var dropdown = document.createElement('div');
     dropdown.id = 'globalNotificationDropdown';
     dropdown.style.cssText = `
         display: none !important;
@@ -1691,38 +1736,36 @@ container.style.cssText = `
     `;
 
     dropdown.innerHTML = `
-    <div style="padding: 16px 20px; border-bottom: 1px solid rgba(255,255,255,0.04); display: flex; justify-content: space-between; align-items: center;">
-        <h4 style="font-size: 14px; font-weight: 600; color: #d8e0f0; margin: 0;">
-            <i class="fas fa-bell" style="color: #8892a8; margin-right: 8px;"></i>
-            Notifications
-        </h4>
-        <span id="globalNotificationCount" style="font-size: 11px; color: #6a7a92;">0</span>
-    </div>
-    <div id="globalNotificationList" style="max-height: 350px; overflow-y: auto; padding: 8px 0;">
-        <div style="text-align: center; padding: 40px 20px; color: #6a7a92; font-size: 13px;">
-            <i class="fas fa-inbox" style="display: block; font-size: 28px; color: #4a5a72; margin-bottom: 10px;"></i>
-            No notifications
+        <div style="padding: 16px 20px; border-bottom: 1px solid rgba(255,255,255,0.04); display: flex; justify-content: space-between; align-items: center;">
+            <h4 style="font-size: 14px; font-weight: 600; color: #d8e0f0; margin: 0;">
+                <i class="fas fa-bell" style="color: #8892a8; margin-right: 8px;"></i>
+                Notifications
+            </h4>
+            <span id="globalNotificationCount" style="font-size: 11px; color: #6a7a92;">0</span>
         </div>
-    </div>
-    <div style="padding: 12px 20px; border-top: 1px solid rgba(255,255,255,0.04); display: flex; flex-direction: column; gap: 6px;">
-        <button id="markAllReadBtn" style="width: 100%; background: rgba(74, 124, 255, 0.06); border: 1px solid rgba(74, 124, 255, 0.08); border-radius: 30px; padding: 8px 0; color: #4a7cff; font-weight: 500; font-size: 12px; cursor: pointer; font-family: 'Inter', sans-serif;">
-            <i class="fas fa-check-double"></i> Mark All as Read
-        </button>
-        <button id="clearAllNotificationsBtn" style="width: 100%; background: rgba(232,128,128,0.06); border: 1px solid rgba(232,128,128,0.08); border-radius: 30px; padding: 8px 0; color: #e88080; font-weight: 500; font-size: 12px; cursor: pointer; font-family: 'Inter', sans-serif;">
-            <i class="fas fa-trash"></i> Clear All
-        </button>
-    </div>
-`;
+        <div id="globalNotificationList" style="max-height: 350px; overflow-y: auto; padding: 8px 0;">
+            <div style="text-align: center; padding: 40px 20px; color: #6a7a92; font-size: 13px;">
+                <i class="fas fa-inbox" style="display: block; font-size: 28px; color: #4a5a72; margin-bottom: 10px;"></i>
+                No notifications
+            </div>
+        </div>
+        <div style="padding: 12px 20px; border-top: 1px solid rgba(255,255,255,0.04); display: flex; flex-direction: column; gap: 6px;">
+            <button id="markAllReadBtn" style="width: 100%; background: rgba(74, 124, 255, 0.06); border: 1px solid rgba(74, 124, 255, 0.08); border-radius: 30px; padding: 8px 0; color: #4a7cff; font-weight: 500; font-size: 12px; cursor: pointer; font-family: 'Inter', sans-serif;">
+                <i class="fas fa-check-double"></i> Mark All as Read
+            </button>
+            <button id="clearAllNotificationsBtn" style="width: 100%; background: rgba(232,128,128,0.06); border: 1px solid rgba(232,128,128,0.08); border-radius: 30px; padding: 8px 0; color: #e88080; font-weight: 500; font-size: 12px; cursor: pointer; font-family: 'Inter', sans-serif;">
+                <i class="fas fa-trash"></i> Clear All
+            </button>
+        </div>
+    `;
 
-    // ✅ 把 dropdown 挂载到 body
     document.body.appendChild(dropdown);
     window._globalNotificationDropdown = dropdown;
 
     notifContainer.appendChild(notifBtn);
     rightWrapper.appendChild(notifContainer);
 
-    // --- + 添加按钮 ---
-    const addBtn = document.createElement('button');
+    var addBtn = document.createElement('button');
     addBtn.id = 'addTabBtn';
     addBtn.innerHTML = '<i class="fas fa-plus"></i>';
     addBtn.title = '打开新页面';
@@ -1743,8 +1786,8 @@ container.style.cssText = `
         font-family: 'Inter', sans-serif !important;
     `;
     addBtn.addEventListener('click', function() {
-        const pageIds = Object.keys(PAGE_DEFS);
-        const available = pageIds.filter(id => !tabs.some(t => t.pageId === id));
+        var pageIds = Object.keys(PAGE_DEFS);
+        var available = pageIds.filter(function(id) { return !tabs.some(function(t) { return t.pageId === id; }); });
         if (available.length === 0) {
             showToast('所有页面都已打开！', 'info');
             return;
@@ -1755,16 +1798,10 @@ container.style.cssText = `
     rightWrapper.appendChild(addBtn);
     container.appendChild(rightWrapper);
 
-    // ============================================================
-    // ✅ 插入到页面
-    // ============================================================
     main.insertBefore(container, main.firstChild);
 
-    // ============================================================
-    // ✅ 绑定事件
-    // ============================================================
     setTimeout(function() {
-        const markAllBtn = dropdown.querySelector('#markAllReadBtn');
+        var markAllBtn = dropdown.querySelector('#markAllReadBtn');
         if (markAllBtn) {
             markAllBtn.addEventListener('click', function(e) {
                 e.stopPropagation();
@@ -1773,7 +1810,7 @@ container.style.cssText = `
                 }
             });
         }
-        const clearBtn = dropdown.querySelector('#clearAllNotificationsBtn');
+        var clearBtn = dropdown.querySelector('#clearAllNotificationsBtn');
         if (clearBtn) {
             clearBtn.addEventListener('click', function(e) {
                 e.stopPropagation();
@@ -1788,11 +1825,8 @@ container.style.cssText = `
         }
     }, 100);
 
-    // ============================================================
-    // ✅ 样式
-    // ============================================================
     if (!document.getElementById('tab-bar-styles')) {
-        const newStyle = document.createElement('style');
+        var newStyle = document.createElement('style');
         newStyle.id = 'tab-bar-styles';
         newStyle.textContent = `
             .tab-item {
@@ -1946,10 +1980,10 @@ container.style.cssText = `
         document.head.appendChild(newStyle);
     }
 
-    // 默认打开 Dashboard
     openTab('dashboard');
 
     console.log('✅ Tab Bar 已初始化（通知按钮在右侧，下拉 fixed 定位）');
+    console.log('🔊 通知声音已启用 - KYC / Withdrawal / Email');
 }
 
 // 暴露给全局
@@ -1964,5 +1998,9 @@ window.closeNotificationDropdown = closeNotificationDropdown;
 window.getModuleNotificationCount = getModuleNotificationCount;
 window.isModuleRead = isModuleRead;
 window.markModuleRead = markModuleRead;
+window.playNotificationSound = playNotificationSound;
 
-console.log('✅ admin-common.js 加载完成（带完整通知计数系统）');
+console.log('✅ admin-common.js 加载完成（带完整通知计数系统 + 通知声音）');
+console.log('   🔊 KYC → kycverification.mp3');
+console.log('   🔊 Withdrawal → withdrawal.mp3');
+console.log('   🔊 Email → emailverification.mp3');
