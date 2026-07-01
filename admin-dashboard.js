@@ -322,19 +322,45 @@ async function loadChartData(force) {
 }
 
 // ============================================================
-// loadConversionData - 只统计 Today 注册的用户
+// loadConversionData - 只统计 Today 注册的用户（无缓存）
 // ============================================================
 async function loadConversionData(days, force) {
     force = force || false;
     var now = Date.now();
+    
+    // 🔥 Today 数据不缓存，每次都重新获取
+    if (days === 0) {
+        // 强制刷新，不使用缓存
+        force = true;
+    }
+    
     if (!force && cachedData.conversion && (now - cachedData.lastConversionTime) < CACHE_DURATION) {
         applyConversionData(cachedData.conversion, days);
         return;
     }
+    
     try {
-        var periods = [
-            { label: 'Today', days: 0 }
-        ];
+        var periods = [];
+        
+        // ============================================================
+        // 根据 days 参数决定统计哪些时间段
+        // ============================================================
+        if (days === 0) {
+            // Today only
+            periods.push({ label: 'Today', daysOffset: 0 });
+        } else if (days === 7) {
+            periods.push({ label: 'Today', daysOffset: 0 });
+            periods.push({ label: '7 Days', daysOffset: 7 });
+        } else if (days === 30) {
+            periods.push({ label: 'Today', daysOffset: 0 });
+            periods.push({ label: '7 Days', daysOffset: 7 });
+            periods.push({ label: '30 Days', daysOffset: 30 });
+        } else if (days === -1) {
+            periods.push({ label: 'Today', daysOffset: 0 });
+            periods.push({ label: '7 Days', daysOffset: 7 });
+            periods.push({ label: '30 Days', daysOffset: 30 });
+            periods.push({ label: 'All Time', daysOffset: -1 });
+        }
         
         var result = [];
         var allUsers = await sb.from('users').select('uid, created_at');
@@ -353,32 +379,58 @@ async function loadConversionData(days, force) {
         });
         
         // ============================================================
-        // 🔥 只统计今天注册的用户（柏林时间）
+        // 🔥 获取今天的日期（柏林时间）
         // ============================================================
         var today = getBerlinDate();
         var todayStr = today.toISOString().split('T')[0];
         
-        var registeredUsers = users.filter(function(u) {
-            if (!u.created_at) return false;
-            var berlinDate = convertToBerlinDate(new Date(u.created_at));
-            var dateStr = berlinDate.toISOString().split('T')[0];
-            return dateStr === todayStr;
-        });
-        
-        var totalRegister = registeredUsers.length;
-        var convertedUsers = registeredUsers.filter(function(u) {
-            return depositUsers[u.uid] === true;
-        });
-        var totalConverted = convertedUsers.length;
-        var rate = totalRegister > 0 ? Math.round((totalConverted / totalRegister) * 100) : 0;
-        
-        result.push({
-            label: 'Today',
-            days: 0,
-            register: totalRegister,
-            converted: totalConverted,
-            rate: rate
-        });
+        for (var p = 0; p < periods.length; p++) {
+            var period = periods[p];
+            var label = period.label;
+            var daysOffset = period.daysOffset;
+            
+            var registeredUsers = [];
+            
+            if (daysOffset === -1) {
+                // All Time
+                registeredUsers = users;
+            } else if (daysOffset === 0) {
+                // 🔥 Today：只统计今天注册的用户
+                registeredUsers = users.filter(function(u) {
+                    if (!u.created_at) return false;
+                    var berlinDate = convertToBerlinDate(new Date(u.created_at));
+                    var dateStr = berlinDate.toISOString().split('T')[0];
+                    return dateStr === todayStr;
+                });
+            } else {
+                // 7 Days / 30 Days
+                var startDate = new Date(today);
+                startDate.setDate(startDate.getDate() - daysOffset);
+                var startStr = startDate.toISOString().split('T')[0];
+                
+                registeredUsers = users.filter(function(u) {
+                    if (!u.created_at) return false;
+                    var berlinDate = convertToBerlinDate(new Date(u.created_at));
+                    var dateStr = berlinDate.toISOString().split('T')[0];
+                    return dateStr >= startStr && dateStr <= todayStr;
+                });
+            }
+            
+            var totalRegister = registeredUsers.length;
+            var convertedUsers = registeredUsers.filter(function(u) {
+                return depositUsers[u.uid] === true;
+            });
+            var totalConverted = convertedUsers.length;
+            var rate = totalRegister > 0 ? Math.round((totalConverted / totalRegister) * 100) : 0;
+            
+            result.push({
+                label: label,
+                days: daysOffset,
+                register: totalRegister,
+                converted: totalConverted,
+                rate: rate
+            });
+        }
         
         cachedData.conversion = result;
         cachedData.lastConversionTime = now;
@@ -390,7 +442,36 @@ async function loadConversionData(days, force) {
 }
 
 function applyConversionData(data, days) {
-    var displayData = data[0] || { label: 'Today', register: 0, converted: 0, rate: 0 };
+    // 🔥 根据 days 参数决定显示哪个时间段的数据
+    var displayData = null;
+    var targetLabel = 'Today';
+    
+    if (days === 0) {
+        targetLabel = 'Today';
+    } else if (days === 7) {
+        targetLabel = '7 Days';
+    } else if (days === 30) {
+        targetLabel = '30 Days';
+    } else if (days === -1) {
+        targetLabel = 'All Time';
+    }
+    
+    // 查找匹配的数据
+    for (var i = 0; i < data.length; i++) {
+        if (data[i].label === targetLabel) {
+            displayData = data[i];
+            break;
+        }
+    }
+    
+    // 如果没找到，使用第一个（Today）
+    if (!displayData && data.length > 0) {
+        displayData = data[0];
+    }
+    
+    if (!displayData) {
+        displayData = { label: 'Today', register: 0, converted: 0, rate: 0 };
+    }
     
     var ringPercent = document.getElementById('ringPercent');
     if (ringPercent) {
@@ -404,33 +485,38 @@ function applyConversionData(data, days) {
     if (registerEl) registerEl.innerText = displayData.register;
     if (convertedEl) convertedEl.innerText = displayData.converted;
     if (labelEl) {
-        labelEl.innerText = 'Today Register';
+        labelEl.innerText = displayData.label + ' Register';
     }
     
+    // 更新所有统计行
     var allLabels = document.querySelectorAll('.conversion-stat-label');
     var allRegisters = document.querySelectorAll('.conversion-stat-register');
     var allConverteds = document.querySelectorAll('.conversion-stat-converted');
     var allRates = document.querySelectorAll('.conversion-stat-rate');
+    var allRows = document.querySelectorAll('.conversion-stat-row');
     
-    if (allLabels.length > 0) allLabels[0].innerText = 'Today';
+    // 只显示匹配的行，隐藏其他行
+    allRows.forEach(function(row, index) {
+        if (index === 0) {
+            // 第一行显示主数据（Today）
+            row.style.display = 'flex';
+            row.style.background = 'rgba(204,184,159,0.08)';
+            row.style.borderRadius = '8px';
+            row.style.padding = '3px 6px';
+        } else {
+            // 其他行隐藏
+            row.style.display = 'none';
+        }
+    });
+    
+    // 更新所有行的数据为 displayData（简化处理，只更新第一行）
+    if (allLabels.length > 0) allLabels[0].innerText = displayData.label;
     if (allRegisters.length > 0) allRegisters[0].innerText = displayData.register;
     if (allConverteds.length > 0) allConverteds[0].innerText = displayData.converted;
     if (allRates.length > 0) {
         allRates[0].innerText = displayData.rate + '%';
         allRates[0].style.color = displayData.rate >= 50 ? '#ccb89f' : displayData.rate >= 20 ? '#c8b090' : '#e88080';
     }
-    
-    var allRows = document.querySelectorAll('.conversion-stat-row');
-    allRows.forEach(function(row, index) {
-        if (index === 0) {
-            row.style.display = 'flex';
-            row.style.background = 'rgba(204,184,159,0.08)';
-            row.style.borderRadius = '8px';
-            row.style.padding = '3px 6px';
-        } else {
-            row.style.display = 'none';
-        }
-    });
 }
 
 // ========== 初始化环形进度条 ==========
@@ -699,11 +785,15 @@ window.handleActivityClick = function(type) {
 async function refreshDashboard(days, force) {
     days = days || currentDays;
     force = force || false;
+    
+    // 🔥 如果是 Today (days === 0)，强制刷新，不使用缓存
+    var conversionForce = force || (days === 0);
+    
     await Promise.all([
         loadQuickCards(),
         loadStatsData(days, force),
         loadChartData(force),
-        loadConversionData(days, force),
+        loadConversionData(days, conversionForce),  // 传递 conversionForce
         loadActivityTimeline(force),
         loadRecentRegistrations()
     ]);
@@ -714,6 +804,7 @@ async function refreshDashboard(days, force) {
         if (days === 7) targetLabel = '7 Days';
         else if (days === 30) targetLabel = '30 Days';
         else if (days === -1) targetLabel = 'All Time';
+        
         var matched = cachedData.conversion.filter(function(d) { return d.label === targetLabel; });
         if (matched.length > 0) {
             var rate = matched[0].rate;
@@ -867,8 +958,11 @@ function bindDateFilters() {
         btn.classList.add('active');
         var days = parseInt(btn.dataset.days);
         currentDays = days;
+        
+        // 🔥 如果是 Today (days === 0)，强制刷新
         refreshDashboard(days, true);
     }, DEBOUNCE_DELAY);
+    
     document.querySelectorAll('.date-filter-btn').forEach(function(btn) {
         if (btn._handler) btn.removeEventListener('click', btn._handler);
         btn._handler = function() { handleFilterChange(btn); };
