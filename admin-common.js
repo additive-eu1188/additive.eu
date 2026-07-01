@@ -1555,7 +1555,7 @@ container.style.cssText = `
     align-items: center !important;
     background: rgba(12, 16, 28, 0.92) !important;
     border-bottom: 1px solid rgba(214, 178, 94, 0.08) !important;
-    padding: 0 12px !important;
+    padding: 0 16px !important;
     height: 50px !important;
     overflow-x: auto !important;
     overflow-y: hidden !important;
@@ -1566,7 +1566,7 @@ container.style.cssText = `
     z-index: 100 !important;
     scrollbar-width: thin !important;
     box-shadow: 0 2px 20px rgba(0,0,0,0.3), inset 0 1px 0 rgba(214, 178, 94, 0.04) !important;
-    margin: 0 -32px 0 -32px !important;  /* ← 从 -24px 改为 0 */
+    margin: 0 !important;
     padding-left: 20px !important;
     padding-right: 16px !important;
     min-height: 50px !important;
