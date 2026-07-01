@@ -53,6 +53,7 @@
             padding: 32px;
             border: 1px solid rgba(201, 176, 149, 0.1);
         }
+        /* ===== 多图网格 ===== */
         .content-card .image-grid-container {
             display: grid;
             grid-template-columns: 1fr;
@@ -103,7 +104,7 @@
         .content-card .content-text h2 {
             color: #C9B095;
             font-size: 22px;
-            margin-top: 24px;
+            margin-top: 0;
             margin-bottom: 16px;
         }
         .content-card .content-text h3 {
@@ -297,7 +298,7 @@
 
             <div class="page-content">
                 <div class="page-header">
-                    <h1 data-i18n="event_title">📅 EVENTS</h1>
+                    <h1 data-i18n="event_title">📅 Events</h1>
                     <p data-i18n="event_subtitle">Discover our latest promotions, campaigns, and special offers.</p>
                 </div>
 
@@ -457,92 +458,78 @@
             const container = document.getElementById('contentContainer');
 
             try {
-                const { data: events, error } = await sb
+                const { data, error } = await sb
                     .from('system_content')
                     .select('*')
                     .eq('type', 'events')
-                    .order('id', { ascending: true });
+                    .single();
 
                 if (error) throw error;
 
-                if (!events || events.length === 0) {
-                    container.innerHTML = `
-                        <div class="content-card">
-                            <div style="text-align:center; padding:40px; color:#6a7a9a;">
-                                <i class="fas fa-calendar-alt" style="font-size:48px; display:block; margin-bottom:12px; color:#C9B095; opacity:0.3;"></i>
-                                <span data-i18n="event_no_events">No events available</span>
-                            </div>
-                        </div>
-                    `;
-                    return;
-                }
-
-                // 构建 HTML
-                let imagesHtml = '';
-                let title = '';
-                let contentText = '';
-
-                events.forEach(function(event, index) {
-                    // 解析图片 URL
+                if (data) {
                     let images = [];
-                    if (event.image_url) {
+                    if (data.image_url) {
                         try {
-                            const parsed = JSON.parse(event.image_url);
+                            const parsed = JSON.parse(data.image_url);
                             if (Array.isArray(parsed)) {
                                 images = parsed;
                             } else {
-                                images = [event.image_url];
+                                images = [data.image_url];
                             }
                         } catch (e) {
-                            images = event.image_url ? [event.image_url] : [];
+                            images = data.image_url ? [data.image_url] : [];
                         }
                     }
 
-                    // 每个 event 作为一个独立的卡片
-                    const eventTitle = event.title || 'Event ' + (index + 1);
-                    const eventContent = event.content || '';
-
-                    // 构建该 event 的图片网格
-                    let eventImagesHtml = '';
+                    let imagesHtml = '';
                     if (images.length > 0) {
-                        eventImagesHtml = `<div class="image-grid-container">`;
-                        images.forEach(function(url, imgIndex) {
+                        imagesHtml = `<div class="image-grid-container">`;
+                        images.forEach(function(url, index) {
                             const escapedUrl = escapeHtml(url);
-                            eventImagesHtml += `
-                                <div class="image-item" onclick="openImageViewerFromElement(this)">
-                                    <div class="img-wrapper">
-                                        <img src="${escapedUrl}" alt="${escapeHtml(eventTitle)} Image ${imgIndex + 1}" 
-                                             style="position:absolute; top:0; left:0; width:100%; height:100%; object-fit:cover; cursor:pointer;" 
-                                             onerror="handleImageError(this, ${imgIndex + 1})">
-                                        <span class="image-number">${imgIndex + 1} / ${images.length}</span>
-                                    </div>
-                                </div>
-                            `;
+                            imagesHtml += `
+    <div class="image-item" onclick="openImageViewerFromElement(this)">
+        <div class="img-wrapper">
+            <img src="${escapedUrl}" alt="Event Image ${index + 1}" 
+                 style="position:absolute; top:0; left:0; width:100%; height:100%; object-fit:cover; cursor:pointer;" 
+                 onerror="handleImageError(this, ${index + 1})">
+            <span class="image-number">${index + 1} / ${images.length}</span>
+        </div>
+    </div>
+`;
                         });
-                        eventImagesHtml += `</div>`;
+                        imagesHtml += `</div>`;
                     } else {
-                        eventImagesHtml = `
+                        imagesHtml = `
                             <div style="text-align:center; padding:40px; color:#6a7a9a;">
                                 <i class="fas fa-calendar-alt" style="font-size:48px; display:block; margin-bottom:12px; color:#C9B095; opacity:0.3;"></i>
-                                <span>No images uploaded for this event</span>
+                                <span data-i18n="event_no_images">No images uploaded</span>
                             </div>
                         `;
                     }
 
-                    // 构建事件卡片
-                    imagesHtml += `
-                        <div class="content-card" style="margin-bottom: 24px;">
-                            ${eventImagesHtml}
+                    // 🔥 使用单个 content-card（和 company/employment 完全一样）
+                    container.innerHTML = `
+                        <div class="content-card">
+                            ${imagesHtml}
                             <div class="content-text">
-                                <h2 style="color: #C9B095; font-size: 22px; margin-top: 0; margin-bottom: 8px;">${escapeHtml(eventTitle)}</h2>
-                                ${eventContent ? `<div style="color: #c0c8e0; line-height: 1.8; font-size: 14px;">${eventContent}</div>` : ''}
+                                <h2>${escapeHtml(data.title || 'Events')}</h2>
+                                ${data.content || ''}
                             </div>
                         </div>
                     `;
-                });
-
-                container.innerHTML = imagesHtml;
-
+                } else {
+                    container.innerHTML = `
+                        <div class="content-card">
+                            <div style="text-align:center; padding:40px; color:#6a7a9a;">
+                                <i class="fas fa-calendar-alt" style="font-size:48px; display:block; margin-bottom:12px; color:#C9B095; opacity:0.3;"></i>
+                                <span>No content yet</span>
+                            </div>
+                            <div class="content-text">
+                                <p>Content not found. Please check back later.</p>
+                            </div>
+                        </div>
+                    `;
+                }
             } catch (error) {
                 console.error('加载内容失败:', error);
                 const t = window.i18n?.t || function(key) { return key; };
