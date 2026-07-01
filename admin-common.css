@@ -33,7 +33,7 @@ body {
 
 /* ===== 金属质感侧边栏（无粒子动画） ===== */
 .sidebar {
-    width: 280px;
+    width: 220px;
     height: 100vh;
     position: fixed;
     top: 0;
@@ -436,7 +436,7 @@ body {
 /* ===== 主内容区 ===== */
 .main {
     flex: 1;
-    margin-left: 280px;
+    margin-left: 220px;
     padding: 0 32px 24px 32px;
     overflow-y: auto;
 }
