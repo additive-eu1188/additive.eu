@@ -1,4 +1,4 @@
-// admin-dashboard.js - 完整版（完全静态，无动画，金属质感 #ccb89f）
+// admin-dashboard.js - 完整版（柏林时间 + D&W Trend 与卡片数据一致）
 let trendChart = null;
 let ringChart = null;
 let breatheInterval = null;
@@ -28,6 +28,44 @@ function debounce(func, wait) {
         clearTimeout(timeout);
         timeout = setTimeout(later, wait);
     };
+}
+
+// ============================================================
+// 🔥 柏林时间工具函数
+// ============================================================
+
+// 获取当前柏林时间
+function getBerlinDate() {
+    var now = new Date();
+    var utc = now.getTime() + (now.getTimezoneOffset() * 60000);
+    var offset = isBerlinSummerTime(now) ? 2 : 1;
+    return new Date(utc + (3600000 * offset));
+}
+
+// 判断是否夏令时（柏林时间）
+function isBerlinSummerTime(date) {
+    var year = date.getFullYear();
+    var lastSundayMarch = new Date(year, 2, 31);
+    lastSundayMarch.setDate(lastSundayMarch.getDate() - lastSundayMarch.getDay());
+    var lastSundayOctober = new Date(year, 9, 31);
+    lastSundayOctober.setDate(lastSundayOctober.getDate() - lastSundayOctober.getDay());
+    var testDate = new Date(date);
+    testDate.setHours(0, 0, 0, 0);
+    return testDate >= lastSundayMarch && testDate < lastSundayOctober;
+}
+
+// 将任意日期转换为柏林时间日期
+function convertToBerlinDate(date) {
+    var utc = date.getTime() + (date.getTimezoneOffset() * 60000);
+    var offset = isBerlinSummerTime(date) ? 2 : 1;
+    return new Date(utc + (3600000 * offset));
+}
+
+// 获取柏林时间当天的开始（0:00）
+function getBerlinStartOfDay(date) {
+    var d = new Date(date);
+    d.setHours(0, 0, 0, 0);
+    return convertToBerlinDate(d);
 }
 
 async function loadQuickCards() {
@@ -60,31 +98,83 @@ async function loadStatsData(days, force) {
     }
     try {
         var usersRes = await sb.from('users').select('created_at, balance');
-        
         var depositsRes = await sb.from('deposits')
             .select('created_at, amount')
             .eq('type', 'manual');
-        
         var withdrawalsRes = await sb.from('withdrawals').select('request_date, amount, status');
         var users = usersRes.data || [];
         var deposits = depositsRes.data || [];
         var withdrawals = withdrawalsRes.data || [];
-        var nowDate = new Date();
-        var startDate = new Date(); startDate.setDate(nowDate.getDate() - days);
+        
+        // ============================================================
+        // 🔥 使用柏林时间计算日期范围
+        // ============================================================
+        var nowDate = getBerlinDate();
+        var startDate = new Date(nowDate);
+        startDate.setDate(startDate.getDate() - days);
         var startStr = startDate.toISOString().split('T')[0];
-        var lastPeriodStart = new Date(); lastPeriodStart.setDate(nowDate.getDate() - days * 2);
+        
+        var lastPeriodStart = new Date(nowDate);
+        lastPeriodStart.setDate(lastPeriodStart.getDate() - days * 2);
         var lastPeriodStr = lastPeriodStart.toISOString().split('T')[0];
         
-        var newUsers = users.filter(function(u) { return u.created_at && u.created_at.split('T')[0] >= startStr; }).length;
-        var prevNewUsers = users.filter(function(u) { return u.created_at && u.created_at.split('T')[0] >= lastPeriodStr && u.created_at.split('T')[0] < startStr; }).length;
-        var totalDeposit = deposits.reduce(function(s, d) { return s + (d.amount || 0); }, 0);
-        var periodDeposit = deposits.filter(function(d) { return d.created_at && d.created_at.split('T')[0] >= startStr; }).reduce(function(s, d) { return s + (d.amount || 0); }, 0);
-        var prevPeriodDeposit = deposits.filter(function(d) { return d.created_at && d.created_at.split('T')[0] >= lastPeriodStr && d.created_at.split('T')[0] < startStr; }).reduce(function(s, d) { return s + (d.amount || 0); }, 0);
-        var totalWithdraw = withdrawals.filter(function(w) { return w.status === 'approved'; }).reduce(function(s, w) { return s + (w.amount || 0); }, 0);
-        var periodWithdraw = withdrawals.filter(function(w) { return w.status === 'approved' && w.request_date && w.request_date.split('T')[0] >= startStr; }).reduce(function(s, w) { return s + (w.amount || 0); }, 0);
-        var prevPeriodWithdraw = withdrawals.filter(function(w) { return w.status === 'approved' && w.request_date && w.request_date.split('T')[0] >= lastPeriodStr && w.request_date.split('T')[0] < startStr; }).reduce(function(s, w) { return s + (w.amount || 0); }, 0);
+        // 过滤数据（使用柏林时间）
+        var newUsers = users.filter(function(u) {
+            if (!u.created_at) return false;
+            var berlinDate = convertToBerlinDate(new Date(u.created_at));
+            return berlinDate.toISOString().split('T')[0] >= startStr;
+        }).length;
         
-        var statsData = { newUsers: newUsers, prevNewUsers: prevNewUsers, totalUsers: users.length, totalDeposit: totalDeposit, periodDeposit: periodDeposit, prevPeriodDeposit: prevPeriodDeposit, totalWithdraw: totalWithdraw, periodWithdraw: periodWithdraw, prevPeriodWithdraw: prevPeriodWithdraw };
+        var prevNewUsers = users.filter(function(u) {
+            if (!u.created_at) return false;
+            var berlinDate = convertToBerlinDate(new Date(u.created_at));
+            var dateStr = berlinDate.toISOString().split('T')[0];
+            return dateStr >= lastPeriodStr && dateStr < startStr;
+        }).length;
+        
+        var totalDeposit = deposits.reduce(function(s, d) { return s + (d.amount || 0); }, 0);
+        
+        var periodDeposit = deposits.filter(function(d) {
+            if (!d.created_at) return false;
+            var berlinDate = convertToBerlinDate(new Date(d.created_at));
+            return berlinDate.toISOString().split('T')[0] >= startStr;
+        }).reduce(function(s, d) { return s + (d.amount || 0); }, 0);
+        
+        var prevPeriodDeposit = deposits.filter(function(d) {
+            if (!d.created_at) return false;
+            var berlinDate = convertToBerlinDate(new Date(d.created_at));
+            var dateStr = berlinDate.toISOString().split('T')[0];
+            return dateStr >= lastPeriodStr && dateStr < startStr;
+        }).reduce(function(s, d) { return s + (d.amount || 0); }, 0);
+        
+        var totalWithdraw = withdrawals.filter(function(w) { return w.status === 'approved'; }).reduce(function(s, w) { return s + (w.amount || 0); }, 0);
+        
+        var periodWithdraw = withdrawals.filter(function(w) {
+            if (!w.request_date) return false;
+            if (w.status !== 'approved') return false;
+            var berlinDate = convertToBerlinDate(new Date(w.request_date));
+            return berlinDate.toISOString().split('T')[0] >= startStr;
+        }).reduce(function(s, w) { return s + (w.amount || 0); }, 0);
+        
+        var prevPeriodWithdraw = withdrawals.filter(function(w) {
+            if (!w.request_date) return false;
+            if (w.status !== 'approved') return false;
+            var berlinDate = convertToBerlinDate(new Date(w.request_date));
+            var dateStr = berlinDate.toISOString().split('T')[0];
+            return dateStr >= lastPeriodStr && dateStr < startStr;
+        }).reduce(function(s, w) { return s + (w.amount || 0); }, 0);
+        
+        var statsData = { 
+            newUsers: newUsers, 
+            prevNewUsers: prevNewUsers, 
+            totalUsers: users.length, 
+            totalDeposit: totalDeposit, 
+            periodDeposit: periodDeposit, 
+            prevPeriodDeposit: prevPeriodDeposit, 
+            totalWithdraw: totalWithdraw, 
+            periodWithdraw: periodWithdraw, 
+            prevPeriodWithdraw: prevPeriodWithdraw 
+        };
         cachedData.stats = statsData;
         cachedData.lastStatsTime = now;
         applyStatsData(statsData);
@@ -110,13 +200,12 @@ function applyStatsData(data) {
 }
 
 // ============================================================
-// loadChartData - 显示当月 Deposit & Withdrawal 趋势
+// loadChartData - 与统计卡片数据完全一致（柏林时间，最近7天）
 // ============================================================
 async function loadChartData(force) {
     force = force || false;
     var now = Date.now();
     
-    // 缓存检查
     if (!force && cachedData.chart && (now - cachedData.lastChartTime) < CACHE_DURATION && trendChart) {
         trendChart.setOption({ 
             xAxis: { data: cachedData.chart.dates }, 
@@ -130,11 +219,11 @@ async function loadChartData(force) {
     
     try {
         // ============================================================
-        // 🔥 查询 deposits (manual + deposit_bonus + card_reward)
+        // 🔥 数据源与统计卡片完全一致
         // ============================================================
         var depositsRes = await sb.from('deposits')
             .select('created_at, amount')
-            .in('type', ['manual', 'deposit_bonus', 'card_reward']);
+            .eq('type', 'manual');
             
         var withdrawalsRes = await sb.from('withdrawals')
             .select('request_date, amount, status');
@@ -143,75 +232,68 @@ async function loadChartData(force) {
         var withdrawals = withdrawalsRes.data || [];
         
         // ============================================================
-        // 🔥 获取当前月份的第一天和最后一天
+        // 🔥 使用柏林时间生成最近7天
         // ============================================================
-        var today = new Date();
-        var year = today.getFullYear();
-        var month = today.getMonth(); // 0 = 1月, 5 = 6月
-        var daysInMonth = new Date(year, month + 1, 0).getDate(); // 当月总天数
-        var currentDay = today.getDate(); // 当前是几号
-        
-        // 生成当月所有日期 (1日 到 总天数)
+        var today = getBerlinDate();
         var dates = [];
         var dateStrMap = {};
         
-        for (var day = 1; day <= daysInMonth; day++) {
-            var d = new Date(year, month, day);
-            var dateStr = d.toISOString().split('T')[0];
-            var label = (month + 1) + '/' + day;
+        for (var i = 6; i >= 0; i--) {
+            var d = new Date(today);
+            d.setDate(d.getDate() - i);
+            // 确保日期在柏林时间下
+            var berlinDate = convertToBerlinDate(d);
+            var dateStr = berlinDate.toISOString().split('T')[0];
+            var label = (berlinDate.getMonth() + 1) + '/' + berlinDate.getDate();
             dates.push(label);
             dateStrMap[label] = dateStr;
         }
         
-        console.log('📅 当前月份:', year + '-' + String(month + 1).padStart(2, '0'), '总天数:', daysInMonth, '今日:', currentDay);
-        
         // ============================================================
-        // 🔥 按天汇总数据（仅限本月）
+        // 🔥 按天汇总数据（最近7天，柏林时间）
         // ============================================================
         var depositData = [];
         var withdrawData = [];
         
-        // 获取本月第一天和最后一天的日期字符串
-        var firstDayStr = new Date(year, month, 1).toISOString().split('T')[0];
-        var lastDayStr = new Date(year, month + 1, 0).toISOString().split('T')[0];
+        var firstDayStr = dateStrMap[dates[0]];
+        var lastDayStr = dateStrMap[dates[dates.length - 1]];
         
-        // 过滤出本月的数据
-        var monthDeposits = deposits.filter(function(d) {
-            return d.created_at && d.created_at >= firstDayStr && d.created_at <= lastDayStr;
+        // 过滤出最近7天的数据（使用柏林时间）
+        var periodDeposits = deposits.filter(function(d) {
+            if (!d.created_at) return false;
+            var berlinDate = convertToBerlinDate(new Date(d.created_at));
+            var dateStr = berlinDate.toISOString().split('T')[0];
+            return dateStr >= firstDayStr && dateStr <= lastDayStr;
         });
         
-        var monthWithdrawals = withdrawals.filter(function(w) {
-            return w.status === 'approved' && w.request_date && w.request_date >= firstDayStr && w.request_date <= lastDayStr;
+        var periodWithdrawals = withdrawals.filter(function(w) {
+            if (!w.request_date) return false;
+            if (w.status !== 'approved') return false;
+            var berlinDate = convertToBerlinDate(new Date(w.request_date));
+            var dateStr = berlinDate.toISOString().split('T')[0];
+            return dateStr >= firstDayStr && dateStr <= lastDayStr;
         });
         
         // 按天汇总
         for (var i = 0; i < dates.length; i++) {
             var label = dates[i];
             var dateStr = dateStrMap[label];
-            var dayNum = parseInt(label.split('/')[1]);
             
-            // 如果日期还没到（未来日期），数据为 null（显示为空）
-            // 如果日期已经到了但没有数据，数据为 0（显示在底部）
-            if (dayNum > currentDay) {
-                // 未来日期：用 null 表示空
-                depositData.push(null);
-                withdrawData.push(null);
-            } else {
-                // 过去或今天的日期：计算数据
-                var dayDeposit = monthDeposits.filter(function(dep) {
-                    return dep.created_at && dep.created_at.split('T')[0] === dateStr;
-                }).reduce(function(s, d) { return s + (d.amount || 0); }, 0);
-                
-                var dayWithdraw = monthWithdrawals.filter(function(w) {
-                    return w.request_date && w.request_date.split('T')[0] === dateStr;
-                }).reduce(function(s, w) { return s + (w.amount || 0); }, 0);
-                
-                depositData.push(dayDeposit);
-                withdrawData.push(dayWithdraw);
-            }
+            var dayDeposit = periodDeposits.filter(function(dep) {
+                var berlinDate = convertToBerlinDate(new Date(dep.created_at));
+                return berlinDate.toISOString().split('T')[0] === dateStr;
+            }).reduce(function(s, d) { return s + (d.amount || 0); }, 0);
+            
+            var dayWithdraw = periodWithdrawals.filter(function(w) {
+                var berlinDate = convertToBerlinDate(new Date(w.request_date));
+                return berlinDate.toISOString().split('T')[0] === dateStr;
+            }).reduce(function(s, w) { return s + (w.amount || 0); }, 0);
+            
+            depositData.push(dayDeposit);
+            withdrawData.push(dayWithdraw);
         }
         
-        console.log('📊 本月数据汇总完成, 总天数:', dates.length);
+        console.log('📊 D&W Trend 数据 (柏林时间):', { dates, depositData, withdrawData });
         
         cachedData.chart = { dates: dates, depositData: depositData, withdrawData: withdrawData };
         cachedData.lastChartTime = now;
@@ -232,7 +314,7 @@ async function loadChartData(force) {
                     }
                 ]
             });
-            console.log('📊 D&W Trend 已更新 (本月数据: ' + dates.length + '天)');
+            console.log('📊 D&W Trend 已更新 (柏林时间, 最近7天)');
         }
     } catch (e) {
         console.error('加载图表数据失败:', e);
@@ -240,7 +322,7 @@ async function loadChartData(force) {
 }
 
 // ============================================================
-// 🔥 loadConversionData - 只统计 Today 注册的用户
+// loadConversionData - 只统计 Today 注册的用户
 // ============================================================
 async function loadConversionData(days, force) {
     force = force || false;
@@ -250,9 +332,6 @@ async function loadConversionData(days, force) {
         return;
     }
     try {
-        // ============================================================
-        // 🔥 只显示 Today 的数据
-        // ============================================================
         var periods = [
             { label: 'Today', days: 0 }
         ];
@@ -274,15 +353,15 @@ async function loadConversionData(days, force) {
         });
         
         // ============================================================
-        // 🔥 只统计今天注册的用户
+        // 🔥 只统计今天注册的用户（柏林时间）
         // ============================================================
-        var today = new Date();
-        today.setHours(0, 0, 0, 0);
+        var today = getBerlinDate();
         var todayStr = today.toISOString().split('T')[0];
         
         var registeredUsers = users.filter(function(u) {
             if (!u.created_at) return false;
-            var dateStr = u.created_at.split('T')[0];
+            var berlinDate = convertToBerlinDate(new Date(u.created_at));
+            var dateStr = berlinDate.toISOString().split('T')[0];
             return dateStr === todayStr;
         });
         
@@ -310,9 +389,6 @@ async function loadConversionData(days, force) {
     }
 }
 
-// ============================================================
-// 🔥 applyConversionData - 只显示 Today，隐藏其他行
-// ============================================================
 function applyConversionData(data, days) {
     var displayData = data[0] || { label: 'Today', register: 0, converted: 0, rate: 0 };
     
@@ -331,7 +407,6 @@ function applyConversionData(data, days) {
         labelEl.innerText = 'Today Register';
     }
     
-    // 更新列表 - 只显示 Today
     var allLabels = document.querySelectorAll('.conversion-stat-label');
     var allRegisters = document.querySelectorAll('.conversion-stat-register');
     var allConverteds = document.querySelectorAll('.conversion-stat-converted');
@@ -345,7 +420,6 @@ function applyConversionData(data, days) {
         allRates[0].style.color = displayData.rate >= 50 ? '#ccb89f' : displayData.rate >= 20 ? '#c8b090' : '#e88080';
     }
     
-    // 隐藏其他行
     var allRows = document.querySelectorAll('.conversion-stat-row');
     allRows.forEach(function(row, index) {
         if (index === 0) {
@@ -359,7 +433,7 @@ function applyConversionData(data, days) {
     });
 }
 
-// ========== 初始化环形进度条（静态金属质感 #ccb89f） ==========
+// ========== 初始化环形进度条 ==========
 function initWaveRing() {
     var container = document.getElementById('waveRingContainer');
     if (!container) return;
@@ -370,7 +444,6 @@ function initWaveRing() {
     container.style.position = 'relative';
     container.style.margin = '0 auto';
     
-    // 使用 SVG 绘制静态金属环形进度条
     var svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
     svg.setAttribute('viewBox', '0 0 220 220');
     svg.style.cssText = 'width:100%;height:100%;transform:rotate(-90deg);position:relative;z-index:2;';
@@ -392,16 +465,12 @@ function initWaveRing() {
                 <stop offset="100%" stop-color="#ccb89f"/>
             </linearGradient>
         </defs>
-        <!-- 背景圆环 -->
         <circle cx="110" cy="110" r="95" fill="none" stroke="rgba(204,184,159,0.06)" stroke-width="12"/>
-        <!-- 进度圆环（金属质感 #ccb89f） -->
         <circle cx="110" cy="110" r="95" fill="none" stroke="url(#progressGrad)" stroke-width="12" stroke-linecap="round" stroke-dasharray="596.9" stroke-dashoffset="596.9" filter="drop-shadow(0 0 20px rgba(204,184,159,0.15))" class="progress-ring" style="transition: stroke-dashoffset 1s ease;"/>
-        <!-- 外圈装饰光晕 -->
         <circle cx="110" cy="110" r="100" fill="none" stroke="rgba(204,184,159,0.03)" stroke-width="1"/>
     `;
     container.appendChild(svg);
     
-    // 中心文字（百分比 + 标签）
     var centerText = document.createElement('div');
     centerText.style.cssText = 'position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;pointer-events:none;z-index:10;';
     centerText.innerHTML = `
@@ -410,7 +479,6 @@ function initWaveRing() {
     `;
     container.appendChild(centerText);
     
-    // 等待数据加载后更新进度
     setTimeout(function() {
         var progressRing = container.querySelector('.progress-ring');
         if (progressRing) {
@@ -664,7 +732,7 @@ async function refreshDashboard(days, force) {
 }
 
 // ============================================================
-// initTrendChart - 细线条 + 小圆点（极简样式）
+// initTrendChart - 柏林时间，最近7天
 // ============================================================
 function initTrendChart() {
     var dom = document.getElementById('trendChart');
@@ -677,34 +745,27 @@ function initTrendChart() {
         trendChart = null;
     }
     
-    console.log('📊 趋势图已加载（当月数据）');
+    console.log('📊 趋势图已加载（柏林时间，最近7天）');
     
     trendChart = echarts.init(dom);
     
-    // ✅ 生成当月的默认日期标签
+    // ✅ 生成最近7天的日期标签（柏林时间）
     var defaultDates = [];
-    var today = new Date();
-    var year = today.getFullYear();
-    var month = today.getMonth();
-    var daysInMonth = new Date(year, month + 1, 0).getDate();
+    var today = getBerlinDate();
     
-    for (var day = 1; day <= daysInMonth; day++) {
-        defaultDates.push((month + 1) + '/' + day);
+    for (var i = 6; i >= 0; i--) {
+        var d = new Date(today);
+        d.setDate(d.getDate() - i);
+        defaultDates.push((d.getMonth() + 1) + '/' + d.getDate());
     }
     
-    // 默认数据：过去日期为 0，未来日期为 null
-    var currentDay = today.getDate();
+    // 默认数据：全部为 0
     var defaultDepositData = [];
     var defaultWithdrawData = [];
     
-    for (var i = 1; i <= daysInMonth; i++) {
-        if (i > currentDay) {
-            defaultDepositData.push(null);
-            defaultWithdrawData.push(null);
-        } else {
-            defaultDepositData.push(0);
-            defaultWithdrawData.push(0);
-        }
+    for (var i = 0; i < 7; i++) {
+        defaultDepositData.push(0);
+        defaultWithdrawData.push(0);
     }
     
     trendChart.setOption({
@@ -719,7 +780,7 @@ function initTrendChart() {
                 var result = params[0].axisValue + '<br/>';
                 var hasData = false;
                 params.forEach(function(p) {
-                    if (p.value !== null && p.value !== undefined) {
+                    if (p.value !== null && p.value !== undefined && p.value > 0) {
                         result += p.marker + ' ' + p.seriesName + ': €' + p.value.toFixed(2) + '<br/>';
                         hasData = true;
                     }
@@ -742,8 +803,7 @@ function initTrendChart() {
             data: defaultDates,
             axisLabel: { 
                 color: 'rgba(255,255,255,0.15)', 
-                fontSize: 9,
-                interval: Math.max(0, Math.floor(defaultDates.length / 30))
+                fontSize: 9
             }, 
             axisLine: { lineStyle: { color: 'rgba(255,255,255,0.04)' } }, 
             axisTick: { show: false } 
@@ -793,7 +853,7 @@ function initTrendChart() {
         ]
     });
     
-    console.log('✅ D&W Trend 初始化完成（当月: ' + defaultDates.length + '天）');
+    console.log('✅ D&W Trend 初始化完成（柏林时间，最近7天）');
     
     if (pulseInterval) {
         clearInterval(pulseInterval);
@@ -817,7 +877,7 @@ function bindDateFilters() {
 }
 
 function loadDashboardPage(days) {
-    days = days || 1;
+    days = days || 7;
     var container = document.getElementById('page_dashboard');
     if (!container) return;
     
@@ -837,7 +897,6 @@ function loadDashboardPage(days) {
                     <span id="notificationBadge" style="position: absolute; top: -4px; right: -4px; background: #e88080; color: #fff; border-radius: 50%; font-size: 10px; font-weight: 700; min-width: 18px; height: 18px; display: none; align-items: center; justify-content: center; padding: 0 4px; border: 2px solid rgba(12, 16, 28, 0.8);">0</span>
                 </button>
                 
-                <!-- Notification Dropdown -->
                 <div id="notificationDropdown" style="display: none; position: absolute; top: 52px; left: 0; width: 400px; max-height: 500px; background: rgba(16, 20, 34, 0.98); border-radius: 16px; border: 1px solid rgba(255,255,255,0.06); box-shadow: 0 20px 60px rgba(0,0,0,0.6); overflow: hidden; z-index: 1000; backdrop-filter: blur(20px);">
                     <div style="padding: 16px 20px; border-bottom: 1px solid rgba(255,255,255,0.04); display: flex; justify-content: space-between; align-items: center;">
                         <h4 style="font-size: 14px; font-weight: 600; color: #d8e0f0; margin: 0;">
@@ -863,8 +922,7 @@ function loadDashboardPage(days) {
 
         <!-- 日期过滤器 -->
         <div style="display: flex; justify-content: flex-end; gap: 10px; margin-bottom: 24px; flex-wrap: wrap;">
-            <button class="date-filter-btn active" data-days="1" style="background: linear-gradient(145deg, rgba(20,24,40,0.6), rgba(10,12,24,0.4)); border: 1px solid rgba(180,180,200,0.06); border-radius: 30px; padding: 8px 20px; color: #8892a8; cursor: pointer; transition: all 0.3s; font-size: 13px; font-weight: 500; font-family: 'Inter', sans-serif; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">Today</button>
-            <button class="date-filter-btn" data-days="7" style="background: linear-gradient(145deg, rgba(20,24,40,0.6), rgba(10,12,24,0.4)); border: 1px solid rgba(180,180,200,0.06); border-radius: 30px; padding: 8px 20px; color: #8892a8; cursor: pointer; transition: all 0.3s; font-size: 13px; font-weight: 500; font-family: 'Inter', sans-serif; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">7 Days</button>
+            <button class="date-filter-btn active" data-days="7" style="background: linear-gradient(145deg, rgba(20,24,40,0.6), rgba(10,12,24,0.4)); border: 1px solid rgba(180,180,200,0.06); border-radius: 30px; padding: 8px 20px; color: #8892a8; cursor: pointer; transition: all 0.3s; font-size: 13px; font-weight: 500; font-family: 'Inter', sans-serif; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">7 Days</button>
             <button class="date-filter-btn" data-days="30" style="background: linear-gradient(145deg, rgba(20,24,40,0.6), rgba(10,12,24,0.4)); border: 1px solid rgba(180,180,200,0.06); border-radius: 30px; padding: 8px 20px; color: #8892a8; cursor: pointer; transition: all 0.3s; font-size: 13px; font-weight: 500; font-family: 'Inter', sans-serif; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">30 Days</button>
             <button class="date-filter-btn" data-days="-1" style="background: linear-gradient(145deg, rgba(20,24,40,0.6), rgba(10,12,24,0.4)); border: 1px solid rgba(180,180,200,0.06); border-radius: 30px; padding: 8px 20px; color: #8892a8; cursor: pointer; transition: all 0.3s; font-size: 13px; font-weight: 500; font-family: 'Inter', sans-serif; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">All Time</button>
         </div>
