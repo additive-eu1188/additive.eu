@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="de">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
@@ -1025,8 +1025,8 @@
             <div class="nav-links">
                 <!-- 语言切换按钮 -->
                 <div class="lang-toggle" id="langToggle" onclick="toggleLangDropdown()">
-                    <img id="currentLangFlag" class="flag-icon" src="https://qgmbzdfnwsdosdqphlxk.supabase.co/storage/v1/object/public/flags/uk.png" alt="EN">
-                    <span id="currentLangLabel">EN</span>
+                    <img id="currentLangFlag" class="flag-icon" src="https://qgmbzdfnwsdosdqphlxk.supabase.co/storage/v1/object/public/flags/de.png" alt="DE">
+<span id="currentLangLabel">DE</span>
                     <i class="fas fa-chevron-down chevron"></i>
                 </div>
             </div>
@@ -1262,7 +1262,7 @@
         'it': 'IT'
     };
 
-    let currentLang = localStorage.getItem('app_lang') || 'en';
+    let currentLang = localStorage.getItem('app_lang') || 'de';
 
     function updateLangUI(lang) {
         const flagImg = document.getElementById('currentLangFlag');
