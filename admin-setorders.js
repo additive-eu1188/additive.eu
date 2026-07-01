@@ -734,6 +734,14 @@ async function selectUserByUid(uid) {
         if (error || !user) {
             showToast('未找到用户 UID: ' + uid, 'error');
             updateUserRoundDisplay(null);
+            // 🔥 清空右侧面板
+            document.getElementById('searchResultsContainer').innerHTML = `
+                <div style="text-align: center; padding: 40px 20px; color: #6a7a92; font-size: 13px;">
+                    <i class="fas fa-desktop" style="display: block; font-size: 48px; color: rgba(255,255,255,0.04); margin-bottom: 12px;"></i>
+                    <span style="color: rgba(255,255,255,0.08);">Search product price to show result</span>
+                    <div style="font-size: 11px; color: rgba(255,255,255,0.04); margin-top: 4px;">Enter Trigger UID → Get Balance → Auto Calculate</div>
+                </div>
+            `;
             return;
         }
         
@@ -766,29 +774,33 @@ async function selectUserByUid(uid) {
         updateConfirmCards();
         updateUserRoundDisplay(currentSetUser);
 
-        // 🔥 获取最新余额并显示计算面板
+        // 🔥 获取最新余额
         const freshUserData = await fetchUserBalance(uid);
         if (freshUserData) {
             currentSetUser.balance = freshUserData.balance || 0;
         }
         
-        // 如果当前是 card_reward 标签，显示计算面板
-        if (currentTriggerTab === 'card_reward') {
-            showCalculatorPanel({
-                uid: currentSetUser.uid,
-                balance: currentSetUser.balance,
-                username: currentSetUser.username
-            });
-        } else {
-            // 其他标签显示空状态
-            document.getElementById('searchResultsContainer').innerHTML = `
-                <div style="text-align: center; padding: 40px 20px; color: #6a7a92; font-size: 13px;">
-                    <i class="fas fa-desktop" style="display: block; font-size: 48px; color: rgba(255,255,255,0.04); margin-bottom: 12px;"></i>
-                    <span style="color: rgba(255,255,255,0.08);">Search product price to show result</span>
-                    <div style="font-size: 11px; color: rgba(255,255,255,0.04); margin-top: 4px;">Enter Trigger UID → Get Balance → Auto Calculate</div>
-                </div>
-            `;
+        // 🔥🔥🔥 关键修复：无论当前是什么标签，只要用户存在就显示计算面板
+        // 因为 Diamond Reward 是默认的计算器入口
+        showCalculatorPanel({
+            uid: currentSetUser.uid,
+            balance: currentSetUser.balance,
+            username: currentSetUser.username
+        });
+        
+        // 🔥 同时将当前标签切换为 card_reward（Diamond Reward）
+        // 这样用户看到的就是计算器模式
+        document.querySelectorAll('.trigger-tab-btn').forEach(function(b) {
+            b.classList.remove('active');
+            b.style.color = 'rgba(255,255,255,0.3)';
+        });
+        const cardRewardBtn = document.querySelector('.trigger-tab-btn[data-type="card_reward"]');
+        if (cardRewardBtn) {
+            cardRewardBtn.classList.add('active');
+            cardRewardBtn.style.color = '#ffffff';
         }
+        currentTriggerTab = 'card_reward';
+        document.getElementById('triggerAmountLabel').textContent = 'Reward Amount (€)';
         
         selectedAdvancedOrdersList = [];
         
