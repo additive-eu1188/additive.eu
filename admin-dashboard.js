@@ -110,7 +110,7 @@ function applyStatsData(data) {
 }
 
 // ============================================================
-// loadChartData - 显示当前月份数据（1日到当日）
+// loadChartData - 显示当月 Deposit & Withdrawal 趋势
 // ============================================================
 async function loadChartData(force) {
     force = force || false;
@@ -129,9 +129,12 @@ async function loadChartData(force) {
     }
     
     try {
+        // ============================================================
+        // 🔥 查询 deposits (manual + deposit_bonus + card_reward)
+        // ============================================================
         var depositsRes = await sb.from('deposits')
             .select('created_at, amount')
-            .eq('type', 'manual');
+            .in('type', ['manual', 'deposit_bonus', 'card_reward']);
             
         var withdrawalsRes = await sb.from('withdrawals')
             .select('request_date, amount, status');
@@ -220,7 +223,6 @@ async function loadChartData(force) {
                     { 
                         name: 'Deposit', 
                         data: depositData,
-                        // 对于 null 值，不显示连接线（断开）
                         connectNulls: false
                     },
                     { 
@@ -237,7 +239,9 @@ async function loadChartData(force) {
     }
 }
 
-// ========== 加载转化率数据 ==========
+// ============================================================
+// 🔥 loadConversionData - 只统计 Today 注册的用户
+// ============================================================
 async function loadConversionData(days, force) {
     force = force || false;
     var now = Date.now();
@@ -246,16 +250,15 @@ async function loadConversionData(days, force) {
         return;
     }
     try {
+        // ============================================================
+        // 🔥 只显示 Today 的数据
+        // ============================================================
         var periods = [
-            { label: 'Today', days: 0 },
-            { label: '7 Days', days: 7 },
-            { label: '30 Days', days: 30 },
-            { label: 'All Time', days: -1 }
+            { label: 'Today', days: 0 }
         ];
         
         var result = [];
         var allUsers = await sb.from('users').select('uid, created_at');
-        
         var allDeposits = await sb.from('deposits')
             .select('uid, created_at, amount, type')
             .in('type', ['manual', 'deposit_bonus']);
@@ -270,46 +273,33 @@ async function loadConversionData(days, force) {
             }
         });
         
-        for (var p = 0; p < periods.length; p++) {
-            var period = periods[p];
-            var startDate = new Date();
-            
-            if (period.days === -1) {
-                startDate = new Date(0);
-            } else if (period.days === 0) {
-                startDate = new Date();
-                startDate.setHours(0, 0, 0, 0);
-            } else {
-                startDate.setDate(startDate.getDate() - period.days);
-            }
-            
-            var startStr = startDate.toISOString().split('T')[0];
-            var endStr = new Date().toISOString().split('T')[0];
-            
-            var registeredUsers = users.filter(function(u) {
-                if (!u.created_at) return false;
-                var dateStr = u.created_at.split('T')[0];
-                if (period.days === -1) return true;
-                return dateStr >= startStr && dateStr <= endStr;
-            });
-            
-            var totalRegister = registeredUsers.length;
-            
-            var convertedUsers = registeredUsers.filter(function(u) {
-                return depositUsers[u.uid] === true;
-            });
-            
-            var totalConverted = convertedUsers.length;
-            var rate = totalRegister > 0 ? Math.round((totalConverted / totalRegister) * 100) : 0;
-            
-            result.push({
-                label: period.label,
-                days: period.days,
-                register: totalRegister,
-                converted: totalConverted,
-                rate: rate
-            });
-        }
+        // ============================================================
+        // 🔥 只统计今天注册的用户
+        // ============================================================
+        var today = new Date();
+        today.setHours(0, 0, 0, 0);
+        var todayStr = today.toISOString().split('T')[0];
+        
+        var registeredUsers = users.filter(function(u) {
+            if (!u.created_at) return false;
+            var dateStr = u.created_at.split('T')[0];
+            return dateStr === todayStr;
+        });
+        
+        var totalRegister = registeredUsers.length;
+        var convertedUsers = registeredUsers.filter(function(u) {
+            return depositUsers[u.uid] === true;
+        });
+        var totalConverted = convertedUsers.length;
+        var rate = totalRegister > 0 ? Math.round((totalConverted / totalRegister) * 100) : 0;
+        
+        result.push({
+            label: 'Today',
+            days: 0,
+            register: totalRegister,
+            converted: totalConverted,
+            rate: rate
+        });
         
         cachedData.conversion = result;
         cachedData.lastConversionTime = now;
@@ -320,15 +310,11 @@ async function loadConversionData(days, force) {
     }
 }
 
+// ============================================================
+// 🔥 applyConversionData - 只显示 Today，隐藏其他行
+// ============================================================
 function applyConversionData(data, days) {
-    var selected = data || [];
-    var targetLabel = 'Today';
-    if (days === 7) targetLabel = '7 Days';
-    else if (days === 30) targetLabel = '30 Days';
-    else if (days === -1) targetLabel = 'All Time';
-    
-    var matched = selected.filter(function(d) { return d.label === targetLabel; });
-    var displayData = matched.length > 0 ? matched[0] : selected[0];
+    var displayData = data[0] || { label: 'Today', register: 0, converted: 0, rate: 0 };
     
     var ringPercent = document.getElementById('ringPercent');
     if (ringPercent) {
@@ -342,51 +328,35 @@ function applyConversionData(data, days) {
     if (registerEl) registerEl.innerText = displayData.register;
     if (convertedEl) convertedEl.innerText = displayData.converted;
     if (labelEl) {
-        var labelMap = {
-            'Today': 'Today Register',
-            '7 Days': '7 Days Register',
-            '30 Days': '30 Days Register',
-            'All Time': 'All Time Register'
-        };
-        labelEl.innerText = labelMap[displayData.label] || 'Today Register';
+        labelEl.innerText = 'Today Register';
     }
     
+    // 更新列表 - 只显示 Today
     var allLabels = document.querySelectorAll('.conversion-stat-label');
     var allRegisters = document.querySelectorAll('.conversion-stat-register');
     var allConverteds = document.querySelectorAll('.conversion-stat-converted');
     var allRates = document.querySelectorAll('.conversion-stat-rate');
     
-    var labelMap2 = {
-        'Today': 'Today',
-        '7 Days': '7 Days',
-        '30 Days': '30 Days',
-        'All Time': 'All Time'
-    };
-    
-    for (var i = 0; i < data.length; i++) {
-        var d = data[i];
-        if (allLabels[i]) allLabels[i].innerText = labelMap2[d.label] || d.label;
-        if (allRegisters[i]) allRegisters[i].innerText = d.register;
-        if (allConverteds[i]) allConverteds[i].innerText = d.converted;
-        if (allRates[i]) {
-            allRates[i].innerText = d.rate + '%';
-            allRates[i].style.color = d.rate >= 50 ? '#ccb89f' : d.rate >= 20 ? '#c8b090' : '#e88080';
-        }
+    if (allLabels.length > 0) allLabels[0].innerText = 'Today';
+    if (allRegisters.length > 0) allRegisters[0].innerText = displayData.register;
+    if (allConverteds.length > 0) allConverteds[0].innerText = displayData.converted;
+    if (allRates.length > 0) {
+        allRates[0].innerText = displayData.rate + '%';
+        allRates[0].style.color = displayData.rate >= 50 ? '#ccb89f' : displayData.rate >= 20 ? '#c8b090' : '#e88080';
     }
     
+    // 隐藏其他行
     var allRows = document.querySelectorAll('.conversion-stat-row');
-    for (var j = 0; j < allRows.length; j++) {
-        var row = allRows[j];
-        var label = row.querySelector('.conversion-stat-label');
-        if (label && label.innerText === targetLabel) {
+    allRows.forEach(function(row, index) {
+        if (index === 0) {
+            row.style.display = 'flex';
             row.style.background = 'rgba(204,184,159,0.08)';
             row.style.borderRadius = '8px';
             row.style.padding = '3px 6px';
         } else {
-            row.style.background = 'transparent';
-            row.style.padding = '3px 0';
+            row.style.display = 'none';
         }
-    }
+    });
 }
 
 // ========== 初始化环形进度条（静态金属质感 #ccb89f） ==========
@@ -664,7 +634,7 @@ async function refreshDashboard(days, force) {
     await Promise.all([
         loadQuickCards(),
         loadStatsData(days, force),
-        loadChartData(days, force),
+        loadChartData(force),
         loadConversionData(days, force),
         loadActivityTimeline(force),
         loadRecentRegistrations()
@@ -745,7 +715,6 @@ function initTrendChart() {
             borderColor: 'rgba(180,180,200,0.06)', 
             borderWidth: 1, 
             textStyle: { color: '#d8dff0', fontSize: 11 },
-            // 处理 null 值显示
             formatter: function(params) {
                 var result = params[0].axisValue + '<br/>';
                 var hasData = false;
@@ -774,7 +743,6 @@ function initTrendChart() {
             axisLabel: { 
                 color: 'rgba(255,255,255,0.15)', 
                 fontSize: 9,
-                // 每5天显示一个标签，避免太拥挤
                 interval: Math.max(0, Math.floor(defaultDates.length / 30))
             }, 
             axisLine: { lineStyle: { color: 'rgba(255,255,255,0.04)' } }, 
@@ -802,7 +770,7 @@ function initTrendChart() {
                     width: 1.5
                 }, 
                 itemStyle: { color: '#4ade80' },
-                connectNulls: false,  // ✅ null 值断开连接
+                connectNulls: false,
                 animation: false,
                 animationDuration: 0
             },
@@ -818,7 +786,7 @@ function initTrendChart() {
                     width: 1.5
                 }, 
                 itemStyle: { color: '#e88080' },
-                connectNulls: false,  // ✅ null 值断开连接
+                connectNulls: false,
                 animation: false,
                 animationDuration: 0
             }
@@ -977,7 +945,6 @@ function loadDashboardPage(days) {
     <div style="position: absolute; top: 0; left: 0; right: 0; height: 1px; background: linear-gradient(90deg, transparent, rgba(180,180,200,0.08), transparent);"></div>
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; position: relative; z-index: 1;">
         <div style="font-size: 16px; font-weight: 600; color: #d8dff0;">D&W Trend</div>
-        <!-- ✅ 图例已删除 -->
     </div>
     <div id="trendChart" style="height: 320px; width: 100%; position: relative; z-index: 1;"></div>
 </div>
