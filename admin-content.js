@@ -1,6 +1,5 @@
-// admin-content.js - 内容管理页面（完整修复版）
+// admin-content.js - 内容管理页面（性能优化版 + 字体调整）
 // 所有内容统一使用 system_content 表
-// 所有类型都显示所有图片缩略图
 
 // ============================================================
 // 全局状态
@@ -11,6 +10,19 @@ let eventsList = [];
 let isDragging = false;
 let dragStartIndex = null;
 let draggedElement = null;
+
+// 分页状态
+let currentPage = 1;
+const PAGE_SIZE = 10;
+let totalItems = 0;
+
+// 字体大小状态
+let fontSizeLevel = 0; // -2, -1, 0, 1, 2
+const FONT_SIZE_STEPS = [12, 13, 14, 16, 18];
+const FONT_SIZE_LABELS = ['小', '较小', '默认', '较大', '大'];
+
+// 图片懒加载观察器
+let imageObserver = null;
 
 // 富文本编辑器状态
 let editorContent = '';
@@ -38,7 +50,20 @@ async function loadContentPage() {
                         Manage every content and event displayed on the website.
                     </p>
                 </div>
-                <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                <div style="display: flex; gap: 10px; flex-wrap: wrap; align-items: center;">
+                    <!-- ===== 字体大小控制按钮 ===== -->
+                    <div style="display: flex; gap: 4px; background: rgba(255,255,255,0.03); border-radius: 30px; padding: 4px; border: 1px solid rgba(255,255,255,0.04);">
+                        <button id="fontSizeDecreaseBtn" class="font-size-btn" title="缩小字体" style="background: rgba(255,255,255,0.04); border: none; border-radius: 30px; padding: 4px 10px; color: #8892a8; cursor: pointer; font-size: 12px; transition: 0.2s; font-family: 'Inter', sans-serif;">
+                            <i class="fas fa-search-minus"></i>
+                        </button>
+                        <span id="fontSizeLabel" style="font-size: 11px; color: #6a7a92; padding: 4px 6px; min-width: 32px; text-align: center; font-weight: 500;">默认</span>
+                        <button id="fontSizeIncreaseBtn" class="font-size-btn" title="放大字体" style="background: rgba(255,255,255,0.04); border: none; border-radius: 30px; padding: 4px 10px; color: #8892a8; cursor: pointer; font-size: 12px; transition: 0.2s; font-family: 'Inter', sans-serif;">
+                            <i class="fas fa-search-plus"></i>
+                        </button>
+                        <button id="fontSizeResetBtn" class="font-size-btn" title="重置字体大小" style="background: rgba(255,255,255,0.04); border: none; border-radius: 30px; padding: 4px 10px; color: #8892a8; cursor: pointer; font-size: 12px; transition: 0.2s; font-family: 'Inter', sans-serif;">
+                            <i class="fas fa-undo-alt"></i>
+                        </button>
+                    </div>
                     <button id="refreshContentBtn" class="btn-primary" style="padding: 8px 20px; border-radius: 40px; border: none; background: rgba(255,255,255,0.06); color: #c8b090; font-weight: 600; cursor: pointer; font-size: 13px;">
                         <i class="fas fa-sync-alt"></i> Refresh
                     </button>
@@ -76,8 +101,12 @@ async function loadContentPage() {
                 <span id="arrangeHint" style="font-size: 11px; color: #6a7a92; display: none;">Drag items to reorder</span>
             </div>
 
+            <!-- ===== 内容列表容器（带分页） ===== -->
             <div id="contentListContainer" style="background: rgba(255,255,255,0.02); border-radius: 16px; border: 1px solid rgba(255,255,255,0.04); min-height: 200px; padding: 4px;">
             </div>
+            
+            <!-- ===== 分页控件 ===== -->
+            <div id="contentPagination" style="display: flex; justify-content: center; gap: 6px; margin-top: 16px; flex-wrap: wrap;"></div>
         </div>
     `;
 
@@ -234,6 +263,38 @@ async function loadContentPage() {
         .content-item .item-actions .btn-delete:hover {
             border-color: rgba(232,128,128,0.2);
             color: #e88080;
+        }
+
+        /* ===== 分页按钮样式 ===== */
+        .page-btn {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.04);
+            border-radius: 30px;
+            padding: 6px 14px;
+            color: #6a7a92;
+            cursor: pointer;
+            font-size: 12px;
+            transition: 0.2s;
+            font-family: 'Inter', sans-serif;
+        }
+        .page-btn:hover {
+            background: rgba(255,255,255,0.06);
+            color: #d8e0f0;
+        }
+        .page-btn.active {
+            background: rgba(200,176,144,0.08);
+            border-color: rgba(200,176,144,0.2);
+            color: #c8b090;
+        }
+        .page-btn:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+
+        /* ===== 字体大小控制按钮 ===== */
+        .font-size-btn:hover {
+            background: rgba(200,176,144,0.08) !important;
+            color: #c8b090 !important;
         }
 
         .editor-toolbar {
@@ -418,6 +479,7 @@ async function loadContentPage() {
             document.querySelectorAll('.content-tab-btn').forEach(b => b.classList.remove('active'));
             this.classList.add('active');
             currentContentTab = this.dataset.tab;
+            currentPage = 1;
             renderContentList();
         });
     });
@@ -426,11 +488,105 @@ async function loadContentPage() {
     document.getElementById('arrangeContentBtn')?.addEventListener('click', toggleArrangeMode);
     document.getElementById('refreshContentBtn')?.addEventListener('click', async function() {
         await loadAllContentData();
+        currentPage = 1;
         renderContentList();
         showToast('Content refreshed', 'success');
     });
 
+    // ===== 字体大小控制 =====
+    document.getElementById('fontSizeDecreaseBtn')?.addEventListener('click', function() {
+        changeFontSize(-1);
+    });
+    document.getElementById('fontSizeIncreaseBtn')?.addEventListener('click', function() {
+        changeFontSize(1);
+    });
+    document.getElementById('fontSizeResetBtn')?.addEventListener('click', function() {
+        resetFontSize();
+    });
+
+    // 初始化字体大小
+    loadFontSizeFromStorage();
+
     renderContentList();
+}
+
+// ============================================================
+// 字体大小控制函数
+// ============================================================
+function changeFontSize(delta) {
+    fontSizeLevel = Math.max(-2, Math.min(2, fontSizeLevel + delta));
+    applyFontSize();
+    saveFontSizeToStorage();
+    updateFontSizeLabel();
+}
+
+function resetFontSize() {
+    fontSizeLevel = 0;
+    applyFontSize();
+    saveFontSizeToStorage();
+    updateFontSizeLabel();
+    showToast('字体已重置为默认大小', 'info');
+}
+
+function applyFontSize() {
+    const baseSize = FONT_SIZE_STEPS[fontSizeLevel + 2]; // 0 -> 14
+    const container = document.querySelector('#contentListContainer');
+    const contentItems = document.querySelectorAll('.content-item .item-title');
+    const subItems = document.querySelectorAll('.content-item .item-sub');
+    const statusItems = document.querySelectorAll('.content-item .item-status');
+    const actionButtons = document.querySelectorAll('.content-item .item-actions button');
+    
+    // 应用到主容器
+    if (container) {
+        container.style.fontSize = baseSize + 'px';
+    }
+    
+    // 应用到标题
+    contentItems.forEach(el => {
+        el.style.fontSize = (baseSize) + 'px';
+    });
+    
+    // 应用到副标题
+    subItems.forEach(el => {
+        el.style.fontSize = (baseSize - 3) + 'px';
+    });
+    
+    // 应用到状态标签
+    statusItems.forEach(el => {
+        el.style.fontSize = (baseSize - 4) + 'px';
+    });
+    
+    // 应用到操作按钮
+    actionButtons.forEach(el => {
+        el.style.fontSize = (baseSize - 3) + 'px';
+    });
+}
+
+function updateFontSizeLabel() {
+    const label = document.getElementById('fontSizeLabel');
+    if (label) {
+        label.textContent = FONT_SIZE_LABELS[fontSizeLevel + 2];
+    }
+}
+
+function saveFontSizeToStorage() {
+    try {
+        localStorage.setItem('content_font_size_level', String(fontSizeLevel));
+    } catch (e) {}
+}
+
+function loadFontSizeFromStorage() {
+    try {
+        const saved = localStorage.getItem('content_font_size_level');
+        if (saved !== null) {
+            fontSizeLevel = parseInt(saved);
+            if (isNaN(fontSizeLevel) || fontSizeLevel < -2 || fontSizeLevel > 2) {
+                fontSizeLevel = 0;
+            }
+            applyFontSize();
+            updateFontSizeLabel();
+        }
+    } catch (e) {}
 }
 
 // ============================================================
@@ -494,11 +650,6 @@ async function loadAllContentData() {
 
         console.log('✅ 所有内容数据加载完成');
         console.log('   Events:', eventsList.length);
-        console.log('   Certificate:', contentData.certificate ? '✓' : '✗');
-        console.log('   Contract:', contentData.contract ? '✓' : '✗');
-        console.log('   T&C:', contentData.tc ? '✓' : '✗');
-        console.log('   Privacy:', contentData.privacy ? '✓' : '✗');
-        console.log('   Rules:', contentData.rules ? '✓' : '✗');
 
     } catch (e) {
         console.error('加载内容数据失败:', e);
@@ -531,16 +682,16 @@ function getContentImageUrl(item) {
 }
 
 // ============================================================
-// 渲染内容列表（所有类型都有删除按钮 + 显示所有图片）
+// 渲染内容列表（带分页 + 懒加载）
 // ============================================================
 function renderContentList() {
     const container = document.getElementById('contentListContainer');
+    const paginationContainer = document.getElementById('contentPagination');
     if (!container) return;
 
     const tab = currentContentTab;
     let items = [];
     let title = '';
-    let typeKey = '';
 
     if (tab === 'events') {
         items = eventsList.map(e => ({
@@ -553,7 +704,6 @@ function renderContentList() {
             images: getAllContentImages(e)
         }));
         title = 'Events';
-        typeKey = 'event';
     } else if (tab === 'certificate') {
         const d = contentData.certificate;
         items = d ? [{
@@ -566,7 +716,6 @@ function renderContentList() {
             images: getAllContentImages(d)
         }] : [];
         title = 'Certificate & Company Profile';
-        typeKey = 'certificate';
     } else if (tab === 'contract') {
         const d = contentData.contract;
         items = d ? [{
@@ -579,7 +728,6 @@ function renderContentList() {
             images: getAllContentImages(d)
         }] : [];
         title = 'Employment Contract';
-        typeKey = 'contract';
     } else if (tab === 'tc') {
         const d = contentData.tc;
         items = d ? [{
@@ -592,7 +740,6 @@ function renderContentList() {
             images: getAllContentImages(d)
         }] : [];
         title = 'Terms & Conditions';
-        typeKey = 'tc';
     } else if (tab === 'privacy') {
         const d = contentData.privacy;
         items = d ? [{
@@ -605,7 +752,6 @@ function renderContentList() {
             images: getAllContentImages(d)
         }] : [];
         title = 'Privacy & Security';
-        typeKey = 'privacy';
     } else if (tab === 'rules') {
         const d = contentData.rules;
         items = d ? [{
@@ -618,10 +764,11 @@ function renderContentList() {
             images: getAllContentImages(d)
         }] : [];
         title = 'Platform Rules';
-        typeKey = 'rules';
     }
 
-    if (items.length === 0) {
+    totalItems = items.length;
+
+    if (totalItems === 0) {
         container.innerHTML = `
             <div style="text-align: center; padding: 60px 20px; color: #6a7a92; font-size: 14px;">
                 <i class="fas fa-file-alt" style="display: block; font-size: 40px; color: #4a5a72; margin-bottom: 16px;"></i>
@@ -629,9 +776,38 @@ function renderContentList() {
                 <div style="font-size: 12px; color: #4a5a72; margin-top: 4px;">Click "Add Content" to create one</div>
             </div>
         `;
+        paginationContainer.innerHTML = '';
         return;
     }
 
+    // ===== 分页计算 =====
+    const totalPages = Math.ceil(totalItems / PAGE_SIZE);
+    if (currentPage > totalPages) currentPage = totalPages;
+    if (currentPage < 1) currentPage = 1;
+
+    const startIndex = (currentPage - 1) * PAGE_SIZE;
+    const endIndex = Math.min(startIndex + PAGE_SIZE, totalItems);
+    const pageItems = items.slice(startIndex, endIndex);
+
+    // ===== 渲染当前页 =====
+    renderPageItems(container, pageItems);
+
+    // ===== 渲染分页 =====
+    renderPagination(paginationContainer, currentPage, totalPages);
+
+    // ===== 应用字体大小 =====
+    setTimeout(() => {
+        applyFontSize();
+    }, 50);
+
+    // ===== 启动图片懒加载 =====
+    setupImageLazyLoad();
+}
+
+// ============================================================
+// 渲染单页内容
+// ============================================================
+function renderPageItems(container, items) {
     const isArrangeMode = document.getElementById('arrangeContentBtn')?.classList.contains('active') || false;
 
     let html = '';
@@ -639,14 +815,15 @@ function renderContentList() {
         const statusClass = item.status === 'active' ? 'status-active' : 'status-inactive';
         const statusText = item.status === 'active' ? 'Active' : 'Inactive';
         
-        // ✅ 生成图片缩略图 - 显示所有图片
+        // ✅ 生成图片缩略图 - 懒加载
         let thumbHtml = '';
         if (item.images && item.images.length > 0) {
             thumbHtml = '<div class="thumb-container">';
             const maxShow = 4;
             const showImages = item.images.slice(0, maxShow);
             showImages.forEach(imgUrl => {
-                thumbHtml += `<img src="${imgUrl}" class="item-thumb" onerror="this.style.display='none'">`;
+                // 使用 data-src 实现懒加载
+                thumbHtml += `<img data-src="${imgUrl}" class="item-thumb lazy-image" onerror="this.style.display='none'" alt="">`;
             });
             if (item.images.length > maxShow) {
                 thumbHtml += `<div class="item-thumb-more">+${item.images.length - maxShow}</div>`;
@@ -656,8 +833,10 @@ function renderContentList() {
             thumbHtml = `<div class="item-thumb-placeholder"><i class="fas fa-image"></i></div>`;
         }
 
+        const globalIndex = (currentPage - 1) * PAGE_SIZE + index;
+
         html += `
-            <div class="content-item" data-id="${item.id}" data-type="${item.type}" data-tab="${tab}" data-index="${index}" draggable="${isArrangeMode}">
+            <div class="content-item" data-id="${item.id}" data-type="${item.type}" data-tab="${currentContentTab}" data-index="${globalIndex}" draggable="${isArrangeMode}">
                 ${isArrangeMode ? `<span class="drag-handle"><i class="fas fa-grip-vertical"></i></span>` : ''}
                 ${thumbHtml}
                 <div class="item-info">
@@ -685,6 +864,127 @@ function renderContentList() {
     } else {
         document.getElementById('arrangeHint').style.display = 'none';
     }
+}
+
+// ============================================================
+// 图片懒加载（IntersectionObserver）
+// ============================================================
+function setupImageLazyLoad() {
+    // 移除旧的 observer
+    if (imageObserver) {
+        imageObserver.disconnect();
+    }
+
+    if ('IntersectionObserver' in window) {
+        imageObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    const img = entry.target;
+                    const src = img.dataset.src;
+                    if (src) {
+                        img.src = src;
+                        img.removeAttribute('data-src');
+                    }
+                    imageObserver.unobserve(img);
+                }
+            });
+        }, {
+            rootMargin: '50px 0px'
+        });
+
+        document.querySelectorAll('.lazy-image').forEach(img => {
+            imageObserver.observe(img);
+        });
+    } else {
+        // 降级方案：直接加载所有图片
+        document.querySelectorAll('.lazy-image').forEach(img => {
+            const src = img.dataset.src;
+            if (src) {
+                img.src = src;
+                img.removeAttribute('data-src');
+            }
+        });
+    }
+}
+
+// ============================================================
+// 分页渲染
+// ============================================================
+function renderPagination(container, currentPage, totalPages) {
+    if (!container) return;
+    container.innerHTML = '';
+
+    if (totalPages <= 1) return;
+
+    // 上一页
+    const prevBtn = document.createElement('button');
+    prevBtn.className = 'page-btn';
+    prevBtn.innerHTML = '<i class="fas fa-chevron-left"></i>';
+    prevBtn.disabled = currentPage <= 1;
+    prevBtn.onclick = () => {
+        if (currentPage > 1) {
+            currentPage--;
+            renderContentList();
+        }
+    };
+    container.appendChild(prevBtn);
+
+    // 页码
+    const maxVisible = 7;
+    let startPage = Math.max(1, currentPage - Math.floor(maxVisible / 2));
+    let endPage = Math.min(totalPages, startPage + maxVisible - 1);
+    if (endPage - startPage < maxVisible - 1) {
+        startPage = Math.max(1, endPage - maxVisible + 1);
+    }
+
+    if (startPage > 1) {
+        const btn = document.createElement('button');
+        btn.className = 'page-btn';
+        btn.textContent = '1';
+        btn.onclick = () => { currentPage = 1; renderContentList(); };
+        container.appendChild(btn);
+        if (startPage > 2) {
+            const ellipsis = document.createElement('span');
+            ellipsis.textContent = '…';
+            ellipsis.style.cssText = 'color:#4a5a72; padding:0 4px;';
+            container.appendChild(ellipsis);
+        }
+    }
+
+    for (let i = startPage; i <= endPage; i++) {
+        const btn = document.createElement('button');
+        btn.className = 'page-btn' + (i === currentPage ? ' active' : '');
+        btn.textContent = i;
+        btn.onclick = () => { currentPage = i; renderContentList(); };
+        container.appendChild(btn);
+    }
+
+    if (endPage < totalPages) {
+        if (endPage < totalPages - 1) {
+            const ellipsis = document.createElement('span');
+            ellipsis.textContent = '…';
+            ellipsis.style.cssText = 'color:#4a5a72; padding:0 4px;';
+            container.appendChild(ellipsis);
+        }
+        const btn = document.createElement('button');
+        btn.className = 'page-btn';
+        btn.textContent = totalPages;
+        btn.onclick = () => { currentPage = totalPages; renderContentList(); };
+        container.appendChild(btn);
+    }
+
+    // 下一页
+    const nextBtn = document.createElement('button');
+    nextBtn.className = 'page-btn';
+    nextBtn.innerHTML = '<i class="fas fa-chevron-right"></i>';
+    nextBtn.disabled = currentPage >= totalPages;
+    nextBtn.onclick = () => {
+        if (currentPage < totalPages) {
+            currentPage++;
+            renderContentList();
+        }
+    };
+    container.appendChild(nextBtn);
 }
 
 // ============================================================
@@ -733,6 +1033,7 @@ window.deleteContentItem = function(type, id) {
             try {
                 await sb.from('system_content').delete().eq('id', parseInt(id));
                 await loadAllContentData();
+                currentPage = 1;
                 renderContentList();
                 showToast(typeName + ' deleted successfully', 'success');
             } catch (e) {
@@ -745,6 +1046,7 @@ window.deleteContentItem = function(type, id) {
                 try {
                     await sb.from('system_content').delete().eq('id', parseInt(id));
                     await loadAllContentData();
+                    currentPage = 1;
                     renderContentList();
                     showToast(typeName + ' deleted successfully', 'success');
                 } catch (e) {
@@ -1069,6 +1371,7 @@ window.postContent = async function() {
                 if (error) throw error;
 
                 await loadAllContentData();
+                currentPage = 1;
                 renderContentList();
                 closeContentModal();
                 showToast('✅ Content updated successfully!', 'success');
@@ -1092,6 +1395,7 @@ window.postContent = async function() {
         if (error) throw error;
 
         await loadAllContentData();
+        currentPage = 1;
         renderContentList();
         closeContentModal();
         showToast('✅ Content posted successfully!', 'success');
@@ -1285,6 +1589,7 @@ window.updateContent = async function(type, id) {
         if (error) throw error;
 
         await loadAllContentData();
+        currentPage = 1;
         renderContentList();
         closeEditModal();
         showToast('✅ Content updated successfully!', 'success');
@@ -1333,8 +1638,9 @@ window.loadContentPage = loadContentPage;
 window.renderContentList = renderContentList;
 window.loadAllContentData = loadAllContentData;
 
-console.log('✅ admin-content.js loaded (完整修复版)');
+console.log('✅ admin-content.js loaded (性能优化版 + 字体调整)');
+console.log('   - 图片懒加载 (IntersectionObserver)');
+console.log('   - 分页功能 (每页10条)');
+console.log('   - 字体大小调整 (+/-/重置)');
 console.log('   - 所有内容类型都有删除按钮');
 console.log('   - 统一使用 system_content 表');
-console.log('   - 显示所有图片缩略图');
-console.log('   - 支持添加、编辑、删除所有类型');
