@@ -60,7 +60,7 @@
         .event-image-wrapper {
             position: relative;
             width: 100%;
-            padding-bottom: 177.78%; /* 1920/1080 * 100% = 177.78% 竖屏比例 */
+            padding-bottom: 177.78%;
             overflow: hidden;
             background: linear-gradient(135deg, #1a1f3a, #0f1428);
         }
@@ -159,8 +159,8 @@
         .upgrade-desc { font-size: 13px; color: #7a85a5; line-height: 1.5; margin-bottom: 20px; }
         .btn-upgrade { background: rgba(201,176,149,0.15); padding: 10px 20px; border-radius: 40px; text-decoration: none; color: #C9B095; font-weight: 600; font-size: 14px; display: inline-flex; align-items: center; gap: 8px; border: 1px solid rgba(201,176,149,0.3); }
         
-        /* 弹窗 - 1080x1920 比例 */
-        .event-modal {
+        /* ===== 图片查看器弹窗（与 employment/company 一致） ===== */
+        .image-viewer-modal {
             position: fixed;
             top: 0;
             left: 0;
@@ -176,76 +176,27 @@
             opacity: 0;
             transition: all 0.3s ease;
         }
-        
-        .event-modal.active {
+        .image-viewer-modal.active {
             visibility: visible;
             opacity: 1;
         }
-        
-        .event-modal-content {
-            background: linear-gradient(145deg, #1a1f3a, #0f1428);
-            border-radius: 32px;
-            max-width: 90vw;
-            width: auto;
-            max-height: 90vh;
-            overflow-y: auto;
-            border: 1px solid rgba(201, 176, 149, 0.3);
+        .image-viewer-content {
             position: relative;
-        }
-        
-        /* 弹窗图片 - 1080x1920 比例 */
-        .event-modal-image-wrapper {
-            width: 100%;
-            max-width: 500px;
-            margin: 0 auto;
-        }
-        
-        .event-modal-image {
-            width: 100%;
-            height: auto;
-            aspect-ratio: 9 / 16;
-            object-fit: cover;
-            border-radius: 24px 24px 0 0;
-        }
-        
-        .event-modal-body {
-            padding: 24px;
-        }
-        
-        .event-modal-title {
-            font-size: 24px;
-            font-weight: 700;
-            color: #ffffff;
-            margin-bottom: 12px;
-        }
-        
-        .event-modal-date {
-            font-size: 13px;
-            color: #C9B095;
-            margin-bottom: 16px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        
-        .event-modal-description {
-            font-size: 14px;
-            color: #a0a8c0;
-            line-height: 1.6;
-            margin-bottom: 20px;
-        }
-        
-        .event-modal-content-detail {
-            background: rgba(0,0,0,0.3);
+            max-width: 90vw;
+            max-height: 90vh;
             border-radius: 16px;
-            padding: 16px;
-            font-size: 13px;
-            color: #c0c8e0;
-            line-height: 1.6;
-            white-space: pre-wrap;
+            overflow: hidden;
+            background: rgba(20, 30, 55, 0.3);
+            border: 1px solid rgba(201, 176, 149, 0.2);
         }
-        
-        .close-modal-btn {
+        .image-viewer-content img {
+            max-width: 90vw;
+            max-height: 85vh;
+            display: block;
+            object-fit: contain;
+            border-radius: 16px;
+        }
+        .image-viewer-close {
             position: absolute;
             top: 16px;
             right: 16px;
@@ -263,26 +214,55 @@
             transition: 0.2s;
             z-index: 10;
         }
-        
-        .close-modal-btn:hover {
+        .image-viewer-close:hover {
             background: rgba(201,176,149,0.5);
             transform: scale(1.05);
         }
-        
+        .image-viewer-counter {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0,0,0,0.6);
+            padding: 4px 16px;
+            border-radius: 20px;
+            font-size: 13px;
+            color: #C9B095;
+            z-index: 10;
+        }
+        .image-viewer-nav {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(0,0,0,0.5);
+            border: none;
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            color: white;
+            font-size: 20px;
+            cursor: pointer;
+            transition: 0.2s;
+            z-index: 10;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .image-viewer-nav:hover {
+            background: rgba(201,176,149,0.3);
+        }
+        .image-viewer-prev { left: 16px; }
+        .image-viewer-next { right: 16px; }
         @media (max-width: 768px) {
-            .events-grid {
-                grid-template-columns: 1fr;
-                gap: 16px;
+            .image-viewer-nav {
+                width: 36px;
+                height: 36px;
+                font-size: 16px;
             }
-            
-            .event-modal-content {
-                width: 95vw;
-                max-height: 85vh;
-            }
-            
-            .event-modal-title {
-                font-size: 18px;
-            }
+            .image-viewer-prev { left: 8px; }
+            .image-viewer-next { right: 8px; }
+        }
+
         .footer-note {
             margin-top: 40px;
             text-align: center;
@@ -290,7 +270,6 @@
             color: #5a6e8a;
             padding: 16px 0;
             border-top: 1px solid rgba(204, 178, 153, 0.08);
-        }
         }
     </style>
 </head>
@@ -301,7 +280,6 @@
             <div class="sidebar-top">
                 <div class="logo">
     <img src="https://qgmbzdfnwsdosdqphlxk.supabase.co/storage/v1/object/public/logos/additivelogo1.png" alt="ADDITIVE" style="height: 35px; width: auto;">
-    
 </div>
                 <nav class="nav">
     <a href="dashboard.html" class="nav-item"><i class="fas fa-th-large"></i><span data-i18n="nav_dashboard">Dashboard</span></a>
@@ -336,7 +314,7 @@
 </div>
             <div class="events-header">
                 <h1 data-i18n="event_title">EVENTS</h1>
-<p data-i18n="event_subtitle">Discover our latest promotions, campaigns, and special offers.</p>
+                <p data-i18n="event_subtitle">Discover our latest promotions, campaigns, and special offers.</p>
             </div>
 
             <div id="eventsGrid" class="events-grid">
@@ -346,19 +324,14 @@
         </main>
     </div>
 
-    <!-- Event 详情弹窗 -->
-    <div id="eventModal" class="event-modal">
-        <div class="event-modal-content">
-            <button class="close-modal-btn" onclick="closeEventModal()">&times;</button>
-            <div class="event-modal-image-wrapper">
-                <img id="modalImage" class="event-modal-image" src="" alt="">
-            </div>
-            <div class="event-modal-body">
-                <h2 id="modalTitle" class="event-modal-title"></h2>
-                <div id="modalDate" class="event-modal-date"></div>
-                <div id="modalDescription" class="event-modal-description"></div>
-                <div id="modalContent" class="event-modal-content-detail"></div>
-            </div>
+    <!-- ===== 图片查看器弹窗（与 employment/company 一致） ===== -->
+    <div id="imageViewerModal" class="image-viewer-modal" onclick="closeImageViewerOutside(event)">
+        <div class="image-viewer-content">
+            <button class="image-viewer-close" onclick="closeImageViewer()">&times;</button>
+            <img id="viewerImage" src="" alt="Event Image">
+            <div class="image-viewer-counter" id="viewerCounter"></div>
+            <button class="image-viewer-nav image-viewer-prev" onclick="prevImage()"><i class="fas fa-chevron-left"></i></button>
+            <button class="image-viewer-nav image-viewer-next" onclick="nextImage()"><i class="fas fa-chevron-right"></i></button>
         </div>
     </div>
 
@@ -381,107 +354,173 @@
             if (menuBtn) menuBtn.classList.remove('hidden'); 
         }
 
-        async function loadEvents() {
-    const t = window.i18n?.t || function(key) { return key; };
-    const container = document.getElementById('eventsGrid');
-    
-    try {
-        const { data: events, error } = await sb
-            .from('system_content')
-            .select('*')
-            .eq('type', 'events')
-            .order('id', { ascending: true });
-        
-        if (error) throw error;
-        
-        if (!events || events.length === 0) {
-            container.innerHTML = '<div class="empty-events"><i class="fas fa-calendar-alt"></i><p>' + t('event_no_events') + '</p><span>' + t('event_check_back') + '</span></div>';
-            return;
+        // ===== 图片加载失败处理 =====
+        function handleImageError(img, index) {
+            img.onerror = null;
+            img.style.display = 'none';
+            var parent = img.parentElement;
+            var existing = parent.querySelector('.img-error-placeholder');
+            if (existing) return;
+            var div = document.createElement('div');
+            div.className = 'img-error-placeholder';
+            div.style.cssText = 'position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); text-align:center; color:#6a7a9a; width:100%; padding:0 16px; box-sizing:border-box;';
+            div.innerHTML = '<i class="fas fa-calendar-alt" style="font-size:48px; color:#C9B095; opacity:0.3; display:block; margin-bottom:8px;"></i><span style="font-size:12px;">Image ' + index + ' not available</span>';
+            parent.appendChild(div);
         }
-        
-        container.innerHTML = '';
-        
-        events.forEach(event => {
-            const card = document.createElement('div');
-            card.className = 'event-card';
-            card.onclick = () => showEventDetail(event);
+
+        // ===== 图片查看器 =====
+        let viewerImages = [];
+        let viewerCurrentIndex = 0;
+
+        function openImageViewer(url, index, allImages) {
+            viewerImages = allImages || [];
+            viewerCurrentIndex = index || 0;
+            const modal = document.getElementById('imageViewerModal');
+            const img = document.getElementById('viewerImage');
+            const counter = document.getElementById('viewerCounter');
             
-            // 解析图片 URL
-            let imageUrl = 'https://placehold.co/1080x1920/1a1f3a/C9B095?text=Event';
-            if (event.image_url) {
-                try {
-                    const parsed = JSON.parse(event.image_url);
-                    if (Array.isArray(parsed) && parsed.length > 0) {
-                        imageUrl = parsed[0];
-                    }
-                } catch (e) {}
-            }
-            
-            const eventDate = event.created_at ? new Date(event.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) : 'Date TBA';
-            
-            card.innerHTML = `
-                <div class="event-image-wrapper">
-                    <img src="${imageUrl}" class="event-image" alt="${escapeHtml(event.title)}" onerror="this.src='https://placehold.co/1080x1920/1a1f3a/C9B095?text=Event'">
-                </div>
-                <div class="event-content">
-                    <div class="event-title">${escapeHtml(event.title)}</div>
-                    <div class="event-date"><i class="fas fa-calendar-day"></i> ${eventDate}</div>
-                    <div class="event-description">${escapeHtml((event.content || '').replace(/<[^>]*>/g, '')).substring(0, 100)}${(event.content || '').length > 100 ? '...' : ''}</div>
-                    <span class="event-badge"><i class="fas fa-tag"></i> Promotion</span>
-                </div>
-            `;
-            container.appendChild(card);
-        });
-        
-    } catch(e) {
-        console.error('加载活动失败:', e);
-        container.innerHTML = '<div class="empty-events"><i class="fas fa-exclamation-circle"></i><p>' + t('event_failed') + '</p><span>' + t('event_try_again') + '</span></div>';
-    }
-}
-        
-        // 🔥 修复：正确解析 image_url
-        function showEventDetail(event) {
-            const modal = document.getElementById('eventModal');
-            const modalImage = document.getElementById('modalImage');
-            const modalTitle = document.getElementById('modalTitle');
-            const modalDate = document.getElementById('modalDate');
-            const modalDescription = document.getElementById('modalDescription');
-            const modalContent = document.getElementById('modalContent');
-            
-            // 正确解析 image_url
-            let imageUrl = 'https://placehold.co/1080x1920/1a1f3a/C9B095?text=Event';
-            if (event.image_url) {
-                try {
-                    const parsed = JSON.parse(event.image_url);
-                    if (Array.isArray(parsed) && parsed.length > 0) {
-                        imageUrl = parsed[0];
-                    } else if (typeof parsed === 'string' && parsed.startsWith('http')) {
-                        imageUrl = parsed;
-                    }
-                } catch (e) {
-                    // 如果不是 JSON，直接使用原始值
-                    if (typeof event.image_url === 'string' && event.image_url.startsWith('http')) {
-                        imageUrl = event.image_url;
-                    }
-                }
-            }
-            
-            const eventDate = event.event_date ? new Date(event.event_date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) : 'Date TBA';
-            
-            modalImage.src = imageUrl;
-            modalImage.onerror = function() {
-                this.src = 'https://placehold.co/1080x1920/1a1f3a/C9B095?text=Image+Not+Available';
+            img.src = url;
+            img.onerror = function() {
+                this.src = 'https://placehold.co/800x1000/1a1f3a/C9B095?text=Image+Not+Available';
             };
-            modalTitle.innerText = event.title;
-            modalDate.innerHTML = `<i class="fas fa-calendar-day"></i> ${eventDate}${event.end_date ? ` - ${new Date(event.end_date).toLocaleDateString()}` : ''}`;
-            modalDescription.innerText = event.short_description || event.description || '';
-            modalContent.innerText = event.content || event.description || '';
+            
+            if (viewerImages.length > 1) {
+                counter.textContent = (viewerCurrentIndex + 1) + ' / ' + viewerImages.length;
+                counter.style.display = 'block';
+                document.querySelector('.image-viewer-prev').style.display = 'flex';
+                document.querySelector('.image-viewer-next').style.display = 'flex';
+            } else {
+                counter.style.display = 'none';
+                document.querySelector('.image-viewer-prev').style.display = 'none';
+                document.querySelector('.image-viewer-next').style.display = 'none';
+            }
             
             modal.classList.add('active');
+            document.body.style.overflow = 'hidden';
         }
-        
-        function closeEventModal() {
-            document.getElementById('eventModal').classList.remove('active');
+
+        function closeImageViewer() {
+            const modal = document.getElementById('imageViewerModal');
+            modal.classList.remove('active');
+            document.body.style.overflow = '';
+        }
+
+        function closeImageViewerOutside(e) {
+            if (e.target === e.currentTarget) {
+                closeImageViewer();
+            }
+        }
+
+        function prevImage() {
+            if (viewerImages.length === 0) return;
+            viewerCurrentIndex = (viewerCurrentIndex - 1 + viewerImages.length) % viewerImages.length;
+            const img = document.getElementById('viewerImage');
+            img.src = viewerImages[viewerCurrentIndex];
+            document.getElementById('viewerCounter').textContent = (viewerCurrentIndex + 1) + ' / ' + viewerImages.length;
+        }
+
+        function nextImage() {
+            if (viewerImages.length === 0) return;
+            viewerCurrentIndex = (viewerCurrentIndex + 1) % viewerImages.length;
+            const img = document.getElementById('viewerImage');
+            img.src = viewerImages[viewerCurrentIndex];
+            document.getElementById('viewerCounter').textContent = (viewerCurrentIndex + 1) + ' / ' + viewerImages.length;
+        }
+
+        // ESC 键关闭
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') closeImageViewer();
+        });
+
+        // ===== 从元素打开图片查看器 =====
+        function openImageViewerFromElement(element) {
+            const imgWrapper = element.querySelector('.event-image-wrapper img');
+            if (!imgWrapper) return;
+            const url = imgWrapper.src;
+            
+            const allItems = document.querySelectorAll('.event-card');
+            const allImages = [];
+            let currentIndex = 0;
+            
+            allItems.forEach(function(item, idx) {
+                const img = item.querySelector('.event-image-wrapper img');
+                if (img) {
+                    allImages.push(img.src);
+                    if (img.src === url) {
+                        currentIndex = idx;
+                    }
+                }
+            });
+            
+            openImageViewer(url, currentIndex, allImages);
+        }
+
+        async function loadEvents() {
+            const t = window.i18n?.t || function(key) { return key; };
+            const container = document.getElementById('eventsGrid');
+            
+            try {
+                const { data: events, error } = await sb
+                    .from('system_content')
+                    .select('*')
+                    .eq('type', 'events')
+                    .order('id', { ascending: true });
+                
+                if (error) throw error;
+                
+                if (!events || events.length === 0) {
+                    container.innerHTML = '<div class="empty-events"><i class="fas fa-calendar-alt"></i><p>' + t('event_no_events') + '</p><span>' + t('event_check_back') + '</span></div>';
+                    return;
+                }
+                
+                container.innerHTML = '';
+                
+                events.forEach(function(event, index) {
+                    const card = document.createElement('div');
+                    card.className = 'event-card';
+                    // 🔥 点击卡片打开图片查看器
+                    card.onclick = function() { openImageViewerFromElement(this); };
+                    
+                    // 解析图片 URL
+                    let imageUrl = 'https://placehold.co/1080x1920/1a1f3a/C9B095?text=Event';
+                    if (event.image_url) {
+                        try {
+                            const parsed = JSON.parse(event.image_url);
+                            if (Array.isArray(parsed) && parsed.length > 0) {
+                                imageUrl = parsed[0];
+                            } else if (typeof parsed === 'string' && parsed.startsWith('http')) {
+                                imageUrl = parsed;
+                            }
+                        } catch (e) {
+                            if (typeof event.image_url === 'string' && event.image_url.startsWith('http')) {
+                                imageUrl = event.image_url;
+                            }
+                        }
+                    }
+                    
+                    const eventDate = event.created_at ? new Date(event.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) : 'Date TBA';
+                    
+                    // 如果没有内容，只显示图片和标题
+                    const hasContent = event.content && event.content.trim() !== '';
+                    
+                    card.innerHTML = `
+                        <div class="event-image-wrapper">
+                            <img src="${imageUrl}" class="event-image" alt="${escapeHtml(event.title)}" onerror="this.src='https://placehold.co/1080x1920/1a1f3a/C9B095?text=Event'">
+                        </div>
+                        <div class="event-content">
+                            <div class="event-title">${escapeHtml(event.title)}</div>
+                            <div class="event-date"><i class="fas fa-calendar-day"></i> ${eventDate}</div>
+                            ${hasContent ? `<div class="event-description">${escapeHtml((event.content || '').replace(/<[^>]*>/g, '')).substring(0, 100)}${(event.content || '').length > 100 ? '...' : ''}</div>` : ''}
+                            <span class="event-badge"><i class="fas fa-tag"></i> ${hasContent ? 'Promotion' : 'Event'}</span>
+                        </div>
+                    `;
+                    container.appendChild(card);
+                });
+                
+            } catch(e) {
+                console.error('加载活动失败:', e);
+                container.innerHTML = '<div class="empty-events"><i class="fas fa-exclamation-circle"></i><p>' + t('event_failed') + '</p><span>' + t('event_try_again') + '</span></div>';
+            }
         }
         
         function escapeHtml(str) {
