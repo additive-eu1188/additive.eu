@@ -73,7 +73,7 @@
         .content-card .image-grid-container .image-item .img-wrapper {
             position: relative;
             width: 100%;
-            padding-bottom: 177.78%; /* 1920/1080 * 100% = 177.78% 竖屏比例 */
+            padding-bottom: 177.78%;
             background: rgba(20, 30, 55, 0.3);
             overflow: hidden;
         }
@@ -108,7 +108,7 @@
             display: block;
         }
 
-        /* ===== 图片查看器弹窗（保持不变） ===== */
+        /* ===== 图片查看器弹窗 ===== */
         .image-viewer-modal {
             position: fixed;
             top: 0;
@@ -452,48 +452,55 @@
                     return;
                 }
 
-                // 🔥 只取第一个 Event（假设所有图片都在第一个 Event 中）
-                var event = events[0];
-                
-                var images = [];
-                if (event && event.image_url) {
-                    try {
-                        var parsed = JSON.parse(event.image_url);
-                        if (Array.isArray(parsed)) {
-                            images = parsed;
-                        } else {
-                            images = [event.image_url];
+                // 🔥 合并所有 Event 的图片
+                var allImages = [];
+                events.forEach(function(event) {
+                    if (event.image_url) {
+                        try {
+                            var parsed = JSON.parse(event.image_url);
+                            if (Array.isArray(parsed)) {
+                                allImages = allImages.concat(parsed);
+                            } else {
+                                allImages.push(event.image_url);
+                            }
+                        } catch (e) {
+                            if (typeof event.image_url === 'string' && event.image_url.startsWith('http')) {
+                                allImages.push(event.image_url);
+                            }
                         }
-                    } catch (e) {
-                        images = event.image_url ? [event.image_url] : [];
                     }
+                });
+
+                // 🔥 如果还是没有图片，显示空状态
+                if (allImages.length === 0) {
+                    container.innerHTML = `
+                        <div class="content-card">
+                            <div style="text-align:center; padding:40px; color:#6a7a9a;">
+                                <i class="fas fa-calendar-alt" style="font-size:48px; display:block; margin-bottom:12px; color:#C9B095; opacity:0.3;"></i>
+                                <span>No images uploaded</span>
+                            </div>
+                        </div>
+                    `;
+                    return;
                 }
 
-                var imagesHtml = '';
-                if (images.length > 0) {
-                    imagesHtml = '<div class="image-grid-container">';
-                    images.forEach(function(url, imgIndex) {
-                        var escapedUrl = escapeHtml(url);
-                        imagesHtml += `
+                // 🔥 显示所有图片，编号从 1 开始
+                var imagesHtml = '<div class="image-grid-container">';
+                allImages.forEach(function(url, imgIndex) {
+                    var escapedUrl = escapeHtml(url);
+                    var total = allImages.length;
+                    imagesHtml += `
     <div class="image-item" onclick="openImageViewerFromElement(this)">
         <div class="img-wrapper">
             <img src="${escapedUrl}" alt="Event Image ${imgIndex + 1}" 
                  style="position:absolute; top:0; left:0; width:100%; height:100%; object-fit:cover; cursor:pointer; background:#0f1428;" 
                  onerror="handleImageError(this, ${imgIndex + 1})">
-            <span class="image-number">${imgIndex + 1} / ${images.length}</span>
+            <span class="image-number">${imgIndex + 1} / ${total}</span>
         </div>
     </div>
 `;
-                    });
-                    imagesHtml += '</div>';
-                } else {
-                    imagesHtml = `
-                        <div style="text-align:center; padding:40px; color:#6a7a9a;">
-                            <i class="fas fa-calendar-alt" style="font-size:48px; display:block; margin-bottom:12px; color:#C9B095; opacity:0.3;"></i>
-                            <span>No images uploaded</span>
-                        </div>
-                    `;
-                }
+                });
+                imagesHtml += '</div>';
 
                 // 🔥 只显示一个 content-card，包含所有图片
                 container.innerHTML = `
