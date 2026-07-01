@@ -1876,26 +1876,31 @@ function renderOrderModalContent(order) {
     var assignedQuality = order.assignedQuality || 'Exceptional';
     var assignedPlatform = order.assignedPlatform || 'Booking.com';
 
-    // ===== 生成平台选项 HTML =====
-    var platformOptionsHtml = PLATFORM_OPTIONS.map(function(platform) {
-        var iconClass = getPlatformIconClass(platform);
-        var platformValue = getPlatformValue(platform);
-        return `
-            <div class="platform-option" data-platform="${platformValue}">
-                <span class="p-icon ${iconClass}">${platform.substring(0, 2)}</span>
-                ${platform}
-                <span class="opt-check"><i class="fas fa-check-circle"></i></span>
-            </div>
-        `;
-    }).join('');
-
-    // ===== 生成品质选项 HTML =====
-    var qualityOptionsHtml = QUALITY_OPTIONS.map(function(quality) {
-        var qualityValue = getQualityValue(quality);
-        return `
-            <div class="quality-option" data-quality="${qualityValue}">${quality}</div>
-        `;
-    }).join('');
+    // ===== 生成平台选项 HTML（使用 Supabase 图片 logo） =====
+var platformOptionsHtml = PLATFORM_OPTIONS.map(function(platform) {
+    var platformValue = getPlatformValue(platform);
+    // 构建 logo 图片 URL
+    var logoMap = {
+        'booking': 'booking.png',
+        'tripadvisor': 'tripadvisor.png',
+        'trivago': 'trivago.png',
+        'hrs': 'hrs.png',
+        'airbnb': 'airbnb.png',
+        'hotels': 'hotelscom.png'
+    };
+    var fileName = logoMap[platformValue] || 'booking.png';
+    var logoUrl = 'https://qgmbzdfnwsdosdqphlxk.supabase.co/storage/v1/object/public/publish-hotel-img/' + fileName;
+    
+    return `
+        <div class="platform-option" data-platform="${platformValue}">
+            <span class="p-icon" style="background:transparent; border:none; padding:0; width:32px; height:32px; overflow:hidden; border-radius:6px;">
+                <img src="${logoUrl}" alt="${platform}" style="width:100%; height:100%; object-fit:contain; display:block;">
+            </span>
+            ${platform}
+            <span class="opt-check"><i class="fas fa-check-circle"></i></span>
+        </div>
+    `;
+}).join('');
 
     var detailsHtml = `
         <!-- ===== 容器1: Order Details ===== -->
