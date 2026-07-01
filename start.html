@@ -1857,6 +1857,18 @@ function renderOrderModalContent(order) {
 
     const t = window.i18n?.t || function(key) { return key; };
     
+    // ============================================================
+    // 🔥 翻译 Quality 值
+    // ============================================================
+    function getTranslatedQuality(quality) {
+        var map = {
+            'Exceptional': t('exceptional'),
+            'Satisfactory': t('satisfactory'),
+            'Foundational': t('foundational')
+        };
+        return map[quality] || quality;
+    }
+    
     var rateDisplay = commissionPercent || '0.51';
     
     var orderTypeDisplayName = t('normal_publications') || 'Normal Publications';
@@ -1877,7 +1889,12 @@ function renderOrderModalContent(order) {
     var assignedPlatform = order.assignedPlatform || 'Booking.com';
     
     // ============================================================
-    // 🔥 关键修复：使用 t() 函数翻译所有动态文本
+    // 翻译后的 Assign Type 值
+    // ============================================================
+    var translatedAssignedQuality = getTranslatedQuality(assignedQuality);
+    
+    // ============================================================
+    // 使用 t() 函数翻译所有动态文本
     // ============================================================
     var detailsHtml = `
 <!-- ===== 容器1: Order Details ===== -->
@@ -1912,7 +1929,7 @@ function renderOrderModalContent(order) {
         <div class="cross-grid-2col">
             <div class="cross-item">
                 <span class="label">${t('assign_type_title')}</span>
-                <span class="value assigned">${escapeHtml(assignedQuality)}</span>
+                <span class="value assigned">${escapeHtml(translatedAssignedQuality)}</span>
             </div>
             <div class="cross-item">
                 <span class="label">${t('publish_platform_title')}</span>
@@ -2050,7 +2067,6 @@ function renderOrderModalContent(order) {
         publishBtn.disabled = !isReady;
         
         if (isReady) {
-            // 🔥 检查是否匹配预设值
             var qualityMatch = selectedQuality === getQualityValue(assignedQuality);
             var platformMatch = selectedPlatform === getPlatformValue(assignedPlatform);
             
@@ -2060,7 +2076,7 @@ function renderOrderModalContent(order) {
                 publishBtn.disabled = false;
             } else {
                 var msg = '<i class="fas fa-times-circle" style="color:#e88080; margin-right:6px;"></i> ' + t('mismatch_required') + ' ';
-                if (!qualityMatch) msg += '<strong>' + assignedQuality + '</strong>';
+                if (!qualityMatch) msg += '<strong>' + getTranslatedQuality(assignedQuality) + '</strong>';
                 if (!qualityMatch && !platformMatch) msg += ' & ';
                 if (!platformMatch) msg += '<strong>' + assignedPlatform + '</strong>';
                 statusEl.innerHTML = msg;
