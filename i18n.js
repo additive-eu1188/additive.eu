@@ -180,6 +180,8 @@ if (typeof window._i18n_loaded === 'undefined') {
             'carousel_empty': 'No carousel images',
             'carousel_hint': 'Add slides in database',
             'carousel_error': 'Failed to load carousel',
+'stats_title_full': 'Our Numbers<br>Tell a Clear Story.',
+'cta_title_full': '<span class="gold-text">+500 Hotel Clients</span><br>in 6 locations across Europe',
 
             // ==================== 侧边栏 ====================
             'nav_dashboard': 'Dashboard',
@@ -876,6 +878,8 @@ if (typeof window._i18n_loaded === 'undefined') {
             'carousel_empty': 'Keine Karussell-Bilder',
             'carousel_hint': 'Bilder in der Datenbank hinzufügen',
             'carousel_error': 'Karussell konnte nicht geladen werden',
+'stats_title_full': 'Our Numbers<br>Tell a Clear Story.',
+'cta_title_full': '<span class="gold-text">+500 Hotel Clients</span><br>in 6 locations across Europe',
 
             // ==================== 侧边栏 ====================
             'nav_dashboard': 'Dashboard',
@@ -1572,6 +1576,8 @@ if (typeof window._i18n_loaded === 'undefined') {
             'carousel_empty': 'Nessuna immagine del carousel',
             'carousel_hint': 'Aggiungi immagini nel database',
             'carousel_error': 'Caricamento del carousel fallito',
+'stats_title_full': 'Our Numbers<br>Tell a Clear Story.',
+'cta_title_full': '<span class="gold-text">+500 Hotel Clients</span><br>in 6 locations across Europe',
 
             // ==================== 侧边栏 ====================
             'nav_dashboard': 'Dashboard',
