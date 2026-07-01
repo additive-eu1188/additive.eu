@@ -2261,33 +2261,65 @@ if (typeof window._i18n_loaded === 'undefined') {
         }
     }
 
+// ============================================================
+// 🔥 新增：更新语言 UI 函数（在 setLanguage 之前定义）
+// ============================================================
+function updateLangUI(lang) {
+    var flagMap = {
+        'en': 'https://qgmbzdfnwsdosdqphlxk.supabase.co/storage/v1/object/public/flags/uk.png',
+        'de': 'https://qgmbzdfnwsdosdqphlxk.supabase.co/storage/v1/object/public/flags/de.png',
+        'it': 'https://qgmbzdfnwsdosdqphlxk.supabase.co/storage/v1/object/public/flags/it.png'
+    };
+    var labelMap = {
+        'en': 'EN',
+        'de': 'DE',
+        'it': 'IT'
+    };
+    
+    var flagImg = document.getElementById('currentLangFlag');
+    var label = document.getElementById('currentLangLabel');
+    if (flagImg) flagImg.src = flagMap[lang] || flagMap['de'];
+    if (label) label.textContent = labelMap[lang] || 'DE';
+    
+    document.querySelectorAll('.lang-option').forEach(function(el) {
+        if (el.dataset.code === lang) {
+            el.classList.add('selected');
+        } else {
+            el.classList.remove('selected');
+        }
+    });
+}
+
     function setLanguage(lang) {
     if (TRANSLATIONS[lang]) {
         currentLang = lang;
         localStorage.setItem('app_lang', lang);
         applyTranslations();
-        // 🔥 更新语言切换按钮的显示
-        updateLangUI(lang);
+        // 🔥 新增：更新语言 UI
+        if (typeof updateLangUI === 'function') {
+            updateLangUI(lang);
+        }
         return true;
     }
     return false;
 }
 
     function getLanguage() {
-    // 如果 localStorage 中没有保存，返回 'de'
     var lang = localStorage.getItem('app_lang');
-    if (lang) return lang;
+    if (lang && TRANSLATIONS[lang]) return lang;
     return 'de';
 }
 
     // 暴露给全局
     window.i18n = {
-        translate: translate,
-        setLanguage: setLanguage,
-        getLanguage: getLanguage,
-        applyTranslations: applyTranslations,
-        t: translate,
-    };
+    translate: translate,
+    setLanguage: setLanguage,
+    getLanguage: getLanguage,
+    applyTranslations: applyTranslations,
+    t: translate,
+    TRANSLATIONS: TRANSLATIONS,
+    updateLangUI: updateLangUI  // 🔥 新增
+};
 
     // 页面加载时自动应用翻译
     if (document.readyState === 'loading') {
