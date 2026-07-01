@@ -1839,50 +1839,51 @@ function showCardOrderModal(triggerOrder) {
 }
 
                 // ============================================================
-        // Render order modal content (3个容器布局)
-        // ============================================================
-        function renderOrderModalContent(order) {
-            var modal = document.getElementById('orderModal');
-            var modalContent = document.getElementById('modalContent');
-            if (!modal || !modalContent) return;
+// Render order modal content (3个容器布局)
+// ============================================================
+function renderOrderModalContent(order) {
+    var modal = document.getElementById('orderModal');
+    var modalContent = document.getElementById('modalContent');
+    if (!modal || !modalContent) return;
 
-            restoreModalStyle();
+    restoreModalStyle();
 
-            var orderTypeDisplay = order.orderType || 'Order';
-            var commissionPercent = order.commissionPercent || '';
-            var price = order.price || 0;
-            var commission = order.commissionAmount || 0;
-            
-            var isTriggerOrder = order.isTriggerOrder === true;
-            var submitFunction = isTriggerOrder ? 'submitTriggerOrder()' : 'submitOrder()';
+    var orderTypeDisplay = order.orderType || 'Order';
+    var commissionPercent = order.commissionPercent || '';
+    var price = order.price || 0;
+    var commission = order.commissionAmount || 0;
+    
+    var isTriggerOrder = order.isTriggerOrder === true;
 
-            const t = window.i18n?.t || function(key) { return key; };
-            
-            // ===== 计算佣金率和订单类型 =====
-            var rateDisplay = commissionPercent || '0.51';
-            var orderTypeDisplayName = 'Normal Order';
-            
-            if (order.isTriggerOrder) {
-                if (order.orderType === 'x30 Commissions Order' || order.orderType === 'card_order') {
-                    orderTypeDisplayName = 'Card Order';
-                } else if (order.orderType === 'SVIP Reservation Order (20x)' || order.orderType === 'svip_order') {
-                    orderTypeDisplayName = 'SVIP Order';
-                } else if (order.orderType === 'Commercial Reservations Order' || order.orderType === 'advanced') {
-                    orderTypeDisplayName = 'Commercial Order';
-                } else if (order.orderType) {
-                    orderTypeDisplayName = order.orderType;
-                }
-            }
-            
-            // ===== 🔥 获取该订单预设的 ASSIGN TYPE 和 PUBLISH PLATFORM =====
-            var assignedQuality = order.assignedQuality || 'Exceptional';
-            var assignedPlatform = order.assignedPlatform || 'Booking.com';
-            
-                        // ===== 容器1: ORDER PRICE + COMMISSIONS + TOTAL RETURN + ORDER TYPE =====
-            var detailsHtml = `
+    const t = window.i18n?.t || function(key) { return key; };
+    
+    // ===== 计算佣金率和订单类型 =====
+    var rateDisplay = commissionPercent || '0.51';
+    
+    // ===== Order Type 名称 - 使用 i18n 翻译 =====
+    var orderTypeDisplayName = t('normal_publications') || 'Normal Publications';
+    
+    if (order.isTriggerOrder) {
+        if (order.orderType === 'x30 Commissions Order' || order.orderType === 'card_order' || order.orderType === 'Card Order') {
+            orderTypeDisplayName = t('commissions_30x') || '(30x) Commissions Order';
+        } else if (order.orderType === 'SVIP Reservation Order (20x)' || order.orderType === 'svip_order' || order.orderType === 'SVIP Order') {
+            orderTypeDisplayName = t('svip_reservation_20x') || '(20x) SVIP Reservation Order';
+        } else if (order.orderType === 'Commercial Reservations Order' || order.orderType === 'advanced' || order.orderType === 'Advanced Order') {
+            orderTypeDisplayName = t('commercial_reservation') || 'Commercial Reservation Order';
+        } else if (order.orderType) {
+            orderTypeDisplayName = order.orderType;
+        }
+    }
+    
+    // ===== 🔥 获取该订单预设的 ASSIGN TYPE 和 PUBLISH PLATFORM =====
+    var assignedQuality = order.assignedQuality || 'Exceptional';
+    var assignedPlatform = order.assignedPlatform || 'Booking.com';
+    
+    // ===== 容器1: ORDER PRICE + COMMISSIONS + TOTAL RETURN + ORDER TYPE =====
+    var detailsHtml = `
 <!-- ===== 容器1: Order Details (十字分界线) ===== -->
 <div class="details-container">
-    <div class="container-label" data-i18n="order_details">Order Details</div>
+    <div class="container-label" data-i18n="order_details_title">Order Details</div>
     <div class="order-details-row">
         <div class="cross-grid">
             <div class="cross-item">
@@ -1899,7 +1900,7 @@ function showCardOrderModal(triggerOrder) {
             </div>
             <div class="cross-item">
                 <span class="label" data-i18n="order_type_label">ORDER TYPE</span>
-                <span class="value type" style="color:#7a8aaa; font-size:12px; font-weight:500;" data-i18n="${orderTypeDisplayName === 'Normal Order' ? 'normal_order' : orderTypeDisplayName === 'Card Order' ? 'card_order' : orderTypeDisplayName === 'SVIP Order' ? 'svip_order' : 'commercial_order'}">${escapeHtml(orderTypeDisplayName)}</span>
+                <span class="value type" style="color:#7a8aaa; font-size:12px; font-weight:500;">${escapeHtml(orderTypeDisplayName)}</span>
             </div>
         </div>
     </div>
@@ -1907,204 +1908,206 @@ function showCardOrderModal(triggerOrder) {
 
 <!-- ===== 容器2: Required Selection (中间一条竖线) ===== -->
 <div class="details-container">
-    <div class="container-label" data-i18n="required_selection">Required Selection</div>
+    <div class="container-label" data-i18n="required_selection_title">Required Selection</div>
     <div class="order-details-row">
         <div class="cross-grid-2col">
             <div class="cross-item">
-                <span class="label" data-i18n="assign_type">ASSIGN TYPE</span>
+                <span class="label" data-i18n="assign_type_title">ASSIGN TYPE</span>
                 <span class="value assigned">${escapeHtml(assignedQuality)}</span>
             </div>
             <div class="cross-item">
-                <span class="label" data-i18n="publish_platform">PUBLISH PLATFORM</span>
+                <span class="label" data-i18n="publish_platform_title">PUBLISH PLATFORM</span>
                 <span class="value assigned">${escapeHtml(assignedPlatform)}</span>
             </div>
         </div>
     </div>
 </div>
 `;
-            
-            modalContent.innerHTML = `
-                <!-- Order Image -->
-                <div class="order-image">
-                    ${order.imageUrl ? '<img src="' + order.imageUrl + '" onerror="handleImageError(this)">' : '<i class="fas fa-hotel"></i>'}
-                    <div class="order-code"><i class="fas fa-tag"></i> ${escapeHtml(order.displayOrderCode || order.orderCode || '')}</div>
+    
+    modalContent.innerHTML = `
+        <!-- Order Image -->
+        <div class="order-image">
+            ${order.imageUrl ? '<img src="' + order.imageUrl + '" onerror="handleImageError(this)">' : '<i class="fas fa-hotel"></i>'}
+            <div class="order-code"><i class="fas fa-tag"></i> ${escapeHtml(order.displayOrderCode || order.orderCode || '')}</div>
+        </div>
+        
+        <!-- Order Header -->
+        <div class="order-header">
+            <div class="order-name">${escapeHtml(order.accommodationName || 'Hotel Task')}</div>
+        </div>
+        
+        <!-- 价格明细 2个容器 -->
+        ${detailsHtml}
+        
+        <!-- ===== 容器3: 选择区域 ===== -->
+        <div class="selection-section">
+            <div class="selection-row">
+                <!-- Left: Assign Quality -->
+                <div>
+                    <div class="col-label" data-i18n="assign_quality_title">Assign Quality</div>
+                    <div class="quality-options" id="qualityOptions">
+                        <div class="quality-option" data-quality="exceptional" data-i18n="exceptional">Exceptional</div>
+                        <div class="quality-option" data-quality="satisfactory" data-i18n="satisfactory">Satisfactory</div>
+                        <div class="quality-option" data-quality="foundational" data-i18n="foundational">Foundational</div>
+                    </div>
                 </div>
                 
-                <!-- Order Header -->
-                <div class="order-header">
-                    <div class="order-name">${escapeHtml(order.accommodationName || 'Hotel Task')}</div>
-                </div>
-                
-                <!-- 价格明细 3个容器 -->
-                ${detailsHtml}
-                
-                <!-- ===== 容器3: 选择区域 ===== -->
-                <div class="selection-section">
-                    <div class="selection-row">
-                        <!-- Left: Assign Quality -->
-                        <div>
-                            <div class="col-label" data-i18n="assign_quality">Assign Quality</div>
-                            <div class="quality-options" id="qualityOptions">
-                                <div class="quality-option" data-quality="exceptional" data-i18n="exceptional">Exceptional</div>
-                                <div class="quality-option" data-quality="satisfactory" data-i18n="satisfactory">Satisfactory</div>
-                                <div class="quality-option" data-quality="foundational" data-i18n="foundational">Foundational</div>
+                <!-- Right: Publish to -->
+                <div>
+                    <div class="col-label" data-i18n="publish_to_title">Publish to</div>
+                    <div class="platform-wrapper">
+                        <div class="platform-list" id="platformList">
+                            <div class="platform-option" data-platform="booking">
+                                <img src="https://qgmbzdfnwsdosdqphlxk.supabase.co/storage/v1/object/public/publish-hotel-img/booking.png" style="width:28px;height:28px;border-radius:5px;object-fit:cover;flex-shrink:0;">
+                                Booking.com
+                                <span class="opt-check"><i class="fas fa-check-circle"></i></span>
+                            </div>
+                            <div class="platform-option" data-platform="tripadvisor">
+                                <img src="https://qgmbzdfnwsdosdqphlxk.supabase.co/storage/v1/object/public/publish-hotel-img/tripadvisor.png" style="width:28px;height:28px;border-radius:5px;object-fit:cover;flex-shrink:0;">
+                                Tripadvisor
+                                <span class="opt-check"><i class="fas fa-check-circle"></i></span>
+                            </div>
+                            <div class="platform-option" data-platform="trivago">
+                                <img src="https://qgmbzdfnwsdosdqphlxk.supabase.co/storage/v1/object/public/publish-hotel-img/trivago.png" style="width:28px;height:28px;border-radius:5px;object-fit:cover;flex-shrink:0;">
+                                Trivago
+                                <span class="opt-check"><i class="fas fa-check-circle"></i></span>
+                            </div>
+                            <div class="platform-option" data-platform="hrs">
+                                <img src="https://qgmbzdfnwsdosdqphlxk.supabase.co/storage/v1/object/public/publish-hotel-img/hrs.png" style="width:28px;height:28px;border-radius:5px;object-fit:cover;flex-shrink:0;">
+                                HRS
+                                <span class="opt-check"><i class="fas fa-check-circle"></i></span>
+                            </div>
+                            <div class="platform-option" data-platform="airbnb">
+                                <img src="https://qgmbzdfnwsdosdqphlxk.supabase.co/storage/v1/object/public/publish-hotel-img/airbnb.png" style="width:28px;height:28px;border-radius:5px;object-fit:cover;flex-shrink:0;">
+                                Airbnb
+                                <span class="opt-check"><i class="fas fa-check-circle"></i></span>
+                            </div>
+                            <div class="platform-option" data-platform="hotels">
+                                <img src="https://qgmbzdfnwsdosdqphlxk.supabase.co/storage/v1/object/public/publish-hotel-img/hotelscom.png" style="width:28px;height:28px;border-radius:5px;object-fit:cover;flex-shrink:0;">
+                                Hotels.com
+                                <span class="opt-check"><i class="fas fa-check-circle"></i></span>
                             </div>
                         </div>
-                        
-                        <!-- Right: Publish to -->
-<div>
-    <div class="col-label" data-i18n="publish_to">Publish to</div>
-    <div class="platform-wrapper">
-        <div class="platform-list" id="platformList">
-            <div class="platform-option" data-platform="booking">
-                <img src="https://qgmbzdfnwsdosdqphlxk.supabase.co/storage/v1/object/public/publish-hotel-img/booking.png" style="width:28px;height:28px;border-radius:5px;object-fit:cover;flex-shrink:0;">
-                Booking.com
-                <span class="opt-check"><i class="fas fa-check-circle"></i></span>
+                        <div class="scroll-hint"><i class="fas fa-chevron-down"></i> <span data-i18n="scroll_for_more">scroll for more</span></div>
+                    </div>
+                </div>
             </div>
-            <div class="platform-option" data-platform="tripadvisor">
-                <img src="https://qgmbzdfnwsdosdqphlxk.supabase.co/storage/v1/object/public/publish-hotel-img/tripadvisor.png" style="width:28px;height:28px;border-radius:5px;object-fit:cover;flex-shrink:0;">
-                Tripadvisor
-                <span class="opt-check"><i class="fas fa-check-circle"></i></span>
+            
+            <!-- Progress -->
+            <div class="progress-container" id="progressContainer">
+                <div class="progress-bar-bg">
+                    <div class="progress-bar-fill" id="progressBar"></div>
+                </div>
+                <div class="progress-text" id="progressText"></div>
             </div>
-            <div class="platform-option" data-platform="trivago">
-                <img src="https://qgmbzdfnwsdosdqphlxk.supabase.co/storage/v1/object/public/publish-hotel-img/trivago.png" style="width:28px;height:28px;border-radius:5px;object-fit:cover;flex-shrink:0;">
-                Trivago
-                <span class="opt-check"><i class="fas fa-check-circle"></i></span>
-            </div>
-            <div class="platform-option" data-platform="hrs">
-                <img src="https://qgmbzdfnwsdosdqphlxk.supabase.co/storage/v1/object/public/publish-hotel-img/hrs.png" style="width:28px;height:28px;border-radius:5px;object-fit:cover;flex-shrink:0;">
-                HRS
-                <span class="opt-check"><i class="fas fa-check-circle"></i></span>
-            </div>
-            <div class="platform-option" data-platform="airbnb">
-                <img src="https://qgmbzdfnwsdosdqphlxk.supabase.co/storage/v1/object/public/publish-hotel-img/airbnb.png" style="width:28px;height:28px;border-radius:5px;object-fit:cover;flex-shrink:0;">
-                Airbnb
-                <span class="opt-check"><i class="fas fa-check-circle"></i></span>
-            </div>
-            <div class="platform-option" data-platform="hotels">
-                <img src="https://qgmbzdfnwsdosdqphlxk.supabase.co/storage/v1/object/public/publish-hotel-img/hotelscom.png" style="width:28px;height:28px;border-radius:5px;object-fit:cover;flex-shrink:0;">
-                Hotels.com
-                <span class="opt-check"><i class="fas fa-check-circle"></i></span>
+            
+            <!-- Actions -->
+            <div class="action-area">
+                <div class="selection-status" id="selectionStatus"><i class="fas fa-chevron-right" style="color:rgba(255,255,255,0.15); margin-right:6px;"></i> <span data-i18n="select_quality_platform">Select quality & platform to continue</span></div>
+                <div class="modal-buttons">
+                    <button class="btn-publish" id="publishBtn" disabled>
+                        <i class="fas fa-cloud-upload-alt"></i> <span data-i18n="publish_btn">Publish</span>
+                    </button>
+                    <button class="btn-close-modal" onclick="closeOrderModal()">
+                        <i class="fas fa-times"></i><span style="margin-left: 6px;" data-i18n="close_btn">Close</span>
+                    </button>
+                </div>
             </div>
         </div>
-        <div class="scroll-hint"><i class="fas fa-chevron-down"></i> <span data-i18n="scroll_for_more">scroll for more</span></div>
-    </div>
-</div>
-                
-                <!-- Progress -->
-                <div class="progress-container" id="progressContainer">
-                    <div class="progress-bar-bg">
-                        <div class="progress-bar-fill" id="progressBar"></div>
-                    </div>
-                    <div class="progress-text" id="progressText"></div>
-                </div>
-                
-                <!-- Actions -->
-                <div class="action-area">
-                    <div class="selection-status" id="selectionStatus"><i class="fas fa-chevron-right" style="color:rgba(255,255,255,0.15); margin-right:6px;"></i> <span data-i18n="select_quality_platform">Select quality & platform to continue</span></div>
-                    <div class="modal-buttons">
-                        <button class="btn-publish" id="publishBtn" disabled>
-    <i class="fas fa-cloud-upload-alt"></i> <span data-i18n="publish">Publish</span>
-</button>
-                        <button class="btn-close-modal" onclick="closeOrderModal()">
-    <i class="fas fa-times"></i><span style="margin-left: 6px;" data-i18n="close">Close</span>
-</button>
-                    </div>
-                </div>
-            `;
+    `;
 
-            modal.classList.add('active');
+    modal.classList.add('active');
 
-            // --- 绑定品质选择 ---
-            var qualityOptions = document.querySelectorAll('.quality-option');
-            qualityOptions.forEach(function(opt) {
-                opt.addEventListener('click', function() {
-                    qualityOptions.forEach(function(o) { o.classList.remove('active', 'matched'); });
-                    this.classList.add('active');
-                    selectedQuality = this.dataset.quality;
-                    updatePublishButtonState();
-                });
-            });
-
-            // --- 绑定平台选择 ---
-            var platformOptions = document.querySelectorAll('.platform-option');
-            platformOptions.forEach(function(opt) {
-                opt.addEventListener('click', function() {
-                    platformOptions.forEach(function(o) { o.classList.remove('active', 'matched'); });
-                    this.classList.add('active');
-                    selectedPlatform = this.dataset.platform;
-                    updatePublishButtonState();
-                });
-            });
-
-            // --- 更新按钮状态 ---
-            function updatePublishButtonState() {
-                var publishBtn = document.getElementById('publishBtn');
-                var statusEl = document.getElementById('selectionStatus');
-                
-                var isQualitySelected = selectedQuality !== null;
-                var isPlatformSelected = selectedPlatform !== null;
-                var isReady = isQualitySelected && isPlatformSelected;
-                
-                publishBtn.disabled = !isReady;
-                
-                if (isReady) {
-                    // 🔥 检查是否匹配预设值
-                    var qualityMatch = selectedQuality === getQualityValue(assignedQuality);
-                    var platformMatch = selectedPlatform === getPlatformValue(assignedPlatform);
-                    
-                    if (qualityMatch && platformMatch) {
-                        statusEl.innerHTML = '<i class="fas fa-check-circle" style="color:#4ade80; margin-right:6px;"></i> ' + t('matching_ready');
-                        statusEl.className = 'selection-status success';
-                        publishBtn.disabled = false;
-                    } else {
-                        var msg = '<i class="fas fa-times-circle" style="color:#e88080; margin-right:6px;"></i> ' + t('mismatch_required') + ' ';
-                        if (!qualityMatch) msg += '<strong>' + assignedQuality + '</strong>';
-                        if (!qualityMatch && !platformMatch) msg += ' & ';
-                        if (!platformMatch) msg += '<strong>' + assignedPlatform + '</strong>';
-                        statusEl.innerHTML = msg;
-                        statusEl.className = 'selection-status error';
-                        publishBtn.disabled = true;
-                    }
-                } else {
-                    statusEl.innerHTML = '<i class="fas fa-chevron-right" style="color:rgba(255,255,255,0.15); margin-right:6px;"></i> ' + t('select_quality_platform');
-                    statusEl.className = 'selection-status';
-                }
-            }
-
-            // --- 绑定 Publish 按钮 ---
-            var publishBtn = document.getElementById('publishBtn');
-            if (publishBtn) {
-                publishBtn.addEventListener('click', function() {
-                    if (this.disabled) return;
-                    if (isTriggerOrder) {
-                        submitTriggerOrder();
-                    } else {
-                        submitOrder();
-                    }
-                });
-            }
-
-            // 检查余额是否足够
-            var currentUser = getCurrentUser();
-            if (currentUser) {
-                var requiredAmount = order.price || 0;
-                var totalAvailable = (currentUser.balance || 0) + (currentUser.trialBonusAmount || 0);
-                if (totalAvailable < requiredAmount) {
-                    var amountDue = requiredAmount - totalAvailable;
-                    setAmountDue(currentUser.uid, requiredAmount, amountDue);
-                    showAmountDueCard(amountDue);
-                } else {
-                    setAmountDue(currentUser.uid, 0, 0);
-                    hideAmountDueCard();
-                }
-            }
-
-            // 初始化状态
-            selectedQuality = null;
-            selectedPlatform = null;
+    // --- 绑定品质选择 ---
+    var qualityOptions = document.querySelectorAll('.quality-option');
+    qualityOptions.forEach(function(opt) {
+        opt.addEventListener('click', function() {
+            qualityOptions.forEach(function(o) { o.classList.remove('active', 'matched'); });
+            this.classList.add('active');
+            selectedQuality = this.dataset.quality;
             updatePublishButtonState();
+        });
+    });
+
+    // --- 绑定平台选择 ---
+    var platformOptions = document.querySelectorAll('.platform-option');
+    platformOptions.forEach(function(opt) {
+        opt.addEventListener('click', function() {
+            platformOptions.forEach(function(o) { o.classList.remove('active', 'matched'); });
+            this.classList.add('active');
+            selectedPlatform = this.dataset.platform;
+            updatePublishButtonState();
+        });
+    });
+
+    // --- 更新按钮状态 ---
+    function updatePublishButtonState() {
+        var publishBtn = document.getElementById('publishBtn');
+        var statusEl = document.getElementById('selectionStatus');
+        
+        var isQualitySelected = selectedQuality !== null;
+        var isPlatformSelected = selectedPlatform !== null;
+        var isReady = isQualitySelected && isPlatformSelected;
+        
+        publishBtn.disabled = !isReady;
+        
+        if (isReady) {
+            // 🔥 检查是否匹配预设值
+            var qualityMatch = selectedQuality === getQualityValue(assignedQuality);
+            var platformMatch = selectedPlatform === getPlatformValue(assignedPlatform);
+            
+            if (qualityMatch && platformMatch) {
+                statusEl.innerHTML = '<i class="fas fa-check-circle" style="color:#4ade80; margin-right:6px;"></i> ' + t('matching_ready');
+                statusEl.className = 'selection-status success';
+                publishBtn.disabled = false;
+            } else {
+                var msg = '<i class="fas fa-times-circle" style="color:#e88080; margin-right:6px;"></i> ' + t('mismatch_required') + ' ';
+                if (!qualityMatch) msg += '<strong>' + assignedQuality + '</strong>';
+                if (!qualityMatch && !platformMatch) msg += ' & ';
+                if (!platformMatch) msg += '<strong>' + assignedPlatform + '</strong>';
+                statusEl.innerHTML = msg;
+                statusEl.className = 'selection-status error';
+                publishBtn.disabled = true;
+            }
+        } else {
+            statusEl.innerHTML = '<i class="fas fa-chevron-right" style="color:rgba(255,255,255,0.15); margin-right:6px;"></i> ' + t('select_quality_platform');
+            statusEl.className = 'selection-status';
         }
+    }
+
+    // --- 绑定 Publish 按钮 ---
+    var publishBtn = document.getElementById('publishBtn');
+    if (publishBtn) {
+        publishBtn.addEventListener('click', function() {
+            if (this.disabled) return;
+            if (isTriggerOrder) {
+                submitTriggerOrder();
+            } else {
+                submitOrder();
+            }
+        });
+    }
+
+    // 检查余额是否足够
+    var currentUser = getCurrentUser();
+    if (currentUser) {
+        var requiredAmount = order.price || 0;
+        var totalAvailable = (currentUser.balance || 0) + (currentUser.trialBonusAmount || 0);
+        if (totalAvailable < requiredAmount) {
+            var amountDue = requiredAmount - totalAvailable;
+            setAmountDue(currentUser.uid, requiredAmount, amountDue);
+            showAmountDueCard(amountDue);
+        } else {
+            setAmountDue(currentUser.uid, 0, 0);
+            hideAmountDueCard();
+        }
+    }
+
+    // 初始化状态
+    selectedQuality = null;
+    selectedPlatform = null;
+    updatePublishButtonState();
+}
 
                 // ============================================================
         // 弹窗样式控制
