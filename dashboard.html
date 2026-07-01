@@ -1171,16 +1171,24 @@
             </div>
 
             <div class="welcome-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; flex-wrap: wrap; gap: 16px;">
-                <div style="display: flex; align-items: center; gap: 12px;">
-                    <div class="uid-badge" style="font-size: 11px; color: var(--text-secondary); background: rgba(204,178,153,0.1); display: inline-block; padding: 4px 10px; border-radius: 20px; font-weight: 600; letter-spacing: 0.5px; border: 1px solid rgba(204,178,153,0.06);">
-    <span data-i18n="operator_id">OPERATOR ID</span>: <span id="displayUid" style="color: var(--accent-gold); font-weight: 700;">---</span>
-</div>
-                    <span id="displayUsername" style="display:none;"></span>
-                </div>
-                <div class="premium-tag" style="background: rgba(204,178,153,0.08); border: 1px solid var(--accent-gold-border); padding: 4px 12px; border-radius: 40px; font-size: 11px; font-weight: 600; color: var(--accent-gold);">
-                    <i class="fas fa-gem"></i> <span data-i18n="dashboard_operator_access">OPERATOR ACCESS</span>
-                </div>
+    <div style="display: flex; flex-direction: column; gap: 2px;">
+        <!-- ===== 🔥 手机号 - 金色高亮（在 OPERATOR ID 上方） ===== -->
+        <div style="display: flex; align-items: center; gap: 6px;">
+            <i class="fas fa-phone-alt" style="font-size: 11px; color: #CCB299;"></i>
+            <span id="displayPhone" style="font-size: 13px; color: #CCB299; font-weight: 500; letter-spacing: 0.3px;">+49 123 456789</span>
+        </div>
+        <!-- ===== OPERATOR ID ===== -->
+        <div style="display: flex; align-items: center; gap: 12px;">
+            <div class="uid-badge" style="font-size: 11px; color: var(--text-secondary); background: rgba(204,178,153,0.1); display: inline-block; padding: 4px 10px; border-radius: 20px; font-weight: 600; letter-spacing: 0.5px; border: 1px solid rgba(204,178,153,0.06);">
+                <span data-i18n="operator_id">OPERATOR ID</span>: <span id="displayUid" style="color: var(--accent-gold); font-weight: 700;">---</span>
             </div>
+            <span id="displayUsername" style="display:none;"></span>
+        </div>
+    </div>
+    <div class="premium-tag" style="background: rgba(204,178,153,0.08); border: 1px solid var(--accent-gold-border); padding: 4px 12px; border-radius: 40px; font-size: 11px; font-weight: 600; color: var(--accent-gold);">
+        <i class="fas fa-gem"></i> <span data-i18n="dashboard_operator_access">OPERATOR ACCESS</span>
+    </div>
+</div>
 
             <!-- ===== 玫瑰金借记卡 - Available Balance ===== -->
 <div class="card-rosegold" id="balanceCard" style="display:none;">
@@ -1902,146 +1910,148 @@
             }
 
             // ========== 主加载函数 ==========
-            async function loadDashboard() {
-                const user = getCurrentUser();
-                if (!user) { window.location.href = 'signin.html'; return; }
-                try {
-                    const { data: userData } = await sb.from('users').select('*').eq('uid', user.uid).single();
-                    if (userData) {
-                        document.getElementById('displayUsername').innerText = userData.username;
-                        document.getElementById('displayUid').innerText = userData.uid;
-                        document.getElementById('displayBalance').innerHTML = '€' + (userData.balance || 0).toFixed(2);
-                        document.getElementById('balanceUsername').textContent = userData.username;
-                        document.getElementById('amountDueUsername').textContent = userData.username;
-                        const vipMap = { 1: 'Normal', 2: 'VIP', 3: 'SVIP' };
-                        const level = vipMap[userData.vip_level] || 'Normal';
-                        document.getElementById('displayMembership').innerText = level;
-                        document.getElementById('premiumStatusText').innerHTML = level;
-                    }
-                    // ============================================================
-// TOTAL EARNINGS - 包含订单佣金 + Cash Reward + Deposit Bonus
-// ============================================================
+async function loadDashboard() {
+    const user = getCurrentUser();
+    if (!user) { window.location.href = 'signin.html'; return; }
+    try {
+        const { data: userData } = await sb.from('users').select('*').eq('uid', user.uid).single();
+        if (userData) {
+            document.getElementById('displayUsername').innerText = userData.username;
+            document.getElementById('displayUid').innerText = userData.uid;
+            // 🔥 新增：显示手机号（金色高亮）
+            document.getElementById('displayPhone').innerText = userData.phone || 'Not set';
+            document.getElementById('displayBalance').innerHTML = '€' + (userData.balance || 0).toFixed(2);
+            document.getElementById('balanceUsername').textContent = userData.username;
+            document.getElementById('amountDueUsername').textContent = userData.username;
+            const vipMap = { 1: 'Normal', 2: 'VIP', 3: 'SVIP' };
+            const level = vipMap[userData.vip_level] || 'Normal';
+            document.getElementById('displayMembership').innerText = level;
+            document.getElementById('premiumStatusText').innerHTML = level;
+        }
+        // ============================================================
+        // TOTAL EARNINGS - 包含订单佣金 + Cash Reward + Deposit Bonus
+        // ============================================================
 
-// 1. 从 order_history 获取所有订单佣金
-const { data: orders } = await sb
-    .from('order_history')
-    .select('commission')
-    .eq('uid', user.uid);
+        // 1. 从 order_history 获取所有订单佣金
+        const { data: orders } = await sb
+            .from('order_history')
+            .select('commission')
+            .eq('uid', user.uid);
 
-const totalCommission = orders?.reduce((s, o) => s + (o.commission || 0), 0) || 0;
+        const totalCommission = orders?.reduce((s, o) => s + (o.commission || 0), 0) || 0;
 
-// 2. 从 deposits 获取奖励 (card_reward + deposit_bonus)
-const { data: rewards } = await sb
-    .from('deposits')
-    .select('amount')
-    .eq('uid', user.uid)
-    .in('type', ['card_reward', 'deposit_bonus']);
+        // 2. 从 deposits 获取奖励 (card_reward + deposit_bonus)
+        const { data: rewards } = await sb
+            .from('deposits')
+            .select('amount')
+            .eq('uid', user.uid)
+            .in('type', ['card_reward', 'deposit_bonus']);
 
-const totalRewards = rewards?.reduce((s, r) => s + (r.amount || 0), 0) || 0;
+        const totalRewards = rewards?.reduce((s, r) => s + (r.amount || 0), 0) || 0;
 
-// 3. 计算总和
-const totalEarnings = totalCommission + totalRewards;
+        // 3. 计算总和
+        const totalEarnings = totalCommission + totalRewards;
 
-document.getElementById('totalEarnings').innerHTML = '€' + totalEarnings.toFixed(2);
+        document.getElementById('totalEarnings').innerHTML = '€' + totalEarnings.toFixed(2);
 
-                    const { data: events } = await sb.from('events').select('id').eq('status', 'active');
-                    const eventCount = events?.length || 0;
-                    const currentEventValue = document.getElementById('currentEventValue');
-                    if (currentEventValue) {
-                        currentEventValue.innerHTML = eventCount;
-                        document.getElementById('currentEventTag').innerHTML = eventCount + ' Active Events';
-                    }
+        const { data: events } = await sb.from('events').select('id').eq('status', 'active');
+        const eventCount = events?.length || 0;
+        const currentEventValue = document.getElementById('currentEventValue');
+        if (currentEventValue) {
+            currentEventValue.innerHTML = eventCount;
+            document.getElementById('currentEventTag').innerHTML = eventCount + ' Active Events';
+        }
 
-                    // ===== 从数据库读取签到数据 =====
-                    let checkinDays = 0;
-                    try {
-                        const { data: checkinRecords, error: checkinError } = await sb
-                            .from('user_checkin_records')
-                            .select('id', { count: 'exact' })
-                            .eq('uid', user.uid);
+        // ===== 从数据库读取签到数据 =====
+        let checkinDays = 0;
+        try {
+            const { data: checkinRecords, error: checkinError } = await sb
+                .from('user_checkin_records')
+                .select('id', { count: 'exact' })
+                .eq('uid', user.uid);
 
-                        if (checkinError) {
-                            console.error('读取签到记录失败:', checkinError);
-                            checkinDays = 0;
-                        } else {
-                            checkinDays = checkinRecords?.length || 0;
-                            console.log('📊 Check-in days from database:', checkinDays);
-                        }
-                    } catch (e) {
-                        console.error('读取签到记录异常:', e);
-                        checkinDays = 0;
-                    }
-
-                    const contractStatus = document.getElementById('contractStatus');
-                    const contractTag = document.getElementById('contractTag');
-                    if (contractStatus) {
-                        if (checkinDays >= 7) {
-                            contractStatus.innerHTML = '✓ Unlocked';
-                            contractStatus.style.color = '#4ade80';
-                            contractTag.innerHTML = 'Employment contract active';
-                        } else {
-                            contractStatus.innerHTML = `${checkinDays}/7`;
-                            contractStatus.style.color = '#CCB299';
-                            contractTag.innerHTML = `${7 - checkinDays} Day${(7 - checkinDays) !== 1 ? 's' : ''} Left To Unlock`;
-                        }
-                    }
-
-                    // ===== Certificate 卡片数据 =====
-                    const { data: companyData } = await sb
-                        .from('system_content')
-                        .select('id, content, image_url')
-                        .eq('type', 'company')
-                        .single();
-
-                    const certificateStatus = document.getElementById('certificateStatus');
-                    const certificateTag = document.getElementById('certificateTag');
-                    if (certificateStatus) {
-                        let imageCount = 0;
-                        if (companyData && companyData.image_url) {
-                            try {
-                                const parsed = JSON.parse(companyData.image_url);
-                                if (Array.isArray(parsed)) {
-                                    imageCount = parsed.length;
-                                } else if (companyData.image_url) {
-                                    imageCount = 1;
-                                }
-                            } catch (e) {
-                                if (companyData.image_url) {
-                                    imageCount = 1;
-                                }
-                            }
-                        }
-                        
-                        if (imageCount > 0) {
-                            certificateStatus.innerHTML = imageCount;
-                            certificateStatus.style.color = '#CCB299';
-                            if (certificateTag) certificateTag.innerHTML = imageCount + ' Certificate' + (imageCount > 1 ? 's' : '') + ' Uploaded';
-                        } else {
-                            certificateStatus.innerHTML = '0';
-                            certificateStatus.style.color = '#CCB299';
-                            if (certificateTag) certificateTag.innerHTML = 'No certificate uploaded';
-                        }
-                    }
-
-                    const { data: recentOrders } = await sb.from('order_history').select('*').eq('uid', user.uid).order('date', { ascending: false }).limit(5);
-                    const recentContainer = document.getElementById('recentBookings');
-                    if (!recentOrders || recentOrders.length === 0) recentContainer.innerHTML =
-                        '<div class="empty-bookings"><i class="fas fa-calendar-alt"></i><p>No bookings yet</p><span>Start your first task to see recent bookings here</span></div>';
-                    else {
-                        recentContainer.innerHTML = '';
-                        recentOrders.forEach(o => {
-                            const d = new Date(o.date);
-                            recentContainer.innerHTML +=
-                                `<div class="booking-item"><div class="booking-info"><i class="fas fa-hotel"></i><div><div class="booking-name">${o.accommodation_name || 'Hotel Task'}</div><div class="booking-date">${d.toLocaleDateString()}, ${d.toLocaleTimeString()}</div></div></div><div class="booking-amount positive">+€${(o.commission || 0).toFixed(2)}</div></div>`;
-                        });
-                    }
-                    await checkAmountDueAndSwitchCard();
-                    await loadDashboardProducts();
-                    await initCommissionChart();
-                    bindChartButtons();
-                    initNavClickClose();
-                } catch (e) { console.error('加载数据失败:', e); }
+            if (checkinError) {
+                console.error('读取签到记录失败:', checkinError);
+                checkinDays = 0;
+            } else {
+                checkinDays = checkinRecords?.length || 0;
+                console.log('📊 Check-in days from database:', checkinDays);
             }
+        } catch (e) {
+            console.error('读取签到记录异常:', e);
+            checkinDays = 0;
+        }
+
+        const contractStatus = document.getElementById('contractStatus');
+        const contractTag = document.getElementById('contractTag');
+        if (contractStatus) {
+            if (checkinDays >= 7) {
+                contractStatus.innerHTML = '✓ Unlocked';
+                contractStatus.style.color = '#4ade80';
+                contractTag.innerHTML = 'Employment contract active';
+            } else {
+                contractStatus.innerHTML = `${checkinDays}/7`;
+                contractStatus.style.color = '#CCB299';
+                contractTag.innerHTML = `${7 - checkinDays} Day${(7 - checkinDays) !== 1 ? 's' : ''} Left To Unlock`;
+            }
+        }
+
+        // ===== Certificate 卡片数据 =====
+        const { data: companyData } = await sb
+            .from('system_content')
+            .select('id, content, image_url')
+            .eq('type', 'company')
+            .single();
+
+        const certificateStatus = document.getElementById('certificateStatus');
+        const certificateTag = document.getElementById('certificateTag');
+        if (certificateStatus) {
+            let imageCount = 0;
+            if (companyData && companyData.image_url) {
+                try {
+                    const parsed = JSON.parse(companyData.image_url);
+                    if (Array.isArray(parsed)) {
+                        imageCount = parsed.length;
+                    } else if (companyData.image_url) {
+                        imageCount = 1;
+                    }
+                } catch (e) {
+                    if (companyData.image_url) {
+                        imageCount = 1;
+                    }
+                }
+            }
+            
+            if (imageCount > 0) {
+                certificateStatus.innerHTML = imageCount;
+                certificateStatus.style.color = '#CCB299';
+                if (certificateTag) certificateTag.innerHTML = imageCount + ' Certificate' + (imageCount > 1 ? 's' : '') + ' Uploaded';
+            } else {
+                certificateStatus.innerHTML = '0';
+                certificateStatus.style.color = '#CCB299';
+                if (certificateTag) certificateTag.innerHTML = 'No certificate uploaded';
+            }
+        }
+
+        const { data: recentOrders } = await sb.from('order_history').select('*').eq('uid', user.uid).order('date', { ascending: false }).limit(5);
+        const recentContainer = document.getElementById('recentBookings');
+        if (!recentOrders || recentOrders.length === 0) recentContainer.innerHTML =
+            '<div class="empty-bookings"><i class="fas fa-calendar-alt"></i><p>No bookings yet</p><span>Start your first task to see recent bookings here</span></div>';
+        else {
+            recentContainer.innerHTML = '';
+            recentOrders.forEach(o => {
+                const d = new Date(o.date);
+                recentContainer.innerHTML +=
+                    `<div class="booking-item"><div class="booking-info"><i class="fas fa-hotel"></i><div><div class="booking-name">${o.accommodation_name || 'Hotel Task'}</div><div class="booking-date">${d.toLocaleDateString()}, ${d.toLocaleTimeString()}</div></div></div><div class="booking-amount positive">+€${(o.commission || 0).toFixed(2)}</div></div>`;
+            });
+        }
+        await checkAmountDueAndSwitchCard();
+        await loadDashboardProducts();
+        await initCommissionChart();
+        bindChartButtons();
+        initNavClickClose();
+    } catch (e) { console.error('加载数据失败:', e); }
+}
             loadDashboard();
 
 // ============================================================
