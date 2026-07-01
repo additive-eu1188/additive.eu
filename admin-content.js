@@ -2,22 +2,25 @@
 // 所有内容统一使用 system_content 表
 
 // ============================================================
-// 全局状态
+// 全局状态 - 使用 let 并检查是否已存在
 // ============================================================
-let currentContentTab = 'events';
-let contentData = {};
-let eventsList = [];
-let isDragging = false;
-let dragStartIndex = null;
-let draggedElement = null;
+if (typeof window._contentState === 'undefined') {
+    window._contentState = {
+        currentTab: 'events',
+        contentData: {},
+        eventsList: [],
+        isDragging: false,
+        dragStartIndex: null,
+        draggedElement: null,
+        currentPage: 1,
+        pageSize: 10,
+        totalItems: 0,
+        fontSizeLevel: 0
+    };
+}
 
-// 分页状态
-let currentPage = 1;
-const PAGE_SIZE = 10;
-let totalItems = 0;
-
-// 字体大小状态
-let fontSizeLevel = 0; // -2, -1, 0, 1, 2
+// 别名引用，方便使用
+const state = window._contentState;
 const FONT_SIZE_STEPS = [12, 13, 14, 16, 18];
 const FONT_SIZE_LABELS = ['小', '较小', '默认', '较大', '大'];
 
@@ -478,8 +481,8 @@ async function loadContentPage() {
         btn.addEventListener('click', function() {
             document.querySelectorAll('.content-tab-btn').forEach(b => b.classList.remove('active'));
             this.classList.add('active');
-            currentContentTab = this.dataset.tab;
-            currentPage = 1;
+            state.currentTab = this.dataset.tab;
+            state.currentPage = 1;
             renderContentList();
         });
     });
@@ -488,7 +491,7 @@ async function loadContentPage() {
     document.getElementById('arrangeContentBtn')?.addEventListener('click', toggleArrangeMode);
     document.getElementById('refreshContentBtn')?.addEventListener('click', async function() {
         await loadAllContentData();
-        currentPage = 1;
+        state.currentPage = 1;
         renderContentList();
         showToast('Content refreshed', 'success');
     });
@@ -514,14 +517,14 @@ async function loadContentPage() {
 // 字体大小控制函数
 // ============================================================
 function changeFontSize(delta) {
-    fontSizeLevel = Math.max(-2, Math.min(2, fontSizeLevel + delta));
+    state.fontSizeLevel = Math.max(-2, Math.min(2, state.fontSizeLevel + delta));
     applyFontSize();
     saveFontSizeToStorage();
     updateFontSizeLabel();
 }
 
 function resetFontSize() {
-    fontSizeLevel = 0;
+    state.fontSizeLevel = 0;
     applyFontSize();
     saveFontSizeToStorage();
     updateFontSizeLabel();
@@ -529,34 +532,29 @@ function resetFontSize() {
 }
 
 function applyFontSize() {
-    const baseSize = FONT_SIZE_STEPS[fontSizeLevel + 2]; // 0 -> 14
+    const baseSize = FONT_SIZE_STEPS[state.fontSizeLevel + 2];
     const container = document.querySelector('#contentListContainer');
     const contentItems = document.querySelectorAll('.content-item .item-title');
     const subItems = document.querySelectorAll('.content-item .item-sub');
     const statusItems = document.querySelectorAll('.content-item .item-status');
     const actionButtons = document.querySelectorAll('.content-item .item-actions button');
     
-    // 应用到主容器
     if (container) {
         container.style.fontSize = baseSize + 'px';
     }
     
-    // 应用到标题
     contentItems.forEach(el => {
         el.style.fontSize = (baseSize) + 'px';
     });
     
-    // 应用到副标题
     subItems.forEach(el => {
         el.style.fontSize = (baseSize - 3) + 'px';
     });
     
-    // 应用到状态标签
     statusItems.forEach(el => {
         el.style.fontSize = (baseSize - 4) + 'px';
     });
     
-    // 应用到操作按钮
     actionButtons.forEach(el => {
         el.style.fontSize = (baseSize - 3) + 'px';
     });
@@ -565,13 +563,13 @@ function applyFontSize() {
 function updateFontSizeLabel() {
     const label = document.getElementById('fontSizeLabel');
     if (label) {
-        label.textContent = FONT_SIZE_LABELS[fontSizeLevel + 2];
+        label.textContent = FONT_SIZE_LABELS[state.fontSizeLevel + 2];
     }
 }
 
 function saveFontSizeToStorage() {
     try {
-        localStorage.setItem('content_font_size_level', String(fontSizeLevel));
+        localStorage.setItem('content_font_size_level', String(state.fontSizeLevel));
     } catch (e) {}
 }
 
@@ -579,9 +577,9 @@ function loadFontSizeFromStorage() {
     try {
         const saved = localStorage.getItem('content_font_size_level');
         if (saved !== null) {
-            fontSizeLevel = parseInt(saved);
-            if (isNaN(fontSizeLevel) || fontSizeLevel < -2 || fontSizeLevel > 2) {
-                fontSizeLevel = 0;
+            state.fontSizeLevel = parseInt(saved);
+            if (isNaN(state.fontSizeLevel) || state.fontSizeLevel < -2 || state.fontSizeLevel > 2) {
+                state.fontSizeLevel = 0;
             }
             applyFontSize();
             updateFontSizeLabel();
@@ -603,9 +601,9 @@ async function loadAllContentData() {
 
         if (eventsError) {
             console.error('加载 Events 失败:', eventsError);
-            eventsList = [];
+            state.eventsList = [];
         } else {
-            eventsList = events || [];
+            state.eventsList = events || [];
         }
 
         // 2. 加载 Certificate (Company Profile)
@@ -614,7 +612,7 @@ async function loadAllContentData() {
             .select('*')
             .eq('type', 'company')
             .maybeSingle();
-        contentData.certificate = cert || null;
+        state.contentData.certificate = cert || null;
 
         // 3. 加载 Contract
         const { data: contract, error: contractError } = await sb
@@ -622,7 +620,7 @@ async function loadAllContentData() {
             .select('*')
             .eq('type', 'contract')
             .maybeSingle();
-        contentData.contract = contract || null;
+        state.contentData.contract = contract || null;
 
         // 4. 加载 T&C
         const { data: tc, error: tcError } = await sb
@@ -630,7 +628,7 @@ async function loadAllContentData() {
             .select('*')
             .eq('type', 'tc')
             .maybeSingle();
-        contentData.tc = tc || null;
+        state.contentData.tc = tc || null;
 
         // 5. 加载 Privacy
         const { data: privacy, error: privacyError } = await sb
@@ -638,7 +636,7 @@ async function loadAllContentData() {
             .select('*')
             .eq('type', 'privacy')
             .maybeSingle();
-        contentData.privacy = privacy || null;
+        state.contentData.privacy = privacy || null;
 
         // 6. 加载 Rules
         const { data: rules, error: rulesError } = await sb
@@ -646,10 +644,10 @@ async function loadAllContentData() {
             .select('*')
             .eq('type', 'rules')
             .maybeSingle();
-        contentData.rules = rules || null;
+        state.contentData.rules = rules || null;
 
         console.log('✅ 所有内容数据加载完成');
-        console.log('   Events:', eventsList.length);
+        console.log('   Events:', state.eventsList.length);
 
     } catch (e) {
         console.error('加载内容数据失败:', e);
@@ -689,12 +687,12 @@ function renderContentList() {
     const paginationContainer = document.getElementById('contentPagination');
     if (!container) return;
 
-    const tab = currentContentTab;
+    const tab = state.currentTab;
     let items = [];
     let title = '';
 
     if (tab === 'events') {
-        items = eventsList.map(e => ({
+        items = state.eventsList.map(e => ({
             id: e.id,
             title: e.title || 'Untitled Event',
             subtitle: e.updated_at ? new Date(e.updated_at).toLocaleDateString() : 'No date',
@@ -705,7 +703,7 @@ function renderContentList() {
         }));
         title = 'Events';
     } else if (tab === 'certificate') {
-        const d = contentData.certificate;
+        const d = state.contentData.certificate;
         items = d ? [{
             id: d.id || 'cert',
             title: 'Certificate & Company Profile',
@@ -717,7 +715,7 @@ function renderContentList() {
         }] : [];
         title = 'Certificate & Company Profile';
     } else if (tab === 'contract') {
-        const d = contentData.contract;
+        const d = state.contentData.contract;
         items = d ? [{
             id: d.id || 'contract',
             title: 'Employment Contract',
@@ -729,7 +727,7 @@ function renderContentList() {
         }] : [];
         title = 'Employment Contract';
     } else if (tab === 'tc') {
-        const d = contentData.tc;
+        const d = state.contentData.tc;
         items = d ? [{
             id: d.id || 'tc',
             title: 'Terms & Conditions',
@@ -741,7 +739,7 @@ function renderContentList() {
         }] : [];
         title = 'Terms & Conditions';
     } else if (tab === 'privacy') {
-        const d = contentData.privacy;
+        const d = state.contentData.privacy;
         items = d ? [{
             id: d.id || 'privacy',
             title: 'Privacy & Security',
@@ -753,7 +751,7 @@ function renderContentList() {
         }] : [];
         title = 'Privacy & Security';
     } else if (tab === 'rules') {
-        const d = contentData.rules;
+        const d = state.contentData.rules;
         items = d ? [{
             id: d.id || 'rules',
             title: 'Platform Rules',
@@ -766,9 +764,9 @@ function renderContentList() {
         title = 'Platform Rules';
     }
 
-    totalItems = items.length;
+    state.totalItems = items.length;
 
-    if (totalItems === 0) {
+    if (state.totalItems === 0) {
         container.innerHTML = `
             <div style="text-align: center; padding: 60px 20px; color: #6a7a92; font-size: 14px;">
                 <i class="fas fa-file-alt" style="display: block; font-size: 40px; color: #4a5a72; margin-bottom: 16px;"></i>
@@ -781,19 +779,19 @@ function renderContentList() {
     }
 
     // ===== 分页计算 =====
-    const totalPages = Math.ceil(totalItems / PAGE_SIZE);
-    if (currentPage > totalPages) currentPage = totalPages;
-    if (currentPage < 1) currentPage = 1;
+    const totalPages = Math.ceil(state.totalItems / state.pageSize);
+    if (state.currentPage > totalPages) state.currentPage = totalPages;
+    if (state.currentPage < 1) state.currentPage = 1;
 
-    const startIndex = (currentPage - 1) * PAGE_SIZE;
-    const endIndex = Math.min(startIndex + PAGE_SIZE, totalItems);
+    const startIndex = (state.currentPage - 1) * state.pageSize;
+    const endIndex = Math.min(startIndex + state.pageSize, state.totalItems);
     const pageItems = items.slice(startIndex, endIndex);
 
     // ===== 渲染当前页 =====
     renderPageItems(container, pageItems);
 
     // ===== 渲染分页 =====
-    renderPagination(paginationContainer, currentPage, totalPages);
+    renderPagination(paginationContainer, state.currentPage, totalPages);
 
     // ===== 应用字体大小 =====
     setTimeout(() => {
@@ -822,7 +820,6 @@ function renderPageItems(container, items) {
             const maxShow = 4;
             const showImages = item.images.slice(0, maxShow);
             showImages.forEach(imgUrl => {
-                // 使用 data-src 实现懒加载
                 thumbHtml += `<img data-src="${imgUrl}" class="item-thumb lazy-image" onerror="this.style.display='none'" alt="">`;
             });
             if (item.images.length > maxShow) {
@@ -833,10 +830,10 @@ function renderPageItems(container, items) {
             thumbHtml = `<div class="item-thumb-placeholder"><i class="fas fa-image"></i></div>`;
         }
 
-        const globalIndex = (currentPage - 1) * PAGE_SIZE + index;
+        const globalIndex = (state.currentPage - 1) * state.pageSize + index;
 
         html += `
-            <div class="content-item" data-id="${item.id}" data-type="${item.type}" data-tab="${currentContentTab}" data-index="${globalIndex}" draggable="${isArrangeMode}">
+            <div class="content-item" data-id="${item.id}" data-type="${item.type}" data-tab="${state.currentTab}" data-index="${globalIndex}" draggable="${isArrangeMode}">
                 ${isArrangeMode ? `<span class="drag-handle"><i class="fas fa-grip-vertical"></i></span>` : ''}
                 ${thumbHtml}
                 <div class="item-info">
@@ -870,7 +867,6 @@ function renderPageItems(container, items) {
 // 图片懒加载（IntersectionObserver）
 // ============================================================
 function setupImageLazyLoad() {
-    // 移除旧的 observer
     if (imageObserver) {
         imageObserver.disconnect();
     }
@@ -923,7 +919,7 @@ function renderPagination(container, currentPage, totalPages) {
     prevBtn.disabled = currentPage <= 1;
     prevBtn.onclick = () => {
         if (currentPage > 1) {
-            currentPage--;
+            state.currentPage--;
             renderContentList();
         }
     };
@@ -941,7 +937,7 @@ function renderPagination(container, currentPage, totalPages) {
         const btn = document.createElement('button');
         btn.className = 'page-btn';
         btn.textContent = '1';
-        btn.onclick = () => { currentPage = 1; renderContentList(); };
+        btn.onclick = () => { state.currentPage = 1; renderContentList(); };
         container.appendChild(btn);
         if (startPage > 2) {
             const ellipsis = document.createElement('span');
@@ -955,7 +951,7 @@ function renderPagination(container, currentPage, totalPages) {
         const btn = document.createElement('button');
         btn.className = 'page-btn' + (i === currentPage ? ' active' : '');
         btn.textContent = i;
-        btn.onclick = () => { currentPage = i; renderContentList(); };
+        btn.onclick = () => { state.currentPage = i; renderContentList(); };
         container.appendChild(btn);
     }
 
@@ -969,7 +965,7 @@ function renderPagination(container, currentPage, totalPages) {
         const btn = document.createElement('button');
         btn.className = 'page-btn';
         btn.textContent = totalPages;
-        btn.onclick = () => { currentPage = totalPages; renderContentList(); };
+        btn.onclick = () => { state.currentPage = totalPages; renderContentList(); };
         container.appendChild(btn);
     }
 
@@ -980,7 +976,7 @@ function renderPagination(container, currentPage, totalPages) {
     nextBtn.disabled = currentPage >= totalPages;
     nextBtn.onclick = () => {
         if (currentPage < totalPages) {
-            currentPage++;
+            state.currentPage++;
             renderContentList();
         }
     };
@@ -1033,7 +1029,7 @@ window.deleteContentItem = function(type, id) {
             try {
                 await sb.from('system_content').delete().eq('id', parseInt(id));
                 await loadAllContentData();
-                currentPage = 1;
+                state.currentPage = 1;
                 renderContentList();
                 showToast(typeName + ' deleted successfully', 'success');
             } catch (e) {
@@ -1046,7 +1042,7 @@ window.deleteContentItem = function(type, id) {
                 try {
                     await sb.from('system_content').delete().eq('id', parseInt(id));
                     await loadAllContentData();
-                    currentPage = 1;
+                    state.currentPage = 1;
                     renderContentList();
                     showToast(typeName + ' deleted successfully', 'success');
                 } catch (e) {
@@ -1072,7 +1068,7 @@ function openAddContentModal() {
         'privacy': 'Privacy Policy',
         'rules': 'Platform Rules'
     };
-    const tabName = tabNames[currentContentTab] || 'Content';
+    const tabName = tabNames[state.currentTab] || 'Content';
 
     const modalHtml = `
         <div id="addContentModal" class="modal-overlay" style="visibility: visible; opacity: 1; display: flex; align-items: center; justify-content: center; z-index: 20000;">
@@ -1353,10 +1349,10 @@ window.postContent = async function() {
             'privacy': 'privacy',
             'rules': 'rules'
         };
-        const type = typeMap[currentContentTab] || currentContentTab;
+        const type = typeMap[state.currentTab] || state.currentTab;
 
-        if (currentContentTab !== 'events') {
-            const existing = contentData[currentContentTab];
+        if (state.currentTab !== 'events') {
+            const existing = state.contentData[state.currentTab];
             if (existing) {
                 const { error } = await sb
                     .from('system_content')
@@ -1371,7 +1367,7 @@ window.postContent = async function() {
                 if (error) throw error;
 
                 await loadAllContentData();
-                currentPage = 1;
+                state.currentPage = 1;
                 renderContentList();
                 closeContentModal();
                 showToast('✅ Content updated successfully!', 'success');
@@ -1395,7 +1391,7 @@ window.postContent = async function() {
         if (error) throw error;
 
         await loadAllContentData();
-        currentPage = 1;
+        state.currentPage = 1;
         renderContentList();
         closeContentModal();
         showToast('✅ Content posted successfully!', 'success');
@@ -1415,10 +1411,10 @@ window.openEditContentModal = function(type, id) {
     let title = '';
 
     if (type === 'event') {
-        item = eventsList.find(e => e.id == id);
+        item = state.eventsList.find(e => e.id == id);
         title = item?.title || 'Edit Event';
     } else {
-        const data = contentData[type];
+        const data = state.contentData[type];
         if (data) {
             item = data;
             title = item?.title || 'Edit Content';
@@ -1589,7 +1585,7 @@ window.updateContent = async function(type, id) {
         if (error) throw error;
 
         await loadAllContentData();
-        currentPage = 1;
+        state.currentPage = 1;
         renderContentList();
         closeEditModal();
         showToast('✅ Content updated successfully!', 'success');
