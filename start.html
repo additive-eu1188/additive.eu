@@ -1839,7 +1839,7 @@ function showCardOrderModal(triggerOrder) {
 }
 
                 // ============================================================
-// Render order modal content (3个容器布局)
+// Render order modal content (3个容器布局) - 完全翻译版
 // ============================================================
 function renderOrderModalContent(order) {
     var modal = document.getElementById('orderModal');
@@ -1880,7 +1880,7 @@ function renderOrderModalContent(order) {
     var assignedPlatform = order.assignedPlatform || 'Booking.com';
     
     // ===== 容器1: ORDER PRICE + COMMISSIONS + TOTAL RETURN + ORDER TYPE =====
-var detailsHtml = `
+    var detailsHtml = `
 <!-- ===== 容器1: Order Details (十字分界线) ===== -->
 <div class="details-container">
     <div class="container-label" data-i18n="order_details_title">ORDER DETAILS</div>
@@ -1923,98 +1923,98 @@ var detailsHtml = `
     </div>
 </div>
 `;
-
-modalContent.innerHTML = `
-    <!-- Order Image -->
-    <div class="order-image">
-        ${order.imageUrl ? '<img src="' + order.imageUrl + '" onerror="handleImageError(this)">' : '<i class="fas fa-hotel"></i>'}
-        <div class="order-code"><i class="fas fa-tag"></i> ${escapeHtml(order.displayOrderCode || order.orderCode || '')}</div>
-    </div>
     
-    <!-- Order Header -->
-    <div class="order-header">
-        <div class="order-name">${escapeHtml(order.accommodationName || 'Hotel Task')}</div>
-    </div>
-    
-    <!-- 价格明细 2个容器 -->
-    ${detailsHtml}
-    
-    <!-- ===== 容器3: 选择区域 ===== -->
-    <div class="selection-section">
-        <div class="selection-row">
-            <!-- Left: Assign Quality -->
-            <div>
-                <div class="col-label" data-i18n="assign_quality_title">ASSIGN QUALITY</div>
-                <div class="quality-options" id="qualityOptions">
-                    <div class="quality-option" data-quality="exceptional" data-i18n="exceptional">Exceptional</div>
-                    <div class="quality-option" data-quality="satisfactory" data-i18n="satisfactory">Satisfactory</div>
-                    <div class="quality-option" data-quality="foundational" data-i18n="foundational">Foundational</div>
+    modalContent.innerHTML = `
+        <!-- Order Image -->
+        <div class="order-image">
+            ${order.imageUrl ? '<img src="' + order.imageUrl + '" onerror="handleImageError(this)">' : '<i class="fas fa-hotel"></i>'}
+            <div class="order-code"><i class="fas fa-tag"></i> ${escapeHtml(order.displayOrderCode || order.orderCode || '')}</div>
+        </div>
+        
+        <!-- Order Header -->
+        <div class="order-header">
+            <div class="order-name">${escapeHtml(order.accommodationName || 'Hotel Task')}</div>
+        </div>
+        
+        <!-- 价格明细 2个容器 -->
+        ${detailsHtml}
+        
+        <!-- ===== 容器3: 选择区域 ===== -->
+        <div class="selection-section">
+            <div class="selection-row">
+                <!-- Left: Assign Quality -->
+                <div>
+                    <div class="col-label" data-i18n="assign_quality_title">ASSIGN QUALITY</div>
+                    <div class="quality-options" id="qualityOptions">
+                        <div class="quality-option" data-quality="exceptional" data-i18n="exceptional">Exceptional</div>
+                        <div class="quality-option" data-quality="satisfactory" data-i18n="satisfactory">Satisfactory</div>
+                        <div class="quality-option" data-quality="foundational" data-i18n="foundational">Foundational</div>
+                    </div>
+                </div>
+                
+                <!-- Right: Publish to -->
+                <div>
+                    <div class="col-label" data-i18n="publish_to_title">PUBLISH TO</div>
+                    <div class="platform-wrapper">
+                        <div class="platform-list" id="platformList">
+                            <div class="platform-option" data-platform="booking">
+                                <img src="https://qgmbzdfnwsdosdqphlxk.supabase.co/storage/v1/object/public/publish-hotel-img/booking.png" style="width:28px;height:28px;border-radius:5px;object-fit:cover;flex-shrink:0;">
+                                Booking.com
+                                <span class="opt-check"><i class="fas fa-check-circle"></i></span>
+                            </div>
+                            <div class="platform-option" data-platform="tripadvisor">
+                                <img src="https://qgmbzdfnwsdosdqphlxk.supabase.co/storage/v1/object/public/publish-hotel-img/tripadvisor.png" style="width:28px;height:28px;border-radius:5px;object-fit:cover;flex-shrink:0;">
+                                Tripadvisor
+                                <span class="opt-check"><i class="fas fa-check-circle"></i></span>
+                            </div>
+                            <div class="platform-option" data-platform="trivago">
+                                <img src="https://qgmbzdfnwsdosdqphlxk.supabase.co/storage/v1/object/public/publish-hotel-img/trivago.png" style="width:28px;height:28px;border-radius:5px;object-fit:cover;flex-shrink:0;">
+                                Trivago
+                                <span class="opt-check"><i class="fas fa-check-circle"></i></span>
+                            </div>
+                            <div class="platform-option" data-platform="hrs">
+                                <img src="https://qgmbzdfnwsdosdqphlxk.supabase.co/storage/v1/object/public/publish-hotel-img/hrs.png" style="width:28px;height:28px;border-radius:5px;object-fit:cover;flex-shrink:0;">
+                                HRS
+                                <span class="opt-check"><i class="fas fa-check-circle"></i></span>
+                            </div>
+                            <div class="platform-option" data-platform="airbnb">
+                                <img src="https://qgmbzdfnwsdosdqphlxk.supabase.co/storage/v1/object/public/publish-hotel-img/airbnb.png" style="width:28px;height:28px;border-radius:5px;object-fit:cover;flex-shrink:0;">
+                                Airbnb
+                                <span class="opt-check"><i class="fas fa-check-circle"></i></span>
+                            </div>
+                            <div class="platform-option" data-platform="hotels">
+                                <img src="https://qgmbzdfnwsdosdqphlxk.supabase.co/storage/v1/object/public/publish-hotel-img/hotelscom.png" style="width:28px;height:28px;border-radius:5px;object-fit:cover;flex-shrink:0;">
+                                Hotels.com
+                                <span class="opt-check"><i class="fas fa-check-circle"></i></span>
+                            </div>
+                        </div>
+                        <div class="scroll-hint"><i class="fas fa-chevron-down"></i> <span data-i18n="scroll_for_more">scroll for more</span></div>
+                    </div>
                 </div>
             </div>
             
-            <!-- Right: Publish to -->
-            <div>
-                <div class="col-label" data-i18n="publish_to_title">PUBLISH TO</div>
-                <div class="platform-wrapper">
-                    <div class="platform-list" id="platformList">
-                        <div class="platform-option" data-platform="booking">
-                            <img src="https://qgmbzdfnwsdosdqphlxk.supabase.co/storage/v1/object/public/publish-hotel-img/booking.png" style="width:28px;height:28px;border-radius:5px;object-fit:cover;flex-shrink:0;">
-                            Booking.com
-                            <span class="opt-check"><i class="fas fa-check-circle"></i></span>
-                        </div>
-                        <div class="platform-option" data-platform="tripadvisor">
-                            <img src="https://qgmbzdfnwsdosdqphlxk.supabase.co/storage/v1/object/public/publish-hotel-img/tripadvisor.png" style="width:28px;height:28px;border-radius:5px;object-fit:cover;flex-shrink:0;">
-                            Tripadvisor
-                            <span class="opt-check"><i class="fas fa-check-circle"></i></span>
-                        </div>
-                        <div class="platform-option" data-platform="trivago">
-                            <img src="https://qgmbzdfnwsdosdqphlxk.supabase.co/storage/v1/object/public/publish-hotel-img/trivago.png" style="width:28px;height:28px;border-radius:5px;object-fit:cover;flex-shrink:0;">
-                            Trivago
-                            <span class="opt-check"><i class="fas fa-check-circle"></i></span>
-                        </div>
-                        <div class="platform-option" data-platform="hrs">
-                            <img src="https://qgmbzdfnwsdosdqphlxk.supabase.co/storage/v1/object/public/publish-hotel-img/hrs.png" style="width:28px;height:28px;border-radius:5px;object-fit:cover;flex-shrink:0;">
-                            HRS
-                            <span class="opt-check"><i class="fas fa-check-circle"></i></span>
-                        </div>
-                        <div class="platform-option" data-platform="airbnb">
-                            <img src="https://qgmbzdfnwsdosdqphlxk.supabase.co/storage/v1/object/public/publish-hotel-img/airbnb.png" style="width:28px;height:28px;border-radius:5px;object-fit:cover;flex-shrink:0;">
-                            Airbnb
-                            <span class="opt-check"><i class="fas fa-check-circle"></i></span>
-                        </div>
-                        <div class="platform-option" data-platform="hotels">
-                            <img src="https://qgmbzdfnwsdosdqphlxk.supabase.co/storage/v1/object/public/publish-hotel-img/hotelscom.png" style="width:28px;height:28px;border-radius:5px;object-fit:cover;flex-shrink:0;">
-                            Hotels.com
-                            <span class="opt-check"><i class="fas fa-check-circle"></i></span>
-                        </div>
-                    </div>
-                    <div class="scroll-hint"><i class="fas fa-chevron-down"></i> <span data-i18n="scroll_for_more">scroll for more</span></div>
+            <!-- Progress -->
+            <div class="progress-container" id="progressContainer">
+                <div class="progress-bar-bg">
+                    <div class="progress-bar-fill" id="progressBar"></div>
+                </div>
+                <div class="progress-text" id="progressText"></div>
+            </div>
+            
+            <!-- Actions -->
+            <div class="action-area">
+                <div class="selection-status" id="selectionStatus"><i class="fas fa-chevron-right" style="color:rgba(255,255,255,0.15); margin-right:6px;"></i> <span data-i18n="select_quality_platform">Select quality & platform to continue</span></div>
+                <div class="modal-buttons">
+                    <button class="btn-publish" id="publishBtn" disabled>
+                        <i class="fas fa-cloud-upload-alt"></i> <span data-i18n="publish_btn">Publish</span>
+                    </button>
+                    <button class="btn-close-modal" onclick="closeOrderModal()">
+                        <i class="fas fa-times"></i><span style="margin-left: 6px;" data-i18n="close_btn">Close</span>
+                    </button>
                 </div>
             </div>
         </div>
-        
-        <!-- Progress -->
-        <div class="progress-container" id="progressContainer">
-            <div class="progress-bar-bg">
-                <div class="progress-bar-fill" id="progressBar"></div>
-            </div>
-            <div class="progress-text" id="progressText"></div>
-        </div>
-        
-        <!-- Actions -->
-        <div class="action-area">
-            <div class="selection-status" id="selectionStatus"><i class="fas fa-chevron-right" style="color:rgba(255,255,255,0.15); margin-right:6px;"></i> <span data-i18n="select_quality_platform">Select quality & platform to continue</span></div>
-            <div class="modal-buttons">
-                <button class="btn-publish" id="publishBtn" disabled>
-                    <i class="fas fa-cloud-upload-alt"></i> <span data-i18n="publish_btn">Publish</span>
-                </button>
-                <button class="btn-close-modal" onclick="closeOrderModal()">
-                    <i class="fas fa-times"></i><span style="margin-left: 6px;" data-i18n="close_btn">Close</span>
-                </button>
-            </div>
-        </div>
-    </div>
-`;
+    `;
 
     modal.classList.add('active');
 
