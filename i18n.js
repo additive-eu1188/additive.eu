@@ -885,7 +885,7 @@ if (typeof window._i18n_loaded === 'undefined') {
 'footer_contact_title': 'Kontaktiere uns',
 'footer_support': 'Wir bemühen uns, Support- und Missbrauchsanfragen so schnell wie möglich zu beantworten.',
 'footer_copyright': '© 2026 ADDITIVE | Digitales Hotelmarketing. Alle Rechte vorbehalten.',
-'footer_disclaimer': 'Diese Website wird als unabhängige digitale Marketingdienstleistungsplattform betrieben.'
+'footer_disclaimer': 'Diese Website wird als unabhängige digitale Marketingdienstleistungsplattform betrieben.',
             'carousel_empty': 'Keine Karussell-Bilder',
             'carousel_hint': 'Bilder in der Datenbank hinzufügen',
             'carousel_error': 'Karussell konnte nicht geladen werden',
@@ -1594,7 +1594,7 @@ if (typeof window._i18n_loaded === 'undefined') {
 'footer_contact_title': 'Contattaci',
 'footer_support': 'Ci impegniamo a rispondere alle richieste di supporto e segnalazioni il più rapidamente possibile.',
 'footer_copyright': '© 2026 ADDITIVE | Digital Hotel Marketing. Tutti i diritti riservati.',
-'footer_disclaimer': 'Questo sito web è gestito come piattaforma indipendente di servizi di marketing digitale.'
+'footer_disclaimer': 'Questo sito web è gestito come piattaforma indipendente di servizi di marketing digitale.',
             'carousel_empty': 'Nessuna immagine del carousel',
             'carousel_hint': 'Aggiungi immagini nel database',
             'carousel_error': 'Caricamento del carousel fallito',
