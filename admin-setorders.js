@@ -114,8 +114,9 @@ async function loadSetordersPage() {
                     </div>
                     <div id="searchResultsContainer" style="max-height: 320px; overflow-y: auto;">
                         <div style="text-align: center; padding: 40px 20px; color: #6a7a92; font-size: 13px;">
-                            <i class="fas fa-search" style="display: block; font-size: 32px; color: #4a5a72; margin-bottom: 12px;"></i>
-                            Search product price to show result
+                            <i class="fas fa-desktop" style="display: block; font-size: 48px; color: rgba(255,255,255,0.04); margin-bottom: 12px;"></i>
+                            <span style="color: rgba(255,255,255,0.08);">Search product price to show result</span>
+                            <div style="font-size: 11px; color: rgba(255,255,255,0.04); margin-top: 4px;">Enter Trigger UID → Get Balance → Auto Calculate</div>
                         </div>
                     </div>
                 </div>
@@ -254,6 +255,12 @@ async function loadSetordersPage() {
             font-weight: 500;
         }
         
+        /* ===== 计算面板动画 ===== */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(6px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
         @media (max-width: 1200px) {
             #setordersMain > div:first-child {
                 grid-template-columns: 1fr !important;
@@ -336,12 +343,24 @@ async function loadSetordersPage() {
             
             updateConfirmCards();
             
-            document.getElementById('searchResultsContainer').innerHTML = `
-                <div style="text-align: center; padding: 40px 20px; color: #6a7a92; font-size: 13px;">
-                    <i class="fas fa-search" style="display: block; font-size: 32px; color: #4a5a72; margin-bottom: 12px;"></i>
-                    Search product price to show result
-                </div>
-            `;
+            // 如果当前有用户，根据标签类型显示对应内容
+            if (currentSetUser) {
+                if (currentTriggerTab === 'card_reward') {
+                    showCalculatorPanel({
+                        uid: currentSetUser.uid,
+                        balance: currentSetUser.balance || 0,
+                        username: currentSetUser.username
+                    });
+                } else {
+                    document.getElementById('searchResultsContainer').innerHTML = `
+                        <div style="text-align: center; padding: 40px 20px; color: #6a7a92; font-size: 13px;">
+                            <i class="fas fa-desktop" style="display: block; font-size: 48px; color: rgba(255,255,255,0.04); margin-bottom: 12px;"></i>
+                            <span style="color: rgba(255,255,255,0.08);">Search product price to show result</span>
+                            <div style="font-size: 11px; color: rgba(255,255,255,0.04); margin-top: 4px;">Enter Trigger UID → Get Balance → Auto Calculate</div>
+                        </div>
+                    `;
+                }
+            }
             selectedAdvancedOrdersList = [];
         });
     });
@@ -368,6 +387,20 @@ async function loadSetordersPage() {
     document.getElementById('refreshTriggerBtn')?.addEventListener('click', function() {
         if (currentSetUser) {
             loadTriggerHistory();
+            // 刷新用户余额
+            fetchUserBalance(currentSetUser.uid).then(function(data) {
+                if (data) {
+                    currentSetUser.balance = data.balance || 0;
+                    if (currentTriggerTab === 'card_reward') {
+                        showCalculatorPanel({
+                            uid: currentSetUser.uid,
+                            balance: currentSetUser.balance,
+                            username: currentSetUser.username
+                        });
+                    }
+                    updateConfirmCards();
+                }
+            });
         }
         showToast('已刷新', 'success');
     });
@@ -431,134 +464,166 @@ function updateUserRoundDisplay(user) {
     textEl.innerHTML = displayText;
 }
 
-// ========== 根据 UID 选择用户 ==========
-async function selectUserByUid(uid) {
+// ============================================================
+// 🔥 获取用户最新余额
+// ============================================================
+async function fetchUserBalance(uid) {
     try {
-        // ✅ 获取用户数据
-        const { data: user, error } = await sb
+        const { data, error } = await sb
             .from('users')
-            .select('uid, username, balance, round_orders_count, current_round, is_premium, vip_level')
+            .select('balance, username')
             .eq('uid', uid)
             .single();
         
-        if (error || !user) {
-            showToast('未找到用户 UID: ' + uid, 'error');
-            updateUserRoundDisplay(null);
-            return;
-        }
-        
-        // ✅ 获取该用户 VIP 等级的 orders_limit
-        let ordersLimit = 30;
-        try {
-            const { data: vipSetting } = await sb
-                .from('vip_settings')
-                .select('orders_limit')
-                .eq('level', user.vip_level || 1)
-                .single();
-            if (vipSetting) {
-                ordersLimit = vipSetting.orders_limit || 30;
-            }
-        } catch (e) {
-            console.log('使用默认 orders_limit: 30');
-        }
-        
-        currentSetUser = {
-    uid: user.uid,
-    username: user.username,
-    balance: user.balance || 0,
-    roundOrdersCount: user.round_orders_count || 0,  // ← 改成 roundOrdersCount
-    currentRound: user.current_round || 0,
-    isPremium: user.is_premium || false,
-    vipLevel: user.vip_level || 1,
-    ordersLimit: ordersLimit
-};
-        
-        // ✅ 更新卡片显示
-        document.getElementById('cardUid').innerText = user.uid;
-        updateConfirmCards();
-        
-        // ✅ 更新用户 Round / Order 显示
-        updateUserRoundDisplay(currentSetUser);
-        
-        document.getElementById('searchResultsContainer').innerHTML = `
-            <div style="text-align: center; padding: 40px 20px; color: #6a7a92; font-size: 13px;">
-                <i class="fas fa-search" style="display: block; font-size: 32px; color: #4a5a72; margin-bottom: 12px;"></i>
-                Search product price to show result
-            </div>
-        `;
-        selectedAdvancedOrdersList = [];
-        
-        await loadTriggerHistory();
-        showToast('✅ 用户 ' + user.username + ' 已选择', 'success');
-        
+        if (error) throw error;
+        return data;
     } catch (e) {
-        showToast('查找用户失败: ' + e.message, 'error');
-        updateUserRoundDisplay(null);
+        console.error('获取用户余额失败:', e);
+        return null;
     }
 }
 
-// ========== 更新确认卡片 ==========
-function updateConfirmCards() {
-    if (!currentSetUser) return;
-    
-    const typeNames = {
-        'advanced': 'Commercial Order',
-        'card_reward': 'Diamond Reward',
-        'card_order': 'x30 Commissions',
-        'svip_order': 'x20 SVIP Order'
-    };
-    
-    const orderCount = parseInt(document.getElementById('triggerOrderCount').value) || 1;
-    let displayAmount = '-';
-    if (selectedAdvancedOrdersList.length > 0) {
-        displayAmount = '€' + selectedAdvancedOrdersList[0].price.toFixed(2);
-    } else {
-        if (currentTriggerTab === 'card_reward') {
-            const amount = parseFloat(document.getElementById('triggerAmount').value) || 0;
-            displayAmount = amount > 0 ? '€' + amount.toFixed(2) : '-';
-        } else {
-            displayAmount = '-';
-        }
+// ============================================================
+// 🔥 显示计算面板（替代空状态）
+// ============================================================
+function showCalculatorPanel(userData) {
+    const container = document.getElementById('searchResultsContainer');
+    if (!container) return;
+
+    // 自动计算函数
+    function updateCalculator() {
+        const ordersInput = document.getElementById('calcOrdersInput');
+        const negativeInput = document.getElementById('calcNegativeInput');
+        const resultDisplay = document.getElementById('calcResultDisplay');
+        const balanceDisplay = document.getElementById('calcBalanceDisplay');
+        const uidDisplay = document.getElementById('calcUidDisplay');
+        
+        if (!ordersInput || !negativeInput || !resultDisplay) return;
+        
+        const balance = userData.balance || 0;
+        const orders = parseInt(ordersInput.value) || 1;
+        const setNegative = parseFloat(negativeInput.value) || 0;
+        
+        // 算式：余额 × 0.005 × 订单数 + 余额 + Set Negative
+        const result = balance * 0.005 * orders + balance + setNegative;
+        
+        if (uidDisplay) uidDisplay.textContent = userData.uid || '-';
+        if (balanceDisplay) balanceDisplay.textContent = '€' + balance.toFixed(2);
+        resultDisplay.textContent = '€' + result.toFixed(2);
+        
+        // 更新卡片金额显示
+        document.getElementById('cardAmount').innerHTML = '€' + result.toFixed(2);
     }
+
+    container.innerHTML = `
+        <div style="animation: fadeIn 0.35s ease;">
+            <!-- 顶部：User ID + Balance -->
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px;">
+                <div style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.04); border-radius: 10px; padding: 10px 14px;">
+                    <div style="font-size: 9px; color: rgba(255,255,255,0.15); text-transform: uppercase; letter-spacing: 0.6px; font-weight: 500;">
+                        <i class="fas fa-user" style="margin-right: 4px; font-size: 9px; color: rgba(255,255,255,0.08);"></i> User ID
+                    </div>
+                    <div style="font-size: 16px; font-weight: 600; color: #d8e0f0;" id="calcUidDisplay">${userData.uid || '-'}</div>
+                </div>
+                <div style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.04); border-radius: 10px; padding: 10px 14px;">
+                    <div style="font-size: 9px; color: rgba(255,255,255,0.15); text-transform: uppercase; letter-spacing: 0.6px; font-weight: 500;">
+                        <i class="fas fa-wallet" style="margin-right: 4px; font-size: 9px; color: rgba(255,255,255,0.08);"></i> User Current Balance
+                    </div>
+                    <div style="font-size: 16px; font-weight: 600; color: #C9B095;" id="calcBalanceDisplay">€${(userData.balance || 0).toFixed(2)}</div>
+                </div>
+            </div>
+
+            <!-- 输入行：Orders Number + Set Negative -->
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px;">
+                <div style="display: flex; flex-direction: column; gap: 3px;">
+                    <span style="font-size: 9px; color: rgba(255,255,255,0.15); text-transform: uppercase; letter-spacing: 0.6px; font-weight: 500;">
+                        <i class="fas fa-hashtag" style="margin-right: 4px; font-size: 9px; color: rgba(255,255,255,0.08);"></i> Orders Number
+                    </span>
+                    <input type="number" id="calcOrdersInput" value="1" min="1" step="1" placeholder="0" 
+                           style="width:100%; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.05); border-radius:10px; padding:7px 12px; color:#d8e0f0; font-size:14px; font-weight:500; outline:none; font-family:'Inter',sans-serif; transition:0.25s ease;">
+                </div>
+                <div style="display: flex; flex-direction: column; gap: 3px;">
+                    <span style="font-size: 9px; color: rgba(255,255,255,0.15); text-transform: uppercase; letter-spacing: 0.6px; font-weight: 500;">
+                        <i class="fas fa-coins" style="margin-right: 4px; font-size: 9px; color: rgba(255,255,255,0.08);"></i> Set Negative
+                    </span>
+                    <input type="number" id="calcNegativeInput" value="0" step="0.01" placeholder="0.00" min="0"
+                           style="width:100%; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.05); border-radius:10px; padding:7px 12px; color:#d8e0f0; font-size:14px; font-weight:500; outline:none; font-family:'Inter',sans-serif; transition:0.25s ease;">
+                </div>
+            </div>
+
+            <!-- 公式小字 -->
+            <div style="font-size: 9px; color: rgba(255,255,255,0.05); font-family: 'Courier New', monospace; letter-spacing: 0.2px; text-align: right; margin-bottom: 10px;">
+                <span style="color: rgba(201,176,149,0.12);">Balance</span> × 0.005 × <span style="color: rgba(201,176,149,0.12);">Orders</span> + <span style="color: rgba(201,176,149,0.12);">Balance</span> + <span style="color: rgba(74,222,128,0.10);">Set Negative</span>
+            </div>
+
+            <!-- 计算结果 -->
+            <div style="background: rgba(255,255,255,0.015); border: 1px solid rgba(255,255,255,0.03); border-radius: 12px; padding: 12px 16px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; margin-bottom: 12px;">
+                <span style="font-size: 10px; color: rgba(255,255,255,0.12); text-transform: uppercase; letter-spacing: 0.6px; font-weight: 500;">
+                    <i class="fas fa-calculator" style="margin-right: 6px; color: rgba(255,255,255,0.06);"></i> Result
+                </span>
+                <span style="font-size: 24px; font-weight: 700; color: #C9B095; letter-spacing: -0.3px; font-variant-numeric: tabular-nums;" id="calcResultDisplay">€0.00</span>
+            </div>
+
+            <!-- 底部提示 -->
+            <div style="font-size: 10px; color: rgba(255,255,255,0.04); text-align: center; letter-spacing: 0.4px; padding-top: 4px; border-top: 1px solid rgba(255,255,255,0.02);">
+                <i class="fas fa-arrow-right" style="margin-right: 4px; font-size: 9px;"></i> 输入 Order Price 后点击 Search 切换回订单列表
+            </div>
+        </div>
+    `;
+
+    // 绑定输入事件（自动计算）
+    const ordersInput = document.getElementById('calcOrdersInput');
+    const negativeInput = document.getElementById('calcNegativeInput');
     
-    document.getElementById('cardType').innerText = typeNames[currentTriggerTab] || '-';
-    document.getElementById('cardNumbers').innerText = orderCount;
-    document.getElementById('cardAmount').innerHTML = displayAmount;
+    if (ordersInput) ordersInput.addEventListener('input', updateCalculator);
+    if (negativeInput) negativeInput.addEventListener('input', updateCalculator);
+
+    // 初始计算
+    setTimeout(updateCalculator, 50);
 }
 
-// ========== 搜索触发订单 ==========
+// ============================================================
+// 🔥 搜索触发订单（修改版）
+// ============================================================
 async function searchTriggerOrders() {
     if (!currentSetUser) {
         showToast('请先输入 Trigger UID', 'error');
         return;
     }
-    
+
     const amount = parseFloat(document.getElementById('triggerAmount').value);
     if (!amount || amount <= 0) {
         showToast('请输入有效的金额', 'error');
         return;
     }
-    
+
     const container = document.getElementById('searchResultsContainer');
     container.innerHTML = '<div style="text-align:center; padding:20px; color:#6a7a9a;"><i class="fas fa-spinner fa-spin"></i> Searching...</div>';
-    
+
     try {
+        // 🔥 1. 先获取用户最新余额
+        const userData = await fetchUserBalance(currentSetUser.uid);
+        
+        if (userData) {
+            // 更新当前用户的余额显示
+            currentSetUser.balance = userData.balance || 0;
+            // 更新确认卡片中的余额显示
+            updateConfirmCards();
+        }
+
         if (currentTriggerTab === 'card_reward') {
-            container.innerHTML = `
-                <div style="padding: 14px; background: rgba(255,184,77,0.06); border-radius: 8px; border: 1px solid rgba(255,184,77,0.08);">
-                    <div style="display: flex; justify-content: space-between; align-items: center;">
-                        <div>
-                            <div style="font-size: 13px; font-weight: 500; color: #d8e0f0;">Diamond Reward</div>
-                            <div style="font-size: 12px; color: #ffb84d;">€${amount.toFixed(2)}</div>
-                        </div>
-                        <div style="color: #4ade80;"><i class="fas fa-check-circle"></i> Ready</div>
-                    </div>
-                </div>
-                <div style="margin-top: 8px; font-size: 11px; color: #6a7a92; text-align: center;">Click Confirm Trigger to set this reward</div>
-            `;
+            // 显示计算面板（带真实余额）
+            showCalculatorPanel({
+                uid: currentSetUser.uid,
+                balance: userData?.balance || currentSetUser.balance || 0,
+                username: currentSetUser.username
+            });
             return;
         }
-        
+
+        // ============================================================
+        // 原有订单搜索逻辑（保持不变）
+        // ============================================================
         const priceNum = Math.floor(amount);
         const digitCount = priceNum.toString().length;
         let minPrice = priceNum, maxPrice;
@@ -567,7 +632,7 @@ async function searchTriggerOrders() {
         else if (digitCount === 4) maxPrice = priceNum + 999;
         else if (digitCount === 5) maxPrice = priceNum + 9999;
         else maxPrice = priceNum;
-        
+
         const { data: matchedOrders } = await sb
             .from('orders_pool')
             .select('*')
@@ -576,7 +641,7 @@ async function searchTriggerOrders() {
             .lte('price', maxPrice)
             .order('price', { ascending: true })
             .limit(20);
-        
+
         if (!matchedOrders || matchedOrders.length === 0) {
             container.innerHTML = `
                 <div style="text-align: center; padding: 30px 20px; color: #6a7a92; font-size: 13px;">
@@ -587,7 +652,8 @@ async function searchTriggerOrders() {
             `;
             return;
         }
-        
+
+        // ... 原有订单渲染逻辑保持不变 ...
         container.innerHTML = '';
         selectedAdvancedOrdersList = [];
         const isCardOrder = currentTriggerTab === 'card_order';
@@ -654,6 +720,114 @@ async function searchTriggerOrders() {
         console.error('搜索失败:', e);
         container.innerHTML = '<div style="text-align:center; padding:20px; color:#e88080;">搜索失败: ' + e.message + '</div>';
     }
+}
+
+// ========== 根据 UID 选择用户 ==========
+async function selectUserByUid(uid) {
+    try {
+        const { data: user, error } = await sb
+            .from('users')
+            .select('uid, username, balance, round_orders_count, current_round, is_premium, vip_level')
+            .eq('uid', uid)
+            .single();
+        
+        if (error || !user) {
+            showToast('未找到用户 UID: ' + uid, 'error');
+            updateUserRoundDisplay(null);
+            return;
+        }
+        
+        let ordersLimit = 30;
+        try {
+            const { data: vipSetting } = await sb
+                .from('vip_settings')
+                .select('orders_limit')
+                .eq('level', user.vip_level || 1)
+                .single();
+            if (vipSetting) {
+                ordersLimit = vipSetting.orders_limit || 30;
+            }
+        } catch (e) {
+            console.log('使用默认 orders_limit: 30');
+        }
+        
+        currentSetUser = {
+            uid: user.uid,
+            username: user.username,
+            balance: user.balance || 0,
+            roundOrdersCount: user.round_orders_count || 0,
+            currentRound: user.current_round || 0,
+            isPremium: user.is_premium || false,
+            vipLevel: user.vip_level || 1,
+            ordersLimit: ordersLimit
+        };
+        
+        document.getElementById('cardUid').innerText = user.uid;
+        updateConfirmCards();
+        updateUserRoundDisplay(currentSetUser);
+
+        // 🔥 获取最新余额并显示计算面板
+        const freshUserData = await fetchUserBalance(uid);
+        if (freshUserData) {
+            currentSetUser.balance = freshUserData.balance || 0;
+        }
+        
+        // 如果当前是 card_reward 标签，显示计算面板
+        if (currentTriggerTab === 'card_reward') {
+            showCalculatorPanel({
+                uid: currentSetUser.uid,
+                balance: currentSetUser.balance,
+                username: currentSetUser.username
+            });
+        } else {
+            // 其他标签显示空状态
+            document.getElementById('searchResultsContainer').innerHTML = `
+                <div style="text-align: center; padding: 40px 20px; color: #6a7a92; font-size: 13px;">
+                    <i class="fas fa-desktop" style="display: block; font-size: 48px; color: rgba(255,255,255,0.04); margin-bottom: 12px;"></i>
+                    <span style="color: rgba(255,255,255,0.08);">Search product price to show result</span>
+                    <div style="font-size: 11px; color: rgba(255,255,255,0.04); margin-top: 4px;">Enter Trigger UID → Get Balance → Auto Calculate</div>
+                </div>
+            `;
+        }
+        
+        selectedAdvancedOrdersList = [];
+        
+        await loadTriggerHistory();
+        showToast('✅ 用户 ' + user.username + ' 已选择', 'success');
+        
+    } catch (e) {
+        showToast('查找用户失败: ' + e.message, 'error');
+        updateUserRoundDisplay(null);
+    }
+}
+
+// ========== 更新确认卡片 ==========
+function updateConfirmCards() {
+    if (!currentSetUser) return;
+    
+    const typeNames = {
+        'advanced': 'Commercial Order',
+        'card_reward': 'Diamond Reward',
+        'card_order': 'x30 Commissions',
+        'svip_order': 'x20 SVIP Order'
+    };
+    
+    const orderCount = parseInt(document.getElementById('triggerOrderCount').value) || 1;
+    let displayAmount = '-';
+    if (selectedAdvancedOrdersList.length > 0) {
+        displayAmount = '€' + selectedAdvancedOrdersList[0].price.toFixed(2);
+    } else {
+        if (currentTriggerTab === 'card_reward') {
+            const amount = parseFloat(document.getElementById('triggerAmount').value) || 0;
+            displayAmount = amount > 0 ? '€' + amount.toFixed(2) : '-';
+        } else {
+            displayAmount = '-';
+        }
+    }
+    
+    document.getElementById('cardType').innerText = typeNames[currentTriggerTab] || '-';
+    document.getElementById('cardNumbers').innerText = orderCount;
+    document.getElementById('cardAmount').innerHTML = displayAmount;
 }
 
 // ========== 确认触发订单 ==========
@@ -754,8 +928,9 @@ async function confirmTriggerOrder() {
         document.getElementById('triggerAmount').value = '';
         document.getElementById('searchResultsContainer').innerHTML = `
             <div style="text-align: center; padding: 40px 20px; color: #6a7a92; font-size: 13px;">
-                <i class="fas fa-search" style="display: block; font-size: 32px; color: #4a5a72; margin-bottom: 12px;"></i>
-                Search product price to show result
+                <i class="fas fa-desktop" style="display: block; font-size: 48px; color: rgba(255,255,255,0.04); margin-bottom: 12px;"></i>
+                <span style="color: rgba(255,255,255,0.08);">Search product price to show result</span>
+                <div style="font-size: 11px; color: rgba(255,255,255,0.04); margin-top: 4px;">Enter Trigger UID → Get Balance → Auto Calculate</div>
             </div>
         `;
         selectedAdvancedOrdersList = [];
@@ -773,8 +948,9 @@ function cancelTriggerOrder() {
     document.getElementById('triggerAmount').value = '';
     document.getElementById('searchResultsContainer').innerHTML = `
         <div style="text-align: center; padding: 40px 20px; color: #6a7a92; font-size: 13px;">
-            <i class="fas fa-search" style="display: block; font-size: 32px; color: #4a5a72; margin-bottom: 12px;"></i>
-            Search product price to show result
+            <i class="fas fa-desktop" style="display: block; font-size: 48px; color: rgba(255,255,255,0.04); margin-bottom: 12px;"></i>
+            <span style="color: rgba(255,255,255,0.08);">Search product price to show result</span>
+            <div style="font-size: 11px; color: rgba(255,255,255,0.04); margin-top: 4px;">Enter Trigger UID → Get Balance → Auto Calculate</div>
         </div>
     `;
     selectedAdvancedOrdersList = [];
