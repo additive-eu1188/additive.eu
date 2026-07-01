@@ -576,21 +576,49 @@ function initWaveRing() {
     }, 300);
 }
 
-// ========== 加载最近注册用户数据 ==========
+// ========== 加载最近注册用户数据（根据当前筛选条件） ==========
 async function loadRecentRegistrations() {
     var tbody = document.getElementById('recentRegistrationsBody');
     if (!tbody) return;
     
     try {
-        var usersRes = await sb.from('users')
+        // 🔥 根据 currentDays 计算日期范围
+        var nowDate = getBerlinDate();
+        var startDate = new Date(nowDate);
+        
+        if (currentDays === -1) {
+            // All Time：从最早开始
+            startDate = new Date('2000-01-01');
+        } else if (currentDays === 0) {
+            // Today：只取今天
+            startDate.setHours(0, 0, 0, 0);
+        } else {
+            // 7 Days / 30 Days
+            startDate.setDate(startDate.getDate() - currentDays);
+        }
+        
+        var startStr = startDate.toISOString().split('T')[0];
+        
+        // 🔥 查询时过滤日期
+        var query = sb.from('users')
             .select('uid, username, invited_by_username, created_at, balance')
             .order('created_at', { ascending: false })
             .limit(9);
         
+        // 如果不是 All Time，添加日期过滤
+        if (currentDays !== -1) {
+            query = query.gte('created_at', startStr);
+            if (currentDays === 0) {
+                // Today：只取今天
+                query = query.gte('created_at', startStr + 'T00:00:00');
+            }
+        }
+        
+        var usersRes = await query;
         var users = usersRes.data || [];
         
         if (users.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; padding: 20px; color: #4a5a72; font-size: 12px;">No users yet</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; padding: 20px; color: #4a5a72; font-size: 12px;">No users in this period</td></tr>';
             return;
         }
         
@@ -619,8 +647,9 @@ async function loadRecentRegistrations() {
             
             var amount = totalManual > 0 ? '€' + totalManual.toFixed(2) : '€0.00';
             
+            // 🔥 User 列改为显示 uid（而不是 username）
             html += '<tr style="border-bottom: 1px solid rgba(200,176,144,0.03);">' +
-                '<td style="padding: 4px 6px; color: #d8dff0; font-weight: 500;">' + escapeHtml(u.username) + '</td>' +
+                '<td style="padding: 4px 6px; color: #d8dff0; font-weight: 500;">' + escapeHtml(u.uid) + '</td>' +
                 '<td style="padding: 4px 6px; color: #8892a8;">' + escapeHtml(referrer) + '</td>' +
                 '<td style="padding: 4px 6px; text-align: center; color: ' + (hasManualDeposit ? '#ccb89f' : '#5a4a2a') + ';">' + joinedMembership + '</td>' +
                 '<td style="padding: 4px 6px; text-align: right; color: ' + (totalManual > 0 ? '#ccb89f' : '#4a5a72') + '; font-weight: 600;">' + amount + '</td>' +
@@ -786,16 +815,18 @@ async function refreshDashboard(days, force) {
     days = days || currentDays;
     force = force || false;
     
-    // 🔥 如果是 Today (days === 0)，强制刷新，不使用缓存
+    // 🔥 更新 currentDays 供 loadRecentRegistrations 使用
+    currentDays = days;
+    
     var conversionForce = force || (days === 0);
     
     await Promise.all([
         loadQuickCards(),
         loadStatsData(days, force),
         loadChartData(force),
-        loadConversionData(days, conversionForce),  // 传递 conversionForce
+        loadConversionData(days, conversionForce),
         loadActivityTimeline(force),
-        loadRecentRegistrations()
+        loadRecentRegistrations()  // 内部读取 currentDays
     ]);
     
     var ringPercent = document.getElementById('ringPercent');
