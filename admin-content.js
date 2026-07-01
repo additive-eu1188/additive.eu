@@ -1,8 +1,8 @@
-// admin-content.js - 内容管理页面（性能优化版 + 字体调整）
+// admin-content.js - 内容管理页面（性能优化版 + 编辑器字体大小/样式）
 // 所有内容统一使用 system_content 表
 
 // ============================================================
-// 全局状态 - 使用 let 并检查是否已存在
+// 全局状态
 // ============================================================
 if (typeof window._contentState === 'undefined') {
     window._contentState = {
@@ -19,15 +19,11 @@ if (typeof window._contentState === 'undefined') {
     };
 }
 
-// 别名引用，方便使用
 const state = window._contentState;
 const FONT_SIZE_STEPS = [12, 13, 14, 16, 18];
 const FONT_SIZE_LABELS = ['小', '较小', '默认', '较大', '大'];
 
-// 图片懒加载观察器
 let imageObserver = null;
-
-// 富文本编辑器状态
 let editorContent = '';
 let editorImages = [];
 
@@ -54,7 +50,6 @@ async function loadContentPage() {
                     </p>
                 </div>
                 <div style="display: flex; gap: 10px; flex-wrap: wrap; align-items: center;">
-                    <!-- ===== 字体大小控制按钮 ===== -->
                     <div style="display: flex; gap: 4px; background: rgba(255,255,255,0.03); border-radius: 30px; padding: 4px; border: 1px solid rgba(255,255,255,0.04);">
                         <button id="fontSizeDecreaseBtn" class="font-size-btn" title="缩小字体" style="background: rgba(255,255,255,0.04); border: none; border-radius: 30px; padding: 4px 10px; color: #8892a8; cursor: pointer; font-size: 12px; transition: 0.2s; font-family: 'Inter', sans-serif;">
                             <i class="fas fa-search-minus"></i>
@@ -73,6 +68,7 @@ async function loadContentPage() {
                 </div>
             </div>
 
+            <!-- ===== Tab 切换 ===== -->
             <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 24px; padding: 6px; background: rgba(255,255,255,0.02); border-radius: 16px; border: 1px solid rgba(255,255,255,0.04);">
                 <button class="content-tab-btn active" data-tab="events" style="flex: 1; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06); border-radius: 30px; padding: 10px 16px; color: rgba(255,255,255,0.3); cursor: pointer; font-size: 13px; font-weight: 500; transition: all 0.2s; font-family: 'Inter', sans-serif; text-align: center; min-width: 80px;">
                     <i class="fas fa-calendar-alt"></i> Events
@@ -104,11 +100,9 @@ async function loadContentPage() {
                 <span id="arrangeHint" style="font-size: 11px; color: #6a7a92; display: none;">Drag items to reorder</span>
             </div>
 
-            <!-- ===== 内容列表容器（带分页） ===== -->
             <div id="contentListContainer" style="background: rgba(255,255,255,0.02); border-radius: 16px; border: 1px solid rgba(255,255,255,0.04); min-height: 200px; padding: 4px;">
             </div>
             
-            <!-- ===== 分页控件 ===== -->
             <div id="contentPagination" style="display: flex; justify-content: center; gap: 6px; margin-top: 16px; flex-wrap: wrap;"></div>
         </div>
     `;
@@ -142,26 +136,6 @@ async function loadContentPage() {
         .content-item:hover {
             background: rgba(255,255,255,0.04);
             border-color: rgba(200,176,144,0.10);
-        }
-        .content-item.dragging {
-            opacity: 0.4;
-            border-color: rgba(200,176,144,0.3);
-        }
-        .content-item.drag-over {
-            border-color: rgba(200,176,144,0.5);
-            background: rgba(200,176,144,0.06);
-            transform: scale(1.01);
-        }
-        .content-item .drag-handle {
-            cursor: grab;
-            color: rgba(255,255,255,0.15);
-            font-size: 16px;
-            margin-right: 8px;
-            transition: 0.2s;
-            flex-shrink: 0;
-        }
-        .content-item .drag-handle:hover {
-            color: rgba(200,176,144,0.4);
         }
         .thumb-container {
             display: flex;
@@ -268,7 +242,6 @@ async function loadContentPage() {
             color: #e88080;
         }
 
-        /* ===== 分页按钮样式 ===== */
         .page-btn {
             background: rgba(255,255,255,0.03);
             border: 1px solid rgba(255,255,255,0.04);
@@ -294,12 +267,12 @@ async function loadContentPage() {
             cursor: not-allowed;
         }
 
-        /* ===== 字体大小控制按钮 ===== */
         .font-size-btn:hover {
             background: rgba(200,176,144,0.08) !important;
             color: #c8b090 !important;
         }
 
+        /* ===== 编辑器样式 ===== */
         .editor-toolbar {
             display: flex;
             gap: 4px;
@@ -309,6 +282,7 @@ async function loadContentPage() {
             border-radius: 12px 12px 0 0;
             border: 1px solid rgba(255,255,255,0.04);
             border-bottom: none;
+            align-items: center;
         }
         .editor-toolbar button {
             background: rgba(255,255,255,0.04);
@@ -325,6 +299,28 @@ async function loadContentPage() {
             background: rgba(255,255,255,0.08);
             color: #d8e0f0;
         }
+        .editor-toolbar select {
+            background: rgba(255,255,255,0.06);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 6px;
+            padding: 4px 8px;
+            color: #d8e0f0;
+            font-size: 12px;
+            font-family: 'Inter', sans-serif;
+            cursor: pointer;
+            outline: none;
+        }
+        .editor-toolbar select:hover {
+            border-color: rgba(200,176,144,0.2);
+        }
+        .editor-toolbar select option {
+            background: #1a1a2e;
+            color: #d8e0f0;
+        }
+        .editor-toolbar .divider {
+            color: #3a4a5a;
+            margin: 0 2px;
+        }
         .editor-content {
             background: rgba(0,0,0,0.15);
             border: 1px solid rgba(255,255,255,0.04);
@@ -334,7 +330,7 @@ async function loadContentPage() {
             color: #d8e0f0;
             outline: none;
             font-size: 14px;
-            line-height: 1.6;
+            line-height: 1.8;
         }
         .editor-content:focus {
             border-color: rgba(200,176,144,0.2);
@@ -463,6 +459,10 @@ async function loadContentPage() {
                 font-size: 10px;
                 padding: 3px 8px;
             }
+            .editor-toolbar select {
+                font-size: 10px;
+                padding: 3px 6px;
+            }
             .thumb-container .item-thumb {
                 width: 36px;
                 height: 27px;
@@ -496,7 +496,6 @@ async function loadContentPage() {
         showToast('Content refreshed', 'success');
     });
 
-    // ===== 字体大小控制 =====
     document.getElementById('fontSizeDecreaseBtn')?.addEventListener('click', function() {
         changeFontSize(-1);
     });
@@ -507,14 +506,12 @@ async function loadContentPage() {
         resetFontSize();
     });
 
-    // 初始化字体大小
     loadFontSizeFromStorage();
-
     renderContentList();
 }
 
 // ============================================================
-// 字体大小控制函数
+// 字体大小控制（列表视图）
 // ============================================================
 function changeFontSize(delta) {
     state.fontSizeLevel = Math.max(-2, Math.min(2, state.fontSizeLevel + delta));
@@ -539,38 +536,20 @@ function applyFontSize() {
     const statusItems = document.querySelectorAll('.content-item .item-status');
     const actionButtons = document.querySelectorAll('.content-item .item-actions button');
     
-    if (container) {
-        container.style.fontSize = baseSize + 'px';
-    }
-    
-    contentItems.forEach(el => {
-        el.style.fontSize = (baseSize) + 'px';
-    });
-    
-    subItems.forEach(el => {
-        el.style.fontSize = (baseSize - 3) + 'px';
-    });
-    
-    statusItems.forEach(el => {
-        el.style.fontSize = (baseSize - 4) + 'px';
-    });
-    
-    actionButtons.forEach(el => {
-        el.style.fontSize = (baseSize - 3) + 'px';
-    });
+    if (container) container.style.fontSize = baseSize + 'px';
+    contentItems.forEach(el => el.style.fontSize = (baseSize) + 'px');
+    subItems.forEach(el => el.style.fontSize = (baseSize - 3) + 'px');
+    statusItems.forEach(el => el.style.fontSize = (baseSize - 4) + 'px');
+    actionButtons.forEach(el => el.style.fontSize = (baseSize - 3) + 'px');
 }
 
 function updateFontSizeLabel() {
     const label = document.getElementById('fontSizeLabel');
-    if (label) {
-        label.textContent = FONT_SIZE_LABELS[state.fontSizeLevel + 2];
-    }
+    if (label) label.textContent = FONT_SIZE_LABELS[state.fontSizeLevel + 2];
 }
 
 function saveFontSizeToStorage() {
-    try {
-        localStorage.setItem('content_font_size_level', String(state.fontSizeLevel));
-    } catch (e) {}
+    try { localStorage.setItem('content_font_size_level', String(state.fontSizeLevel)); } catch (e) {}
 }
 
 function loadFontSizeFromStorage() {
@@ -588,11 +567,10 @@ function loadFontSizeFromStorage() {
 }
 
 // ============================================================
-// 加载所有内容数据（统一使用 system_content）
+// 加载所有内容数据
 // ============================================================
 async function loadAllContentData() {
     try {
-        // 1. 加载 Events
         const { data: events, error: eventsError } = await sb
             .from('system_content')
             .select('*')
@@ -606,7 +584,6 @@ async function loadAllContentData() {
             state.eventsList = events || [];
         }
 
-        // 2. 加载 Certificate (Company Profile)
         const { data: cert, error: certError } = await sb
             .from('system_content')
             .select('*')
@@ -614,7 +591,6 @@ async function loadAllContentData() {
             .maybeSingle();
         state.contentData.certificate = cert || null;
 
-        // 3. 加载 Contract
         const { data: contract, error: contractError } = await sb
             .from('system_content')
             .select('*')
@@ -622,7 +598,6 @@ async function loadAllContentData() {
             .maybeSingle();
         state.contentData.contract = contract || null;
 
-        // 4. 加载 T&C
         const { data: tc, error: tcError } = await sb
             .from('system_content')
             .select('*')
@@ -630,7 +605,6 @@ async function loadAllContentData() {
             .maybeSingle();
         state.contentData.tc = tc || null;
 
-        // 5. 加载 Privacy
         const { data: privacy, error: privacyError } = await sb
             .from('system_content')
             .select('*')
@@ -638,7 +612,6 @@ async function loadAllContentData() {
             .maybeSingle();
         state.contentData.privacy = privacy || null;
 
-        // 6. 加载 Rules
         const { data: rules, error: rulesError } = await sb
             .from('system_content')
             .select('*')
@@ -646,8 +619,7 @@ async function loadAllContentData() {
             .maybeSingle();
         state.contentData.rules = rules || null;
 
-        console.log('✅ 所有内容数据加载完成');
-        console.log('   Events:', state.eventsList.length);
+        console.log('✅ 所有内容数据加载完成, Events:', state.eventsList.length);
 
     } catch (e) {
         console.error('加载内容数据失败:', e);
@@ -655,7 +627,7 @@ async function loadAllContentData() {
 }
 
 // ============================================================
-// 获取内容的所有图片 URL（返回数组）
+// 获取内容的所有图片 URL
 // ============================================================
 function getAllContentImages(item) {
     if (!item || !item.image_url) return [];
@@ -669,14 +641,6 @@ function getAllContentImages(item) {
         }
     }
     return [];
-}
-
-// ============================================================
-// 获取内容的第一张图片 URL
-// ============================================================
-function getContentImageUrl(item) {
-    const images = getAllContentImages(item);
-    return images.length > 0 ? images[0] : null;
 }
 
 // ============================================================
@@ -778,7 +742,6 @@ function renderContentList() {
         return;
     }
 
-    // ===== 分页计算 =====
     const totalPages = Math.ceil(state.totalItems / state.pageSize);
     if (state.currentPage > totalPages) state.currentPage = totalPages;
     if (state.currentPage < 1) state.currentPage = 1;
@@ -787,18 +750,10 @@ function renderContentList() {
     const endIndex = Math.min(startIndex + state.pageSize, state.totalItems);
     const pageItems = items.slice(startIndex, endIndex);
 
-    // ===== 渲染当前页 =====
     renderPageItems(container, pageItems);
-
-    // ===== 渲染分页 =====
     renderPagination(paginationContainer, state.currentPage, totalPages);
 
-    // ===== 应用字体大小 =====
-    setTimeout(() => {
-        applyFontSize();
-    }, 50);
-
-    // ===== 启动图片懒加载 =====
+    setTimeout(() => applyFontSize(), 50);
     setupImageLazyLoad();
 }
 
@@ -813,7 +768,6 @@ function renderPageItems(container, items) {
         const statusClass = item.status === 'active' ? 'status-active' : 'status-inactive';
         const statusText = item.status === 'active' ? 'Active' : 'Inactive';
         
-        // ✅ 生成图片缩略图 - 懒加载
         let thumbHtml = '';
         if (item.images && item.images.length > 0) {
             thumbHtml = '<div class="thumb-container">';
@@ -830,10 +784,8 @@ function renderPageItems(container, items) {
             thumbHtml = `<div class="item-thumb-placeholder"><i class="fas fa-image"></i></div>`;
         }
 
-        const globalIndex = (state.currentPage - 1) * state.pageSize + index;
-
         html += `
-            <div class="content-item" data-id="${item.id}" data-type="${item.type}" data-tab="${state.currentTab}" data-index="${globalIndex}" draggable="${isArrangeMode}">
+            <div class="content-item" data-id="${item.id}" data-type="${item.type}" data-tab="${state.currentTab}" data-index="${(state.currentPage - 1) * state.pageSize + index}" draggable="${isArrangeMode}">
                 ${isArrangeMode ? `<span class="drag-handle"><i class="fas fa-grip-vertical"></i></span>` : ''}
                 ${thumbHtml}
                 <div class="item-info">
@@ -856,7 +808,6 @@ function renderPageItems(container, items) {
     container.innerHTML = html;
 
     if (isArrangeMode) {
-        setupDragAndDrop(container);
         document.getElementById('arrangeHint').style.display = 'inline';
     } else {
         document.getElementById('arrangeHint').style.display = 'none';
@@ -864,7 +815,7 @@ function renderPageItems(container, items) {
 }
 
 // ============================================================
-// 图片懒加载（IntersectionObserver）
+// 图片懒加载
 // ============================================================
 function setupImageLazyLoad() {
     if (imageObserver) {
@@ -884,15 +835,12 @@ function setupImageLazyLoad() {
                     imageObserver.unobserve(img);
                 }
             });
-        }, {
-            rootMargin: '50px 0px'
-        });
+        }, { rootMargin: '50px 0px' });
 
         document.querySelectorAll('.lazy-image').forEach(img => {
             imageObserver.observe(img);
         });
     } else {
-        // 降级方案：直接加载所有图片
         document.querySelectorAll('.lazy-image').forEach(img => {
             const src = img.dataset.src;
             if (src) {
@@ -912,20 +860,13 @@ function renderPagination(container, currentPage, totalPages) {
 
     if (totalPages <= 1) return;
 
-    // 上一页
     const prevBtn = document.createElement('button');
     prevBtn.className = 'page-btn';
     prevBtn.innerHTML = '<i class="fas fa-chevron-left"></i>';
     prevBtn.disabled = currentPage <= 1;
-    prevBtn.onclick = () => {
-        if (currentPage > 1) {
-            state.currentPage--;
-            renderContentList();
-        }
-    };
+    prevBtn.onclick = () => { if (currentPage > 1) { state.currentPage--; renderContentList(); } };
     container.appendChild(prevBtn);
 
-    // 页码
     const maxVisible = 7;
     let startPage = Math.max(1, currentPage - Math.floor(maxVisible / 2));
     let endPage = Math.min(totalPages, startPage + maxVisible - 1);
@@ -969,27 +910,17 @@ function renderPagination(container, currentPage, totalPages) {
         container.appendChild(btn);
     }
 
-    // 下一页
     const nextBtn = document.createElement('button');
     nextBtn.className = 'page-btn';
     nextBtn.innerHTML = '<i class="fas fa-chevron-right"></i>';
     nextBtn.disabled = currentPage >= totalPages;
-    nextBtn.onclick = () => {
-        if (currentPage < totalPages) {
-            state.currentPage++;
-            renderContentList();
-        }
-    };
+    nextBtn.onclick = () => { if (currentPage < totalPages) { state.currentPage++; renderContentList(); } };
     container.appendChild(nextBtn);
 }
 
 // ============================================================
-// 拖拽排序功能（暂时禁用）
+// 拖拽排序（禁用）
 // ============================================================
-function setupDragAndDrop(container) {
-    console.log('拖拽排序暂时禁用');
-}
-
 function toggleArrangeMode() {
     const btn = document.getElementById('arrangeContentBtn');
     const isActive = btn.classList.contains('active');
@@ -1011,7 +942,7 @@ function toggleArrangeMode() {
 }
 
 // ============================================================
-// 删除内容（统一删除函数，支持所有类型）
+// 删除内容
 // ============================================================
 window.deleteContentItem = function(type, id) {
     const typeNames = {
@@ -1091,24 +1022,51 @@ function openAddContentModal() {
 
                 <div style="margin-bottom: 4px;">
                     <label style="display: block; font-size: 11px; color: #6a7a92; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">Content</label>
+                    
+                    <!-- ===== 编辑器工具栏（含字体大小 + 字体样式） ===== -->
                     <div class="editor-toolbar">
                         <button onclick="execCommand('bold')" title="Bold"><b>B</b></button>
                         <button onclick="execCommand('italic')" title="Italic"><i>I</i></button>
                         <button onclick="execCommand('underline')" title="Underline"><u>U</u></button>
-                        <span style="color: #3a4a5a;">|</span>
-                        <button onclick="execCommand('formatBlock', 'h1')" title="Heading 1">H1</button>
-                        <button onclick="execCommand('formatBlock', 'h2')" title="Heading 2">H2</button>
-                        <button onclick="execCommand('formatBlock', 'h3')" title="Heading 3">H3</button>
-                        <span style="color: #3a4a5a;">|</span>
+                        <span class="divider">|</span>
+                        
+                        <!-- 字体大小下拉 -->
+                        <select id="editorFontSize" onchange="changeEditorFontSize(this.value)" title="字体大小">
+                            <option value="3">字号</option>
+                            <option value="1">极小</option>
+                            <option value="2">小</option>
+                            <option value="3" selected>默认</option>
+                            <option value="4">大</option>
+                            <option value="5">极大</option>
+                            <option value="6">超大</option>
+                            <option value="7">巨大</option>
+                        </select>
+                        
+                        <!-- 字体样式下拉 -->
+                        <select id="editorFontFamily" onchange="changeEditorFontFamily(this.value)" title="字体样式">
+                            <option value="">字体</option>
+                            <option value="Arial, sans-serif">Arial</option>
+                            <option value="'Times New Roman', serif">Times New Roman</option>
+                            <option value="Georgia, serif">Georgia</option>
+                            <option value="'Courier New', monospace">Courier New</option>
+                            <option value="Verdana, sans-serif">Verdana</option>
+                            <option value="'Trebuchet MS', sans-serif">Trebuchet MS</option>
+                            <option value="Impact, sans-serif">Impact</option>
+                            <option value="'Comic Sans MS', cursive">Comic Sans</option>
+                        </select>
+                        
+                        <span class="divider">|</span>
                         <button onclick="execCommand('insertUnorderedList')" title="Bullet List"><i class="fas fa-list-ul"></i></button>
                         <button onclick="execCommand('insertOrderedList')" title="Numbered List"><i class="fas fa-list-ol"></i></button>
-                        <span style="color: #3a4a5a;">|</span>
+                        <span class="divider">|</span>
                         <button onclick="execCommand('foreColor', '#c8b090')" title="Gold Color"><i class="fas fa-palette" style="color: #c8b090;"></i></button>
                         <button onclick="execCommand('foreColor', '#ffffff')" title="White Color"><i class="fas fa-palette" style="color: #ffffff;"></i></button>
-                        <span style="color: #3a4a5a;">|</span>
+                        <span class="divider">|</span>
                         <button onclick="uploadEditorImage()" title="Insert Image"><i class="fas fa-image"></i></button>
                         <button onclick="insertLink()" title="Insert Link"><i class="fas fa-link"></i></button>
+                        <button onclick="execCommand('removeFormat')" title="清除格式"><i class="fas fa-eraser"></i></button>
                     </div>
+                    
                     <div class="editor-content" id="eventEditor" contenteditable="true" placeholder="Write your content here..."></div>
                 </div>
 
@@ -1143,6 +1101,28 @@ function openAddContentModal() {
         if (editor) editor.focus();
     }, 300);
 }
+
+// ============================================================
+// 编辑器字体大小（选中文字后调整）
+// ============================================================
+window.changeEditorFontSize = function(size) {
+    if (!size || size === '3') {
+        document.execCommand('removeFormat', false, null);
+        return;
+    }
+    document.execCommand('fontSize', false, size);
+};
+
+// ============================================================
+// 编辑器字体样式（选中文字后调整）
+// ============================================================
+window.changeEditorFontFamily = function(font) {
+    if (!font) {
+        document.execCommand('removeFormat', false, null);
+        return;
+    }
+    document.execCommand('fontName', false, font);
+};
 
 // ============================================================
 // 关闭弹窗
@@ -1319,7 +1299,7 @@ window.closePreview = function() {
 };
 
 // ============================================================
-// 发布内容 (Post Content)
+// 发布内容
 // ============================================================
 window.postContent = async function() {
     const title = document.getElementById('eventTitleInput')?.value.trim();
@@ -1450,24 +1430,49 @@ window.openEditContentModal = function(type, id) {
 
                 <div style="margin-bottom: 4px;">
                     <label style="display: block; font-size: 11px; color: #6a7a92; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">Content</label>
+                    
+                    <!-- ===== 编辑器工具栏（含字体大小 + 字体样式） ===== -->
                     <div class="editor-toolbar">
                         <button onclick="execCommand('bold')"><b>B</b></button>
                         <button onclick="execCommand('italic')"><i>I</i></button>
                         <button onclick="execCommand('underline')"><u>U</u></button>
-                        <span style="color: #3a4a5a;">|</span>
-                        <button onclick="execCommand('formatBlock', 'h1')">H1</button>
-                        <button onclick="execCommand('formatBlock', 'h2')">H2</button>
-                        <button onclick="execCommand('formatBlock', 'h3')">H3</button>
-                        <span style="color: #3a4a5a;">|</span>
+                        <span class="divider">|</span>
+                        
+                        <select id="editEditorFontSize" onchange="changeEditEditorFontSize(this.value)" title="字体大小">
+                            <option value="3">字号</option>
+                            <option value="1">极小</option>
+                            <option value="2">小</option>
+                            <option value="3" selected>默认</option>
+                            <option value="4">大</option>
+                            <option value="5">极大</option>
+                            <option value="6">超大</option>
+                            <option value="7">巨大</option>
+                        </select>
+                        
+                        <select id="editEditorFontFamily" onchange="changeEditEditorFontFamily(this.value)" title="字体样式">
+                            <option value="">字体</option>
+                            <option value="Arial, sans-serif">Arial</option>
+                            <option value="'Times New Roman', serif">Times New Roman</option>
+                            <option value="Georgia, serif">Georgia</option>
+                            <option value="'Courier New', monospace">Courier New</option>
+                            <option value="Verdana, sans-serif">Verdana</option>
+                            <option value="'Trebuchet MS', sans-serif">Trebuchet MS</option>
+                            <option value="Impact, sans-serif">Impact</option>
+                            <option value="'Comic Sans MS', cursive">Comic Sans</option>
+                        </select>
+                        
+                        <span class="divider">|</span>
                         <button onclick="execCommand('insertUnorderedList')"><i class="fas fa-list-ul"></i></button>
                         <button onclick="execCommand('insertOrderedList')"><i class="fas fa-list-ol"></i></button>
-                        <span style="color: #3a4a5a;">|</span>
+                        <span class="divider">|</span>
                         <button onclick="execCommand('foreColor', '#c8b090')"><i class="fas fa-palette" style="color: #c8b090;"></i></button>
                         <button onclick="execCommand('foreColor', '#ffffff')"><i class="fas fa-palette" style="color: #ffffff;"></i></button>
-                        <span style="color: #3a4a5a;">|</span>
+                        <span class="divider">|</span>
                         <button onclick="uploadEditorImage()"><i class="fas fa-image"></i></button>
                         <button onclick="insertLink()"><i class="fas fa-link"></i></button>
+                        <button onclick="execCommand('removeFormat')"><i class="fas fa-eraser"></i></button>
                     </div>
+                    
                     <div class="editor-content" id="editEditor" contenteditable="true">${item.content || ''}</div>
                 </div>
 
@@ -1503,6 +1508,28 @@ window.openEditContentModal = function(type, id) {
     if (existing) existing.remove();
 
     document.body.insertAdjacentHTML('beforeend', modalHtml);
+};
+
+// ============================================================
+// 编辑弹窗 - 字体大小
+// ============================================================
+window.changeEditEditorFontSize = function(size) {
+    if (!size || size === '3') {
+        document.execCommand('removeFormat', false, null);
+        return;
+    }
+    document.execCommand('fontSize', false, size);
+};
+
+// ============================================================
+// 编辑弹窗 - 字体样式
+// ============================================================
+window.changeEditEditorFontFamily = function(font) {
+    if (!font) {
+        document.execCommand('removeFormat', false, null);
+        return;
+    }
+    document.execCommand('fontName', false, font);
 };
 
 // ============================================================
@@ -1634,9 +1661,9 @@ window.loadContentPage = loadContentPage;
 window.renderContentList = renderContentList;
 window.loadAllContentData = loadAllContentData;
 
-console.log('✅ admin-content.js loaded (性能优化版 + 字体调整)');
+console.log('✅ admin-content.js loaded (性能优化 + 编辑器字体大小/样式)');
 console.log('   - 图片懒加载 (IntersectionObserver)');
 console.log('   - 分页功能 (每页10条)');
-console.log('   - 字体大小调整 (+/-/重置)');
+console.log('   - 编辑器字体大小下拉 (选中文字调整)');
+console.log('   - 编辑器字体样式下拉 (Arial, Times, Georgia, etc.)');
 console.log('   - 所有内容类型都有删除按钮');
-console.log('   - 统一使用 system_content 表');
