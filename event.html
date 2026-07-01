@@ -439,6 +439,7 @@
     }
 }
         
+        // 🔥 修复：正确解析 image_url
         function showEventDetail(event) {
             const modal = document.getElementById('eventModal');
             const modalImage = document.getElementById('modalImage');
@@ -447,11 +448,30 @@
             const modalDescription = document.getElementById('modalDescription');
             const modalContent = document.getElementById('modalContent');
             
-            const imageUrl = event.image_url || 'https://placehold.co/1080x1920/1a1f3a/C9B095?text=Event';
+            // 正确解析 image_url
+            let imageUrl = 'https://placehold.co/1080x1920/1a1f3a/C9B095?text=Event';
+            if (event.image_url) {
+                try {
+                    const parsed = JSON.parse(event.image_url);
+                    if (Array.isArray(parsed) && parsed.length > 0) {
+                        imageUrl = parsed[0];
+                    } else if (typeof parsed === 'string' && parsed.startsWith('http')) {
+                        imageUrl = parsed;
+                    }
+                } catch (e) {
+                    // 如果不是 JSON，直接使用原始值
+                    if (typeof event.image_url === 'string' && event.image_url.startsWith('http')) {
+                        imageUrl = event.image_url;
+                    }
+                }
+            }
+            
             const eventDate = event.event_date ? new Date(event.event_date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) : 'Date TBA';
             
             modalImage.src = imageUrl;
-            modalImage.onerror = () => { modalImage.src = 'https://placehold.co/1080x1920/1a1f3a/C9B095?text=Event'; };
+            modalImage.onerror = function() {
+                this.src = 'https://placehold.co/1080x1920/1a1f3a/C9B095?text=Image+Not+Available';
+            };
             modalTitle.innerText = event.title;
             modalDate.innerHTML = `<i class="fas fa-calendar-day"></i> ${eventDate}${event.end_date ? ` - ${new Date(event.end_date).toLocaleDateString()}` : ''}`;
             modalDescription.innerText = event.short_description || event.description || '';
