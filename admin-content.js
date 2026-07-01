@@ -784,9 +784,14 @@ function renderPageItems(container, items) {
             thumbHtml = `<div class="item-thumb-placeholder"><i class="fas fa-image"></i></div>`;
         }
 
+        // 生成拖拽手柄（Arrange 模式下显示）
+        const dragHandleHtml = isArrangeMode 
+            ? `<span class="drag-handle" style="margin-right:8px;color:rgba(255,255,255,0.15);cursor:grab;font-size:14px;flex-shrink:0;"><i class="fas fa-grip-vertical"></i></span>` 
+            : '';
+
         html += `
             <div class="content-item" data-id="${item.id}" data-type="${item.type}" data-tab="${state.currentTab}" data-index="${(state.currentPage - 1) * state.pageSize + index}" draggable="${isArrangeMode}">
-                ${isArrangeMode ? `<span class="drag-handle"><i class="fas fa-grip-vertical"></i></span>` : ''}
+                ${dragHandleHtml}
                 ${thumbHtml}
                 <div class="item-info">
                     <span class="item-title">${escapeHtml(item.title)}</span>
@@ -809,9 +814,18 @@ function renderPageItems(container, items) {
 
     if (isArrangeMode) {
         document.getElementById('arrangeHint').style.display = 'inline';
+        // 重新启用拖拽事件
+        setTimeout(function() {
+            enableDragAndDrop();
+        }, 100);
     } else {
         document.getElementById('arrangeHint').style.display = 'none';
     }
+
+    // 设置懒加载
+    setTimeout(function() {
+        setupImageLazyLoad();
+    }, 50);
 }
 
 // ============================================================
@@ -919,25 +933,181 @@ function renderPagination(container, currentPage, totalPages) {
 }
 
 // ============================================================
-// 拖拽排序（禁用）
+// 拖拽排序功能
 // ============================================================
+
 function toggleArrangeMode() {
     const btn = document.getElementById('arrangeContentBtn');
     const isActive = btn.classList.contains('active');
+    const container = document.getElementById('contentListContainer');
 
     if (isActive) {
+        // 关闭 Arrange 模式
         btn.classList.remove('active');
         btn.style.borderColor = 'rgba(255,255,255,0.06)';
         btn.style.background = 'rgba(255,255,255,0.06)';
         btn.style.color = '#c8b090';
+        document.getElementById('arrangeHint').style.display = 'none';
+        
+        // 移除所有拖拽相关属性
+        document.querySelectorAll('.content-item').forEach(function(item) {
+            item.draggable = false;
+            item.style.cursor = 'default';
+            item.style.border = '';
+            item.style.background = '';
+            // 移除事件监听
+            item.removeEventListener('dragstart', handleDragStart);
+            item.removeEventListener('dragend', handleDragEnd);
+            item.removeEventListener('dragover', handleDragOver);
+            item.removeEventListener('drop', handleDrop);
+        });
+        
+        // 移除拖拽手柄
+        document.querySelectorAll('.drag-handle').forEach(function(el) {
+            el.remove();
+        });
+        
         renderContentList();
+        showToast('Arrange mode disabled', 'info');
     } else {
+        // 开启 Arrange 模式
         btn.classList.add('active');
         btn.style.borderColor = 'rgba(200,176,144,0.3)';
         btn.style.background = 'rgba(200,176,144,0.08)';
         btn.style.color = '#ffffff';
-        showToast('Drag & drop disabled - coming soon', 'info');
+        document.getElementById('arrangeHint').style.display = 'inline';
+        
         renderContentList();
+        enableDragAndDrop();
+        showToast('Drag & drop to reorder content', 'info');
+    }
+}
+
+// ============================================================
+// 启用拖拽排序
+// ============================================================
+function enableDragAndDrop() {
+    var items = document.querySelectorAll('#contentListContainer .content-item');
+    var dragItem = null;
+    
+    items.forEach(function(item) {
+        // 添加拖拽手柄
+        var handle = document.createElement('span');
+        handle.className = 'drag-handle';
+        handle.style.cssText = 'margin-right:8px;color:rgba(255,255,255,0.15);cursor:grab;font-size:14px;';
+        handle.innerHTML = '<i class="fas fa-grip-vertical"></i>';
+        item.prepend(handle);
+        
+        // 设置 draggable
+        item.draggable = true;
+        item.style.cursor = 'grab';
+        item.style.border = '1px dashed rgba(200,176,144,0.15)';
+        item.style.background = 'rgba(255,255,255,0.03)';
+        
+        // 拖拽事件
+        item.addEventListener('dragstart', function(e) {
+            dragItem = this;
+            this.style.opacity = '0.4';
+            this.style.borderColor = 'rgba(200,176,144,0.4)';
+            e.dataTransfer.effectAllowed = 'move';
+            e.dataTransfer.setData('text/html', this.innerHTML);
+        });
+        
+        item.addEventListener('dragend', function(e) {
+            this.style.opacity = '1';
+            this.style.borderColor = 'rgba(200,176,144,0.15)';
+            document.querySelectorAll('.content-item').forEach(function(el) {
+                el.style.borderColor = 'rgba(200,176,144,0.15)';
+                el.style.background = 'rgba(255,255,255,0.03)';
+            });
+        });
+        
+        item.addEventListener('dragover', function(e) {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'move';
+            if (dragItem && dragItem !== this) {
+                this.style.borderColor = 'rgba(200,176,144,0.4)';
+                this.style.background = 'rgba(200,176,144,0.06)';
+            }
+        });
+        
+        item.addEventListener('dragleave', function(e) {
+            this.style.borderColor = 'rgba(200,176,144,0.15)';
+            this.style.background = 'rgba(255,255,255,0.03)';
+        });
+        
+        item.addEventListener('drop', function(e) {
+            e.preventDefault();
+            this.style.borderColor = 'rgba(200,176,144,0.15)';
+            this.style.background = 'rgba(255,255,255,0.03)';
+            
+            if (dragItem && dragItem !== this) {
+                var container = document.getElementById('contentListContainer');
+                var items = Array.from(container.querySelectorAll('.content-item'));
+                var fromIndex = items.indexOf(dragItem);
+                var toIndex = items.indexOf(this);
+                
+                if (fromIndex < toIndex) {
+                    this.parentNode.insertBefore(dragItem, this.nextSibling);
+                } else {
+                    this.parentNode.insertBefore(dragItem, this);
+                }
+                
+                // 更新排序
+                saveContentOrder();
+            }
+            dragItem = null;
+        });
+    });
+}
+
+// ============================================================
+// 保存排序
+// ============================================================
+async function saveContentOrder() {
+    var container = document.getElementById('contentListContainer');
+    var items = container.querySelectorAll('.content-item');
+    var orderData = [];
+    var newOrder = [];
+
+    items.forEach(function(item, index) {
+        var id = item.dataset.id;
+        var type = item.dataset.type;
+        if (id && type) {
+            var dataId = parseInt(id);
+            orderData.push({ id: dataId, type: type, sort_order: index });
+            // 从 state.eventsList 中找到对应项并重新排序
+            var found = state.eventsList.find(function(e) { return e.id === dataId; });
+            if (found) newOrder.push(found);
+        }
+    });
+
+    if (orderData.length === 0) return;
+
+    try {
+        showToast('Saving order...', 'info');
+
+        // 批量更新数据库
+        for (var i = 0; i < orderData.length; i++) {
+            var data = orderData[i];
+            if (data.type === 'event') {
+                await sb
+                    .from('system_content')
+                    .update({ sort_order: data.sort_order })
+                    .eq('id', data.id)
+                    .eq('type', 'events');
+            }
+        }
+
+        // 更新本地状态
+        if (newOrder.length > 0) {
+            state.eventsList = newOrder;
+        }
+
+        showToast('Order saved successfully!', 'success');
+    } catch (e) {
+        console.error('Save order failed:', e);
+        showToast('Save failed: ' + e.message, 'error');
     }
 }
 
