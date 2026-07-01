@@ -314,6 +314,9 @@ if (typeof window._i18n_loaded === 'undefined') {
 'scroll_for_more': 'scroll for more',
 'please_select_quality_platform': 'Please select quality and platform',
 'order_completed_commission': 'Order completed! Earned €{amount} commission',
+'commissions_title': 'COMMISSIONS',
+'total_return_title': 'TOTAL RETURN',
+'order_type_title': 'ORDER TYPE',
 
 // ==================== Order Type Names ====================
 'normal_publications': 'Normal Publications',
@@ -1040,6 +1043,9 @@ if (typeof window._i18n_loaded === 'undefined') {
 'scroll_for_more': 'mehr anzeigen',
 'please_select_quality_platform': 'Bitte wählen Sie Qualität und Plattform',
 'order_completed_commission': 'Auftrag abgeschlossen! €{amount} Provision verdient',
+'commissions_title': 'PROVISIONEN',
+'total_return_title': 'GESAMTERTRAG',
+'order_type_title': 'AUFTRAGSTYP',
 
 // ==================== Order Type Names ====================
 'normal_publications': 'Normale Veröffentlichungen',
@@ -1766,6 +1772,9 @@ if (typeof window._i18n_loaded === 'undefined') {
 'scroll_for_more': 'scorri per altro',
 'please_select_quality_platform': 'Seleziona qualità e piattaforma',
 'order_completed_commission': 'Ordine completato! Guadagnati €{amount} di commissione',
+'commissions_title': 'COMMISSIONI',
+'total_return_title': 'RENDIMENTO TOTALE',
+'order_type_title': 'TIPO ORDINE',
 
 // ==================== Order Type Names ====================
 'normal_publications': 'Pubblicazioni Normali',
