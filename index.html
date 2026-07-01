@@ -28,7 +28,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        /* ... 所有样式保持不变，和你的原文件一致 ... */
+        /* ... 所有样式保持不变 ... */
         * {
             margin: 0;
             padding: 0;
@@ -1176,28 +1176,28 @@
 
         <div class="cta-locations">
             <div class="location-item">
-                <span class="city">Lana</span>
-                <span class="country">Italy</span>
+                <span class="city" data-i18n="city_lana">Lana</span>
+                <span class="country" data-i18n="country_italy">Italy</span>
             </div>
             <div class="location-item">
-                <span class="city">Bolzano</span>
-                <span class="country">Italy</span>
+                <span class="city" data-i18n="city_bolzano">Bolzano</span>
+                <span class="country" data-i18n="country_italy">Italy</span>
             </div>
             <div class="location-item">
-                <span class="city">Innsbruck</span>
-                <span class="country">Austria</span>
+                <span class="city" data-i18n="city_innsbruck">Innsbruck</span>
+                <span class="country" data-i18n="country_austria">Austria</span>
             </div>
             <div class="location-item">
-                <span class="city">Berlin</span>
-                <span class="country">Germany</span>
+                <span class="city" data-i18n="city_berlin">Berlin</span>
+                <span class="country" data-i18n="country_germany">Germany</span>
             </div>
             <div class="location-item">
-                <span class="city">Barcelona</span>
-                <span class="country">Spain</span>
+                <span class="city" data-i18n="city_barcelona">Barcelona</span>
+                <span class="country" data-i18n="country_spain">Spain</span>
             </div>
             <div class="location-item">
-                <span class="city">Stockholm</span>
-                <span class="country">Sweden</span>
+                <span class="city" data-i18n="city_stockholm">Stockholm</span>
+                <span class="country" data-i18n="country_sweden">Sweden</span>
             </div>
         </div>
     </div>
@@ -1510,13 +1510,14 @@
         
         const indexTranslations = {
             en: {
+                // ===== Hero =====
                 'hero_title': 'Digital<br>Hotel Marketing.<br><span class="highlight">Measurable, precise &<br>specialized.</span>',
                 'hero_subtitle': 'The first specialized performance marketing agency for hotels.<br>With a clear focus on data, measurable results, and more direct bookings.',
                 'hero_register_btn': 'Sign Up',
                 'hero_login_btn': 'Login',
                 'testimonials_title': 'What our <span style="color: #CCB299;">partners say</span>',
-                'stats_title_prefix': 'Our Numbers',
-                'stats_title_suffix': 'Tell a Clear Story.',
+                // ===== Stats =====
+                'stats_title_full': 'Our Numbers<br>Tell a Clear Story.',
                 'stat1_subtitle': 'More Than',
                 'stat1_label': 'Clients In Europe',
                 'stat2_subtitle': 'Within one year',
@@ -1529,6 +1530,7 @@
                 'stat5_label': 'Generated Added Value',
                 'stat6_subtitle': 'Recommended By',
                 'stat6_label': 'Partners & Agencies',
+                // ===== Features =====
                 'feature1_title': 'Marketing Excellence meets Technology.',
                 'feature1_desc': 'We combine high-quality marketing campaigns with advanced data analysis and proprietary technology that shows for the first time what really works.',
                 'feature1_item1': '24/7 Measurability and Transparency',
@@ -1539,25 +1541,38 @@
                 'feature2_item1': 'Individual Campaign Optimization',
                 'feature2_item2': 'Hotel-specific KPIs instead of superficial numbers',
                 'feature2_item3': 'Targeted seasonal balancing',
-                'cta_title_prefix': '+500 Hotel Clients',
-                'cta_title_suffix': 'in 6 locations across Europe',
+                // ===== CTA =====
+                'cta_title_full': '<span class="gold-text">+500 Hotel Clients</span><br>in 6 locations across Europe',
+                'city_lana': 'Lana',
+                'city_bolzano': 'Bolzano',
+                'city_innsbruck': 'Innsbruck',
+                'city_berlin': 'Berlin',
+                'city_barcelona': 'Barcelona',
+                'city_stockholm': 'Stockholm',
+                'country_italy': 'Italy',
+                'country_austria': 'Austria',
+                'country_germany': 'Germany',
+                'country_spain': 'Spain',
+                'country_sweden': 'Sweden',
+                // ===== Footer =====
                 'footer_description': 'ADDITIVE+ offers digital marketing services, review support, and travel-related digital marketing services with a focus on secure access, clear support, and a reliable clients and operators experience.',
                 'footer_about_title': 'About Us & Legal',
                 'footer_tc': 'Terms & Conditions',
                 'footer_privacy': 'Privacy Policy',
                 'footer_contact_title': 'Contact Us',
                 'footer_support': 'We strive to respond to support and abuse requests as quickly as possible.',
-                'footer_copyright': '© 2026 ADDITIVE | Digitales Hotelmarketing. All rights reserved.',
+                'footer_copyright': '© 2026 ADDITIVE | Digital Hotel Marketing. All rights reserved.',
                 'footer_disclaimer': 'This website is operated as an independent digital marketing service platform.'
             },
             de: {
+                // ===== Hero =====
                 'hero_title': 'Digitales<br>Hotelmarketing.<br><span class="highlight">Messbar, präzise &<br>spezialisiert.</span>',
                 'hero_subtitle': 'Die erste spezialisierte Performance Marketing Agentur für Hotels.<br>Mit klarem Fokus auf Daten, messbare Ergebnisse und mehr Direktbuchungen.',
                 'hero_register_btn': 'Anmelden',
                 'hero_login_btn': 'Einloggen',
                 'testimonials_title': 'Was unsere <span style="color: #CCB299;">Partner sagen</span>',
-                'stats_title_prefix': 'Our Numbers',
-                'stats_title_suffix': 'Tell a Clear Story.',
+                // ===== Stats =====
+                'stats_title_full': 'Unsere Zahlen<br>erzählen eine klare Geschichte.',
                 'stat1_subtitle': 'More Than',
                 'stat1_label': 'Clients In Europe',
                 'stat2_subtitle': 'Within one year',
@@ -1570,6 +1585,7 @@
                 'stat5_label': 'Generated Added Value',
                 'stat6_subtitle': 'Recommended By',
                 'stat6_label': 'Partners & Agencies',
+                // ===== Features =====
                 'feature1_title': 'Marketing Exzellenz trifft Technologie.',
                 'feature1_desc': 'Wir kombinieren hochwertige Marketing-Kampagnen mit fortschrittlicher Datenanalyse und einer eigens entwickelten Technologie, die erstmals aufzeigt, welche Maßnahmen wirklich funktionieren.',
                 'feature1_item1': '24/7 Messbarkeit und Transparenz',
@@ -1580,8 +1596,20 @@
                 'feature2_item1': 'Individuelle Kampagnenoptimierung',
                 'feature2_item2': 'Hotelspezifische KPIs statt oberflächlicher Zahlen',
                 'feature2_item3': 'Saisonalität gezielt ausgleichen',
-                'cta_title_prefix': '+500 Hotel Clients',
-                'cta_title_suffix': 'in 6 locations across Europe',
+                // ===== CTA =====
+                'cta_title_full': '<span class="gold-text">+500 Hotel-Kunden</span><br>an 6 Standorten in Europa',
+                'city_lana': 'Lana',
+                'city_bolzano': 'Bozen',
+                'city_innsbruck': 'Innsbruck',
+                'city_berlin': 'Berlin',
+                'city_barcelona': 'Barcelona',
+                'city_stockholm': 'Stockholm',
+                'country_italy': 'Italien',
+                'country_austria': 'Österreich',
+                'country_germany': 'Deutschland',
+                'country_spain': 'Spanien',
+                'country_sweden': 'Schweden',
+                // ===== Footer =====
                 'footer_description': 'ADDITIVE+ offers digital marketing services, review support, and travel-related digital marketing services with a focus on secure access, clear support, and a reliable clients and operators experience.',
                 'footer_about_title': 'About Us & Legal',
                 'footer_tc': 'Terms & Conditions',
@@ -1592,13 +1620,14 @@
                 'footer_disclaimer': 'This website is operated as an independent digital marketing service platform.'
             },
             it: {
+                // ===== Hero =====
                 'hero_title': 'Marketing<br>Digitale per Hotel.<br><span class="highlight">Misurabile, preciso &<br>specializzato.</span>',
                 'hero_subtitle': "La prima agenzia di performance marketing specializzata per hotel.<br>Con un focus chiaro su dati, risultati misurabili e più prenotazioni dirette.",
                 'hero_register_btn': 'Registrati',
                 'hero_login_btn': 'Accedi',
                 'testimonials_title': 'Cosa dicono i nostri <span style="color: #CCB299;">partner</span>',
-                'stats_title_prefix': 'Our Numbers',
-                'stats_title_suffix': 'Tell a Clear Story.',
+                // ===== Stats =====
+                'stats_title_full': 'I nostri numeri<br>raccontano una storia chiara.',
                 'stat1_subtitle': 'More Than',
                 'stat1_label': 'Clients In Europe',
                 'stat2_subtitle': 'Within one year',
@@ -1611,6 +1640,7 @@
                 'stat5_label': 'Generated Added Value',
                 'stat6_subtitle': 'Recommended By',
                 'stat6_label': 'Partners & Agencies',
+                // ===== Features =====
                 'feature1_title': "L'eccellenza del marketing incontra la tecnologia.",
                 'feature1_desc': "Combiniamo campagne di marketing di alta qualità con analisi avanzate dei dati e una tecnologia proprietaria che mostra per la prima volta cosa funziona veramente.",
                 'feature1_item1': 'Misurabilità e trasparenza 24/7',
@@ -1621,8 +1651,20 @@
                 'feature2_item1': 'Ottimizzazione individuale delle campagne',
                 'feature2_item2': 'KPI specifici per hotel invece di numeri superficiali',
                 'feature2_item3': 'Bilanciamento stagionale mirato',
-                'cta_title_prefix': '+500 Hotel Clients',
-                'cta_title_suffix': 'in 6 locations across Europe',
+                // ===== CTA =====
+                'cta_title_full': '<span class="gold-text">+500 Clienti Hotel</span><br>in 6 località in Europa',
+                'city_lana': 'Lana',
+                'city_bolzano': 'Bolzano',
+                'city_innsbruck': 'Innsbruck',
+                'city_berlin': 'Berlino',
+                'city_barcelona': 'Barcellona',
+                'city_stockholm': 'Stoccolma',
+                'country_italy': 'Italia',
+                'country_austria': 'Austria',
+                'country_germany': 'Germania',
+                'country_spain': 'Spagna',
+                'country_sweden': 'Svezia',
+                // ===== Footer =====
                 'footer_description': 'ADDITIVE+ offers digital marketing services, review support, and travel-related digital marketing services with a focus on secure access, clear support, and a reliable clients and operators experience.',
                 'footer_about_title': 'About Us & Legal',
                 'footer_tc': 'Terms & Conditions',
