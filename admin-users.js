@@ -192,6 +192,7 @@ async function loadUsersPage() {
                             <th style="min-width: 90px;">Actions</th>
                             <th style="min-width: 80px;">Phone</th>
                             <th style="min-width: 70px;">User ID</th>
+                            <th style="min-width: 100px;">Username</th>
                             <th style="min-width: 80px;">Referrer</th>
                             <th style="min-width: 60px;">Country</th>
                             <th style="min-width: 65px;">VIP RANK</th>
@@ -295,27 +296,29 @@ async function loadUsersPage() {
 
 /* ===== 列宽定义 - 精确调整版 ===== */
 .data-table th:nth-child(1),
-.data-table td:nth-child(1) { width: 85px !important; min-width: 85px !important; }
+.data-table td:nth-child(1) { width: 40px !important; min-width: 40px !important; }  /* Actions 齿轮 */
 .data-table th:nth-child(2),
-.data-table td:nth-child(2) { width: 90px !important; min-width: 90px !important; }
+.data-table td:nth-child(2) { width: 85px !important; min-width: 85px !important; }  /* Phone */
 .data-table th:nth-child(3),
-.data-table td:nth-child(3) { width: 80px !important; min-width: 80px !important; }
+.data-table td:nth-child(3) { width: 80px !important; min-width: 80px !important; }  /* User ID */
 .data-table th:nth-child(4),
-.data-table td:nth-child(4) { width: 70px !important; min-width: 70px !important; }
+.data-table td:nth-child(4) { width: 110px !important; min-width: 110px !important; } /* Username (新增) */
 .data-table th:nth-child(5),
-.data-table td:nth-child(5) { width: 55px !important; min-width: 55px !important; }
+.data-table td:nth-child(5) { width: 75px !important; min-width: 75px !important; }  /* Referrer */
 .data-table th:nth-child(6),
-.data-table td:nth-child(6) { width: 85px !important; min-width: 85px !important; }
+.data-table td:nth-child(6) { width: 50px !important; min-width: 50px !important; }  /* Country */
 .data-table th:nth-child(7),
-.data-table td:nth-child(7) { width: 95px !important; min-width: 95px !important; }
+.data-table td:nth-child(7) { width: 55px !important; min-width: 55px !important; }  /* VIP */
 .data-table th:nth-child(8),
-.data-table td:nth-child(8) { width: 135px !important; min-width: 135px !important; }
+.data-table td:nth-child(8) { width: 65px !important; min-width: 65px !important; }  /* Pending */
 .data-table th:nth-child(9),
-.data-table td:nth-child(9) { width: 260px !important; min-width: 260px !important; }
+.data-table td:nth-child(9) { width: 70px !important; min-width: 70px !important; }  /* Balance */
 .data-table th:nth-child(10),
-.data-table td:nth-child(10) { width: 100px !important; min-width: 100px !important; }
+.data-table td:nth-child(10) { width: 185px !important; min-width: 185px !important; } /* Round / Orders */
 .data-table th:nth-child(11),
-.data-table td:nth-child(11) { width: 85px !important; min-width: 85px !important; }
+.data-table td:nth-child(11) { width: 85px !important; min-width: 85px !important; }  /* IP */
+.data-table th:nth-child(12),
+.data-table td:nth-child(12) { width: 65px !important; min-width: 65px !important; }  /* Last Online */
 
         .actions-wrapper {
             display: flex;
@@ -861,53 +864,59 @@ async function loadUsers() {
             const creditScore = u.credit_score !== undefined && u.credit_score !== null ? u.credit_score : 100;
             const countryAbbr = getCountryAbbreviation(u.country);
             
-            // ===== 1. Actions =====
-            const actionsCell = document.createElement('td');
-            actionsCell.innerHTML = `
-                <div class="actions-wrapper">
-                    <button class="btn-actions edit-user-btn" 
-                        data-uid="${u.uid}" 
-                        data-username="${escapeHtml(u.username)}"
-                        data-phone="${escapeHtml(u.phone || '')}"
-                        data-pin="${escapeHtml(u.pin || '')}"
-                        data-currency="${escapeHtml(u.withdrawal_address_type || 'USDT')}"
-                        data-address="${escapeHtml(u.withdrawal_address || '')}"
-                        data-credit-score="${creditScore}"
-                        data-user-role="${escapeHtml(u.user_role || 'User')}"
-                        data-withdrawal-frozen="${u.withdrawal_frozen || false}"
-                        data-is-banned="${u.is_banned || false}"
-                        data-created-at="${u.created_at || ''}"
-                        title="Edit User">
-                        <i class="fas fa-cog"></i> Actions
-                    </button>
-                </div>
-            `;
-            row.appendChild(actionsCell);
+            // ===== 1. Actions (只有齿轮图标)
+const actionsCell = document.createElement('td');
+actionsCell.innerHTML = `
+    <div class="actions-wrapper">
+        <button class="btn-actions edit-user-btn" 
+            data-uid="${u.uid}" 
+            data-username="${escapeHtml(u.username)}"
+            data-phone="${escapeHtml(u.phone || '')}"
+            data-pin="${escapeHtml(u.pin || '')}"
+            data-currency="${escapeHtml(u.withdrawal_address_type || 'USDT')}"
+            data-address="${escapeHtml(u.withdrawal_address || '')}"
+            data-credit-score="${creditScore}"
+            data-user-role="${escapeHtml(u.user_role || 'User')}"
+            data-withdrawal-frozen="${u.withdrawal_frozen || false}"
+            data-is-banned="${u.is_banned || false}"
+            data-created-at="${u.created_at || ''}"
+            title="Edit User"
+            style="width:32px; padding:4px 6px; display:flex; align-items:center; justify-content:center;">
+            <i class="fas fa-cog" style="font-size:14px;"></i>
+        </button>
+    </div>
+`;
+row.appendChild(actionsCell);
             
             // ===== 2. Phone =====
             const phoneCell = document.createElement('td');
             phoneCell.innerHTML = `<span class="phone-text">${escapeHtml(u.phone || '-')}</span>`;
             row.appendChild(phoneCell);
             
-            // ===== 3. User ID + Position =====
-            const userRole = u.user_role || 'User';
-            const roleColor = userRole === 'Agent' ? '#c8b090' : 'rgba(255,255,255,0.25)';
-            const roleDisplay = userRole === 'Agent' ? 'Agent' : 'User';
-            const uidCell = document.createElement('td');
-            uidCell.innerHTML = `
-                <div style="display:flex; flex-direction:column; align-items:flex-start; gap:1px;">
-                    <span class="badge" style="background: rgba(255,255,255,0.08); padding: 2px 12px; border-radius: 20px; font-size: 11px; color: #c8d2e8; border: 1px solid rgba(255,255,255,0.06);">${escapeHtml(u.uid)}</span>
-                    <span style="font-size:9px; font-weight:500; color:${roleColor}; background:rgba(255,255,255,0.03); padding:0px 6px; border-radius:8px; letter-spacing:0.3px;">${roleDisplay}</span>
-                </div>
-            `;
-            row.appendChild(uidCell);
+            // ===== 3. User ID + Position
+const userRole = u.user_role || 'User';
+const roleColor = userRole === 'Agent' ? '#c8b090' : 'rgba(255,255,255,0.25)';
+const roleDisplay = userRole === 'Agent' ? 'Agent' : 'User';
+const uidCell = document.createElement('td');
+uidCell.innerHTML = `
+    <div style="display:flex; flex-direction:column; align-items:flex-start; gap:1px;">
+        <span class="badge" style="background: rgba(255,255,255,0.08); padding: 2px 12px; border-radius: 20px; font-size: 11px; color: #c8d2e8; border: 1px solid rgba(255,255,255,0.06);">${escapeHtml(u.uid)}</span>
+        <span style="font-size:9px; font-weight:500; color:${roleColor}; background:rgba(255,255,255,0.03); padding:0px 6px; border-radius:8px; letter-spacing:0.3px;">${roleDisplay}</span>
+    </div>
+`;
+row.appendChild(uidCell);
+
+// ===== 4. Username (新增)
+const usernameCell = document.createElement('td');
+usernameCell.innerHTML = `<span style="font-weight:500; color:#d8e0f0; font-size:13px;">${escapeHtml(u.username)}</span>`;
+row.appendChild(usernameCell);
+
+// ===== 5. Referrer (原第4项)
+const referrerCell = document.createElement('td');
+referrerCell.innerHTML = `<span class="referrer-text">${escapeHtml(u.invited_by_username || '-')}</span>`;
+row.appendChild(referrerCell);
             
-            // ===== 4. Referrer =====
-            const referrerCell = document.createElement('td');
-            referrerCell.innerHTML = `<span class="referrer-text">${escapeHtml(u.invited_by_username || '-')}</span>`;
-            row.appendChild(referrerCell);
-            
-            // ===== 5. Country =====
+            // ===== 6. Country =====
             const countryCell = document.createElement('td');
             const countryData = getCountryData(u.country);
             const flagUrl = countryData.flag ? `https://flagcdn.com/w40/${countryData.flag}.png` : null;
@@ -920,7 +929,7 @@ async function loadUsers() {
             countryCell.innerHTML = countryHtml;
             row.appendChild(countryCell);
             
-            // ===== 6. VIP RANK =====
+            // ===== 7. VIP RANK =====
             const vipCell = document.createElement('td');
             const vipLevels = [
                 { level: 1, name: 'Normal', color: '#8a9aaa' },
@@ -962,7 +971,7 @@ async function loadUsers() {
             `;
             row.appendChild(vipCell);
             
-            // ===== 7. Pending =====
+            // ===== 8. Pending =====
             const pendingDisplay = u.pending_display || 0;
             const pendingCell = document.createElement('td');
             pendingCell.innerHTML = `
@@ -972,7 +981,7 @@ async function loadUsers() {
             `;
             row.appendChild(pendingCell);
             
-            // ===== 8. Balance =====
+            // ===== 9. Balance =====
             const balanceCell = document.createElement('td');
             const userBalance = u.balance || 0;
             const amountDueValue = amountDueMap[u.uid] || 0;
@@ -997,7 +1006,7 @@ async function loadUsers() {
             `;
             row.appendChild(balanceCell);
             
-            // ===== 9. Round / Orders =====
+            // ===== 10. Round / Orders =====
             const ordersCell = document.createElement('td');
             const isPremium = u.is_premium || false;
             const currentRound = u.current_round || 0;
@@ -1027,12 +1036,12 @@ async function loadUsers() {
             `;
             row.appendChild(ordersCell);
             
-            // ===== 10. Registered IP =====
+            // ===== 11. Registered IP =====
             const ipCell = document.createElement('td');
             ipCell.innerHTML = `<span class="ip-text">${escapeHtml(u.registered_ip || '-')}</span>`;
             row.appendChild(ipCell);
             
-            // ===== 11. Last Online =====
+            // ===== 12. Last Online =====
             const lastOnlineCell = document.createElement('td');
             lastOnlineCell.innerHTML = `<span class="last-online-text">${formatLastOnline(u.last_online || u.updated_at || u.created_at)}</span>`;
             row.appendChild(lastOnlineCell);
