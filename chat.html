@@ -184,31 +184,41 @@
 </div>
             <div class="chat-header">
                 <h1 data-i18n="chat_title">CHAT WITH US</h1>
-<p data-i18n="chat_subtitle">Connect with our support team for account, withdrawal, reward, or hotel task assistance.</p>
+                <p data-i18n="chat_subtitle">Connect with our support team for account, withdrawal, reward, or hotel task assistance.</p>
             </div>
 
             <div class="chat-two-columns">
                 <div class="chat-left">
                     <div class="need-help-card">
                         <h2 data-i18n="chat_need_help">Need Help?</h2>
-<p data-i18n="chat_connect_btn">Click the button below to connect with our customer live chat support.</p>
-<button class="chat-connect-btn" onclick="openLiveChat()"><i class="fas fa-comment-dots"></i> <span data-i18n="chat_connect_btn">Connect live chat</span></button>
-                        <div class="app-badges"><div class="app-badge" onclick="openAppStore()"><i class="fab fa-apple"></i> <span data-i18n="chat_app_store">App Store</span></div>
-<div class="app-badge" onclick="openGooglePlay()"><i class="fab fa-google-play"></i> <span data-i18n="chat_google_play">Google Play</span></div></div>
+                        <p data-i18n="chat_connect_btn">Click the button below to connect with our customer live chat support.</p>
+                        <button class="chat-connect-btn" onclick="openLiveChat()"><i class="fas fa-comment-dots"></i> <span data-i18n="chat_connect_btn">Connect live chat</span></button>
+                        <div class="app-badges">
+                            <div class="app-badge" onclick="openAppStore()"><i class="fab fa-apple"></i> <span data-i18n="chat_app_store">App Store</span></div>
+                            <div class="app-badge" onclick="openGooglePlay()"><i class="fab fa-google-play"></i> <span data-i18n="chat_google_play">Google Play</span></div>
+                        </div>
                     </div>
                     <div class="info-card">
                         <div class="info-row"><i class="fas fa-clock"></i><div><strong data-i18n="chat_service_hours">SERVICE HOURS</strong><span data-i18n="chat_service_hours_value">10:00AM - 10:00PM</span></div></div>
-<div class="info-row"><i class="fas fa-hashtag"></i><div><strong data-i18n="chat_support_signal">SUPPORT'S SIGNAL</strong><span data-i18n="chat_support_signal_value">additive_support.02</span></div></div>
+                        <!-- ✅ SUPPORT'S SIGNAL → SUPPORT'S CHANNEL + 可点击跳转 -->
+                        <div class="info-row" onclick="window.open('https://t.me/Additive_Support33', '_blank')" style="cursor: pointer;">
+                            <i class="fas fa-hashtag"></i>
+                            <div>
+                                <strong data-i18n="chat_support_channel">SUPPORT'S CHANNEL</strong>
+                                <span data-i18n="chat_support_channel_value">@Additive_Support33</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
                 <div class="chat-right">
                     <div class="help-section">
                         <h3 data-i18n="chat_help_title">What we can help with</h3>
-<p data-i18n="chat_help_desc">Our support team can assist with common account and platform issues</p>
-<div class="help-item" onclick="openLiveChat()"><span class="help-number">01</span><span class="help-text" data-i18n="chat_help_account">Account Access</span></div>
-<div class="help-item" onclick="openLiveChat()"><span class="help-number">02</span><span class="help-text" data-i18n="chat_help_withdrawal">Withdrawal Support</span></div>
-<div class="help-item" onclick="openLiveChat()"><span class="help-number">03</span><span class="help-text" data-i18n="chat_help_rewards">Rewards And Bonuses</span></div>
-<div class="help-item" onclick="openLiveChat()"><span class="help-number">04</span><span class="help-text" data-i18n="chat_help_tasks">Tasks Questions</span></div>
+                        <p data-i18n="chat_help_desc">Our support team can assist with common account and platform issues</p>
+                        <div class="help-items">
+                            <div class="help-item" onclick="openLiveChat()"><span class="help-number">01</span><span class="help-text" data-i18n="chat_help_account">Account Access</span></div>
+                            <div class="help-item" onclick="openLiveChat()"><span class="help-number">02</span><span class="help-text" data-i18n="chat_help_withdrawal">Withdrawal Support</span></div>
+                            <div class="help-item" onclick="openLiveChat()"><span class="help-number">03</span><span class="help-text" data-i18n="chat_help_rewards">Rewards And Bonuses</span></div>
+                            <div class="help-item" onclick="openLiveChat()"><span class="help-number">04</span><span class="help-text" data-i18n="chat_help_tasks">Tasks Questions</span></div>
                         </div>
                     </div>
                 </div>
@@ -222,22 +232,31 @@
         function closeMenu() { const sidebar = document.getElementById('sidebar'); const overlay = document.querySelector('.menu-overlay'); const menuBtn = document.getElementById('menuToggleBtn'); if (sidebar) sidebar.classList.remove('open'); if (overlay) overlay.classList.remove('active'); if (menuBtn) menuBtn.classList.remove('hidden'); }
         if (document.querySelectorAll('.nav-item')) { document.querySelectorAll('.nav-item').forEach(link => { link.addEventListener('click', () => { if (window.innerWidth <= 768) closeMenu(); }); }); }
 
-        function openLiveChat() { 
-    const t = window.i18n?.t || function(key) { return key; };
-    alert(t('chat_coming_soon') + '\n\n' + t('chat_email') + '\n' + t('chat_telegram')); 
-}
-        function openAppStore() { window.open('https://www.apple.com/app-store/', '_blank'); }
-        function openGooglePlay() { window.open('https://play.google.com/store/', '_blank'); }
+        // ✅ 跳转到 Telegram 支持频道
+        function openLiveChat() {
+            window.open('https://t.me/Additive_Support33', '_blank');
+        }
+
+        // ✅ 跳转到 Telegram App Store
+        function openAppStore() {
+            window.open('https://apps.apple.com/us/app/telegram-messenger/id686449807', '_blank');
+        }
+
+        // ✅ 跳转到 Telegram Google Play
+        function openGooglePlay() {
+            window.open('https://play.google.com/store/apps/details?id=org.telegram.messenger', '_blank');
+        }
+
         function checkLogin() { if (!localStorage.getItem('currentUser')) { console.log('Not logged in'); } }
         checkLogin();
     </script>
-<script src="i18n.js"></script>
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        if (window.i18n) {
-            window.i18n.applyTranslations();
-        }
-    });
-</script>
+    <script src="i18n.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            if (window.i18n) {
+                window.i18n.applyTranslations();
+            }
+        });
+    </script>
 </body>
 </html>
