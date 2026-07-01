@@ -1918,9 +1918,31 @@
                         document.getElementById('displayMembership').innerText = level;
                         document.getElementById('premiumStatusText').innerHTML = level;
                     }
-                    const { data: orders } = await sb.from('order_history').select('commission').eq('uid', user.uid);
-                    const total = orders?.reduce((s, o) => s + (o.commission || 0), 0) || 0;
-                    document.getElementById('totalEarnings').innerHTML = '€' + total.toFixed(2);
+                    // ============================================================
+// TOTAL EARNINGS - 包含订单佣金 + Cash Reward + Deposit Bonus
+// ============================================================
+
+// 1. 从 order_history 获取所有订单佣金
+const { data: orders } = await sb
+    .from('order_history')
+    .select('commission')
+    .eq('uid', user.uid);
+
+const totalCommission = orders?.reduce((s, o) => s + (o.commission || 0), 0) || 0;
+
+// 2. 从 deposits 获取奖励 (card_reward + deposit_bonus)
+const { data: rewards } = await sb
+    .from('deposits')
+    .select('amount')
+    .eq('uid', user.uid)
+    .in('type', ['card_reward', 'deposit_bonus']);
+
+const totalRewards = rewards?.reduce((s, r) => s + (r.amount || 0), 0) || 0;
+
+// 3. 计算总和
+const totalEarnings = totalCommission + totalRewards;
+
+document.getElementById('totalEarnings').innerHTML = '€' + totalEarnings.toFixed(2);
 
                     const { data: events } = await sb.from('events').select('id').eq('status', 'active');
                     const eventCount = events?.length || 0;
