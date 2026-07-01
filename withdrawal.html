@@ -1913,7 +1913,8 @@
                 if (displayBalanceEl) displayBalanceEl.innerHTML = '€' + newBalance.toFixed(2);
                 document.getElementById('amountInput').value = '';
 
-                showToast('withdrawal_success', 'success');
+                const t = window.i18n?.t || function(key) { return key; };
+showToast(t('withdrawal_success', { amount: amount.toFixed(2) }), 'success');
 
             } catch (e) {
                 showToast('withdrawal_failed: ' + e.message, 'error');
