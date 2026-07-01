@@ -1954,8 +1954,12 @@ async function loadDashboard() {
 
         document.getElementById('totalEarnings').innerHTML = '€' + totalEarnings.toFixed(2);
 
-        const { data: events } = await sb.from('events').select('id').eq('status', 'active');
-        const eventCount = events?.length || 0;
+        // 🔥 从 system_content 获取 events 数量
+const { data: events } = await sb
+    .from('system_content')
+    .select('id')
+    .eq('type', 'events');
+const eventCount = events?.length || 0;
         const currentEventValue = document.getElementById('currentEventValue');
         if (currentEventValue) {
             currentEventValue.innerHTML = eventCount;
