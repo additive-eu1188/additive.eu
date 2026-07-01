@@ -431,12 +431,12 @@
             var container = document.getElementById('contentContainer');
 
             try {
-                // 🔥 获取所有 events
+                // 🔥 按 sort_order 排序（由后台 Arrange 功能控制）
                 var { data: events, error } = await sb
                     .from('system_content')
                     .select('*')
                     .eq('type', 'events')
-                    .order('id', { ascending: true });
+                    .order('sort_order', { ascending: true });
 
                 if (error) throw error;
 
@@ -452,7 +452,7 @@
                     return;
                 }
 
-                // 🔥 合并所有 Event 的图片
+                // 🔥 合并所有 Event 的图片，按 sort_order 顺序
                 var allImages = [];
                 events.forEach(function(event) {
                     if (event.image_url) {
@@ -471,7 +471,6 @@
                     }
                 });
 
-                // 🔥 如果还是没有图片，显示空状态
                 if (allImages.length === 0) {
                     container.innerHTML = `
                         <div class="content-card">
@@ -484,7 +483,6 @@
                     return;
                 }
 
-                // 🔥 显示所有图片，编号从 1 开始
                 var imagesHtml = '<div class="image-grid-container">';
                 allImages.forEach(function(url, imgIndex) {
                     var escapedUrl = escapeHtml(url);
