@@ -1566,7 +1566,7 @@ function initTabBar() {
         z-index: 100 !important;
         scrollbar-width: thin !important;
         box-shadow: 0 2px 20px rgba(0,0,0,0.3), inset 0 1px 0 rgba(214, 178, 94, 0.04) !important;
-        margin: -24px -32px 20px -32px !important;
+        margin: 0px -32px 20px -32px !important;
         padding-left: 20px !important;
         padding-right: 16px !important;
         min-height: 50px !important;
