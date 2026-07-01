@@ -889,36 +889,6 @@ function loadDashboardPage(days) {
     dashboardRendered = true;
     
     container.innerHTML = `
-        <!-- ========== Notification 按钮 ========== -->
-        <div class="notification-container" style="display: flex; justify-content: flex-start; margin-bottom: 16px; position: relative;">
-            <div style="position: relative; display: inline-block;">
-                <button id="notificationBellBtn" style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06); border-radius: 50%; width: 44px; height: 44px; color: #d8e0f0; cursor: pointer; position: relative; transition: all 0.3s; font-size: 18px; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 20px rgba(0,0,0,0.2);">
-                    <i class="fas fa-bell"></i>
-                    <span id="notificationBadge" style="position: absolute; top: -4px; right: -4px; background: #e88080; color: #fff; border-radius: 50%; font-size: 10px; font-weight: 700; min-width: 18px; height: 18px; display: none; align-items: center; justify-content: center; padding: 0 4px; border: 2px solid rgba(12, 16, 28, 0.8);">0</span>
-                </button>
-                
-                <div id="notificationDropdown" style="display: none; position: absolute; top: 52px; left: 0; width: 400px; max-height: 500px; background: rgba(16, 20, 34, 0.98); border-radius: 16px; border: 1px solid rgba(255,255,255,0.06); box-shadow: 0 20px 60px rgba(0,0,0,0.6); overflow: hidden; z-index: 1000; backdrop-filter: blur(20px);">
-                    <div style="padding: 16px 20px; border-bottom: 1px solid rgba(255,255,255,0.04); display: flex; justify-content: space-between; align-items: center;">
-                        <h4 style="font-size: 14px; font-weight: 600; color: #d8e0f0; margin: 0;">
-                            <i class="fas fa-bell" style="color: #8892a8; margin-right: 8px;"></i>
-                            Notifications
-                        </h4>
-                        <span id="notificationCount" style="font-size: 11px; color: #6a7a92;">0</span>
-                    </div>
-                    <div id="notificationList" style="max-height: 350px; overflow-y: auto; padding: 8px 0;">
-                        <div style="text-align: center; padding: 40px 20px; color: #6a7a92; font-size: 13px;">
-                            <i class="fas fa-inbox" style="display: block; font-size: 28px; color: #4a5a72; margin-bottom: 10px;"></i>
-                            No notifications
-                        </div>
-                    </div>
-                    <div style="padding: 12px 20px; border-top: 1px solid rgba(255,255,255,0.04);">
-                        <button id="clearAllNotificationsBtn" style="width: 100%; background: rgba(232,128,128,0.06); border: 1px solid rgba(232,128,128,0.08); border-radius: 30px; padding: 8px 0; color: #e88080; font-weight: 500; font-size: 12px; cursor: pointer; transition: all 0.2s; font-family: 'Inter', sans-serif;">
-                            <i class="fas fa-trash"></i> Clear All
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
 
         <!-- 日期过滤器 -->
         <div style="display: flex; justify-content: flex-end; gap: 10px; margin-bottom: 24px; flex-wrap: wrap;">
