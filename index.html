@@ -1505,190 +1505,190 @@
     // 等待 i18n 加载并扩展翻译
     // ============================================================
     function extendI18nWithIndexTranslations() {
-    if (!window.i18n) return false;
-    if (window.i18n._indexExtended) return true;
-    
-    const indexTranslations = {
-        en: {
-            // ===== Hero =====
-            'hero_title': 'Digital<br>Hotel Marketing.<br><span class="highlight">Measurable, precise &<br>specialized.</span>',
-            'hero_subtitle': 'The first specialized performance marketing agency for hotels.<br>With a clear focus on data, measurable results, and more direct bookings.',
-            'hero_register_btn': 'Sign Up',
-            'hero_login_btn': 'Login',
-            'testimonials_title': 'What our <span style="color: #CCB299;">partners say</span>',
-            // ===== Stats =====
-            'stats_title_full': 'Our Numbers<br>Tell a Clear Story.',
-            'stat1_subtitle': 'More Than',
-            'stat1_label': 'Clients In Europe',
-            'stat2_subtitle': 'Within one year',
-            'stat2_label': 'More Revenue For Hotels',
-            'stat3_subtitle': 'Around',
-            'stat3_label': 'Managed Advertising Budget',
-            'stat4_subtitle': 'Average',
-            'stat4_label': 'ROI In Online Marketing',
-            'stat5_subtitle': 'About',
-            'stat5_label': 'Generated Added Value',
-            'stat6_subtitle': 'Recommended By',
-            'stat6_label': 'Partners & Agencies',
-            // ===== Features =====
-            'feature1_title': 'Marketing Excellence meets Technology.',
-            'feature1_desc': 'We combine high-quality marketing campaigns with advanced data analysis and proprietary technology that shows for the first time what really works.',
-            'feature1_item1': '24/7 Measurability and Transparency',
-            'feature1_item2': '100% Focus on Hospitality',
-            'feature1_item3': 'Not Clicks, but Revenue',
-            'feature2_title': 'Less Gut Feeling.<br>More Data.',
-            'feature2_desc': 'Our marketing system analyzes guest behavior & booking data in real time, enabling targeted marketing with a clear focus: More bookings and higher ROI.',
-            'feature2_item1': 'Individual Campaign Optimization',
-            'feature2_item2': 'Hotel-specific KPIs instead of superficial numbers',
-            'feature2_item3': 'Targeted seasonal balancing',
-            // ===== CTA =====
-            'cta_title_full': '<span class="gold-text">+500 Hotel Clients</span><br>in 6 locations across Europe',
-            'city_lana': 'Lana',
-            'city_bolzano': 'Bolzano',
-            'city_innsbruck': 'Innsbruck',
-            'city_berlin': 'Berlin',
-            'city_barcelona': 'Barcelona',
-            'city_stockholm': 'Stockholm',
-            'country_italy': 'Italy',
-            'country_austria': 'Austria',
-            'country_germany': 'Germany',
-            'country_spain': 'Spain',
-            'country_sweden': 'Sweden',
-            // ===== Footer =====
-            'footer_description': 'ADDITIVE+ offers digital marketing services, review support, and travel-related digital marketing services with a focus on secure access, clear support, and a reliable clients and operators experience.',
-            'footer_about_title': 'About Us & Legal',
-            'footer_tc': 'Terms & Conditions',
-            'footer_privacy': 'Privacy Policy',
-            'footer_contact_title': 'Contact Us',
-            'footer_support': 'We strive to respond to support and abuse requests as quickly as possible.',
-            'footer_copyright': '© 2026 ADDITIVE | Digital Hotel Marketing. All rights reserved.',
-            'footer_disclaimer': 'This website is operated as an independent digital marketing service platform.'
-        },
-        de: {
-            // ===== Hero =====
-            'hero_title': 'Digitales<br>Hotelmarketing.<br><span class="highlight">Messbar, präzise &<br>spezialisiert.</span>',
-            'hero_subtitle': 'Die erste spezialisierte Performance Marketing Agentur für Hotels.<br>Mit klarem Fokus auf Daten, messbare Ergebnisse und mehr Direktbuchungen.',
-            'hero_register_btn': 'Anmelden',
-            'hero_login_btn': 'Einloggen',
-            'testimonials_title': 'Was unsere <span style="color: #CCB299;">Partner sagen</span>',
-            // ===== Stats =====
-            'stats_title_full': 'Unsere Zahlen<br>erzählen eine klare Geschichte.',
-            'stat1_subtitle': 'Mehr als',
-            'stat1_label': 'Kunden in Europa',
-            'stat2_subtitle': 'Innerhalb eines Jahres',
-            'stat2_label': 'Mehr Umsatz für Hotels',
-            'stat3_subtitle': 'Rund',
-            'stat3_label': 'Verwaltetes Werbebudget',
-            'stat4_subtitle': 'Durchschnittlich',
-            'stat4_label': 'ROI im Online-Marketing',
-            'stat5_subtitle': 'Über',
-            'stat5_label': 'Generierter Mehrwert',
-            'stat6_subtitle': 'Empfohlen von',
-            'stat6_label': 'Partnern & Agenturen',
-            // ===== Features =====
-            'feature1_title': 'Marketing Exzellenz trifft Technologie.',
-            'feature1_desc': 'Wir kombinieren hochwertige Marketing-Kampagnen mit fortschrittlicher Datenanalyse und einer eigens entwickelten Technologie, die erstmals aufzeigt, welche Maßnahmen wirklich funktionieren.',
-            'feature1_item1': '24/7 Messbarkeit und Transparenz',
-            'feature1_item2': '100% Fokus auf die Hotellerie',
-            'feature1_item3': 'Nicht Klicks, sondern Umsatz',
-            'feature2_title': 'Weniger Bauchgefühl.<br>Mehr Daten.',
-            'feature2_desc': 'Unser Marketingsystem analysiert in Echtzeit Gästeverhalten & Reservierungsdaten und ermöglicht zielgerichtetes Marketing mit klarem Fokus: Mehr Buchungen und ein höherer ROI.',
-            'feature2_item1': 'Individuelle Kampagnenoptimierung',
-            'feature2_item2': 'Hotelspezifische KPIs statt oberflächlicher Zahlen',
-            'feature2_item3': 'Saisonalität gezielt ausgleichen',
-            // ===== CTA =====
-            'cta_title_full': '<span class="gold-text">+500 Hotel-Kunden</span><br>an 6 Standorten in Europa',
-            'city_lana': 'Lana',
-            'city_bolzano': 'Bozen',
-            'city_innsbruck': 'Innsbruck',
-            'city_berlin': 'Berlin',
-            'city_barcelona': 'Barcelona',
-            'city_stockholm': 'Stockholm',
-            'country_italy': 'Italien',
-            'country_austria': 'Österreich',
-            'country_germany': 'Deutschland',
-            'country_spain': 'Spanien',
-            'country_sweden': 'Schweden',
-            // ===== Footer (德文翻译) =====
-            'footer_description': 'ADDITIVE+ bietet digitale Marketingdienstleistungen, Bewertungsunterstützung und reisebezogene digitale Marketingdienstleistungen mit Fokus auf sicheren Zugang, klaren Support und eine zuverlässige Erfahrung für Kunden und Betreiber.',
-            'footer_about_title': 'Über uns & Rechtliches',
-            'footer_tc': 'Allgemeine Geschäftsbedingungen',
-            'footer_privacy': 'Datenschutzerklärung',
-            'footer_contact_title': 'Kontaktiere uns',
-            'footer_support': 'Wir bemühen uns, Support- und Missbrauchsanfragen so schnell wie möglich zu beantworten.',
-            'footer_copyright': '© 2026 ADDITIVE | Digitales Hotelmarketing. Alle Rechte vorbehalten.',
-            'footer_disclaimer': 'Diese Website wird als unabhängige digitale Marketingdienstleistungsplattform betrieben.'
-        },
-        it: {
-            // ===== Hero =====
-            'hero_title': 'Marketing<br>Digitale per Hotel.<br><span class="highlight">Misurabile, preciso &<br>specializzato.</span>',
-            'hero_subtitle': "La prima agenzia di performance marketing specializzata per hotel.<br>Con un focus chiaro su dati, risultati misurabili e più prenotazioni dirette.",
-            'hero_register_btn': 'Registrati',
-            'hero_login_btn': 'Accedi',
-            'testimonials_title': 'Cosa dicono i nostri <span style="color: #CCB299;">partner</span>',
-            // ===== Stats =====
-            'stats_title_full': 'I nostri numeri<br>raccontano una storia chiara.',
-            'stat1_subtitle': 'Più di',
-            'stat1_label': 'Clienti in Europa',
-            'stat2_subtitle': 'In un anno',
-            'stat2_label': 'Più fatturato per gli hotel',
-            'stat3_subtitle': 'Circa',
-            'stat3_label': 'Budget pubblicitario gestito',
-            'stat4_subtitle': 'In media',
-            'stat4_label': 'ROI nel marketing online',
-            'stat5_subtitle': 'Circa',
-            'stat5_label': 'Valore aggiunto generato',
-            'stat6_subtitle': 'Raccomandato da',
-            'stat6_label': 'Partner & Agenzie',
-            // ===== Features =====
-            'feature1_title': "L'eccellenza del marketing incontra la tecnologia.",
-            'feature1_desc': "Combiniamo campagne di marketing di alta qualità con analisi avanzate dei dati e una tecnologia proprietaria che mostra per la prima volta cosa funziona veramente.",
-            'feature1_item1': 'Misurabilità e trasparenza 24/7',
-            'feature1_item2': '100% Focus sull\'ospitalità',
-            'feature1_item3': 'Non clic, ma fatturato',
-            'feature2_title': 'Meno istinto.<br>Più dati.',
-            'feature2_desc': 'Il nostro sistema di marketing analizza in tempo reale il comportamento degli ospiti e i dati delle prenotazioni, consentendo un marketing mirato con un focus chiaro: più prenotazioni e un ROI più alto.',
-            'feature2_item1': 'Ottimizzazione individuale delle campagne',
-            'feature2_item2': 'KPI specifici per hotel invece di numeri superficiali',
-            'feature2_item3': 'Bilanciamento stagionale mirato',
-            // ===== CTA =====
-            'cta_title_full': '<span class="gold-text">+500 Clienti Hotel</span><br>in 6 località in Europa',
-            'city_lana': 'Lana',
-            'city_bolzano': 'Bolzano',
-            'city_innsbruck': 'Innsbruck',
-            'city_berlin': 'Berlino',
-            'city_barcelona': 'Barcellona',
-            'city_stockholm': 'Stoccolma',
-            'country_italy': 'Italia',
-            'country_austria': 'Austria',
-            'country_germany': 'Germania',
-            'country_spain': 'Spagna',
-            'country_sweden': 'Svezia',
-            // ===== Footer (意大利文翻译) =====
-            'footer_description': 'ADDITIVE+ offre servizi di marketing digitale, supporto per le recensioni e servizi di marketing digitale legati al turismo, con un focus su accesso sicuro, supporto chiaro e un\'esperienza affidabile per clienti e operatori.',
-            'footer_about_title': 'Chi siamo & Legale',
-            'footer_tc': 'Termini e Condizioni',
-            'footer_privacy': 'Informativa sulla Privacy',
-            'footer_contact_title': 'Contattaci',
-            'footer_support': 'Ci impegniamo a rispondere alle richieste di supporto e segnalazioni il più rapidamente possibile.',
-            'footer_copyright': '© 2026 ADDITIVE | Digital Hotel Marketing. Tutti i diritti riservati.',
-            'footer_disclaimer': 'Questo sito web è gestito come piattaforma indipendente di servizi di marketing digitale.'
-        }
-    };
-
-    const translations = window.i18n._translations || window.i18n.TRANSLATIONS;
-    if (translations) {
-        for (const lang in indexTranslations) {
-            if (translations[lang]) {
-                Object.assign(translations[lang], indexTranslations[lang]);
+        if (!window.i18n) return false;
+        if (window.i18n._indexExtended) return true;
+        
+        const indexTranslations = {
+            en: {
+                // ===== Hero =====
+                'hero_title': 'Digital<br>Hotel Marketing.<br><span class="highlight">Measurable, precise &<br>specialized.</span>',
+                'hero_subtitle': 'The first specialized performance marketing agency for hotels.<br>With a clear focus on data, measurable results, and more direct bookings.',
+                'hero_register_btn': 'Sign Up',
+                'hero_login_btn': 'Login',
+                'testimonials_title': 'What our <span style="color: #CCB299;">partners say</span>',
+                // ===== Stats =====
+                'stats_title_full': 'Our Numbers<br>Tell a Clear Story.',
+                'stat1_subtitle': 'More Than',
+                'stat1_label': 'Clients In Europe',
+                'stat2_subtitle': 'Within one year',
+                'stat2_label': 'More Revenue For Hotels',
+                'stat3_subtitle': 'Around',
+                'stat3_label': 'Managed Advertising Budget',
+                'stat4_subtitle': 'Average',
+                'stat4_label': 'ROI In Online Marketing',
+                'stat5_subtitle': 'About',
+                'stat5_label': 'Generated Added Value',
+                'stat6_subtitle': 'Recommended By',
+                'stat6_label': 'Partners & Agencies',
+                // ===== Features =====
+                'feature1_title': 'Marketing Excellence meets Technology.',
+                'feature1_desc': 'We combine high-quality marketing campaigns with advanced data analysis and proprietary technology that shows for the first time what really works.',
+                'feature1_item1': '24/7 Measurability and Transparency',
+                'feature1_item2': '100% Focus on Hospitality',
+                'feature1_item3': 'Not Clicks, but Revenue',
+                'feature2_title': 'Less Gut Feeling.<br>More Data.',
+                'feature2_desc': 'Our marketing system analyzes guest behavior & booking data in real time, enabling targeted marketing with a clear focus: More bookings and higher ROI.',
+                'feature2_item1': 'Individual Campaign Optimization',
+                'feature2_item2': 'Hotel-specific KPIs instead of superficial numbers',
+                'feature2_item3': 'Targeted seasonal balancing',
+                // ===== CTA =====
+                'cta_title_full': '<span class="gold-text">+500 Hotel Clients</span><br>in 6 locations across Europe',
+                'city_lana': 'Lana',
+                'city_bolzano': 'Bolzano',
+                'city_innsbruck': 'Innsbruck',
+                'city_berlin': 'Berlin',
+                'city_barcelona': 'Barcelona',
+                'city_stockholm': 'Stockholm',
+                'country_italy': 'Italy',
+                'country_austria': 'Austria',
+                'country_germany': 'Germany',
+                'country_spain': 'Spain',
+                'country_sweden': 'Sweden',
+                // ===== Footer =====
+                'footer_description': 'ADDITIVE+ offers digital marketing services, review support, and travel-related digital marketing services with a focus on secure access, clear support, and a reliable clients and operators experience.',
+                'footer_about_title': 'About Us & Legal',
+                'footer_tc': 'Terms & Conditions',
+                'footer_privacy': 'Privacy Policy',
+                'footer_contact_title': 'Contact Us',
+                'footer_support': 'We strive to respond to support and abuse requests as quickly as possible.',
+                'footer_copyright': '© 2026 ADDITIVE | Digital Hotel Marketing. All rights reserved.',
+                'footer_disclaimer': 'This website is operated as an independent digital marketing service platform.'
+            },
+            de: {
+                // ===== Hero =====
+                'hero_title': 'Digitales<br>Hotelmarketing.<br><span class="highlight">Messbar, präzise &<br>spezialisiert.</span>',
+                'hero_subtitle': 'Die erste spezialisierte Performance Marketing Agentur für Hotels.<br>Mit klarem Fokus auf Daten, messbare Ergebnisse und mehr Direktbuchungen.',
+                'hero_register_btn': 'Anmelden',
+                'hero_login_btn': 'Einloggen',
+                'testimonials_title': 'Was unsere <span style="color: #CCB299;">Partner sagen</span>',
+                // ===== Stats =====
+                'stats_title_full': 'Unsere Zahlen<br>erzählen eine klare Geschichte.',
+                'stat1_subtitle': 'More Than',
+                'stat1_label': 'Clients In Europe',
+                'stat2_subtitle': 'Within one year',
+                'stat2_label': 'More Revenue For Hotels',
+                'stat3_subtitle': 'Around',
+                'stat3_label': 'Managed Advertising Budget',
+                'stat4_subtitle': 'Average',
+                'stat4_label': 'ROI In Online Marketing',
+                'stat5_subtitle': 'About',
+                'stat5_label': 'Generated Added Value',
+                'stat6_subtitle': 'Recommended By',
+                'stat6_label': 'Partners & Agencies',
+                // ===== Features =====
+                'feature1_title': 'Marketing Exzellenz trifft Technologie.',
+                'feature1_desc': 'Wir kombinieren hochwertige Marketing-Kampagnen mit fortschrittlicher Datenanalyse und einer eigens entwickelten Technologie, die erstmals aufzeigt, welche Maßnahmen wirklich funktionieren.',
+                'feature1_item1': '24/7 Messbarkeit und Transparenz',
+                'feature1_item2': '100% Fokus auf die Hotellerie',
+                'feature1_item3': 'Nicht Klicks, sondern Umsatz',
+                'feature2_title': 'Weniger Bauchgefühl.<br>Mehr Daten.',
+                'feature2_desc': 'Unser Marketingsystem analysiert in Echtzeit Gästeverhalten & Reservierungsdaten und ermöglicht zielgerichtetes Marketing mit klarem Fokus: Mehr Buchungen und ein höherer ROI.',
+                'feature2_item1': 'Individuelle Kampagnenoptimierung',
+                'feature2_item2': 'Hotelspezifische KPIs statt oberflächlicher Zahlen',
+                'feature2_item3': 'Saisonalität gezielt ausgleichen',
+                // ===== CTA =====
+                'cta_title_full': '<span class="gold-text">+500 Hotel-Kunden</span><br>an 6 Standorten in Europa',
+                'city_lana': 'Lana',
+                'city_bolzano': 'Bozen',
+                'city_innsbruck': 'Innsbruck',
+                'city_berlin': 'Berlin',
+                'city_barcelona': 'Barcelona',
+                'city_stockholm': 'Stockholm',
+                'country_italy': 'Italien',
+                'country_austria': 'Österreich',
+                'country_germany': 'Deutschland',
+                'country_spain': 'Spanien',
+                'country_sweden': 'Schweden',
+                // ===== Footer =====
+                'footer_description': 'ADDITIVE+ offers digital marketing services, review support, and travel-related digital marketing services with a focus on secure access, clear support, and a reliable clients and operators experience.',
+                'footer_about_title': 'About Us & Legal',
+                'footer_tc': 'Terms & Conditions',
+                'footer_privacy': 'Privacy Policy',
+                'footer_contact_title': 'Contact Us',
+                'footer_support': 'We strive to respond to support and abuse requests as quickly as possible.',
+                'footer_copyright': '© 2026 ADDITIVE | Digitales Hotelmarketing. All rights reserved.',
+                'footer_disclaimer': 'This website is operated as an independent digital marketing service platform.'
+            },
+            it: {
+                // ===== Hero =====
+                'hero_title': 'Marketing<br>Digitale per Hotel.<br><span class="highlight">Misurabile, preciso &<br>specializzato.</span>',
+                'hero_subtitle': "La prima agenzia di performance marketing specializzata per hotel.<br>Con un focus chiaro su dati, risultati misurabili e più prenotazioni dirette.",
+                'hero_register_btn': 'Registrati',
+                'hero_login_btn': 'Accedi',
+                'testimonials_title': 'Cosa dicono i nostri <span style="color: #CCB299;">partner</span>',
+                // ===== Stats =====
+                'stats_title_full': 'I nostri numeri<br>raccontano una storia chiara.',
+                'stat1_subtitle': 'More Than',
+                'stat1_label': 'Clients In Europe',
+                'stat2_subtitle': 'Within one year',
+                'stat2_label': 'More Revenue For Hotels',
+                'stat3_subtitle': 'Around',
+                'stat3_label': 'Managed Advertising Budget',
+                'stat4_subtitle': 'Average',
+                'stat4_label': 'ROI In Online Marketing',
+                'stat5_subtitle': 'About',
+                'stat5_label': 'Generated Added Value',
+                'stat6_subtitle': 'Recommended By',
+                'stat6_label': 'Partners & Agencies',
+                // ===== Features =====
+                'feature1_title': "L'eccellenza del marketing incontra la tecnologia.",
+                'feature1_desc': "Combiniamo campagne di marketing di alta qualità con analisi avanzate dei dati e una tecnologia proprietaria che mostra per la prima volta cosa funziona veramente.",
+                'feature1_item1': 'Misurabilità e trasparenza 24/7',
+                'feature1_item2': '100% Focus sull\'ospitalità',
+                'feature1_item3': 'Non clic, ma fatturato',
+                'feature2_title': 'Meno istinto.<br>Più dati.',
+                'feature2_desc': 'Il nostro sistema di marketing analizza in tempo reale il comportamento degli ospiti e i dati delle prenotazioni, consentendo un marketing mirato con un focus chiaro: più prenotazioni e un ROI più alto.',
+                'feature2_item1': 'Ottimizzazione individuale delle campagne',
+                'feature2_item2': 'KPI specifici per hotel invece di numeri superficiali',
+                'feature2_item3': 'Bilanciamento stagionale mirato',
+                // ===== CTA =====
+                'cta_title_full': '<span class="gold-text">+500 Clienti Hotel</span><br>in 6 località in Europa',
+                'city_lana': 'Lana',
+                'city_bolzano': 'Bolzano',
+                'city_innsbruck': 'Innsbruck',
+                'city_berlin': 'Berlino',
+                'city_barcelona': 'Barcellona',
+                'city_stockholm': 'Stoccolma',
+                'country_italy': 'Italia',
+                'country_austria': 'Austria',
+                'country_germany': 'Germania',
+                'country_spain': 'Spagna',
+                'country_sweden': 'Svezia',
+                // ===== Footer =====
+                'footer_description': 'ADDITIVE+ offers digital marketing services, review support, and travel-related digital marketing services with a focus on secure access, clear support, and a reliable clients and operators experience.',
+                'footer_about_title': 'About Us & Legal',
+                'footer_tc': 'Terms & Conditions',
+                'footer_privacy': 'Privacy Policy',
+                'footer_contact_title': 'Contact Us',
+                'footer_support': 'We strive to respond to support and abuse requests as quickly as possible.',
+                'footer_copyright': '© 2026 ADDITIVE | Digitales Hotelmarketing. All rights reserved.',
+                'footer_disclaimer': 'This website is operated as an independent digital marketing service platform.'
             }
+        };
+
+        const translations = window.i18n._translations || window.i18n.TRANSLATIONS;
+        if (translations) {
+            for (const lang in indexTranslations) {
+                if (translations[lang]) {
+                    Object.assign(translations[lang], indexTranslations[lang]);
+                }
+            }
+            window.i18n._indexExtended = true;
+            console.log('✅ Index page translations extended');
+            return true;
         }
-        window.i18n._indexExtended = true;
-        console.log('✅ Index page translations extended');
-        return true;
+        return false;
     }
-    return false;
-}
 
     function waitForI18nAndInit() {
         let attempts = 0;
