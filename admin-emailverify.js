@@ -1,9 +1,9 @@
-// admin-emailverify.js - 邮箱验证管理页面（一键发送邮件）
+// admin-emailverify.js - 邮箱验证管理页面（三种状态分类）
 let activeEmailTab = 'pending';
 let emailSearchKeyword = '';
 
 // ============================================================
-// 🔥 邮件模板配置（完全按您的要求设置）
+// 🔥 邮件模板配置
 // ============================================================
 const EMAIL_TEMPLATE = {
     subject: 'Verification Code For Your Additive\'s Account',
@@ -31,6 +31,22 @@ function generateTAC() {
 }
 
 // ============================================================
+// 🔥 判断记录状态
+// ============================================================
+function getRecordStatus(record) {
+    // 已验证
+    if (record.is_verified === true) {
+        return { label: 'Verified', class: 'status-badge-verified', icon: '✅' };
+    }
+    // 已发送待验证 (code 有值)
+    if (record.code && record.code !== '' && record.code !== null) {
+        return { label: 'Pending', class: 'status-badge-pending', icon: '⏳' };
+    }
+    // 新请求 (code 为空)
+    return { label: 'New Request', class: 'status-badge-new', icon: '🆕' };
+}
+
+// ============================================================
 // 🔥 一键发送邮件 - 自动生成TAC + 跳转Gmail
 // ============================================================
 function sendVerificationEmail(email, requestId) {
@@ -39,22 +55,17 @@ function sendVerificationEmail(email, requestId) {
         return;
     }
 
-    // 1. 生成6位数TAC
     const tacCode = generateTAC();
     console.log('📧 生成TAC:', tacCode, 'for:', email);
 
-    // 2. 替换邮件模板中的 [VERIFICATION_CODE]
     let subject = EMAIL_TEMPLATE.subject;
     let body = EMAIL_TEMPLATE.body;
     body = body.replace(/\[VERIFICATION_CODE\]/g, tacCode);
 
-    // 3. 构建 Gmail 链接
     const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(email)}&su=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
     
-    // 4. 打开 Gmail（新窗口）
     window.open(gmailUrl, '_blank');
 
-    // 5. 将TAC保存到数据库
     saveTACToDatabase(requestId, tacCode, email);
 
     showToast(`✅ TAC: ${tacCode} | Gmail opened for ${email}`, 'success');
@@ -81,13 +92,42 @@ async function saveTACToDatabase(requestId, code, email) {
 
         console.log('✅ TAC saved to database:', code);
         
-        // 刷新列表
         await loadEmailPending();
         await loadEmailHistory();
         await updateEmailStats();
 
     } catch (e) {
         console.error('❌ 保存TAC异常:', e);
+    }
+}
+
+// ============================================================
+// 🔥 手动验证 - 将记录标记为已验证
+// ============================================================
+async function verifyEmail(requestId, email) {
+    try {
+        const { error } = await sb
+            .from('email_verification_requests')
+            .update({ 
+                is_verified: true,
+                verified_at: new Date().toISOString()
+            })
+            .eq('id', parseInt(requestId));
+
+        if (error) {
+            console.error('❌ 验证失败:', error);
+            showToast('❌ Verification failed', 'error');
+            return;
+        }
+
+        showToast(`✅ ${email} verified successfully!`, 'success');
+        
+        await loadEmailPending();
+        await loadEmailHistory();
+        await updateEmailStats();
+
+    } catch (e) {
+        console.error('❌ 验证异常:', e);
     }
 }
 
@@ -113,14 +153,18 @@ async function loadEmailVerifyPage() {
             <!-- 待处理面板 -->
             <div id="emailPendingPanel" class="email-panel">
                 <!-- 统计卡片 -->
-                <div class="stats-grid" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; margin-bottom: 24px;">
+                <div class="stats-grid" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 24px;">
                     <div class="stat-item" style="background: rgba(12, 16, 28, 0.6); border-radius: 16px; padding: 16px 20px; text-align: center; border: 1px solid rgba(255,255,255,0.04);">
-                        <div class="label" style="font-size: 11px; color: #8892a8; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">TOTAL REQUESTS</div>
-                        <div class="value" id="emailStatTotal" style="font-size: 28px; font-weight: 700; color: #ffffff;">0</div>
+                        <div class="label" style="font-size: 11px; color: #8892a8; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">🆕 New Requests</div>
+                        <div class="value" id="emailStatNew" style="font-size: 28px; font-weight: 700; color: #4a7cff;">0</div>
                     </div>
                     <div class="stat-item" style="background: rgba(12, 16, 28, 0.6); border-radius: 16px; padding: 16px 20px; text-align: center; border: 1px solid rgba(255,255,255,0.04);">
-                        <div class="label" style="font-size: 11px; color: #8892a8; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">PENDING</div>
-                        <div class="value" id="emailStatPending" style="font-size: 28px; font-weight: 700; color: #ffffff;">0</div>
+                        <div class="label" style="font-size: 11px; color: #8892a8; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">⏳ Pending</div>
+                        <div class="value" id="emailStatPending" style="font-size: 28px; font-weight: 700; color: #ffb84d;">0</div>
+                    </div>
+                    <div class="stat-item" style="background: rgba(12, 16, 28, 0.6); border-radius: 16px; padding: 16px 20px; text-align: center; border: 1px solid rgba(255,255,255,0.04);">
+                        <div class="label" style="font-size: 11px; color: #8892a8; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">✅ Verified</div>
+                        <div class="value" id="emailStatVerified" style="font-size: 28px; font-weight: 700; color: #4ade80;">0</div>
                     </div>
                 </div>
                 
@@ -131,14 +175,14 @@ async function loadEmailVerifyPage() {
                 </div>
                 
                 <div class="table-container" style="max-height: 500px; overflow-y: auto; border-radius: 16px; border: 1px solid rgba(255,255,255,0.03);">
-                    <table class="data-table" style="width: 100%; border-collapse: collapse; font-size: 13px; min-width: 900px;">
+                    <table class="data-table" style="width: 100%; border-collapse: collapse; font-size: 13px; min-width: 950px;">
                         <thead>
                             <tr>
                                 <th style="padding: 14px 14px; color: #a8b4d0; font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid rgba(255,255,255,0.04); background: rgba(10,14,28,0.3); text-align: left; min-width: 120px;">PHONE</th>
                                 <th style="padding: 14px 14px; color: #a8b4d0; font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid rgba(255,255,255,0.04); background: rgba(10,14,28,0.3); text-align: left; min-width: 200px;">EMAIL</th>
                                 <th style="padding: 14px 14px; color: #a8b4d0; font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid rgba(255,255,255,0.04); background: rgba(10,14,28,0.3); text-align: left; min-width: 160px;">REQUEST TIME</th>
-                                <th style="padding: 14px 14px; color: #a8b4d0; font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid rgba(255,255,255,0.04); background: rgba(10,14,28,0.3); text-align: left; min-width: 160px;">EXPIRES</th>
-                                <th style="padding: 14px 14px; color: #a8b4d0; font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid rgba(255,255,255,0.04); background: rgba(10,14,28,0.3); text-align: left; min-width: 200px;">ACTIONS</th>
+                                <th style="padding: 14px 14px; color: #a8b4d0; font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid rgba(255,255,255,0.04); background: rgba(10,14,28,0.3); text-align: left; min-width: 140px;">STATUS</th>
+                                <th style="padding: 14px 14px; color: #a8b4d0; font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid rgba(255,255,255,0.04); background: rgba(10,14,28,0.3); text-align: left; min-width: 220px;">ACTIONS</th>
                             </tr>
                         </thead>
                         <tbody id="emailTableBody"><tr><td colspan="5" style="text-align:center; padding:30px; color:#6a7a9a;">Loading...</td></tr></tbody>
@@ -151,7 +195,7 @@ async function loadEmailVerifyPage() {
                 <div class="stats-grid" style="display: grid; grid-template-columns: repeat(1, 1fr); gap: 16px; margin-bottom: 24px;">
                     <div class="stat-item" style="background: rgba(12, 16, 28, 0.6); border-radius: 16px; padding: 16px 20px; text-align: center; border: 1px solid rgba(255,255,255,0.04);">
                         <div class="label" style="font-size: 11px; color: #8892a8; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">TOTAL VERIFIED</div>
-                        <div class="value" id="emailHistoryStatTotal" style="font-size: 28px; font-weight: 700; color: #ffffff;">0</div>
+                        <div class="value" id="emailHistoryStatTotal" style="font-size: 28px; font-weight: 700; color: #4ade80;">0</div>
                     </div>
                 </div>
                 
@@ -209,11 +253,24 @@ async function loadEmailVerifyPage() {
             from { opacity: 0; transform: translateY(8px); }
             to { opacity: 1; transform: translateY(0); }
         }
+        .btn-sm-action {
+            padding: 4px 12px;
+            font-size: 11px;
+            border: none;
+            border-radius: 40px;
+            color: #fff;
+            cursor: pointer;
+            transition: 0.2s;
+            margin-right: 4px;
+            font-weight: 600;
+            font-family: 'Inter', sans-serif;
+        }
+        .btn-sm-action:hover { opacity: 0.85; }
         .btn-send-email { 
             background: rgba(74, 222, 128, 0.12); 
             color: #4ade80; 
-            padding: 6px 18px;
-            font-size: 12px;
+            padding: 5px 14px;
+            font-size: 11px;
             border: none;
             border-radius: 40px;
             cursor: pointer;
@@ -223,33 +280,66 @@ async function loadEmailVerifyPage() {
             font-family: 'Inter', sans-serif;
         }
         .btn-send-email:hover { background: rgba(74, 222, 128, 0.25); }
-        .btn-send-email i { margin-right: 6px; }
+        .btn-send-email i { margin-right: 4px; }
         .btn-send-email:disabled {
             opacity: 0.4;
             cursor: not-allowed;
         }
+        .btn-verify-email {
+            background: rgba(74, 124, 255, 0.12);
+            color: #4a7cff;
+            padding: 5px 14px;
+            font-size: 11px;
+            border: none;
+            border-radius: 40px;
+            cursor: pointer;
+            transition: 0.2s;
+            font-weight: 600;
+            white-space: nowrap;
+            font-family: 'Inter', sans-serif;
+        }
+        .btn-verify-email:hover { background: rgba(74, 124, 255, 0.25); }
+        .btn-verify-email i { margin-right: 4px; }
+        .btn-resend-email {
+            background: rgba(255, 184, 77, 0.12);
+            color: #ffb84d;
+            padding: 5px 14px;
+            font-size: 11px;
+            border: none;
+            border-radius: 40px;
+            cursor: pointer;
+            transition: 0.2s;
+            font-weight: 600;
+            white-space: nowrap;
+            font-family: 'Inter', sans-serif;
+        }
+        .btn-resend-email:hover { background: rgba(255, 184, 77, 0.25); }
+        .btn-resend-email i { margin-right: 4px; }
         .status-badge-verified {
-            background: rgba(122, 208, 176, 0.10);
-            color: #7ad0b0;
-            padding: 2px 12px;
+            background: rgba(74, 222, 128, 0.12);
+            color: #4ade80;
+            padding: 3px 14px;
             border-radius: 40px;
             font-size: 11px;
+            font-weight: 600;
             display: inline-block;
         }
         .status-badge-pending {
-            background: rgba(212, 192, 154, 0.10);
-            color: #d4c09a;
-            padding: 2px 12px;
+            background: rgba(255, 184, 77, 0.12);
+            color: #ffb84d;
+            padding: 3px 14px;
             border-radius: 40px;
             font-size: 11px;
+            font-weight: 600;
             display: inline-block;
         }
-        .status-badge-expired {
-            background: rgba(232, 128, 128, 0.10);
-            color: #e88080;
-            padding: 2px 12px;
+        .status-badge-new {
+            background: rgba(74, 124, 255, 0.12);
+            color: #4a7cff;
+            padding: 3px 14px;
             border-radius: 40px;
             font-size: 11px;
+            font-weight: 600;
             display: inline-block;
         }
         @media (max-width: 768px) {
@@ -257,7 +347,7 @@ async function loadEmailVerifyPage() {
             .tab-email-btn { font-size: 12px; padding: 6px 14px; }
             .search-bar { flex-direction: column; align-items: stretch; }
             .search-bar input { width: 100% !important; min-width: unset; flex: 1 1 auto !important; }
-            .btn-send-email { font-size: 11px; padding: 5px 14px; }
+            .btn-send-email, .btn-verify-email, .btn-resend-email { font-size: 10px; padding: 4px 10px; }
         }
     `;
     document.head.appendChild(style);
@@ -332,36 +422,30 @@ function switchEmailTab(tab) {
 
 async function updateEmailStats() {
     try {
-        const totalRes = await sb.from('email_verification_requests').select('id', { count: 'exact', head: true });
-        const pendingRes = await sb.from('email_verification_requests').select('id', { count: 'exact', head: true })
-            .eq('is_verified', false)
-            .is('code', null);
-        const historyRes = await sb.from('email_verification_requests').select('id', { count: 'exact', head: true })
+        // 统计所有未验证的记录
+        const { data: allUnverified } = await sb
+            .from('email_verification_requests')
+            .select('code, is_verified')
+            .eq('is_verified', false);
+        
+        // 新请求：code 为空
+        const newRequests = allUnverified?.filter(r => !r.code || r.code === '' || r.code === null) || [];
+        // 待验证：code 有值
+        const pendingRequests = allUnverified?.filter(r => r.code && r.code !== '' && r.code !== null) || [];
+        
+        // 已验证
+        const { count: verifiedCount } = await sb
+            .from('email_verification_requests')
+            .select('id', { count: 'exact', head: true })
             .eq('is_verified', true);
         
-        document.getElementById('emailStatTotal').innerText = totalRes.count || 0;
-        document.getElementById('emailStatPending').innerText = pendingRes.count || 0;
-        document.getElementById('emailHistoryStatTotal').innerText = historyRes.count || 0;
+        document.getElementById('emailStatNew').innerText = newRequests.length;
+        document.getElementById('emailStatPending').innerText = pendingRequests.length;
+        document.getElementById('emailStatVerified').innerText = verifiedCount || 0;
+        document.getElementById('emailHistoryStatTotal').innerText = verifiedCount || 0;
+        
     } catch (e) {
         console.error('更新Email统计失败:', e);
-    }
-}
-
-async function getPhoneByUid(uid) {
-    try {
-        const { data } = await sb.from('users').select('phone').eq('uid', uid).single();
-        return data?.phone || '-';
-    } catch (e) {
-        return '-';
-    }
-}
-
-async function getUserByEmail(email) {
-    try {
-        const { data } = await sb.from('users').select('uid, phone').eq('email', email).single();
-        return data || null;
-    } catch (e) {
-        return null;
     }
 }
 
@@ -371,10 +455,10 @@ async function loadEmailPending() {
     tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:30px; color:#6a7a9a;">Loading...</td></tr>';
     
     try {
+        // ✅ 查询所有未验证的记录（不管 code 有没有值）
         let query = sb.from('email_verification_requests')
             .select('*')
             .eq('is_verified', false)
-            .is('code', null)
             .order('requested_at', { ascending: false });
         
         const keyword = document.getElementById('emailSearchInput')?.value.trim() || '';
@@ -408,34 +492,78 @@ async function loadEmailPending() {
             const row = tbody.insertRow();
             
             const phone = phoneMap[item.email] || '-';
-            
             const requestTime = item.requested_at ? new Date(item.requested_at).toLocaleString() : '-';
-            const expireTime = item.expires_at ? new Date(item.expires_at).toLocaleString() : '-';
-            const isExpired = item.expires_at ? new Date(item.expires_at) < new Date() : false;
+            
+            // 🔥 判断状态
+            const status = getRecordStatus(item);
+            
+            // 🔥 判断是否可操作
+            const isNewRequest = !item.code || item.code === '' || item.code === null;
+            const isPending = item.code && item.code !== '' && item.code !== null;
             
             row.insertCell(0).innerHTML = `<span style="font-size:12px; color:#b0c0da;">${escapeHtml(phone)}</span>`;
             row.insertCell(1).innerHTML = `<span style="font-weight:500; color:#d8e0f0;">${escapeHtml(item.email)}</span>`;
             row.insertCell(2).innerHTML = `<span style="font-size:12px; color:#8892a8;">${requestTime}</span>`;
-            row.insertCell(3).innerHTML = `<span style="font-size:12px; color:${isExpired ? '#e88080' : '#8892a8'};">${expireTime}${isExpired ? ' ⚠️' : ''}</span>`;
             
-            // ACTIONS 列 - 只有 Send 按钮
+            // 状态列
+            row.insertCell(3).innerHTML = `<span class="${status.class}">${status.icon} ${status.label}</span>`;
+            
+            // 操作列
             const actionsCell = row.insertCell(4);
-            actionsCell.innerHTML = `
-                <button class="btn-send-email send-email-btn" data-id="${item.id}" data-email="${item.email}" ${isExpired ? 'disabled style="opacity:0.4;cursor:not-allowed;"' : ''}>
-                    <i class="fas fa-envelope"></i> Send
-                </button>
-                ${isExpired ? '<span class="status-badge-expired" style="margin-left:8px;">Expired</span>' : ''}
-            `;
+            let actionsHtml = '';
+            
+            if (isNewRequest) {
+                // 新请求：显示 Send 按钮
+                actionsHtml = `
+                    <button class="btn-send-email send-email-btn" data-id="${item.id}" data-email="${item.email}">
+                        <i class="fas fa-envelope"></i> Send
+                    </button>
+                `;
+            } else if (isPending) {
+                // 已发送待验证：显示 Resend + Verify 按钮
+                actionsHtml = `
+                    <button class="btn-resend-email resend-email-btn" data-id="${item.id}" data-email="${item.email}" title="Resend with new TAC">
+                        <i class="fas fa-sync-alt"></i> Resend
+                    </button>
+                    <button class="btn-verify-email verify-email-btn" data-id="${item.id}" data-email="${item.email}" title="Mark as verified">
+                        <i class="fas fa-check"></i> Verify
+                    </button>
+                `;
+            }
+            
+            actionsCell.innerHTML = actionsHtml;
         }
         
         // ============================================================
-        // 🔥 绑定事件：一键发送邮件（自动生成TAC + 跳转Gmail）
+        // 🔥 绑定事件：发送邮件（新请求）
         // ============================================================
         document.querySelectorAll('.send-email-btn').forEach(btn => {
             btn.addEventListener('click', function() {
                 const id = this.dataset.id;
                 const email = this.dataset.email;
                 sendVerificationEmail(email, id);
+            });
+        });
+        
+        // ============================================================
+        // 🔥 绑定事件：重新发送（已发送待验证）
+        // ============================================================
+        document.querySelectorAll('.resend-email-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const id = this.dataset.id;
+                const email = this.dataset.email;
+                sendVerificationEmail(email, id);
+            });
+        });
+        
+        // ============================================================
+        // 🔥 绑定事件：手动验证
+        // ============================================================
+        document.querySelectorAll('.verify-email-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const id = this.dataset.id;
+                const email = this.dataset.email;
+                verifyEmail(id, email);
             });
         });
         
@@ -498,7 +626,7 @@ async function loadEmailHistory() {
             row.insertCell(2).innerHTML = `<span class="badge" style="background: rgba(255,255,255,0.08); padding: 2px 12px; border-radius: 20px; font-size: 11px; color: #c8d2e8; border: 1px solid rgba(255,255,255,0.06);">${escapeHtml(uid)}</span>`;
             row.insertCell(3).innerHTML = `<span style="font-weight:600; font-size:14px; color:#4a7cff; font-family:'Courier New', monospace; letter-spacing:2px;">${escapeHtml(item.code || '-')}</span>`;
             row.insertCell(4).innerHTML = `<span style="font-size:12px; color:#8892a8;">${requestTime}</span>`;
-            row.insertCell(5).innerHTML = `<span style="font-size:12px; color:#7ad0b0;">${verifiedTime}</span>`;
+            row.insertCell(5).innerHTML = `<span style="font-size:12px; color:#4ade80;">${verifiedTime}</span>`;
         }
         
     } catch (e) {
