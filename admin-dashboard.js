@@ -1611,7 +1611,6 @@ async function updateCongratsMessage() {
         var today = getBerlinDate();
         var todayStr = today.toISOString().split('T')[0];
         
-        // 查询今天注册的用户
         var { data: users } = await sb
             .from('users')
             .select('uid, username, invited_by_username')
@@ -1626,7 +1625,6 @@ async function updateCongratsMessage() {
             return;
         }
         
-        // 获取这些用户的存款记录
         var uids = users.map(function(u) { return u.uid; });
         var { data: deposits } = await sb
             .from('deposits')
@@ -1643,7 +1641,6 @@ async function updateCongratsMessage() {
             });
         }
         
-        // 找出已转化的用户（有存款 >= 40）
         var convertedUsers = users.filter(function(u) {
             return depositUsers[u.uid] === true;
         });
@@ -1657,7 +1654,6 @@ async function updateCongratsMessage() {
             return;
         }
         
-        // 🔥 生成每条祝贺消息，最多显示4条
         var messagesHtml = '';
         var displayUsers = convertedUsers.slice(0, 4);
         
@@ -1670,7 +1666,6 @@ async function updateCongratsMessage() {
                 '</div>';
         });
         
-        // 如果有更多，显示剩余数量
         var remaining = convertedUsers.length - 4;
         if (remaining > 0) {
             messagesHtml += '<div style="padding: 4px 0; color: #6a7a8a; font-size: 12px; text-align: center; border-top: 1px solid rgba(214,178,94,0.06); margin-top: 2px; padding-top: 6px;">' +
