@@ -438,18 +438,20 @@ async function loadConversionData(days, force) {
             var rate = totalRegister > 0 ? Math.round((totalConverted / totalRegister) * 100) : 0;
             
             console.log('📊 ' + label + ': register=' + totalRegister + ', converted=' + totalConverted + ', rate=' + rate + '%');
-            
-            result.push({
-                label: label,
-                days: daysOffset,
-                register: totalRegister,
-                converted: totalConverted,
-                rate: rate
-            });
-        }
+
+result.push({
+    label: label,
+    days: daysOffset,
+    register: totalRegister,
+    converted: totalConverted,
+    rate: rate
+});
+
+console.log('📊 result 当前长度:', result.length);
         
         console.log('✅ loadConversionData 最终结果:', result);
-        
+        console.log('📊 for 循环结束，result 长度:', result.length);
+console.log('📊 result 内容:', JSON.stringify(result));
         cachedData.conversion = result;
         cachedData.lastConversionTime = now;
         applyConversionData(result, days);
