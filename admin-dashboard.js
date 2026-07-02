@@ -1546,3 +1546,4 @@ async function refreshConversionOnly() {
 window.refreshQuickCardsOnly = refreshQuickCardsOnly;
 window.refreshRecentOnly = refreshRecentOnly;
 window.refreshConversionOnly = refreshConversionOnly;
+}
