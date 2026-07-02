@@ -18,14 +18,6 @@ let cachedData = {
 const CACHE_DURATION = 30000;
 const DEBOUNCE_DELAY = 300;
 
-// ============================================================
-// New Order 展开窗相关变量
-// ============================================================
-let newOrderPanel = null;
-let newOrderData = [];
-let newOrderCount = 0;
-let lastNewOrderDate = '';
-
 function debounce(func, wait) {
     let timeout;
     return function executedFunction(...args) {
@@ -114,6 +106,9 @@ async function loadStatsData(days, force) {
         var deposits = depositsRes.data || [];
         var withdrawals = withdrawalsRes.data || [];
         
+        // ============================================================
+        // 🔥 使用柏林时间计算日期范围
+        // ============================================================
         var nowDate = getBerlinDate();
         var startDate = new Date(nowDate);
         startDate.setDate(startDate.getDate() - days);
@@ -123,6 +118,7 @@ async function loadStatsData(days, force) {
         lastPeriodStart.setDate(lastPeriodStart.getDate() - days * 2);
         var lastPeriodStr = lastPeriodStart.toISOString().split('T')[0];
         
+        // 过滤数据（使用柏林时间）
         var newUsers = users.filter(function(u) {
             if (!u.created_at) return false;
             var berlinDate = convertToBerlinDate(new Date(u.created_at));
@@ -135,82 +131,89 @@ async function loadStatsData(days, force) {
             var dateStr = berlinDate.toISOString().split('T')[0];
             return dateStr >= lastPeriodStr && dateStr < startStr;
         }).length;
+        
+        // 🔥 根据 days 参数筛选存款和提款
+// days = 0: 今天, days = 7: 最近7天, days = 30: 最近30天, days = -1: 所有时间
 
-        var filteredDeposits = deposits;
-        var filteredWithdrawals = withdrawals.filter(function(w) { return w.status === 'approved'; });
+var filteredDeposits = deposits;
+var filteredWithdrawals = withdrawals.filter(function(w) { return w.status === 'approved'; });
 
-        if (days === 0) {
-            var todayStr = nowDate.toISOString().split('T')[0];
-            filteredDeposits = deposits.filter(function(d) {
-                if (!d.created_at) return false;
-                var berlinDate = convertToBerlinDate(new Date(d.created_at));
-                return berlinDate.toISOString().split('T')[0] === todayStr;
-            });
-            filteredWithdrawals = withdrawals.filter(function(w) {
-                if (!w.request_date) return false;
-                if (w.status !== 'approved') return false;
-                var berlinDate = convertToBerlinDate(new Date(w.request_date));
-                return berlinDate.toISOString().split('T')[0] === todayStr;
-            });
-        } else if (days === 7 || days === 30) {
-            var startDate = new Date(nowDate);
-            startDate.setDate(startDate.getDate() - days);
-            var startStr = startDate.toISOString().split('T')[0];
-            filteredDeposits = deposits.filter(function(d) {
-                if (!d.created_at) return false;
-                var berlinDate = convertToBerlinDate(new Date(d.created_at));
-                return berlinDate.toISOString().split('T')[0] >= startStr;
-            });
-            filteredWithdrawals = withdrawals.filter(function(w) {
-                if (!w.request_date) return false;
-                if (w.status !== 'approved') return false;
-                var berlinDate = convertToBerlinDate(new Date(w.request_date));
-                return berlinDate.toISOString().split('T')[0] >= startStr;
-            });
-        }
+if (days === 0) {
+    // Today：只统计今天
+    var todayStr = nowDate.toISOString().split('T')[0];
+    filteredDeposits = deposits.filter(function(d) {
+        if (!d.created_at) return false;
+        var berlinDate = convertToBerlinDate(new Date(d.created_at));
+        return berlinDate.toISOString().split('T')[0] === todayStr;
+    });
+    filteredWithdrawals = withdrawals.filter(function(w) {
+        if (!w.request_date) return false;
+        if (w.status !== 'approved') return false;
+        var berlinDate = convertToBerlinDate(new Date(w.request_date));
+        return berlinDate.toISOString().split('T')[0] === todayStr;
+    });
+} else if (days === 7 || days === 30) {
+    // 7 Days / 30 Days：只统计指定天数内
+    var startDate = new Date(nowDate);
+    startDate.setDate(startDate.getDate() - days);
+    var startStr = startDate.toISOString().split('T')[0];
+    filteredDeposits = deposits.filter(function(d) {
+        if (!d.created_at) return false;
+        var berlinDate = convertToBerlinDate(new Date(d.created_at));
+        return berlinDate.toISOString().split('T')[0] >= startStr;
+    });
+    filteredWithdrawals = withdrawals.filter(function(w) {
+        if (!w.request_date) return false;
+        if (w.status !== 'approved') return false;
+        var berlinDate = convertToBerlinDate(new Date(w.request_date));
+        return berlinDate.toISOString().split('T')[0] >= startStr;
+    });
+}
+// days = -1: All Time，不过滤
 
-        var totalDeposit = filteredDeposits.reduce(function(s, d) { return s + (d.amount || 0); }, 0);
-        var totalWithdraw = filteredWithdrawals.reduce(function(s, w) { return s + (w.amount || 0); }, 0);
+var totalDeposit = filteredDeposits.reduce(function(s, d) { return s + (d.amount || 0); }, 0);
+var totalWithdraw = filteredWithdrawals.reduce(function(s, w) { return s + (w.amount || 0); }, 0);
 
-        var periodDeposit = deposits.filter(function(d) {
-            if (!d.created_at) return false;
-            var berlinDate = convertToBerlinDate(new Date(d.created_at));
-            return berlinDate.toISOString().split('T')[0] >= startStr;
-        }).reduce(function(s, d) { return s + (d.amount || 0); }, 0);
+// 保留 periodDeposit 和 prevPeriodDeposit 用于趋势显示
+var periodDeposit = deposits.filter(function(d) {
+    if (!d.created_at) return false;
+    var berlinDate = convertToBerlinDate(new Date(d.created_at));
+    return berlinDate.toISOString().split('T')[0] >= startStr;
+}).reduce(function(s, d) { return s + (d.amount || 0); }, 0);
 
-        var prevPeriodDeposit = deposits.filter(function(d) {
-            if (!d.created_at) return false;
-            var berlinDate = convertToBerlinDate(new Date(d.created_at));
-            var dateStr = berlinDate.toISOString().split('T')[0];
-            return dateStr >= lastPeriodStr && dateStr < startStr;
-        }).reduce(function(s, d) { return s + (d.amount || 0); }, 0);
+var prevPeriodDeposit = deposits.filter(function(d) {
+    if (!d.created_at) return false;
+    var berlinDate = convertToBerlinDate(new Date(d.created_at));
+    var dateStr = berlinDate.toISOString().split('T')[0];
+    return dateStr >= lastPeriodStr && dateStr < startStr;
+}).reduce(function(s, d) { return s + (d.amount || 0); }, 0);
 
-        var periodWithdraw = withdrawals.filter(function(w) {
-            if (!w.request_date) return false;
-            if (w.status !== 'approved') return false;
-            var berlinDate = convertToBerlinDate(new Date(w.request_date));
-            return berlinDate.toISOString().split('T')[0] >= startStr;
-        }).reduce(function(s, w) { return s + (w.amount || 0); }, 0);
+var periodWithdraw = withdrawals.filter(function(w) {
+    if (!w.request_date) return false;
+    if (w.status !== 'approved') return false;
+    var berlinDate = convertToBerlinDate(new Date(w.request_date));
+    return berlinDate.toISOString().split('T')[0] >= startStr;
+}).reduce(function(s, w) { return s + (w.amount || 0); }, 0);
 
-        var prevPeriodWithdraw = withdrawals.filter(function(w) {
-            if (!w.request_date) return false;
-            if (w.status !== 'approved') return false;
-            var berlinDate = convertToBerlinDate(new Date(w.request_date));
-            var dateStr = berlinDate.toISOString().split('T')[0];
-            return dateStr >= lastPeriodStr && dateStr < startStr;
-        }).reduce(function(s, w) { return s + (w.amount || 0); }, 0);
+var prevPeriodWithdraw = withdrawals.filter(function(w) {
+    if (!w.request_date) return false;
+    if (w.status !== 'approved') return false;
+    var berlinDate = convertToBerlinDate(new Date(w.request_date));
+    var dateStr = berlinDate.toISOString().split('T')[0];
+    return dateStr >= lastPeriodStr && dateStr < startStr;
+}).reduce(function(s, w) { return s + (w.amount || 0); }, 0);
         
         var statsData = { 
-            newUsers: newUsers, 
-            prevNewUsers: prevNewUsers, 
-            totalUsers: users.length, 
-            totalDeposit: totalDeposit,
-            periodDeposit: periodDeposit, 
-            prevPeriodDeposit: prevPeriodDeposit, 
-            totalWithdraw: totalWithdraw,
-            periodWithdraw: periodWithdraw, 
-            prevPeriodWithdraw: prevPeriodWithdraw 
-        };
+    newUsers: newUsers, 
+    prevNewUsers: prevNewUsers, 
+    totalUsers: users.length, 
+    totalDeposit: totalDeposit,        // 🔥 根据 days 筛选
+    periodDeposit: periodDeposit, 
+    prevPeriodDeposit: prevPeriodDeposit, 
+    totalWithdraw: totalWithdraw,      // 🔥 根据 days 筛选
+    periodWithdraw: periodWithdraw, 
+    prevPeriodWithdraw: prevPeriodWithdraw 
+};
         cachedData.stats = statsData;
         cachedData.lastStatsTime = now;
         applyStatsData(statsData);
@@ -236,7 +239,7 @@ function applyStatsData(data) {
 }
 
 // ============================================================
-// loadChartData
+// loadChartData - 与统计卡片数据完全一致（柏林时间，最近7天）
 // ============================================================
 async function loadChartData(force) {
     force = force || false;
@@ -254,6 +257,9 @@ async function loadChartData(force) {
     }
     
     try {
+        // ============================================================
+        // 🔥 数据源与统计卡片完全一致
+        // ============================================================
         var depositsRes = await sb.from('deposits')
             .select('created_at, amount')
             .eq('type', 'manual');
@@ -264,6 +270,9 @@ async function loadChartData(force) {
         var deposits = depositsRes.data || [];
         var withdrawals = withdrawalsRes.data || [];
         
+        // ============================================================
+        // 🔥 使用柏林时间生成最近7天
+        // ============================================================
         var today = getBerlinDate();
         var dates = [];
         var dateStrMap = {};
@@ -271,6 +280,7 @@ async function loadChartData(force) {
         for (var i = 6; i >= 0; i--) {
             var d = new Date(today);
             d.setDate(d.getDate() - i);
+            // 确保日期在柏林时间下
             var berlinDate = convertToBerlinDate(d);
             var dateStr = berlinDate.toISOString().split('T')[0];
             var label = (berlinDate.getMonth() + 1) + '/' + berlinDate.getDate();
@@ -278,12 +288,16 @@ async function loadChartData(force) {
             dateStrMap[label] = dateStr;
         }
         
+        // ============================================================
+        // 🔥 按天汇总数据（最近7天，柏林时间）
+        // ============================================================
         var depositData = [];
         var withdrawData = [];
         
         var firstDayStr = dateStrMap[dates[0]];
         var lastDayStr = dateStrMap[dates[dates.length - 1]];
         
+        // 过滤出最近7天的数据（使用柏林时间）
         var periodDeposits = deposits.filter(function(d) {
             if (!d.created_at) return false;
             var berlinDate = convertToBerlinDate(new Date(d.created_at));
@@ -299,6 +313,7 @@ async function loadChartData(force) {
             return dateStr >= firstDayStr && dateStr <= lastDayStr;
         });
         
+        // 按天汇总
         for (var i = 0; i < dates.length; i++) {
             var label = dates[i];
             var dateStr = dateStrMap[label];
@@ -326,8 +341,16 @@ async function loadChartData(force) {
             trendChart.setOption({ 
                 xAxis: { data: dates }, 
                 series: [
-                    { name: 'Deposit', data: depositData, connectNulls: false },
-                    { name: 'Withdrawal', data: withdrawData, connectNulls: false }
+                    { 
+                        name: 'Deposit', 
+                        data: depositData,
+                        connectNulls: false
+                    },
+                    { 
+                        name: 'Withdrawal', 
+                        data: withdrawData,
+                        connectNulls: false
+                    }
                 ]
             });
             console.log('📊 D&W Trend 已更新 (柏林时间, 最近7天)');
@@ -338,7 +361,7 @@ async function loadChartData(force) {
 }
 
 // ============================================================
-// loadConversionData
+// loadConversionData - 统计注册用户转化率（完整版）
 // ============================================================
 async function loadConversionData(days, force) {
     force = force || false;
@@ -374,6 +397,7 @@ async function loadConversionData(days, force) {
             periods.push({ label: '30 Days', daysOffset: 30 });
             periods.push({ label: 'All Time', daysOffset: -1 });
         } else {
+            // 🔥 默认当作 Today
             console.log('⚠️ days 值异常 (' + days + ')，自动切换为 Today');
             periods.push({ label: 'Today', daysOffset: 0 });
         }
@@ -470,11 +494,13 @@ async function loadConversionData(days, force) {
 }
 
 function applyConversionData(data, days) {
+    // 🔥 如果 data 为空或没有数据，使用默认值
     if (!data || data.length === 0) {
         console.log('⚠️ applyConversionData: data 为空，使用默认值');
         data = [{ label: 'Today', days: 0, register: 0, converted: 0, rate: 0 }];
     }
     
+    // 🔥 根据 days 参数决定显示哪个时间段的数据
     var displayData = null;
     var targetLabel = 'Today';
     
@@ -488,6 +514,7 @@ function applyConversionData(data, days) {
         targetLabel = 'All Time';
     }
     
+    // 查找匹配的数据
     for (var i = 0; i < data.length; i++) {
         if (data[i].label === targetLabel) {
             displayData = data[i];
@@ -495,6 +522,7 @@ function applyConversionData(data, days) {
         }
     }
     
+    // 如果没找到，使用第一个
     if (!displayData && data.length > 0) {
         displayData = data[0];
     }
@@ -505,15 +533,18 @@ function applyConversionData(data, days) {
     
     console.log('📊 applyConversionData 显示:', displayData);
     
+    // 🔥 更新环形图百分比
     var ringPercent = document.getElementById('ringPercent');
     if (ringPercent) {
         ringPercent.innerText = displayData.rate + '%';
     }
     
+    // 🔥 更新顶部显示的 Register / Converted 数字
     var registerEl = document.getElementById('conversionRegister');
     var convertedEl = document.getElementById('conversionConverted');
     var labelEl = document.getElementById('conversionLabel');
     
+    // 🔥 直接更新，不使用 requestAnimationFrame（确保立即生效）
     if (registerEl) {
         registerEl.innerText = displayData.register;
         console.log('✅ Register 更新为:', displayData.register);
@@ -526,6 +557,7 @@ function applyConversionData(data, days) {
         labelEl.innerText = displayData.label + ' Register';
     }
     
+    // 🔥 更新所有统计行
     var allLabels = document.querySelectorAll('.conversion-stat-label');
     var allRegisters = document.querySelectorAll('.conversion-stat-register');
     var allConverteds = document.querySelectorAll('.conversion-stat-converted');
@@ -543,6 +575,7 @@ function applyConversionData(data, days) {
         }
     });
     
+    // 更新第一行的数据
     if (allLabels.length > 0) allLabels[0].innerText = displayData.label;
     if (allRegisters.length > 0) allRegisters[0].innerText = displayData.register;
     if (allConverteds.length > 0) allConverteds[0].innerText = displayData.converted;
@@ -558,14 +591,13 @@ function initWaveRing() {
     if (!container) return;
     
     container.innerHTML = '';
-    container.style.width = '200px';
-    container.style.height = '200px';
+    container.style.width = '220px';
+    container.style.height = '220px';
     container.style.position = 'relative';
     container.style.margin = '0 auto';
-    container.style.marginTop = '-20px';
     
     var svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-    svg.setAttribute('viewBox', '0 0 200 200');
+    svg.setAttribute('viewBox', '0 0 220 220');
     svg.style.cssText = 'width:100%;height:100%;transform:rotate(-90deg);position:relative;z-index:2;';
     svg.innerHTML = `
         <defs>
@@ -585,17 +617,17 @@ function initWaveRing() {
                 <stop offset="100%" stop-color="#ccb89f"/>
             </linearGradient>
         </defs>
-        <circle cx="100" cy="100" r="85" fill="none" stroke="rgba(204,184,159,0.06)" stroke-width="12"/>
-        <circle cx="100" cy="100" r="85" fill="none" stroke="url(#progressGrad)" stroke-width="12" stroke-linecap="round" stroke-dasharray="534.07" stroke-dashoffset="534.07" filter="drop-shadow(0 0 20px rgba(204,184,159,0.15))" class="progress-ring" style="transition: stroke-dashoffset 1s ease;"/>
-        <circle cx="100" cy="100" r="90" fill="none" stroke="rgba(204,184,159,0.03)" stroke-width="1"/>
+        <circle cx="110" cy="110" r="95" fill="none" stroke="rgba(204,184,159,0.06)" stroke-width="12"/>
+        <circle cx="110" cy="110" r="95" fill="none" stroke="url(#progressGrad)" stroke-width="12" stroke-linecap="round" stroke-dasharray="596.9" stroke-dashoffset="596.9" filter="drop-shadow(0 0 20px rgba(204,184,159,0.15))" class="progress-ring" style="transition: stroke-dashoffset 1s ease;"/>
+        <circle cx="110" cy="110" r="100" fill="none" stroke="rgba(204,184,159,0.03)" stroke-width="1"/>
     `;
     container.appendChild(svg);
     
     var centerText = document.createElement('div');
     centerText.style.cssText = 'position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;pointer-events:none;z-index:10;';
     centerText.innerHTML = `
-        <div id="ringPercent" style="font-size:40px;font-weight:900;letter-spacing:-1px;line-height:1;background:linear-gradient(180deg,#ffffff 0%,#d0d8e8 35%,#8892a8 65%,#c0c8d8 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;filter:drop-shadow(0 0 30px rgba(200,210,230,0.12)) drop-shadow(0 4px 8px rgba(0,0,0,0.3));">78%</div>
-        <div style="font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;margin-top:4px;background:linear-gradient(180deg,#d0d8e8 0%,#8892a8 50%,#5a6a82 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;filter:drop-shadow(0 0 20px rgba(200,210,230,0.08)) drop-shadow(0 2px 4px rgba(0,0,0,0.2));">Conversion Rate</div>
+        <div id="ringPercent" style="font-size:48px;font-weight:900;letter-spacing:-1px;line-height:1;background:linear-gradient(180deg,#ffffff 0%,#d0d8e8 35%,#8892a8 65%,#c0c8d8 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;filter:drop-shadow(0 0 30px rgba(200,210,230,0.12)) drop-shadow(0 4px 8px rgba(0,0,0,0.3));">78%</div>
+        <div style="font-size:13px;font-weight:700;letter-spacing:2px;text-transform:uppercase;margin-top:6px;background:linear-gradient(180deg,#d0d8e8 0%,#8892a8 50%,#5a6a82 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;filter:drop-shadow(0 0 20px rgba(200,210,230,0.08)) drop-shadow(0 2px 4px rgba(0,0,0,0.2));">Conversion Rate</div>
     `;
     container.appendChild(centerText);
     
@@ -603,300 +635,47 @@ function initWaveRing() {
         var progressRing = container.querySelector('.progress-ring');
         if (progressRing) {
             var rate = parseInt(document.getElementById('ringPercent')?.innerText || '78');
-            var circumference = 534.07;
+            var circumference = 596.9;
             var offset = circumference - (circumference * rate / 100);
             progressRing.style.strokeDashoffset = offset;
         }
     }, 300);
 }
 
-// ============================================================
-// 🔥 New Order 按钮和展开窗功能
-// ============================================================
-
-// 显示 New Order 展开窗
-function showNewOrderPanel(btnElement) {
-    if (newOrderPanel) {
-        newOrderPanel.remove();
-        newOrderPanel = null;
-        return;
-    }
-    
-    var today = getBerlinDate();
-    var todayStr = today.toISOString().split('T')[0];
-    
-    if (lastNewOrderDate !== todayStr) {
-        newOrderData = [];
-        newOrderCount = 0;
-        lastNewOrderDate = todayStr;
-        try {
-            localStorage.setItem('newOrderData_' + (getCurrentUser()?.uid || 'global'), JSON.stringify({
-                data: newOrderData,
-                count: newOrderCount,
-                date: todayStr
-            }));
-        } catch (e) {}
-    }
-    
-    try {
-        var user = getCurrentUser();
-        var stored = localStorage.getItem('newOrderData_' + (user?.uid || 'global'));
-        if (stored) {
-            var parsed = JSON.parse(stored);
-            if (parsed.date === todayStr) {
-                newOrderData = parsed.data || [];
-                newOrderCount = parsed.count || 0;
-            }
-        }
-    } catch (e) {}
-    
-    var panel = document.createElement('div');
-    panel.id = 'newOrderPanel';
-    panel.style.cssText = `
-        position: fixed;
-        top: 20px;
-        left: 20px;
-        z-index: 99999;
-        background: rgba(12, 16, 30, 0.75);
-        backdrop-filter: blur(24px);
-        -webkit-backdrop-filter: blur(24px);
-        border-radius: 20px;
-        padding: 24px 28px;
-        min-width: 380px;
-        max-width: 440px;
-        max-height: 360px;
-        overflow-y: auto;
-        box-shadow: 0 30px 80px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.03);
-        animation: newOrderFadeSlide 0.35s ease;
-        border: none;
-    `;
-    
-    if (!document.getElementById('newOrderAnimStyle')) {
-        var styleEl = document.createElement('style');
-        styleEl.id = 'newOrderAnimStyle';
-        styleEl.textContent = `
-            @keyframes newOrderFadeSlide {
-                0% { opacity: 0; transform: translateY(-10px) scale(0.97); }
-                100% { opacity: 1; transform: translateY(0) scale(1); }
-            }
-            #newOrderPanel::-webkit-scrollbar { width: 2px; }
-            #newOrderPanel::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.06); border-radius: 4px; }
-        `;
-        document.head.appendChild(styleEl);
-    }
-    
-    var itemsHtml = '';
-    if (newOrderData.length === 0) {
-        itemsHtml = `
-            <div style="text-align:center; padding:20px 0; color:rgba(255,255,255,0.04); font-size:13px;">
-                <i class="fas fa-inbox" style="display:block; font-size:24px; margin-bottom:6px; color:rgba(255,255,255,0.02);"></i>
-                No new orders today
-            </div>
-        `;
-    } else {
-        newOrderData.forEach(function(item) {
-            itemsHtml += `
-                <div style="padding:8px 10px; border-radius:8px; font-size:13px; color:rgba(255,255,255,0.55); line-height:1.5; transition:0.15s;">
-                    <span style="color:#C9B095; font-weight:500;">${escapeHtml(item.referrer)}</span>'s client <span style="color:#ffd700; font-weight:600;">${escapeHtml(item.uid)}</span> become new order today! <i class="fas fa-gem" style="color:rgba(200,200,220,0.06); margin-left:4px; font-size:11px;"></i>
-                </div>
-            `;
-        });
-    }
-    
-    panel.innerHTML = `
-        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; padding-bottom:10px; border-bottom:1px solid rgba(255,255,255,0.04);">
-            <div style="display:flex; align-items:center; gap:10px;">
-                <i class="fas fa-gem" style="font-size:16px; color:rgba(200,200,220,0.25);"></i>
-                <span style="font-size:12px; font-weight:600; color:rgba(255,255,255,0.35); text-transform:uppercase; letter-spacing:1.5px;">Today's New Orders</span>
-            </div>
-            <span style="font-size:12px; font-weight:600; color:rgba(200,200,220,0.2); background:rgba(255,255,255,0.02); padding:2px 14px; border-radius:20px; letter-spacing:0.3px;">${newOrderCount}</span>
-        </div>
-        <div style="display:flex; flex-direction:column; gap:1px; max-height:240px; overflow-y:auto; padding-right:2px;">
-            ${itemsHtml}
-        </div>
-    `;
-    
-    document.body.appendChild(panel);
-    newOrderPanel = panel;
-    
-    var closeHandler = function(e) {
-        if (panel && !panel.contains(e.target) && e.target.id !== 'newOrderBtn') {
-            panel.remove();
-            newOrderPanel = null;
-            document.removeEventListener('click', closeHandler);
-        }
-    };
-    setTimeout(function() { document.addEventListener('click', closeHandler); }, 100);
-    
-    var escHandler = function(e) {
-        if (e.key === 'Escape' && newOrderPanel) {
-            newOrderPanel.remove();
-            newOrderPanel = null;
-            document.removeEventListener('keydown', escHandler);
-        }
-    };
-    document.addEventListener('keydown', escHandler);
-}
-
-// 更新 New Order 按钮徽章
-function updateNewOrderBadge() {
-    var btn = document.getElementById('newOrderBtn');
-    if (!btn) return;
-    
-    var badge = btn.querySelector('.order-badge');
-    if (newOrderCount > 0) {
-        if (!badge) {
-            badge = document.createElement('span');
-            badge.className = 'order-badge';
-            badge.style.cssText = `
-                position: absolute;
-                top: -6px;
-                right: -6px;
-                background: #ffd700;
-                color: #0a0f2a;
-                font-size: 10px;
-                font-weight: 700;
-                min-width: 18px;
-                height: 18px;
-                border-radius: 50%;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                padding: 0 5px;
-                box-shadow: 0 0 20px rgba(255,215,0,0.15);
-                border: 1px solid rgba(255,215,0,0.2);
-            `;
-            badge.textContent = newOrderCount;
-            btn.style.position = 'relative';
-            btn.appendChild(badge);
-        } else {
-            badge.textContent = newOrderCount;
-        }
-    } else {
-        if (badge) badge.remove();
-    }
-}
-
-// 更新 New Order 数据
-async function updateNewOrderData() {
-    try {
-        var today = getBerlinDate();
-        var todayStr = today.toISOString().split('T')[0];
-        
-        var { data: users } = await sb
-            .from('users')
-            .select('uid, username, invited_by_username')
-            .gte('created_at', todayStr + 'T00:00:00');
-        
-        if (!users || users.length === 0) {
-            newOrderData = [];
-            newOrderCount = 0;
-            updateNewOrderBadge();
-            return;
-        }
-        
-        var uids = users.map(function(u) { return u.uid; });
-        var { data: deposits } = await sb
-            .from('deposits')
-            .select('uid, amount')
-            .in('uid', uids)
-            .in('type', ['manual', 'deposit_bonus']);
-        
-        var depositUsers = {};
-        if (deposits) {
-            deposits.forEach(function(d) {
-                if (d.amount >= 40) {
-                    depositUsers[d.uid] = true;
-                }
-            });
-        }
-        
-        var convertedUsers = users.filter(function(u) {
-            return depositUsers[u.uid] === true;
-        });
-        
-        newOrderData = [];
-        convertedUsers.forEach(function(u) {
-            var referrer = u.invited_by_username || 'New';
-            newOrderData.push({
-                referrer: referrer,
-                uid: u.uid
-            });
-        });
-        newOrderCount = newOrderData.length;
-        
-        try {
-            var user = getCurrentUser();
-            localStorage.setItem('newOrderData_' + (user?.uid || 'global'), JSON.stringify({
-                data: newOrderData,
-                count: newOrderCount,
-                date: todayStr
-            }));
-        } catch (e) {}
-        
-        updateNewOrderBadge();
-        
-    } catch (e) {
-        console.error('更新 New Order 数据失败:', e);
-    }
-}
-
-// 添加今日新订单
-function addNewOrder(referrer, uid) {
-    var today = getBerlinDate();
-    var todayStr = today.toISOString().split('T')[0];
-    
-    if (lastNewOrderDate !== todayStr) {
-        newOrderData = [];
-        newOrderCount = 0;
-        lastNewOrderDate = todayStr;
-    }
-    
-    var exists = newOrderData.some(function(item) { return item.uid === uid; });
-    if (exists) return;
-    
-    newOrderData.push({ referrer: referrer, uid: uid });
-    newOrderCount = newOrderData.length;
-    
-    try {
-        var user = getCurrentUser();
-        localStorage.setItem('newOrderData_' + (user?.uid || 'global'), JSON.stringify({
-            data: newOrderData,
-            count: newOrderCount,
-            date: todayStr
-        }));
-    } catch (e) {}
-    
-    updateNewOrderBadge();
-}
-
-// ========== 加载最近注册用户数据（8条，可滑动） ==========
+// ========== 加载最近注册用户数据（根据当前筛选条件） ==========
 async function loadRecentRegistrations() {
     var tbody = document.getElementById('recentRegistrationsBody');
     if (!tbody) return;
     
     try {
+        // 🔥 根据 currentDays 计算日期范围
         var nowDate = getBerlinDate();
         var startDate = new Date(nowDate);
         
         if (currentDays === -1) {
+            // All Time：从最早开始
             startDate = new Date('2000-01-01');
         } else if (currentDays === 0) {
+            // Today：只取今天
             startDate.setHours(0, 0, 0, 0);
         } else {
+            // 7 Days / 30 Days
             startDate.setDate(startDate.getDate() - currentDays);
         }
         
         var startStr = startDate.toISOString().split('T')[0];
         
+        // 🔥 查询时过滤日期
         var query = sb.from('users')
             .select('uid, username, invited_by_username, created_at, balance')
             .order('created_at', { ascending: false })
-            .limit(8);
+            .limit(9);
         
+        // 如果不是 All Time，添加日期过滤
         if (currentDays !== -1) {
             query = query.gte('created_at', startStr);
             if (currentDays === 0) {
+                // Today：只取今天
                 query = query.gte('created_at', startStr + 'T00:00:00');
             }
         }
@@ -933,6 +712,7 @@ async function loadRecentRegistrations() {
             
             var amount = totalManual > 0 ? '€' + totalManual.toFixed(2) : '€0.00';
             
+            // 🔥 行样式 - 字体更大更亮，使用 Font Awesome 图标
             html += '<tr style="border-bottom: 1px solid rgba(200,176,144,0.04);">' +
                 '<td style="padding: 5px 8px; color: #e8eef8; font-weight: 600; font-size: 13px;">' + escapeHtml(u.uid) + '</td>' +
                 '<td style="padding: 5px 8px; color: #aab8c8; font-size: 13px;">' + escapeHtml(referrer) + '</td>' +
@@ -1102,6 +882,7 @@ async function refreshDashboard(days, force) {
     days = days || currentDays;
     force = force || false;
     
+    // 🔥 更新 currentDays 供 loadRecentRegistrations 使用
     currentDays = days;
     
     var conversionForce = force || (days === 0);
@@ -1115,27 +896,9 @@ async function refreshDashboard(days, force) {
         loadRecentRegistrations()
     ]);
 
+// 🔥 只在 Today 视图显示祝贺消息
     if (days === 0) {
-        var today = getBerlinDate();
-        var todayStr = today.toISOString().split('T')[0];
-        try {
-            var user = getCurrentUser();
-            var stored = localStorage.getItem('newOrderData_' + (user?.uid || 'global'));
-            if (stored) {
-                var parsed = JSON.parse(stored);
-                if (parsed.date === todayStr) {
-                    newOrderData = parsed.data || [];
-                    newOrderCount = parsed.count || 0;
-                } else {
-                    newOrderData = [];
-                    newOrderCount = 0;
-                    lastNewOrderDate = todayStr;
-                }
-            }
-            updateNewOrderBadge();
-        } catch (e) {}
-        
-        setTimeout(updateNewOrderData, 500);
+        setTimeout(updateCongratsMessage, 500);
     } else {
         var congratsEl = document.getElementById('congratsMessage');
         if (congratsEl) {
@@ -1159,7 +922,7 @@ async function refreshDashboard(days, force) {
             if (container) {
                 var progressRing = container.querySelector('.progress-ring');
                 if (progressRing) {
-                    var circumference = 534.07;
+                    var circumference = 596.9;
                     var offset = circumference - (circumference * rate / 100);
                     progressRing.style.strokeDashoffset = offset;
                 }
@@ -1167,11 +930,12 @@ async function refreshDashboard(days, force) {
         }
     }
     
+    // 🔥 返回 Promise
     return;
 }
 
 // ============================================================
-// initTrendChart
+// initTrendChart - 柏林时间，最近7天
 // ============================================================
 function initTrendChart() {
     var dom = document.getElementById('trendChart');
@@ -1188,6 +952,7 @@ function initTrendChart() {
     
     trendChart = echarts.init(dom);
     
+    // ✅ 生成最近7天的日期标签（柏林时间）
     var defaultDates = [];
     var today = getBerlinDate();
     
@@ -1197,6 +962,7 @@ function initTrendChart() {
         defaultDates.push((d.getMonth() + 1) + '/' + d.getDate());
     }
     
+    // 默认数据：全部为 0
     var defaultDepositData = [];
     var defaultWithdrawData = [];
     
@@ -1463,7 +1229,7 @@ function loadDashboardPage(days) {
                 </div>
                 
                 <div style="display: flex; align-items: stretch; gap: 12px; position: relative; z-index: 1; min-height: 210px;">
-                    <div id="waveRingContainer" style="width: 200px; height: 200px; flex-shrink: 0; position: relative; align-self: center; margin-top: -20px;"></div>
+                    <div id="waveRingContainer" style="width: 220px; height: 280px; flex-shrink: 0; position: relative; align-self: center;"></div>
                     
                     <div style="flex: 1; min-width: 0; display: flex; flex-direction: column; justify-content: space-between; gap: 0px;">
                         <div style="border-top: 1px solid rgba(200,176,144,0.06); padding-top: 8px;">
@@ -1495,6 +1261,7 @@ function loadDashboardPage(days) {
                                 <div style="font-size: 11px; color: #8a7a6a; font-weight: 600; letter-spacing: 0.8px; text-transform: uppercase;">
                                     <i class="fas fa-users" style="color: #ccb89f; margin-right: 6px; font-size: 11px;"></i>Recent
                                 </div>
+                                <!-- ❌ View All 已删除 -->
                             </div>
                             <div style="overflow-y: auto; max-height: 155px;">
                                 <table style="width: 100%; border-collapse: collapse; font-size: 12px;">
@@ -1512,33 +1279,9 @@ function loadDashboardPage(days) {
                                 </table>
                             </div>
 
-                            <!-- 🔥 New Order 按钮 - 替换原来的 congratulations -->
-                            <div style="margin-top: 8px; padding-top: 6px; border-top: 1px solid rgba(200,176,144,0.04);">
-                                <div style="display:flex; justify-content:center; position:relative; z-index:1;">
-                                    <button id="newOrderBtn" class="btn-new-order" style="
-                                        display: inline-flex;
-                                        align-items: center;
-                                        gap: 10px;
-                                        padding: 10px 24px;
-                                        border-radius: 40px;
-                                        font-weight: 600;
-                                        font-size: 13px;
-                                        cursor: pointer;
-                                        font-family: 'Inter', sans-serif;
-                                        transition: all 0.3s ease;
-                                        border: none;
-                                        position: relative;
-                                        overflow: hidden;
-                                        background: linear-gradient(145deg, #1a1a2e, #2a2a4a, #1a1a2e);
-                                        color: #e8e8f0;
-                                        border: 1px solid rgba(200,200,220,0.15);
-                                        box-shadow: 0 4px 24px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.06);
-                                    ">
-                                        <i class="fas fa-gem" style="font-size:13px; color:rgba(200,200,220,0.4);"></i>
-                                        <span>New Order</span>
-                                    </button>
-                                </div>
-                            </div>
+<!-- 🔥 祝贺消息区域 -->
+<div id="congratsMessage" style="margin-top: 10px; padding: 10px 14px; background: linear-gradient(135deg, rgba(214,178,94,0.06), rgba(214,178,94,0.02)); border-radius: 10px; border-left: 3px solid #D6B25E; font-size: 13px; color: #c8b8a8; line-height: 1.6; display: none;">
+</div>
 
                         </div>
                     </div>
@@ -1564,18 +1307,6 @@ function loadDashboardPage(days) {
     updateBerlinClock();
     if (window.clockInterval) clearInterval(window.clockInterval);
     window.clockInterval = setInterval(updateBerlinClock, 1000);
-    
-    // 绑定 New Order 按钮事件
-    setTimeout(function() {
-        var btn = document.getElementById('newOrderBtn');
-        if (btn) {
-            btn.addEventListener('click', function(e) {
-                e.stopPropagation();
-                showNewOrderPanel(this);
-            });
-            updateNewOrderBadge();
-        }
-    }, 300);
     
     var style = document.createElement('style');
     style.textContent = `
@@ -1629,14 +1360,6 @@ function loadDashboardPage(days) {
         #notificationList::-webkit-scrollbar-track {
             background: transparent;
         }
-        .btn-new-order:hover {
-            transform: scale(1.03);
-            border-color: rgba(200,200,220,0.35);
-            box-shadow: 0 8px 40px rgba(200,200,220,0.08);
-        }
-        .btn-new-order:hover i {
-            color: rgba(200,200,220,0.8);
-        }
     `;
     document.head.appendChild(style);
     
@@ -1656,6 +1379,8 @@ function loadDashboardPage(days) {
     refreshDashboard(0, true).then(function() {
         console.log('✅ Dashboard 数据加载完成');
         console.log('🔄 实时监听已启动，无需定时轮询');
+        // 🔥 加载完成后更新祝贺消息
+        setTimeout(updateCongratsMessage, 600);
     });
 }, 200);
 
@@ -1705,7 +1430,7 @@ if (typeof formatTime !== 'function') {
 }
 
 // ============================================================
-// 🔥 Notification 事件绑定
+// 🔥 Notification 事件绑定（使用 admin-common.js 中的函数）
 // ============================================================
 function initNotificationEvents() {
     var bellBtn = document.getElementById('notificationBellBtn');
@@ -1752,9 +1477,10 @@ function initNotificationEvents() {
 }
 
 // ============================================================
-// 🔥 轻量级刷新函数
+// 🔥 轻量级刷新函数（事件驱动）
 // ============================================================
 
+// 只刷新快捷卡片
 async function refreshQuickCardsOnly() {
     try {
         var [kycRes, withdrawalRes, emailRes] = await Promise.all([
@@ -1775,6 +1501,7 @@ async function refreshQuickCardsOnly() {
     }
 }
 
+// 只刷新 Recent 表格
 async function refreshRecentOnly() {
     try {
         var nowDate = getBerlinDate();
@@ -1786,7 +1513,7 @@ async function refreshRecentOnly() {
             .select('uid, username, invited_by_username, created_at, balance')
             .gte('created_at', startStr + 'T00:00:00')
             .order('created_at', { ascending: false })
-            .limit(8);
+            .limit(9);
         
         var tbody = document.getElementById('recentRegistrationsBody');
         if (!tbody) return;
@@ -1833,6 +1560,7 @@ async function refreshRecentOnly() {
     }
 }
 
+// 只刷新转化率
 async function refreshConversionOnly() {
     try {
         var today = getBerlinDate();
@@ -1865,8 +1593,6 @@ async function refreshConversionOnly() {
         if (convertedEl) convertedEl.innerText = totalConverted;
         if (ringPercent) ringPercent.innerText = rate + '%';
         
-        await updateNewOrderData();
-        
     } catch (e) {
         console.error('刷新转化率失败:', e);
     }
@@ -1877,38 +1603,87 @@ window.refreshQuickCardsOnly = refreshQuickCardsOnly;
 window.refreshRecentOnly = refreshRecentOnly;
 window.refreshConversionOnly = refreshConversionOnly;
 
-// 暴露 New Order 函数
-window.addNewOrder = addNewOrder;
-window.updateNewOrderData = updateNewOrderData;
-window.showNewOrderPanel = showNewOrderPanel;
-window.updateNewOrderBadge = updateNewOrderBadge;
-
 // ============================================================
-// 初始化 New Order 数据
+// 🔥 祝贺消息函数
 // ============================================================
-(function initNewOrderData() {
-    var today = getBerlinDate();
-    var todayStr = today.toISOString().split('T')[0];
+async function updateCongratsMessage() {
     try {
-        var user = getCurrentUser();
-        var stored = localStorage.getItem('newOrderData_' + (user?.uid || 'global'));
-        if (stored) {
-            var parsed = JSON.parse(stored);
-            if (parsed.date === todayStr) {
-                newOrderData = parsed.data || [];
-                newOrderCount = parsed.count || 0;
-            } else {
-                newOrderData = [];
-                newOrderCount = 0;
-                lastNewOrderDate = todayStr;
+        var today = getBerlinDate();
+        var todayStr = today.toISOString().split('T')[0];
+        
+        var { data: users } = await sb
+            .from('users')
+            .select('uid, username, invited_by_username')
+            .gte('created_at', todayStr + 'T00:00:00');
+        
+        if (!users || users.length === 0) {
+            var congratsEl = document.getElementById('congratsMessage');
+            if (congratsEl) {
+                congratsEl.innerHTML = '';
+                congratsEl.style.display = 'none';
             }
+            return;
         }
-    } catch (e) {}
-})();
+        
+        var uids = users.map(function(u) { return u.uid; });
+        var { data: deposits } = await sb
+            .from('deposits')
+            .select('uid, amount')
+            .in('uid', uids)
+            .in('type', ['manual', 'deposit_bonus']);
+        
+        var depositUsers = {};
+        if (deposits) {
+            deposits.forEach(function(d) {
+                if (d.amount >= 40) {
+                    depositUsers[d.uid] = true;
+                }
+            });
+        }
+        
+        var convertedUsers = users.filter(function(u) {
+            return depositUsers[u.uid] === true;
+        });
+        
+        if (convertedUsers.length === 0) {
+            var congratsEl = document.getElementById('congratsMessage');
+            if (congratsEl) {
+                congratsEl.innerHTML = '';
+                congratsEl.style.display = 'none';
+            }
+            return;
+        }
+        
+        var messagesHtml = '';
+        var displayUsers = convertedUsers.slice(0, 4);
+        
+        displayUsers.forEach(function(u) {
+            var referrer = u.invited_by_username || 'New';
+            messagesHtml += '<div style="padding: 4px 0; border-bottom: 1px solid rgba(214,178,94,0.04);">' +
+                'Congratulations ' + referrer + "'s client <span style='color: #D6B25E; font-weight: 700;'>" + u.uid + '</span> become new order today! ' +
+                '<i class="fas fa-gem" style="color: #D6B25E; margin-left: 4px; font-size: 11px;"></i> ' +
+                '<i class="fas fa-coins" style="color: #D6B25E; margin-left: 2px; font-size: 11px;"></i>' +
+                '</div>';
+        });
+        
+        var remaining = convertedUsers.length - 4;
+        if (remaining > 0) {
+            messagesHtml += '<div style="padding: 4px 0; color: #6a7a8a; font-size: 12px; text-align: center; border-top: 1px solid rgba(214,178,94,0.06); margin-top: 2px; padding-top: 6px;">' +
+                'and ' + remaining + ' more new orders today' +
+                '</div>';
+        }
+        
+        var congratsEl = document.getElementById('congratsMessage');
+        if (congratsEl) {
+            congratsEl.innerHTML = '<div style="max-height: 120px; overflow-y: auto; padding-right: 4px;">' + messagesHtml + '</div>';
+            congratsEl.style.display = 'block';
+        }
+        
+    } catch (e) {
+        console.error('更新祝贺消息失败:', e);
+    }
+}
 
-console.log('✅ admin-dashboard.js loaded');
-console.log('   - Recent 表格: 8条 (可滑动)');
-console.log('   - 环形图: 上移, 尺寸缩小');
-console.log('   - New Order 按钮: 样式3 (深色金属+银边)');
-console.log('   - 展开窗: 样式A (毛玻璃, 标题亮色)');
-console.log('   - UID: 黄色高亮, 无#前缀');
+// 暴露给全局
+window.updateCongratsMessage = updateCongratsMessage;
+}
