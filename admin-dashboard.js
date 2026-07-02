@@ -1686,3 +1686,4 @@ async function updateCongratsMessage() {
 
 // 暴露给全局
 window.updateCongratsMessage = updateCongratsMessage;
+}
