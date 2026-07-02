@@ -1321,14 +1321,12 @@ function loadDashboardPage(days) {
     cachedData.conversion = null;
     cachedData.lastConversionTime = 0;
     
+    // 🔥 加载初始数据（只加载一次）
     refreshDashboard(0, true).then(function() {
         console.log('✅ Dashboard 数据加载完成');
+        console.log('🔄 实时监听已启动，无需定时轮询');
     });
 }, 200);
-    
-    if (dashboardRefreshInterval) clearInterval(dashboardRefreshInterval);
-    dashboardRefreshInterval = setInterval(function() { refreshDashboard(currentDays, false); }, 15000);
-}
 
 window.loadDashboardPage = loadDashboardPage;
 window.refreshDashboardData = function(days) {
@@ -1421,3 +1419,130 @@ function initNotificationEvents() {
         });
     }
 }
+
+// ============================================================
+// 🔥 轻量级刷新函数（事件驱动）
+// ============================================================
+
+// 只刷新快捷卡片
+async function refreshQuickCardsOnly() {
+    try {
+        var [kycRes, withdrawalRes, emailRes] = await Promise.all([
+            sb.from('kyc_verifications').select('id', { count: 'exact', head: true }).eq('status', 'pending'),
+            sb.from('withdrawals').select('id', { count: 'exact', head: true }).eq('status', 'pending'),
+            sb.from('email_verification_requests').select('id', { count: 'exact', head: true }).eq('is_verified', false).is('code', null)
+        ]);
+        
+        var kycEl = document.getElementById('kycPendingCount');
+        var withdrawalEl = document.getElementById('withdrawalPendingCount');
+        var emailEl = document.getElementById('emailPendingCount');
+        
+        if (kycEl) kycEl.innerText = kycRes.count || 0;
+        if (withdrawalEl) withdrawalEl.innerText = withdrawalRes.count || 0;
+        if (emailEl) emailEl.innerText = emailRes.count || 0;
+    } catch (e) {
+        console.error('刷新快捷卡片失败:', e);
+    }
+}
+
+// 只刷新 Recent 表格
+async function refreshRecentOnly() {
+    try {
+        var nowDate = getBerlinDate();
+        var startDate = new Date(nowDate);
+        startDate.setHours(0, 0, 0, 0);
+        var startStr = startDate.toISOString().split('T')[0];
+        
+        var { data: users } = await sb.from('users')
+            .select('uid, username, invited_by_username, created_at, balance')
+            .gte('created_at', startStr + 'T00:00:00')
+            .order('created_at', { ascending: false })
+            .limit(9);
+        
+        var tbody = document.getElementById('recentRegistrationsBody');
+        if (!tbody) return;
+        
+        if (!users || users.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; padding: 12px; color: #5a6a7a; font-size: 12px;">No users today</td></tr>';
+            return;
+        }
+        
+        var uids = users.map(function(u) { return u.uid; });
+        var { data: deposits } = await sb.from('deposits')
+            .select('uid, amount')
+            .eq('type', 'manual')
+            .in('uid', uids);
+        
+        var manualDepositMap = {};
+        if (deposits) {
+            deposits.forEach(function(d) {
+                manualDepositMap[d.uid] = (manualDepositMap[d.uid] || 0) + (d.amount || 0);
+            });
+        }
+        
+        var html = '';
+        for (var i = 0; i < users.length; i++) {
+            var u = users[i];
+            var referrer = u.invited_by_username || '-';
+            var totalManual = manualDepositMap[u.uid] || 0;
+            var hasManualDeposit = totalManual >= 40;
+            var amount = totalManual > 0 ? '€' + totalManual.toFixed(2) : '€0.00';
+            
+            html += '<tr style="border-bottom: 1px solid rgba(200,176,144,0.04);">' +
+                '<td style="padding: 5px 8px; color: #e8eef8; font-weight: 600; font-size: 13px;">' + escapeHtml(u.uid) + '</td>' +
+                '<td style="padding: 5px 8px; color: #aab8c8; font-size: 13px;">' + escapeHtml(referrer) + '</td>' +
+                '<td style="padding: 5px 8px; text-align: center; font-size: 13px; font-weight: 500;">' + 
+                    (hasManualDeposit ? '<i class="fas fa-check-circle" style="color: #4ade80; font-size: 15px;"></i>' : '<i class="fas fa-times-circle" style="color: #5a4a3a; font-size: 15px;"></i>') + 
+                '</td>' +
+                '<td style="padding: 5px 8px; text-align: right; color: ' + (totalManual > 0 ? '#d4c8a0' : '#5a6a7a') + '; font-weight: 600; font-size: 13px;">' + amount + '</td>' +
+                '</tr>';
+        }
+        tbody.innerHTML = html;
+        
+    } catch (e) {
+        console.error('刷新Recent失败:', e);
+    }
+}
+
+// 只刷新转化率
+async function refreshConversionOnly() {
+    try {
+        var today = getBerlinDate();
+        var todayStr = today.toISOString().split('T')[0];
+        
+        var [usersRes, depositsRes] = await Promise.all([
+            sb.from('users').select('uid').gte('created_at', todayStr + 'T00:00:00'),
+            sb.from('deposits').select('uid').in('type', ['manual', 'deposit_bonus']).gte('created_at', todayStr + 'T00:00:00')
+        ]);
+        
+        var users = usersRes.data || [];
+        var deposits = depositsRes.data || [];
+        
+        var depositUsers = {};
+        deposits.forEach(function(d) {
+            depositUsers[d.uid] = true;
+        });
+        
+        var totalRegister = users.length;
+        var totalConverted = users.filter(function(u) {
+            return depositUsers[u.uid] === true;
+        }).length;
+        var rate = totalRegister > 0 ? Math.round((totalConverted / totalRegister) * 100) : 0;
+        
+        var registerEl = document.getElementById('conversionRegister');
+        var convertedEl = document.getElementById('conversionConverted');
+        var ringPercent = document.getElementById('ringPercent');
+        
+        if (registerEl) registerEl.innerText = totalRegister;
+        if (convertedEl) convertedEl.innerText = totalConverted;
+        if (ringPercent) ringPercent.innerText = rate + '%';
+        
+    } catch (e) {
+        console.error('刷新转化率失败:', e);
+    }
+}
+
+// 暴露给 admin-common.js 使用
+window.refreshQuickCardsOnly = refreshQuickCardsOnly;
+window.refreshRecentOnly = refreshRecentOnly;
+window.refreshConversionOnly = refreshConversionOnly;

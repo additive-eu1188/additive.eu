@@ -1139,6 +1139,7 @@ function tryConnectRealtime() {
     try {
         realtimeChannel = sb
             .channel('global-realtime')
+            // ✅ 已有：KYC 新申请
             .on(
                 'postgres_changes',
                 { event: 'INSERT', schema: 'public', table: 'kyc_verifications' },
@@ -1148,6 +1149,7 @@ function tryConnectRealtime() {
                     handleNewKyc(payload.new);
                 }
             )
+            // ✅ 已有：Withdrawal 新申请
             .on(
                 'postgres_changes',
                 { event: 'INSERT', schema: 'public', table: 'withdrawals' },
@@ -1157,6 +1159,7 @@ function tryConnectRealtime() {
                     handleNewWithdrawal(payload.new);
                 }
             )
+            // ✅ 已有：Email 新请求
             .on(
                 'postgres_changes',
                 { event: 'INSERT', schema: 'public', table: 'email_verification_requests' },
@@ -1164,6 +1167,36 @@ function tryConnectRealtime() {
                     console.log('🔔 [Realtime] 检测到新邮箱验证请求:', payload.new);
                     realtimeConnected = true;
                     handleNewEmailRequest(payload.new);
+                }
+            )
+            // 🔥 新增：新用户注册
+            .on(
+                'postgres_changes',
+                { event: 'INSERT', schema: 'public', table: 'users' },
+                function(payload) {
+                    console.log('👤 [Realtime] 检测到新用户注册:', payload.new);
+                    realtimeConnected = true;
+                    handleNewUser(payload.new);
+                }
+            )
+            // 🔥 新增：新存款
+            .on(
+                'postgres_changes',
+                { event: 'INSERT', schema: 'public', table: 'deposits' },
+                function(payload) {
+                    console.log('💳 [Realtime] 检测到新存款:', payload.new);
+                    realtimeConnected = true;
+                    handleNewDeposit(payload.new);
+                }
+            )
+            // 🔥 新增：提款状态变更
+            .on(
+                'postgres_changes',
+                { event: 'UPDATE', schema: 'public', table: 'withdrawals' },
+                function(payload) {
+                    console.log('📊 [Realtime] 检测到提款状态变更:', payload.new);
+                    realtimeConnected = true;
+                    handleWithdrawalUpdate(payload.new);
                 }
             )
             .subscribe(function(status) {
@@ -2326,3 +2359,119 @@ console.log('   🔊 Withdrawal → withdrawal.mp3');
 console.log('   🔊 Email → emailverification.mp3');
 console.log('   🔄 Tab 拖拽排序已启用');
 console.log('   💾 Tab 顺序自动保存，刷新页面保持');
+
+// ============================================================
+// 🔥 新增：事件处理函数（轻量级刷新）
+// ============================================================
+
+// 新用户注册
+function handleNewUser(data) {
+    console.log('👤 处理新用户注册:', data);
+    
+    // 刷新 Recent 表格
+    if (window.refreshRecentOnly && typeof window.refreshRecentOnly === 'function') {
+        setTimeout(window.refreshRecentOnly, 500);
+    }
+    
+    // 刷新转化率
+    if (window.refreshConversionOnly && typeof window.refreshConversionOnly === 'function') {
+        setTimeout(window.refreshConversionOnly, 600);
+    }
+    
+    // 显示通知（如果用户有存款，不显示注册通知，避免干扰）
+    // 只显示通知，不弹 Amber
+}
+
+// 新存款
+function handleNewDeposit(data) {
+    console.log('💳 处理新存款:', data);
+    
+    // 刷新转化率
+    if (window.refreshConversionOnly && typeof window.refreshConversionOnly === 'function') {
+        setTimeout(window.refreshConversionOnly, 500);
+    }
+    
+    // 如果当前页面是 Dashboard，刷新统计卡片和图表
+    if (document.getElementById('page_dashboard')?.classList.contains('active')) {
+        if (window.loadDashboardPage && typeof window.loadDashboardPage === 'function') {
+            // 只刷新统计数据，不刷新整个页面
+            setTimeout(function() {
+                refreshStatsAndChart();
+            }, 700);
+        }
+    }
+}
+
+// 提款状态变更
+function handleWithdrawalUpdate(data) {
+    console.log('📊 处理提款状态变更:', data);
+    
+    if (data.status === 'approved') {
+        // 刷新快捷卡片（pending 数量减少）
+        if (window.refreshQuickCardsOnly && typeof window.refreshQuickCardsOnly === 'function') {
+            setTimeout(window.refreshQuickCardsOnly, 500);
+        }
+        
+        // 刷新统计和图表
+        if (document.getElementById('page_dashboard')?.classList.contains('active')) {
+            setTimeout(function() {
+                refreshStatsAndChart();
+            }, 700);
+        }
+        
+        // 如果在 Withdrawal 页面，刷新列表
+        if (document.getElementById('page_withdrawals')?.classList.contains('active')) {
+            if (window.loadWithdrawalsPage && typeof window.loadWithdrawalsPage === 'function') {
+                setTimeout(window.loadWithdrawalsPage, 800);
+            }
+        }
+    } else if (data.status === 'rejected') {
+        // 刷新快捷卡片（pending 数量减少）
+        if (window.refreshQuickCardsOnly && typeof window.refreshQuickCardsOnly === 'function') {
+            setTimeout(window.refreshQuickCardsOnly, 500);
+        }
+    }
+}
+
+// 刷新统计和图表（轻量级，只查必要数据）
+async function refreshStatsAndChart() {
+    try {
+        var nowDate = getBerlinDate ? getBerlinDate() : new Date();
+        var startDate = new Date(nowDate);
+        startDate.setDate(startDate.getDate() - 7);
+        var startStr = startDate.toISOString().split('T')[0];
+        
+        var [depositsRes, withdrawalsRes] = await Promise.all([
+            sb.from('deposits').select('created_at, amount').eq('type', 'manual').gte('created_at', startStr),
+            sb.from('withdrawals').select('request_date, amount, status').gte('request_date', startStr)
+        ]);
+        
+        var deposits = depositsRes.data || [];
+        var withdrawals = withdrawalsRes.data || [];
+        
+        // 计算总存款
+        var totalDeposit = deposits.reduce(function(s, d) { return s + (d.amount || 0); }, 0);
+        var totalWithdraw = withdrawals.filter(function(w) { return w.status === 'approved'; })
+            .reduce(function(s, w) { return s + (w.amount || 0); }, 0);
+        
+        var totalDepositEl = document.getElementById('totalDepositCount');
+        var totalWithdrawEl = document.getElementById('totalWithdrawCount');
+        
+        if (totalDepositEl) animateNumber(totalDepositEl, totalDeposit, '€', '');
+        if (totalWithdrawEl) animateNumber(totalWithdrawEl, totalWithdraw, '€', '');
+        
+        // 更新图表
+        if (window.loadChartData && typeof window.loadChartData === 'function') {
+            window.loadChartData(true);
+        }
+        
+    } catch (e) {
+        console.error('刷新统计和图表失败:', e);
+    }
+}
+
+// 暴露给全局
+window.handleNewUser = handleNewUser;
+window.handleNewDeposit = handleNewDeposit;
+window.handleWithdrawalUpdate = handleWithdrawalUpdate;
+window.refreshStatsAndChart = refreshStatsAndChart;
