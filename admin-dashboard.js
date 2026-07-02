@@ -328,13 +328,15 @@ async function loadConversionData(days, force) {
     force = force || false;
     var now = Date.now();
     
+    console.log('🔍 loadConversionData 被调用, days:', days, 'force:', force);
+    
     // 🔥 Today 数据不缓存，每次都重新获取
     if (days === 0) {
-        // 强制刷新，不使用缓存
         force = true;
     }
     
     if (!force && cachedData.conversion && (now - cachedData.lastConversionTime) < CACHE_DURATION) {
+        console.log('📦 使用缓存的 conversion 数据:', cachedData.conversion);
         applyConversionData(cachedData.conversion, days);
         return;
     }
@@ -346,7 +348,6 @@ async function loadConversionData(days, force) {
         // 根据 days 参数决定统计哪些时间段
         // ============================================================
         if (days === 0) {
-            // Today only
             periods.push({ label: 'Today', daysOffset: 0 });
         } else if (days === 7) {
             periods.push({ label: 'Today', daysOffset: 0 });
@@ -362,27 +363,38 @@ async function loadConversionData(days, force) {
             periods.push({ label: 'All Time', daysOffset: -1 });
         }
         
+        console.log('📊 periods:', periods);
+        
         var result = [];
+        
+        // 🔥 查询所有用户
         var allUsers = await sb.from('users').select('uid, created_at');
+        console.log('👤 总用户数:', allUsers.data?.length || 0);
+        
+        // 🔥 查询所有存款（manual + deposit_bonus）
         var allDeposits = await sb.from('deposits')
             .select('uid, created_at, amount, type')
             .in('type', ['manual', 'deposit_bonus']);
+        console.log('💰 总存款记录数:', allDeposits.data?.length || 0);
         
         var users = allUsers.data || [];
         var deposits = allDeposits.data || [];
         
+        // 构建存款用户映射（存款 >= 40 的用户）
         var depositUsers = {};
         deposits.forEach(function(d) {
             if (d.uid && (d.amount || 0) >= 40) {
                 depositUsers[d.uid] = true;
             }
         });
+        console.log('✅ 已转化用户数（存款>=40）:', Object.keys(depositUsers).length);
         
         // ============================================================
         // 🔥 获取今天的日期（柏林时间）
         // ============================================================
         var today = getBerlinDate();
         var todayStr = today.toISOString().split('T')[0];
+        console.log('📅 今天 (柏林时间):', todayStr);
         
         for (var p = 0; p < periods.length; p++) {
             var period = periods[p];
@@ -402,6 +414,8 @@ async function loadConversionData(days, force) {
                     var dateStr = berlinDate.toISOString().split('T')[0];
                     return dateStr === todayStr;
                 });
+                console.log('📊 Today 注册用户数:', registeredUsers.length);
+                console.log('📊 Today 注册用户 UIDs:', registeredUsers.map(function(u) { return u.uid; }));
             } else {
                 // 7 Days / 30 Days
                 var startDate = new Date(today);
@@ -423,6 +437,8 @@ async function loadConversionData(days, force) {
             var totalConverted = convertedUsers.length;
             var rate = totalRegister > 0 ? Math.round((totalConverted / totalRegister) * 100) : 0;
             
+            console.log('📊 ' + label + ': register=' + totalRegister + ', converted=' + totalConverted + ', rate=' + rate + '%');
+            
             result.push({
                 label: label,
                 days: daysOffset,
@@ -432,12 +448,14 @@ async function loadConversionData(days, force) {
             });
         }
         
+        console.log('✅ loadConversionData 最终结果:', result);
+        
         cachedData.conversion = result;
         cachedData.lastConversionTime = now;
         applyConversionData(result, days);
         
     } catch (e) {
-        console.error('加载转化率数据失败:', e);
+        console.error('❌ 加载转化率数据失败:', e);
     }
 }
 
@@ -473,11 +491,13 @@ function applyConversionData(data, days) {
         displayData = { label: 'Today', register: 0, converted: 0, rate: 0 };
     }
     
+    // 🔥 更新环形图百分比
     var ringPercent = document.getElementById('ringPercent');
     if (ringPercent) {
         ringPercent.innerText = displayData.rate + '%';
     }
     
+    // 🔥 更新顶部显示的 Register / Converted 数字
     var registerEl = document.getElementById('conversionRegister');
     var convertedEl = document.getElementById('conversionConverted');
     var labelEl = document.getElementById('conversionLabel');
@@ -488,28 +508,25 @@ function applyConversionData(data, days) {
         labelEl.innerText = displayData.label + ' Register';
     }
     
-    // 更新所有统计行
+    // 🔥 更新所有统计行（只显示第一行作为主数据）
     var allLabels = document.querySelectorAll('.conversion-stat-label');
     var allRegisters = document.querySelectorAll('.conversion-stat-register');
     var allConverteds = document.querySelectorAll('.conversion-stat-converted');
     var allRates = document.querySelectorAll('.conversion-stat-rate');
     var allRows = document.querySelectorAll('.conversion-stat-row');
     
-    // 只显示匹配的行，隐藏其他行
     allRows.forEach(function(row, index) {
         if (index === 0) {
-            // 第一行显示主数据（Today）
             row.style.display = 'flex';
             row.style.background = 'rgba(204,184,159,0.08)';
             row.style.borderRadius = '8px';
             row.style.padding = '3px 6px';
         } else {
-            // 其他行隐藏
             row.style.display = 'none';
         }
     });
     
-    // 更新所有行的数据为 displayData（简化处理，只更新第一行）
+    // 更新第一行的数据
     if (allLabels.length > 0) allLabels[0].innerText = displayData.label;
     if (allRegisters.length > 0) allRegisters[0].innerText = displayData.register;
     if (allConverteds.length > 0) allConverteds[0].innerText = displayData.converted;
