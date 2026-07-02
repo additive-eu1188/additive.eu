@@ -617,6 +617,9 @@
     btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> ' + t('register_send') + '...';
 
     try {
+        // ============================================================
+        // 🔥 1. 检查邮箱是否已被注册
+        // ============================================================
         const { data: existingEmail, error: checkError } = await sb
             .from('users')
             .select('email')
@@ -634,42 +637,81 @@
             return;
         }
 
-        const { error: deleteError } = await sb
+        // ============================================================
+        // 🔥 2. 检查是否已有未验证的记录（pending）
+        // ============================================================
+        const { data: existingRequest } = await sb
             .from('email_verification_requests')
-            .delete()
+            .select('id, code, send_count, is_verified')
             .eq('email', email)
-            .eq('is_verified', false);
-
-        if (deleteError) {
-            console.error('Delete old records failed:', deleteError);
-        }
+            .eq('is_verified', false)
+            .maybeSingle();
 
         const expiresAt = new Date();
         expiresAt.setHours(expiresAt.getHours() + 24);
 
-        const { data: insertData, error: insertError } = await sb
-            .from('email_verification_requests')
-            .insert({
-                email: email,
-                code: null,
-                is_verified: false,
-                requested_at: new Date().toISOString(),
-                expires_at: expiresAt.toISOString()
-            })
-            .select();
+        let result;
 
-        if (insertError) {
-            console.error('Storage failed:', insertError);
-            showMessage(t('register_send_failed') + insertError.message);
-            btn.disabled = false;
-            btn.innerHTML = t('register_send');
-            return;
+        if (existingRequest) {
+            // ============================================================
+            // 🔥 已有记录 → 更新（增加 send_count，重置 code 为 null）
+            // ============================================================
+            console.log('📧 更新已有记录 ID:', existingRequest.id, 'send_count:', existingRequest.send_count || 0);
+            
+            const newCount = (existingRequest.send_count || 0) + 1;
+            
+            result = await sb
+                .from('email_verification_requests')
+                .update({
+                    code: null,  // 清空旧的 TAC，等待管理员重新设置
+                    send_count: newCount,
+                    is_verified: false,
+                    requested_at: new Date().toISOString(),
+                    expires_at: expiresAt.toISOString()
+                })
+                .eq('id', existingRequest.id)
+                .select();
+
+            console.log('📧 更新后 send_count:', newCount);
+
+            if (result.error) {
+                console.error('Update failed:', result.error);
+                showMessage(t('register_send_failed') + result.error.message);
+                btn.disabled = false;
+                btn.innerHTML = t('register_send');
+                return;
+            }
+
+            showMessage(`✅ 已重新发送验证请求 (点击 ${newCount} 次)`, false);
+
+        } else {
+            // ============================================================
+            // 🔥 没有记录 → 创建新记录
+            // ============================================================
+            result = await sb
+                .from('email_verification_requests')
+                .insert({
+                    email: email,
+                    code: null,
+                    is_verified: false,
+                    send_count: 0,  // 初始为 0，后台点击 Send 时才变为 1
+                    requested_at: new Date().toISOString(),
+                    expires_at: expiresAt.toISOString()
+                })
+                .select();
+
+            if (result.error) {
+                console.error('Insert failed:', result.error);
+                showMessage(t('register_send_failed') + result.error.message);
+                btn.disabled = false;
+                btn.innerHTML = t('register_send');
+                return;
+            }
+
+            showMessage(t('register_email_submitted'), false);
         }
 
-        console.log('Email submitted successfully:', insertData);
         pendingEmail = email;
-        showMessage(t('register_email_submitted'), false);
-
         startCountdown(60);
 
     } catch (err) {
