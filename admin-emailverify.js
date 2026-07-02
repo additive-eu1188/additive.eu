@@ -36,23 +36,22 @@ function generateTAC() {
 function getRecordStatus(record) {
     // 1️⃣ 已验证 → History
     if (record.is_verified === true) {
-        return { label: 'Verified', class: 'status-badge-verified', icon: '✅' };
+        return { label: 'Verified', class: 'status-badge-verified', icon: 'fas fa-check-circle' };
     }
     
     // 2️⃣ code 为空 → 根据 send_count 显示
     if (!record.code || record.code === '' || record.code === null) {
         const sendCount = record.send_count || 0;
         if (sendCount === 0) {
-            return { label: 'New Request', class: 'status-badge-new', icon: '🆕' };
+            return { label: 'New Request', class: 'status-badge-new', icon: 'fas fa-envelope' };
         } else {
-            // 🔥 send_count + 1 = 用户实际点击次数
             const clickCount = sendCount + 1;
-            return { label: `Clicked ${clickCount} times`, class: 'status-badge-pending', icon: '📤' };
+            return { label: `Clicked ${clickCount} times`, class: 'status-badge-clicked', icon: 'fas fa-envelope' };
         }
     }
     
     // 3️⃣ code 有值 → Pending
-    return { label: 'Pending', class: 'status-badge-pending', icon: '⏳' };
+    return { label: 'Pending', class: 'status-badge-pending', icon: 'fas fa-clock' };
 }
 
 // ============================================================
@@ -160,7 +159,6 @@ async function loadEmailVerifyPage() {
                 </div>
             </div>
             
-            <!-- 待处理面板 -->
             <div id="emailPendingPanel" class="email-panel">
                 <div class="stats-grid" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 24px;">
                     <div class="stat-item" style="background: rgba(12, 16, 28, 0.6); border-radius: 16px; padding: 16px 20px; text-align: center; border: 1px solid rgba(255,255,255,0.04);">
@@ -198,7 +196,6 @@ async function loadEmailVerifyPage() {
                 </div>
             </div>
             
-            <!-- 历史记录面板 -->
             <div id="emailHistoryPanel" class="email-panel" style="display: none;">
                 <div class="stats-grid" style="display: grid; grid-template-columns: repeat(1, 1fr); gap: 16px; margin-bottom: 24px;">
                     <div class="stat-item" style="background: rgba(12, 16, 28, 0.6); border-radius: 16px; padding: 16px 20px; text-align: center; border: 1px solid rgba(255,255,255,0.04);">
@@ -232,7 +229,7 @@ async function loadEmailVerifyPage() {
         </div>
     `;
     
-    // 样式
+    // 样式 - 金属质感
     const style = document.createElement('style');
     style.textContent = `
         .tab-email-btn {
@@ -261,6 +258,65 @@ async function loadEmailVerifyPage() {
             from { opacity: 0; transform: translateY(8px); }
             to { opacity: 1; transform: translateY(0); }
         }
+
+        /* ===== 金属质感 Status 标签 ===== */
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 500;
+            color: #ffffff;
+            white-space: nowrap;
+            background: linear-gradient(160deg, rgba(255,255,255,0.045), rgba(255,255,255,0.008));
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.06), inset 0 -1px 0 rgba(0,0,0,0.2), 0 2px 8px rgba(0,0,0,0.15);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        .status-badge::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 10%;
+            right: 10%;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent);
+            pointer-events: none;
+            border-radius: 50%;
+        }
+        .status-badge::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 20%;
+            right: 20%;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(0,0,0,0.2), transparent);
+            pointer-events: none;
+        }
+        .status-badge:hover {
+            background: linear-gradient(160deg, rgba(255,255,255,0.08), rgba(255,255,255,0.02));
+            border-color: rgba(255,255,255,0.15);
+            transform: translateY(-2px);
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.08), inset 0 -1px 0 rgba(0,0,0,0.2), 0 8px 24px rgba(0,0,0,0.25);
+        }
+        .status-badge i {
+            font-size: 13px;
+            opacity: 0.8;
+            flex-shrink: 0;
+        }
+        .status-badge.status-new i { color: #4a7cff; }
+        .status-badge.status-pending i { color: #ffb84d; }
+        .status-badge.status-clicked i { color: #c8b090; }
+        .status-badge.status-verified i { color: #4ade80; }
+
+        /* ===== 金属质感按钮 ===== */
         .btn-sm-action {
             padding: 4px 12px;
             font-size: 11px;
@@ -274,55 +330,144 @@ async function loadEmailVerifyPage() {
             font-family: 'Inter', sans-serif;
         }
         .btn-sm-action:hover { opacity: 0.85; }
-        .btn-send-email { 
-            background: rgba(74, 222, 128, 0.12); 
-            color: #4ade80; 
-            padding: 5px 14px;
-            font-size: 11px;
-            border: none;
+        .btn-approve { background: rgba(122, 208, 176, 0.15); color: #7ad0b0; }
+        .btn-approve:hover { background: rgba(122, 208, 176, 0.25); }
+        .btn-reject { background: rgba(232, 128, 128, 0.15); color: #e88080; }
+        .btn-reject:hover { background: rgba(232, 128, 128, 0.25); }
+
+        /* Email 页面按钮 */
+        .btn-send-email {
+            background: rgba(74, 222, 128, 0.06);
+            border: 1px solid rgba(74, 222, 128, 0.12);
             border-radius: 40px;
+            padding: 5px 14px;
+            color: #4ade80;
+            font-size: 11px;
+            font-weight: 600;
             cursor: pointer;
             transition: 0.2s;
-            font-weight: 600;
             white-space: nowrap;
             font-family: 'Inter', sans-serif;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: linear-gradient(160deg, rgba(255,255,255,0.035), rgba(255,255,255,0.005));
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.04), inset 0 -1px 0 rgba(0,0,0,0.15), 0 2px 8px rgba(0,0,0,0.1);
+            position: relative;
+            overflow: hidden;
         }
-        .btn-send-email:hover { background: rgba(74, 222, 128, 0.25); }
-        .btn-send-email i { margin-right: 4px; }
+        .btn-send-email::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 15%;
+            right: 15%;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.08), transparent);
+            pointer-events: none;
+            border-radius: 50%;
+        }
+        .btn-send-email:hover {
+            background: rgba(74, 222, 128, 0.10);
+            border-color: rgba(74, 222, 128, 0.25);
+            transform: translateY(-2px);
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.06), inset 0 -1px 0 rgba(0,0,0,0.15), 0 4px 20px rgba(74,222,128,0.04);
+        }
+        .btn-send-email i { margin-right: 4px; font-size: 12px; }
         .btn-send-email:disabled {
             opacity: 0.4;
             cursor: not-allowed;
+            pointer-events: none;
         }
-        .btn-verify-email {
-            background: rgba(74, 124, 255, 0.12);
-            color: #4a7cff;
-            padding: 5px 14px;
-            font-size: 11px;
-            border: none;
-            border-radius: 40px;
-            cursor: pointer;
-            transition: 0.2s;
-            font-weight: 600;
-            white-space: nowrap;
-            font-family: 'Inter', sans-serif;
-        }
-        .btn-verify-email:hover { background: rgba(74, 124, 255, 0.25); }
-        .btn-verify-email i { margin-right: 4px; }
+
         .btn-resend-email {
-            background: rgba(255, 184, 77, 0.12);
-            color: #ffb84d;
-            padding: 5px 14px;
-            font-size: 11px;
-            border: none;
+            background: rgba(255, 184, 77, 0.06);
+            border: 1px solid rgba(255, 184, 77, 0.12);
             border-radius: 40px;
+            padding: 5px 14px;
+            color: #ffb84d;
+            font-size: 11px;
+            font-weight: 600;
             cursor: pointer;
             transition: 0.2s;
-            font-weight: 600;
             white-space: nowrap;
             font-family: 'Inter', sans-serif;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: linear-gradient(160deg, rgba(255,255,255,0.035), rgba(255,255,255,0.005));
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.04), inset 0 -1px 0 rgba(0,0,0,0.15), 0 2px 8px rgba(0,0,0,0.1);
+            position: relative;
+            overflow: hidden;
         }
-        .btn-resend-email:hover { background: rgba(255, 184, 77, 0.25); }
-        .btn-resend-email i { margin-right: 4px; }
+        .btn-resend-email::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 15%;
+            right: 15%;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.08), transparent);
+            pointer-events: none;
+            border-radius: 50%;
+        }
+        .btn-resend-email:hover {
+            background: rgba(255, 184, 77, 0.10);
+            border-color: rgba(255, 184, 77, 0.25);
+            transform: translateY(-2px);
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.06), inset 0 -1px 0 rgba(0,0,0,0.15), 0 4px 20px rgba(255,184,77,0.04);
+        }
+        .btn-resend-email i { margin-right: 4px; font-size: 12px; }
+        .btn-resend-email:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+            pointer-events: none;
+        }
+
+        .btn-verify-email {
+            background: rgba(74, 124, 255, 0.06);
+            border: 1px solid rgba(74, 124, 255, 0.12);
+            border-radius: 40px;
+            padding: 5px 14px;
+            color: #4a7cff;
+            font-size: 11px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.2s;
+            white-space: nowrap;
+            font-family: 'Inter', sans-serif;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: linear-gradient(160deg, rgba(255,255,255,0.035), rgba(255,255,255,0.005));
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.04), inset 0 -1px 0 rgba(0,0,0,0.15), 0 2px 8px rgba(0,0,0,0.1);
+            position: relative;
+            overflow: hidden;
+        }
+        .btn-verify-email::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 15%;
+            right: 15%;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.08), transparent);
+            pointer-events: none;
+            border-radius: 50%;
+        }
+        .btn-verify-email:hover {
+            background: rgba(74, 124, 255, 0.10);
+            border-color: rgba(74, 124, 255, 0.25);
+            transform: translateY(-2px);
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.06), inset 0 -1px 0 rgba(0,0,0,0.15), 0 4px 20px rgba(74,124,255,0.04);
+        }
+        .btn-verify-email i { margin-right: 4px; font-size: 12px; }
+        .btn-verify-email:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+            pointer-events: none;
+        }
+
         .status-badge-verified {
             background: rgba(74, 222, 128, 0.12);
             color: #4ade80;
@@ -355,7 +500,7 @@ async function loadEmailVerifyPage() {
             .tab-email-btn { font-size: 12px; padding: 6px 14px; }
             .search-bar { flex-direction: column; align-items: stretch; }
             .search-bar input { width: 100% !important; min-width: unset; flex: 1 1 auto !important; }
-            .btn-send-email, .btn-verify-email, .btn-resend-email { font-size: 10px; padding: 4px 10px; }
+            .btn-send-email, .btn-resend-email, .btn-verify-email { font-size: 10px; padding: 4px 10px; }
         }
     `;
     document.head.appendChild(style);
@@ -514,20 +659,36 @@ async function loadEmailPending() {
             row.insertCell(0).innerHTML = `<span style="font-size:12px; color:#b0c0da;">${escapeHtml(phone)}</span>`;
             row.insertCell(1).innerHTML = `<span style="font-weight:500; color:#d8e0f0;">${escapeHtml(item.email)}</span>`;
             row.insertCell(2).innerHTML = `<span style="font-size:12px; color:#8892a8;">${requestTime}</span>`;
-            row.insertCell(3).innerHTML = `<span class="${status.class}">${status.icon} ${status.label}</span>`;
             
+            // ===== Status 列 - 金属质感标签 =====
+            let statusClass = '';
+            let iconHtml = `<i class="${status.icon}"></i>`;
+            if (status.label === 'New Request') {
+                statusClass = 'status-new';
+            } else if (status.label === 'Pending') {
+                statusClass = 'status-pending';
+            } else if (status.label.includes('Clicked')) {
+                statusClass = 'status-clicked';
+            } else {
+                statusClass = 'status-verified';
+            }
+            row.insertCell(3).innerHTML = `
+                <span class="status-badge ${statusClass}">
+                    ${iconHtml} ${status.label}
+                </span>
+            `;
+            
+            // ===== Actions 列 - 金属质感按钮 =====
             const actionsCell = row.insertCell(4);
             let actionsHtml = '';
             
             if (isNewRequest || isClicked) {
-                // New Request 或 Clicked N times → 显示 Send
                 actionsHtml = `
                     <button class="btn-send-email send-email-btn" data-id="${item.id}" data-email="${item.email}">
                         <i class="fas fa-envelope"></i> Send
                     </button>
                 `;
             } else if (isPending) {
-                // Pending → 显示 Resend + Verify
                 actionsHtml = `
                     <button class="btn-resend-email resend-email-btn" data-id="${item.id}" data-email="${item.email}" title="Resend with new TAC">
                         <i class="fas fa-sync-alt"></i> Resend
