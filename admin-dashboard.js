@@ -1016,7 +1016,8 @@ function bindDateFilters() {
         var days = parseInt(btn.dataset.days);
         currentDays = days;
         
-        // 🔥 如果是 Today (days === 0)，强制刷新
+        console.log('🔍 bindDateFilters 切换日期:', days);  // ← 添加这行日志
+        
         refreshDashboard(days, true);
     }, DEBOUNCE_DELAY);
     
@@ -1283,12 +1284,11 @@ function loadDashboardPage(days) {
         console.warn('⚠️ 初始化组件时出错:', e.message);
     }
     
-    // 🔥 强制清除缓存，确保数据重新加载
     cachedData.conversion = null;
     cachedData.lastConversionTime = 0;
     
-    // 🔥 先加载数据，再渲染
-    refreshDashboard(days, true).then(function() {
+    // 🔥 确保传入正确的 days 参数（这里应该是 0）
+    refreshDashboard(0, true).then(function() {
         console.log('✅ Dashboard 数据加载完成');
     });
 }, 200);

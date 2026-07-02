@@ -141,6 +141,30 @@ async function verifyEmail(requestId, email) {
     }
 }
 
+// ============================================================
+// 🔥 删除邮箱验证请求
+// ============================================================
+async function deleteEmailRequest(requestId, email) {
+    try {
+        const { error } = await sb
+            .from('email_verification_requests')
+            .delete()
+            .eq('id', parseInt(requestId));
+
+        if (error) throw error;
+
+        showToast(`✅ Deleted request for ${email}`, 'success');
+        
+        await loadEmailPending();
+        await loadEmailHistory();
+        await updateEmailStats();
+
+    } catch (e) {
+        console.error('❌ 删除失败:', e);
+        showToast('❌ Delete failed: ' + e.message, 'error');
+    }
+}
+
 async function loadEmailVerifyPage() {
     const container = document.getElementById('page_emailverify');
     if (!container) return;
@@ -188,7 +212,7 @@ async function loadEmailVerifyPage() {
                                 <th style="padding: 14px 14px; color: #a8b4d0; font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid rgba(255,255,255,0.04); background: rgba(10,14,28,0.3); text-align: left; min-width: 200px;">EMAIL</th>
                                 <th style="padding: 14px 14px; color: #a8b4d0; font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid rgba(255,255,255,0.04); background: rgba(10,14,28,0.3); text-align: left; min-width: 160px;">REQUEST TIME</th>
                                 <th style="padding: 14px 14px; color: #a8b4d0; font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid rgba(255,255,255,0.04); background: rgba(10,14,28,0.3); text-align: left; min-width: 160px;">STATUS</th>
-                                <th style="padding: 14px 14px; color: #a8b4d0; font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid rgba(255,255,255,0.04); background: rgba(10,14,28,0.3); text-align: left; min-width: 230px;">ACTIONS</th>
+                                <th style="padding: 14px 14px; color: #a8b4d0; font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid rgba(255,255,255,0.04); background: rgba(10,14,28,0.3); text-align: left; min-width: 280px;">ACTIONS</th>
                             </tr>
                         </thead>
                         <tbody id="emailTableBody"><tr><td colspan="5" style="text-align:center; padding:30px; color:#6a7a9a;">Loading...</td></tr></tbody>
@@ -468,6 +492,46 @@ async function loadEmailVerifyPage() {
             pointer-events: none;
         }
 
+        /* Delete 按钮 - 红色调 */
+        .btn-delete-email {
+            background: rgba(232, 128, 128, 0.06);
+            border: 1px solid rgba(232, 128, 128, 0.12);
+            border-radius: 40px;
+            padding: 5px 12px;
+            color: #e88080;
+            font-size: 11px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.2s;
+            white-space: nowrap;
+            font-family: 'Inter', sans-serif;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            background: linear-gradient(160deg, rgba(255,255,255,0.035), rgba(255,255,255,0.005));
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.04), inset 0 -1px 0 rgba(0,0,0,0.15), 0 2px 8px rgba(0,0,0,0.1);
+            position: relative;
+            overflow: hidden;
+        }
+        .btn-delete-email::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 15%;
+            right: 15%;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.08), transparent);
+            pointer-events: none;
+            border-radius: 50%;
+        }
+        .btn-delete-email:hover {
+            background: rgba(232, 128, 128, 0.12);
+            border-color: rgba(232, 128, 128, 0.25);
+            transform: translateY(-2px);
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.06), inset 0 -1px 0 rgba(0,0,0,0.15), 0 4px 20px rgba(232,128,128,0.04);
+        }
+        .btn-delete-email i { font-size: 12px; }
+
         .status-badge-verified {
             background: rgba(74, 222, 128, 0.12);
             color: #4ade80;
@@ -500,7 +564,7 @@ async function loadEmailVerifyPage() {
             .tab-email-btn { font-size: 12px; padding: 6px 14px; }
             .search-bar { flex-direction: column; align-items: stretch; }
             .search-bar input { width: 100% !important; min-width: unset; flex: 1 1 auto !important; }
-            .btn-send-email, .btn-resend-email, .btn-verify-email { font-size: 10px; padding: 4px 10px; }
+            .btn-send-email, .btn-resend-email, .btn-verify-email, .btn-delete-email { font-size: 10px; padding: 4px 10px; }
         }
     `;
     document.head.appendChild(style);
@@ -687,6 +751,9 @@ async function loadEmailPending() {
                     <button class="btn-send-email send-email-btn" data-id="${item.id}" data-email="${item.email}">
                         <i class="fas fa-envelope"></i> Send
                     </button>
+                    <button class="btn-delete-email delete-email-btn" data-id="${item.id}" data-email="${item.email}" title="Delete this request">
+                        <i class="fas fa-trash"></i>
+                    </button>
                 `;
             } else if (isPending) {
                 actionsHtml = `
@@ -696,12 +763,16 @@ async function loadEmailPending() {
                     <button class="btn-verify-email verify-email-btn" data-id="${item.id}" data-email="${item.email}" title="Mark as verified">
                         <i class="fas fa-check"></i> Verify
                     </button>
+                    <button class="btn-delete-email delete-email-btn" data-id="${item.id}" data-email="${item.email}" title="Delete this request">
+                        <i class="fas fa-trash"></i>
+                    </button>
                 `;
             }
             
             actionsCell.innerHTML = actionsHtml;
         }
         
+        // ===== 绑定事件 =====
         document.querySelectorAll('.send-email-btn').forEach(btn => {
             btn.addEventListener('click', function() {
                 const id = this.dataset.id;
@@ -723,6 +794,22 @@ async function loadEmailPending() {
                 const id = this.dataset.id;
                 const email = this.dataset.email;
                 verifyEmail(id, email);
+            });
+        });
+        
+        // ===== Delete 按钮事件 =====
+        document.querySelectorAll('.delete-email-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const id = this.dataset.id;
+                const email = this.dataset.email;
+                
+                showConfirm(
+                    'Delete Email Request',
+                    `Are you sure you want to delete the verification request for <strong>${escapeHtml(email)}</strong>?<br><br>This action cannot be undone.`,
+                    async () => {
+                        await deleteEmailRequest(id, email);
+                    }
+                );
             });
         });
         
