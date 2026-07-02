@@ -895,6 +895,17 @@ async function refreshDashboard(days, force) {
         loadActivityTimeline(force),
         loadRecentRegistrations()
     ]);
+
+// 🔥 只在 Today 视图显示祝贺消息
+    if (days === 0) {
+        setTimeout(updateCongratsMessage, 500);
+    } else {
+        var congratsEl = document.getElementById('congratsMessage');
+        if (congratsEl) {
+            congratsEl.innerHTML = '';
+            congratsEl.style.display = 'none';
+        }
+    }
     
     var ringPercent = document.getElementById('ringPercent');
     if (ringPercent && cachedData.conversion) {
@@ -1267,6 +1278,11 @@ function loadDashboardPage(days) {
                                     </tbody>
                                 </table>
                             </div>
+
+<!-- 🔥 祝贺消息区域 -->
+<div id="congratsMessage" style="margin-top: 10px; padding: 10px 14px; background: linear-gradient(135deg, rgba(214,178,94,0.06), rgba(214,178,94,0.02)); border-radius: 10px; border-left: 3px solid #D6B25E; font-size: 13px; color: #c8b8a8; line-height: 1.6; display: none;">
+</div>
+
                         </div>
                     </div>
                 </div>
@@ -1360,10 +1376,11 @@ function loadDashboardPage(days) {
     cachedData.conversion = null;
     cachedData.lastConversionTime = 0;
     
-    // 🔥 加载初始数据（只加载一次）
     refreshDashboard(0, true).then(function() {
         console.log('✅ Dashboard 数据加载完成');
         console.log('🔄 实时监听已启动，无需定时轮询');
+        // 🔥 加载完成后更新祝贺消息
+        setTimeout(updateCongratsMessage, 600);
     });
 }, 200);
 
@@ -1585,4 +1602,92 @@ async function refreshConversionOnly() {
 window.refreshQuickCardsOnly = refreshQuickCardsOnly;
 window.refreshRecentOnly = refreshRecentOnly;
 window.refreshConversionOnly = refreshConversionOnly;
+
+// ============================================================
+// 🔥 祝贺消息函数
+// ============================================================
+async function updateCongratsMessage() {
+    try {
+        var today = getBerlinDate();
+        var todayStr = today.toISOString().split('T')[0];
+        
+        // 查询今天注册的用户
+        var { data: users } = await sb
+            .from('users')
+            .select('uid, username, invited_by_username')
+            .gte('created_at', todayStr + 'T00:00:00');
+        
+        if (!users || users.length === 0) {
+            var congratsEl = document.getElementById('congratsMessage');
+            if (congratsEl) {
+                congratsEl.innerHTML = '';
+                congratsEl.style.display = 'none';
+            }
+            return;
+        }
+        
+        // 获取这些用户的存款记录
+        var uids = users.map(function(u) { return u.uid; });
+        var { data: deposits } = await sb
+            .from('deposits')
+            .select('uid, amount')
+            .in('uid', uids)
+            .in('type', ['manual', 'deposit_bonus']);
+        
+        var depositUsers = {};
+        if (deposits) {
+            deposits.forEach(function(d) {
+                if (d.amount >= 40) {
+                    depositUsers[d.uid] = true;
+                }
+            });
+        }
+        
+        // 找出已转化的用户（有存款 >= 40）
+        var convertedUsers = users.filter(function(u) {
+            return depositUsers[u.uid] === true;
+        });
+        
+        if (convertedUsers.length === 0) {
+            var congratsEl = document.getElementById('congratsMessage');
+            if (congratsEl) {
+                congratsEl.innerHTML = '';
+                congratsEl.style.display = 'none';
+            }
+            return;
+        }
+        
+        // 🔥 生成每条祝贺消息，最多显示4条
+        var messagesHtml = '';
+        var displayUsers = convertedUsers.slice(0, 4);
+        
+        displayUsers.forEach(function(u) {
+            var referrer = u.invited_by_username || 'New';
+            messagesHtml += '<div style="padding: 4px 0; border-bottom: 1px solid rgba(214,178,94,0.04);">' +
+                '🎊 Congratulations ' + referrer + "'s client <span style='color: #D6B25E; font-weight: 700;'>" + u.uid + '</span> become new order today! ' +
+                '<i class="fas fa-gem" style="color: #D6B25E; margin-left: 4px; font-size: 11px;"></i> ' +
+                '<i class="fas fa-coins" style="color: #D6B25E; margin-left: 2px; font-size: 11px;"></i>' +
+                '</div>';
+        });
+        
+        // 如果有更多，显示剩余数量
+        var remaining = convertedUsers.length - 4;
+        if (remaining > 0) {
+            messagesHtml += '<div style="padding: 4px 0; color: #6a7a8a; font-size: 12px; text-align: center; border-top: 1px solid rgba(214,178,94,0.06); margin-top: 2px; padding-top: 6px;">' +
+                'and ' + remaining + ' more new orders today' +
+                '</div>';
+        }
+        
+        var congratsEl = document.getElementById('congratsMessage');
+        if (congratsEl) {
+            congratsEl.innerHTML = '<div style="max-height: 120px; overflow-y: auto; padding-right: 4px;">' + messagesHtml + '</div>';
+            congratsEl.style.display = 'block';
+        }
+        
+    } catch (e) {
+        console.error('更新祝贺消息失败:', e);
+    }
 }
+
+// 暴露给全局
+window.updateCongratsMessage = updateCongratsMessage;
