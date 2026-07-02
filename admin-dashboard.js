@@ -897,35 +897,16 @@ async function refreshDashboard(days, force) {
         loadRecentRegistrations()
     ]);
 
-// 🔥 只在 Today 视图更新 New Order 数据
-if (days === 0) {
-    var today = getBerlinDate();
-    var todayStr = today.toISOString().split('T')[0];
-    try {
-        var user = getCurrentUser();
-        var stored = localStorage.getItem('newOrderData_' + (user?.uid || 'global'));
-        if (stored) {
-            var parsed = JSON.parse(stored);
-            if (parsed.date === todayStr) {
-                newOrderData = parsed.data || [];
-                newOrderCount = parsed.count || 0;
-            } else {
-                newOrderData = [];
-                newOrderCount = 0;
-                lastNewOrderDate = todayStr;
-            }
+// 🔥 只在 Today 视图显示祝贺消息
+    if (days === 0) {
+        setTimeout(updateCongratsMessage, 500);
+    } else {
+        var congratsEl = document.getElementById('congratsMessage');
+        if (congratsEl) {
+            congratsEl.innerHTML = '';
+            congratsEl.style.display = 'none';
         }
-        updateNewOrderBadge();
-    } catch (e) {}
-    
-    setTimeout(updateNewOrderData, 500);
-} else {
-    var congratsEl = document.getElementById('congratsMessage');
-    if (congratsEl) {
-        congratsEl.innerHTML = '';
-        congratsEl.style.display = 'none';
     }
-}
     
     var ringPercent = document.getElementById('ringPercent');
     if (ringPercent && cachedData.conversion) {
@@ -942,7 +923,7 @@ if (days === 0) {
             if (container) {
                 var progressRing = container.querySelector('.progress-ring');
                 if (progressRing) {
-                    var circumference = 534.07;
+                    var circumference = 596.9;
                     var offset = circumference - (circumference * rate / 100);
                     progressRing.style.strokeDashoffset = offset;
                 }
@@ -1299,33 +1280,15 @@ function loadDashboardPage(days) {
                                 </table>
                             </div>
 
-<!-- 🔥 New Order 按钮 -->
-<div style="margin-top: 8px; padding-top: 6px; border-top: 1px solid rgba(200,176,144,0.04);">
-    <div style="display:flex; justify-content:center; position:relative; z-index:1;">
-        <button id="newOrderBtn" class="btn-new-order" style="
-            display: inline-flex;
-            align-items: center;
-            gap: 10px;
-            padding: 10px 24px;
-            border-radius: 40px;
-            font-weight: 600;
-            font-size: 13px;
-            cursor: pointer;
-            font-family: 'Inter', sans-serif;
-            transition: all 0.3s ease;
-            border: none;
-            position: relative;
-            overflow: hidden;
-            background: linear-gradient(145deg, #1a1a2e, #2a2a4a, #1a1a2e);
-            color: #e8e8f0;
-            border: 1px solid rgba(200,200,220,0.15);
-            box-shadow: 0 4px 24px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.06);
-        ">
-            <i class="fas fa-gem" style="font-size:13px; color:rgba(200,200,220,0.4);"></i>
-            <span>New Order</span>
-        </button>
-    </div>
+<!-- 🔥 祝贺消息区域 -->
+<div id="congratsMessage" style="margin-top: 10px; padding: 10px 14px; background: linear-gradient(135deg, rgba(214,178,94,0.06), rgba(214,178,94,0.02)); border-radius: 10px; border-left: 3px solid #D6B25E; font-size: 13px; color: #c8b8a8; line-height: 1.6; display: none;">
 </div>
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
         
         <!-- 实时活动 -->
         <div style="background: linear-gradient(145deg, rgba(20,24,40,0.85), rgba(10,12,24,0.6)); backdrop-filter: blur(8px); border-radius: 20px; padding: 20px; border: 1px solid rgba(180,180,200,0.06); box-shadow: 0 4px 20px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.04); position: relative; overflow: hidden;">
@@ -1414,19 +1377,11 @@ function loadDashboardPage(days) {
     cachedData.conversion = null;
     cachedData.lastConversionTime = 0;
     
-    // 🔥 绑定 New Order 按钮
-    var btn = document.getElementById('newOrderBtn');
-    if (btn) {
-        btn.addEventListener('click', function(e) {
-            e.stopPropagation();
-            showNewOrderPanel(this);
-        });
-        updateNewOrderBadge();
-    }
-    
     refreshDashboard(0, true).then(function() {
         console.log('✅ Dashboard 数据加载完成');
         console.log('🔄 实时监听已启动，无需定时轮询');
+        // 🔥 加载完成后更新祝贺消息
+        setTimeout(updateCongratsMessage, 600);
     });
 }, 200);
 
