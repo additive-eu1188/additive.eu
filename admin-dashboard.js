@@ -1280,8 +1280,18 @@ function loadDashboardPage(days) {
                                 </table>
                             </div>
 
-<!-- 🔥 祝贺消息区域 -->
-<div id="congratsMessage" style="margin-top: 10px; padding: 10px 14px; background: linear-gradient(135deg, rgba(214,178,94,0.06), rgba(214,178,94,0.02)); border-radius: 10px; border-left: 3px solid #D6B25E; font-size: 13px; color: #c8b8a8; line-height: 1.6; display: none;">
+<!-- 🔥 祝贺消息区域 - 可折叠 -->
+<div id="congratsWrapper" style="margin-top: 10px; display: none;">
+    <div id="congratsToggle" onclick="toggleCongratsMessage()" style="display: flex; align-items: center; gap: 10px; cursor: pointer; padding: 10px 16px; background: rgba(214,178,94,0.04); border-radius: 10px; border: 1px solid rgba(214,178,94,0.06); user-select: none; transition: all 0.2s ease;">
+        <i id="congratsArrow" class="fas fa-chevron-right" style="color: #D6B25E; font-size: 11px; transition: transform 0.3s ease;"></i>
+        <span style="font-size: 12px; color: #c8b8a8; font-weight: 500;">
+            <i class="fas fa-gem" style="color: #D6B25E; margin-right: 4px;"></i>
+            New Orders Today
+            <span id="congratsCountBadge" style="background: #D6B25E; color: #080c1a; padding: 0 10px; border-radius: 10px; font-size: 10px; font-weight: 700; margin-left: 6px; line-height: 18px; display: inline-block; min-width: 20px; text-align: center;">0</span>
+        </span>
+    </div>
+    <div id="congratsMessage" style="margin-top: 6px; padding: 10px 14px; background: linear-gradient(135deg, rgba(214,178,94,0.06), rgba(214,178,94,0.02)); border-radius: 10px; border-left: 3px solid #D6B25E; font-size: 13px; color: #c8b8a8; line-height: 1.6; display: none; max-height: 200px; overflow-y: auto;">
+    </div>
 </div>
 
                         </div>
@@ -1605,7 +1615,7 @@ window.refreshRecentOnly = refreshRecentOnly;
 window.refreshConversionOnly = refreshConversionOnly;
 
 // ============================================================
-// 🔥 祝贺消息函数
+// 🔥 祝贺消息函数 - 可折叠版本
 // ============================================================
 async function updateCongratsMessage() {
     try {
@@ -1617,12 +1627,15 @@ async function updateCongratsMessage() {
             .select('uid, username, invited_by_username')
             .gte('created_at', todayStr + 'T00:00:00');
         
+        var wrapper = document.getElementById('congratsWrapper');
+        var messageEl = document.getElementById('congratsMessage');
+        var badgeEl = document.getElementById('congratsCountBadge');
+        var arrowEl = document.getElementById('congratsArrow');
+        
+        if (!wrapper || !messageEl) return;
+        
         if (!users || users.length === 0) {
-            var congratsEl = document.getElementById('congratsMessage');
-            if (congratsEl) {
-                congratsEl.innerHTML = '';
-                congratsEl.style.display = 'none';
-            }
+            wrapper.style.display = 'none';
             return;
         }
         
@@ -1647,44 +1660,60 @@ async function updateCongratsMessage() {
         });
         
         if (convertedUsers.length === 0) {
-            var congratsEl = document.getElementById('congratsMessage');
-            if (congratsEl) {
-                congratsEl.innerHTML = '';
-                congratsEl.style.display = 'none';
-            }
+            wrapper.style.display = 'none';
             return;
         }
         
+        wrapper.style.display = 'block';
+        if (badgeEl) badgeEl.textContent = convertedUsers.length;
+        
         var messagesHtml = '';
-        var displayUsers = convertedUsers.slice(0, 4);
+        var displayUsers = convertedUsers.slice(0, 10);
         
         displayUsers.forEach(function(u) {
             var referrer = u.invited_by_username || 'New';
-            messagesHtml += '<div style="padding: 4px 0; border-bottom: 1px solid rgba(214,178,94,0.04);">' +
+            messagesHtml += '<div style="padding: 5px 0; border-bottom: 1px solid rgba(214,178,94,0.04); font-size: 13px;">' +
                 'Congratulations ' + referrer + "'s client <span style='color: #D6B25E; font-weight: 700;'>" + u.uid + '</span> become new order today! ' +
                 '<i class="fas fa-gem" style="color: #D6B25E; margin-left: 4px; font-size: 11px;"></i> ' +
                 '<i class="fas fa-coins" style="color: #D6B25E; margin-left: 2px; font-size: 11px;"></i>' +
                 '</div>';
         });
         
-        var remaining = convertedUsers.length - 4;
+        var remaining = convertedUsers.length - 10;
         if (remaining > 0) {
             messagesHtml += '<div style="padding: 4px 0; color: #6a7a8a; font-size: 12px; text-align: center; border-top: 1px solid rgba(214,178,94,0.06); margin-top: 2px; padding-top: 6px;">' +
                 'and ' + remaining + ' more new orders today' +
                 '</div>';
         }
         
-        var congratsEl = document.getElementById('congratsMessage');
-        if (congratsEl) {
-            congratsEl.innerHTML = '<div style="max-height: 120px; overflow-y: auto; padding-right: 4px;">' + messagesHtml + '</div>';
-            congratsEl.style.display = 'block';
-        }
+        messageEl.innerHTML = messagesHtml;
+        
+        // 默认收起
+        messageEl.style.display = 'none';
+        if (arrowEl) arrowEl.style.transform = 'rotate(0deg)';
         
     } catch (e) {
         console.error('更新祝贺消息失败:', e);
     }
 }
 
-// 暴露给全局
-window.updateCongratsMessage = updateCongratsMessage;
+// ============================================================
+// 🔥 切换祝贺消息展开/收起
+// ============================================================
+function toggleCongratsMessage() {
+    var messageEl = document.getElementById('congratsMessage');
+    var arrowEl = document.getElementById('congratsArrow');
+    if (!messageEl) return;
+    
+    if (messageEl.style.display === 'none' || messageEl.style.display === '') {
+        messageEl.style.display = 'block';
+        if (arrowEl) arrowEl.style.transform = 'rotate(90deg)';
+    } else {
+        messageEl.style.display = 'none';
+        if (arrowEl) arrowEl.style.transform = 'rotate(0deg)';
+    }
+}
+
+// 暴露到全局
+window.toggleCongratsMessage = toggleCongratsMessage;
 }
