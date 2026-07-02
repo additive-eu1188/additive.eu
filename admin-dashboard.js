@@ -1256,113 +1256,57 @@ function loadDashboardPage(days) {
                             </div>
                         </div>
                         
-                        <!-- ========== Recent 表格 ========== -->
-                        <div style="margin-top: 8px; padding-top: 8px; border-top: 1px solid rgba(200,176,144,0.06);">
-                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-                                <div style="font-size: 11px; color: #8a7a6a; font-weight: 600; letter-spacing: 0.8px; text-transform: uppercase;">
-                                    <i class="fas fa-users" style="color: #ccb89f; margin-right: 6px; font-size: 11px;"></i>Recent
-                                </div>
-                                <!-- ❌ View All 已删除 -->
-                            </div>
-                            <div style="overflow-y: auto; max-height: 155px;">
-                                <table style="width: 100%; border-collapse: collapse; font-size: 12px;">
-                                    <thead>
-                                        <tr style="border-bottom: 1px solid rgba(200,176,144,0.06); position: sticky; top: 0; background: rgba(20,24,40,0.95); z-index: 2;">
-                                            <th style="text-align: left; padding: 5px 8px; color: #c8b8a8; font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px;">User</th>
-                                            <th style="text-align: left; padding: 5px 8px; color: #c8b8a8; font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px;">Ref</th>
-                                            <th style="text-align: center; padding: 5px 8px; color: #c8b8a8; font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px;">Joined</th>
-                                            <th style="text-align: right; padding: 5px 8px; color: #c8b8a8; font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px;">Amount</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="recentRegistrationsBody">
-                                        <tr><td colspan="4" style="text-align: center; padding: 12px; color: #5a6a7a; font-size: 12px;">Loading...</td></tr>
-                                    </tbody>
-                                </table>
-                            </div>
-
-// 🔥 祝贺消息区域 - Crypto Type 下拉风格（向上伸展）
-<div id="congratsWrapper" style="margin-top: 10px; display: none; position: relative;">
-    <!-- 类似 Crypto Type 下拉的显示区域 -->
-    <div id="congratsDropdownDisplay" onclick="toggleCongratsMessage()" style="
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        padding: 8px 14px 8px 16px;
-        background: rgba(255,255,255,0.08);
-        border: 1px solid rgba(255,255,255,0.10);
-        border-radius: 40px;
-        cursor: pointer;
-        color: #e6edf5;
-        font-size: 13px;
-        font-weight: 500;
-        transition: 0.25s ease;
-        min-height: 38px;
-        user-select: none;
-        width: 100%;
-        box-sizing: border-box;
-        font-family: 'Inter', sans-serif;
-    ">
-        <span style="display: flex; align-items: center; gap: 10px;">
-            <i class="fas fa-gem" style="color: #D6B25E; font-size: 14px;"></i>
-            <span>New Orders Today</span>
-            <span id="congratsCountBadge" style="background: #D6B25E; color: #080c1a; padding: 0 10px; border-radius: 10px; font-size: 10px; font-weight: 700; margin-left: 4px; line-height: 18px; display: inline-block; min-width: 20px; text-align: center;">0</span>
-        </span>
-        <i id="congratsArrow" class="fas fa-chevron-up" style="color: #5a6a82; font-size: 11px; transition: transform 0.25s ease;"></i>
+                        // ========== Recent 表格 ==========
+<div style="margin-top: 8px; padding-top: 8px; border-top: 1px solid rgba(200,176,144,0.06);">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+        <div style="font-size: 11px; color: #8a7a6a; font-weight: 600; letter-spacing: 0.8px; text-transform: uppercase;">
+            <i class="fas fa-users" style="color: #ccb89f; margin-right: 6px; font-size: 11px;"></i>Recent
+        </div>
     </div>
-    
-    <!-- 下拉选项区域（向上弹出） -->
-    <div id="congratsDropdownOptions" style="
-        position: absolute;
-        bottom: calc(100% + 6px);
-        left: 0;
-        right: 0;
-        background: rgba(14, 18, 30, 0.98);
-        backdrop-filter: blur(16px);
-        border: 1px solid rgba(255,255,255,0.06);
-        border-radius: 12px;
-        padding: 6px 0;
-        opacity: 0;
-        visibility: hidden;
-        transform: translateY(6px) scale(0.98);
-        transition: all 0.25s ease;
-        z-index: 100;
-        box-shadow: 0 20px 60px rgba(0,0,0,0.5);
-        overflow: hidden;
-        max-height: 0;
-        overflow-y: auto;
-        box-sizing: border-box;
-    ">
-        <!-- 内容将动态渲染到 congratsMessage -->
-        <div id="congratsMessage" style="
-            padding: 10px 14px;
-            font-size: 13px;
-            color: #c8b8a8;
-            line-height: 1.6;
-            max-height: 200px;
-            overflow-y: auto;
-            box-sizing: border-box;
-        "></div>
+    <div style="overflow-y: auto; max-height: 155px;">
+        <table style="width: 100%; border-collapse: collapse; font-size: 12px;">
+            <thead>
+                <tr style="border-bottom: 1px solid rgba(200,176,144,0.06); position: sticky; top: 0; background: rgba(20,24,40,0.95); z-index: 2;">
+                    <th style="text-align: left; padding: 5px 8px; color: #c8b8a8; font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px;">User</th>
+                    <th style="text-align: left; padding: 5px 8px; color: #c8b8a8; font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px;">Ref</th>
+                    <th style="text-align: center; padding: 5px 8px; color: #c8b8a8; font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px;">Joined</th>
+                    <th style="text-align: right; padding: 5px 8px; color: #c8b8a8; font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px;">Amount</th>
+                </tr>
+            </thead>
+            <tbody id="recentRegistrationsBody">
+                <tr><td colspan="4" style="text-align: center; padding: 12px; color: #5a6a7a; font-size: 12px;">Loading...</td></tr>
+            </tbody>
+        </table>
     </div>
 </div>
 
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        
-        <!-- 实时活动 -->
-        <div style="background: linear-gradient(145deg, rgba(20,24,40,0.85), rgba(10,12,24,0.6)); backdrop-filter: blur(8px); border-radius: 20px; padding: 20px; border: 1px solid rgba(180,180,200,0.06); box-shadow: 0 4px 20px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.04); position: relative; overflow: hidden;">
-            <div style="position: absolute; top: -15%; right: -5%; width: 75%; height: 75%; background: radial-gradient(ellipse at 70% 20%, rgba(255,255,255,0.06), transparent 70%); pointer-events: none; border-radius: 50%;"></div>
-            <div style="position: absolute; top: 0; left: 0; right: 0; height: 1px; background: linear-gradient(90deg, transparent, rgba(180,180,200,0.08), transparent);"></div>
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; position: relative; z-index: 1;">
-                <div style="font-size: 16px; font-weight: 600; color: #d8dff0;"><i class="fas fa-history" style="color: #8892a8; margin-right: 8px;"></i>Real-Time Event</div>
-                <div style="font-size: 11px; color: #ccb89f;"><i class="fas fa-circle" style="font-size: 8px; margin-right: 4px;"></i>Real-Time Updates</div>
-            </div>
-            <div id="activityList" style="max-height: 350px; overflow-y: auto; position: relative; z-index: 1;">
-                <div style="text-align: center; padding: 20px; color: #6a7a9a;">Loading...</div>
-            </div>
-        </div>
+<!-- 🔥 祝贺消息区域 - Crypto Type 下拉风格（向上伸展） -->
+<div id="congratsWrapper" style="margin-top: 12px; padding-top: 8px; border-top: 1px solid rgba(200,176,144,0.04); display: none; position: relative;">
+    <div id="congratsDropdownDisplay" onclick="toggleCongratsMessage()" style="display: flex; align-items: center; justify-content: space-between; padding: 8px 14px 8px 16px; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.10); border-radius: 40px; cursor: pointer; color: #e6edf5; font-size: 13px; font-weight: 500; transition: 0.25s ease; min-height: 38px; user-select: none; width: 100%; box-sizing: border-box; font-family: 'Inter', sans-serif;">
+        <span style="display: flex; align-items: center; gap: 10px;">
+            <i class="fas fa-gem" style="color: #D6B25E; font-size: 14px;"></i>
+            <span>New Orders Today</span>
+            <span id="congratsCountBadge" style="background: #D6B25E; color: #080c1a; padding: 0 10px; border-radius: 10px; font-size: 10px; font-weight: 700; line-height: 18px; display: inline-block; min-width: 20px; text-align: center;">0</span>
+        </span>
+        <i id="congratsArrow" class="fas fa-chevron-up" style="color: #5a6a82; font-size: 11px; transition: transform 0.25s ease;"></i>
+    </div>
+    <div id="congratsDropdownOptions" style="position: absolute; bottom: calc(100% + 6px); left: 0; right: 0; background: rgba(14, 18, 30, 0.98); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border: 1px solid rgba(255,255,255,0.06); border-radius: 12px; padding: 6px 0; opacity: 0; visibility: hidden; transform: translateY(6px) scale(0.98); transition: all 0.25s ease; z-index: 100; box-shadow: 0 20px 60px rgba(0,0,0,0.5); overflow: hidden; max-height: 0; overflow-y: auto; box-sizing: border-box;">
+        <div id="congratsMessage" style="padding: 10px 14px; font-size: 13px; color: #c8b8a8; line-height: 1.6; max-height: 200px; overflow-y: auto; box-sizing: border-box;"></div>
+    </div>
+</div>
+
+<!-- 实时活动 -->
+<div style="background: linear-gradient(145deg, rgba(20,24,40,0.85), rgba(10,12,24,0.6)); backdrop-filter: blur(8px); border-radius: 20px; padding: 20px; border: 1px solid rgba(180,180,200,0.06); box-shadow: 0 4px 20px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.04); position: relative; overflow: hidden;">
+    <div style="position: absolute; top: -15%; right: -5%; width: 75%; height: 75%; background: radial-gradient(ellipse at 70% 20%, rgba(255,255,255,0.06), transparent 70%); pointer-events: none; border-radius: 50%;"></div>
+    <div style="position: absolute; top: 0; left: 0; right: 0; height: 1px; background: linear-gradient(90deg, transparent, rgba(180,180,200,0.08), transparent);"></div>
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; position: relative; z-index: 1;">
+        <div style="font-size: 16px; font-weight: 600; color: #d8dff0;"><i class="fas fa-history" style="color: #8892a8; margin-right: 8px;"></i>Real-Time Event</div>
+        <div style="font-size: 11px; color: #ccb89f;"><i class="fas fa-circle" style="font-size: 8px; margin-right: 4px;"></i>Real-Time Updates</div>
+    </div>
+    <div id="activityList" style="max-height: 350px; overflow-y: auto; position: relative; z-index: 1;">
+        <div style="text-align: center; padding: 20px; color: #6a7a9a;">Loading...</div>
+    </div>
+</div>
     `;
     
     // 启动时钟
