@@ -1436,6 +1436,8 @@ function loadDashboardPage(days) {
     });
 }, 200);
 
+}
+
 window.loadDashboardPage = loadDashboardPage;
 window.refreshDashboardData = function(days) {
     refreshDashboard(days || currentDays, true);
