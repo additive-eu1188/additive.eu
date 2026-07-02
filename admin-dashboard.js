@@ -322,7 +322,7 @@ async function loadChartData(force) {
 }
 
 // ============================================================
-// loadConversionData - 只统计 Today 注册的用户（无缓存）
+// loadConversionData - 统计注册用户转化率（完整版）
 // ============================================================
 async function loadConversionData(days, force) {
     force = force || false;
@@ -460,6 +460,12 @@ async function loadConversionData(days, force) {
 }
 
 function applyConversionData(data, days) {
+    // 🔥 如果 data 为空或没有数据，使用默认值
+    if (!data || data.length === 0) {
+        console.log('⚠️ applyConversionData: data 为空，使用默认值');
+        data = [{ label: 'Today', days: 0, register: 0, converted: 0, rate: 0 }];
+    }
+    
     // 🔥 根据 days 参数决定显示哪个时间段的数据
     var displayData = null;
     var targetLabel = 'Today';
@@ -482,7 +488,7 @@ function applyConversionData(data, days) {
         }
     }
     
-    // 如果没找到，使用第一个（Today）
+    // 如果没找到，使用第一个
     if (!displayData && data.length > 0) {
         displayData = data[0];
     }
@@ -490,6 +496,8 @@ function applyConversionData(data, days) {
     if (!displayData) {
         displayData = { label: 'Today', register: 0, converted: 0, rate: 0 };
     }
+    
+    console.log('📊 applyConversionData 显示:', displayData);
     
     // 🔥 更新环形图百分比
     var ringPercent = document.getElementById('ringPercent');
