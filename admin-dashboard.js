@@ -342,27 +342,26 @@ async function loadConversionData(days, force) {
     
     try {
         var periods = [];
-
-// 🔥 默认当作 Today (days = 0) 处理
-if (days === 0) {
-    periods.push({ label: 'Today', daysOffset: 0 });
-} else if (days === 7) {
-    periods.push({ label: 'Today', daysOffset: 0 });
-    periods.push({ label: '7 Days', daysOffset: 7 });
-} else if (days === 30) {
-    periods.push({ label: 'Today', daysOffset: 0 });
-    periods.push({ label: '7 Days', daysOffset: 7 });
-    periods.push({ label: '30 Days', daysOffset: 30 });
-} else if (days === -1) {
-    periods.push({ label: 'Today', daysOffset: 0 });
-    periods.push({ label: '7 Days', daysOffset: 7 });
-    periods.push({ label: '30 Days', daysOffset: 30 });
-    periods.push({ label: 'All Time', daysOffset: -1 });
-} else {
-    // 🔥 默认当作 Today
-    console.log('⚠️ days 值异常 (' + days + ')，自动切换为 Today');
-    periods.push({ label: 'Today', daysOffset: 0 });
-}
+        
+        if (days === 0) {
+            periods.push({ label: 'Today', daysOffset: 0 });
+        } else if (days === 7) {
+            periods.push({ label: 'Today', daysOffset: 0 });
+            periods.push({ label: '7 Days', daysOffset: 7 });
+        } else if (days === 30) {
+            periods.push({ label: 'Today', daysOffset: 0 });
+            periods.push({ label: '7 Days', daysOffset: 7 });
+            periods.push({ label: '30 Days', daysOffset: 30 });
+        } else if (days === -1) {
+            periods.push({ label: 'Today', daysOffset: 0 });
+            periods.push({ label: '7 Days', daysOffset: 7 });
+            periods.push({ label: '30 Days', daysOffset: 30 });
+            periods.push({ label: 'All Time', daysOffset: -1 });
+        } else {
+            // 🔥 默认当作 Today
+            console.log('⚠️ days 值异常 (' + days + ')，自动切换为 Today');
+            periods.push({ label: 'Today', daysOffset: 0 });
+        }
         
         console.log('📊 periods:', periods);
         
@@ -646,7 +645,7 @@ async function loadRecentRegistrations() {
         var users = usersRes.data || [];
         
         if (users.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; padding: 20px; color: #4a5a72; font-size: 12px;">No users in this period</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; padding: 12px; color: #5a6a7a; font-size: 12px;">No users in this period</td></tr>';
             return;
         }
         
@@ -671,23 +670,24 @@ async function loadRecentRegistrations() {
             
             var totalManual = manualDepositMap[u.uid] || 0;
             var hasManualDeposit = totalManual >= 40;
-            var joinedMembership = hasManualDeposit ? '✅ Yes' : '❌ No';
             
             var amount = totalManual > 0 ? '€' + totalManual.toFixed(2) : '€0.00';
             
-            // 🔥 User 列改为显示 uid（而不是 username）
-            html += '<tr style="border-bottom: 1px solid rgba(200,176,144,0.03);">' +
-                '<td style="padding: 4px 6px; color: #d8dff0; font-weight: 500;">' + escapeHtml(u.uid) + '</td>' +
-                '<td style="padding: 4px 6px; color: #8892a8;">' + escapeHtml(referrer) + '</td>' +
-                '<td style="padding: 4px 6px; text-align: center; color: ' + (hasManualDeposit ? '#ccb89f' : '#5a4a2a') + ';">' + joinedMembership + '</td>' +
-                '<td style="padding: 4px 6px; text-align: right; color: ' + (totalManual > 0 ? '#ccb89f' : '#4a5a72') + '; font-weight: 600;">' + amount + '</td>' +
+            // 🔥 行样式 - 字体更大更亮，使用 Font Awesome 图标
+            html += '<tr style="border-bottom: 1px solid rgba(200,176,144,0.04);">' +
+                '<td style="padding: 5px 8px; color: #e8eef8; font-weight: 600; font-size: 13px;">' + escapeHtml(u.uid) + '</td>' +
+                '<td style="padding: 5px 8px; color: #aab8c8; font-size: 13px;">' + escapeHtml(referrer) + '</td>' +
+                '<td style="padding: 5px 8px; text-align: center; font-size: 13px; font-weight: 500;">' + 
+                    (hasManualDeposit ? '<i class="fas fa-check-circle" style="color: #4ade80; font-size: 15px;"></i>' : '<i class="fas fa-times-circle" style="color: #5a4a3a; font-size: 15px;"></i>') + 
+                '</td>' +
+                '<td style="padding: 5px 8px; text-align: right; color: ' + (totalManual > 0 ? '#d4c8a0' : '#5a6a7a') + '; font-weight: 600; font-size: 13px;">' + amount + '</td>' +
                 '</tr>';
         }
         tbody.innerHTML = html;
         
     } catch (e) {
         console.error('加载最近注册用户失败:', e);
-        tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; padding: 16px; color: #e88080; font-size: 12px;">Failed to load</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; padding: 12px; color: #e88080; font-size: 12px;">Failed to load</td></tr>';
     }
 }
 
@@ -1021,7 +1021,7 @@ function bindDateFilters() {
         var days = parseInt(btn.dataset.days);
         currentDays = days;
         
-        console.log('🔍 bindDateFilters 切换日期:', days);  // ← 添加这行日志
+        console.log('🔍 bindDateFilters 切换日期:', days);
         
         refreshDashboard(days, true);
     }, DEBOUNCE_DELAY);
@@ -1031,6 +1031,20 @@ function bindDateFilters() {
         btn._handler = function() { handleFilterChange(btn); };
         btn.addEventListener('click', btn._handler);
     });
+}
+
+// ========== 更新时间显示 ==========
+function updateBerlinClock() {
+    var now = getBerlinDate();
+    var hours = String(now.getHours()).padStart(2, '0');
+    var minutes = String(now.getMinutes()).padStart(2, '0');
+    var seconds = String(now.getSeconds()).padStart(2, '0');
+    var timeStr = hours + ':' + minutes + ':' + seconds;
+    
+    var clockEl = document.getElementById('berlinClock');
+    if (clockEl) {
+        clockEl.textContent = timeStr;
+    }
 }
 
 function loadDashboardPage(days) {
@@ -1053,6 +1067,15 @@ function loadDashboardPage(days) {
     <button class="date-filter-btn" data-days="7" style="background: linear-gradient(145deg, rgba(20,24,40,0.6), rgba(10,12,24,0.4)); border: 1px solid rgba(180,180,200,0.06); border-radius: 30px; padding: 8px 20px; color: #8892a8; cursor: pointer; transition: all 0.3s; font-size: 13px; font-weight: 500; font-family: 'Inter', sans-serif; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">7 Days</button>
     <button class="date-filter-btn" data-days="30" style="background: linear-gradient(145deg, rgba(20,24,40,0.6), rgba(10,12,24,0.4)); border: 1px solid rgba(180,180,200,0.06); border-radius: 30px; padding: 8px 20px; color: #8892a8; cursor: pointer; transition: all 0.3s; font-size: 13px; font-weight: 500; font-family: 'Inter', sans-serif; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">30 Days</button>
     <button class="date-filter-btn" data-days="-1" style="background: linear-gradient(145deg, rgba(20,24,40,0.6), rgba(10,12,24,0.4)); border: 1px solid rgba(180,180,200,0.06); border-radius: 30px; padding: 8px 20px; color: #8892a8; cursor: pointer; transition: all 0.3s; font-size: 13px; font-weight: 500; font-family: 'Inter', sans-serif; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">All Time</button>
+</div>
+
+<!-- 🔥 柏林实时时间 -->
+<div style="display: flex; justify-content: flex-end; align-items: center; margin-bottom: 16px; padding: 6px 16px; background: rgba(20,24,40,0.3); border-radius: 30px; border: 1px solid rgba(200,176,144,0.06); width: fit-content; margin-left: auto;">
+    <div style="display: flex; align-items: center; gap: 10px;">
+        <i class="fas fa-clock" style="color: #8892a8; font-size: 13px;"></i>
+        <span style="color: #6a7a8a; font-size: 11px; font-weight: 500; letter-spacing: 0.5px;">BERLIN</span>
+        <span id="berlinClock" style="color: #e8eef0; font-size: 14px; font-weight: 600; font-family: 'Courier New', monospace; letter-spacing: 1px;">00:00:00</span>
+    </div>
 </div>
         
         <!-- 快捷卡片 -->
@@ -1182,25 +1205,26 @@ function loadDashboardPage(days) {
                             </div>
                         </div>
                         
+                        <!-- ========== Recent 表格 ========== -->
                         <div style="margin-top: 8px; padding-top: 8px; border-top: 1px solid rgba(200,176,144,0.06);">
-                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2px;">
-                                <div style="font-size: 9px; color: #5a4a2a; font-weight: 500; letter-spacing: 0.5px; text-transform: uppercase;">
-                                    <i class="fas fa-users" style="color: #ccb89f; margin-right: 4px; font-size: 9px;"></i>Recent
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                                <div style="font-size: 11px; color: #8a7a6a; font-weight: 600; letter-spacing: 0.8px; text-transform: uppercase;">
+                                    <i class="fas fa-users" style="color: #ccb89f; margin-right: 6px; font-size: 11px;"></i>Recent
                                 </div>
-                                <a href="#" onclick="showPage('users'); return false;" style="font-size: 8px; color: #4a3a2a; text-decoration: none; transition: 0.2s;" onmouseover="this.style.color='#ccb89f'" onmouseout="this.style.color='#4a3a2a'">View All →</a>
+                                <!-- ❌ View All 已删除 -->
                             </div>
                             <div style="overflow-y: auto; max-height: 155px;">
-                                <table style="width: 100%; border-collapse: collapse; font-size: 10px;">
+                                <table style="width: 100%; border-collapse: collapse; font-size: 12px;">
                                     <thead>
-                                        <tr style="border-bottom: 1px solid rgba(200,176,144,0.04); position: sticky; top: 0; background: rgba(20,24,40,0.9); z-index: 2;">
-                                            <th style="text-align: left; padding: 2px 4px; color: #4a3a2a; font-weight: 500; font-size: 8px; text-transform: uppercase; letter-spacing: 0.3px;">User</th>
-                                            <th style="text-align: left; padding: 2px 4px; color: #4a3a2a; font-weight: 500; font-size: 8px; text-transform: uppercase; letter-spacing: 0.3px;">Ref</th>
-                                            <th style="text-align: center; padding: 2px 4px; color: #4a3a2a; font-weight: 500; font-size: 8px; text-transform: uppercase; letter-spacing: 0.3px;">Joined</th>
-                                            <th style="text-align: right; padding: 2px 4px; color: #4a3a2a; font-weight: 500; font-size: 8px; text-transform: uppercase; letter-spacing: 0.3px;">Amount</th>
+                                        <tr style="border-bottom: 1px solid rgba(200,176,144,0.06); position: sticky; top: 0; background: rgba(20,24,40,0.95); z-index: 2;">
+                                            <th style="text-align: left; padding: 5px 8px; color: #c8b8a8; font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px;">User</th>
+                                            <th style="text-align: left; padding: 5px 8px; color: #c8b8a8; font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px;">Ref</th>
+                                            <th style="text-align: center; padding: 5px 8px; color: #c8b8a8; font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px;">Joined</th>
+                                            <th style="text-align: right; padding: 5px 8px; color: #c8b8a8; font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px;">Amount</th>
                                         </tr>
                                     </thead>
                                     <tbody id="recentRegistrationsBody">
-                                        <tr><td colspan="4" style="text-align: center; padding: 8px; color: #4a5a72; font-size: 10px;">Loading...</td></tr>
+                                        <tr><td colspan="4" style="text-align: center; padding: 12px; color: #5a6a7a; font-size: 12px;">Loading...</td></tr>
                                     </tbody>
                                 </table>
                             </div>
@@ -1223,6 +1247,11 @@ function loadDashboardPage(days) {
             </div>
         </div>
     `;
+    
+    // 启动时钟
+    updateBerlinClock();
+    if (window.clockInterval) clearInterval(window.clockInterval);
+    window.clockInterval = setInterval(updateBerlinClock, 1000);
     
     var style = document.createElement('style');
     style.textContent = `
@@ -1258,7 +1287,7 @@ function loadDashboardPage(days) {
             background: rgba(204,184,159,0.04);
         }
         #recentRegistrationsBody td {
-            padding: 2px 4px;
+            padding: 5px 8px;
         }
         #recentRegistrationsBody::-webkit-scrollbar { width: 3px; }
         #recentRegistrationsBody::-webkit-scrollbar-thumb { background: rgba(204,184,159,0.12); border-radius: 4px; }
@@ -1292,7 +1321,6 @@ function loadDashboardPage(days) {
     cachedData.conversion = null;
     cachedData.lastConversionTime = 0;
     
-    // 🔥 确保传入正确的 days 参数（这里应该是 0）
     refreshDashboard(0, true).then(function() {
         console.log('✅ Dashboard 数据加载完成');
     });
