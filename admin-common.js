@@ -1,4 +1,4 @@
-// admin-common.js - 完整版（已移除所有粒子动画，保留金属质感侧边栏 + 通知声音）
+// admin-common.js - 完整版（金属质感侧边栏 + 通知声音 + Tab 拖拽排序 + 持久化）
 const SUPABASE_URL = 'https://qgmbzdfnwsdosdqphlxk.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_zsJFjfNUO7NKp8ZH5KrXFQ_WZ8Q2Kym';
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -25,7 +25,6 @@ function playNotificationSound(type) {
         const url = NOTIFICATION_SOUNDS[type];
         if (!url) return;
 
-        // 创建或复用 Audio 对象
         if (!audioCache[type]) {
             audioCache[type] = new Audio(url);
             audioCache[type].preload = 'auto';
@@ -33,7 +32,6 @@ function playNotificationSound(type) {
 
         const audio = audioCache[type];
 
-        // 尝试解锁音频上下文（绕开自动播放限制）
         if (!audioContextUnlocked && typeof AudioContext !== 'undefined') {
             const context = new (window.AudioContext || window.webkitAudioContext)();
             if (context.state === 'suspended') {
@@ -46,7 +44,6 @@ function playNotificationSound(type) {
             }
         }
 
-        // 重置并播放
         audio.currentTime = 0;
         var playPromise = audio.play();
 
@@ -59,10 +56,6 @@ function playNotificationSound(type) {
         // 静默处理
     }
 }
-
-// ============================================================
-// 🔥 用户交互时解锁音频（页面加载后第一次点击）
-// ============================================================
 
 function unlockAudioOnUserInteraction() {
     var unlock = function() {
@@ -84,26 +77,6 @@ function unlockAudioOnUserInteraction() {
     document.addEventListener('click', unlock);
     document.addEventListener('touchstart', unlock);
 }
-
-// ============================================================
-// 🔥 性能检测（仅检测，无自动降级）
-// ============================================================
-
-function detectDevicePerformance() {
-    var isMobile = /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
-    var cores = navigator.hardwareConcurrency || 4;
-    var isLowEnd = cores <= 4;
-    var memory = navigator.deviceMemory || 4;
-    var isLowMemory = memory <= 4;
-    var isTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
-    var isLowPerformance = isMobile || isLowEnd || isLowMemory || isTouch;
-    
-    console.log('📱 设备检测:', { isMobile: isMobile, cores: cores, memory: memory, isTouch: isTouch, isLowPerformance: isLowPerformance });
-    
-    return { isLowPerformance: isLowPerformance, isMobile: isMobile, isLowEnd: isLowEnd, isLowMemory: isLowMemory, isTouch: isTouch, cores: cores, memory: memory };
-}
-
-var deviceInfo = detectDevicePerformance();
 
 // ============================================================
 // 通知数据
@@ -201,9 +174,6 @@ function saveNotifications() {
     } catch (e) {}
 }
 
-// ============================================================
-// 🔥 添加通知（防重复 + 播放声音）
-// ============================================================
 function addNotification(notification) {
     if (typeof window.notifications === 'undefined') {
         window.notifications = [];
@@ -247,7 +217,6 @@ function addNotification(notification) {
     }
     saveNotifications();
     
-    // 🔔 播放对应的通知声音
     if (notification.type && NOTIFICATION_SOUNDS[notification.type]) {
         playNotificationSound(notification.type);
         console.log('🔊 播放通知声音:', notification.type);
@@ -264,9 +233,6 @@ function addNotification(notification) {
 
 loadNotifications();
 
-// ============================================================
-// 🔥 通知 UI 更新（同时更新 Dashboard 和 Tab Bar）
-// ============================================================
 function updateNotificationUI() {
     var badge = document.getElementById('notificationBadge');
     var countEl = document.getElementById('notificationCount');
@@ -313,9 +279,6 @@ function updateNotificationUI() {
     updateSidebarBadges();
 }
 
-// ============================================================
-// 🔥 单个通知列表更新函数
-// ============================================================
 function updateSingleNotificationList(listEl, badgeEl, countEl) {
     if (typeof window.notifications === 'undefined') {
         loadNotifications();
@@ -383,9 +346,6 @@ function updateSingleNotificationList(listEl, badgeEl, countEl) {
     listEl.innerHTML = html;
 }
 
-// ============================================================
-// 🔥 更新全局通知角标（Tab Bar 右侧）
-// ============================================================
 function updateGlobalNotificationBadge() {
     var badge = document.getElementById('globalNotificationBadge');
     if (!badge) return;
@@ -407,9 +367,6 @@ function updateGlobalNotificationBadge() {
     }
 }
 
-// ============================================================
-// 🔥 标记所有通知为已读
-// ============================================================
 window.markAllNotificationsRead = function() {
     if (!window.notifications || window.notifications.length === 0) {
         showToast('No notifications to mark', 'info');
@@ -435,11 +392,6 @@ window.markAllNotificationsRead = function() {
         showToast('All notifications already read', 'info');
     }
 };
-
-// ============================================================
-// 🔥 通知下拉切换（全局）
-// ============================================================
-var isNotificationDropdownOpen = false;
 
 function toggleNotificationDropdown() {
     var dropdown = document.getElementById('globalNotificationDropdown');
@@ -498,9 +450,6 @@ window.clearAllNotifications = function() {
     }
 };
 
-// ============================================================
-// 🔥 获取模块的通知数量
-// ============================================================
 function getModuleNotificationCount(pageId) {
     var countKeyMap = {
         'emailverify': 'email',
@@ -523,9 +472,6 @@ function getModuleNotificationCount(pageId) {
     return notificationCounts[key] || 0;
 }
 
-// ============================================================
-// 🔥 检查模块是否已读
-// ============================================================
 function isModuleRead(pageId) {
     var readKeyMap = {
         'emailverify': 'email',
@@ -548,9 +494,6 @@ function isModuleRead(pageId) {
     return readNotifications[key] !== false;
 }
 
-// ============================================================
-// 🔥 标记模块为已读
-// ============================================================
 function markModuleRead(pageId) {
     var readKeyMap = {
         'emailverify': 'email',
@@ -573,9 +516,6 @@ function markModuleRead(pageId) {
     readNotifications[key] = true;
 }
 
-// ============================================================
-// 🔥 侧边栏渲染（带通知角标）
-// ============================================================
 function renderSidebarNav() {
     var navList = document.querySelector('.nav-list');
     if (!navList) return;
@@ -1066,7 +1006,6 @@ if (document.readyState === 'loading') {
 function handleNewKyc(data) {
     console.log('📋 处理新KYC申请:', data);
     
-    // 🔔 播放 KYC 通知声音
     playNotificationSound('kyc');
     
     if (window.refreshDashboardData) {
@@ -1101,7 +1040,6 @@ function handleNewKyc(data) {
 function handleNewWithdrawal(data) {
     console.log('💰 处理新提现申请:', data);
     
-    // 🔔 播放 Withdrawal 通知声音
     playNotificationSound('withdrawal');
     
     if (window.refreshDashboardData) {
@@ -1136,7 +1074,6 @@ function handleNewWithdrawal(data) {
 function handleNewEmailRequest(data) {
     console.log('📧 处理新邮箱验证请求:', data.email);
     
-    // 🔔 播放 Email 通知声音
     playNotificationSound('email');
     
     if (window.refreshDashboardData) {
@@ -1361,7 +1298,6 @@ document.addEventListener('DOMContentLoaded', function() {
     
     loadNotificationCounts();
     
-    // 解锁音频（用户首次交互）
     unlockAudioOnUserInteraction();
     
     setTimeout(function() {
@@ -1374,24 +1310,42 @@ document.addEventListener('DOMContentLoaded', function() {
     }, 500);
 });
 
-// 启动实时订阅
 setTimeout(function() {
     initGlobalRealtime();
 }, 2000);
 
-// 检查登录状态
 if (localStorage.getItem('admin_logged_in') !== 'true') {
     window.location.href = 'admin-login.html';
 }
 
 // ============================================================
-// 🔥 Tab 标签栏渲染（支持拖拽排序 + 持久化）
+// 🔥 Tab 排序持久化函数
 // ============================================================
 
-// ========== Tab 排序持久化 ==========
+function loadTabOrderFromStorage() {
+    try {
+        var saved = localStorage.getItem('admin_tab_order');
+        if (saved) {
+            var order = JSON.parse(saved);
+            if (Array.isArray(order) && order.length > 0) {
+                var validOrder = order.filter(function(pageId) {
+                    return PAGE_DEFS[pageId] !== undefined;
+                });
+                if (validOrder.length > 0) {
+                    console.log('📂 从 localStorage 加载 Tab 顺序:', validOrder);
+                    return validOrder;
+                }
+            }
+        }
+    } catch (e) {
+        console.warn('加载 Tab 顺序失败:', e);
+    }
+    return null;
+}
+
 function saveTabOrder() {
     try {
-        var tabOrder = tabs.map(function(tab) { return tab.id; });
+        var tabOrder = tabs.map(function(tab) { return tab.pageId; });
         localStorage.setItem('admin_tab_order', JSON.stringify(tabOrder));
         console.log('💾 Tab order saved:', tabOrder);
     } catch (e) {
@@ -1399,42 +1353,10 @@ function saveTabOrder() {
     }
 }
 
-function loadTabOrder() {
-    try {
-        var saved = localStorage.getItem('admin_tab_order');
-        if (saved) {
-            var order = JSON.parse(saved);
-            if (Array.isArray(order) && order.length > 0) {
-                // 只保留仍然存在的 tab
-                var validOrder = order.filter(function(id) {
-                    return tabs.some(function(t) { return t.id === id; });
-                });
-                if (validOrder.length > 0) {
-                    // 按照保存的顺序重新排列 tabs
-                    var sortedTabs = [];
-                    var remainingTabs = tabs.slice();
-                    validOrder.forEach(function(id) {
-                        var index = remainingTabs.findIndex(function(t) { return t.id === id; });
-                        if (index !== -1) {
-                            sortedTabs.push(remainingTabs[index]);
-                            remainingTabs.splice(index, 1);
-                        }
-                    });
-                    // 把剩余的 tab 追加到末尾
-                    sortedTabs = sortedTabs.concat(remainingTabs);
-                    tabs = sortedTabs;
-                    console.log('📂 Tab order loaded:', validOrder);
-                    return true;
-                }
-            }
-        }
-    } catch (e) {
-        console.warn('Failed to load tab order:', e);
-    }
-    return false;
-}
+// ============================================================
+// 🔥 Tab 拖拽排序核心逻辑
+// ============================================================
 
-// ========== 拖拽排序核心逻辑 ==========
 var dragState = {
     isDragging: false,
     dragTabId: null,
@@ -1445,19 +1367,16 @@ var dragState = {
     originalIndex: -1,
     currentIndex: -1,
     ghostElement: null,
-    tabsWrapper: null,
-    tabItems: []
+    tabsWrapper: null
 };
 
 function initDragSort() {
     var tabsWrapper = document.getElementById('tabsWrapper');
     if (!tabsWrapper) return;
     
-    // 使用事件委托监听拖拽事件
     tabsWrapper.addEventListener('mousedown', onDragStart);
     tabsWrapper.addEventListener('touchstart', onDragStart, { passive: false });
     
-    // 全局事件
     document.addEventListener('mousemove', onDragMove);
     document.addEventListener('touchmove', onDragMove, { passive: false });
     document.addEventListener('mouseup', onDragEnd);
@@ -1468,7 +1387,6 @@ function initDragSort() {
 function onDragStart(e) {
     var target = e.target.closest('.tab-item');
     if (!target) return;
-    // 如果点击的是关闭按钮，不触发拖拽
     if (e.target.closest('.tab-close')) return;
     
     var tabId = parseInt(target.dataset.tabId);
@@ -1476,13 +1394,10 @@ function onDragStart(e) {
     
     var tabIndex = tabs.findIndex(function(t) { return t.id === tabId; });
     if (tabIndex === -1) return;
-    
-    // 只有一个 tab 时不允许拖拽
     if (tabs.length <= 1) return;
     
     e.preventDefault();
     
-    var rect = target.getBoundingClientRect();
     var clientX = e.clientX || (e.touches && e.touches[0].clientX) || 0;
     
     dragState.isDragging = true;
@@ -1493,9 +1408,7 @@ function onDragStart(e) {
     dragState.originalIndex = tabIndex;
     dragState.currentIndex = tabIndex;
     dragState.tabsWrapper = document.getElementById('tabsWrapper');
-    dragState.tabItems = Array.from(dragState.tabsWrapper.querySelectorAll('.tab-item'));
     
-    // 创建占位元素
     var placeholder = document.createElement('div');
     placeholder.className = 'tab-placeholder';
     placeholder.style.cssText = `
@@ -1512,7 +1425,6 @@ function onDragStart(e) {
     `;
     dragState.dragPlaceholder = placeholder;
     
-    // 创建幽灵元素（拖拽时的跟随元素）
     var ghost = target.cloneNode(true);
     ghost.className = 'tab-item ghost';
     ghost.style.cssText = `
@@ -1539,20 +1451,16 @@ function onDragStart(e) {
         transition: none;
         width: auto;
     `;
-    // 复制图标和文字
     ghost.innerHTML = target.innerHTML;
     dragState.ghostElement = ghost;
     document.body.appendChild(ghost);
     
-    // 更新幽灵位置
     updateGhostPosition(clientX);
     
-    // 在原位置插入占位符
     target.style.opacity = '0';
     target.style.transition = 'opacity 0.2s';
     target.parentNode.insertBefore(placeholder, target.nextSibling);
     
-    // 添加拖拽中的样式
     dragState.tabsWrapper.style.cursor = 'grabbing';
     document.body.style.userSelect = 'none';
     
@@ -1566,10 +1474,8 @@ function onDragMove(e) {
     var clientX = e.clientX || (e.touches && e.touches[0].clientX) || 0;
     dragState.currentX = clientX;
     
-    // 更新幽灵位置
     updateGhostPosition(clientX);
     
-    // 检测是否应该交换位置
     var tabsWrapper = dragState.tabsWrapper;
     if (!tabsWrapper) return;
     
@@ -1577,14 +1483,11 @@ function onDragMove(e) {
     var placeholder = dragState.dragPlaceholder;
     if (!placeholder) return;
     
-    // 获取 placeholder 当前在 DOM 中的位置
     var placeholderIndex = Array.from(tabsWrapper.children).indexOf(placeholder);
     
-    // 计算鼠标相对于容器左侧的位置
     var wrapperRect = tabsWrapper.getBoundingClientRect();
     var mouseX = clientX - wrapperRect.left;
     
-    // 找到应该插入的位置
     var targetIndex = -1;
     for (var i = 0; i < tabItems.length; i++) {
         var item = tabItems[i];
@@ -1599,24 +1502,19 @@ function onDragMove(e) {
         targetIndex = tabItems.length;
     }
     
-    // 如果目标位置变化，移动占位符
     if (targetIndex !== placeholderIndex) {
         var parent = tabsWrapper;
         var children = Array.from(parent.children);
         var placeholderEl = placeholder;
         
-        // 移除占位符
         parent.removeChild(placeholderEl);
         
-        // 计算插入位置（需要考虑 ghost 和拖拽的元素）
         var targetNode = null;
         var currentIdx = 0;
         for (var j = 0; j < children.length; j++) {
             var child = children[j];
-            // 跳过幽灵元素和占位符本身
             if (child === placeholderEl) continue;
             if (child.classList && child.classList.contains('ghost')) continue;
-            // 跳过被拖拽的元素（它被隐藏了，但还在 DOM 中）
             if (child === dragState.dragElement) continue;
             
             if (currentIdx === targetIndex) {
@@ -1626,14 +1524,12 @@ function onDragMove(e) {
             currentIdx++;
         }
         
-        // 插入占位符
         if (targetNode) {
             parent.insertBefore(placeholderEl, targetNode);
         } else {
             parent.appendChild(placeholderEl);
         }
         
-        // 更新拖拽元素的位置索引
         dragState.currentIndex = targetIndex;
     }
 }
@@ -1643,57 +1539,45 @@ function onDragEnd(e) {
     
     var clientX = e.clientX || (e.changedTouches && e.changedTouches[0].clientX) || 0;
     
-    // 清理幽灵元素
     if (dragState.ghostElement && dragState.ghostElement.parentNode) {
         dragState.ghostElement.parentNode.removeChild(dragState.ghostElement);
     }
     
-    // 还原被拖拽的元素
     if (dragState.dragElement) {
         dragState.dragElement.style.opacity = '1';
         dragState.dragElement.style.transition = '';
     }
     
-    // 移除占位符
     if (dragState.dragPlaceholder && dragState.dragPlaceholder.parentNode) {
         dragState.dragPlaceholder.parentNode.removeChild(dragState.dragPlaceholder);
     }
     
-    // 恢复样式
     if (dragState.tabsWrapper) {
         dragState.tabsWrapper.style.cursor = '';
     }
     document.body.style.userSelect = '';
     
-    // 如果位置发生了变化，重新排序 tabs 数组
     var originalIndex = dragState.originalIndex;
     var newIndex = dragState.currentIndex;
     
     if (originalIndex !== -1 && newIndex !== -1 && originalIndex !== newIndex) {
-        // 移动 tab 到新位置
         var tab = tabs.splice(originalIndex, 1)[0];
-        // 如果 newIndex > originalIndex，需要减 1 因为数组已经变了
         var insertIndex = newIndex > originalIndex ? newIndex - 1 : newIndex;
         tabs.splice(insertIndex, 0, tab);
         
-        // 保存排序
         saveTabOrder();
         
         console.log('📌 Tab 已移动:', originalIndex, '->', insertIndex);
         
-        // 重新渲染 Tab Bar（保持激活状态）
         var activeTabIdBefore = activeTabId;
         renderTabBar();
-        // 恢复激活状态
         activeTabId = activeTabIdBefore;
-        // 重新高亮激活的 tab
         var activeTabEl = document.querySelector('.tab-item[data-tab-id="' + activeTabId + '"]');
         if (activeTabEl) {
             activeTabEl.classList.add('active');
         }
     }
     
-    // 重置拖拽状态
     dragState.isDragging = false;
     dragState.dragTabId = null;
     dragState.dragElement = null;
@@ -1702,7 +1586,6 @@ function onDragEnd(e) {
     dragState.tabsWrapper = null;
     dragState.originalIndex = -1;
     dragState.currentIndex = -1;
-    dragState.tabItems = [];
 }
 
 function updateGhostPosition(clientX) {
@@ -1710,14 +1593,15 @@ function updateGhostPosition(clientX) {
     var ghost = dragState.ghostElement;
     var rect = ghost.getBoundingClientRect();
     var width = rect.width || 120;
-    var height = rect.height || 42;
     var offsetX = width / 2;
-    var offsetY = 20;
     ghost.style.left = (clientX - offsetX) + 'px';
     ghost.style.top = (window.scrollY + 10) + 'px';
 }
 
-// ========== 渲染 Tab Bar（支持拖拽） ==========
+// ============================================================
+// 🔥 Tab Bar 渲染
+// ============================================================
+
 function renderTabBar() {
     var container = document.getElementById('tabBarContainer');
     if (!container) {
@@ -1767,7 +1651,6 @@ function renderTabBar() {
         tabEl.className = 'tab-item';
         tabEl.dataset.tabId = tab.id;
         tabEl.dataset.pageId = tab.pageId;
-        // 添加 draggable 属性
         tabEl.draggable = false;
 
         var isActive = tab.id === activeTabId;
@@ -1813,7 +1696,6 @@ function renderTabBar() {
         tabsWrapper.appendChild(tabEl);
     });
 
-    // 初始化拖拽排序（只初始化一次）
     if (!container.dataset.dragInitialized) {
         container.dataset.dragInitialized = 'true';
         initDragSort();
@@ -1890,7 +1772,6 @@ function openTab(pageId) {
     tabs.push(newTab);
     activeTabId = newTab.id;
     
-    // 保存 tab 顺序
     saveTabOrder();
     renderTabBar();
 
@@ -1927,18 +1808,15 @@ function closeTab(tabId) {
         activeTabId = tabs[newIndex].id;
     }
     
-    // 保存 tab 顺序
     saveTabOrder();
     renderTabBar();
 }
 
 // ============================================================
-// 🔥 初始化 Tab Bar（带全局通知按钮）- 强制重建版
+// 🔥 初始化 Tab Bar
 // ============================================================
+
 function initTabBar() {
-    // 先尝试加载已保存的 tab 顺序（在初始化 tabs 之前）
-    // 但 tabs 可能已经有数据了，所以我们在第一次渲染时应用排序
-    
     var existingContainer = document.getElementById('tabBarContainer');
     if (existingContainer) {
         existingContainer.remove();
@@ -1951,6 +1829,49 @@ function initTabBar() {
         return;
     }
 
+    // 🔥 先加载保存的 Tab 顺序
+    var savedOrder = loadTabOrderFromStorage();
+    
+    // 重置 tabs
+    tabs = [];
+    tabIdCounter = 0;
+    
+    if (savedOrder && savedOrder.length > 0) {
+        savedOrder.forEach(function(pageId) {
+            var pageDef = PAGE_DEFS[pageId];
+            if (pageDef) {
+                tabs.push({
+                    id: ++tabIdCounter,
+                    pageId: pageId,
+                    label: pageDef.label,
+                    notificationCount: notificationCounts[pageId] || 0
+                });
+            }
+        });
+        var hasDashboard = tabs.some(function(t) { return t.pageId === 'dashboard'; });
+        if (!hasDashboard) {
+            tabs.unshift({
+                id: ++tabIdCounter,
+                pageId: 'dashboard',
+                label: PAGE_DEFS.dashboard.label,
+                notificationCount: notificationCounts.dashboard || 0
+            });
+        }
+        activeTabId = tabs[0].id;
+        console.log('📂 从保存的顺序恢复 Tabs:', tabs.map(function(t) { return t.pageId; }));
+    } else {
+        var defaultTab = {
+            id: ++tabIdCounter,
+            pageId: 'dashboard',
+            label: PAGE_DEFS.dashboard.label,
+            notificationCount: notificationCounts.dashboard || 0
+        };
+        tabs.push(defaultTab);
+        activeTabId = defaultTab.id;
+        console.log('📂 使用默认 Tabs');
+    }
+
+    // 创建容器
     var container = document.createElement('div');
     container.id = 'tabBarContainer';
     container.className = 'tab-bar-container';
@@ -2236,7 +2157,6 @@ function initTabBar() {
                 border-radius: 2px;
                 box-shadow: 0 0 12px rgba(214,178,94,0.15);
             }
-            /* 拖拽占位符样式 */
             .tab-placeholder {
                 display: inline-block;
                 border-radius: 8px 8px 0 0;
@@ -2359,87 +2279,30 @@ function initTabBar() {
                 font-size: 12px;
                 padding: 0 8px;
             }
-            
-            /* 拖拽时禁止选中 */
             .tab-bar-container.dragging {
                 cursor: grabbing;
             }
             .tab-bar-container.dragging .tab-item {
                 cursor: grabbing;
             }
-            /* 拖拽元素透明度动画 */
-            .tab-item.dragging-source {
-                opacity: 0.4;
-                transform: scale(0.95);
-            }
         `;
         document.head.appendChild(newStyle);
     }
 
-    // 加载已保存的 tab 顺序（在 tabs 已经有一些默认数据的情况下）
-    // 但 openTab 会添加 tab，所以我们在第一次 openTab 之后再加载顺序
-    // 这里先不加载，等 openTab 调用后再处理
-    
-    openTab('dashboard');
+    renderTabBar();
 
-    console.log('✅ Tab Bar 已初始化（通知按钮在右侧，下拉 fixed 定位）');
-    console.log('🔊 通知声音已启用 - KYC / Withdrawal / Email');
-    console.log('🔄 Tab 拖拽排序已启用 - 像 Chrome 一样拖拽排列');
-    console.log('💾 Tab 顺序自动保存到 localStorage');
+    if (tabs.length > 0) {
+        var firstTab = tabs[0];
+        var pageEl = document.getElementById('page_' + firstTab.pageId);
+        if (pageEl) {
+            pageEl.classList.add('active');
+            loadPageContent(firstTab.pageId);
+        }
+    }
+
+    console.log('✅ Tab Bar 已初始化（带持久化排序 + 拖拽）');
+    console.log('📋 当前 Tabs:', tabs.map(function(t) { return t.pageId; }));
 }
-
-// 在 openTab 和 closeTab 中保存顺序
-var originalOpenTab = openTab;
-var originalCloseTab = closeTab;
-
-openTab = function(pageId) {
-    var existing = tabs.find(function(t) { return t.pageId === pageId; });
-    if (existing) {
-        switchTab(existing.id);
-        return;
-    }
-
-    var pageDef = PAGE_DEFS[pageId];
-    if (!pageDef) return;
-
-    var newTab = {
-        id: ++tabIdCounter,
-        pageId: pageId,
-        label: pageDef.label,
-        notificationCount: notificationCounts[pageId] || 0
-    };
-
-    tabs.push(newTab);
-    activeTabId = newTab.id;
-    
-    // 保存 tab 顺序
-    saveTabOrder();
-    renderTabBar();
-
-    var container = document.getElementById('tabBarContainer');
-    var newTabEl = container.querySelector('.tab-item[data-tab-id="' + newTab.id + '"]');
-    if (newTabEl) {
-        newTabEl.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
-    }
-};
-
-closeTab = function(tabId) {
-    var index = tabs.findIndex(function(t) { return t.id === tabId; });
-    if (index === -1) return;
-
-    tabs.splice(index, 1);
-
-    if (tabs.length === 0) {
-        activeTabId = null;
-    } else if (activeTabId === tabId) {
-        var newIndex = Math.min(index, tabs.length - 1);
-        activeTabId = tabs[newIndex].id;
-    }
-    
-    // 保存 tab 顺序
-    saveTabOrder();
-    renderTabBar();
-};
 
 // 暴露给全局
 window.openTab = openTab;
@@ -2454,10 +2317,12 @@ window.getModuleNotificationCount = getModuleNotificationCount;
 window.isModuleRead = isModuleRead;
 window.markModuleRead = markModuleRead;
 window.playNotificationSound = playNotificationSound;
+window.saveTabOrder = saveTabOrder;
+window.loadTabOrderFromStorage = loadTabOrderFromStorage;
 
-console.log('✅ admin-common.js 加载完成（带完整通知计数系统 + 通知声音 + Tab 拖拽排序）');
+console.log('✅ admin-common.js 加载完成');
 console.log('   🔊 KYC → kycverification.mp3');
 console.log('   🔊 Withdrawal → withdrawal.mp3');
 console.log('   🔊 Email → emailverification.mp3');
-console.log('   🔄 Tab 拖拽排序: 点击并拖拽 Tab 标签重新排列');
-console.log('   💾 Tab 顺序自动保存，刷新页面后保持');
+console.log('   🔄 Tab 拖拽排序已启用');
+console.log('   💾 Tab 顺序自动保存，刷新页面保持');
