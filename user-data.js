@@ -1,7 +1,7 @@
 // user-data.js - 所有页面共享的用户数据管理
 
-const SUPABASE_URL = 'https://qgmbzdfnwsdosdqphlxk.supabase.co';
-const SUPABASE_KEY = 'sb_publishable_zsJFjfNUO7NKp8ZH5KrXFQ_WZ8Q2Kym';
+const SUPABASE_URL = 'https://additive-eu-security.pages.dev';
+const SUPABASE_KEY = 'fb_rkjh345sd98sdsdfgkjlhFjhdgs4_sdfkjh34rhfd';
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 // 获取当前登录用户
