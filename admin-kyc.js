@@ -315,7 +315,6 @@ async function loadKycPending() {
         const docType = document.getElementById('kycDocTypeFilter')?.value || '';
         
         if (keyword) {
-            // 先获取匹配的用户
             const { data: matchedUsers } = await sb.from('users').select('uid').or(`uid.ilike.%${keyword}%,username.ilike.%${keyword}%`).limit(50);
             if (matchedUsers && matchedUsers.length > 0) {
                 const uids = matchedUsers.map(u => u.uid);
@@ -335,14 +334,12 @@ async function loadKycPending() {
             return;
         }
         
-        // 按用户分组
         const userGroups = {};
         for (const item of kycList) {
             if (!userGroups[item.uid]) userGroups[item.uid] = [];
             userGroups[item.uid].push(item);
         }
         
-        // 获取用户名
         const userMap = {};
         for (const uid of Object.keys(userGroups)) {
             userMap[uid] = await getUsername(uid);
@@ -353,7 +350,6 @@ async function loadKycPending() {
             const row = tbody.insertRow();
             const username = userMap[uid] || uid;
             
-            // 查找不同类型的文档
             const nationalIdFront = items.find(i => i.document_type === 'national_id_front');
             const nationalIdBack = items.find(i => i.document_type === 'national_id_back');
             const passport = items.find(i => i.document_type === 'passport');
@@ -361,18 +357,15 @@ async function loadKycPending() {
             const drivingLicenseFront = items.find(i => i.document_type === 'driving_license_front');
             const drivingLicenseBack = items.find(i => i.document_type === 'driving_license_back');
             
-            // 确定主要文档类型
             let docTypeDisplay = '-';
             if (passport) docTypeDisplay = 'Passport';
             else if (residentPermit) docTypeDisplay = 'Resident Permit';
             else if (drivingLicenseFront) docTypeDisplay = 'Driving License';
             else if (nationalIdFront) docTypeDisplay = 'National ID';
             
-            // 检查是否有待处理的
             const hasPending = items.some(i => i.status === 'pending');
             const statusText = hasPending ? 'Pending' : 'Rejected';
             
-            // Front 图片
             let frontHtml = '';
             const frontImg = nationalIdFront || passport || residentPermit || drivingLicenseFront;
             if (frontImg && frontImg.image_url) {
@@ -381,7 +374,6 @@ async function loadKycPending() {
                 frontHtml = '<div class="kyc-doc-placeholder">No Image</div>';
             }
             
-            // Back 图片
             let backHtml = '';
             if (nationalIdBack && nationalIdBack.image_url) {
                 backHtml = `<img src="${nationalIdBack.image_url}" class="kyc-doc-image" onclick="window.open('${nationalIdBack.image_url}','_blank')" onerror="this.outerHTML='<div class=\\'kyc-doc-placeholder\\'>No Image</div>'">`;
@@ -393,12 +385,20 @@ async function loadKycPending() {
                 backHtml = '<div class="kyc-doc-placeholder">No Back</div>';
             }
             
-            // Actions
+            // ============================================================
+            // 🔥 修复：Actions 列 - 使用 flex 确保左右显示
+            // ============================================================
             let actionsHtml = '';
             if (hasPending) {
                 actionsHtml = `
-                    <button class="btn-sm-action btn-approve approve-kyc" data-uid="${uid}"><i class="fas fa-check"></i> Approve</button>
-                    <button class="btn-sm-action btn-reject reject-kyc" data-uid="${uid}"><i class="fas fa-times"></i> Reject</button>
+                    <div style="display: flex; gap: 6px; flex-wrap: nowrap; align-items: center; justify-content: flex-start;">
+                        <button class="btn-sm-action btn-approve approve-kyc" data-uid="${uid}" style="white-space: nowrap; flex-shrink: 0;">
+                            <i class="fas fa-check"></i> Approve
+                        </button>
+                        <button class="btn-sm-action btn-reject reject-kyc" data-uid="${uid}" style="white-space: nowrap; flex-shrink: 0;">
+                            <i class="fas fa-times"></i> Reject
+                        </button>
+                    </div>
                 `;
             } else {
                 actionsHtml = `<span class="status-badge-rejected">Rejected</span>`;
