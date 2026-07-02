@@ -583,11 +583,10 @@ async function loadUsersPage() {
         loadUsers(); 
     });
     document.getElementById('refreshUserBtn')?.addEventListener('click', () => { 
-        document.getElementById('searchUserInput').value = ''; 
-        searchKeyword = ''; 
-        window.userCurrentPage = 1;
-        loadUsers(); 
-    });
+    // 🔥 保留搜索关键词，只刷新当前搜索结果
+    window.userCurrentPage = 1;
+    loadUsers(); 
+});
     document.getElementById('addUserBtn')?.addEventListener('click', () => {
         document.getElementById('addUserModal').classList.add('active');
     });

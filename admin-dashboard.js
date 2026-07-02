@@ -955,8 +955,8 @@ function initTrendChart() {
             type: 'category', 
             data: defaultDates,
             axisLabel: { 
-                color: 'rgba(255,255,255,0.15)', 
-                fontSize: 9
+                color: 'rgba(255,255,255,0.6)', 
+                fontSize: 12
             }, 
             axisLine: { lineStyle: { color: 'rgba(255,255,255,0.04)' } }, 
             axisTick: { show: false } 
@@ -964,7 +964,7 @@ function initTrendChart() {
         yAxis: { 
             type: 'value', 
             name: '', 
-            axisLabel: { color: 'rgba(255,255,255,0.10)', fontSize: 8 }, 
+            axisLabel: { color: 'rgba(255,255,255,0.6)', fontSize: 12 }, 
             axisLine: { show: false }, 
             axisTick: { show: false }, 
             splitLine: { lineStyle: { color: 'rgba(255,255,255,0.03)', type: 'dashed' } } 
