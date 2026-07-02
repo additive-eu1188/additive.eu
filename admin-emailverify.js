@@ -31,7 +31,7 @@ function generateTAC() {
 }
 
 // ============================================================
-// 🔥 判断记录状态 - 修正版
+// 🔥 判断记录状态 - 最终修正版
 // ============================================================
 function getRecordStatus(record) {
     // 1️⃣ 已验证 → History
@@ -39,24 +39,24 @@ function getRecordStatus(record) {
         return { label: 'Verified', class: 'status-badge-verified', icon: '✅' };
     }
     
-    // 2️⃣ code 为空 → New Request (用户刚提交，后台还没处理)
+    // 2️⃣ code 为空 → 根据 send_count 显示
     if (!record.code || record.code === '' || record.code === null) {
-        return { label: 'New Request', class: 'status-badge-new', icon: '🆕' };
+        const sendCount = record.send_count || 0;
+        if (sendCount === 0) {
+            return { label: 'New Request', class: 'status-badge-new', icon: '🆕' };
+        } else {
+            // 🔥 send_count + 1 = 用户实际点击次数
+            const clickCount = sendCount + 1;
+            return { label: `Clicked ${clickCount} times`, class: 'status-badge-pending', icon: '📤' };
+        }
     }
     
-    // 3️⃣ code 有值 → 已发送
-    const sendCount = record.send_count || 0;
-    if (sendCount === 1) {
-        // 第一次发送 → Pending
-        return { label: 'Pending', class: 'status-badge-pending', icon: '⏳' };
-    } else {
-        // 第二次及以上 → Clicked N times
-        return { label: `Clicked ${sendCount} times`, class: 'status-badge-pending', icon: '📤' };
-    }
+    // 3️⃣ code 有值 → Pending
+    return { label: 'Pending', class: 'status-badge-pending', icon: '⏳' };
 }
 
 // ============================================================
-// 🔥 一键发送邮件 - 自动生成TAC + 跳转Gmail + 计数+1
+// 🔥 一键发送邮件 - 自动生成TAC + 跳转Gmail
 // ============================================================
 function sendVerificationEmail(email, requestId) {
     if (!email) {
@@ -75,31 +75,22 @@ function sendVerificationEmail(email, requestId) {
     
     window.open(gmailUrl, '_blank');
 
-    // 🔥 保存TAC到数据库，同时 send_count + 1
+    // ✅ 管理员点击：只保存 TAC，不修改 send_count
     saveTACToDatabase(requestId, tacCode, email);
 
     showToast(`✅ TAC: ${tacCode} | Gmail opened for ${email}`, 'success');
 }
 
 // ============================================================
-// 🔥 将TAC保存到数据库（同时增加发送次数）
+// 🔥 将TAC保存到数据库（管理员点击 Send Email）
 // ============================================================
 async function saveTACToDatabase(requestId, code, email) {
     try {
-        // 先获取当前的 send_count
-        const { data: current } = await sb
-            .from('email_verification_requests')
-            .select('send_count')
-            .eq('id', parseInt(requestId))
-            .single();
-        
-        const newCount = (current?.send_count || 0) + 1;
-        
+        // ✅ 只设置 code，不改变 send_count
         const { error } = await sb
             .from('email_verification_requests')
             .update({ 
                 code: code,
-                send_count: newCount,
                 updated_at: new Date().toISOString()
             })
             .eq('id', parseInt(requestId));
@@ -110,7 +101,7 @@ async function saveTACToDatabase(requestId, code, email) {
             return;
         }
 
-        console.log(`✅ TAC saved to database (发送次数: ${newCount})`);
+        console.log(`✅ TAC saved (send_count 保持不变)`);
         
         await loadEmailPending();
         await loadEmailHistory();
@@ -157,7 +148,6 @@ async function loadEmailVerifyPage() {
     
     container.innerHTML = `
         <div class="card">
-            <!-- 顶部 -->
             <div class="withdraw-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 24px;">
                 <h2 style="font-size: 18px; font-weight: 600; color: #d8e0f0; margin: 0;">
                     <i class="fas fa-envelope" style="color: #8892a8; margin-right: 10px;"></i>
@@ -172,7 +162,6 @@ async function loadEmailVerifyPage() {
             
             <!-- 待处理面板 -->
             <div id="emailPendingPanel" class="email-panel">
-                <!-- 统计卡片 -->
                 <div class="stats-grid" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 24px;">
                     <div class="stat-item" style="background: rgba(12, 16, 28, 0.6); border-radius: 16px; padding: 16px 20px; text-align: center; border: 1px solid rgba(255,255,255,0.04);">
                         <div class="label" style="font-size: 11px; color: #8892a8; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">🆕 New Requests</div>
@@ -188,7 +177,6 @@ async function loadEmailVerifyPage() {
                     </div>
                 </div>
                 
-                <!-- 搜索栏 -->
                 <div class="search-bar" style="display: flex; flex-wrap: wrap; gap: 10px; align-items: center; background: rgba(8, 12, 24, 0.5); border-radius: 16px; padding: 12px 16px; margin-bottom: 20px; border: 1px solid rgba(255,255,255,0.03);">
                     <input type="text" id="emailSearchInput" class="search-input" placeholder="Search email / phone" style="flex: 1; min-width: 160px; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.10); border-radius: 40px; padding: 8px 16px; color: #e6edf5; font-size: 13px; outline: none;">
                     <button id="emailSearchBtn" class="btn-primary" style="padding: 8px 20px; border-radius: 40px; border: none; background: #2a3a5a; color: #e6edf5; font-weight: 600; cursor: pointer; font-size: 13px; white-space: nowrap;"><i class="fas fa-search"></i> Search</button>
@@ -244,7 +232,7 @@ async function loadEmailVerifyPage() {
         </div>
     `;
     
-    // 添加样式（与之前相同，省略以节省篇幅）
+    // 样式
     const style = document.createElement('style');
     style.textContent = `
         .tab-email-btn {
@@ -372,7 +360,7 @@ async function loadEmailVerifyPage() {
     `;
     document.head.appendChild(style);
     
-    // 绑定事件（与之前相同）
+    // 绑定事件
     document.getElementById('emailTabPending')?.addEventListener('click', function() { switchEmailTab('pending'); });
     document.getElementById('emailTabHistory')?.addEventListener('click', function() { switchEmailTab('history'); });
     document.getElementById('refreshEmailBtn')?.addEventListener('click', function() {
@@ -444,7 +432,19 @@ async function updateEmailStats() {
             .select('code, is_verified, send_count')
             .eq('is_verified', false);
         
-        const newRequests = allUnverified?.filter(r => !r.code || r.code === '' || r.code === null) || [];
+        // New Request: code 为空且 send_count = 0
+        const newRequests = allUnverified?.filter(r => {
+            const isEmpty = !r.code || r.code === '' || r.code === null;
+            return isEmpty && (r.send_count || 0) === 0;
+        }) || [];
+        
+        // Clicked: code 为空且 send_count > 0 (用户点了但管理员还没发)
+        const clickedRequests = allUnverified?.filter(r => {
+            const isEmpty = !r.code || r.code === '' || r.code === null;
+            return isEmpty && (r.send_count || 0) > 0;
+        }) || [];
+        
+        // Pending: code 有值 (管理员已发送)
         const pendingRequests = allUnverified?.filter(r => r.code && r.code !== '' && r.code !== null) || [];
         
         const { count: verifiedCount } = await sb
@@ -452,7 +452,7 @@ async function updateEmailStats() {
             .select('id', { count: 'exact', head: true })
             .eq('is_verified', true);
         
-        document.getElementById('emailStatNew').innerText = newRequests.length;
+        document.getElementById('emailStatNew').innerText = newRequests.length + clickedRequests.length;
         document.getElementById('emailStatPending').innerText = pendingRequests.length;
         document.getElementById('emailStatVerified').innerText = verifiedCount || 0;
         document.getElementById('emailHistoryStatTotal').innerText = verifiedCount || 0;
@@ -504,10 +504,12 @@ async function loadEmailPending() {
             const phone = phoneMap[item.email] || '-';
             const requestTime = item.requested_at ? new Date(item.requested_at).toLocaleString() : '-';
             
+            // 🔥 使用 getRecordStatus 判断状态
             const status = getRecordStatus(item);
             
-            const isNewRequest = !item.code || item.code === '' || item.code === null;
-            const isPending = item.code && item.code !== '' && item.code !== null;
+            const isNewRequest = status.label === 'New Request';
+            const isPending = status.label === 'Pending';
+            const isClicked = status.label !== 'New Request' && status.label !== 'Pending' && status.label !== 'Verified';
             
             row.insertCell(0).innerHTML = `<span style="font-size:12px; color:#b0c0da;">${escapeHtml(phone)}</span>`;
             row.insertCell(1).innerHTML = `<span style="font-weight:500; color:#d8e0f0;">${escapeHtml(item.email)}</span>`;
@@ -517,13 +519,15 @@ async function loadEmailPending() {
             const actionsCell = row.insertCell(4);
             let actionsHtml = '';
             
-            if (isNewRequest) {
+            if (isNewRequest || isClicked) {
+                // New Request 或 Clicked N times → 显示 Send
                 actionsHtml = `
                     <button class="btn-send-email send-email-btn" data-id="${item.id}" data-email="${item.email}">
                         <i class="fas fa-envelope"></i> Send
                     </button>
                 `;
             } else if (isPending) {
+                // Pending → 显示 Resend + Verify
                 actionsHtml = `
                     <button class="btn-resend-email resend-email-btn" data-id="${item.id}" data-email="${item.email}" title="Resend with new TAC">
                         <i class="fas fa-sync-alt"></i> Resend

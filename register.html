@@ -617,9 +617,7 @@
     btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> ' + t('register_send') + '...';
 
     try {
-        // ============================================================
-        // 🔥 1. 检查邮箱是否已被注册
-        // ============================================================
+        // 1. 检查邮箱是否已被注册
         const { data: existingEmail, error: checkError } = await sb
             .from('users')
             .select('email')
@@ -637,9 +635,7 @@
             return;
         }
 
-        // ============================================================
-        // 🔥 2. 检查是否已有未验证的记录（pending）
-        // ============================================================
+        // 2. 检查是否已有未验证的记录
         const { data: existingRequest } = await sb
             .from('email_verification_requests')
             .select('id, code, send_count, is_verified')
@@ -653,17 +649,15 @@
         let result;
 
         if (existingRequest) {
-            // ============================================================
-            // 🔥 已有记录 → 更新（增加 send_count，重置 code 为 null）
-            // ============================================================
-            console.log('📧 更新已有记录 ID:', existingRequest.id, 'send_count:', existingRequest.send_count || 0);
-            
+            // 🔥 用户点击：send_count + 1，code 清空
             const newCount = (existingRequest.send_count || 0) + 1;
+            
+            console.log('📧 用户点击 Send，ID:', existingRequest.id, 'send_count:', existingRequest.send_count || 0, '→', newCount);
             
             result = await sb
                 .from('email_verification_requests')
                 .update({
-                    code: null,  // 清空旧的 TAC，等待管理员重新设置
+                    code: null,
                     send_count: newCount,
                     is_verified: false,
                     requested_at: new Date().toISOString(),
@@ -671,8 +665,6 @@
                 })
                 .eq('id', existingRequest.id)
                 .select();
-
-            console.log('📧 更新后 send_count:', newCount);
 
             if (result.error) {
                 console.error('Update failed:', result.error);
@@ -682,19 +674,17 @@
                 return;
             }
 
-            showMessage(`✅ 已重新发送验证请求 (点击 ${newCount} 次)`, false);
+            showMessage(`✅ 已重新发送验证请求 (点击 ${newCount + 1} 次)`, false);
 
         } else {
-            // ============================================================
-            // 🔥 没有记录 → 创建新记录
-            // ============================================================
+            // 没有记录 → 创建新记录
             result = await sb
                 .from('email_verification_requests')
                 .insert({
                     email: email,
                     code: null,
                     is_verified: false,
-                    send_count: 0,  // 初始为 0，后台点击 Send 时才变为 1
+                    send_count: 0,
                     requested_at: new Date().toISOString(),
                     expires_at: expiresAt.toISOString()
                 })
