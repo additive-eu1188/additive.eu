@@ -132,49 +132,88 @@ async function loadStatsData(days, force) {
             return dateStr >= lastPeriodStr && dateStr < startStr;
         }).length;
         
-        var totalDeposit = deposits.reduce(function(s, d) { return s + (d.amount || 0); }, 0);
-        
-        var periodDeposit = deposits.filter(function(d) {
-            if (!d.created_at) return false;
-            var berlinDate = convertToBerlinDate(new Date(d.created_at));
-            return berlinDate.toISOString().split('T')[0] >= startStr;
-        }).reduce(function(s, d) { return s + (d.amount || 0); }, 0);
-        
-        var prevPeriodDeposit = deposits.filter(function(d) {
-            if (!d.created_at) return false;
-            var berlinDate = convertToBerlinDate(new Date(d.created_at));
-            var dateStr = berlinDate.toISOString().split('T')[0];
-            return dateStr >= lastPeriodStr && dateStr < startStr;
-        }).reduce(function(s, d) { return s + (d.amount || 0); }, 0);
-        
-        var totalWithdraw = withdrawals.filter(function(w) { return w.status === 'approved'; }).reduce(function(s, w) { return s + (w.amount || 0); }, 0);
-        
-        var periodWithdraw = withdrawals.filter(function(w) {
-            if (!w.request_date) return false;
-            if (w.status !== 'approved') return false;
-            var berlinDate = convertToBerlinDate(new Date(w.request_date));
-            return berlinDate.toISOString().split('T')[0] >= startStr;
-        }).reduce(function(s, w) { return s + (w.amount || 0); }, 0);
-        
-        var prevPeriodWithdraw = withdrawals.filter(function(w) {
-            if (!w.request_date) return false;
-            if (w.status !== 'approved') return false;
-            var berlinDate = convertToBerlinDate(new Date(w.request_date));
-            var dateStr = berlinDate.toISOString().split('T')[0];
-            return dateStr >= lastPeriodStr && dateStr < startStr;
-        }).reduce(function(s, w) { return s + (w.amount || 0); }, 0);
+        // 🔥 根据 days 参数筛选存款和提款
+// days = 0: 今天, days = 7: 最近7天, days = 30: 最近30天, days = -1: 所有时间
+
+var filteredDeposits = deposits;
+var filteredWithdrawals = withdrawals.filter(function(w) { return w.status === 'approved'; });
+
+if (days === 0) {
+    // Today：只统计今天
+    var todayStr = nowDate.toISOString().split('T')[0];
+    filteredDeposits = deposits.filter(function(d) {
+        if (!d.created_at) return false;
+        var berlinDate = convertToBerlinDate(new Date(d.created_at));
+        return berlinDate.toISOString().split('T')[0] === todayStr;
+    });
+    filteredWithdrawals = withdrawals.filter(function(w) {
+        if (!w.request_date) return false;
+        if (w.status !== 'approved') return false;
+        var berlinDate = convertToBerlinDate(new Date(w.request_date));
+        return berlinDate.toISOString().split('T')[0] === todayStr;
+    });
+} else if (days === 7 || days === 30) {
+    // 7 Days / 30 Days：只统计指定天数内
+    var startDate = new Date(nowDate);
+    startDate.setDate(startDate.getDate() - days);
+    var startStr = startDate.toISOString().split('T')[0];
+    filteredDeposits = deposits.filter(function(d) {
+        if (!d.created_at) return false;
+        var berlinDate = convertToBerlinDate(new Date(d.created_at));
+        return berlinDate.toISOString().split('T')[0] >= startStr;
+    });
+    filteredWithdrawals = withdrawals.filter(function(w) {
+        if (!w.request_date) return false;
+        if (w.status !== 'approved') return false;
+        var berlinDate = convertToBerlinDate(new Date(w.request_date));
+        return berlinDate.toISOString().split('T')[0] >= startStr;
+    });
+}
+// days = -1: All Time，不过滤
+
+var totalDeposit = filteredDeposits.reduce(function(s, d) { return s + (d.amount || 0); }, 0);
+var totalWithdraw = filteredWithdrawals.reduce(function(s, w) { return s + (w.amount || 0); }, 0);
+
+// 保留 periodDeposit 和 prevPeriodDeposit 用于趋势显示
+var periodDeposit = deposits.filter(function(d) {
+    if (!d.created_at) return false;
+    var berlinDate = convertToBerlinDate(new Date(d.created_at));
+    return berlinDate.toISOString().split('T')[0] >= startStr;
+}).reduce(function(s, d) { return s + (d.amount || 0); }, 0);
+
+var prevPeriodDeposit = deposits.filter(function(d) {
+    if (!d.created_at) return false;
+    var berlinDate = convertToBerlinDate(new Date(d.created_at));
+    var dateStr = berlinDate.toISOString().split('T')[0];
+    return dateStr >= lastPeriodStr && dateStr < startStr;
+}).reduce(function(s, d) { return s + (d.amount || 0); }, 0);
+
+var periodWithdraw = withdrawals.filter(function(w) {
+    if (!w.request_date) return false;
+    if (w.status !== 'approved') return false;
+    var berlinDate = convertToBerlinDate(new Date(w.request_date));
+    return berlinDate.toISOString().split('T')[0] >= startStr;
+}).reduce(function(s, w) { return s + (w.amount || 0); }, 0);
+
+var prevPeriodWithdraw = withdrawals.filter(function(w) {
+    if (!w.request_date) return false;
+    if (w.status !== 'approved') return false;
+    var berlinDate = convertToBerlinDate(new Date(w.request_date));
+    var dateStr = berlinDate.toISOString().split('T')[0];
+    return dateStr >= lastPeriodStr && dateStr < startStr;
+}).reduce(function(s, w) { return s + (w.amount || 0); }, 0);
         
         var statsData = { 
-            newUsers: newUsers, 
-            prevNewUsers: prevNewUsers, 
-            totalUsers: users.length, 
-            totalDeposit: totalDeposit, 
-            periodDeposit: periodDeposit, 
-            prevPeriodDeposit: prevPeriodDeposit, 
-            totalWithdraw: totalWithdraw, 
-            periodWithdraw: periodWithdraw, 
-            prevPeriodWithdraw: prevPeriodWithdraw 
-        };
+    newUsers: newUsers, 
+    prevNewUsers: prevNewUsers, 
+    totalUsers: users.length, 
+    totalDeposit: totalDeposit,        // 🔥 根据 days 筛选
+    periodDeposit: periodDeposit, 
+    prevPeriodDeposit: prevPeriodDeposit, 
+    totalWithdraw: totalWithdraw,      // 🔥 根据 days 筛选
+    periodWithdraw: periodWithdraw, 
+    prevPeriodWithdraw: prevPeriodWithdraw 
+};
         cachedData.stats = statsData;
         cachedData.lastStatsTime = now;
         applyStatsData(statsData);
