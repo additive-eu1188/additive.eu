@@ -1,4 +1,4 @@
-// admin-emailverify.js - 邮箱验证管理页面（三种状态分类）
+// admin-emailverify.js - 邮箱验证管理页面（完整版）
 let activeEmailTab = 'pending';
 let emailSearchKeyword = '';
 
@@ -31,23 +31,32 @@ function generateTAC() {
 }
 
 // ============================================================
-// 🔥 判断记录状态
+// 🔥 判断记录状态 - 修正版
 // ============================================================
 function getRecordStatus(record) {
-    // 已验证
+    // 1️⃣ 已验证 → History
     if (record.is_verified === true) {
         return { label: 'Verified', class: 'status-badge-verified', icon: '✅' };
     }
-    // 已发送待验证 (code 有值)
-    if (record.code && record.code !== '' && record.code !== null) {
-        return { label: 'Pending', class: 'status-badge-pending', icon: '⏳' };
+    
+    // 2️⃣ code 为空 → New Request (用户刚提交，后台还没处理)
+    if (!record.code || record.code === '' || record.code === null) {
+        return { label: 'New Request', class: 'status-badge-new', icon: '🆕' };
     }
-    // 新请求 (code 为空)
-    return { label: 'New Request', class: 'status-badge-new', icon: '🆕' };
+    
+    // 3️⃣ code 有值 → 已发送
+    const sendCount = record.send_count || 0;
+    if (sendCount === 1) {
+        // 第一次发送 → Pending
+        return { label: 'Pending', class: 'status-badge-pending', icon: '⏳' };
+    } else {
+        // 第二次及以上 → Clicked N times
+        return { label: `Clicked ${sendCount} times`, class: 'status-badge-pending', icon: '📤' };
+    }
 }
 
 // ============================================================
-// 🔥 一键发送邮件 - 自动生成TAC + 跳转Gmail
+// 🔥 一键发送邮件 - 自动生成TAC + 跳转Gmail + 计数+1
 // ============================================================
 function sendVerificationEmail(email, requestId) {
     if (!email) {
@@ -66,20 +75,31 @@ function sendVerificationEmail(email, requestId) {
     
     window.open(gmailUrl, '_blank');
 
+    // 🔥 保存TAC到数据库，同时 send_count + 1
     saveTACToDatabase(requestId, tacCode, email);
 
     showToast(`✅ TAC: ${tacCode} | Gmail opened for ${email}`, 'success');
 }
 
 // ============================================================
-// 🔥 将TAC保存到数据库
+// 🔥 将TAC保存到数据库（同时增加发送次数）
 // ============================================================
 async function saveTACToDatabase(requestId, code, email) {
     try {
+        // 先获取当前的 send_count
+        const { data: current } = await sb
+            .from('email_verification_requests')
+            .select('send_count')
+            .eq('id', parseInt(requestId))
+            .single();
+        
+        const newCount = (current?.send_count || 0) + 1;
+        
         const { error } = await sb
             .from('email_verification_requests')
             .update({ 
                 code: code,
+                send_count: newCount,
                 updated_at: new Date().toISOString()
             })
             .eq('id', parseInt(requestId));
@@ -90,7 +110,7 @@ async function saveTACToDatabase(requestId, code, email) {
             return;
         }
 
-        console.log('✅ TAC saved to database:', code);
+        console.log(`✅ TAC saved to database (发送次数: ${newCount})`);
         
         await loadEmailPending();
         await loadEmailHistory();
@@ -181,8 +201,8 @@ async function loadEmailVerifyPage() {
                                 <th style="padding: 14px 14px; color: #a8b4d0; font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid rgba(255,255,255,0.04); background: rgba(10,14,28,0.3); text-align: left; min-width: 120px;">PHONE</th>
                                 <th style="padding: 14px 14px; color: #a8b4d0; font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid rgba(255,255,255,0.04); background: rgba(10,14,28,0.3); text-align: left; min-width: 200px;">EMAIL</th>
                                 <th style="padding: 14px 14px; color: #a8b4d0; font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid rgba(255,255,255,0.04); background: rgba(10,14,28,0.3); text-align: left; min-width: 160px;">REQUEST TIME</th>
-                                <th style="padding: 14px 14px; color: #a8b4d0; font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid rgba(255,255,255,0.04); background: rgba(10,14,28,0.3); text-align: left; min-width: 140px;">STATUS</th>
-                                <th style="padding: 14px 14px; color: #a8b4d0; font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid rgba(255,255,255,0.04); background: rgba(10,14,28,0.3); text-align: left; min-width: 220px;">ACTIONS</th>
+                                <th style="padding: 14px 14px; color: #a8b4d0; font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid rgba(255,255,255,0.04); background: rgba(10,14,28,0.3); text-align: left; min-width: 160px;">STATUS</th>
+                                <th style="padding: 14px 14px; color: #a8b4d0; font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid rgba(255,255,255,0.04); background: rgba(10,14,28,0.3); text-align: left; min-width: 230px;">ACTIONS</th>
                             </tr>
                         </thead>
                         <tbody id="emailTableBody"><tr><td colspan="5" style="text-align:center; padding:30px; color:#6a7a9a;">Loading...</td></tr></tbody>
@@ -224,7 +244,7 @@ async function loadEmailVerifyPage() {
         </div>
     `;
     
-    // 添加样式
+    // 添加样式（与之前相同，省略以节省篇幅）
     const style = document.createElement('style');
     style.textContent = `
         .tab-email-btn {
@@ -352,7 +372,7 @@ async function loadEmailVerifyPage() {
     `;
     document.head.appendChild(style);
     
-    // 绑定标签切换
+    // 绑定事件（与之前相同）
     document.getElementById('emailTabPending')?.addEventListener('click', function() { switchEmailTab('pending'); });
     document.getElementById('emailTabHistory')?.addEventListener('click', function() { switchEmailTab('history'); });
     document.getElementById('refreshEmailBtn')?.addEventListener('click', function() {
@@ -361,7 +381,6 @@ async function loadEmailVerifyPage() {
         updateEmailStats();
     });
     
-    // 绑定待处理搜索
     document.getElementById('emailSearchBtn')?.addEventListener('click', function() {
         emailSearchKeyword = document.getElementById('emailSearchInput').value.trim();
         loadEmailPending();
@@ -373,7 +392,6 @@ async function loadEmailVerifyPage() {
         }
     });
     
-    // 绑定历史搜索
     document.getElementById('emailHistorySearchBtn')?.addEventListener('click', function() {
         emailSearchKeyword = document.getElementById('emailHistorySearchInput').value.trim();
         loadEmailHistory();
@@ -390,7 +408,6 @@ async function loadEmailVerifyPage() {
         }
     });
     
-    // 加载数据
     await loadEmailPending();
     await loadEmailHistory();
     await updateEmailStats();
@@ -422,18 +439,14 @@ function switchEmailTab(tab) {
 
 async function updateEmailStats() {
     try {
-        // 统计所有未验证的记录
         const { data: allUnverified } = await sb
             .from('email_verification_requests')
-            .select('code, is_verified')
+            .select('code, is_verified, send_count')
             .eq('is_verified', false);
         
-        // 新请求：code 为空
         const newRequests = allUnverified?.filter(r => !r.code || r.code === '' || r.code === null) || [];
-        // 待验证：code 有值
         const pendingRequests = allUnverified?.filter(r => r.code && r.code !== '' && r.code !== null) || [];
         
-        // 已验证
         const { count: verifiedCount } = await sb
             .from('email_verification_requests')
             .select('id', { count: 'exact', head: true })
@@ -443,7 +456,6 @@ async function updateEmailStats() {
         document.getElementById('emailStatPending').innerText = pendingRequests.length;
         document.getElementById('emailStatVerified').innerText = verifiedCount || 0;
         document.getElementById('emailHistoryStatTotal').innerText = verifiedCount || 0;
-        
     } catch (e) {
         console.error('更新Email统计失败:', e);
     }
@@ -455,7 +467,6 @@ async function loadEmailPending() {
     tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:30px; color:#6a7a9a;">Loading...</td></tr>';
     
     try {
-        // ✅ 查询所有未验证的记录（不管 code 有没有值）
         let query = sb.from('email_verification_requests')
             .select('*')
             .eq('is_verified', false)
@@ -473,7 +484,6 @@ async function loadEmailPending() {
             return;
         }
         
-        // 批量获取所有用户信息
         const emails = emailList.map(item => item.email);
         const { data: users } = await sb
             .from('users')
@@ -494,33 +504,26 @@ async function loadEmailPending() {
             const phone = phoneMap[item.email] || '-';
             const requestTime = item.requested_at ? new Date(item.requested_at).toLocaleString() : '-';
             
-            // 🔥 判断状态
             const status = getRecordStatus(item);
             
-            // 🔥 判断是否可操作
             const isNewRequest = !item.code || item.code === '' || item.code === null;
             const isPending = item.code && item.code !== '' && item.code !== null;
             
             row.insertCell(0).innerHTML = `<span style="font-size:12px; color:#b0c0da;">${escapeHtml(phone)}</span>`;
             row.insertCell(1).innerHTML = `<span style="font-weight:500; color:#d8e0f0;">${escapeHtml(item.email)}</span>`;
             row.insertCell(2).innerHTML = `<span style="font-size:12px; color:#8892a8;">${requestTime}</span>`;
-            
-            // 状态列
             row.insertCell(3).innerHTML = `<span class="${status.class}">${status.icon} ${status.label}</span>`;
             
-            // 操作列
             const actionsCell = row.insertCell(4);
             let actionsHtml = '';
             
             if (isNewRequest) {
-                // 新请求：显示 Send 按钮
                 actionsHtml = `
                     <button class="btn-send-email send-email-btn" data-id="${item.id}" data-email="${item.email}">
                         <i class="fas fa-envelope"></i> Send
                     </button>
                 `;
             } else if (isPending) {
-                // 已发送待验证：显示 Resend + Verify 按钮
                 actionsHtml = `
                     <button class="btn-resend-email resend-email-btn" data-id="${item.id}" data-email="${item.email}" title="Resend with new TAC">
                         <i class="fas fa-sync-alt"></i> Resend
@@ -534,9 +537,6 @@ async function loadEmailPending() {
             actionsCell.innerHTML = actionsHtml;
         }
         
-        // ============================================================
-        // 🔥 绑定事件：发送邮件（新请求）
-        // ============================================================
         document.querySelectorAll('.send-email-btn').forEach(btn => {
             btn.addEventListener('click', function() {
                 const id = this.dataset.id;
@@ -545,9 +545,6 @@ async function loadEmailPending() {
             });
         });
         
-        // ============================================================
-        // 🔥 绑定事件：重新发送（已发送待验证）
-        // ============================================================
         document.querySelectorAll('.resend-email-btn').forEach(btn => {
             btn.addEventListener('click', function() {
                 const id = this.dataset.id;
@@ -556,9 +553,6 @@ async function loadEmailPending() {
             });
         });
         
-        // ============================================================
-        // 🔥 绑定事件：手动验证
-        // ============================================================
         document.querySelectorAll('.verify-email-btn').forEach(btn => {
             btn.addEventListener('click', function() {
                 const id = this.dataset.id;
