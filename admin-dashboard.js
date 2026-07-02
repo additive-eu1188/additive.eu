@@ -510,11 +510,20 @@ function applyConversionData(data, days) {
     var convertedEl = document.getElementById('conversionConverted');
     var labelEl = document.getElementById('conversionLabel');
     
-    if (registerEl) registerEl.innerText = displayData.register;
-    if (convertedEl) convertedEl.innerText = displayData.converted;
-    if (labelEl) {
-        labelEl.innerText = displayData.label + ' Register';
-    }
+    // 🔥 使用 requestAnimationFrame 确保 DOM 更新
+    requestAnimationFrame(function() {
+        if (registerEl) {
+            registerEl.innerText = displayData.register;
+            console.log('✅ Register 更新为:', displayData.register);
+        }
+        if (convertedEl) {
+            convertedEl.innerText = displayData.converted;
+            console.log('✅ Converted 更新为:', displayData.converted);
+        }
+        if (labelEl) {
+            labelEl.innerText = displayData.label + ' Register';
+        }
+    });
     
     // 🔥 更新所有统计行（只显示第一行作为主数据）
     var allLabels = document.querySelectorAll('.conversion-stat-label');
@@ -1273,12 +1282,16 @@ function loadDashboardPage(days) {
     document.head.appendChild(style);
     
     setTimeout(function() {
-        initTrendChart();
-        bindDateFilters();
-        initWaveRing();
+    initTrendChart();
+    bindDateFilters();
+    initWaveRing();
+    initNotificationEvents();
+    
+    // 🔥 延迟执行 refreshDashboard，确保 DOM 完全渲染后再加载数据
+    setTimeout(function() {
         refreshDashboard(days, true);
-        initNotificationEvents();
-    }, 200);
+    }, 150);
+}, 200);
     
     if (dashboardRefreshInterval) clearInterval(dashboardRefreshInterval);
     dashboardRefreshInterval = setInterval(function() { refreshDashboard(currentDays, false); }, 15000);
