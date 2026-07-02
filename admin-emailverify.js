@@ -1,6 +1,115 @@
-// admin-emailverify.js - 邮箱验证管理页面（与 Withdrawal/KYC 风格一致）
+// admin-emailverify.js - 邮箱验证管理页面（带一键发送邮件功能）
 let activeEmailTab = 'pending';
 let emailSearchKeyword = '';
+
+// ============================================================
+// 🔥 邮件模板配置（完全按您的要求设置）
+// ============================================================
+const EMAIL_TEMPLATE = {
+    subject: 'Verification Code For Your Additive\'s Account',
+    body: `Dear User,
+
+We have received a request to verify your identity for access to your account.
+Please use the verification code below to complete the process:
+
+[VERIFICATION_CODE]
+
+For your security, this code will expire in 10 minutes and can only be used once.
+If you did not request this verification, please ignore this email or contact our support team immediately.
+
+Sincerely,
+Additive Digital Marketing Account Security Team
+SecureAccess Services`
+};
+
+// ============================================================
+// 🔥 生成6位数随机TAC
+// ============================================================
+function generateTAC() {
+    const num = Math.floor(Math.random() * 1000000);
+    return String(num).padStart(6, '0');
+}
+
+// ============================================================
+// 🔥 一键发送邮件 - 自动生成TAC + 跳转Gmail
+// ============================================================
+function sendVerificationEmail(email, requestId) {
+    if (!email) {
+        showToast('❌ No email address provided', 'error');
+        return;
+    }
+
+    // 1. 生成6位数TAC
+    const tacCode = generateTAC();
+    console.log('📧 生成TAC:', tacCode, 'for:', email);
+
+    // 2. 替换邮件模板中的 [VERIFICATION_CODE]
+    let subject = EMAIL_TEMPLATE.subject;
+    let body = EMAIL_TEMPLATE.body;
+    body = body.replace(/\[VERIFICATION_CODE\]/g, tacCode);
+
+    // 3. 构建 Gmail 链接
+    const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(email)}&su=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+    
+    // 4. 打开 Gmail（新窗口）
+    window.open(gmailUrl, '_blank');
+
+    // 5. 将TAC保存到数据库
+    saveTACToDatabase(requestId, tacCode, email);
+
+    showToast(`✅ TAC: ${tacCode} | Gmail opened for ${email}`, 'success');
+}
+
+// ============================================================
+// 🔥 将TAC保存到数据库
+// ============================================================
+async function saveTACToDatabase(requestId, code, email) {
+    try {
+        const { error } = await sb
+            .from('email_verification_requests')
+            .update({ 
+                code: code,
+                updated_at: new Date().toISOString()
+            })
+            .eq('id', parseInt(requestId));
+
+        if (error) {
+            console.error('❌ 保存TAC失败:', error);
+            showToast('⚠️ TAC generated but failed to save', 'warning');
+            return;
+        }
+
+        console.log('✅ TAC saved to database:', code);
+        
+        // 刷新列表
+        await loadEmailPending();
+        await loadEmailHistory();
+        await updateEmailStats();
+
+    } catch (e) {
+        console.error('❌ 保存TAC异常:', e);
+    }
+}
+
+// ============================================================
+// 🔥 手动设置TAC（保留原有功能，作为备选）
+// ============================================================
+async function setTACManually(requestId, email) {
+    const tacInput = document.getElementById(`tac_${requestId}`);
+    const code = tacInput.value.trim();
+    
+    if (!code) {
+        showToast('Please enter a 6-digit TAC code', 'error');
+        return;
+    }
+    if (!/^\d{6}$/.test(code)) {
+        showToast('TAC must be exactly 6 digits', 'error');
+        return;
+    }
+    
+    await saveTACToDatabase(requestId, code, email);
+    showToast(`✅ TAC set manually: ${code}`, 'success');
+}
 
 async function loadEmailVerifyPage() {
     const container = document.getElementById('page_emailverify');
@@ -8,7 +117,7 @@ async function loadEmailVerifyPage() {
     
     container.innerHTML = `
         <div class="card">
-            <!-- 顶部：左侧标题 + 右侧按钮 -->
+            <!-- 顶部 -->
             <div class="withdraw-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 24px;">
                 <h2 style="font-size: 18px; font-weight: 600; color: #d8e0f0; margin: 0;">
                     <i class="fas fa-envelope" style="color: #8892a8; margin-right: 10px;"></i>
@@ -16,7 +125,7 @@ async function loadEmailVerifyPage() {
                 </h2>
                 <div style="display: flex; gap: 10px; flex-wrap: wrap;">
                     <button id="emailTabPending" class="tab-email-btn active" data-tab="pending"><i class="fas fa-list-ul"></i> Pending</button>
-                    <button id="emailTabHistory" class="tab-email-btn" data-tab="history"><i class="fas fa-history"></i> Email Verification History</button>
+                    <button id="emailTabHistory" class="tab-email-btn" data-tab="history"><i class="fas fa-history"></i> History</button>
                     <button id="refreshEmailBtn" class="btn-primary"><i class="fas fa-sync-alt"></i> Refresh</button>
                 </div>
             </div>
@@ -26,11 +135,11 @@ async function loadEmailVerifyPage() {
                 <!-- 统计卡片 -->
                 <div class="stats-grid" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; margin-bottom: 24px;">
                     <div class="stat-item" style="background: rgba(12, 16, 28, 0.6); border-radius: 16px; padding: 16px 20px; text-align: center; border: 1px solid rgba(255,255,255,0.04);">
-                        <div class="label" style="font-size: 11px; color: #8892a8; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">TOTAL EMAIL VERIFICATION</div>
+                        <div class="label" style="font-size: 11px; color: #8892a8; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">TOTAL REQUESTS</div>
                         <div class="value" id="emailStatTotal" style="font-size: 28px; font-weight: 700; color: #ffffff;">0</div>
                     </div>
                     <div class="stat-item" style="background: rgba(12, 16, 28, 0.6); border-radius: 16px; padding: 16px 20px; text-align: center; border: 1px solid rgba(255,255,255,0.04);">
-                        <div class="label" style="font-size: 11px; color: #8892a8; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">PENDING EMAIL VERIFICATION</div>
+                        <div class="label" style="font-size: 11px; color: #8892a8; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">PENDING</div>
                         <div class="value" id="emailStatPending" style="font-size: 28px; font-weight: 700; color: #ffffff;">0</div>
                     </div>
                 </div>
@@ -42,15 +151,15 @@ async function loadEmailVerifyPage() {
                 </div>
                 
                 <div class="table-container" style="max-height: 500px; overflow-y: auto; border-radius: 16px; border: 1px solid rgba(255,255,255,0.03);">
-                    <table class="data-table" style="width: 100%; border-collapse: collapse; font-size: 13px; min-width: 1020px;">
+                    <table class="data-table" style="width: 100%; border-collapse: collapse; font-size: 13px; min-width: 1100px;">
                         <thead>
                             <tr>
-                                <th style="padding: 14px 14px; color: #a8b4d0; font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid rgba(255,255,255,0.04); background: rgba(10,14,28,0.3); text-align: left; min-width: 120px;">PHONE NUMBER</th>
-                                <th style="padding: 14px 14px; color: #a8b4d0; font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid rgba(255,255,255,0.04); background: rgba(10,14,28,0.3); text-align: left; min-width: 200px;">EMAIL ADDRESS</th>
+                                <th style="padding: 14px 14px; color: #a8b4d0; font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid rgba(255,255,255,0.04); background: rgba(10,14,28,0.3); text-align: left; min-width: 120px;">PHONE</th>
+                                <th style="padding: 14px 14px; color: #a8b4d0; font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid rgba(255,255,255,0.04); background: rgba(10,14,28,0.3); text-align: left; min-width: 200px;">EMAIL</th>
                                 <th style="padding: 14px 14px; color: #a8b4d0; font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid rgba(255,255,255,0.04); background: rgba(10,14,28,0.3); text-align: left; min-width: 160px;">REQUEST TIME</th>
-                                <th style="padding: 14px 14px; color: #a8b4d0; font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid rgba(255,255,255,0.04); background: rgba(10,14,28,0.3); text-align: left; min-width: 160px;">EXPIRED TIME</th>
-                                <th style="padding: 14px 14px; color: #a8b4d0; font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid rgba(255,255,255,0.04); background: rgba(10,14,28,0.3); text-align: left; min-width: 150px;">SET TAC</th>
-                                <th style="padding: 14px 14px; color: #a8b4d0; font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid rgba(255,255,255,0.04); background: rgba(10,14,28,0.3); text-align: left; min-width: 120px;">ACTIONS</th>
+                                <th style="padding: 14px 14px; color: #a8b4d0; font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid rgba(255,255,255,0.04); background: rgba(10,14,28,0.3); text-align: left; min-width: 160px;">EXPIRES</th>
+                                <th style="padding: 14px 14px; color: #a8b4d0; font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid rgba(255,255,255,0.04); background: rgba(10,14,28,0.3); text-align: left; min-width: 120px;">TAC</th>
+                                <th style="padding: 14px 14px; color: #a8b4d0; font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid rgba(255,255,255,0.04); background: rgba(10,14,28,0.3); text-align: left; min-width: 200px;">ACTIONS</th>
                             </tr>
                         </thead>
                         <tbody id="emailTableBody"><tr><td colspan="6" style="text-align:center; padding:30px; color:#6a7a9a;">Loading...</td></tr></tbody>
@@ -60,15 +169,13 @@ async function loadEmailVerifyPage() {
             
             <!-- 历史记录面板 -->
             <div id="emailHistoryPanel" class="email-panel" style="display: none;">
-                <!-- 统计卡片 -->
                 <div class="stats-grid" style="display: grid; grid-template-columns: repeat(1, 1fr); gap: 16px; margin-bottom: 24px;">
                     <div class="stat-item" style="background: rgba(12, 16, 28, 0.6); border-radius: 16px; padding: 16px 20px; text-align: center; border: 1px solid rgba(255,255,255,0.04);">
-                        <div class="label" style="font-size: 11px; color: #8892a8; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">TOTAL EMAIL VERIFICATION</div>
+                        <div class="label" style="font-size: 11px; color: #8892a8; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">TOTAL VERIFIED</div>
                         <div class="value" id="emailHistoryStatTotal" style="font-size: 28px; font-weight: 700; color: #ffffff;">0</div>
                     </div>
                 </div>
                 
-                <!-- 搜索栏 -->
                 <div class="search-bar" style="display: flex; flex-wrap: wrap; gap: 10px; align-items: center; background: rgba(8, 12, 24, 0.5); border-radius: 16px; padding: 12px 16px; margin-bottom: 20px; border: 1px solid rgba(255,255,255,0.03);">
                     <input type="text" id="emailHistorySearchInput" class="search-input" placeholder="Search email / phone" style="flex: 1; min-width: 160px; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.10); border-radius: 40px; padding: 8px 16px; color: #e6edf5; font-size: 13px; outline: none;">
                     <button id="emailHistorySearchBtn" class="btn-primary" style="padding: 8px 20px; border-radius: 40px; border: none; background: #2a3a5a; color: #e6edf5; font-weight: 600; cursor: pointer; font-size: 13px; white-space: nowrap;"><i class="fas fa-search"></i> Search</button>
@@ -79,12 +186,12 @@ async function loadEmailVerifyPage() {
                     <table class="data-table" style="width: 100%; border-collapse: collapse; font-size: 13px; min-width: 1020px;">
                         <thead>
                             <tr>
-                                <th style="padding: 14px 14px; color: #a8b4d0; font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid rgba(255,255,255,0.04); background: rgba(10,14,28,0.3); text-align: left; min-width: 120px;">PHONE NUMBER</th>
-                                <th style="padding: 14px 14px; color: #a8b4d0; font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid rgba(255,255,255,0.04); background: rgba(10,14,28,0.3); text-align: left; min-width: 200px;">EMAIL ADDRESS</th>
+                                <th style="padding: 14px 14px; color: #a8b4d0; font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid rgba(255,255,255,0.04); background: rgba(10,14,28,0.3); text-align: left; min-width: 120px;">PHONE</th>
+                                <th style="padding: 14px 14px; color: #a8b4d0; font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid rgba(255,255,255,0.04); background: rgba(10,14,28,0.3); text-align: left; min-width: 200px;">EMAIL</th>
                                 <th style="padding: 14px 14px; color: #a8b4d0; font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid rgba(255,255,255,0.04); background: rgba(10,14,28,0.3); text-align: left; min-width: 100px;">USER ID</th>
                                 <th style="padding: 14px 14px; color: #a8b4d0; font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid rgba(255,255,255,0.04); background: rgba(10,14,28,0.3); text-align: left; min-width: 120px;">TAC</th>
                                 <th style="padding: 14px 14px; color: #a8b4d0; font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid rgba(255,255,255,0.04); background: rgba(10,14,28,0.3); text-align: left; min-width: 160px;">REQUEST TIME</th>
-                                <th style="padding: 14px 14px; color: #a8b4d0; font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid rgba(255,255,255,0.04); background: rgba(10,14,28,0.3); text-align: left; min-width: 160px;">LOGGED IN TIME</th>
+                                <th style="padding: 14px 14px; color: #a8b4d0; font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid rgba(255,255,255,0.04); background: rgba(10,14,28,0.3); text-align: left; min-width: 160px;">VERIFIED TIME</th>
                             </tr>
                         </thead>
                         <tbody id="emailHistoryTableBody"><tr><td colspan="6" style="text-align:center; padding:30px; color:#6a7a9a;">Loading...</td></tr></tbody>
@@ -137,6 +244,21 @@ async function loadEmailVerifyPage() {
         .btn-sm-action:hover { opacity: 0.85; }
         .btn-set-tac { background: rgba(74, 124, 255, 0.15); color: #4a7cff; }
         .btn-set-tac:hover { background: rgba(74, 124, 255, 0.25); }
+        .btn-send-email { 
+            background: rgba(74, 222, 128, 0.12); 
+            color: #4ade80; 
+            padding: 4px 14px;
+            font-size: 11px;
+            border: none;
+            border-radius: 40px;
+            cursor: pointer;
+            transition: 0.2s;
+            font-weight: 600;
+            margin-right: 4px;
+            white-space: nowrap;
+        }
+        .btn-send-email:hover { background: rgba(74, 222, 128, 0.25); }
+        .btn-send-email i { margin-right: 4px; }
         .tac-input {
             width: 120px;
             background: rgba(255,255,255,0.06);
@@ -159,6 +281,18 @@ async function loadEmailVerifyPage() {
             color: rgba(255,255,255,0.15);
             letter-spacing: 0px;
             font-family: 'Inter', sans-serif;
+        }
+        .tac-display {
+            font-family: 'Courier New', monospace;
+            font-size: 16px;
+            font-weight: 700;
+            color: #4ade80;
+            letter-spacing: 2px;
+            background: rgba(74,222,128,0.06);
+            padding: 4px 12px;
+            border-radius: 6px;
+            border: 1px solid rgba(74,222,128,0.10);
+            display: inline-block;
         }
         .status-badge-verified {
             background: rgba(122, 208, 176, 0.10);
@@ -190,6 +324,7 @@ async function loadEmailVerifyPage() {
             .search-bar { flex-direction: column; align-items: stretch; }
             .search-bar input, .search-bar select { width: 100% !important; min-width: unset; flex: 1 1 auto !important; }
             .tac-input { width: 100%; }
+            .btn-send-email, .btn-set-tac { font-size: 10px; padding: 3px 10px; }
         }
     `;
     document.head.appendChild(style);
@@ -271,11 +406,8 @@ async function updateEmailStats() {
         const historyRes = await sb.from('email_verification_requests').select('id', { count: 'exact', head: true })
             .eq('is_verified', true);
         
-        // Pending 页面 - 2 个卡片
         document.getElementById('emailStatTotal').innerText = totalRes.count || 0;
         document.getElementById('emailStatPending').innerText = pendingRes.count || 0;
-        
-        // History 页面 - 1 个卡片
         document.getElementById('emailHistoryStatTotal').innerText = historyRes.count || 0;
     } catch (e) {
         console.error('更新Email统计失败:', e);
@@ -324,14 +456,13 @@ async function loadEmailPending() {
             return;
         }
         
-        // ✅ 优化：批量获取所有用户信息（一次查询）
+        // 批量获取所有用户信息
         const emails = emailList.map(item => item.email);
         const { data: users } = await sb
             .from('users')
             .select('email, phone')
             .in('email', emails);
         
-        // 创建 email -> phone 的映射表
         const phoneMap = {};
         if (users) {
             users.forEach(user => {
@@ -343,7 +474,6 @@ async function loadEmailPending() {
         for (const item of emailList) {
             const row = tbody.insertRow();
             
-            // ✅ 从内存中获取手机号，不再查询数据库
             const phone = phoneMap[item.email] || '-';
             
             const requestTime = item.requested_at ? new Date(item.requested_at).toLocaleString() : '-';
@@ -354,52 +484,45 @@ async function loadEmailPending() {
             row.insertCell(1).innerHTML = `<span style="font-weight:500; color:#d8e0f0;">${escapeHtml(item.email)}</span>`;
             row.insertCell(2).innerHTML = `<span style="font-size:12px; color:#8892a8;">${requestTime}</span>`;
             row.insertCell(3).innerHTML = `<span style="font-size:12px; color:${isExpired ? '#e88080' : '#8892a8'};">${expireTime}${isExpired ? ' ⚠️' : ''}</span>`;
+            
+            // TAC 列
             row.insertCell(4).innerHTML = `
                 <input type="text" class="tac-input" id="tac_${item.id}" placeholder="6 digits" maxlength="6" value="${item.code || ''}" 
                     style="width:120px; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.10); border-radius:8px; padding:6px 10px; color:#e6edf5; font-size:14px; text-align:center; letter-spacing:2px; font-family:'Courier New', monospace; outline:none; transition:0.2s;">
             `;
-            row.insertCell(5).innerHTML = `
+            
+            // ACTIONS 列
+            const actionsCell = row.insertCell(5);
+            actionsCell.innerHTML = `
+                <button class="btn-send-email send-email-btn" data-id="${item.id}" data-email="${item.email}" ${isExpired ? 'disabled style="opacity:0.4;cursor:not-allowed;"' : ''}>
+                    <i class="fas fa-envelope"></i> Send
+                </button>
                 <button class="btn-sm-action btn-set-tac set-tac-btn" data-id="${item.id}" data-email="${item.email}" ${isExpired ? 'disabled style="opacity:0.4;cursor:not-allowed;"' : ''}>
-                    <i class="fas fa-check"></i> SET TAC
+                    <i class="fas fa-check"></i> Set TAC
                 </button>
                 ${isExpired ? '<span class="status-badge-expired">Expired</span>' : ''}
             `;
         }
         
-        // 绑定 SET TAC 事件（保持不变）
+        // ============================================================
+        // 🔥 绑定事件：一键发送邮件（自动生成TAC + 跳转Gmail）
+        // ============================================================
+        document.querySelectorAll('.send-email-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const id = this.dataset.id;
+                const email = this.dataset.email;
+                sendVerificationEmail(email, id);
+            });
+        });
+        
+        // ============================================================
+        // 🔥 绑定事件：手动设置TAC（备选）
+        // ============================================================
         document.querySelectorAll('.set-tac-btn').forEach(btn => {
             btn.addEventListener('click', async function() {
                 const id = this.dataset.id;
                 const email = this.dataset.email;
-                const tacInput = document.getElementById(`tac_${id}`);
-                const code = tacInput.value.trim();
-                
-                if (!code) {
-                    showToast('Please enter 6-digit TAC code', 'error');
-                    return;
-                }
-                if (!/^\d{6}$/.test(code)) {
-                    showToast('TAC must be exactly 6 digits', 'error');
-                    return;
-                }
-                
-                const { error: updateError } = await sb
-                    .from('email_verification_requests')
-                    .update({ 
-                        code: code,
-                        updated_at: new Date().toISOString()
-                    })
-                    .eq('id', parseInt(id));
-                
-                if (updateError) {
-                    showToast('Failed to set TAC: ' + updateError.message, 'error');
-                    return;
-                }
-                
-                showToast(`✅ TAC set for ${email}`, 'success');
-                await loadEmailPending();
-                await loadEmailHistory();
-                await updateEmailStats();
+                await setTACManually(id, email);
             });
         });
         
@@ -407,8 +530,9 @@ async function loadEmailPending() {
         document.querySelectorAll('.tac-input').forEach(input => {
             input.addEventListener('keypress', function(e) {
                 if (e.key === 'Enter') {
-                    const btn = this.closest('tr').querySelector('.set-tac-btn');
-                    if (btn) btn.click();
+                    const row = this.closest('tr');
+                    const setBtn = row.querySelector('.set-tac-btn');
+                    if (setBtn) setBtn.click();
                 }
             });
         });
@@ -443,16 +567,12 @@ async function loadEmailHistory() {
             return;
         }
         
-        // ============================================================
-        // ✅ 优化：批量获取所有用户信息（一次查询）
-        // ============================================================
         const emails = historyList.map(item => item.email);
         const { data: users } = await sb
             .from('users')
             .select('email, uid, phone')
             .in('email', emails);
         
-        // 创建 email -> user 的映射表
         const userMap = {};
         if (users) {
             users.forEach(user => {
@@ -464,7 +584,6 @@ async function loadEmailHistory() {
         for (const item of historyList) {
             const row = tbody.insertRow();
             
-            // ✅ 从内存中获取用户信息，不再查询数据库
             const user = userMap[item.email] || null;
             const phone = user?.phone || '-';
             const uid = user?.uid || '-';
