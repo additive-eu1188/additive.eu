@@ -5,8 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Agent Dashboard - ADDITIVE</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    </script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700;14..32,800&display=swap" rel="stylesheet">
     <style>
         /* ============================================================
@@ -59,10 +58,10 @@
         }
 
         /* ============================================================
-           侧边栏 - 粒子网络 + 毛玻璃 (与主后台一致)
+           金属质感侧边栏（无粒子动画，与主后台一致）
            ============================================================ */
         .sidebar {
-            width: 280px;
+            width: 220px;
             height: 100vh;
             position: fixed;
             top: 0;
@@ -70,44 +69,39 @@
             z-index: 10;
             padding: 0;
             overflow-y: auto;
-            background: transparent;
+            background: linear-gradient(165deg, #0e0e1a 0%, #1a1a2e 30%, #121220 60%, #0a0a14 100%);
             border-right: 1px solid rgba(214, 178, 94, 0.06);
             display: flex;
             flex-direction: column;
             isolation: isolate;
             transition: all 0.3s;
+            box-shadow: inset 0 1px 0 rgba(204,184,159,0.04), inset 0 -1px 0 rgba(0,0,0,0.2);
         }
 
-        .sidebar-canvas {
+        /* 顶部金属高光 */
+        .sidebar::before {
+            content: '';
             position: absolute;
             top: 0;
             left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(204,184,159,0.10), rgba(204,184,159,0.20), rgba(204,184,159,0.10), transparent);
+            z-index: 5;
             pointer-events: none;
-            overflow: hidden;
-            border-radius: 0;
         }
 
-        .sidebar-canvas canvas {
-            width: 100%;
-            height: 100%;
-            display: block;
-        }
-
-        .sidebar-glass {
+        /* 底部金属反光 */
+        .sidebar::after {
+            content: '';
             position: absolute;
-            top: 0;
+            bottom: 0;
             left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: 1;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(204,184,159,0.03), transparent);
+            z-index: 5;
             pointer-events: none;
-            background: rgba(10, 14, 30, 0.15);
-            backdrop-filter: blur(4px) saturate(1.1);
-            -webkit-backdrop-filter: blur(4px) saturate(1.1);
-            border-radius: 0;
         }
 
         .sidebar-content {
@@ -125,14 +119,14 @@
             width: 2px;
         }
         .sidebar::-webkit-scrollbar-thumb {
-            background: rgba(214, 178, 94, 0.12);
+            background: rgba(214, 178, 94, 0.10);
             border-radius: 4px;
         }
         .sidebar-content::-webkit-scrollbar {
             width: 2px;
         }
         .sidebar-content::-webkit-scrollbar-thumb {
-            background: rgba(214, 178, 94, 0.12);
+            background: rgba(214, 178, 94, 0.10);
             border-radius: 4px;
         }
 
@@ -157,7 +151,7 @@
         .nav-list {
             display: flex;
             flex-direction: column;
-            gap: 6px;
+            gap: 4px;
             flex: 1;
             overflow-y: auto;
             padding-right: 2px;
@@ -168,7 +162,7 @@
             width: 2px;
         }
         .nav-list::-webkit-scrollbar-thumb {
-            background: rgba(214, 178, 94, 0.12);
+            background: rgba(204,184,159,0.08);
             border-radius: 4px;
         }
 
@@ -176,26 +170,30 @@
             display: flex;
             align-items: center;
             gap: 14px;
-            padding: 12px 18px;
+            padding: 11px 16px;
             border-radius: 0 14px 14px 0;
-            background: rgba(12, 18, 38, 0.50);
-            backdrop-filter: blur(8px);
-            -webkit-backdrop-filter: blur(8px);
+            background: rgba(12, 18, 38, 0.30);
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
             border: none;
-            color: rgba(255, 255, 255, 0.35);
-            font-size: 14px;
+            color: rgba(255, 255, 255, 0.30);
+            font-size: 13px;
             font-weight: 500;
             cursor: pointer;
-            transition: all 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+            transition: all 0.3s cubic-bezier(0.22, 1, 0.36, 1);
             position: relative;
-            text-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+            text-shadow: 0 1px 4px rgba(0,0,0,0.2);
             user-select: none;
             -webkit-tap-highlight-color: transparent;
             overflow: visible;
             transform-origin: left center;
             pointer-events: auto;
+            font-family: 'Inter', sans-serif;
+            width: 100%;
+            text-align: left;
         }
 
+        /* 左侧装饰细线 */
         .nav-item::after {
             content: '';
             position: absolute;
@@ -203,14 +201,14 @@
             top: 0;
             width: 1px;
             height: 100%;
-            background: linear-gradient(180deg, transparent, rgba(214, 178, 94, 0.08), transparent);
+            background: linear-gradient(180deg, transparent, rgba(204,184,159,0.04), transparent);
         }
 
         .nav-item i {
             width: 22px;
             font-size: 15px;
-            color: rgba(214, 178, 94, 0.2);
-            transition: all 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+            color: rgba(204,184,159,0.12);
+            transition: all 0.3s;
             flex-shrink: 0;
             text-align: center;
             position: relative;
@@ -219,7 +217,7 @@
 
         .nav-item .nav-label {
             flex: 1;
-            letter-spacing: 0.3px;
+            letter-spacing: 0.2px;
             position: relative;
             z-index: 1;
             transition: all 0.3s ease;
@@ -241,29 +239,39 @@
         }
 
         .nav-item:hover {
-            background: rgba(20, 30, 60, 0.65);
-            color: rgba(255, 255, 255, 0.6);
-            transform: translateX(4px);
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+            background: rgba(20, 30, 60, 0.50);
+            color: rgba(255, 255, 255, 0.50);
+            transform: translateX(2px);
+            box-shadow: none;
         }
 
         .nav-item:hover i {
-            color: rgba(214, 178, 94, 0.4);
-            transform: scale(1.05);
+            color: rgba(204,184,159,0.25);
+        }
+
+        .nav-item:hover .badge {
+            background: rgba(214, 178, 94, 0.06);
+            color: rgba(214, 178, 94, 0.25);
         }
 
         .nav-item.active {
             color: #F3D38B;
             background: rgba(214, 178, 94, 0.06);
-            transform: translateX(2px);
-            box-shadow: 0 0 40px rgba(214, 178, 94, 0.03);
+            transform: translateX(0px);
+            box-shadow: none;
         }
 
         .nav-item.active i {
             color: #D6B25E;
-            filter: drop-shadow(0 0 8px rgba(214, 178, 94, 0.1));
+            filter: drop-shadow(0 0 10px rgba(204,184,159,0.08));
         }
 
+        .nav-item.active .badge {
+            background: rgba(214, 178, 94, 0.08);
+            color: #D6B25E;
+        }
+
+        /* 左侧金色光条 */
         .nav-item.active::before {
             content: '';
             position: absolute;
@@ -273,18 +281,8 @@
             width: 3px;
             background: linear-gradient(180deg, #F3D38B, #D6B25E, #B8942A);
             border-radius: 0 4px 4px 0;
-            box-shadow: 0 0 24px rgba(214, 178, 94, 0.15), inset 0 0 12px rgba(214, 178, 94, 0.05);
-            animation: glowPulse 2s ease-in-out infinite alternate;
+            box-shadow: 0 0 20px rgba(204,184,159,0.12), inset 0 0 12px rgba(204,184,159,0.04);
             z-index: 3;
-        }
-
-        @keyframes glowPulse {
-            0% {
-                box-shadow: 0 0 16px rgba(214, 178, 94, 0.1), inset 0 0 8px rgba(214, 178, 94, 0.05);
-            }
-            100% {
-                box-shadow: 0 0 32px rgba(214, 178, 94, 0.25), inset 0 0 16px rgba(214, 178, 94, 0.1);
-            }
         }
 
         /* 底部 Logout */
@@ -300,34 +298,44 @@
             display: flex;
             align-items: center;
             gap: 14px;
-            padding: 11px 18px;
+            padding: 10px 16px;
             border-radius: 0 14px 14px 0;
-            background: rgba(12, 18, 38, 0.30);
-            backdrop-filter: blur(8px);
-            -webkit-backdrop-filter: blur(8px);
+            background: rgba(12, 18, 38, 0.20);
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
             border: none;
-            color: rgba(255, 255, 255, 0.12);
+            color: rgba(255, 255, 255, 0.08);
             font-size: 13px;
             cursor: pointer;
-            transition: all 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+            transition: all 0.3s;
             position: relative;
             overflow: hidden;
             transform-origin: left center;
+            font-family: 'Inter', sans-serif;
+            width: 100%;
+            text-align: left;
         }
 
         .footer-item:hover {
-            background: rgba(20, 30, 60, 0.45);
-            color: rgba(255, 255, 255, 0.25);
+            background: rgba(20, 30, 60, 0.30);
+            color: rgba(255, 255, 255, 0.18);
             transform: translateX(2px);
         }
 
         .footer-item i {
-            color: rgba(214, 178, 94, 0.08);
+            color: rgba(204,184,159,0.04);
             transition: 0.3s;
         }
 
         .footer-item:hover i {
-            color: rgba(214, 178, 94, 0.15);
+            color: rgba(204,184,159,0.08);
+        }
+
+        .footer-item .version {
+            margin-left: auto;
+            font-size: 8px;
+            color: rgba(255, 255, 255, 0.02);
+            letter-spacing: 0.5px;
         }
 
         /* ============================================================
@@ -335,7 +343,7 @@
            ============================================================ */
         .main {
             flex: 1;
-            margin-left: 280px;
+            margin-left: 220px;
             padding: 24px 32px;
             overflow-y: auto;
         }
@@ -812,17 +820,10 @@
 <body>
 
     <!-- ============================================================
-    侧边栏 - 粒子网络 + 毛玻璃
+    侧边栏 - 金属质感（无粒子动画）
     ============================================================ -->
     <div class="app">
         <div class="sidebar" id="sidebar">
-            <!-- 粒子 Canvas -->
-            <div class="sidebar-canvas" id="sidebarCanvas">
-                <canvas id="particleCanvas"></canvas>
-            </div>
-            <!-- 毛玻璃覆盖层 -->
-            <div class="sidebar-glass"></div>
-            <!-- 内容 -->
             <div class="sidebar-content">
                 <div class="logo">
                     <img src="https://qgmbzdfnwsdosdqphlxk.supabase.co/storage/v1/object/public/logos/additivelogo1.png" alt="ADDITIVE Agent">
@@ -1696,193 +1697,9 @@
         });
 
         // ============================================================
-        // 粒子网络背景（与主后台一致）
-        // ============================================================
-        function initParticleNetwork() {
-            const canvas = document.getElementById('particleCanvas');
-            if (!canvas) return;
-
-            const container = document.getElementById('sidebarCanvas');
-            const ctx = canvas.getContext('2d');
-            let width, height;
-            let particles = [];
-            const PARTICLE_COUNT = 45;
-            const CONNECT_DISTANCE = 130;
-            const MAX_LINE_WIDTH = 1.8;
-            const GOLD_PALETTE = [
-                'rgba(214, 178, 94, ',
-                'rgba(243, 211, 139, ',
-                'rgba(184, 148, 42, ',
-            ];
-            let animationId = null;
-
-            function resize() {
-                const rect = container.getBoundingClientRect();
-                width = rect.width || 280;
-                height = rect.height || 600;
-                canvas.width = width;
-                canvas.height = height;
-                canvas.style.width = '100%';
-                canvas.style.height = '100%';
-            }
-
-            class Particle {
-                constructor() {
-                    this.reset();
-                    this.vx = (Math.random() - 0.5) * 0.25;
-                    this.vy = (Math.random() - 0.5) * 0.25;
-                    this.colorIndex = Math.floor(Math.random() * GOLD_PALETTE.length);
-                    this.baseRadius = 1.5 + Math.random() * 2.5;
-                }
-
-                reset() {
-                    this.x = Math.random() * width;
-                    this.y = Math.random() * height;
-                    this.vx = (Math.random() - 0.5) * 0.3;
-                    this.vy = (Math.random() - 0.5) * 0.3;
-                    this.phaseX = Math.random() * Math.PI * 2;
-                    this.phaseY = Math.random() * Math.PI * 2;
-                    this.freqX = 0.002 + Math.random() * 0.005;
-                    this.freqY = 0.002 + Math.random() * 0.005;
-                    this.amplitude = 0.2 + Math.random() * 0.4;
-                }
-
-                update() {
-                    this.x += this.vx + Math.sin(Date.now() * this.freqX + this.phaseX) * this.amplitude * 0.60;
-                    this.y += this.vy + Math.cos(Date.now() * this.freqY + this.phaseY) * this.amplitude * 0.60;
-
-                    if (this.x < 0) { this.x = 0;
-                        this.vx *= -0.9; }
-                    if (this.x > width) { this.x = width;
-                        this.vx *= -0.9; }
-                    if (this.y < 0) { this.y = 0;
-                        this.vy *= -0.9; }
-                    if (this.y > height) { this.y = height;
-                        this.vy *= -0.9; }
-
-                    if (Math.random() < 0.002) {
-                        this.vx += (Math.random() - 0.5) * 0.06;
-                        this.vy += (Math.random() - 0.5) * 0.06;
-                        const maxSpeed = 0.4;
-                        const sp = Math.hypot(this.vx, this.vy);
-                        if (sp > maxSpeed) {
-                            this.vx = (this.vx / sp) * maxSpeed;
-                            this.vy = (this.vy / sp) * maxSpeed;
-                        }
-                    }
-                }
-
-                draw() {
-                    const alpha = 0.5 + 0.4 * Math.sin(Date.now() * 0.001 + this.phaseX);
-                    const color = GOLD_PALETTE[this.colorIndex];
-                    const radius = this.baseRadius * (0.8 + 0.2 * Math.sin(Date.now() * 0.002 + this.phaseX));
-                    ctx.beginPath();
-                    ctx.arc(this.x, this.y, radius, 0, Math.PI * 2);
-                    ctx.fillStyle = color + (0.5 + 0.4 * Math.sin(Date.now() * 0.0015 + this.phaseX)) + ')';
-                    ctx.shadowColor = 'rgba(214, 178, 94, 0.12)';
-                    ctx.shadowBlur = 6;
-                    ctx.fill();
-                    ctx.shadowBlur = 0;
-                }
-            }
-
-            function initParticles() {
-                particles = [];
-                for (let i = 0; i < PARTICLE_COUNT; i++) {
-                    particles.push(new Particle());
-                }
-            }
-
-            function drawLines() {
-                for (let i = 0; i < particles.length; i++) {
-                    for (let j = i + 1; j < particles.length; j++) {
-                        const p1 = particles[i];
-                        const p2 = particles[j];
-                        const dx = p1.x - p2.x;
-                        const dy = p1.y - p2.y;
-                        const dist = Math.hypot(dx, dy);
-
-                        if (dist < CONNECT_DISTANCE) {
-                            const alpha = (1 - dist / CONNECT_DISTANCE) * 0.6;
-                            const lineWidth = (1 - dist / CONNECT_DISTANCE) * MAX_LINE_WIDTH + 0.2;
-
-                            const gradient = ctx.createLinearGradient(p1.x, p1.y, p2.x, p2.y);
-                            gradient.addColorStop(0, 'rgba(214, 178, 94, ' + (alpha * 0.9) + ')');
-                            gradient.addColorStop(0.5, 'rgba(243, 211, 139, ' + (alpha * 0.7) + ')');
-                            gradient.addColorStop(1, 'rgba(184, 148, 42, ' + (alpha * 0.9) + ')');
-
-                            ctx.beginPath();
-                            ctx.moveTo(p1.x, p1.y);
-                            ctx.lineTo(p2.x, p2.y);
-                            ctx.strokeStyle = gradient;
-                            ctx.lineWidth = lineWidth;
-                            ctx.shadowColor = 'rgba(214, 178, 94, ' + (alpha * 0.08) + ')';
-                            ctx.shadowBlur = 4;
-                            ctx.stroke();
-                            ctx.shadowBlur = 0;
-                        }
-                    }
-                }
-            }
-
-            function animate() {
-                ctx.clearRect(0, 0, width, height);
-
-                const grad = ctx.createRadialGradient(
-                    width * 0.5 + Math.sin(Date.now() * 0.0001) * 30,
-                    height * 0.5 + Math.cos(Date.now() * 0.00015) * 30,
-                    10,
-                    width * 0.5,
-                    height * 0.5,
-                    width * 0.7
-                );
-                grad.addColorStop(0, 'rgba(214, 178, 94, 0.015)');
-                grad.addColorStop(0.5, 'rgba(214, 178, 94, 0.008)');
-                grad.addColorStop(1, 'rgba(214, 178, 94, 0)');
-                ctx.fillStyle = grad;
-                ctx.fillRect(0, 0, width, height);
-
-                for (const p of particles) {
-                    p.update();
-                }
-
-                drawLines();
-
-                for (const p of particles) {
-                    p.draw();
-                }
-
-                animationId = requestAnimationFrame(animate);
-            }
-
-            function start() {
-                resize();
-                initParticles();
-                if (animationId) cancelAnimationFrame(animationId);
-                animate();
-            }
-
-            start();
-
-            const resizeObserver = new ResizeObserver(function() {
-                resize();
-                for (const p of particles) {
-                    p.x = Math.random() * width;
-                    p.y = Math.random() * height;
-                }
-            });
-            resizeObserver.observe(container);
-
-            console.log('✨ Agent 粒子网络已启动');
-        }
-
-        // ============================================================
         // 初始化
         // ============================================================
         document.addEventListener('DOMContentLoaded', function() {
-            // 初始化粒子
-            setTimeout(initParticleNetwork, 300);
-
             // 默认加载 Users 页面
             loadUsers();
         });
