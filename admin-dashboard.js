@@ -510,22 +510,20 @@ function applyConversionData(data, days) {
     var convertedEl = document.getElementById('conversionConverted');
     var labelEl = document.getElementById('conversionLabel');
     
-    // 🔥 使用 requestAnimationFrame 确保 DOM 更新
-    requestAnimationFrame(function() {
-        if (registerEl) {
-            registerEl.innerText = displayData.register;
-            console.log('✅ Register 更新为:', displayData.register);
-        }
-        if (convertedEl) {
-            convertedEl.innerText = displayData.converted;
-            console.log('✅ Converted 更新为:', displayData.converted);
-        }
-        if (labelEl) {
-            labelEl.innerText = displayData.label + ' Register';
-        }
-    });
+    // 🔥 直接更新，不使用 requestAnimationFrame（确保立即生效）
+    if (registerEl) {
+        registerEl.innerText = displayData.register;
+        console.log('✅ Register 更新为:', displayData.register);
+    }
+    if (convertedEl) {
+        convertedEl.innerText = displayData.converted;
+        console.log('✅ Converted 更新为:', displayData.converted);
+    }
+    if (labelEl) {
+        labelEl.innerText = displayData.label + ' Register';
+    }
     
-    // 🔥 更新所有统计行（只显示第一行作为主数据）
+    // 🔥 更新所有统计行
     var allLabels = document.querySelectorAll('.conversion-stat-label');
     var allRegisters = document.querySelectorAll('.conversion-stat-register');
     var allConverteds = document.querySelectorAll('.conversion-stat-converted');
@@ -860,7 +858,7 @@ async function refreshDashboard(days, force) {
         loadChartData(force),
         loadConversionData(days, conversionForce),
         loadActivityTimeline(force),
-        loadRecentRegistrations()  // 内部读取 currentDays
+        loadRecentRegistrations()
     ]);
     
     var ringPercent = document.getElementById('ringPercent');
@@ -885,6 +883,9 @@ async function refreshDashboard(days, force) {
             }
         }
     }
+    
+    // 🔥 返回 Promise
+    return;
 }
 
 // ============================================================
@@ -1282,15 +1283,23 @@ function loadDashboardPage(days) {
     document.head.appendChild(style);
     
     setTimeout(function() {
-    initTrendChart();
-    bindDateFilters();
-    initWaveRing();
-    initNotificationEvents();
+    try {
+        initTrendChart();
+        bindDateFilters();
+        initWaveRing();
+        initNotificationEvents();
+    } catch (e) {
+        console.warn('⚠️ 初始化组件时出错:', e.message);
+    }
     
-    // 🔥 延迟执行 refreshDashboard，确保 DOM 完全渲染后再加载数据
-    setTimeout(function() {
-        refreshDashboard(days, true);
-    }, 150);
+    // 🔥 强制清除缓存，确保数据重新加载
+    cachedData.conversion = null;
+    cachedData.lastConversionTime = 0;
+    
+    // 🔥 先加载数据，再渲染
+    refreshDashboard(days, true).then(function() {
+        console.log('✅ Dashboard 数据加载完成');
+    });
 }, 200);
     
     if (dashboardRefreshInterval) clearInterval(dashboardRefreshInterval);
