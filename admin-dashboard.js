@@ -1280,17 +1280,68 @@ function loadDashboardPage(days) {
                                 </table>
                             </div>
 
-<!-- 🔥 祝贺消息区域 - 底部可折叠 -->
-<div id="congratsWrapper" style="margin-top: 10px; padding: 0 4px; display: none;">
-    <div id="congratsToggle" onclick="toggleCongratsMessage()" style="display: flex; align-items: center; gap: 10px; cursor: pointer; padding: 10px 16px; background: rgba(214,178,94,0.04); border-radius: 10px; border: 1px solid rgba(214,178,94,0.06); user-select: none; transition: all 0.2s ease;">
-        <i id="congratsArrow" class="fas fa-chevron-up" style="color: #D6B25E; font-size: 11px; transition: transform 0.3s ease;"></i>
-        <span style="font-size: 12px; color: #c8b8a8; font-weight: 500;">
-            <i class="fas fa-gem" style="color: #D6B25E; margin-right: 4px;"></i>
-            New Orders Today
-            <span id="congratsCountBadge" style="background: #D6B25E; color: #080c1a; padding: 0 10px; border-radius: 10px; font-size: 10px; font-weight: 700; margin-left: 6px; line-height: 18px; display: inline-block; min-width: 20px; text-align: center;">0</span>
+// 🔥 祝贺消息区域 - Crypto Type 下拉风格（向上伸展）
+<div id="congratsWrapper" style="margin-top: 10px; display: none; position: relative;">
+    <!-- 类似 Crypto Type 下拉的显示区域 -->
+    <div id="congratsDropdownDisplay" onclick="toggleCongratsMessage()" style="
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 8px 14px 8px 16px;
+        background: rgba(255,255,255,0.08);
+        border: 1px solid rgba(255,255,255,0.10);
+        border-radius: 40px;
+        cursor: pointer;
+        color: #e6edf5;
+        font-size: 13px;
+        font-weight: 500;
+        transition: 0.25s ease;
+        min-height: 38px;
+        user-select: none;
+        width: 100%;
+        box-sizing: border-box;
+        font-family: 'Inter', sans-serif;
+    ">
+        <span style="display: flex; align-items: center; gap: 10px;">
+            <i class="fas fa-gem" style="color: #D6B25E; font-size: 14px;"></i>
+            <span>New Orders Today</span>
+            <span id="congratsCountBadge" style="background: #D6B25E; color: #080c1a; padding: 0 10px; border-radius: 10px; font-size: 10px; font-weight: 700; margin-left: 4px; line-height: 18px; display: inline-block; min-width: 20px; text-align: center;">0</span>
         </span>
+        <i id="congratsArrow" class="fas fa-chevron-up" style="color: #5a6a82; font-size: 11px; transition: transform 0.25s ease;"></i>
     </div>
-    <div id="congratsMessage" style="margin-top: 6px; padding: 10px 14px; background: linear-gradient(135deg, rgba(214,178,94,0.06), rgba(214,178,94,0.02)); border-radius: 10px; border-left: 3px solid #D6B25E; font-size: 13px; color: #c8b8a8; line-height: 1.6; display: none; max-height: 200px; overflow-y: auto; transform-origin: bottom center; animation: expandUp 0.3s ease;">
+    
+    <!-- 下拉选项区域（向上弹出） -->
+    <div id="congratsDropdownOptions" style="
+        position: absolute;
+        bottom: calc(100% + 6px);
+        left: 0;
+        right: 0;
+        background: rgba(14, 18, 30, 0.98);
+        backdrop-filter: blur(16px);
+        border: 1px solid rgba(255,255,255,0.06);
+        border-radius: 12px;
+        padding: 6px 0;
+        opacity: 0;
+        visibility: hidden;
+        transform: translateY(6px) scale(0.98);
+        transition: all 0.25s ease;
+        z-index: 100;
+        box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+        overflow: hidden;
+        max-height: 0;
+        overflow-y: auto;
+        box-sizing: border-box;
+    ">
+        <!-- 内容将动态渲染到 congratsMessage -->
+        <div id="congratsMessage" style="
+            padding: 10px 14px;
+            font-size: 13px;
+            color: #c8b8a8;
+            line-height: 1.6;
+            max-height: 200px;
+            overflow-y: auto;
+            box-sizing: border-box;
+        "></div>
     </div>
 </div>
 
@@ -1641,7 +1692,7 @@ window.refreshRecentOnly = refreshRecentOnly;
 window.refreshConversionOnly = refreshConversionOnly;
 
 // ============================================================
-// 🔥 祝贺消息函数 - 底部可折叠（向上伸展）
+// 🔥 祝贺消息函数 - 底部可折叠（向上伸展，类似 Crypto Type 下拉）
 // ============================================================
 async function updateCongratsMessage() {
     try {
@@ -1657,6 +1708,8 @@ async function updateCongratsMessage() {
         var messageEl = document.getElementById('congratsMessage');
         var badgeEl = document.getElementById('congratsCountBadge');
         var arrowEl = document.getElementById('congratsArrow');
+        var dropdownDisplay = document.getElementById('congratsDropdownDisplay');
+        var dropdownOptions = document.getElementById('congratsDropdownOptions');
         
         if (!wrapper || !messageEl) return;
         
@@ -1717,9 +1770,8 @@ async function updateCongratsMessage() {
         // 默认收起
         messageEl.classList.remove('open');
         messageEl.style.display = 'none';
-        if (arrowEl) {
-            arrowEl.className = 'fas fa-chevron-up';
-            arrowEl.style.transform = 'rotate(0deg)';
+        if (dropdownOptions) {
+            dropdownOptions.classList.remove('open');
         }
         
     } catch (e) {
@@ -1728,30 +1780,52 @@ async function updateCongratsMessage() {
 }
 
 // ============================================================
-// 🔥 切换祝贺消息展开/收起（向上伸展）
+// 🔥 切换祝贺消息展开/收起（向上伸展，类似 Crypto Type 下拉）
 // ============================================================
 function toggleCongratsMessage() {
     var messageEl = document.getElementById('congratsMessage');
+    var optionsEl = document.getElementById('congratsDropdownOptions');
+    var displayEl = document.getElementById('congratsDropdownDisplay');
     var arrowEl = document.getElementById('congratsArrow');
-    if (!messageEl) return;
     
-    if (messageEl.classList.contains('open')) {
+    if (!messageEl || !optionsEl) return;
+    
+    var isOpen = optionsEl.classList.contains('open');
+    
+    if (isOpen) {
         // 收起
+        optionsEl.classList.remove('open');
         messageEl.classList.remove('open');
         messageEl.style.display = 'none';
+        if (displayEl) {
+            displayEl.style.borderColor = 'rgba(255,255,255,0.10)';
+            displayEl.style.background = 'rgba(255,255,255,0.08)';
+        }
         if (arrowEl) {
             arrowEl.className = 'fas fa-chevron-up';
-            arrowEl.style.transform = 'rotate(0deg)';
         }
     } else {
-        // 展开
+        // 展开（向上）
+        // 先计算展开后的高度，然后从底部向上展开
         messageEl.style.display = 'block';
-        // 强制重排触发动画
-        void messageEl.offsetHeight;
+        messageEl.style.maxHeight = '0';
+        messageEl.style.overflow = 'hidden';
+        messageEl.style.transition = 'max-height 0.35s cubic-bezier(0.2, 0.9, 0.4, 1.1), opacity 0.3s ease';
+        messageEl.style.opacity = '0';
+        
+        // 获取实际内容高度
+        var contentHeight = messageEl.scrollHeight || 200;
+        messageEl.style.maxHeight = contentHeight + 'px';
+        messageEl.style.opacity = '1';
         messageEl.classList.add('open');
+        
+        optionsEl.classList.add('open');
+        if (displayEl) {
+            displayEl.style.borderColor = 'rgba(200,176,144,0.25)';
+            displayEl.style.background = 'rgba(200,176,144,0.06)';
+        }
         if (arrowEl) {
             arrowEl.className = 'fas fa-chevron-down';
-            arrowEl.style.transform = 'rotate(0deg)';
         }
     }
 }
