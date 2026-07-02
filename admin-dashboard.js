@@ -1256,57 +1256,62 @@ function loadDashboardPage(days) {
                             </div>
                         </div>
                         
-                        // ========== Recent 表格 ==========
-<div style="margin-top: 8px; padding-top: 8px; border-top: 1px solid rgba(200,176,144,0.06);">
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-        <div style="font-size: 11px; color: #8a7a6a; font-weight: 600; letter-spacing: 0.8px; text-transform: uppercase;">
-            <i class="fas fa-users" style="color: #ccb89f; margin-right: 6px; font-size: 11px;"></i>Recent
-        </div>
-    </div>
-    <div style="overflow-y: auto; max-height: 155px;">
-        <table style="width: 100%; border-collapse: collapse; font-size: 12px;">
-            <thead>
-                <tr style="border-bottom: 1px solid rgba(200,176,144,0.06); position: sticky; top: 0; background: rgba(20,24,40,0.95); z-index: 2;">
-                    <th style="text-align: left; padding: 5px 8px; color: #c8b8a8; font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px;">User</th>
-                    <th style="text-align: left; padding: 5px 8px; color: #c8b8a8; font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px;">Ref</th>
-                    <th style="text-align: center; padding: 5px 8px; color: #c8b8a8; font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px;">Joined</th>
-                    <th style="text-align: right; padding: 5px 8px; color: #c8b8a8; font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px;">Amount</th>
-                </tr>
-            </thead>
-            <tbody id="recentRegistrationsBody">
-                <tr><td colspan="4" style="text-align: center; padding: 12px; color: #5a6a7a; font-size: 12px;">Loading...</td></tr>
-            </tbody>
-        </table>
-    </div>
-</div>
+                        <!-- ========== Recent 表格 ========== -->
+                        <div style="margin-top: 8px; padding-top: 8px; border-top: 1px solid rgba(200,176,144,0.06);">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                                <div style="font-size: 11px; color: #8a7a6a; font-weight: 600; letter-spacing: 0.8px; text-transform: uppercase;">
+                                    <i class="fas fa-users" style="color: #ccb89f; margin-right: 6px; font-size: 11px;"></i>Recent
+                                </div>
+                                <!-- ❌ View All 已删除 -->
+                            </div>
+                            <div style="overflow-y: auto; max-height: 155px;">
+                                <table style="width: 100%; border-collapse: collapse; font-size: 12px;">
+                                    <thead>
+                                        <tr style="border-bottom: 1px solid rgba(200,176,144,0.06); position: sticky; top: 0; background: rgba(20,24,40,0.95); z-index: 2;">
+                                            <th style="text-align: left; padding: 5px 8px; color: #c8b8a8; font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px;">User</th>
+                                            <th style="text-align: left; padding: 5px 8px; color: #c8b8a8; font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px;">Ref</th>
+                                            <th style="text-align: center; padding: 5px 8px; color: #c8b8a8; font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px;">Joined</th>
+                                            <th style="text-align: right; padding: 5px 8px; color: #c8b8a8; font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px;">Amount</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="recentRegistrationsBody">
+                                        <tr><td colspan="4" style="text-align: center; padding: 12px; color: #5a6a7a; font-size: 12px;">Loading...</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
 
-<!-- 🔥 祝贺消息区域 - Crypto Type 下拉风格（向上伸展） -->
-<div id="congratsWrapper" style="margin-top: 12px; padding-top: 8px; border-top: 1px solid rgba(200,176,144,0.04); display: none; position: relative;">
-    <div id="congratsDropdownDisplay" onclick="toggleCongratsMessage()" style="display: flex; align-items: center; justify-content: space-between; padding: 8px 14px 8px 16px; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.10); border-radius: 40px; cursor: pointer; color: #e6edf5; font-size: 13px; font-weight: 500; transition: 0.25s ease; min-height: 38px; user-select: none; width: 100%; box-sizing: border-box; font-family: 'Inter', sans-serif;">
-        <span style="display: flex; align-items: center; gap: 10px;">
-            <i class="fas fa-gem" style="color: #D6B25E; font-size: 14px;"></i>
-            <span>New Orders Today</span>
-            <span id="congratsCountBadge" style="background: #D6B25E; color: #080c1a; padding: 0 10px; border-radius: 10px; font-size: 10px; font-weight: 700; line-height: 18px; display: inline-block; min-width: 20px; text-align: center;">0</span>
+<!-- 🔥 祝贺消息区域 - 可折叠 -->
+<div id="congratsWrapper" style="margin-top: 10px; display: none;">
+    <div id="congratsToggle" onclick="toggleCongratsMessage()" style="display: flex; align-items: center; gap: 10px; cursor: pointer; padding: 10px 16px; background: rgba(214,178,94,0.04); border-radius: 10px; border: 1px solid rgba(214,178,94,0.06); user-select: none; transition: all 0.2s ease;">
+        <i id="congratsArrow" class="fas fa-chevron-right" style="color: #D6B25E; font-size: 11px; transition: transform 0.3s ease;"></i>
+        <span style="font-size: 12px; color: #c8b8a8; font-weight: 500;">
+            <i class="fas fa-gem" style="color: #D6B25E; margin-right: 4px;"></i>
+            New Orders Today
+            <span id="congratsCountBadge" style="background: #D6B25E; color: #080c1a; padding: 0 10px; border-radius: 10px; font-size: 10px; font-weight: 700; margin-left: 6px; line-height: 18px; display: inline-block; min-width: 20px; text-align: center;">0</span>
         </span>
-        <i id="congratsArrow" class="fas fa-chevron-up" style="color: #5a6a82; font-size: 11px; transition: transform 0.25s ease;"></i>
     </div>
-    <div id="congratsDropdownOptions" style="position: absolute; bottom: calc(100% + 6px); left: 0; right: 0; background: rgba(14, 18, 30, 0.98); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border: 1px solid rgba(255,255,255,0.06); border-radius: 12px; padding: 6px 0; opacity: 0; visibility: hidden; transform: translateY(6px) scale(0.98); transition: all 0.25s ease; z-index: 100; box-shadow: 0 20px 60px rgba(0,0,0,0.5); overflow: hidden; max-height: 0; overflow-y: auto; box-sizing: border-box;">
-        <div id="congratsMessage" style="padding: 10px 14px; font-size: 13px; color: #c8b8a8; line-height: 1.6; max-height: 200px; overflow-y: auto; box-sizing: border-box;"></div>
+    <div id="congratsMessage" style="margin-top: 6px; padding: 10px 14px; background: linear-gradient(135deg, rgba(214,178,94,0.06), rgba(214,178,94,0.02)); border-radius: 10px; border-left: 3px solid #D6B25E; font-size: 13px; color: #c8b8a8; line-height: 1.6; display: none; max-height: 200px; overflow-y: auto;">
     </div>
 </div>
 
-<!-- 实时活动 -->
-<div style="background: linear-gradient(145deg, rgba(20,24,40,0.85), rgba(10,12,24,0.6)); backdrop-filter: blur(8px); border-radius: 20px; padding: 20px; border: 1px solid rgba(180,180,200,0.06); box-shadow: 0 4px 20px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.04); position: relative; overflow: hidden;">
-    <div style="position: absolute; top: -15%; right: -5%; width: 75%; height: 75%; background: radial-gradient(ellipse at 70% 20%, rgba(255,255,255,0.06), transparent 70%); pointer-events: none; border-radius: 50%;"></div>
-    <div style="position: absolute; top: 0; left: 0; right: 0; height: 1px; background: linear-gradient(90deg, transparent, rgba(180,180,200,0.08), transparent);"></div>
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; position: relative; z-index: 1;">
-        <div style="font-size: 16px; font-weight: 600; color: #d8dff0;"><i class="fas fa-history" style="color: #8892a8; margin-right: 8px;"></i>Real-Time Event</div>
-        <div style="font-size: 11px; color: #ccb89f;"><i class="fas fa-circle" style="font-size: 8px; margin-right: 4px;"></i>Real-Time Updates</div>
-    </div>
-    <div id="activityList" style="max-height: 350px; overflow-y: auto; position: relative; z-index: 1;">
-        <div style="text-align: center; padding: 20px; color: #6a7a9a;">Loading...</div>
-    </div>
-</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 实时活动 -->
+        <div style="background: linear-gradient(145deg, rgba(20,24,40,0.85), rgba(10,12,24,0.6)); backdrop-filter: blur(8px); border-radius: 20px; padding: 20px; border: 1px solid rgba(180,180,200,0.06); box-shadow: 0 4px 20px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.04); position: relative; overflow: hidden;">
+            <div style="position: absolute; top: -15%; right: -5%; width: 75%; height: 75%; background: radial-gradient(ellipse at 70% 20%, rgba(255,255,255,0.06), transparent 70%); pointer-events: none; border-radius: 50%;"></div>
+            <div style="position: absolute; top: 0; left: 0; right: 0; height: 1px; background: linear-gradient(90deg, transparent, rgba(180,180,200,0.08), transparent);"></div>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; position: relative; z-index: 1;">
+                <div style="font-size: 16px; font-weight: 600; color: #d8dff0;"><i class="fas fa-history" style="color: #8892a8; margin-right: 8px;"></i>Real-Time Event</div>
+                <div style="font-size: 11px; color: #ccb89f;"><i class="fas fa-circle" style="font-size: 8px; margin-right: 4px;"></i>Real-Time Updates</div>
+            </div>
+            <div id="activityList" style="max-height: 350px; overflow-y: auto; position: relative; z-index: 1;">
+                <div style="text-align: center; padding: 20px; color: #6a7a9a;">Loading...</div>
+            </div>
+        </div>
     `;
     
     // 启动时钟
@@ -1316,32 +1321,6 @@ function loadDashboardPage(days) {
     
     var style = document.createElement('style');
     style.textContent = `
-
-/* ===== 向上伸展动画 ===== */
-@keyframes expandUp {
-    from {
-        opacity: 0;
-        transform: scaleY(0);
-        max-height: 0;
-        padding: 0 14px;
-    }
-    to {
-        opacity: 1;
-        transform: scaleY(1);
-        max-height: 200px;
-        padding: 10px 14px;
-    }
-}
-
-#congratsMessage {
-    transform-origin: bottom center;
-}
-
-#congratsMessage.open {
-    display: block !important;
-    animation: expandUp 0.3s ease forwards;
-}
-
         .date-filter-btn.active {
             background: linear-gradient(145deg, rgba(30,40,70,0.8), rgba(20,28,50,0.6)) !important;
             color: #e6edf5 !important;
@@ -1636,7 +1615,7 @@ window.refreshRecentOnly = refreshRecentOnly;
 window.refreshConversionOnly = refreshConversionOnly;
 
 // ============================================================
-// 🔥 祝贺消息函数 - 底部可折叠（向上伸展，类似 Crypto Type 下拉）
+// 🔥 祝贺消息函数
 // ============================================================
 async function updateCongratsMessage() {
     try {
@@ -1648,17 +1627,12 @@ async function updateCongratsMessage() {
             .select('uid, username, invited_by_username')
             .gte('created_at', todayStr + 'T00:00:00');
         
-        var wrapper = document.getElementById('congratsWrapper');
-        var messageEl = document.getElementById('congratsMessage');
-        var badgeEl = document.getElementById('congratsCountBadge');
-        var arrowEl = document.getElementById('congratsArrow');
-        var dropdownDisplay = document.getElementById('congratsDropdownDisplay');
-        var dropdownOptions = document.getElementById('congratsDropdownOptions');
-        
-        if (!wrapper || !messageEl) return;
-        
         if (!users || users.length === 0) {
-            wrapper.style.display = 'none';
+            var congratsEl = document.getElementById('congratsMessage');
+            if (congratsEl) {
+                congratsEl.innerHTML = '';
+                congratsEl.style.display = 'none';
+            }
             return;
         }
         
@@ -1683,39 +1657,37 @@ async function updateCongratsMessage() {
         });
         
         if (convertedUsers.length === 0) {
-            wrapper.style.display = 'none';
+            var congratsEl = document.getElementById('congratsMessage');
+            if (congratsEl) {
+                congratsEl.innerHTML = '';
+                congratsEl.style.display = 'none';
+            }
             return;
         }
         
-        wrapper.style.display = 'block';
-        if (badgeEl) badgeEl.textContent = convertedUsers.length;
-        
         var messagesHtml = '';
-        var displayUsers = convertedUsers.slice(0, 10);
+        var displayUsers = convertedUsers.slice(0, 4);
         
         displayUsers.forEach(function(u) {
             var referrer = u.invited_by_username || 'New';
-            messagesHtml += '<div style="padding: 5px 0; border-bottom: 1px solid rgba(214,178,94,0.04); font-size: 13px;">' +
+            messagesHtml += '<div style="padding: 4px 0; border-bottom: 1px solid rgba(214,178,94,0.04);">' +
                 'Congratulations ' + referrer + "'s client <span style='color: #D6B25E; font-weight: 700;'>" + u.uid + '</span> become new order today! ' +
                 '<i class="fas fa-gem" style="color: #D6B25E; margin-left: 4px; font-size: 11px;"></i> ' +
                 '<i class="fas fa-coins" style="color: #D6B25E; margin-left: 2px; font-size: 11px;"></i>' +
                 '</div>';
         });
         
-        var remaining = convertedUsers.length - 10;
+        var remaining = convertedUsers.length - 4;
         if (remaining > 0) {
             messagesHtml += '<div style="padding: 4px 0; color: #6a7a8a; font-size: 12px; text-align: center; border-top: 1px solid rgba(214,178,94,0.06); margin-top: 2px; padding-top: 6px;">' +
                 'and ' + remaining + ' more new orders today' +
                 '</div>';
         }
         
-        messageEl.innerHTML = messagesHtml;
-        
-        // 默认收起
-        messageEl.classList.remove('open');
-        messageEl.style.display = 'none';
-        if (dropdownOptions) {
-            dropdownOptions.classList.remove('open');
+        var congratsEl = document.getElementById('congratsMessage');
+        if (congratsEl) {
+            congratsEl.innerHTML = '<div style="max-height: 120px; overflow-y: auto; padding-right: 4px;">' + messagesHtml + '</div>';
+            congratsEl.style.display = 'block';
         }
         
     } catch (e) {
@@ -1723,57 +1695,6 @@ async function updateCongratsMessage() {
     }
 }
 
-// ============================================================
-// 🔥 切换祝贺消息展开/收起（向上伸展，类似 Crypto Type 下拉）
-// ============================================================
-function toggleCongratsMessage() {
-    var messageEl = document.getElementById('congratsMessage');
-    var optionsEl = document.getElementById('congratsDropdownOptions');
-    var displayEl = document.getElementById('congratsDropdownDisplay');
-    var arrowEl = document.getElementById('congratsArrow');
-    
-    if (!messageEl || !optionsEl) return;
-    
-    var isOpen = optionsEl.classList.contains('open');
-    
-    if (isOpen) {
-        // 收起
-        optionsEl.classList.remove('open');
-        messageEl.classList.remove('open');
-        messageEl.style.display = 'none';
-        if (displayEl) {
-            displayEl.style.borderColor = 'rgba(255,255,255,0.10)';
-            displayEl.style.background = 'rgba(255,255,255,0.08)';
-        }
-        if (arrowEl) {
-            arrowEl.className = 'fas fa-chevron-up';
-        }
-    } else {
-        // 展开（向上）
-        // 先计算展开后的高度，然后从底部向上展开
-        messageEl.style.display = 'block';
-        messageEl.style.maxHeight = '0';
-        messageEl.style.overflow = 'hidden';
-        messageEl.style.transition = 'max-height 0.35s cubic-bezier(0.2, 0.9, 0.4, 1.1), opacity 0.3s ease';
-        messageEl.style.opacity = '0';
-        
-        // 获取实际内容高度
-        var contentHeight = messageEl.scrollHeight || 200;
-        messageEl.style.maxHeight = contentHeight + 'px';
-        messageEl.style.opacity = '1';
-        messageEl.classList.add('open');
-        
-        optionsEl.classList.add('open');
-        if (displayEl) {
-            displayEl.style.borderColor = 'rgba(200,176,144,0.25)';
-            displayEl.style.background = 'rgba(200,176,144,0.06)';
-        }
-        if (arrowEl) {
-            arrowEl.className = 'fas fa-chevron-down';
-        }
-    }
-}
-
-// 暴露到全局
-window.toggleCongratsMessage = toggleCongratsMessage;
+// 暴露给全局
+window.updateCongratsMessage = updateCongratsMessage;
 }
