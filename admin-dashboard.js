@@ -330,7 +330,6 @@ async function loadConversionData(days, force) {
     
     console.log('🔍 loadConversionData 被调用, days:', days, 'force:', force);
     
-    // 🔥 Today 数据不缓存，每次都重新获取
     if (days === 0) {
         force = true;
     }
@@ -344,9 +343,6 @@ async function loadConversionData(days, force) {
     try {
         var periods = [];
         
-        // ============================================================
-        // 根据 days 参数决定统计哪些时间段
-        // ============================================================
         if (days === 0) {
             periods.push({ label: 'Today', daysOffset: 0 });
         } else if (days === 7) {
@@ -367,11 +363,9 @@ async function loadConversionData(days, force) {
         
         var result = [];
         
-        // 🔥 查询所有用户
         var allUsers = await sb.from('users').select('uid, created_at');
         console.log('👤 总用户数:', allUsers.data?.length || 0);
         
-        // 🔥 查询所有存款（manual + deposit_bonus）
         var allDeposits = await sb.from('deposits')
             .select('uid, created_at, amount, type')
             .in('type', ['manual', 'deposit_bonus']);
@@ -380,7 +374,6 @@ async function loadConversionData(days, force) {
         var users = allUsers.data || [];
         var deposits = allDeposits.data || [];
         
-        // 构建存款用户映射（存款 >= 40 的用户）
         var depositUsers = {};
         deposits.forEach(function(d) {
             if (d.uid && (d.amount || 0) >= 40) {
@@ -389,9 +382,6 @@ async function loadConversionData(days, force) {
         });
         console.log('✅ 已转化用户数（存款>=40）:', Object.keys(depositUsers).length);
         
-        // ============================================================
-        // 🔥 获取今天的日期（柏林时间）
-        // ============================================================
         var today = getBerlinDate();
         var todayStr = today.toISOString().split('T')[0];
         console.log('📅 今天 (柏林时间):', todayStr);
@@ -404,10 +394,8 @@ async function loadConversionData(days, force) {
             var registeredUsers = [];
             
             if (daysOffset === -1) {
-                // All Time
                 registeredUsers = users;
             } else if (daysOffset === 0) {
-                // 🔥 Today：只统计今天注册的用户
                 registeredUsers = users.filter(function(u) {
                     if (!u.created_at) return false;
                     var berlinDate = convertToBerlinDate(new Date(u.created_at));
@@ -417,7 +405,6 @@ async function loadConversionData(days, force) {
                 console.log('📊 Today 注册用户数:', registeredUsers.length);
                 console.log('📊 Today 注册用户 UIDs:', registeredUsers.map(function(u) { return u.uid; }));
             } else {
-                // 7 Days / 30 Days
                 var startDate = new Date(today);
                 startDate.setDate(startDate.getDate() - daysOffset);
                 var startStr = startDate.toISOString().split('T')[0];
@@ -438,20 +425,22 @@ async function loadConversionData(days, force) {
             var rate = totalRegister > 0 ? Math.round((totalConverted / totalRegister) * 100) : 0;
             
             console.log('📊 ' + label + ': register=' + totalRegister + ', converted=' + totalConverted + ', rate=' + rate + '%');
-
-result.push({
-    label: label,
-    days: daysOffset,
-    register: totalRegister,
-    converted: totalConverted,
-    rate: rate
-});
-
-console.log('📊 result 当前长度:', result.length);
+            
+            result.push({
+                label: label,
+                days: daysOffset,
+                register: totalRegister,
+                converted: totalConverted,
+                rate: rate
+            });
+            
+            console.log('📊 result 当前长度:', result.length);
+        }
         
-        console.log('✅ loadConversionData 最终结果:', result);
         console.log('📊 for 循环结束，result 长度:', result.length);
-console.log('📊 result 内容:', JSON.stringify(result));
+        console.log('📊 result 内容:', JSON.stringify(result));
+        console.log('✅ loadConversionData 最终结果:', result);
+        
         cachedData.conversion = result;
         cachedData.lastConversionTime = now;
         applyConversionData(result, days);
