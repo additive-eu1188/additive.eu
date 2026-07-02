@@ -1939,3 +1939,10 @@ window.updateNewOrderBadge = updateNewOrderBadge;
         }
     } catch (e) {}
 })();
+
+console.log('✅ admin-dashboard.js loaded');
+console.log('   - Recent 表格: 9条 (可滑动)');
+console.log('   - 环形图: 上移, 尺寸缩小');
+console.log('   - New Order 按钮: 样式3 (深色金属+银边)');
+console.log('   - 展开窗: 样式A (毛玻璃, 标题亮色)');
+console.log('   - UID: 黄色高亮, 无#前缀');
