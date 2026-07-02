@@ -1280,17 +1280,17 @@ function loadDashboardPage(days) {
                                 </table>
                             </div>
 
-<!-- 🔥 祝贺消息区域 - 可折叠 -->
-<div id="congratsWrapper" style="margin-top: 10px; display: none;">
+<!-- 🔥 祝贺消息区域 - 底部可折叠 -->
+<div id="congratsWrapper" style="margin-top: 10px; padding: 0 4px; display: none;">
     <div id="congratsToggle" onclick="toggleCongratsMessage()" style="display: flex; align-items: center; gap: 10px; cursor: pointer; padding: 10px 16px; background: rgba(214,178,94,0.04); border-radius: 10px; border: 1px solid rgba(214,178,94,0.06); user-select: none; transition: all 0.2s ease;">
-        <i id="congratsArrow" class="fas fa-chevron-right" style="color: #D6B25E; font-size: 11px; transition: transform 0.3s ease;"></i>
+        <i id="congratsArrow" class="fas fa-chevron-up" style="color: #D6B25E; font-size: 11px; transition: transform 0.3s ease;"></i>
         <span style="font-size: 12px; color: #c8b8a8; font-weight: 500;">
             <i class="fas fa-gem" style="color: #D6B25E; margin-right: 4px;"></i>
             New Orders Today
             <span id="congratsCountBadge" style="background: #D6B25E; color: #080c1a; padding: 0 10px; border-radius: 10px; font-size: 10px; font-weight: 700; margin-left: 6px; line-height: 18px; display: inline-block; min-width: 20px; text-align: center;">0</span>
         </span>
     </div>
-    <div id="congratsMessage" style="margin-top: 6px; padding: 10px 14px; background: linear-gradient(135deg, rgba(214,178,94,0.06), rgba(214,178,94,0.02)); border-radius: 10px; border-left: 3px solid #D6B25E; font-size: 13px; color: #c8b8a8; line-height: 1.6; display: none; max-height: 200px; overflow-y: auto;">
+    <div id="congratsMessage" style="margin-top: 6px; padding: 10px 14px; background: linear-gradient(135deg, rgba(214,178,94,0.06), rgba(214,178,94,0.02)); border-radius: 10px; border-left: 3px solid #D6B25E; font-size: 13px; color: #c8b8a8; line-height: 1.6; display: none; max-height: 200px; overflow-y: auto; transform-origin: bottom center; animation: expandUp 0.3s ease;">
     </div>
 </div>
 
@@ -1321,6 +1321,32 @@ function loadDashboardPage(days) {
     
     var style = document.createElement('style');
     style.textContent = `
+
+/* ===== 向上伸展动画 ===== */
+@keyframes expandUp {
+    from {
+        opacity: 0;
+        transform: scaleY(0);
+        max-height: 0;
+        padding: 0 14px;
+    }
+    to {
+        opacity: 1;
+        transform: scaleY(1);
+        max-height: 200px;
+        padding: 10px 14px;
+    }
+}
+
+#congratsMessage {
+    transform-origin: bottom center;
+}
+
+#congratsMessage.open {
+    display: block !important;
+    animation: expandUp 0.3s ease forwards;
+}
+
         .date-filter-btn.active {
             background: linear-gradient(145deg, rgba(30,40,70,0.8), rgba(20,28,50,0.6)) !important;
             color: #e6edf5 !important;
@@ -1615,7 +1641,7 @@ window.refreshRecentOnly = refreshRecentOnly;
 window.refreshConversionOnly = refreshConversionOnly;
 
 // ============================================================
-// 🔥 祝贺消息函数 - 可折叠版本
+// 🔥 祝贺消息函数 - 底部可折叠（向上伸展）
 // ============================================================
 async function updateCongratsMessage() {
     try {
@@ -1689,8 +1715,12 @@ async function updateCongratsMessage() {
         messageEl.innerHTML = messagesHtml;
         
         // 默认收起
+        messageEl.classList.remove('open');
         messageEl.style.display = 'none';
-        if (arrowEl) arrowEl.style.transform = 'rotate(0deg)';
+        if (arrowEl) {
+            arrowEl.className = 'fas fa-chevron-up';
+            arrowEl.style.transform = 'rotate(0deg)';
+        }
         
     } catch (e) {
         console.error('更新祝贺消息失败:', e);
@@ -1698,19 +1728,31 @@ async function updateCongratsMessage() {
 }
 
 // ============================================================
-// 🔥 切换祝贺消息展开/收起
+// 🔥 切换祝贺消息展开/收起（向上伸展）
 // ============================================================
 function toggleCongratsMessage() {
     var messageEl = document.getElementById('congratsMessage');
     var arrowEl = document.getElementById('congratsArrow');
     if (!messageEl) return;
     
-    if (messageEl.style.display === 'none' || messageEl.style.display === '') {
-        messageEl.style.display = 'block';
-        if (arrowEl) arrowEl.style.transform = 'rotate(90deg)';
-    } else {
+    if (messageEl.classList.contains('open')) {
+        // 收起
+        messageEl.classList.remove('open');
         messageEl.style.display = 'none';
-        if (arrowEl) arrowEl.style.transform = 'rotate(0deg)';
+        if (arrowEl) {
+            arrowEl.className = 'fas fa-chevron-up';
+            arrowEl.style.transform = 'rotate(0deg)';
+        }
+    } else {
+        // 展开
+        messageEl.style.display = 'block';
+        // 强制重排触发动画
+        void messageEl.offsetHeight;
+        messageEl.classList.add('open');
+        if (arrowEl) {
+            arrowEl.className = 'fas fa-chevron-down';
+            arrowEl.style.transform = 'rotate(0deg)';
+        }
     }
 }
 
