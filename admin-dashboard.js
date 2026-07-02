@@ -1208,86 +1208,85 @@ function loadDashboardPage(days) {
     <div id="trendChart" style="height: 320px; width: 100%; position: relative; z-index: 1;"></div>
 </div>
             
-            <!-- 转化率卡片 -->
-            <div style="background: linear-gradient(145deg, rgba(20,24,40,0.85), rgba(10,12,24,0.6)); backdrop-filter: blur(8px); border-radius: 20px; padding: 20px; border: 1px solid rgba(180,180,200,0.06); box-shadow: 0 4px 20px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.04); position: relative; overflow: hidden;">
-                <div style="position: absolute; top: -15%; right: -5%; width: 75%; height: 75%; background: radial-gradient(ellipse at 70% 20%, rgba(255,255,255,0.06), transparent 70%); pointer-events: none; border-radius: 50%;"></div>
-                <div style="position: absolute; top: 0; left: 0; right: 0; height: 1px; background: linear-gradient(90deg, transparent, rgba(180,180,200,0.08), transparent);"></div>
-                
-                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 6px; position: relative; z-index: 1;">
-                    <div style="font-size: 15px; font-weight: 600; color: #d8dff0;">📈 New Orders Conversion Rate</div>
-                    <div style="text-align: right;">
-                        <div style="font-size: 10px; color: #6a5a3a; letter-spacing: 0.5px;">
-                            <span style="color: #8892a8;">Today Register</span>
-                        </div>
-                        <div style="display: flex; align-items: baseline; gap: 4px; justify-content: flex-end;">
-                            <span id="conversionRegister" style="font-size: 22px; font-weight: 700; color: #ccb89f;">0</span>
-                            <span style="font-size: 12px; color: #6a5a3a;">/</span>
-                            <span id="conversionConverted" style="font-size: 16px; font-weight: 600; color: #d4af37;">0</span>
-                            <span style="font-size: 10px; color: #5a4a2a;">converted</span>
-                        </div>
-                    </div>
+            // 转化率卡片 - 环形图区域
+<div style="background: linear-gradient(145deg, rgba(20,24,40,0.85), rgba(10,12,24,0.6)); backdrop-filter: blur(8px); border-radius: 20px; padding: 20px; border: 1px solid rgba(180,180,200,0.06); box-shadow: 0 4px 20px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.04); position: relative; overflow: hidden;">
+    <div style="position: absolute; top: -15%; right: -5%; width: 75%; height: 75%; background: radial-gradient(ellipse at 70% 20%, rgba(255,255,255,0.06), transparent 70%); pointer-events: none; border-radius: 50%;"></div>
+    <div style="position: absolute; top: 0; left: 0; right: 0; height: 1px; background: linear-gradient(90deg, transparent, rgba(180,180,200,0.08), transparent);"></div>
+    
+    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 6px; position: relative; z-index: 1;">
+        <div style="font-size: 15px; font-weight: 600; color: #d8dff0;">📈 New Orders Conversion Rate</div>
+        <div style="text-align: right;">
+            <div style="font-size: 10px; color: #6a5a3a; letter-spacing: 0.5px;">
+                <span style="color: #8892a8;">Today Register</span>
+            </div>
+            <div style="display: flex; align-items: baseline; gap: 4px; justify-content: flex-end;">
+                <span id="conversionRegister" style="font-size: 22px; font-weight: 700; color: #ccb89f;">0</span>
+                <span style="font-size: 12px; color: #6a5a3a;">/</span>
+                <span id="conversionConverted" style="font-size: 16px; font-weight: 600; color: #d4af37;">0</span>
+                <span style="font-size: 10px; color: #5a4a2a;">converted</span>
+            </div>
+        </div>
+    </div>
+    
+    <div style="display: flex; align-items: stretch; gap: 12px; position: relative; z-index: 1; min-height: 210px;">
+        <div id="waveRingContainer" style="width: 220px; height: 220px; flex-shrink: 0; position: relative; align-self: center; margin-top: -20px;"></div>
+        
+        <div style="flex: 1; min-width: 0; display: flex; flex-direction: column; justify-content: space-between; gap: 0px;">
+            <div style="border-top: 1px solid rgba(200,176,144,0.06); padding-top: 8px;">
+                <div class="conversion-stat-row" style="display: flex; justify-content: space-between; padding: 2px 0; font-size: 11px; color: #6a7a92;">
+                    <span class="conversion-stat-label">Today</span>
+                    <span><span class="conversion-stat-register">0</span> / <span class="conversion-stat-converted">0</span></span>
+                    <span class="conversion-stat-rate" style="font-weight: 600;">0%</span>
                 </div>
-                
-                <div style="display: flex; align-items: stretch; gap: 12px; position: relative; z-index: 1; min-height: 210px;">
-                    <div id="waveRingContainer" style="width: 220px; height: 280px; flex-shrink: 0; position: relative; align-self: center;"></div>
-                    
-                    <div style="flex: 1; min-width: 0; display: flex; flex-direction: column; justify-content: space-between; gap: 0px;">
-                        <div style="border-top: 1px solid rgba(200,176,144,0.06); padding-top: 8px;">
-                            <div class="conversion-stat-row" style="display: flex; justify-content: space-between; padding: 2px 0; font-size: 11px; color: #6a7a92;">
-                                <span class="conversion-stat-label">Today</span>
-                                <span><span class="conversion-stat-register">0</span> / <span class="conversion-stat-converted">0</span></span>
-                                <span class="conversion-stat-rate" style="font-weight: 600;">0%</span>
-                            </div>
-                            <div class="conversion-stat-row" style="display: flex; justify-content: space-between; padding: 2px 0; font-size: 11px; color: #6a7a92;">
-                                <span class="conversion-stat-label">7 Days</span>
-                                <span><span class="conversion-stat-register">0</span> / <span class="conversion-stat-converted">0</span></span>
-                                <span class="conversion-stat-rate" style="font-weight: 600;">0%</span>
-                            </div>
-                            <div class="conversion-stat-row" style="display: flex; justify-content: space-between; padding: 2px 0; font-size: 11px; color: #6a7a92;">
-                                <span class="conversion-stat-label">30 Days</span>
-                                <span><span class="conversion-stat-register">0</span> / <span class="conversion-stat-converted">0</span></span>
-                                <span class="conversion-stat-rate" style="font-weight: 600;">0%</span>
-                            </div>
-                            <div class="conversion-stat-row" style="display: flex; justify-content: space-between; padding: 2px 0; font-size: 11px; color: #6a7a92;">
-                                <span class="conversion-stat-label">All Time</span>
-                                <span><span class="conversion-stat-register">0</span> / <span class="conversion-stat-converted">0</span></span>
-                                <span class="conversion-stat-rate" style="font-weight: 600;">0%</span>
-                            </div>
-                        </div>
-                        
-                        <!-- ========== Recent 表格 ========== -->
-                        <div style="margin-top: 8px; padding-top: 8px; border-top: 1px solid rgba(200,176,144,0.06);">
-                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-                                <div style="font-size: 11px; color: #8a7a6a; font-weight: 600; letter-spacing: 0.8px; text-transform: uppercase;">
-                                    <i class="fas fa-users" style="color: #ccb89f; margin-right: 6px; font-size: 11px;"></i>Recent
-                                </div>
-                                <!-- ❌ View All 已删除 -->
-                            </div>
-                            <div style="overflow-y: auto; max-height: 155px;">
-                                <table style="width: 100%; border-collapse: collapse; font-size: 12px;">
-                                    <thead>
-                                        <tr style="border-bottom: 1px solid rgba(200,176,144,0.06); position: sticky; top: 0; background: rgba(20,24,40,0.95); z-index: 2;">
-                                            <th style="text-align: left; padding: 5px 8px; color: #c8b8a8; font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px;">User</th>
-                                            <th style="text-align: left; padding: 5px 8px; color: #c8b8a8; font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px;">Ref</th>
-                                            <th style="text-align: center; padding: 5px 8px; color: #c8b8a8; font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px;">Joined</th>
-                                            <th style="text-align: right; padding: 5px 8px; color: #c8b8a8; font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px;">Amount</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="recentRegistrationsBody">
-                                        <tr><td colspan="4" style="text-align: center; padding: 12px; color: #5a6a7a; font-size: 12px;">Loading...</td></tr>
-                                    </tbody>
-                                </table>
-                            </div>
+                <div class="conversion-stat-row" style="display: flex; justify-content: space-between; padding: 2px 0; font-size: 11px; color: #6a7a92;">
+                    <span class="conversion-stat-label">7 Days</span>
+                    <span><span class="conversion-stat-register">0</span> / <span class="conversion-stat-converted">0</span></span>
+                    <span class="conversion-stat-rate" style="font-weight: 600;">0%</span>
+                </div>
+                <div class="conversion-stat-row" style="display: flex; justify-content: space-between; padding: 2px 0; font-size: 11px; color: #6a7a92;">
+                    <span class="conversion-stat-label">30 Days</span>
+                    <span><span class="conversion-stat-register">0</span> / <span class="conversion-stat-converted">0</span></span>
+                    <span class="conversion-stat-rate" style="font-weight: 600;">0%</span>
+                </div>
+                <div class="conversion-stat-row" style="display: flex; justify-content: space-between; padding: 2px 0; font-size: 11px; color: #6a7a92;">
+                    <span class="conversion-stat-label">All Time</span>
+                    <span><span class="conversion-stat-register">0</span> / <span class="conversion-stat-converted">0</span></span>
+                    <span class="conversion-stat-rate" style="font-weight: 600;">0%</span>
+                </div>
+            </div>
+            
+            <!-- ========== Recent 表格 ========== -->
+            <div style="margin-top: 8px; padding-top: 8px; border-top: 1px solid rgba(200,176,144,0.06);">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                    <div style="font-size: 11px; color: #8a7a6a; font-weight: 600; letter-spacing: 0.8px; text-transform: uppercase;">
+                        <i class="fas fa-users" style="color: #ccb89f; margin-right: 6px; font-size: 11px;"></i>Recent
+                    </div>
+                    <!-- ❌ View All 已删除 -->
+                </div>
+                <div style="overflow-y: auto; max-height: 155px;">
+                    <table style="width: 100%; border-collapse: collapse; font-size: 12px;">
+                        <thead>
+                            <tr style="border-bottom: 1px solid rgba(200,176,144,0.06); position: sticky; top: 0; background: rgba(20,24,40,0.95); z-index: 2;">
+                                <th style="text-align: left; padding: 5px 8px; color: #c8b8a8; font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px;">User</th>
+                                <th style="text-align: left; padding: 5px 8px; color: #c8b8a8; font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px;">Ref</th>
+                                <th style="text-align: center; padding: 5px 8px; color: #c8b8a8; font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px;">Joined</th>
+                                <th style="text-align: right; padding: 5px 8px; color: #c8b8a8; font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px;">Amount</th>
+                            </tr>
+                        </thead>
+                        <tbody id="recentRegistrationsBody">
+                            <tr><td colspan="4" style="text-align: center; padding: 12px; color: #5a6a7a; font-size: 12px;">Loading...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
 
 <!-- 🔥 祝贺消息区域 -->
 <div id="congratsMessage" style="margin-top: 10px; padding: 10px 14px; background: linear-gradient(135deg, rgba(214,178,94,0.06), rgba(214,178,94,0.02)); border-radius: 10px; border-left: 3px solid #D6B25E; font-size: 13px; color: #c8b8a8; line-height: 1.6; display: none;">
 </div>
 
-                        </div>
-                    </div>
-                </div>
             </div>
         </div>
+    </div>
+</div>
         
         <!-- 实时活动 -->
         <div style="background: linear-gradient(145deg, rgba(20,24,40,0.85), rgba(10,12,24,0.6)); backdrop-filter: blur(8px); border-radius: 20px; padding: 20px; border: 1px solid rgba(180,180,200,0.06); box-shadow: 0 4px 20px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.04); position: relative; overflow: hidden;">
@@ -1660,7 +1659,7 @@ async function updateCongratsMessage() {
         displayUsers.forEach(function(u) {
             var referrer = u.invited_by_username || 'New';
             messagesHtml += '<div style="padding: 4px 0; border-bottom: 1px solid rgba(214,178,94,0.04);">' +
-                '🎊 Congratulations ' + referrer + "'s client <span style='color: #D6B25E; font-weight: 700;'>" + u.uid + '</span> become new order today! ' +
+                'Congratulations ' + referrer + "'s client <span style='color: #D6B25E; font-weight: 700;'>" + u.uid + '</span> become new order today! ' +
                 '<i class="fas fa-gem" style="color: #D6B25E; margin-left: 4px; font-size: 11px;"></i> ' +
                 '<i class="fas fa-coins" style="color: #D6B25E; margin-left: 2px; font-size: 11px;"></i>' +
                 '</div>';
