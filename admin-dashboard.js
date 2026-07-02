@@ -342,22 +342,27 @@ async function loadConversionData(days, force) {
     
     try {
         var periods = [];
-        
-        if (days === 0) {
-            periods.push({ label: 'Today', daysOffset: 0 });
-        } else if (days === 7) {
-            periods.push({ label: 'Today', daysOffset: 0 });
-            periods.push({ label: '7 Days', daysOffset: 7 });
-        } else if (days === 30) {
-            periods.push({ label: 'Today', daysOffset: 0 });
-            periods.push({ label: '7 Days', daysOffset: 7 });
-            periods.push({ label: '30 Days', daysOffset: 30 });
-        } else if (days === -1) {
-            periods.push({ label: 'Today', daysOffset: 0 });
-            periods.push({ label: '7 Days', daysOffset: 7 });
-            periods.push({ label: '30 Days', daysOffset: 30 });
-            periods.push({ label: 'All Time', daysOffset: -1 });
-        }
+
+// 🔥 默认当作 Today (days = 0) 处理
+if (days === 0) {
+    periods.push({ label: 'Today', daysOffset: 0 });
+} else if (days === 7) {
+    periods.push({ label: 'Today', daysOffset: 0 });
+    periods.push({ label: '7 Days', daysOffset: 7 });
+} else if (days === 30) {
+    periods.push({ label: 'Today', daysOffset: 0 });
+    periods.push({ label: '7 Days', daysOffset: 7 });
+    periods.push({ label: '30 Days', daysOffset: 30 });
+} else if (days === -1) {
+    periods.push({ label: 'Today', daysOffset: 0 });
+    periods.push({ label: '7 Days', daysOffset: 7 });
+    periods.push({ label: '30 Days', daysOffset: 30 });
+    periods.push({ label: 'All Time', daysOffset: -1 });
+} else {
+    // 🔥 默认当作 Today
+    console.log('⚠️ days 值异常 (' + days + ')，自动切换为 Today');
+    periods.push({ label: 'Today', daysOffset: 0 });
+}
         
         console.log('📊 periods:', periods);
         
