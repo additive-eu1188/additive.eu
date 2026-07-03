@@ -595,11 +595,20 @@ function loadNotificationPage() {
                         Sent Time <span style="color:#e88080;">*</span>
                     </label>
                     <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
-                        <input type="number" id="notifDay" placeholder="Day" min="1" max="31" style="width: 70px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06); border-radius: 10px; padding: 10px 8px; color: #e6edf5; font-size: 14px; outline: none; transition: 0.2s; font-family: 'Inter', sans-serif; box-sizing: border-box; text-align: center;">
+                        <div style="display: flex; flex-direction: column; align-items: center;">
+                            <input type="number" id="notifDay" placeholder="" min="1" max="31" style="width: 70px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06); border-radius: 10px; padding: 10px 8px; color: #e6edf5; font-size: 14px; outline: none; transition: 0.2s; font-family: 'Inter', sans-serif; box-sizing: border-box; text-align: center;">
+                            <span style="color: #4a5a72; font-size: 10px; margin-top: 2px;">Month</span>
+                        </div>
                         <span style="color: #4a5a72; font-size: 16px; font-weight: 600;">/</span>
-                        <input type="number" id="notifMonth" placeholder="Month" min="1" max="12" style="width: 70px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06); border-radius: 10px; padding: 10px 8px; color: #e6edf5; font-size: 14px; outline: none; transition: 0.2s; font-family: 'Inter', sans-serif; box-sizing: border-box; text-align: center;">
+                        <div style="display: flex; flex-direction: column; align-items: center;">
+                            <input type="number" id="notifMonth" placeholder="" min="1" max="12" style="width: 70px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06); border-radius: 10px; padding: 10px 8px; color: #e6edf5; font-size: 14px; outline: none; transition: 0.2s; font-family: 'Inter', sans-serif; box-sizing: border-box; text-align: center;">
+                            <span style="color: #4a5a72; font-size: 10px; margin-top: 2px;">Day</span>
+                        </div>
                         <span style="color: #4a5a72; font-size: 16px; font-weight: 600;">/</span>
-                        <input type="number" id="notifYear" placeholder="Year" min="2020" max="2099" style="width: 80px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06); border-radius: 10px; padding: 10px 8px; color: #e6edf5; font-size: 14px; outline: none; transition: 0.2s; font-family: 'Inter', sans-serif; box-sizing: border-box; text-align: center;">
+                        <div style="display: flex; flex-direction: column; align-items: center;">
+                            <input type="number" id="notifYear" placeholder="" min="2020" max="2099" style="width: 80px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06); border-radius: 10px; padding: 10px 8px; color: #e6edf5; font-size: 14px; outline: none; transition: 0.2s; font-family: 'Inter', sans-serif; box-sizing: border-box; text-align: center;">
+                            <span style="color: #4a5a72; font-size: 10px; margin-top: 2px;">Year</span>
+                        </div>
                         <span style="color: #4a5a72; font-size: 16px; font-weight: 600; margin: 0 2px;">|</span>
                         <input type="time" id="notifTime" style="width: 120px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06); border-radius: 10px; padding: 10px 8px; color: #e6edf5; font-size: 14px; outline: none; transition: 0.2s; font-family: 'Inter', sans-serif; box-sizing: border-box; text-align: center; color-scheme: dark;">
                     </div>
@@ -640,11 +649,20 @@ function loadNotificationPage() {
                         Sent Time
                     </label>
                     <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
-                        <input type="number" id="editDay" placeholder="Day" min="1" max="31" style="width: 70px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06); border-radius: 10px; padding: 10px 8px; color: #e6edf5; font-size: 14px; outline: none; transition: 0.2s; font-family: 'Inter', sans-serif; box-sizing: border-box; text-align: center;">
+                        <div style="display: flex; flex-direction: column; align-items: center;">
+                            <input type="number" id="editDay" placeholder="" min="1" max="31" style="width: 70px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06); border-radius: 10px; padding: 10px 8px; color: #e6edf5; font-size: 14px; outline: none; transition: 0.2s; font-family: 'Inter', sans-serif; box-sizing: border-box; text-align: center;">
+                            <span style="color: #4a5a72; font-size: 10px; margin-top: 2px;">Month</span>
+                        </div>
                         <span style="color: #4a5a72; font-size: 16px; font-weight: 600;">/</span>
-                        <input type="number" id="editMonth" placeholder="Month" min="1" max="12" style="width: 70px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06); border-radius: 10px; padding: 10px 8px; color: #e6edf5; font-size: 14px; outline: none; transition: 0.2s; font-family: 'Inter', sans-serif; box-sizing: border-box; text-align: center;">
+                        <div style="display: flex; flex-direction: column; align-items: center;">
+                            <input type="number" id="editMonth" placeholder="" min="1" max="12" style="width: 70px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06); border-radius: 10px; padding: 10px 8px; color: #e6edf5; font-size: 14px; outline: none; transition: 0.2s; font-family: 'Inter', sans-serif; box-sizing: border-box; text-align: center;">
+                            <span style="color: #4a5a72; font-size: 10px; margin-top: 2px;">Day</span>
+                        </div>
                         <span style="color: #4a5a72; font-size: 16px; font-weight: 600;">/</span>
-                        <input type="number" id="editYear" placeholder="Year" min="2020" max="2099" style="width: 80px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06); border-radius: 10px; padding: 10px 8px; color: #e6edf5; font-size: 14px; outline: none; transition: 0.2s; font-family: 'Inter', sans-serif; box-sizing: border-box; text-align: center;">
+                        <div style="display: flex; flex-direction: column; align-items: center;">
+                            <input type="number" id="editYear" placeholder="" min="2020" max="2099" style="width: 80px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06); border-radius: 10px; padding: 10px 8px; color: #e6edf5; font-size: 14px; outline: none; transition: 0.2s; font-family: 'Inter', sans-serif; box-sizing: border-box; text-align: center;">
+                            <span style="color: #4a5a72; font-size: 10px; margin-top: 2px;">Year</span>
+                        </div>
                         <span style="color: #4a5a72; font-size: 16px; font-weight: 600; margin: 0 2px;">|</span>
                         <input type="time" id="editTime" style="width: 120px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06); border-radius: 10px; padding: 10px 8px; color: #e6edf5; font-size: 14px; outline: none; transition: 0.2s; font-family: 'Inter', sans-serif; box-sizing: border-box; text-align: center; color-scheme: dark;">
                     </div>
@@ -735,7 +753,7 @@ function loadNotificationPage() {
     notifLoadNotifications();
 
     console.log('✅ User Notification page loaded');
-    console.log('   - Date picker: 4 separate inputs (Day / Month / Year HH:mm)');
+    console.log('   - Date picker: 4 separate inputs with labels below');
     console.log('   - Audience cards: glow effect on active');
     console.log('   - UID input: auto fetch user info');
 }
