@@ -1124,6 +1124,66 @@ window.showAmberNotification = function(title, message, type) {
     }, 5000);
 };
 
+// ============================================================
+// 🔔 显示音频激活提示（每台设备只需点击一次）
+// ============================================================
+function showAudioActivationHint() {
+    var adminName = localStorage.getItem('admin_username') || 'admin';
+    var key = 'audio_activated_' + adminName;
+    if (localStorage.getItem(key) === 'true') return;
+    
+    // 检查是否已经在页面上
+    if (document.getElementById('audioHint')) return;
+    
+    var hint = document.createElement('div');
+    hint.id = 'audioHint';
+    hint.style.cssText = `
+        position: fixed;
+        bottom: 80px;
+        right: 20px;
+        z-index: 999999;
+        background: rgba(20, 24, 40, 0.95);
+        backdrop-filter: blur(12px);
+        border: 1px solid rgba(201, 176, 149, 0.3);
+        border-radius: 16px;
+        padding: 16px 20px;
+        max-width: 280px;
+        font-family: 'Inter', sans-serif;
+        box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+        animation: slideInRight 0.4s ease;
+        cursor: pointer;
+        transition: opacity 0.5s ease;
+    `;
+    hint.innerHTML = `
+        <div style="display: flex; align-items: center; gap: 12px;">
+            <span style="font-size: 28px;">🔊</span>
+            <div>
+                <div style="color: #d8e0f0; font-size: 13px; font-weight: 600;">Enable Sound</div>
+                <div style="color: #6a7a92; font-size: 11px;">Click to enable notification sound</div>
+            </div>
+        </div>
+    `;
+    
+    hint.onclick = function() {
+        unlockAudioContext();
+        playNotificationSound('kyc');
+        localStorage.setItem(key, 'true');
+        this.style.opacity = '0';
+        setTimeout(function() {
+            if (hint.parentNode) hint.remove();
+        }, 400);
+    };
+    
+    document.body.appendChild(hint);
+    
+    // 5秒后淡出但保留在页面上
+    setTimeout(function() {
+        if (document.getElementById('audioHint')) {
+            hint.style.opacity = '0.5';
+        }
+    }, 5000);
+}
+
 function ensureAnimationStyles() {
     if (document.getElementById('notification-animation-styles')) return;
     
@@ -1482,6 +1542,11 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     
     loadNotificationCounts();
+    
+    // ===== 🔥 添加：显示音频激活提示 =====
+    setTimeout(function() {
+        showAudioActivationHint();
+    }, 3000);
     
     setTimeout(function() {
         loadNotifications();
