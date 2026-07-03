@@ -688,7 +688,8 @@ function renderSidebarNav() {
         { id: 'orderpool', icon: 'fa-hotel', label: 'Orders Pool' },
         { id: 'animated', icon: 'fa-play-circle', label: 'Animated' },
         { id: 'signin', icon: 'fa-calendar-check', label: 'Check In Bonus' },
-        { id: 'content', icon: 'fa-file-alt', label: 'Content Management' }
+        { id: 'content', icon: 'fa-file-alt', label: 'Content Management' },
+        { id: 'notification', icon: 'fa-bell', label: 'User Notification' }
     ];
 
     navItems.forEach(function(item) {
