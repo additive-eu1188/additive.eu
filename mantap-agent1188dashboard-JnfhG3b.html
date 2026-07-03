@@ -890,7 +890,7 @@
                                     <th>Orders</th>
                                     <th>VIP</th>
                                     <th>Country</th>
-                                    <th>Registered IP</th>
+                                    <th>Registered Date</th>
                                     <th>Last Online</th>
                                 </tr>
                             </thead>
@@ -1306,9 +1306,9 @@
                     }
                     row.insertCell(8).innerHTML = countryHtml;
 
-                    // Registered IP
-                    row.insertCell(9).innerHTML = '<span style="font-size:11px; color:rgba(255,255,255,0.4); font-family:monospace;">' +
-                        escapeHtml(user.registered_ip || '-') + '</span>';
+                    // Registered Date
+const regDate = user.created_at ? new Date(user.created_at).toLocaleString() : '-';
+row.insertCell(9).innerHTML = '<span style="font-size:11px; color:rgba(255,255,255,0.6);">' + regDate + '</span>';
 
                     // Last Online
                     const lastOnline = user.last_online || user.updated_at || user.created_at;
