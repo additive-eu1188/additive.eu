@@ -1,14 +1,9 @@
 // admin-notification.js - User Notification 管理页面
+// 依赖：admin-common.js, toast.js, user-data.js
+
 // ============================================================
-// Supabase 配置（使用全局 sb 对象，由 admin-common.js 提供）
+// 使用全局 sb 对象（由 admin-common.js 提供），不重复声明
 // ============================================================
-// 如果全局 sb 不存在，创建本地实例
-if (typeof sb === 'undefined') {
-    var sb = supabase.createClient(
-        'https://qgmbzdfnwsdosdqphlxk.supabase.co',
-        'sb_publishable_zsJFjfNUO7NKp8ZH5KrXFQ_WZ8Q2Kym'
-    );
-}
 
 // ============================================================
 // 全局状态
@@ -294,6 +289,7 @@ function selectAudience(type) {
 
 function openCreateModal() {
     document.getElementById('createNotifModal').classList.add('active');
+    document.getElementById('createNotifModal').style.display = 'flex';
     var defaultTime = getDefaultSentTime();
     document.getElementById('notifSentTimeInput').value = defaultTime;
     document.getElementById('notifTitleInput').value = '';
@@ -304,6 +300,7 @@ function openCreateModal() {
 
 function closeCreateModal() {
     document.getElementById('createNotifModal').classList.remove('active');
+    document.getElementById('createNotifModal').style.display = 'none';
 }
 
 function openEditTimeModal(id, sentTime) {
@@ -323,10 +320,12 @@ function openEditTimeModal(id, sentTime) {
     }
     document.getElementById('editSentTimeInput').value = dt;
     document.getElementById('editTimeModal').classList.add('active');
+    document.getElementById('editTimeModal').style.display = 'flex';
 }
 
 function closeEditTimeModal() {
     document.getElementById('editTimeModal').classList.remove('active');
+    document.getElementById('editTimeModal').style.display = 'none';
 }
 
 // ============================================================
