@@ -1,4 +1,24 @@
 // ============================================================
+// 🔥 确保 showToast 和 showConfirm 存在（备用实现）
+// ============================================================
+if (typeof showToast !== 'function') {
+    window.showToast = function(message, type) {
+        console.log('🔔 Toast:', message, type || 'info');
+        // 使用 alert 作为备用，确保功能可用
+        alert(message);
+    };
+}
+if (typeof showConfirm !== 'function') {
+    window.showConfirm = function(title, message, onConfirm, onCancel) {
+        if (confirm(title + '\n\n' + message)) {
+            if (onConfirm) onConfirm();
+        } else {
+            if (onCancel) onCancel();
+        }
+    };
+}
+
+// ============================================================
 // 全局状态
 // ============================================================
 var notifCurrentType = 'notification';
