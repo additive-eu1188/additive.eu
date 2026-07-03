@@ -1631,7 +1631,7 @@ window.refreshRecentOnly = refreshRecentOnly;
 window.refreshConversionOnly = refreshConversionOnly;
 
 // ============================================================
-// 🔥 祝贺消息函数 - 可折叠版本
+// 🔥 祝贺消息函数 - 可折叠版本（提前声明）
 // ============================================================
 async function updateCongratsMessage() {
     try {
@@ -1704,7 +1704,6 @@ async function updateCongratsMessage() {
         
         messageEl.innerHTML = messagesHtml;
         
-        // 默认收起
         messageEl.style.display = 'none';
         if (arrowEl) arrowEl.style.transform = 'rotate(0deg)';
         
@@ -1713,9 +1712,6 @@ async function updateCongratsMessage() {
     }
 }
 
-// ============================================================
-// 🔥 切换祝贺消息展开/收起
-// ============================================================
 function toggleCongratsMessage() {
     var messageEl = document.getElementById('congratsMessage');
     var arrowEl = document.getElementById('congratsArrow');
