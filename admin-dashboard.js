@@ -915,7 +915,11 @@ async function refreshDashboard(days, force) {
 
     // 🔥 只在 Today 视图显示祝贺消息
     if (days === 0) {
-        setTimeout(updateCongratsMessage, 500);
+        setTimeout(function() {
+            if (typeof updateCongratsMessage === 'function') {
+                updateCongratsMessage();
+            }
+        }, 500);
     } else {
         var congratsEl = document.getElementById('congratsMessage');
         if (congratsEl) {
@@ -1406,8 +1410,12 @@ function loadDashboardPage(days) {
     refreshDashboard(0, true).then(function() {
         console.log('✅ Dashboard 数据加载完成');
         console.log('🔄 实时监听已启动，无需定时轮询');
-        // 🔥 加载完成后更新祝贺消息
-        setTimeout(updateCongratsMessage, 600);
+                // 🔥 加载完成后更新祝贺消息
+        setTimeout(function() {
+            if (typeof updateCongratsMessage === 'function') {
+                updateCongratsMessage();
+            }
+        }, 600);
     });
 }, 200);
 
