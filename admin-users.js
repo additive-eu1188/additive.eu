@@ -2062,11 +2062,24 @@ async function updateWithdrawalAddress(uid) {
         `;
         
         // 加密类型选项
-        var typeOptions = ['USDT', 'BTC', 'ETH', 'USDC'];
-        var typeOptionsHtml = typeOptions.map(function(type) {
-            var selected = type === currentType ? 'selected' : '';
-            return '<option value="' + type + '" ' + selected + '>' + type + '</option>';
+        var cryptoOptions = [
+            { value: 'USDT', label: 'USDT (TRC20)', icon: 'fas fa-dollar-sign', color: '#26a17b' },
+            { value: 'BTC', label: 'BTC', icon: 'fab fa-bitcoin', color: '#f7931a' },
+            { value: 'ETH', label: 'ETH (ERC20)', icon: 'fab fa-ethereum', color: '#627eea' },
+            { value: 'USDC', label: 'USDC', icon: 'fas fa-dollar-sign', color: '#2775ca' }
+        ];
+        
+        // 生成选项 HTML
+        var optionsHtml = cryptoOptions.map(function(opt) {
+            var selected = opt.value === currentType ? 'selected' : '';
+            return '<div class="crypto-option-item ' + selected + '" data-value="' + opt.value + '" data-label="' + opt.label + '">' +
+                '<i class="' + opt.icon + '" style="color: ' + opt.color + '; width: 20px; text-align: center;"></i>' +
+                '<span>' + opt.label + '</span>' +
+                '</div>';
         }).join('');
+        
+        // 获取当前选中项的显示信息
+        var currentOpt = cryptoOptions.find(function(opt) { return opt.value === currentType; }) || cryptoOptions[0];
         
         modal.innerHTML = `
             <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 20px;">
@@ -2093,9 +2106,17 @@ async function updateWithdrawalAddress(uid) {
                     <i class="fas fa-coins" style="margin-right: 4px; font-size: 11px;"></i>
                     Currency Type
                 </label>
-                <select id="newAddressType" style="width: 100%; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06); border-radius: 10px; padding: 10px 14px; color: #e6edf5; font-size: 14px; outline: none; transition: 0.2s; box-sizing: border-box;">
-                    ${typeOptionsHtml}
-                </select>
+                <div class="crypto-select-wrapper" style="position: relative; width: 100%;">
+                    <div class="crypto-select-display" style="display: flex; align-items: center; gap: 10px; padding: 10px 14px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06); border-radius: 10px; cursor: pointer; transition: 0.25s ease; color: #e6edf5; font-size: 14px; user-select: none;">
+                        <i class="${currentOpt.icon}" style="color: ${currentOpt.color}; width: 20px; text-align: center;"></i>
+                        <span style="flex: 1;">${currentOpt.label}</span>
+                        <i class="fas fa-chevron-down" style="color: #5a6a82; font-size: 11px; transition: transform 0.25s ease;"></i>
+                    </div>
+                    <div class="crypto-select-dropdown" style="position: absolute; top: calc(100% + 4px); left: 0; right: 0; background: rgba(14, 18, 30, 0.98); backdrop-filter: blur(16px); border: 1px solid rgba(255,255,255,0.06); border-radius: 12px; padding: 4px 0; opacity: 0; visibility: hidden; transform: translateY(-6px); transition: all 0.2s ease; z-index: 100; max-height: 0; overflow: hidden; box-shadow: 0 20px 60px rgba(0,0,0,0.5);">
+                        ${optionsHtml}
+                    </div>
+                    <input type="hidden" id="newAddressType" value="${currentType}">
+                </div>
             </div>
             
             <div style="margin-bottom: 14px;">
@@ -2103,7 +2124,7 @@ async function updateWithdrawalAddress(uid) {
                     <i class="fas fa-address-book" style="margin-right: 4px; font-size: 11px;"></i>
                     Current Address
                 </label>
-                <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.04); border-radius: 10px; padding: 10px 14px; color: #6a7a92; font-size: 12px; word-break: break-all; font-family: monospace; min-height: 20px;">
+                <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.04); border-radius: 10px; padding: 10px 14px; color: #6a7a92; font-size: 12px; word-break: break-all; font-family: monospace; min-height: 20px; max-height: 80px; overflow-y: auto;">
                     ${currentAddress || '<span style="color: #4a5a72;">No address bound</span>'}
                 </div>
             </div>
@@ -2113,7 +2134,7 @@ async function updateWithdrawalAddress(uid) {
                     <i class="fas fa-pen" style="margin-right: 4px; font-size: 11px;"></i>
                     New Address
                 </label>
-                <input type="text" id="newAddressInput" placeholder="Enter new wallet address..." value="${escapeHtml(currentAddress)}" style="width: 100%; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06); border-radius: 10px; padding: 10px 14px; color: #e6edf5; font-size: 14px; outline: none; transition: 0.2s; box-sizing: border-box; font-family: monospace;">
+                <input type="text" id="newAddressInput" placeholder="Enter new wallet address..." value="" style="width: 100%; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06); border-radius: 10px; padding: 10px 14px; color: #e6edf5; font-size: 14px; outline: none; transition: 0.2s; box-sizing: border-box; font-family: monospace;">
                 <div style="font-size: 10px; color: #4a5a72; margin-top: 4px;">
                     <i class="fas fa-info-circle"></i> Enter the new withdrawal address for this user
                 </div>
@@ -2132,7 +2153,71 @@ async function updateWithdrawalAddress(uid) {
         overlay.appendChild(modal);
         document.body.appendChild(overlay);
         
+        // ============================================================
+        // 自定义下拉逻辑
+        // ============================================================
+        var display = modal.querySelector('.crypto-select-display');
+        var dropdown = modal.querySelector('.crypto-select-dropdown');
+        var options = modal.querySelectorAll('.crypto-option-item');
+        var hiddenInput = modal.querySelector('#newAddressType');
+        
+        // 点击显示框切换下拉
+        display.addEventListener('click', function(e) {
+            e.stopPropagation();
+            var isOpen = dropdown.style.opacity === '1';
+            if (!isOpen) {
+                dropdown.style.opacity = '1';
+                dropdown.style.visibility = 'visible';
+                dropdown.style.maxHeight = '200px';
+                dropdown.style.transform = 'translateY(0)';
+            } else {
+                dropdown.style.opacity = '0';
+                dropdown.style.visibility = 'hidden';
+                dropdown.style.maxHeight = '0';
+                dropdown.style.transform = 'translateY(-6px)';
+            }
+        });
+        
+        // 点击选项
+        options.forEach(function(option) {
+            option.addEventListener('click', function(e) {
+                e.stopPropagation();
+                var value = this.dataset.value;
+                var label = this.dataset.label;
+                var icon = this.querySelector('i') ? this.querySelector('i').outerHTML : '';
+                
+                // 更新隐藏输入
+                hiddenInput.value = value;
+                
+                // 更新显示
+                display.innerHTML = icon + ' <span style="flex:1;">' + label + '</span> <i class="fas fa-chevron-down" style="color: #5a6a82; font-size: 11px; transition: transform 0.25s ease;"></i>';
+                
+                // 更新选中状态
+                options.forEach(function(opt) { opt.classList.remove('selected'); });
+                this.classList.add('selected');
+                
+                // 关闭下拉
+                dropdown.style.opacity = '0';
+                dropdown.style.visibility = 'hidden';
+                dropdown.style.maxHeight = '0';
+                dropdown.style.transform = 'translateY(-6px)';
+            });
+        });
+        
+        // 点击外部关闭下拉
+        document.addEventListener('click', function closeDropdown(e) {
+            var wrapper = modal.querySelector('.crypto-select-wrapper');
+            if (wrapper && !wrapper.contains(e.target)) {
+                dropdown.style.opacity = '0';
+                dropdown.style.visibility = 'hidden';
+                dropdown.style.maxHeight = '0';
+                dropdown.style.transform = 'translateY(-6px)';
+            }
+        });
+        
+        // ============================================================
         // 动画样式
+        // ============================================================
         if (!document.getElementById('updateAddressModalStyles')) {
             var style = document.createElement('style');
             style.id = 'updateAddressModalStyles';
@@ -2145,19 +2230,59 @@ async function updateWithdrawalAddress(uid) {
                     from { transform: scale(0.92); opacity: 0; }
                     to { transform: scale(1); opacity: 1; }
                 }
-                #updateAddressModal input:focus,
-                #updateAddressModal select:focus {
+                #updateAddressModal input:focus {
                     border-color: rgba(201,176,149,0.25);
                     background: rgba(255,255,255,0.06);
                 }
                 #updateAddressModal input::placeholder {
                     color: rgba(255,255,255,0.12);
                 }
+                .crypto-option-item {
+                    display: flex;
+                    align-items: center;
+                    gap: 10px;
+                    padding: 10px 16px;
+                    cursor: pointer;
+                    transition: 0.15s ease;
+                    color: #b8c4de;
+                    font-size: 14px;
+                    font-weight: 500;
+                }
+                .crypto-option-item:hover {
+                    background: rgba(255,255,255,0.04);
+                    color: #e6edf5;
+                }
+                .crypto-option-item.selected {
+                    background: rgba(255,255,255,0.02);
+                    color: #e6edf5;
+                }
+                .crypto-option-item.selected::after {
+                    content: ' ✓';
+                    color: #6a8af0;
+                }
+                .crypto-option-item i {
+                    width: 20px;
+                    text-align: center;
+                    flex-shrink: 0;
+                }
+                .crypto-select-display:hover {
+                    border-color: rgba(255,255,255,0.12);
+                    background: rgba(255,255,255,0.06);
+                }
+                #updateAddressModal .crypto-select-dropdown::-webkit-scrollbar {
+                    width: 3px;
+                }
+                #updateAddressModal .crypto-select-dropdown::-webkit-scrollbar-thumb {
+                    background: rgba(255,255,255,0.08);
+                    border-radius: 4px;
+                }
             `;
             document.head.appendChild(style);
         }
         
+        // ============================================================
         // 关闭弹窗
+        // ============================================================
         function closeModal() {
             if (overlay.parentNode) overlay.remove();
         }
@@ -2174,7 +2299,9 @@ async function updateWithdrawalAddress(uid) {
             }
         });
         
+        // ============================================================
         // 确认更新
+        // ============================================================
         document.getElementById('updateAddressConfirmBtn').addEventListener('click', async function() {
             var newAddress = document.getElementById('newAddressInput').value.trim();
             var newType = document.getElementById('newAddressType').value;
