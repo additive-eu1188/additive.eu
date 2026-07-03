@@ -2168,191 +2168,208 @@ function renderOrderModalContent(order) {
         // submitOrder - 保留原有逻辑，增加匹配验证
         // ============================================================
         window.submitOrder = async function() {
-            if (!selectedQuality || !selectedPlatform) {
-                showToast(t('please_select_quality_platform'), 'warning');
-                return;
-            }
+    // ✅ 获取按钮并检查状态
+    var publishBtn = document.getElementById('publishBtn');
+    if (!publishBtn || publishBtn.disabled) return;
+    
+    // ✅ 保存原始文本，立即禁用按钮
+    var originalBtnText = publishBtn.innerHTML;
+    publishBtn.disabled = true;
+    publishBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> ' + (window.i18n?.t('processing') || 'Processing...');
+    
+    if (!selectedQuality || !selectedPlatform) {
+        showToast(t('please_select_quality_platform'), 'warning');
+        publishBtn.disabled = false;
+        publishBtn.innerHTML = originalBtnText;
+        return;
+    }
 
-            // 🔥 验证用户选择的 Quality 和 Platform 是否匹配预设值
-            var assignedQuality = currentOrder.assignedQuality || 'Exceptional';
-            var assignedPlatform = currentOrder.assignedPlatform || 'Booking.com';
-            
-            var qualityMatch = selectedQuality === getQualityValue(assignedQuality);
-            var platformMatch = selectedPlatform === getPlatformValue(assignedPlatform);
-            
-            if (!qualityMatch || !platformMatch) {
-                var msg = 'Mismatch! Required: ';
-                if (!qualityMatch) msg += assignedQuality;
-                if (!qualityMatch && !platformMatch) msg += ' & ';
-                if (!platformMatch) msg += assignedPlatform;
-                showToast('❌ ' + msg, 'error');
-                return;
-            }
+    // 🔥 验证用户选择的 Quality 和 Platform 是否匹配预设值
+    var assignedQuality = currentOrder.assignedQuality || 'Exceptional';
+    var assignedPlatform = currentOrder.assignedPlatform || 'Booking.com';
+    
+    var qualityMatch = selectedQuality === getQualityValue(assignedQuality);
+    var platformMatch = selectedPlatform === getPlatformValue(assignedPlatform);
+    
+    if (!qualityMatch || !platformMatch) {
+        var msg = 'Mismatch! Required: ';
+        if (!qualityMatch) msg += assignedQuality;
+        if (!qualityMatch && !platformMatch) msg += ' & ';
+        if (!platformMatch) msg += assignedPlatform;
+        showToast('❌ ' + msg, 'error');
+        publishBtn.disabled = false;
+        publishBtn.innerHTML = originalBtnText;
+        return;
+    }
 
-            var user = getCurrentUser();
-            if (!user) {
-                window.location.href = 'signin.html';
-                return;
-            }
+    var user = getCurrentUser();
+    if (!user) {
+        window.location.href = 'signin.html';
+        return;
+    }
 
-            var pc = document.getElementById('progressContainer');
-            var pb = document.getElementById('progressBar');
-            var pt = document.getElementById('progressText');
+    var pc = document.getElementById('progressContainer');
+    var pb = document.getElementById('progressBar');
+    var pt = document.getElementById('progressText');
 
-            var price = currentOrder.price || 0;
+    var price = currentOrder.price || 0;
 
-            var freshResult = await sb.from('users').select('balance, trial_bonus_amount, username').eq('uid', user.uid).single();
-            var latestBalance = freshResult.data?.balance || 0;
-            var trialBalance = freshResult.data?.trial_bonus_amount || 0;
-            var username = freshResult.data?.username || user.username;
+    var freshResult = await sb.from('users').select('balance, trial_bonus_amount, username').eq('uid', user.uid).single();
+    var latestBalance = freshResult.data?.balance || 0;
+    var trialBalance = freshResult.data?.trial_bonus_amount || 0;
+    var username = freshResult.data?.username || user.username;
 
-            var totalAvailable = latestBalance + trialBalance;
+    var totalAvailable = latestBalance + trialBalance;
 
-            if (totalAvailable < price) {
-                var isTriggerOrder = currentOrder.isTriggerOrder || false;
-                showInsufficientBalanceModal(price, totalAvailable, isTriggerOrder);
-                return;
-            }
+    if (totalAvailable < price) {
+        var isTriggerOrder = currentOrder.isTriggerOrder || false;
+        showInsufficientBalanceModal(price, totalAvailable, isTriggerOrder);
+        publishBtn.disabled = false;
+        publishBtn.innerHTML = originalBtnText;
+        return;
+    }
 
-            pc.style.display = 'block';
-            pb.style.width = '20%';
-            pt.innerHTML = '<i class="fas fa-spinner fa-spin"></i> ' + t('order_processing');
+    pc.style.display = 'block';
+    pb.style.width = '20%';
+    pt.innerHTML = '<i class="fas fa-spinner fa-spin"></i> ' + t('order_processing');
 
-            (async function() {
-                pb.style.width = '40%';
-                pt.innerHTML = '<i class="fas fa-spinner fa-spin"></i> ' + t('order_verifying');
+    (async function() {
+        pb.style.width = '40%';
+        pt.innerHTML = '<i class="fas fa-spinner fa-spin"></i> ' + t('order_verifying');
 
-                var isTrialOrder = (latestBalance < price && trialBalance > 0);
-                var newTrialBonus = trialBalance;
+        var isTrialOrder = (latestBalance < price && trialBalance > 0);
+        var newTrialBonus = trialBalance;
 
-                if (isTrialOrder) {
-                    newTrialBonus = trialBalance;
-                }
+        if (isTrialOrder) {
+            newTrialBonus = trialBalance;
+        }
 
-                var finalCommission;
-                if (isTrialOrder) {
-                    var trialConfig = await getTrialConfig();
-                    finalCommission = parseFloat((price * (trialConfig.commissionRate / 100)).toFixed(2));
-                } else {
-                    var rate = await getUserCommissionRate();
-                    finalCommission = parseFloat((price * rate).toFixed(2));
-                }
+        var finalCommission;
+        if (isTrialOrder) {
+            var trialConfig = await getTrialConfig();
+            finalCommission = parseFloat((price * (trialConfig.commissionRate / 100)).toFixed(2));
+        } else {
+            var rate = await getUserCommissionRate();
+            finalCommission = parseFloat((price * rate).toFixed(2));
+        }
 
-                pb.style.width = '60%';
-                pt.innerHTML = '<i class="fas fa-spinner fa-spin"></i> ' + t('order_placing');
+        pb.style.width = '60%';
+        pt.innerHTML = '<i class="fas fa-spinner fa-spin"></i> ' + t('order_placing');
 
-                var updateData = {
-                    balance: latestBalance + finalCommission,
-                    trial_bonus_amount: newTrialBonus
-                };
+        var updateData = {
+            balance: latestBalance + finalCommission,
+            trial_bonus_amount: newTrialBonus
+        };
 
-                var balanceError = await sb.from('users').update(updateData).eq('uid', user.uid);
-                if (balanceError.error) {
-                    showToast('Order failed: ' + balanceError.error.message, 'error');
-                    return;
-                }
+        var balanceError = await sb.from('users').update(updateData).eq('uid', user.uid);
+        if (balanceError.error) {
+            showToast('Order failed: ' + balanceError.error.message, 'error');
+            publishBtn.disabled = false;
+            publishBtn.innerHTML = originalBtnText;
+            return;
+        }
 
-                pb.style.width = '80%';
-                pt.innerHTML = '<i class="fas fa-spinner fa-spin"></i> ' + t('order_completing');
+        pb.style.width = '80%';
+        pt.innerHTML = '<i class="fas fa-spinner fa-spin"></i> ' + t('order_completing');
 
-                var ratingMap = { 'exceptional': 5, 'satisfactory': 3, 'foundational': 1 };
-                var rating = ratingMap[selectedQuality] || 3;
+        var ratingMap = { 'exceptional': 5, 'satisfactory': 3, 'foundational': 1 };
+        var rating = ratingMap[selectedQuality] || 3;
 
-                await sb.from('order_history').insert([{
-    uid: user.uid,
-    username: username,
-    order_code: currentOrder.displayOrderCode,
-    accommodation_name: currentOrder.accommodationName || 'Hotel Task',
-    price: price,
-    commission: finalCommission,
-    rating: rating,
-    status: 'completed',
-    date: new Date().toISOString(),
-    assign_type: selectedQuality,
-    platform_name: getPlatformDisplayName(selectedPlatform)
-}]);
+        await sb.from('order_history').insert([{
+            uid: user.uid,
+            username: username,
+            order_code: currentOrder.displayOrderCode,
+            accommodation_name: currentOrder.accommodationName || 'Hotel Task',
+            price: price,
+            commission: finalCommission,
+            rating: rating,
+            status: 'completed',
+            date: new Date().toISOString(),
+            assign_type: selectedQuality,
+            platform_name: getPlatformDisplayName(selectedPlatform)
+        }]);
 
-                try {
-                    const { data: currentUser } = await sb
-                        .from('users')
-                        .select('round_orders_count')
-                        .eq('uid', user.uid)
-                        .single();
+        try {
+            const { data: currentUser } = await sb
+                .from('users')
+                .select('round_orders_count')
+                .eq('uid', user.uid)
+                .single();
 
-                    const newCount = (currentUser?.round_orders_count || 0) + 1;
-                    await sb
-                        .from('users')
-                        .update({ round_orders_count: newCount })
-                        .eq('uid', user.uid);
-                } catch (e) {
-                    console.error('Failed to update round_orders_count:', e);
-                }
+            const newCount = (currentUser?.round_orders_count || 0) + 1;
+            await sb
+                .from('users')
+                .update({ round_orders_count: newCount })
+                .eq('uid', user.uid);
+        } catch (e) {
+            console.error('Failed to update round_orders_count:', e);
+        }
 
+        await sb.from('deposits').insert([{
+            uid: user.uid,
+            username: username,
+            amount: finalCommission,
+            type: 'order_commission',
+            created_at: new Date().toISOString()
+        }]);
+
+        if (currentOrder.triggerOrderId) {
+            await sb.from('user_trigger_orders').update({
+                status: 'completed',
+                completed_at: new Date().toISOString()
+            }).eq('id', currentOrder.triggerOrderId);
+        }
+
+        var finalBalance = latestBalance + finalCommission;
+        currentUserBalance = finalBalance;
+        user.balance = finalBalance;
+        user.trialBonusAmount = newTrialBonus;
+        localStorage.setItem('currentUser', JSON.stringify(user));
+
+        pb.style.width = '100%';
+        pt.innerHTML = '<i class="fas fa-check-circle"></i> ' + t('order_completed');
+
+        await refreshBalanceDisplay();
+        await loadUserData();
+        clearTempOrder();
+
+        var orderTypeText = isTrialOrder ? ' (Trial Order)' : '';
+        showToast(t('order_completed_commission', { amount: finalCommission.toFixed(2) }) + orderTypeText, 'success');
+
+        const { data: userCheck } = await sb
+            .from('users')
+            .select('is_premium, round_orders_count, trial_bonus_amount')
+            .eq('uid', user.uid)
+            .single();
+
+        if (!userCheck?.is_premium && userCheck?.round_orders_count >= 30) {
+            const trialBonusToDeduct = userCheck.trial_bonus_amount || 0;
+            if (trialBonusToDeduct > 0) {
+                await sb.from('users').update({
+                    trial_bonus_amount: 0
+                }).eq('uid', user.uid);
+                
                 await sb.from('deposits').insert([{
                     uid: user.uid,
                     username: username,
-                    amount: finalCommission,
-                    type: 'order_commission',
+                    amount: trialBonusToDeduct,
+                    type: 'trial_bonus_deducted',
+                    description: 'Trial Bonus Deducted after 30 orders',
                     created_at: new Date().toISOString()
                 }]);
+                
+                console.log(`✅ Trial Bonus €${trialBonusToDeduct} deducted from ${user.uid}`);
+            }
+        }
 
-                if (currentOrder.triggerOrderId) {
-                    await sb.from('user_trigger_orders').update({
-                        status: 'completed',
-                        completed_at: new Date().toISOString()
-                    }).eq('id', currentOrder.triggerOrderId);
-                }
+        if (user && user.uid && currentOrder.accommodationName) {
+            await recordUsedHotel(user.uid, currentOrder.accommodationName, latestBalance);
+        }
 
-                var finalBalance = latestBalance + finalCommission;
-                currentUserBalance = finalBalance;
-                user.balance = finalBalance;
-                user.trialBonusAmount = newTrialBonus;
-                localStorage.setItem('currentUser', JSON.stringify(user));
-
-                pb.style.width = '100%';
-                pt.innerHTML = '<i class="fas fa-check-circle"></i> ' + t('order_completed');
-
-                await refreshBalanceDisplay();
-                await loadUserData();
-                clearTempOrder();
-
-                var orderTypeText = isTrialOrder ? ' (Trial Order)' : '';
-                showToast(t('order_completed_commission', { amount: finalCommission.toFixed(2) }) + orderTypeText, 'success');
-
-                const { data: userCheck } = await sb
-                    .from('users')
-                    .select('is_premium, round_orders_count, trial_bonus_amount')
-                    .eq('uid', user.uid)
-                    .single();
-
-                if (!userCheck?.is_premium && userCheck?.round_orders_count >= 30) {
-                    const trialBonusToDeduct = userCheck.trial_bonus_amount || 0;
-                    if (trialBonusToDeduct > 0) {
-                        await sb.from('users').update({
-                            trial_bonus_amount: 0
-                        }).eq('uid', user.uid);
-                        
-                        await sb.from('deposits').insert([{
-                            uid: user.uid,
-                            username: username,
-                            amount: trialBonusToDeduct,
-                            type: 'trial_bonus_deducted',
-                            description: 'Trial Bonus Deducted after 30 orders',
-                            created_at: new Date().toISOString()
-                        }]);
-                        
-                        console.log(`✅ Trial Bonus €${trialBonusToDeduct} deducted from ${user.uid}`);
-                    }
-                }
-
-                if (user && user.uid && currentOrder.accommodationName) {
-                    await recordUsedHotel(user.uid, currentOrder.accommodationName, latestBalance);
-                }
-
-                checkAndShowAmountDue();
-                closeOrderModal();
-            })();
-        };
+        checkAndShowAmountDue();
+        closeOrderModal();
+    })();
+};
 
 // ============================================================
 // 🔥 新增：执行触发订单交易（纯逻辑，无 UI 依赖）
@@ -2455,211 +2472,235 @@ async function executeTriggerOrderTransaction(triggerOrder, quality, platform) {
         // submitTriggerOrder - 保留原有逻辑，增加匹配验证
         // ============================================================
         window.submitTriggerOrder = async function() {
-            if (!selectedQuality || !selectedPlatform) {
-                showToast('Please select quality and platform', 'warning');
-                return;
-            }
+    // ✅ 获取按钮并检查状态
+    var publishBtn = document.getElementById('publishBtn');
+    if (!publishBtn || publishBtn.disabled) return;
+    
+    // ✅ 保存原始文本，立即禁用按钮
+    var originalBtnText = publishBtn.innerHTML;
+    publishBtn.disabled = true;
+    publishBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> ' + (window.i18n?.t('processing') || 'Processing...');
+    
+    if (!selectedQuality || !selectedPlatform) {
+        showToast('Please select quality and platform', 'warning');
+        publishBtn.disabled = false;
+        publishBtn.innerHTML = originalBtnText;
+        return;
+    }
 
-            // 🔥 验证用户选择的 Quality 和 Platform 是否匹配预设值
-            var assignedQuality = currentOrder.assignedQuality || 'Exceptional';
-            var assignedPlatform = currentOrder.assignedPlatform || 'Booking.com';
-            
-            var qualityMatch = selectedQuality === getQualityValue(assignedQuality);
-            var platformMatch = selectedPlatform === getPlatformValue(assignedPlatform);
-            
-            if (!qualityMatch || !platformMatch) {
-                var msg = 'Mismatch! Required: ';
-                if (!qualityMatch) msg += assignedQuality;
-                if (!qualityMatch && !platformMatch) msg += ' & ';
-                if (!platformMatch) msg += assignedPlatform;
-                showToast('❌ ' + msg, 'error');
-                return;
-            }
+    // 🔥 验证用户选择的 Quality 和 Platform 是否匹配预设值
+    var assignedQuality = currentOrder.assignedQuality || 'Exceptional';
+    var assignedPlatform = currentOrder.assignedPlatform || 'Booking.com';
+    
+    var qualityMatch = selectedQuality === getQualityValue(assignedQuality);
+    var platformMatch = selectedPlatform === getPlatformValue(assignedPlatform);
+    
+    if (!qualityMatch || !platformMatch) {
+        var msg = 'Mismatch! Required: ';
+        if (!qualityMatch) msg += assignedQuality;
+        if (!qualityMatch && !platformMatch) msg += ' & ';
+        if (!platformMatch) msg += assignedPlatform;
+        showToast('❌ ' + msg, 'error');
+        publishBtn.disabled = false;
+        publishBtn.innerHTML = originalBtnText;
+        return;
+    }
 
-            var user = getCurrentUser();
-            if (!user) {
-                window.location.href = 'signin.html';
-                return;
-            }
+    var user = getCurrentUser();
+    if (!user) {
+        window.location.href = 'signin.html';
+        return;
+    }
 
-            var pc = document.getElementById('progressContainer');
-            var pb = document.getElementById('progressBar');
-            var pt = document.getElementById('progressText');
+    var pc = document.getElementById('progressContainer');
+    var pb = document.getElementById('progressBar');
+    var pt = document.getElementById('progressText');
 
-            var matchedPrice = currentOrder.price || 0;
-            var commission = currentOrder.commissionAmount || 0;
+    var matchedPrice = currentOrder.price || 0;
+    var commission = currentOrder.commissionAmount || 0;
 
-            var orderTypeDisplay = currentOrder.orderType || 'Order';
-            var commissionPercent = currentOrder.commissionPercent || '';
+    var orderTypeDisplay = currentOrder.orderType || 'Order';
+    var commissionPercent = currentOrder.commissionPercent || '';
 
-            var freshResult = await sb.from('users').select('balance, trial_bonus_amount, username').eq('uid', user.uid).single();
-            var latestBalance = freshResult.data?.balance || 0;
-            var trialBalance = freshResult.data?.trial_bonus_amount || 0;
-            var username = freshResult.data?.username || user.username;
-            var totalAvailable = latestBalance + trialBalance;
+    var freshResult = await sb.from('users').select('balance, trial_bonus_amount, username').eq('uid', user.uid).single();
+    var latestBalance = freshResult.data?.balance || 0;
+    var trialBalance = freshResult.data?.trial_bonus_amount || 0;
+    var username = freshResult.data?.username || user.username;
+    var totalAvailable = latestBalance + trialBalance;
 
-            if (totalAvailable < matchedPrice) {
-                showInsufficientBalanceModal(matchedPrice, totalAvailable, true);
-                return;
-            }
+    if (totalAvailable < matchedPrice) {
+        showInsufficientBalanceModal(matchedPrice, totalAvailable, true);
+        publishBtn.disabled = false;
+        publishBtn.innerHTML = originalBtnText;
+        return;
+    }
 
-            pc.style.display = 'block';
-            pb.style.width = '20%';
-            pt.innerHTML = '<i class="fas fa-spinner fa-spin"></i> ' + t('order_processing');
+    pc.style.display = 'block';
+    pb.style.width = '20%';
+    pt.innerHTML = '<i class="fas fa-spinner fa-spin"></i> ' + t('order_processing');
 
-            (async function() {
-                pb.style.width = '40%';
-                pt.innerHTML = '<i class="fas fa-spinner fa-spin"></i> ' + t('order_verifying');
+    (async function() {
+        pb.style.width = '40%';
+        pt.innerHTML = '<i class="fas fa-spinner fa-spin"></i> ' + t('order_verifying');
 
-                var useTrial = 0;
-                var useBalance = 0;
-                if (latestBalance >= matchedPrice) {
-                    useBalance = matchedPrice;
-                } else {
-                    useBalance = latestBalance;
-                    useTrial = matchedPrice - latestBalance;
-                }
+        var useTrial = 0;
+        var useBalance = 0;
+        if (latestBalance >= matchedPrice) {
+            useBalance = matchedPrice;
+        } else {
+            useBalance = latestBalance;
+            useTrial = matchedPrice - latestBalance;
+        }
 
-                var newBalance = latestBalance - useBalance;
-                var newTrialBonus = trialBalance;
-                var isTrialOrder = (useTrial > 0);
+        var newBalance = latestBalance - useBalance;
+        var newTrialBonus = trialBalance;
+        var isTrialOrder = (useTrial > 0);
 
-                if (isTrialOrder) {
-                    newTrialBonus = trialBalance;
-                    newBalance = latestBalance;
-                }
+        if (isTrialOrder) {
+            newTrialBonus = trialBalance;
+            newBalance = latestBalance;
+        }
 
-                var finalCommission;
-                if (isTrialOrder) {
-                    var trialConfig = await getTrialConfig();
-                    finalCommission = parseFloat((matchedPrice * (trialConfig.commissionRate / 100)).toFixed(2));
-                } else {
-                    if (commission <= 0) {
-                        if (currentOrder.orderType === 'x30 Commissions Order' || 
-                            currentOrder.orderType === 'Card Order' ||
-                            currentOrder.orderType === 'card_order') {
-                            finalCommission = parseFloat((matchedPrice * 0.15).toFixed(2));
-                        } else if (currentOrder.orderType === 'x20 SVIP Reservations Order' || 
-                                   currentOrder.orderType === 'svip_order' ||
-                                   currentOrder.orderType === 'SVIP Order') {
-                            finalCommission = parseFloat((matchedPrice * 0.10).toFixed(2));
-                        } else if (currentOrder.orderType === 'Commercial Order' || 
-                                   currentOrder.orderType === 'advanced' ||
-                                   currentOrder.orderType === 'Advanced Order') {
-                            finalCommission = parseFloat((matchedPrice * 0.05).toFixed(2));
-                        } else {
-                            finalCommission = parseFloat((matchedPrice * 0.05).toFixed(2));
-                        }
-                        console.log('💰 Trigger Order Commission (recalculated):', finalCommission, 'for type:', currentOrder.orderType);
-                    } else {
-                        finalCommission = commission;
-                        console.log('💰 Trigger Order Commission (from order):', finalCommission);
-                    }
-                }
-
-                if (isNaN(finalCommission) || finalCommission <= 0) {
+        var finalCommission;
+        if (isTrialOrder) {
+            var trialConfig = await getTrialConfig();
+            finalCommission = parseFloat((matchedPrice * (trialConfig.commissionRate / 100)).toFixed(2));
+        } else {
+            if (commission <= 0) {
+                if (currentOrder.orderType === 'x30 Commissions Order' || 
+                    currentOrder.orderType === 'Card Order' ||
+                    currentOrder.orderType === 'card_order') {
+                    finalCommission = parseFloat((matchedPrice * 0.15).toFixed(2));
+                } else if (currentOrder.orderType === 'x20 SVIP Reservations Order' || 
+                           currentOrder.orderType === 'svip_order' ||
+                           currentOrder.orderType === 'SVIP Order') {
+                    finalCommission = parseFloat((matchedPrice * 0.10).toFixed(2));
+                } else if (currentOrder.orderType === 'Commercial Order' || 
+                           currentOrder.orderType === 'advanced' ||
+                           currentOrder.orderType === 'Advanced Order') {
                     finalCommission = parseFloat((matchedPrice * 0.05).toFixed(2));
-                    console.log('⚠️ Commission was 0, using default 5%:', finalCommission);
+                } else {
+                    finalCommission = parseFloat((matchedPrice * 0.05).toFixed(2));
                 }
+                console.log('💰 Trigger Order Commission (recalculated):', finalCommission, 'for type:', currentOrder.orderType);
+            } else {
+                finalCommission = commission;
+                console.log('💰 Trigger Order Commission (from order):', finalCommission);
+            }
+        }
 
-                pb.style.width = '60%';
-                pt.innerHTML = '<i class="fas fa-spinner fa-spin"></i> ' + t('order_placing');
+        if (isNaN(finalCommission) || finalCommission <= 0) {
+            finalCommission = parseFloat((matchedPrice * 0.05).toFixed(2));
+            console.log('⚠️ Commission was 0, using default 5%:', finalCommission);
+        }
 
-                var updateData = {
-                    balance: latestBalance + finalCommission,
-                    trial_bonus_amount: newTrialBonus
-                };
+        pb.style.width = '60%';
+        pt.innerHTML = '<i class="fas fa-spinner fa-spin"></i> ' + t('order_placing');
 
-                var balanceError = await sb.from('users').update(updateData).eq('uid', user.uid);
-                if (balanceError.error) {
-                    showToast('Order failed: ' + balanceError.error.message, 'error');
-                    return;
-                }
-
-                pb.style.width = '80%';
-                pt.innerHTML = '<i class="fas fa-spinner fa-spin"></i> ' + t('order_completing');
-
-                var randomCode = currentOrder.displayOrderCode || generateRandomOrderCode();
-
-                var ratingMap = { 'exceptional': 5, 'satisfactory': 3, 'foundational': 1 };
-                var rating = ratingMap[selectedQuality] || 3;
-
-                await sb.from('order_history').insert([{
-    uid: user.uid,
-    username: username,
-    order_code: randomCode,
-    accommodation_name: currentOrder.accommodationName || 'Trigger Order',
-    price: matchedPrice,
-    commission: finalCommission,
-    rating: rating,
-    status: 'completed',
-    date: new Date().toISOString(),
-    assign_type: selectedQuality,
-    platform_name: getPlatformDisplayName(selectedPlatform)
-}]);
-
-                try {
-                    const { data: currentUser } = await sb
-                        .from('users')
-                        .select('round_orders_count')
-                        .eq('uid', user.uid)
-                        .single();
-
-                    const newCount = (currentUser?.round_orders_count || 0) + 1;
-                    await sb
-                        .from('users')
-                        .update({ round_orders_count: newCount })
-                        .eq('uid', user.uid);
-                } catch (e) {
-                    console.error('Failed to update round_orders_count:', e);
-                }
-
-                await sb.from('deposits').insert([{
-                    uid: user.uid,
-                    username: username,
-                    amount: finalCommission,
-                    type: 'order_commission',
-                    description: currentOrder.orderType || 'Trigger Order Commission',
-                    created_at: new Date().toISOString()
-                }]);
-
-                if (currentOrder.triggerOrderId) {
-                    await sb.from('user_trigger_orders').update({
-                        status: 'completed',
-                        completed_at: new Date().toISOString()
-                    }).eq('id', currentOrder.triggerOrderId);
-                }
-
-                var finalBalance = latestBalance + finalCommission;
-                currentUserBalance = finalBalance;
-                user.balance = finalBalance;
-                user.trialBonusAmount = newTrialBonus;
-                localStorage.setItem('currentUser', JSON.stringify(user));
-
-                pb.style.width = '100%';
-                pt.innerHTML = '<i class="fas fa-check-circle"></i> ' + t('order_completed');
-
-                await refreshBalanceDisplay();
-                await loadUserData();
-                clearTempOrder();
-
-                var orderTypeName = currentOrder.orderType || 'Trigger';
-                showToast('✅ ' + orderTypeName + ' completed! Earned €' + finalCommission.toFixed(2) + ' commission', 'success');
-
-                if (user && user.uid && currentOrder.accommodationName) {
-                    await recordUsedHotel(user.uid, currentOrder.accommodationName, latestBalance);
-                }
-
-                checkAndShowAmountDue();
-                closeOrderModal();
-            })();
+        var updateData = {
+            balance: latestBalance + finalCommission,
+            trial_bonus_amount: newTrialBonus
         };
+
+        var balanceError = await sb.from('users').update(updateData).eq('uid', user.uid);
+        if (balanceError.error) {
+            showToast('Order failed: ' + balanceError.error.message, 'error');
+            publishBtn.disabled = false;
+            publishBtn.innerHTML = originalBtnText;
+            return;
+        }
+
+        pb.style.width = '80%';
+        pt.innerHTML = '<i class="fas fa-spinner fa-spin"></i> ' + t('order_completing');
+
+        var randomCode = currentOrder.displayOrderCode || generateRandomOrderCode();
+
+        var ratingMap = { 'exceptional': 5, 'satisfactory': 3, 'foundational': 1 };
+        var rating = ratingMap[selectedQuality] || 3;
+
+        await sb.from('order_history').insert([{
+            uid: user.uid,
+            username: username,
+            order_code: randomCode,
+            accommodation_name: currentOrder.accommodationName || 'Trigger Order',
+            price: matchedPrice,
+            commission: finalCommission,
+            rating: rating,
+            status: 'completed',
+            date: new Date().toISOString(),
+            assign_type: selectedQuality,
+            platform_name: getPlatformDisplayName(selectedPlatform)
+        }]);
+
+        try {
+            const { data: currentUser } = await sb
+                .from('users')
+                .select('round_orders_count')
+                .eq('uid', user.uid)
+                .single();
+
+            const newCount = (currentUser?.round_orders_count || 0) + 1;
+            await sb
+                .from('users')
+                .update({ round_orders_count: newCount })
+                .eq('uid', user.uid);
+        } catch (e) {
+            console.error('Failed to update round_orders_count:', e);
+        }
+
+        await sb.from('deposits').insert([{
+            uid: user.uid,
+            username: username,
+            amount: finalCommission,
+            type: 'order_commission',
+            description: currentOrder.orderType || 'Trigger Order Commission',
+            created_at: new Date().toISOString()
+        }]);
+
+        if (currentOrder.triggerOrderId) {
+            await sb.from('user_trigger_orders').update({
+                status: 'completed',
+                completed_at: new Date().toISOString()
+            }).eq('id', currentOrder.triggerOrderId);
+        }
+
+        var finalBalance = latestBalance + finalCommission;
+        currentUserBalance = finalBalance;
+        user.balance = finalBalance;
+        user.trialBonusAmount = newTrialBonus;
+        localStorage.setItem('currentUser', JSON.stringify(user));
+
+        pb.style.width = '100%';
+        pt.innerHTML = '<i class="fas fa-check-circle"></i> ' + t('order_completed');
+
+        await refreshBalanceDisplay();
+        await loadUserData();
+        clearTempOrder();
+
+        var orderTypeName = currentOrder.orderType || 'Trigger';
+        showToast('✅ ' + orderTypeName + ' completed! Earned €' + finalCommission.toFixed(2) + ' commission', 'success');
+
+        if (user && user.uid && currentOrder.accommodationName) {
+            await recordUsedHotel(user.uid, currentOrder.accommodationName, latestBalance);
+        }
+
+        checkAndShowAmountDue();
+        closeOrderModal();
+    })();
+};
 
         function closeOrderModal() {
     restoreModalStyle();
     document.getElementById('orderModal').classList.remove('active');
     selectedQuality = null;
     selectedPlatform = null;
+    
+    // 恢复 Publish 按钮
+    var publishBtn = document.getElementById('publishBtn');
+    if (publishBtn) {
+        publishBtn.disabled = false;
+        publishBtn.innerHTML = '<i class="fas fa-cloud-upload-alt"></i> ' + (window.i18n?.t('publish_btn') || 'Publish');
+    }
     
     var startBtn = document.getElementById('startNowBtn');
     if (startBtn) {
