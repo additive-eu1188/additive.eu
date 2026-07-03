@@ -5,6 +5,7 @@ var notifCurrentType = 'notification';
 var notifCurrentAudience = 'all';
 var notifList = [];
 var notifSearchKeyword = '';
+var notifSelectedUser = null;
 
 // ============================================================
 // 工具函数
@@ -45,6 +46,60 @@ function notifGetTargetBadge(record) {
         return '<span class="target-badge-specific"><i class="fas fa-user"></i> Specific</span>';
     }
     return '<span class="target-badge-all"><i class="fas fa-globe"></i> All</span>';
+}
+
+// ============================================================
+// 🔥 获取用户信息（用于显示在 UID 下方）
+// ============================================================
+async function notifFetchUserInfo(uid) {
+    if (!uid) return null;
+    try {
+        var { data, error } = await sb
+            .from('users')
+            .select('username, balance, vip_level, last_online, phone')
+            .eq('uid', uid)
+            .single();
+        
+        if (error) throw error;
+        return data;
+    } catch (e) {
+        console.error('获取用户信息失败:', e);
+        return null;
+    }
+}
+
+// ============================================================
+// 🔥 获取 VIP 等级名称
+// ============================================================
+function notifGetVipName(level) {
+    var map = {
+        1: 'Normal',
+        2: 'VIP',
+        3: 'SVIP'
+    };
+    return map[level] || 'Normal';
+}
+
+// ============================================================
+// 🔥 格式化最后在线时间
+// ============================================================
+function notifFormatLastOnline(dateStr) {
+    if (!dateStr) return '-';
+    try {
+        var date = new Date(dateStr);
+        var now = new Date();
+        var diffMins = Math.floor((now - date) / 60000);
+        var diffHours = Math.floor(diffMins / 60);
+        var diffDays = Math.floor(diffHours / 24);
+        
+        if (diffMins < 1) return 'Just now';
+        if (diffMins < 60) return diffMins + 'm ago';
+        if (diffHours < 24) return diffHours + 'h ago';
+        if (diffDays < 7) return diffDays + 'd ago';
+        return date.toLocaleDateString();
+    } catch (e) {
+        return '-';
+    }
 }
 
 // ============================================================
@@ -276,10 +331,63 @@ function notifSelectAudience(type) {
     var container = document.getElementById('specificUidContainer');
     if (type === 'specific') {
         container.style.display = 'block';
+        // 清空之前选中的用户信息
+        notifSelectedUser = null;
+        document.getElementById('userInfoDisplay').innerHTML = '';
     } else {
         container.style.display = 'none';
         document.getElementById('notifSpecificUid').value = '';
+        notifSelectedUser = null;
+        document.getElementById('userInfoDisplay').innerHTML = '';
     }
+}
+
+// ============================================================
+// 🔥 监听 UID 输入 - 自动获取用户信息
+// ============================================================
+function notifSetupUidListener() {
+    var uidInput = document.getElementById('notifSpecificUid');
+    if (!uidInput) return;
+    
+    var debounceTimer = null;
+    uidInput.addEventListener('input', function() {
+        var uid = this.value.trim();
+        var infoDisplay = document.getElementById('userInfoDisplay');
+        
+        if (!uid) {
+            notifSelectedUser = null;
+            infoDisplay.innerHTML = '';
+            return;
+        }
+        
+        // 防抖：延迟500ms请求
+        clearTimeout(debounceTimer);
+        debounceTimer = setTimeout(async function() {
+            infoDisplay.innerHTML = '<div style="color:#6a7a92; font-size:12px; padding:8px 0;"><i class="fas fa-spinner fa-spin"></i> Loading user info...</div>';
+            
+            var user = await notifFetchUserInfo(uid);
+            if (user) {
+                notifSelectedUser = user;
+                var vipName = notifGetVipName(user.vip_level);
+                var lastOnline = notifFormatLastOnline(user.last_online);
+                var balance = (user.balance || 0).toFixed(2);
+                
+                infoDisplay.innerHTML = `
+                    <div style="background: rgba(12,16,28,0.6); border-radius: 12px; padding: 12px 16px; margin-top: 6px; border: 1px solid rgba(201,176,149,0.06);">
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px 16px; font-size: 13px;">
+                            <div><span style="color:#6a7a92;">Username</span> <span style="color:#d8e0f0; font-weight:500;">${notifEscapeHtml(user.username)}</span></div>
+                            <div><span style="color:#6a7a92;">Balance</span> <span style="color:#4ade80; font-weight:600;">€${balance}</span></div>
+                            <div><span style="color:#6a7a92;">VIP RANK</span> <span style="color:#C9B095; font-weight:500;">${notifEscapeHtml(vipName)}</span></div>
+                            <div><span style="color:#6a7a92;">Last Online</span> <span style="color:#8892a8;">${notifEscapeHtml(lastOnline)}</span></div>
+                        </div>
+                    </div>
+                `;
+            } else {
+                infoDisplay.innerHTML = '<div style="color:#e88080; font-size:12px; padding:8px 0;"><i class="fas fa-exclamation-circle"></i> User not found</div>';
+                notifSelectedUser = null;
+            }
+        }, 500);
+    });
 }
 
 function notifOpenCreateModal() {
@@ -290,6 +398,8 @@ function notifOpenCreateModal() {
     document.getElementById('notifTitleInput').value = '';
     document.getElementById('notifDescInput').value = '';
     document.getElementById('notifSpecificUid').value = '';
+    notifSelectedUser = null;
+    document.getElementById('userInfoDisplay').innerHTML = '';
     notifSelectAudience('all');
 }
 
@@ -421,22 +531,23 @@ function loadNotificationPage() {
                 </div>
                 <div class="form-group" style="margin-bottom: 16px;">
                     <label style="display: block; font-size: 11px; color: #6a7a92; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; font-weight: 600;">Sent Time <span style="color:#e88080;">*</span></label>
-                    <input type="datetime-local" id="notifSentTimeInput" style="width: 100%; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06); border-radius: 10px; padding: 10px 14px; color: #e6edf5; font-size: 14px; outline: none; transition: 0.2s; font-family: 'Inter', sans-serif; box-sizing: border-box; color-scheme: dark;" />
+                    <input type="datetime-local" id="notifSentTimeInput" lang="en-GB" style="width: 100%; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06); border-radius: 10px; padding: 10px 14px; color: #e6edf5; font-size: 14px; outline: none; transition: 0.2s; font-family: 'Inter', sans-serif; box-sizing: border-box; color-scheme: dark;" />
                 </div>
                 <div class="form-group" style="margin-bottom: 16px;">
                     <label style="display: block; font-size: 11px; color: #6a7a92; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; font-weight: 600;">Audience</label>
                     <div class="audience-group" style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 6px;">
-                        <div class="audience-option active" data-target="all" onclick="notifSelectAudience('all')" style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.06); border-radius: 10px; padding: 12px 14px; cursor: pointer; transition: 0.2s; text-align: center; color: #8892a8; font-weight: 500; font-size: 13px;">
+                        <div class="audience-option active" data-target="all" onclick="notifSelectAudience('all')" style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.06); border-radius: 10px; padding: 12px 14px; cursor: pointer; transition: 0.3s ease; text-align: center; color: #8892a8; font-weight: 500; font-size: 13px; box-shadow: 0 0 0 rgba(201,176,149,0);">
                             <span class="icon" style="display: block; font-size: 20px; margin-bottom: 4px;"><i class="fas fa-users"></i></span>
                             All user
                         </div>
-                        <div class="audience-option" data-target="specific" onclick="notifSelectAudience('specific')" style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.06); border-radius: 10px; padding: 12px 14px; cursor: pointer; transition: 0.2s; text-align: center; color: #8892a8; font-weight: 500; font-size: 13px;">
+                        <div class="audience-option" data-target="specific" onclick="notifSelectAudience('specific')" style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.06); border-radius: 10px; padding: 12px 14px; cursor: pointer; transition: 0.3s ease; text-align: center; color: #8892a8; font-weight: 500; font-size: 13px; box-shadow: 0 0 0 rgba(201,176,149,0);">
                             <span class="icon" style="display: block; font-size: 20px; margin-bottom: 4px;"><i class="fas fa-user"></i></span>
                             Specific User
                         </div>
                     </div>
                     <div class="audience-specific-input" id="specificUidContainer" style="display: none; margin-top: 10px;">
                         <input type="text" id="notifSpecificUid" placeholder="Enter UID" style="width: 100%; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06); border-radius: 10px; padding: 10px 14px; color: #e6edf5; font-size: 14px; outline: none; box-sizing: border-box;">
+                        <div id="userInfoDisplay" style="margin-top: 6px;"></div>
                     </div>
                 </div>
                 <div class="modal-actions" style="display: flex; gap: 10px; margin-top: 20px; border-top: 1px solid rgba(255,255,255,0.04); padding-top: 20px;">
@@ -455,7 +566,7 @@ function loadNotificationPage() {
                 </div>
                 <div class="form-group" style="margin-bottom: 16px;">
                     <label style="display: block; font-size: 11px; color: #6a7a92; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; font-weight: 600;">Sent Time</label>
-                    <input type="datetime-local" id="editSentTimeInput" style="width: 100%; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06); border-radius: 10px; padding: 10px 14px; color: #e6edf5; font-size: 14px; outline: none; transition: 0.2s; font-family: 'Inter', sans-serif; box-sizing: border-box; color-scheme: dark;" />
+                    <input type="datetime-local" id="editSentTimeInput" lang="en-GB" style="width: 100%; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06); border-radius: 10px; padding: 10px 14px; color: #e6edf5; font-size: 14px; outline: none; transition: 0.2s; font-family: 'Inter', sans-serif; box-sizing: border-box; color-scheme: dark;" />
                 </div>
                 <input type="hidden" id="editNotifId" />
                 <div class="modal-actions" style="display: flex; gap: 10px; margin-top: 20px; border-top: 1px solid rgba(255,255,255,0.04); padding-top: 20px;">
@@ -502,6 +613,9 @@ function loadNotificationPage() {
     document.getElementById('createNotifBtn').addEventListener('click', notifCreateNotification);
     document.getElementById('saveEditTimeBtn').addEventListener('click', notifSaveEditTime);
 
+    // 🔥 设置 UID 输入监听
+    notifSetupUidListener();
+
     document.querySelectorAll('.notif-modal-overlay').forEach(function(overlay) {
         overlay.addEventListener('click', function(e) {
             if (e.target === this) {
@@ -518,9 +632,31 @@ function loadNotificationPage() {
         }
     });
 
+    // 🔥 添加 Audience 卡片发光样式
+    var style = document.createElement('style');
+    style.textContent = `
+        .audience-option.active {
+            border-color: rgba(201,176,149,0.5) !important;
+            background: rgba(201,176,149,0.12) !important;
+            color: #C9B095 !important;
+            box-shadow: 0 0 30px rgba(201,176,149,0.12), inset 0 0 20px rgba(201,176,149,0.04) !important;
+        }
+        .audience-option {
+            transition: all 0.3s ease !important;
+        }
+        .audience-option:hover {
+            border-color: rgba(201,176,149,0.2);
+            background: rgba(255,255,255,0.04);
+        }
+    `;
+    document.head.appendChild(style);
+
     notifLoadNotifications();
 
     console.log('✅ User Notification page loaded');
+    console.log('   - Date picker: DD/MM/YYYY (en-GB)');
+    console.log('   - Audience cards: glow effect on active');
+    console.log('   - UID input: auto fetch user info');
 }
 
 // ============================================================
