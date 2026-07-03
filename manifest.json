@@ -1,0 +1,25 @@
+{
+  "name": "ADDITIVE - Digital Hotel Marketing",
+  "short_name": "ADDITIVE",
+  "description": "The first specialized performance marketing agency for hotels.",
+  "start_url": "/dashboard.html",
+  "display": "standalone",
+  "background_color": "#0B0B21",
+  "theme_color": "#CCB299",
+  "orientation": "portrait",
+  "categories": ["business", "travel", "productivity"],
+  "icons": [
+    {
+      "src": "https://qgmbzdfnwsdosdqphlxk.supabase.co/storage/v1/object/public/application/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "https://qgmbzdfnwsdosdqphlxk.supabase.co/storage/v1/object/public/application/icon-500.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
