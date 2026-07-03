@@ -290,7 +290,8 @@ var PAGE_DEFS = {
     orderpool: { id: 'orderpool', label: 'Orders Pool', icon: 'fa-hotel', pageId: 'orderpool' },
     animated: { id: 'animated', label: 'Animated', icon: 'fa-play-circle', pageId: 'animated' },
     signin: { id: 'signin', label: 'Check In', icon: 'fa-calendar-check', pageId: 'signin' },
-    content: { id: 'content', label: 'Content', icon: 'fa-file-alt', pageId: 'content' }
+    content: { id: 'content', label: 'Content', icon: 'fa-file-alt', pageId: 'content' },
+    notification: { id: 'notification', label: 'Notification', icon: 'fa-bell', pageId: 'notification' }
 };
 
 // ============================================================
@@ -1995,7 +1996,8 @@ function loadPageContent(pageId) {
         'orderpool': 'loadOrderPoolPage',
         'animated': 'loadAnimatedPage',
         'signin': 'loadSigninPage',
-        'content': 'loadContentPage'
+        'content': 'loadContentPage',
+        'notification': 'loadNotificationPage'
     };
 
     var fnName = pageMap[pageId];
