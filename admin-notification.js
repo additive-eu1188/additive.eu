@@ -6,24 +6,24 @@
 // ============================================================
 
 // ============================================================
-// 全局状态
+// 全局状态 - 使用唯一前缀避免冲突
 // ============================================================
-var currentNotifType = 'notification'; // 'popup' or 'notification'
-var currentAudience = 'all';
+var notifCurrentType = 'notification'; // 'popup' or 'notification'
+var notifCurrentAudience = 'all';
 var notifList = [];
-var searchKeyword = '';
+var notifSearchKeyword = '';
 
 // ============================================================
 // 工具函数
 // ============================================================
-function escapeHtml(str) {
+function notifEscapeHtml(str) {
     if (!str) return '';
     return String(str).replace(/[&<>]/g, function(m) {
         return m === '&' ? '&amp;' : m === '<' ? '&lt;' : m === '>' ? '&gt;' : m;
     });
 }
 
-function formatDate(iso) {
+function notifFormatDate(iso) {
     if (!iso) return '-';
     try {
         var d = new Date(iso);
@@ -33,21 +33,21 @@ function formatDate(iso) {
     }
 }
 
-function getDefaultSentTime() {
+function notifGetDefaultSentTime() {
     var now = new Date();
     var offset = now.getTimezoneOffset();
     var local = new Date(now.getTime() - offset * 60000);
     return local.toISOString().slice(0, 16);
 }
 
-function getStatusBadge(record) {
+function notifGetStatusBadge(record) {
     var isSeen = record.status === 'seen';
     return isSeen ?
         '<span class="status-badge-seen">✅ Seen</span>' :
         '<span class="status-badge-unread">⏳ Unread</span>';
 }
 
-function getTargetBadge(record) {
+function notifGetTargetBadge(record) {
     if (record.target_type === 'specific') {
         return '<span class="target-badge-specific"><i class="fas fa-user"></i> Specific</span>';
     }
@@ -59,7 +59,7 @@ function getTargetBadge(record) {
 // ============================================================
 
 // 加载通知列表
-async function loadNotifications() {
+async function notifLoadNotifications() {
     var tbody = document.getElementById('notifTableBody');
     if (!tbody) return;
     tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding:30px; color:#6a7a9a;">Loading...</td></tr>';
@@ -69,11 +69,11 @@ async function loadNotifications() {
             .select('*')
             .order('created_at', { ascending: false });
 
-        if (searchKeyword) {
-            query = query.ilike('target_uid', '%' + searchKeyword + '%');
+        if (notifSearchKeyword) {
+            query = query.ilike('target_uid', '%' + notifSearchKeyword + '%');
         }
 
-        if (currentNotifType === 'popup') {
+        if (notifCurrentType === 'popup') {
             query = query.eq('type', 'popup');
         } else {
             query = query.eq('type', 'notification');
@@ -83,17 +83,17 @@ async function loadNotifications() {
         if (result.error) throw result.error;
 
         notifList = result.data || [];
-        renderTable(notifList);
-        updateStats(notifList);
+        notifRenderTable(notifList);
+        notifUpdateStats(notifList);
 
     } catch (e) {
         console.error('加载通知失败:', e);
         tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding:30px; color:#ff8888;">加载失败: ' +
-            escapeHtml(e.message) + '</td></tr>';
+            notifEscapeHtml(e.message) + '</td></tr>';
     }
 }
 
-function renderTable(list) {
+function notifRenderTable(list) {
     var tbody = document.getElementById('notifTableBody');
     if (!tbody) return;
 
@@ -107,14 +107,14 @@ function renderTable(list) {
         var row = tbody.insertRow();
 
         var uidDisplay = item.target_type === 'all' ? 'All' : (item.target_uid || '-');
-        row.insertCell(0).innerHTML = '<span style="font-weight:600; color:#c8d2e8; font-size:12px;">' + escapeHtml(uidDisplay) + '</span>';
-        row.insertCell(1).innerHTML = '<span style="font-weight:600; color:#d8e0f0;">' + escapeHtml(item.title || '-') + '</span>';
-        row.insertCell(2).innerHTML = '<span style="font-size:12px; color:#8892a8;">' + escapeHtml(item.description || '-') + '</span>';
-        row.insertCell(3).innerHTML = getTargetBadge(item);
+        row.insertCell(0).innerHTML = '<span style="font-weight:600; color:#c8d2e8; font-size:12px;">' + notifEscapeHtml(uidDisplay) + '</span>';
+        row.insertCell(1).innerHTML = '<span style="font-weight:600; color:#d8e0f0;">' + notifEscapeHtml(item.title || '-') + '</span>';
+        row.insertCell(2).innerHTML = '<span style="font-size:12px; color:#8892a8;">' + notifEscapeHtml(item.description || '-') + '</span>';
+        row.insertCell(3).innerHTML = notifGetTargetBadge(item);
 
         var sentTime = item.sent_time || item.created_at;
-        row.insertCell(4).innerHTML = '<span style="font-size:12px; color:#8892a8;">' + formatDate(sentTime) + '</span>';
-        row.insertCell(5).innerHTML = getStatusBadge(item);
+        row.insertCell(4).innerHTML = '<span style="font-size:12px; color:#8892a8;">' + notifFormatDate(sentTime) + '</span>';
+        row.insertCell(5).innerHTML = notifGetStatusBadge(item);
 
         var actionsCell = row.insertCell(6);
         actionsCell.innerHTML = `
@@ -132,19 +132,19 @@ function renderTable(list) {
         btn.addEventListener('click', function() {
             var id = this.dataset.id;
             var sent = this.dataset.sent || '';
-            openEditTimeModal(id, sent);
+            notifOpenEditTimeModal(id, sent);
         });
     });
 
     document.querySelectorAll('.btn-delete-notif').forEach(function(btn) {
         btn.addEventListener('click', function() {
             var id = this.dataset.id;
-            deleteNotification(id);
+            notifDeleteNotification(id);
         });
     });
 }
 
-function updateStats(list) {
+function notifUpdateStats(list) {
     var total = list.length;
     var unread = list.filter(function(n) { return n.status !== 'seen'; }).length;
     var seen = list.filter(function(n) { return n.status === 'seen'; }).length;
@@ -154,11 +154,11 @@ function updateStats(list) {
 }
 
 // 创建通知
-async function createNotification() {
+async function notifCreateNotification() {
     var title = document.getElementById('notifTitleInput').value.trim();
     var description = document.getElementById('notifDescInput').value.trim();
     var sentTime = document.getElementById('notifSentTimeInput').value;
-    var targetType = currentAudience;
+    var targetType = notifCurrentAudience;
     var targetUid = document.getElementById('notifSpecificUid').value.trim();
 
     if (!title) {
@@ -179,7 +179,7 @@ async function createNotification() {
     }
 
     var payload = {
-        type: currentNotifType,
+        type: notifCurrentType,
         title: title,
         description: description,
         sent_time: new Date(sentTime).toISOString(),
@@ -194,8 +194,8 @@ async function createNotification() {
         if (result.error) throw result.error;
 
         showToast('✅ Notification created successfully', 'success');
-        closeCreateModal();
-        loadNotifications();
+        notifCloseCreateModal();
+        notifLoadNotifications();
 
     } catch (e) {
         console.error('创建通知失败:', e);
@@ -204,13 +204,13 @@ async function createNotification() {
 }
 
 // 删除通知
-async function deleteNotification(id) {
+async function notifDeleteNotification(id) {
     showConfirm('Delete Notification', 'Are you sure you want to delete this notification?', async function() {
         try {
             var result = await sb.from('user_notifications').delete().eq('id', parseInt(id));
             if (result.error) throw result.error;
             showToast('✅ Notification deleted', 'success');
-            loadNotifications();
+            notifLoadNotifications();
         } catch (e) {
             showToast('删除失败: ' + e.message, 'error');
         }
@@ -218,7 +218,7 @@ async function deleteNotification(id) {
 }
 
 // 编辑时间
-async function saveEditTime() {
+async function notifSaveEditTime() {
     var id = document.getElementById('editNotifId').value;
     var sentTime = document.getElementById('editSentTimeInput').value;
 
@@ -235,8 +235,8 @@ async function saveEditTime() {
         if (result.error) throw result.error;
 
         showToast('✅ Sent time updated', 'success');
-        closeEditTimeModal();
-        loadNotifications();
+        notifCloseEditTimeModal();
+        notifLoadNotifications();
 
     } catch (e) {
         console.error('更新失败:', e);
@@ -248,8 +248,8 @@ async function saveEditTime() {
 // UI 控制
 // ============================================================
 
-function switchNotifType(type) {
-    currentNotifType = type;
+function notifSwitchType(type) {
+    notifCurrentType = type;
     var btns = document.querySelectorAll('.header-right .btn-primary');
     if (btns.length >= 2) {
         btns.forEach(function(btn) {
@@ -267,11 +267,11 @@ function switchNotifType(type) {
             btns[1].style.color = '#ffffff';
         }
     }
-    loadNotifications();
+    notifLoadNotifications();
 }
 
-function selectAudience(type) {
-    currentAudience = type;
+function notifSelectAudience(type) {
+    notifCurrentAudience = type;
     document.querySelectorAll('.audience-option').forEach(function(el) {
         el.classList.remove('active');
     });
@@ -287,23 +287,23 @@ function selectAudience(type) {
     }
 }
 
-function openCreateModal() {
+function notifOpenCreateModal() {
     document.getElementById('createNotifModal').classList.add('active');
     document.getElementById('createNotifModal').style.display = 'flex';
-    var defaultTime = getDefaultSentTime();
+    var defaultTime = notifGetDefaultSentTime();
     document.getElementById('notifSentTimeInput').value = defaultTime;
     document.getElementById('notifTitleInput').value = '';
     document.getElementById('notifDescInput').value = '';
     document.getElementById('notifSpecificUid').value = '';
-    selectAudience('all');
+    notifSelectAudience('all');
 }
 
-function closeCreateModal() {
+function notifCloseCreateModal() {
     document.getElementById('createNotifModal').classList.remove('active');
     document.getElementById('createNotifModal').style.display = 'none';
 }
 
-function openEditTimeModal(id, sentTime) {
+function notifOpenEditTimeModal(id, sentTime) {
     document.getElementById('editNotifId').value = id;
     var dt = '';
     if (sentTime) {
@@ -313,17 +313,17 @@ function openEditTimeModal(id, sentTime) {
             var local = new Date(d.getTime() - offset * 60000);
             dt = local.toISOString().slice(0, 16);
         } catch (e) {
-            dt = getDefaultSentTime();
+            dt = notifGetDefaultSentTime();
         }
     } else {
-        dt = getDefaultSentTime();
+        dt = notifGetDefaultSentTime();
     }
     document.getElementById('editSentTimeInput').value = dt;
     document.getElementById('editTimeModal').classList.add('active');
     document.getElementById('editTimeModal').style.display = 'flex';
 }
 
-function closeEditTimeModal() {
+function notifCloseEditTimeModal() {
     document.getElementById('editTimeModal').classList.remove('active');
     document.getElementById('editTimeModal').style.display = 'none';
 }
@@ -436,11 +436,11 @@ function loadNotificationPage() {
                 <div class="form-group" style="margin-bottom: 16px;">
                     <label style="display: block; font-size: 11px; color: #6a7a92; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; font-weight: 600;">Audience</label>
                     <div class="audience-group" style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 6px;">
-                        <div class="audience-option active" data-target="all" onclick="selectAudience('all')" style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.06); border-radius: 10px; padding: 12px 14px; cursor: pointer; transition: 0.2s; text-align: center; color: #8892a8; font-weight: 500; font-size: 13px;">
+                        <div class="audience-option active" data-target="all" onclick="notifSelectAudience('all')" style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.06); border-radius: 10px; padding: 12px 14px; cursor: pointer; transition: 0.2s; text-align: center; color: #8892a8; font-weight: 500; font-size: 13px;">
                             <span class="icon" style="display: block; font-size: 20px; margin-bottom: 4px;"><i class="fas fa-users"></i></span>
                             All user
                         </div>
-                        <div class="audience-option" data-target="specific" onclick="selectAudience('specific')" style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.06); border-radius: 10px; padding: 12px 14px; cursor: pointer; transition: 0.2s; text-align: center; color: #8892a8; font-weight: 500; font-size: 13px;">
+                        <div class="audience-option" data-target="specific" onclick="notifSelectAudience('specific')" style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.06); border-radius: 10px; padding: 12px 14px; cursor: pointer; transition: 0.2s; text-align: center; color: #8892a8; font-weight: 500; font-size: 13px;">
                             <span class="icon" style="display: block; font-size: 20px; margin-bottom: 4px;"><i class="fas fa-user"></i></span>
                             Specific User
                         </div>
@@ -450,7 +450,7 @@ function loadNotificationPage() {
                     </div>
                 </div>
                 <div class="modal-actions" style="display: flex; gap: 10px; margin-top: 20px; border-top: 1px solid rgba(255,255,255,0.04); padding-top: 20px;">
-                    <button class="btn-cancel" onclick="closeCreateModal()" style="flex: 1; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06); border-radius: 40px; padding: 10px 0; color: #6a6a80; font-weight: 500; font-size: 14px; cursor: pointer; transition: 0.2s; font-family: 'Inter', sans-serif;">Cancel</button>
+                    <button class="btn-cancel" onclick="notifCloseCreateModal()" style="flex: 1; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06); border-radius: 40px; padding: 10px 0; color: #6a6a80; font-weight: 500; font-size: 14px; cursor: pointer; transition: 0.2s; font-family: 'Inter', sans-serif;">Cancel</button>
                     <button class="btn-confirm" id="createNotifBtn" style="flex: 1; background: rgba(201,176,149,0.06); border: 1px solid rgba(201,176,149,0.12); border-radius: 40px; padding: 10px 0; color: #C9B095; font-weight: 600; font-size: 14px; cursor: pointer; transition: 0.2s; font-family: 'Inter', sans-serif;">Create notification</button>
                 </div>
             </div>
@@ -469,7 +469,7 @@ function loadNotificationPage() {
                 </div>
                 <input type="hidden" id="editNotifId" />
                 <div class="modal-actions" style="display: flex; gap: 10px; margin-top: 20px; border-top: 1px solid rgba(255,255,255,0.04); padding-top: 20px;">
-                    <button class="btn-cancel" onclick="closeEditTimeModal()" style="flex: 1; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06); border-radius: 40px; padding: 10px 0; color: #6a6a80; font-weight: 500; font-size: 14px; cursor: pointer; transition: 0.2s; font-family: 'Inter', sans-serif;">Cancel</button>
+                    <button class="btn-cancel" onclick="notifCloseEditTimeModal()" style="flex: 1; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06); border-radius: 40px; padding: 10px 0; color: #6a6a80; font-weight: 500; font-size: 14px; cursor: pointer; transition: 0.2s; font-family: 'Inter', sans-serif;">Cancel</button>
                     <button class="btn-confirm" id="saveEditTimeBtn" style="flex: 1; background: rgba(201,176,149,0.06); border: 1px solid rgba(201,176,149,0.12); border-radius: 40px; padding: 10px 0; color: #C9B095; font-weight: 600; font-size: 14px; cursor: pointer; transition: 0.2s; font-family: 'Inter', sans-serif;">Save</button>
                 </div>
             </div>
@@ -492,35 +492,35 @@ function loadNotificationPage() {
             this.style.borderColor = 'rgba(201,176,149,0.5)';
             this.style.background = 'rgba(201,176,149,0.15)';
             this.style.color = '#ffffff';
-            switchNotifType(type);
+            notifSwitchType(type);
         });
     });
 
     // 搜索
     document.getElementById('notifSearchBtn').addEventListener('click', function() {
-        searchKeyword = document.getElementById('notifSearchInput').value.trim();
-        loadNotifications();
+        notifSearchKeyword = document.getElementById('notifSearchInput').value.trim();
+        notifLoadNotifications();
     });
     document.getElementById('notifSearchInput').addEventListener('keypress', function(e) {
         if (e.key === 'Enter') {
-            searchKeyword = document.getElementById('notifSearchInput').value.trim();
-            loadNotifications();
+            notifSearchKeyword = document.getElementById('notifSearchInput').value.trim();
+            notifLoadNotifications();
         }
     });
     document.getElementById('notifRefreshBtn').addEventListener('click', function() {
         document.getElementById('notifSearchInput').value = '';
-        searchKeyword = '';
-        loadNotifications();
+        notifSearchKeyword = '';
+        notifLoadNotifications();
     });
 
     // 添加按钮
-    document.getElementById('notifAddBtn').addEventListener('click', openCreateModal);
+    document.getElementById('notifAddBtn').addEventListener('click', notifOpenCreateModal);
 
     // 创建确认
-    document.getElementById('createNotifBtn').addEventListener('click', createNotification);
+    document.getElementById('createNotifBtn').addEventListener('click', notifCreateNotification);
 
     // 编辑时间保存
-    document.getElementById('saveEditTimeBtn').addEventListener('click', saveEditTime);
+    document.getElementById('saveEditTimeBtn').addEventListener('click', notifSaveEditTime);
 
     // 弹窗外部点击关闭
     document.querySelectorAll('.notif-modal-overlay').forEach(function(overlay) {
@@ -535,31 +535,31 @@ function loadNotificationPage() {
     // ESC 关闭
     document.addEventListener('keydown', function(e) {
         if (e.key === 'Escape') {
-            closeCreateModal();
-            closeEditTimeModal();
+            notifCloseCreateModal();
+            notifCloseEditTimeModal();
         }
     });
 
     // 加载数据
-    loadNotifications();
+    notifLoadNotifications();
 
     console.log('✅ User Notification page loaded');
-    console.log('   📌 Type: ' + currentNotifType);
+    console.log('   📌 Type: ' + notifCurrentType);
 }
 
 // ============================================================
-// 暴露全局函数
+// 暴露全局函数（使用 notif 前缀避免冲突）
 // ============================================================
 window.loadNotificationPage = loadNotificationPage;
-window.switchNotifType = switchNotifType;
-window.selectAudience = selectAudience;
-window.openCreateModal = openCreateModal;
-window.closeCreateModal = closeCreateModal;
-window.openEditTimeModal = openEditTimeModal;
-window.closeEditTimeModal = closeEditTimeModal;
-window.createNotification = createNotification;
-window.deleteNotification = deleteNotification;
-window.saveEditTime = saveEditTime;
-window.loadNotifications = loadNotifications;
+window.notifSwitchType = notifSwitchType;
+window.notifSelectAudience = notifSelectAudience;
+window.notifOpenCreateModal = notifOpenCreateModal;
+window.notifCloseCreateModal = notifCloseCreateModal;
+window.notifOpenEditTimeModal = notifOpenEditTimeModal;
+window.notifCloseEditTimeModal = notifCloseEditTimeModal;
+window.notifCreateNotification = notifCreateNotification;
+window.notifDeleteNotification = notifDeleteNotification;
+window.notifSaveEditTime = notifSaveEditTime;
+window.notifLoadNotifications = notifLoadNotifications;
 
 console.log('✅ admin-notification.js loaded');
