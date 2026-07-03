@@ -1,14 +1,13 @@
-// admin-notification.js - User Notification 管理页面（与 withdrawal 页面风格一致）
-// 依赖：admin-common.js, toast.js, user-data.js
-
+// admin-notification.js - User Notification 管理页面
 // ============================================================
-// Supabase 配置（使用全局 sb 对象）
+// Supabase 配置（使用全局 sb 对象，由 admin-common.js 提供）
 // ============================================================
-const SUPABASE_URL = 'https://qgmbzdfnwsdosdqphlxk.supabase.co';
-const SUPABASE_KEY = 'sb_publishable_zsJFjfNUO7NKp8ZH5KrXFQ_WZ8Q2Kym';
 // 如果全局 sb 不存在，创建本地实例
 if (typeof sb === 'undefined') {
-    var sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    var sb = supabase.createClient(
+        'https://qgmbzdfnwsdosdqphlxk.supabase.co',
+        'sb_publishable_zsJFjfNUO7NKp8ZH5KrXFQ_WZ8Q2Kym'
+    );
 }
 
 // ============================================================
