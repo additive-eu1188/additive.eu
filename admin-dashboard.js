@@ -107,113 +107,110 @@ async function loadStatsData(days, force) {
         var withdrawals = withdrawalsRes.data || [];
         
         // ============================================================
-        // 🔥 使用柏林时间计算日期范围
+        // 🔥 使用柏林时间计算日期范围（修复版：精确 UTC 范围）
         // ============================================================
-        var nowDate = getBerlinDate();
-        var startDate = new Date(nowDate);
-        startDate.setDate(startDate.getDate() - days);
-        var startStr = startDate.toISOString().split('T')[0];
-        
-        var lastPeriodStart = new Date(nowDate);
-        lastPeriodStart.setDate(lastPeriodStart.getDate() - days * 2);
-        var lastPeriodStr = lastPeriodStart.toISOString().split('T')[0];
-        
-        // 过滤数据（使用柏林时间）
+        var nowBerlin = getBerlinDate();
+
+        // 计算"今天"的柏林时间 00:00:00 和 23:59:59.999（转为 UTC）
+        var todayStartBerlin = new Date(nowBerlin);
+        todayStartBerlin.setHours(0, 0, 0, 0);
+        var todayStartUTC = todayStartBerlin.toISOString();
+
+        var todayEndBerlin = new Date(nowBerlin);
+        todayEndBerlin.setHours(23, 59, 59, 999);
+        var todayEndUTC = todayEndBerlin.toISOString();
+
+        // 计算 days 天前的开始时间（柏林时间 00:00:00，转为 UTC）
+        var startDateBerlin = new Date(nowBerlin);
+        startDateBerlin.setDate(startDateBerlin.getDate() - days);
+        startDateBerlin.setHours(0, 0, 0, 0);
+        var startDateUTC = startDateBerlin.toISOString();
+
+        // 计算上个周期的开始时间（用于趋势对比）
+        var lastPeriodStartBerlin = new Date(nowBerlin);
+        lastPeriodStartBerlin.setDate(lastPeriodStartBerlin.getDate() - days * 2);
+        lastPeriodStartBerlin.setHours(0, 0, 0, 0);
+        var lastPeriodStartUTC = lastPeriodStartBerlin.toISOString();
+
+        // 过滤数据（使用 UTC 时间范围）
         var newUsers = users.filter(function(u) {
             if (!u.created_at) return false;
-            var berlinDate = convertToBerlinDate(new Date(u.created_at));
-            return berlinDate.toISOString().split('T')[0] >= startStr;
+            return u.created_at >= startDateUTC && u.created_at <= todayEndUTC;
         }).length;
-        
+
         var prevNewUsers = users.filter(function(u) {
             if (!u.created_at) return false;
-            var berlinDate = convertToBerlinDate(new Date(u.created_at));
-            var dateStr = berlinDate.toISOString().split('T')[0];
-            return dateStr >= lastPeriodStr && dateStr < startStr;
+            return u.created_at >= lastPeriodStartUTC && u.created_at < startDateUTC;
         }).length;
         
         // 🔥 根据 days 参数筛选存款和提款
-// days = 0: 今天, days = 7: 最近7天, days = 30: 最近30天, days = -1: 所有时间
+        // days = 0: 今天, days = 7: 最近7天, days = 30: 最近30天, days = -1: 所有时间
 
-var filteredDeposits = deposits;
-var filteredWithdrawals = withdrawals.filter(function(w) { return w.status === 'approved'; });
+        var filteredDeposits = deposits;
+        var filteredWithdrawals = withdrawals.filter(function(w) { return w.status === 'approved'; });
 
-if (days === 0) {
-    // Today：只统计今天
-    var todayStr = nowDate.toISOString().split('T')[0];
-    filteredDeposits = deposits.filter(function(d) {
-        if (!d.created_at) return false;
-        var berlinDate = convertToBerlinDate(new Date(d.created_at));
-        return berlinDate.toISOString().split('T')[0] === todayStr;
-    });
-    filteredWithdrawals = withdrawals.filter(function(w) {
-        if (!w.request_date) return false;
-        if (w.status !== 'approved') return false;
-        var berlinDate = convertToBerlinDate(new Date(w.request_date));
-        return berlinDate.toISOString().split('T')[0] === todayStr;
-    });
-} else if (days === 7 || days === 30) {
-    // 7 Days / 30 Days：只统计指定天数内
-    var startDate = new Date(nowDate);
-    startDate.setDate(startDate.getDate() - days);
-    var startStr = startDate.toISOString().split('T')[0];
-    filteredDeposits = deposits.filter(function(d) {
-        if (!d.created_at) return false;
-        var berlinDate = convertToBerlinDate(new Date(d.created_at));
-        return berlinDate.toISOString().split('T')[0] >= startStr;
-    });
-    filteredWithdrawals = withdrawals.filter(function(w) {
-        if (!w.request_date) return false;
-        if (w.status !== 'approved') return false;
-        var berlinDate = convertToBerlinDate(new Date(w.request_date));
-        return berlinDate.toISOString().split('T')[0] >= startStr;
-    });
-}
-// days = -1: All Time，不过滤
+        if (days === 0) {
+            // Today：使用精确 UTC 范围
+            filteredDeposits = deposits.filter(function(d) {
+                if (!d.created_at) return false;
+                return d.created_at >= todayStartUTC && d.created_at <= todayEndUTC;
+            });
+            filteredWithdrawals = withdrawals.filter(function(w) {
+                if (!w.request_date) return false;
+                if (w.status !== 'approved') return false;
+                return w.request_date >= todayStartUTC && w.request_date <= todayEndUTC;
+            });
+        } else if (days === 7 || days === 30) {
+            // 7 Days / 30 Days：使用精确 UTC 范围
+            filteredDeposits = deposits.filter(function(d) {
+                if (!d.created_at) return false;
+                return d.created_at >= startDateUTC && d.created_at <= todayEndUTC;
+            });
+            filteredWithdrawals = withdrawals.filter(function(w) {
+                if (!w.request_date) return false;
+                if (w.status !== 'approved') return false;
+                return w.request_date >= startDateUTC && w.request_date <= todayEndUTC;
+            });
+        }
+        // days = -1: All Time，不过滤
 
-var totalDeposit = filteredDeposits.reduce(function(s, d) { return s + (d.amount || 0); }, 0);
-var totalWithdraw = filteredWithdrawals.reduce(function(s, w) { return s + (w.amount || 0); }, 0);
+        var totalDeposit = filteredDeposits.reduce(function(s, d) { return s + (d.amount || 0); }, 0);
+        var totalWithdraw = filteredWithdrawals.reduce(function(s, w) { return s + (w.amount || 0); }, 0);
 
-// 保留 periodDeposit 和 prevPeriodDeposit 用于趋势显示
-var periodDeposit = deposits.filter(function(d) {
-    if (!d.created_at) return false;
-    var berlinDate = convertToBerlinDate(new Date(d.created_at));
-    return berlinDate.toISOString().split('T')[0] >= startStr;
-}).reduce(function(s, d) { return s + (d.amount || 0); }, 0);
+        // 保留 periodDeposit 和 prevPeriodDeposit 用于趋势显示
+        var periodDeposit = deposits.filter(function(d) {
+            if (!d.created_at) return false;
+            return d.created_at >= startDateUTC && d.created_at <= todayEndUTC;
+        }).reduce(function(s, d) { return s + (d.amount || 0); }, 0);
 
-var prevPeriodDeposit = deposits.filter(function(d) {
-    if (!d.created_at) return false;
-    var berlinDate = convertToBerlinDate(new Date(d.created_at));
-    var dateStr = berlinDate.toISOString().split('T')[0];
-    return dateStr >= lastPeriodStr && dateStr < startStr;
-}).reduce(function(s, d) { return s + (d.amount || 0); }, 0);
+        var prevPeriodDeposit = deposits.filter(function(d) {
+            if (!d.created_at) return false;
+            return d.created_at >= lastPeriodStartUTC && d.created_at < startDateUTC;
+        }).reduce(function(s, d) { return s + (d.amount || 0); }, 0);
 
-var periodWithdraw = withdrawals.filter(function(w) {
-    if (!w.request_date) return false;
-    if (w.status !== 'approved') return false;
-    var berlinDate = convertToBerlinDate(new Date(w.request_date));
-    return berlinDate.toISOString().split('T')[0] >= startStr;
-}).reduce(function(s, w) { return s + (w.amount || 0); }, 0);
+        var periodWithdraw = withdrawals.filter(function(w) {
+            if (!w.request_date) return false;
+            if (w.status !== 'approved') return false;
+            return w.request_date >= startDateUTC && w.request_date <= todayEndUTC;
+        }).reduce(function(s, w) { return s + (w.amount || 0); }, 0);
 
-var prevPeriodWithdraw = withdrawals.filter(function(w) {
-    if (!w.request_date) return false;
-    if (w.status !== 'approved') return false;
-    var berlinDate = convertToBerlinDate(new Date(w.request_date));
-    var dateStr = berlinDate.toISOString().split('T')[0];
-    return dateStr >= lastPeriodStr && dateStr < startStr;
-}).reduce(function(s, w) { return s + (w.amount || 0); }, 0);
+        var prevPeriodWithdraw = withdrawals.filter(function(w) {
+            if (!w.request_date) return false;
+            if (w.status !== 'approved') return false;
+            return w.request_date >= lastPeriodStartUTC && w.request_date < startDateUTC;
+        }).reduce(function(s, w) { return s + (w.amount || 0); }, 0);
         
         var statsData = { 
-    newUsers: newUsers, 
-    prevNewUsers: prevNewUsers, 
-    totalUsers: users.length, 
-    totalDeposit: totalDeposit,        // 🔥 根据 days 筛选
-    periodDeposit: periodDeposit, 
-    prevPeriodDeposit: prevPeriodDeposit, 
-    totalWithdraw: totalWithdraw,      // 🔥 根据 days 筛选
-    periodWithdraw: periodWithdraw, 
-    prevPeriodWithdraw: prevPeriodWithdraw 
-};
+            newUsers: newUsers, 
+            prevNewUsers: prevNewUsers, 
+            totalUsers: users.length, 
+            totalDeposit: totalDeposit,
+            periodDeposit: periodDeposit, 
+            prevPeriodDeposit: prevPeriodDeposit, 
+            totalWithdraw: totalWithdraw,
+            periodWithdraw: periodWithdraw, 
+            prevPeriodWithdraw: prevPeriodWithdraw 
+        };
         cachedData.stats = statsData;
         cachedData.lastStatsTime = now;
         applyStatsData(statsData);
@@ -271,21 +268,27 @@ async function loadChartData(force) {
         var withdrawals = withdrawalsRes.data || [];
         
         // ============================================================
-        // 🔥 使用柏林时间生成最近7天
+        // 🔥 使用柏林时间生成最近7天（修复版：精确 UTC 范围）
         // ============================================================
         var today = getBerlinDate();
         var dates = [];
-        var dateStrMap = {};
-        
+        var dateRangeMap = {}; // 存储每一天的 UTC 时间范围
+
         for (var i = 6; i >= 0; i--) {
             var d = new Date(today);
             d.setDate(d.getDate() - i);
-            // 确保日期在柏林时间下
-            var berlinDate = convertToBerlinDate(d);
-            var dateStr = berlinDate.toISOString().split('T')[0];
-            var label = (berlinDate.getMonth() + 1) + '/' + berlinDate.getDate();
+            // 获取当天的柏林时间 00:00:00
+            var dayStartBerlin = new Date(d);
+            dayStartBerlin.setHours(0, 0, 0, 0);
+            var dayStartUTC = dayStartBerlin.toISOString();
+
+            var dayEndBerlin = new Date(d);
+            dayEndBerlin.setHours(23, 59, 59, 999);
+            var dayEndUTC = dayEndBerlin.toISOString();
+
+            var label = (d.getMonth() + 1) + '/' + d.getDate();
             dates.push(label);
-            dateStrMap[label] = dateStr;
+            dateRangeMap[label] = { start: dayStartUTC, end: dayEndUTC };
         }
         
         // ============================================================
@@ -294,40 +297,44 @@ async function loadChartData(force) {
         var depositData = [];
         var withdrawData = [];
         
-        var firstDayStr = dateStrMap[dates[0]];
-        var lastDayStr = dateStrMap[dates[dates.length - 1]];
-        
-        // 过滤出最近7天的数据（使用柏林时间）
+        // 过滤出最近7天的数据（使用精确 UTC 范围）
         var periodDeposits = deposits.filter(function(d) {
             if (!d.created_at) return false;
-            var berlinDate = convertToBerlinDate(new Date(d.created_at));
-            var dateStr = berlinDate.toISOString().split('T')[0];
-            return dateStr >= firstDayStr && dateStr <= lastDayStr;
+            // 检查是否落在任何一天的范围内
+            for (var label in dateRangeMap) {
+                var range = dateRangeMap[label];
+                if (d.created_at >= range.start && d.created_at <= range.end) {
+                    return true;
+                }
+            }
+            return false;
         });
-        
+
         var periodWithdrawals = withdrawals.filter(function(w) {
             if (!w.request_date) return false;
             if (w.status !== 'approved') return false;
-            var berlinDate = convertToBerlinDate(new Date(w.request_date));
-            var dateStr = berlinDate.toISOString().split('T')[0];
-            return dateStr >= firstDayStr && dateStr <= lastDayStr;
+            for (var label in dateRangeMap) {
+                var range = dateRangeMap[label];
+                if (w.request_date >= range.start && w.request_date <= range.end) {
+                    return true;
+                }
+            }
+            return false;
         });
-        
+         
         // 按天汇总
         for (var i = 0; i < dates.length; i++) {
             var label = dates[i];
-            var dateStr = dateStrMap[label];
-            
+            var range = dateRangeMap[label];
+
             var dayDeposit = periodDeposits.filter(function(dep) {
-                var berlinDate = convertToBerlinDate(new Date(dep.created_at));
-                return berlinDate.toISOString().split('T')[0] === dateStr;
+                return dep.created_at >= range.start && dep.created_at <= range.end;
             }).reduce(function(s, d) { return s + (d.amount || 0); }, 0);
-            
+
             var dayWithdraw = periodWithdrawals.filter(function(w) {
-                var berlinDate = convertToBerlinDate(new Date(w.request_date));
-                return berlinDate.toISOString().split('T')[0] === dateStr;
+                return w.request_date >= range.start && w.request_date <= range.end;
             }).reduce(function(s, w) { return s + (w.amount || 0); }, 0);
-            
+
             depositData.push(dayDeposit);
             withdrawData.push(dayWithdraw);
         }
@@ -426,8 +433,15 @@ async function loadConversionData(days, force) {
         console.log('✅ 已转化用户数（存款>=40）:', Object.keys(depositUsers).length);
         
         var today = getBerlinDate();
-        var todayStr = today.toISOString().split('T')[0];
-        console.log('📅 今天 (柏林时间):', todayStr);
+        
+        // 计算"今天"的柏林时间 00:00:00 和 23:59:59.999（转为 UTC）
+        var todayStartBerlin = new Date(today);
+        todayStartBerlin.setHours(0, 0, 0, 0);
+        var todayStartUTC = todayStartBerlin.toISOString();
+
+        var todayEndBerlin = new Date(today);
+        todayEndBerlin.setHours(23, 59, 59, 999);
+        var todayEndUTC = todayEndBerlin.toISOString();
         
         for (var p = 0; p < periods.length; p++) {
             var period = periods[p];
@@ -441,22 +455,19 @@ async function loadConversionData(days, force) {
             } else if (daysOffset === 0) {
                 registeredUsers = users.filter(function(u) {
                     if (!u.created_at) return false;
-                    var berlinDate = convertToBerlinDate(new Date(u.created_at));
-                    var dateStr = berlinDate.toISOString().split('T')[0];
-                    return dateStr === todayStr;
+                    return u.created_at >= todayStartUTC && u.created_at <= todayEndUTC;
                 });
                 console.log('📊 Today 注册用户数:', registeredUsers.length);
                 console.log('📊 Today 注册用户 UIDs:', registeredUsers.map(function(u) { return u.uid; }));
             } else {
-                var startDate = new Date(today);
-                startDate.setDate(startDate.getDate() - daysOffset);
-                var startStr = startDate.toISOString().split('T')[0];
-                
+                var startDateBerlin = new Date(today);
+                startDateBerlin.setDate(startDateBerlin.getDate() - daysOffset);
+                startDateBerlin.setHours(0, 0, 0, 0);
+                var startDateUTC = startDateBerlin.toISOString();
+
                 registeredUsers = users.filter(function(u) {
                     if (!u.created_at) return false;
-                    var berlinDate = convertToBerlinDate(new Date(u.created_at));
-                    var dateStr = berlinDate.toISOString().split('T')[0];
-                    return dateStr >= startStr && dateStr <= todayStr;
+                    return u.created_at >= startDateUTC && u.created_at <= todayEndUTC;
                 });
             }
             
@@ -650,35 +661,34 @@ async function loadRecentRegistrations() {
     
     try {
         // 🔥 根据 currentDays 计算日期范围
-        var nowDate = getBerlinDate();
-        var startDate = new Date(nowDate);
-        
+        var nowBerlin = getBerlinDate();
+
         if (currentDays === -1) {
-            // All Time：从最早开始
-            startDate = new Date('2000-01-01');
-        } else if (currentDays === 0) {
-            // Today：只取今天
-            startDate.setHours(0, 0, 0, 0);
+            var startDateUTC = '2000-01-01T00:00:00.000Z';
         } else {
-            // 7 Days / 30 Days
-            startDate.setDate(startDate.getDate() - currentDays);
+            var startDateBerlin = new Date(nowBerlin);
+            if (currentDays === 0) {
+                startDateBerlin.setHours(0, 0, 0, 0);
+            } else {
+                startDateBerlin.setDate(startDateBerlin.getDate() - currentDays);
+                startDateBerlin.setHours(0, 0, 0, 0);
+            }
+            var startDateUTC = startDateBerlin.toISOString();
         }
-        
-        var startStr = startDate.toISOString().split('T')[0];
+
+        var todayEndBerlin = new Date(nowBerlin);
+        todayEndBerlin.setHours(23, 59, 59, 999);
+        var todayEndUTC = todayEndBerlin.toISOString();
         
         // 🔥 查询时过滤日期
         var query = sb.from('users')
             .select('uid, username, invited_by_username, created_at, balance')
             .order('created_at', { ascending: false })
             .limit(9);
-        
-        // 如果不是 All Time，添加日期过滤
+
         if (currentDays !== -1) {
-            query = query.gte('created_at', startStr);
-            if (currentDays === 0) {
-                // Today：只取今天
-                query = query.gte('created_at', startStr + 'T00:00:00');
-            }
+            query = query.gte('created_at', startDateUTC);
+            query = query.lte('created_at', todayEndUTC);
         }
         
         var usersRes = await query;
@@ -897,7 +907,7 @@ async function refreshDashboard(days, force) {
         loadRecentRegistrations()
     ]);
 
-// 🔥 只在 Today 视图显示祝贺消息
+    // 🔥 只在 Today 视图显示祝贺消息
     if (days === 0) {
         setTimeout(updateCongratsMessage, 500);
     } else {
