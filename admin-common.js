@@ -1486,18 +1486,24 @@ async function pollForUpdates() {
 
 function showPage(pageId) {
     console.log('切换页面:', pageId);
-    currentActivePage = pageId;
     
-    document.querySelectorAll('.page').forEach(function(p) { p.classList.remove('active'); });
+    // 隐藏所有页面
+    document.querySelectorAll('.page').forEach(function(p) {
+        p.classList.remove('active');
+    });
+    
+    // 显示目标页面
     var targetPage = document.getElementById('page_' + pageId);
     if (targetPage) targetPage.classList.add('active');
     
-    document.querySelectorAll('.nav-item').forEach(function(n) { n.classList.remove('active'); });
+    // 侧边栏高亮
+    document.querySelectorAll('.nav-item').forEach(function(n) {
+        n.classList.remove('active');
+    });
     var activeNav = document.querySelector('.nav-item[data-page="' + pageId + '"]');
-    if (activeNav) {
-        activeNav.classList.add('active');
-    }
+    if (activeNav) activeNav.classList.add('active');
     
+    // 加载对应页面内容
     if (pageId === 'dashboard' && window.loadDashboardPage) {
         window.loadDashboardPage(currentDays);
     } else if (pageId === 'users' && window.loadUsersPage) {
@@ -1526,6 +1532,8 @@ function showPage(pageId) {
         window.loadSigninPage();
     } else if (pageId === 'content' && window.loadContentPage) {
         window.loadContentPage();
+    } else if (pageId === 'notification' && window.loadNotificationPage) {
+        window.loadNotificationPage();
     }
 }
 
