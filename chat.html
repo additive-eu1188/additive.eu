@@ -323,6 +323,7 @@
             border-color: rgba(201, 176, 149, 0.06);
         }
 
+        /* ===== 所有通知图标统一为铃铛（金色） ===== */
         .notif-item .icon-box {
             width: 38px;
             height: 38px;
@@ -333,22 +334,8 @@
             justify-content: center;
             font-size: 16px;
             border: 1px solid rgba(255, 255, 255, 0.04);
-        }
-        .notif-item .icon-box.gold {
             background: rgba(201, 176, 149, 0.08);
             color: #C9B095;
-        }
-        .notif-item .icon-box.green {
-            background: rgba(74, 222, 128, 0.08);
-            color: #4ade80;
-        }
-        .notif-item .icon-box.blue {
-            background: rgba(74, 124, 255, 0.08);
-            color: #4a7cff;
-        }
-        .notif-item .icon-box.pink {
-            background: rgba(232, 128, 128, 0.08);
-            color: #e88080;
         }
 
         .notif-item .content {
@@ -740,7 +727,7 @@
                         <div class="icon-wrap">
                             <i class="fas fa-bell"></i>
                         </div>
-                        <span class="title"><span class="gold">✦</span> <span data-i18n="chat_notifications">Notifications</span></span>
+                        <span class="title"><span class="gold">✦</span> <span data-i18n="notifications_title">Notifications</span></span>
                         <span class="count-badge" id="notifCount">0</span>
                     </div>
                     <button class="close-btn" onclick="closeNotifModal()">
@@ -752,16 +739,16 @@
                 <div class="notif-list" id="notifList">
                     <div class="notif-empty-state">
                         <i class="fas fa-inbox"></i>
-                        <p data-i18n="chat_no_notifications">No notifications</p>
-                        <small data-i18n="chat_all_caught_up">You're all caught up!</small>
+                        <p data-i18n="notifications_empty">No notifications</p>
+                        <small data-i18n="notifications_caught_up">You're all caught up!</small>
                     </div>
                 </div>
 
                 <!-- ===== 底部 ===== -->
                 <div class="notif-modal-footer">
-                    <span class="info"><strong id="notifUnreadCount">0</strong> <span data-i18n="chat_unread">unread</span></span>
+                    <span class="info"><strong id="notifUnreadCount">0</strong> <span data-i18n="notifications_unread">unread</span></span>
                     <div class="actions">
-                        <button class="btn-close" onclick="closeNotifModal()" data-i18n="chat_close">Close</button>
+                        <button class="btn-close" onclick="closeNotifModal()" data-i18n="notifications_close">Close</button>
                     </div>
                 </div>
 
@@ -833,7 +820,7 @@
         }
 
         // ============================================================
-        // 🔔 通知功能 - 金属质感弹窗版
+        // 🔔 通知功能 - 金属质感弹窗版（所有图标统一为铃铛）
         // ============================================================
 
         let notifList = [];
@@ -910,31 +897,7 @@
             }
         }
 
-        // 获取通知图标样式
-        function getNotifIcon(title) {
-            const lower = title.toLowerCase();
-            if (lower.includes('withdrawal') || lower.includes('withdraw')) {
-                return { icon: 'fas fa-money-bill-wave', cls: 'green' };
-            } else if (lower.includes('kyc') || lower.includes('verification')) {
-                return { icon: 'fas fa-id-card', cls: 'gold' };
-            } else if (lower.includes('email') || lower.includes('mail')) {
-                return { icon: 'fas fa-envelope', cls: 'blue' };
-            } else if (lower.includes('welcome') || lower.includes('bonus') || lower.includes('reward')) {
-                return { icon: 'fas fa-gift', cls: 'gold' };
-            } else if (lower.includes('system') || lower.includes('update')) {
-                return { icon: 'fas fa-arrow-up', cls: 'blue' };
-            } else if (lower.includes('order') || lower.includes('commission')) {
-                return { icon: 'fas fa-shopping-cart', cls: 'green' };
-            } else if (lower.includes('event') || lower.includes('promotion')) {
-                return { icon: 'fas fa-calendar-alt', cls: 'pink' };
-            } else if (lower.includes('vip') || lower.includes('membership')) {
-                return { icon: 'fas fa-crown', cls: 'gold' };
-            } else {
-                return { icon: 'fas fa-bell', cls: 'gold' };
-            }
-        }
-
-        // 渲染通知列表
+        // 渲染通知列表（所有图标统一为铃铛）
         function renderNotifList(notifications) {
             const listEl = document.getElementById('notifList');
             const countEl = document.getElementById('notifCount');
@@ -950,8 +913,8 @@
                 listEl.innerHTML = `
                     <div class="notif-empty-state">
                         <i class="fas fa-inbox"></i>
-                        <p data-i18n="chat_no_notifications">No notifications</p>
-                        <small data-i18n="chat_all_caught_up">You're all caught up!</small>
+                        <p data-i18n="notifications_empty">No notifications</p>
+                        <small data-i18n="notifications_caught_up">You're all caught up!</small>
                     </div>
                 `;
                 if (countEl) countEl.textContent = '0';
@@ -982,12 +945,11 @@
                 const isUnread = n.status !== 'seen';
                 const unreadClass = isUnread ? 'unread' : '';
                 const dotHtml = isUnread ? '<span class="unread-dot"></span>' : '';
-                const iconData = getNotifIcon(n.title);
 
                 html += `
                     <div class="notif-item ${unreadClass}" data-id="${n.id}" onclick="handleNotifClick(${n.id})">
-                        <div class="icon-box ${iconData.cls}">
-                            <i class="${iconData.icon}"></i>
+                        <div class="icon-box">
+                            <i class="fas fa-bell"></i>
                         </div>
                         <div class="content">
                             <div class="title">${escapeHtml(n.title)}</div>
