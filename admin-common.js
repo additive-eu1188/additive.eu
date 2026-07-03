@@ -291,6 +291,7 @@ var PAGE_DEFS = {
     animated: { id: 'animated', label: 'Animated', icon: 'fa-play-circle', pageId: 'animated' },
     signin: { id: 'signin', label: 'Check In', icon: 'fa-calendar-check', pageId: 'signin' },
     content: { id: 'content', label: 'Content', icon: 'fa-file-alt', pageId: 'content' }
+    notification: { id: 'notification', label: 'User Notification', icon: 'fa-bell', pageId: 'notification' }
 };
 
 // ============================================================
@@ -689,6 +690,7 @@ function renderSidebarNav() {
         { id: 'animated', icon: 'fa-play-circle', label: 'Animated' },
         { id: 'signin', icon: 'fa-calendar-check', label: 'Check In Bonus' },
         { id: 'content', icon: 'fa-file-alt', label: 'Content Management' }
+        { id: 'notification', icon: 'fa-bell', label: 'User Notification' }
     ];
 
     navItems.forEach(function(item) {
