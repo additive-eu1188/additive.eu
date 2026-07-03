@@ -597,12 +597,12 @@ function loadNotificationPage() {
                     <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
                         <div style="display: flex; flex-direction: column; align-items: center;">
                             <input type="number" id="notifDay" placeholder="" min="1" max="31" style="width: 70px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06); border-radius: 10px; padding: 10px 8px; color: #e6edf5; font-size: 14px; outline: none; transition: 0.2s; font-family: 'Inter', sans-serif; box-sizing: border-box; text-align: center;">
-                            <span style="color: #4a5a72; font-size: 10px; margin-top: 2px;">Month</span>
+                            <span style="color: #4a5a72; font-size: 10px; margin-top: 2px;">Day</span>
                         </div>
                         <span style="color: #4a5a72; font-size: 16px; font-weight: 600;">/</span>
                         <div style="display: flex; flex-direction: column; align-items: center;">
                             <input type="number" id="notifMonth" placeholder="" min="1" max="12" style="width: 70px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06); border-radius: 10px; padding: 10px 8px; color: #e6edf5; font-size: 14px; outline: none; transition: 0.2s; font-family: 'Inter', sans-serif; box-sizing: border-box; text-align: center;">
-                            <span style="color: #4a5a72; font-size: 10px; margin-top: 2px;">Day</span>
+                            <span style="color: #4a5a72; font-size: 10px; margin-top: 2px;">Month</span>
                         </div>
                         <span style="color: #4a5a72; font-size: 16px; font-weight: 600;">/</span>
                         <div style="display: flex; flex-direction: column; align-items: center;">
@@ -651,12 +651,12 @@ function loadNotificationPage() {
                     <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
                         <div style="display: flex; flex-direction: column; align-items: center;">
                             <input type="number" id="editDay" placeholder="" min="1" max="31" style="width: 70px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06); border-radius: 10px; padding: 10px 8px; color: #e6edf5; font-size: 14px; outline: none; transition: 0.2s; font-family: 'Inter', sans-serif; box-sizing: border-box; text-align: center;">
-                            <span style="color: #4a5a72; font-size: 10px; margin-top: 2px;">Month</span>
+                            <span style="color: #4a5a72; font-size: 10px; margin-top: 2px;">Day</span>
                         </div>
                         <span style="color: #4a5a72; font-size: 16px; font-weight: 600;">/</span>
                         <div style="display: flex; flex-direction: column; align-items: center;">
                             <input type="number" id="editMonth" placeholder="" min="1" max="12" style="width: 70px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06); border-radius: 10px; padding: 10px 8px; color: #e6edf5; font-size: 14px; outline: none; transition: 0.2s; font-family: 'Inter', sans-serif; box-sizing: border-box; text-align: center;">
-                            <span style="color: #4a5a72; font-size: 10px; margin-top: 2px;">Day</span>
+                            <span style="color: #4a5a72; font-size: 10px; margin-top: 2px;">Month</span>
                         </div>
                         <span style="color: #4a5a72; font-size: 16px; font-weight: 600;">/</span>
                         <div style="display: flex; flex-direction: column; align-items: center;">
