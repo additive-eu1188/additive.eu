@@ -785,3 +785,74 @@ body {
     font-size: 12px !important;
     padding: 5px 14px !important;
 }
+
+/* ===== 强制覆盖系统 Dark Mode ===== */
+html {
+    color-scheme: light !important;
+}
+
+body {
+    background: radial-gradient(circle at 10% 20%, #0a0f2a, #050814) !important;
+    color: #ffffff !important;
+}
+
+.app {
+    background: radial-gradient(circle at 10% 20%, #0a0f2a, #050814) !important;
+}
+
+.sidebar,
+.card,
+.stat-card,
+.overview-card-content,
+.chart-container,
+.metal-card,
+.big-card,
+.current-membership-card,
+.tier-card,
+.need-help-card,
+.info-card,
+.help-section,
+.rules-card,
+.total-rewards-card,
+.streak-card,
+.content-card,
+.step-container,
+.step-card,
+.login-card,
+.register-card {
+    background: rgba(11, 11, 33, 0.92) !important;
+    backdrop-filter: blur(20px) !important;
+    -webkit-backdrop-filter: blur(20px) !important;
+}
+
+input,
+textarea,
+select,
+.search-input,
+.address-input,
+.trial-amount-input,
+.vip-select,
+.prompt-input {
+    background: rgba(255, 255, 255, 0.06) !important;
+    color: #ffffff !important;
+    border-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+input::placeholder,
+textarea::placeholder {
+    color: rgba(255, 255, 255, 0.3) !important;
+}
+
+/* 强制所有文字颜色 */
+h1, h2, h3, h4, h5, h6, p, span, div, label, a, li, td, th {
+    color: inherit;
+}
+
+/* 表格和列表保持深色 */
+.data-table th {
+    background: rgba(255, 255, 255, 0.05) !important;
+}
+
+.data-table td {
+    border-bottom-color: rgba(255, 255, 255, 0.05) !important;
+}
