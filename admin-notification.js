@@ -2,13 +2,24 @@
 // 依赖：admin-common.js, toast.js, user-data.js
 
 // ============================================================
-// 使用全局 sb 对象（由 admin-common.js 提供），不重复声明
+// 安全获取 sb 对象
 // ============================================================
+var sb = window.sb;
+if (!sb) {
+    try {
+        sb = supabase.createClient(
+            'https://qgmbzdfnwsdosdqphlxk.supabase.co',
+            'sb_publishable_zsJFjfNUO7NKp8ZH5KrXFQ_WZ8Q2Kym'
+        );
+    } catch (e) {
+        console.error('❌ 无法创建 Supabase 客户端:', e);
+    }
+}
 
 // ============================================================
-// 全局状态 - 使用唯一前缀避免冲突
+// 全局状态
 // ============================================================
-var notifCurrentType = 'notification'; // 'popup' or 'notification'
+var notifCurrentType = 'notification';
 var notifCurrentAudience = 'all';
 var notifList = [];
 var notifSearchKeyword = '';
@@ -58,13 +69,16 @@ function notifGetTargetBadge(record) {
 // CRUD 操作
 // ============================================================
 
-// 加载通知列表
 async function notifLoadNotifications() {
     var tbody = document.getElementById('notifTableBody');
     if (!tbody) return;
     tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding:30px; color:#6a7a9a;">Loading...</td></tr>';
 
     try {
+        if (!sb) {
+            throw new Error('Supabase client not available');
+        }
+
         var query = sb.from('user_notifications')
             .select('*')
             .order('created_at', { ascending: false });
@@ -127,7 +141,6 @@ function notifRenderTable(list) {
         `;
     });
 
-    // 绑定事件
     document.querySelectorAll('.btn-edit-time').forEach(function(btn) {
         btn.addEventListener('click', function() {
             var id = this.dataset.id;
@@ -153,7 +166,6 @@ function notifUpdateStats(list) {
     document.getElementById('seenNotifCount').textContent = seen;
 }
 
-// 创建通知
 async function notifCreateNotification() {
     var title = document.getElementById('notifTitleInput').value.trim();
     var description = document.getElementById('notifDescInput').value.trim();
@@ -190,6 +202,7 @@ async function notifCreateNotification() {
     };
 
     try {
+        if (!sb) throw new Error('Supabase client not available');
         var result = await sb.from('user_notifications').insert([payload]);
         if (result.error) throw result.error;
 
@@ -203,10 +216,10 @@ async function notifCreateNotification() {
     }
 }
 
-// 删除通知
 async function notifDeleteNotification(id) {
     showConfirm('Delete Notification', 'Are you sure you want to delete this notification?', async function() {
         try {
+            if (!sb) throw new Error('Supabase client not available');
             var result = await sb.from('user_notifications').delete().eq('id', parseInt(id));
             if (result.error) throw result.error;
             showToast('✅ Notification deleted', 'success');
@@ -217,7 +230,6 @@ async function notifDeleteNotification(id) {
     });
 }
 
-// 编辑时间
 async function notifSaveEditTime() {
     var id = document.getElementById('editNotifId').value;
     var sentTime = document.getElementById('editSentTimeInput').value;
@@ -228,6 +240,7 @@ async function notifSaveEditTime() {
     }
 
     try {
+        if (!sb) throw new Error('Supabase client not available');
         var result = await sb.from('user_notifications')
             .update({ sent_time: new Date(sentTime).toISOString() })
             .eq('id', parseInt(id));
@@ -338,11 +351,9 @@ function loadNotificationPage() {
         return;
     }
 
-    // 渲染 HTML 内容
     container.innerHTML = `
         <div class="card" style="background: rgba(12, 16, 28, 0.6); backdrop-filter: blur(16px); border-radius: 20px; border: 1px solid rgba(255,255,255,0.04); padding: 22px 24px;">
             
-            <!-- 页面头部 -->
             <div class="page-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 24px;">
                 <div>
                     <h2 style="font-size: 18px; font-weight: 600; color: #d8e0f0; margin: 0;">
@@ -363,7 +374,6 @@ function loadNotificationPage() {
                 </div>
             </div>
 
-            <!-- 统计卡片 -->
             <div class="notif-stats" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 24px;">
                 <div class="notif-stat-item" style="background: rgba(12, 16, 28, 0.6); border-radius: 16px; padding: 16px 20px; text-align: center; border: 1px solid rgba(255,255,255,0.04);">
                     <div class="label" style="font-size: 11px; color: #8892a8; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">All Notification</div>
@@ -379,7 +389,6 @@ function loadNotificationPage() {
                 </div>
             </div>
 
-            <!-- 搜索栏 -->
             <div class="notif-search-bar" style="display: flex; flex-wrap: wrap; gap: 10px; align-items: center; background: rgba(8, 12, 24, 0.5); border-radius: 16px; padding: 12px 16px; margin-bottom: 20px; border: 1px solid rgba(255,255,255,0.03);">
                 <input type="text" id="notifSearchInput" class="search-input" placeholder="Search UID..." style="flex: 1; min-width: 160px; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.10); border-radius: 40px; padding: 8px 16px; color: #e6edf5; font-size: 13px; outline: none;">
                 <button id="notifSearchBtn" class="btn-primary" style="padding: 8px 20px; border-radius: 40px; border: none; background: #2a3a5a; color: #e6edf5; font-weight: 600; cursor: pointer; font-size: 13px; white-space: nowrap; font-family: 'Inter', sans-serif;">
@@ -393,7 +402,6 @@ function loadNotificationPage() {
                 </button>
             </div>
 
-            <!-- 表格 -->
             <div class="table-container notif-table-wrap" style="max-height: 500px; overflow-y: auto; border-radius: 16px; border: 1px solid rgba(255,255,255,0.03);">
                 <table class="data-table" style="width: 100%; border-collapse: collapse; font-size: 13px; min-width: 900px; table-layout: fixed;">
                     <thead>
@@ -414,7 +422,7 @@ function loadNotificationPage() {
             </div>
         </div>
 
-        <!-- ===== 创建通知弹窗 ===== -->
+        <!-- 创建通知弹窗 -->
         <div id="createNotifModal" class="notif-modal-overlay" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(7, 11, 26, 0.92); backdrop-filter: blur(14px); z-index: 30000; display: none; align-items: center; justify-content: center;">
             <div class="notif-modal-content" style="background: linear-gradient(160deg, #1a1428, #0e0a1a); border-radius: 24px; padding: 32px 36px 28px; max-width: 560px; width: 92%; border: 1px solid rgba(201,176,149,0.1); box-shadow: 0 24px 60px rgba(0,0,0,0.6); transform: scale(0.92); transition: transform 0.3s cubic-bezier(0.2,0.9,0.4,1.1); max-height: 90vh; overflow-y: auto;">
                 <div class="modal-header" style="display: flex; align-items: center; gap: 10px; margin-bottom: 20px;">
@@ -456,7 +464,7 @@ function loadNotificationPage() {
             </div>
         </div>
 
-        <!-- ===== 编辑时间弹窗 ===== -->
+        <!-- 编辑时间弹窗 -->
         <div id="editTimeModal" class="notif-modal-overlay edit-time-modal" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(7, 11, 26, 0.92); backdrop-filter: blur(14px); z-index: 30000; display: none; align-items: center; justify-content: center;">
             <div class="notif-modal-content" style="background: linear-gradient(160deg, #1a1428, #0e0a1a); border-radius: 24px; padding: 32px 36px 28px; max-width: 420px; width: 92%; border: 1px solid rgba(201,176,149,0.1); box-shadow: 0 24px 60px rgba(0,0,0,0.6); transform: scale(0.92); transition: transform 0.3s cubic-bezier(0.2,0.9,0.4,1.1); max-height: 90vh; overflow-y: auto;">
                 <div class="modal-header" style="display: flex; align-items: center; gap: 10px; margin-bottom: 20px;">
@@ -476,11 +484,7 @@ function loadNotificationPage() {
         </div>
     `;
 
-    // ============================================================
     // 绑定事件
-    // ============================================================
-
-    // 类型切换按钮
     document.querySelectorAll('.notif-type-btn').forEach(function(btn) {
         btn.addEventListener('click', function() {
             var type = this.dataset.type;
@@ -496,7 +500,6 @@ function loadNotificationPage() {
         });
     });
 
-    // 搜索
     document.getElementById('notifSearchBtn').addEventListener('click', function() {
         notifSearchKeyword = document.getElementById('notifSearchInput').value.trim();
         notifLoadNotifications();
@@ -513,16 +516,10 @@ function loadNotificationPage() {
         notifLoadNotifications();
     });
 
-    // 添加按钮
     document.getElementById('notifAddBtn').addEventListener('click', notifOpenCreateModal);
-
-    // 创建确认
     document.getElementById('createNotifBtn').addEventListener('click', notifCreateNotification);
-
-    // 编辑时间保存
     document.getElementById('saveEditTimeBtn').addEventListener('click', notifSaveEditTime);
 
-    // 弹窗外部点击关闭
     document.querySelectorAll('.notif-modal-overlay').forEach(function(overlay) {
         overlay.addEventListener('click', function(e) {
             if (e.target === this) {
@@ -532,7 +529,6 @@ function loadNotificationPage() {
         });
     });
 
-    // ESC 关闭
     document.addEventListener('keydown', function(e) {
         if (e.key === 'Escape') {
             notifCloseCreateModal();
@@ -540,15 +536,13 @@ function loadNotificationPage() {
         }
     });
 
-    // 加载数据
     notifLoadNotifications();
 
     console.log('✅ User Notification page loaded');
-    console.log('   📌 Type: ' + notifCurrentType);
 }
 
 // ============================================================
-// 暴露全局函数（使用 notif 前缀避免冲突）
+// 暴露全局函数
 // ============================================================
 window.loadNotificationPage = loadNotificationPage;
 window.notifSwitchType = notifSwitchType;

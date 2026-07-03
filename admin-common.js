@@ -3,6 +3,9 @@ const SUPABASE_URL = 'https://qgmbzdfnwsdosdqphlxk.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_zsJFjfNUO7NKp8ZH5KrXFQ_WZ8Q2Kym';
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
+// ⬇️ 添加这一行
+window.sb = sb;
+
 // ============================================================
 // 🔔 通知声音配置
 // ============================================================
