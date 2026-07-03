@@ -144,6 +144,398 @@
             font-size: 13px;
             color: #8a9abb;
         }
+
+        /* ===== User Notification 页面样式 ===== */
+        .notif-stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        .notif-stat-item {
+            background: rgba(12, 16, 28, 0.6);
+            border-radius: 16px;
+            padding: 16px 20px;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.04);
+        }
+        .notif-stat-item .label {
+            font-size: 11px;
+            color: #8892a8;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 4px;
+        }
+        .notif-stat-item .value {
+            font-size: 28px;
+            font-weight: 700;
+            color: #ffffff;
+        }
+        .notif-search-bar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            align-items: center;
+            background: rgba(8, 12, 24, 0.5);
+            border-radius: 16px;
+            padding: 12px 16px;
+            margin-bottom: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.03);
+        }
+        .notif-search-bar .search-input {
+            flex: 1;
+            min-width: 160px;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.10);
+            border-radius: 40px;
+            padding: 8px 16px;
+            color: #e6edf5;
+            font-size: 13px;
+            outline: none;
+        }
+        .notif-search-bar .search-input::placeholder {
+            color: rgba(255, 255, 255, 0.15);
+        }
+        .notif-search-bar .btn-primary {
+            padding: 8px 20px;
+            border-radius: 40px;
+            border: none;
+            background: #2a3a5a;
+            color: #e6edf5;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 13px;
+            white-space: nowrap;
+            font-family: 'Inter', sans-serif;
+            transition: 0.2s;
+        }
+        .notif-search-bar .btn-primary:hover {
+            background: #3a4a6a;
+        }
+        .notif-table-wrap .data-table {
+            table-layout: fixed;
+            width: 100%;
+            min-width: 900px;
+        }
+        .notif-table-wrap .data-table th,
+        .notif-table-wrap .data-table td {
+            padding: 10px 14px;
+            font-size: 12px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .notif-table-wrap .data-table th:nth-child(1) { width: 90px; min-width: 90px; }
+        .notif-table-wrap .data-table th:nth-child(2) { width: 140px; min-width: 140px; }
+        .notif-table-wrap .data-table th:nth-child(3) { width: 200px; min-width: 200px; }
+        .notif-table-wrap .data-table th:nth-child(4) { width: 110px; min-width: 110px; }
+        .notif-table-wrap .data-table th:nth-child(5) { width: 150px; min-width: 150px; }
+        .notif-table-wrap .data-table th:nth-child(6) { width: 100px; min-width: 100px; }
+        .notif-table-wrap .data-table th:nth-child(7) { width: 150px; min-width: 150px; }
+
+        .status-badge-unread {
+            background: rgba(74, 124, 255, 0.15);
+            color: #4a7cff;
+            padding: 2px 14px;
+            border-radius: 40px;
+            font-size: 11px;
+            display: inline-block;
+        }
+        .status-badge-seen {
+            background: rgba(74, 222, 128, 0.10);
+            color: #4ade80;
+            padding: 2px 14px;
+            border-radius: 40px;
+            font-size: 11px;
+            display: inline-block;
+        }
+        .target-badge-all {
+            background: rgba(200, 176, 144, 0.10);
+            color: #c8b090;
+            padding: 2px 14px;
+            border-radius: 40px;
+            font-size: 11px;
+            display: inline-block;
+        }
+        .target-badge-specific {
+            background: rgba(74, 124, 255, 0.10);
+            color: #4a7cff;
+            padding: 2px 14px;
+            border-radius: 40px;
+            font-size: 11px;
+            display: inline-block;
+        }
+        .btn-sm-action {
+            padding: 4px 12px;
+            font-size: 11px;
+            border: none;
+            border-radius: 40px;
+            color: #fff;
+            cursor: pointer;
+            transition: 0.2s;
+            margin-right: 4px;
+            font-weight: 600;
+            font-family: 'Inter', sans-serif;
+        }
+        .btn-sm-action:hover {
+            opacity: 0.85;
+        }
+        .btn-edit-time {
+            background: rgba(200, 176, 144, 0.15);
+            color: #c8b090;
+        }
+        .btn-edit-time:hover {
+            background: rgba(200, 176, 144, 0.25);
+        }
+        .btn-delete-notif {
+            background: rgba(232, 128, 128, 0.15);
+            color: #e88080;
+        }
+        .btn-delete-notif:hover {
+            background: rgba(232, 128, 128, 0.25);
+        }
+
+        .notif-modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(7, 11, 26, 0.92);
+            backdrop-filter: blur(14px);
+            z-index: 30000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+        }
+        .notif-modal-overlay.active {
+            display: flex !important;
+        }
+        .notif-modal-content {
+            background: linear-gradient(160deg, #1a1428, #0e0a1a);
+            border-radius: 24px;
+            padding: 32px 36px 28px;
+            max-width: 560px;
+            width: 92%;
+            border: 1px solid rgba(201, 176, 149, 0.1);
+            box-shadow: 0 24px 60px rgba(0, 0, 0, 0.6);
+            transform: scale(0.92);
+            transition: transform 0.3s cubic-bezier(0.2, 0.9, 0.4, 1.1);
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        .notif-modal-overlay.active .notif-modal-content {
+            transform: scale(1);
+        }
+        .notif-modal-content .modal-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .notif-modal-content .modal-header .indicator {
+            display: inline-block;
+            width: 3px;
+            height: 18px;
+            background: linear-gradient(180deg, #C9B095, #b8944a);
+            border-radius: 2px;
+        }
+        .notif-modal-content .modal-header h3 {
+            font-size: 18px;
+            font-weight: 600;
+            color: #e8e8f0;
+            margin: 0;
+            letter-spacing: 0.3px;
+        }
+        .notif-modal-content .form-group {
+            margin-bottom: 16px;
+        }
+        .notif-modal-content .form-group label {
+            display: block;
+            font-size: 11px;
+            color: #6a7a92;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 4px;
+            font-weight: 600;
+        }
+        .notif-modal-content .form-group input,
+        .notif-modal-content .form-group textarea {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 10px;
+            padding: 10px 14px;
+            color: #e6edf5;
+            font-size: 14px;
+            outline: none;
+            transition: 0.2s;
+            font-family: 'Inter', sans-serif;
+            box-sizing: border-box;
+        }
+        .notif-modal-content .form-group textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+        .notif-modal-content .form-group input:focus,
+        .notif-modal-content .form-group textarea:focus {
+            border-color: rgba(201, 176, 149, 0.25);
+            background: rgba(255, 255, 255, 0.06);
+        }
+        .notif-modal-content .form-group input::placeholder,
+        .notif-modal-content .form-group textarea::placeholder {
+            color: rgba(255, 255, 255, 0.12);
+        }
+
+        .audience-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-top: 6px;
+        }
+        .audience-option {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 10px;
+            padding: 12px 14px;
+            cursor: pointer;
+            transition: 0.2s;
+            text-align: center;
+            color: #8892a8;
+            font-weight: 500;
+            font-size: 13px;
+        }
+        .audience-option:hover {
+            background: rgba(255, 255, 255, 0.04);
+        }
+        .audience-option.active {
+            border-color: rgba(201, 176, 149, 0.3);
+            background: rgba(201, 176, 149, 0.06);
+            color: #C9B095;
+        }
+        .audience-option .icon {
+            display: block;
+            font-size: 20px;
+            margin-bottom: 4px;
+        }
+        .audience-specific-input {
+            margin-top: 10px;
+        }
+        .audience-specific-input input {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 10px;
+            padding: 10px 14px;
+            color: #e6edf5;
+            font-size: 14px;
+            outline: none;
+        }
+        .audience-specific-input input:focus {
+            border-color: rgba(201, 176, 149, 0.25);
+        }
+        .audience-specific-input input::placeholder {
+            color: rgba(255, 255, 255, 0.12);
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+            border-top: 1px solid rgba(255, 255, 255, 0.04);
+            padding-top: 20px;
+        }
+        .modal-actions .btn-confirm {
+            flex: 1;
+            background: rgba(201, 176, 149, 0.06);
+            border: 1px solid rgba(201, 176, 149, 0.12);
+            border-radius: 40px;
+            padding: 10px 0;
+            color: #C9B095;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            transition: 0.2s;
+            font-family: 'Inter', sans-serif;
+        }
+        .modal-actions .btn-confirm:hover {
+            background: rgba(201, 176, 149, 0.12);
+        }
+        .modal-actions .btn-cancel {
+            flex: 1;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 40px;
+            padding: 10px 0;
+            color: #6a6a80;
+            font-weight: 500;
+            font-size: 14px;
+            cursor: pointer;
+            transition: 0.2s;
+            font-family: 'Inter', sans-serif;
+        }
+        .modal-actions .btn-cancel:hover {
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .edit-time-modal .notif-modal-content {
+            max-width: 420px;
+        }
+        .edit-time-modal .form-group input[type="datetime-local"] {
+            color-scheme: dark;
+        }
+
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+        .page-header h2 {
+            font-size: 18px;
+            font-weight: 600;
+            color: #d8e0f0;
+            margin: 0;
+        }
+        .page-header h2 i {
+            color: #8892a8;
+            margin-right: 10px;
+        }
+        .page-header .subtitle {
+            color: #7a85a5;
+            font-size: 13px;
+            margin: 4px 0 0 0;
+        }
+        .page-header .header-right {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        @media (max-width: 768px) {
+            .notif-stats {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            .audience-group {
+                grid-template-columns: 1fr;
+            }
+            .notif-modal-content {
+                padding: 24px 20px;
+            }
+            .page-header h2 {
+                font-size: 16px;
+            }
+        }
+        @media (max-width: 480px) {
+            .notif-stats {
+                grid-template-columns: 1fr;
+            }
+            .notif-table-wrap .data-table {
+                min-width: 700px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -173,6 +565,10 @@
             <div class="nav-item" data-page="users">
                 <i class="fas fa-users"></i>
                 <span class="nav-label">Users Management</span>
+            </div>
+            <div class="nav-item" data-page="invitation">
+                <i class="fas fa-qrcode"></i>
+                <span class="nav-label">Invitation Codes</span>
             </div>
             <div class="nav-item" data-page="kyc">
                 <i class="fas fa-id-card"></i>
@@ -218,6 +614,11 @@
                 <i class="fas fa-file-alt"></i>
                 <span class="nav-label">Content Management</span>
             </div>
+            <!-- ⬇️ 新增：User Notification -->
+            <div class="nav-item" data-page="notification">
+                <i class="fas fa-bell"></i>
+                <span class="nav-label">User Notification</span>
+            </div>
         </div>
 
         <!-- 底部 Logout -->
@@ -254,6 +655,8 @@
         <div id="page_animated" class="page"></div>
         <div id="page_signin" class="page"></div>
         <div id="page_content" class="page"></div>
+        <!-- ⬇️ 新增：User Notification -->
+        <div id="page_notification" class="page"></div>
     </div>
 </div>
 
@@ -318,6 +721,8 @@
 <script src="admin-animated.js"></script>
 <script src="admin-signin.js"></script>
 <script src="admin-content.js"></script>
+<!-- ⬇️ 新增：User Notification -->
+<script src="admin-notification.js"></script>
 
 <script>
     // 导航点击事件
@@ -335,6 +740,63 @@
         localStorage.removeItem('admin_username');
         window.location.href = 'mantapadmin1188login-Dt6Fd2s.html'; 
     });
+    
+    // ============================================================
+    // showPage 函数
+    // ============================================================
+    function showPage(pageId) {
+        console.log('切换页面:', pageId);
+        
+        // 隐藏所有页面
+        document.querySelectorAll('.page').forEach(function(p) {
+            p.classList.remove('active');
+        });
+        
+        // 显示目标页面
+        var targetPage = document.getElementById('page_' + pageId);
+        if (targetPage) targetPage.classList.add('active');
+        
+        // 侧边栏高亮
+        document.querySelectorAll('.nav-item').forEach(function(n) {
+            n.classList.remove('active');
+        });
+        var activeNav = document.querySelector('.nav-item[data-page="' + pageId + '"]');
+        if (activeNav) activeNav.classList.add('active');
+        
+        // 加载对应页面内容
+        if (pageId === 'dashboard' && window.loadDashboardPage) {
+            window.loadDashboardPage(currentDays);
+        } else if (pageId === 'users' && window.loadUsersPage) {
+            window.loadUsersPage();
+        } else if (pageId === 'invitation' && window.loadInvitationPage) {
+            window.loadInvitationPage();
+        } else if (pageId === 'kyc' && window.loadKycPage) {
+            window.loadKycPage();
+        } else if (pageId === 'emailverify' && window.loadEmailVerifyPage) {
+            window.loadEmailVerifyPage();
+        } else if (pageId === 'trial' && window.loadTrialPage) {
+            window.loadTrialPage();
+        } else if (pageId === 'withdrawals' && window.loadWithdrawalsPage) {
+            window.loadWithdrawalsPage();
+        } else if (pageId === 'vip' && window.loadVipPage) {
+            window.loadVipPage();
+        } else if (pageId === 'setorders' && window.loadSetordersPage) {
+            window.loadSetordersPage();
+        } else if (pageId === 'orders' && window.loadOrdersPage) {
+            window.loadOrdersPage();
+        } else if (pageId === 'orderpool' && window.loadOrderPoolPage) {
+            window.loadOrderPoolPage();
+        } else if (pageId === 'animated' && window.loadAnimatedPage) {
+            window.loadAnimatedPage();
+        } else if (pageId === 'signin' && window.loadSigninPage) {
+            window.loadSigninPage();
+        } else if (pageId === 'content' && window.loadContentPage) {
+            window.loadContentPage();
+        } else if (pageId === 'notification' && window.loadNotificationPage) {
+            // ⬇️ 新增：User Notification
+            window.loadNotificationPage();
+        }
+    }
     
     // 加载默认页面
     showPage('dashboard');
