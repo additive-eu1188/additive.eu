@@ -28,13 +28,7 @@ function notifFormatDate(iso) {
 }
 
 function notifGetDefaultSentTime() {
-    var now = new Date();
-    var day = String(now.getDate()).padStart(2, '0');
-    var month = String(now.getMonth() + 1).padStart(2, '0');
-    var year = now.getFullYear();
-    var hours = String(now.getHours()).padStart(2, '0');
-    var minutes = String(now.getMinutes()).padStart(2, '0');
-    return { day: day, month: month, year: year, time: hours + ':' + minutes };
+    return { day: '', month: '', year: '', time: '' };
 }
 
 function notifGetStatusBadge(record) {
@@ -444,11 +438,11 @@ function notifOpenCreateModal() {
     document.getElementById('createNotifModal').classList.add('active');
     document.getElementById('createNotifModal').style.display = 'flex';
     
-    var defaultTime = notifGetDefaultSentTime();
-    document.getElementById('notifDay').value = defaultTime.day;
-    document.getElementById('notifMonth').value = defaultTime.month;
-    document.getElementById('notifYear').value = defaultTime.year;
-    document.getElementById('notifTime').value = defaultTime.time;
+    // 所有输入框留空
+    document.getElementById('notifDay').value = '';
+    document.getElementById('notifMonth').value = '';
+    document.getElementById('notifYear').value = '';
+    document.getElementById('notifTime').value = '';
     
     document.getElementById('notifTitleInput').value = '';
     document.getElementById('notifDescInput').value = '';
@@ -599,14 +593,13 @@ function loadNotificationPage() {
                 <div class="form-group" style="margin-bottom: 16px;">
                     <label style="display: block; font-size: 11px; color: #6a7a92; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; font-weight: 600;">
                         Sent Time <span style="color:#e88080;">*</span>
-                        <span style="color:#4a5a72; font-weight:400; text-transform:none; letter-spacing:0.3px; margin-left:6px; font-size:10px;">(MM / DD / YYYY HH:mm)</span>
                     </label>
                     <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
-                        <input type="number" id="notifDay" placeholder="DD" min="1" max="31" style="width: 60px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06); border-radius: 10px; padding: 10px 8px; color: #e6edf5; font-size: 14px; outline: none; transition: 0.2s; font-family: 'Inter', sans-serif; box-sizing: border-box; text-align: center;">
+                        <input type="number" id="notifDay" placeholder="Day" min="1" max="31" style="width: 70px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06); border-radius: 10px; padding: 10px 8px; color: #e6edf5; font-size: 14px; outline: none; transition: 0.2s; font-family: 'Inter', sans-serif; box-sizing: border-box; text-align: center;">
                         <span style="color: #4a5a72; font-size: 16px; font-weight: 600;">/</span>
-                        <input type="number" id="notifMonth" placeholder="MM" min="1" max="12" style="width: 60px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06); border-radius: 10px; padding: 10px 8px; color: #e6edf5; font-size: 14px; outline: none; transition: 0.2s; font-family: 'Inter', sans-serif; box-sizing: border-box; text-align: center;">
+                        <input type="number" id="notifMonth" placeholder="Month" min="1" max="12" style="width: 70px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06); border-radius: 10px; padding: 10px 8px; color: #e6edf5; font-size: 14px; outline: none; transition: 0.2s; font-family: 'Inter', sans-serif; box-sizing: border-box; text-align: center;">
                         <span style="color: #4a5a72; font-size: 16px; font-weight: 600;">/</span>
-                        <input type="number" id="notifYear" placeholder="YYYY" min="2020" max="2099" style="width: 80px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06); border-radius: 10px; padding: 10px 8px; color: #e6edf5; font-size: 14px; outline: none; transition: 0.2s; font-family: 'Inter', sans-serif; box-sizing: border-box; text-align: center;">
+                        <input type="number" id="notifYear" placeholder="Year" min="2020" max="2099" style="width: 80px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06); border-radius: 10px; padding: 10px 8px; color: #e6edf5; font-size: 14px; outline: none; transition: 0.2s; font-family: 'Inter', sans-serif; box-sizing: border-box; text-align: center;">
                         <span style="color: #4a5a72; font-size: 16px; font-weight: 600; margin: 0 2px;">|</span>
                         <input type="time" id="notifTime" style="width: 120px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06); border-radius: 10px; padding: 10px 8px; color: #e6edf5; font-size: 14px; outline: none; transition: 0.2s; font-family: 'Inter', sans-serif; box-sizing: border-box; text-align: center; color-scheme: dark;">
                     </div>
@@ -645,14 +638,13 @@ function loadNotificationPage() {
                 <div class="form-group" style="margin-bottom: 16px;">
                     <label style="display: block; font-size: 11px; color: #6a7a92; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; font-weight: 600;">
                         Sent Time
-                        <span style="color:#4a5a72; font-weight:400; text-transform:none; letter-spacing:0.3px; margin-left:6px; font-size:10px;">(MM / DD / YYYY HH:mm)</span>
                     </label>
                     <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
-                        <input type="number" id="editDay" placeholder="DD" min="1" max="31" style="width: 60px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06); border-radius: 10px; padding: 10px 8px; color: #e6edf5; font-size: 14px; outline: none; transition: 0.2s; font-family: 'Inter', sans-serif; box-sizing: border-box; text-align: center;">
+                        <input type="number" id="editDay" placeholder="Day" min="1" max="31" style="width: 70px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06); border-radius: 10px; padding: 10px 8px; color: #e6edf5; font-size: 14px; outline: none; transition: 0.2s; font-family: 'Inter', sans-serif; box-sizing: border-box; text-align: center;">
                         <span style="color: #4a5a72; font-size: 16px; font-weight: 600;">/</span>
-                        <input type="number" id="editMonth" placeholder="MM" min="1" max="12" style="width: 60px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06); border-radius: 10px; padding: 10px 8px; color: #e6edf5; font-size: 14px; outline: none; transition: 0.2s; font-family: 'Inter', sans-serif; box-sizing: border-box; text-align: center;">
+                        <input type="number" id="editMonth" placeholder="Month" min="1" max="12" style="width: 70px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06); border-radius: 10px; padding: 10px 8px; color: #e6edf5; font-size: 14px; outline: none; transition: 0.2s; font-family: 'Inter', sans-serif; box-sizing: border-box; text-align: center;">
                         <span style="color: #4a5a72; font-size: 16px; font-weight: 600;">/</span>
-                        <input type="number" id="editYear" placeholder="YYYY" min="2020" max="2099" style="width: 80px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06); border-radius: 10px; padding: 10px 8px; color: #e6edf5; font-size: 14px; outline: none; transition: 0.2s; font-family: 'Inter', sans-serif; box-sizing: border-box; text-align: center;">
+                        <input type="number" id="editYear" placeholder="Year" min="2020" max="2099" style="width: 80px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06); border-radius: 10px; padding: 10px 8px; color: #e6edf5; font-size: 14px; outline: none; transition: 0.2s; font-family: 'Inter', sans-serif; box-sizing: border-box; text-align: center;">
                         <span style="color: #4a5a72; font-size: 16px; font-weight: 600; margin: 0 2px;">|</span>
                         <input type="time" id="editTime" style="width: 120px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06); border-radius: 10px; padding: 10px 8px; color: #e6edf5; font-size: 14px; outline: none; transition: 0.2s; font-family: 'Inter', sans-serif; box-sizing: border-box; text-align: center; color-scheme: dark;">
                     </div>
@@ -743,7 +735,7 @@ function loadNotificationPage() {
     notifLoadNotifications();
 
     console.log('✅ User Notification page loaded');
-    console.log('   - Date picker: 4 separate inputs (MM / DD / YYYY HH:mm)');
+    console.log('   - Date picker: 4 separate inputs (Day / Month / Year HH:mm)');
     console.log('   - Audience cards: glow effect on active');
     console.log('   - UID input: auto fetch user info');
 }
