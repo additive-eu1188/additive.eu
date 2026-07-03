@@ -1,21 +1,3 @@
-// admin-notification.js - User Notification 管理页面
-// 依赖：admin-common.js, toast.js, user-data.js
-
-// ============================================================
-// 安全获取 sb 对象
-// ============================================================
-var sb = window.sb;
-if (!sb) {
-    try {
-        sb = supabase.createClient(
-            'https://qgmbzdfnwsdosdqphlxk.supabase.co',
-            'sb_publishable_zsJFjfNUO7NKp8ZH5KrXFQ_WZ8Q2Kym'
-        );
-    } catch (e) {
-        console.error('❌ 无法创建 Supabase 客户端:', e);
-    }
-}
-
 // ============================================================
 // 全局状态
 // ============================================================
