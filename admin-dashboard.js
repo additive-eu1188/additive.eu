@@ -18,6 +18,9 @@ let cachedData = {
 const CACHE_DURATION = 30000;
 const DEBOUNCE_DELAY = 300;
 
+// ✅ 在这里添加
+var currentDays = 0;  // 默认 Today
+
 function debounce(func, wait) {
     let timeout;
     return function executedFunction(...args) {
@@ -890,7 +893,10 @@ window.handleActivityClick = function(type) {
 };
 
 async function refreshDashboard(days, force) {
-    days = days || currentDays;
+    // 🔥 修复：当 days 为 0 时，不应该被 currentDays 覆盖
+    if (days === undefined || days === null) {
+        days = currentDays;
+    }
     force = force || false;
     
     // 🔥 更新 currentDays 供 loadRecentRegistrations 使用
