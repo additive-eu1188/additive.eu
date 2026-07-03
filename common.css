@@ -1,5 +1,16 @@
 /* ========== common.css - 所有页面共用 ========== */
 
+/* 强制 Light Mode */
+@media (prefers-color-scheme: dark) {
+    :root {
+        color-scheme: light !important;
+    }
+    html, body, .app, .main, .sidebar, .card {
+        background: #0B0B21 !important;
+        color: #ffffff !important;
+    }
+}
+
 * {
     margin: 0;
     padding: 0;
