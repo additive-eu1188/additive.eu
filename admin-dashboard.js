@@ -1646,11 +1646,6 @@ async function updateCongratsMessage() {
         var today = getBerlinDate();
         var todayStr = today.toISOString().split('T')[0];
         
-        var { data: users } = await sb
-            .from('users')
-            .select('uid, username, invited_by_username')
-            .gte('created_at', todayStr + 'T00:00:00');
-        
         var wrapper = document.getElementById('congratsWrapper');
         var messageEl = document.getElementById('congratsMessage');
         var badgeEl = document.getElementById('congratsCountBadge');
@@ -1658,41 +1653,77 @@ async function updateCongratsMessage() {
         
         if (!wrapper || !messageEl) return;
         
+        // ============================================================
+        // 🔥 New Orders Today：查询今天首次存款 >= 40 的用户
+        //    不管什么时候注册，只看今天首次存款
+        // ============================================================
+        
+        // 1. 获取今天所有存款记录（manual 或 deposit_bonus）
+        var { data: todayDeposits } = await sb
+            .from('deposits')
+            .select('uid, amount, created_at')
+            .gte('created_at', todayStr + 'T00:00:00')
+            .in('type', ['manual', 'deposit_bonus']);
+        
+        if (!todayDeposits || todayDeposits.length === 0) {
+            wrapper.style.display = 'none';
+            return;
+        }
+        
+        // 2. 找出今天存款 >= 40 的用户
+        var depositUsers = {};
+        todayDeposits.forEach(function(d) {
+            if (d.amount >= 40) {
+                depositUsers[d.uid] = true;
+            }
+        });
+        
+        var uids = Object.keys(depositUsers);
+        if (uids.length === 0) {
+            wrapper.style.display = 'none';
+            return;
+        }
+        
+        // 3. 获取这些用户的详细信息
+        var { data: users } = await sb
+            .from('users')
+            .select('uid, username, invited_by_username')
+            .in('uid', uids);
+        
         if (!users || users.length === 0) {
             wrapper.style.display = 'none';
             return;
         }
         
-        var uids = users.map(function(u) { return u.uid; });
-        var { data: deposits } = await sb
-            .from('deposits')
-            .select('uid, amount')
-            .in('uid', uids)
-            .in('type', ['manual', 'deposit_bonus']);
+        // 4. 过滤：只保留首次存款的用户（今天之前没有存款记录）
+        var firstTimeDepositors = [];
         
-        var depositUsers = {};
-        if (deposits) {
-            deposits.forEach(function(d) {
-                if (d.amount >= 40) {
-                    depositUsers[d.uid] = true;
-                }
-            });
+        for (var i = 0; i < users.length; i++) {
+            var user = users[i];
+            
+            var { data: previousDeposits } = await sb
+                .from('deposits')
+                .select('id')
+                .eq('uid', user.uid)
+                .lt('created_at', todayStr + 'T00:00:00')
+                .in('type', ['manual', 'deposit_bonus'])
+                .limit(1);
+            
+            if (!previousDeposits || previousDeposits.length === 0) {
+                firstTimeDepositors.push(user);
+            }
         }
         
-        var convertedUsers = users.filter(function(u) {
-            return depositUsers[u.uid] === true;
-        });
-        
-        if (convertedUsers.length === 0) {
+        if (firstTimeDepositors.length === 0) {
             wrapper.style.display = 'none';
             return;
         }
         
         wrapper.style.display = 'block';
-        if (badgeEl) badgeEl.textContent = convertedUsers.length;
+        if (badgeEl) badgeEl.textContent = firstTimeDepositors.length;
         
         var messagesHtml = '';
-        var displayUsers = convertedUsers.slice(0, 10);
+        var displayUsers = firstTimeDepositors.slice(0, 10);
         
         displayUsers.forEach(function(u) {
             var referrer = u.invited_by_username || 'New';
@@ -1703,7 +1734,7 @@ async function updateCongratsMessage() {
                 '</div>';
         });
         
-        var remaining = convertedUsers.length - 10;
+        var remaining = firstTimeDepositors.length - 10;
         if (remaining > 0) {
             messagesHtml += '<div style="padding: 4px 0; color: #6a7a8a; font-size: 12px; text-align: center; border-top: 1px solid rgba(214,178,94,0.06); margin-top: 2px; padding-top: 6px;">' +
                 'and ' + remaining + ' more new orders today' +
@@ -1711,7 +1742,6 @@ async function updateCongratsMessage() {
         }
         
         messageEl.innerHTML = messagesHtml;
-        
         messageEl.style.display = 'none';
         if (arrowEl) arrowEl.style.transform = 'rotate(0deg)';
         
