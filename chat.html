@@ -1,17 +1,17 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-<link rel="manifest" href="/manifest.json">
-<link rel="apple-touch-icon" href="https://qgmbzdfnwsdosdqphlxk.supabase.co/storage/v1/object/public/application/icon-192.png">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="ADDITIVE">
-<meta name="theme-color" content="#0B0B21">
-<meta name="mobile-web-app-capable" content="yes">
-<meta name="application-name" content="ADDITIVE">
+    <link rel="manifest" href="/manifest.json">
+    <link rel="apple-touch-icon" href="https://qgmbzdfnwsdosdqphlxk.supabase.co/storage/v1/object/public/application/icon-192.png">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="ADDITIVE">
+    <meta name="theme-color" content="#0B0B21">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="application-name" content="ADDITIVE">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<script>
+    <script>
         (function() {
             var host = window.location.hostname;
             var isProduction = host !== 'localhost' && 
@@ -34,6 +34,8 @@
     <title>ADDITIVE - Chat With Us</title>
     <link rel="stylesheet" href="common.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="user-data.js"></script>
     <style>
         .chat-header { margin-bottom: 24px; }
         .chat-header h1 { font-size: 28px; font-weight: 700; color: #ffffff; margin-bottom: 6px; }
@@ -127,21 +129,6 @@
         .help-number { font-size: 13px; font-weight: 700; color: #C9B095; min-width: 32px; }
         .help-text { font-size: 14px; font-weight: 500; color: #ffffff; }
         
-        .upgrade-card-pulse {
-            margin-top: 32px;
-            background: rgba(20, 30, 55, 0.6);
-            backdrop-filter: blur(12px);
-            border-radius: 28px;
-            padding: 24px;
-            animation: pulseGlow 2.5s ease-in-out infinite;
-            border: 1px solid rgba(201, 176, 149, 0.3);
-        }
-        @keyframes pulseGlow { 0% { box-shadow: inset 0 0 10px rgba(201,176,149,0.08), 0 0 5px rgba(201,176,149,0.05); border-color: rgba(201,176,149,0.2); } 50% { box-shadow: inset 0 0 25px rgba(201,176,149,0.25), 0 0 15px rgba(201,176,149,0.12); border-color: rgba(201,176,149,0.5); } 100% { box-shadow: inset 0 0 10px rgba(201,176,149,0.08), 0 0 5px rgba(201,176,149,0.05); border-color: rgba(201,176,149,0.2); } }
-        .upgrade-title { font-size: 18px; font-weight: 600; margin-bottom: 10px; color: #C9B095; }
-        .upgrade-desc { font-size: 13px; color: #7a85a5; line-height: 1.5; margin-bottom: 20px; }
-        .btn-upgrade { background: rgba(201,176,149,0.15); padding: 10px 20px; border-radius: 40px; text-decoration: none; color: #C9B095; font-weight: 600; font-size: 14px; display: inline-flex; align-items: center; gap: 8px; border: 1px solid rgba(201,176,149,0.3); }
-        
-        @media (max-width: 1000px) { .chat-two-columns { flex-direction: column; } 
         .footer-note {
             margin-top: 40px;
             text-align: center;
@@ -150,7 +137,170 @@
             padding: 16px 0;
             border-top: 1px solid rgba(204, 178, 153, 0.08);
         }
-}
+
+        /* 🔔 通知铃铛样式 */
+        .notification-bell-wrapper {
+            position: relative;
+            cursor: pointer;
+            flex-shrink: 0;
+            transition: transform 0.2s ease;
+        }
+        .notification-bell-wrapper:hover {
+            transform: scale(1.05);
+        }
+        .notification-bell-wrapper .bell-icon {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: rgba(201, 176, 149, 0.08);
+            border: 1px solid rgba(201, 176, 149, 0.15);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: 0.2s;
+        }
+        .notification-bell-wrapper .bell-icon:hover {
+            background: rgba(201, 176, 149, 0.15);
+            border-color: rgba(201, 176, 149, 0.3);
+        }
+        .notification-bell-wrapper .bell-icon i {
+            font-size: 20px;
+            color: #C9B095;
+        }
+        .notification-bell-wrapper .badge {
+            position: absolute;
+            top: -2px;
+            right: -2px;
+            background: #ff5a5a;
+            color: #fff;
+            font-size: 10px;
+            font-weight: 700;
+            min-width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 0 4px;
+            border: 2px solid #0a0f2a;
+        }
+        .notification-bell-wrapper .badge.show {
+            display: flex;
+        }
+
+        /* 🔔 通知下拉列表 */
+        #notificationDropdown {
+            display: none;
+            position: fixed;
+            top: 80px;
+            right: 20px;
+            width: 380px;
+            max-height: 450px;
+            background: rgba(16, 20, 34, 0.98);
+            backdrop-filter: blur(20px);
+            border-radius: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8);
+            overflow: hidden;
+            z-index: 99999;
+            font-family: 'Inter', sans-serif;
+        }
+        #notificationDropdown .dropdown-header {
+            padding: 16px 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        #notificationDropdown .dropdown-header .title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #d8e0f0;
+        }
+        #notificationDropdown .dropdown-header .title i {
+            color: #8892a8;
+            margin-right: 8px;
+        }
+        #notificationDropdown .dropdown-header .count {
+            font-size: 11px;
+            color: #6a7a92;
+        }
+        #notificationDropdown .dropdown-body {
+            max-height: 350px;
+            overflow-y: auto;
+            padding: 8px 0;
+        }
+        #notificationDropdown .dropdown-body::-webkit-scrollbar {
+            width: 3px;
+        }
+        #notificationDropdown .dropdown-body::-webkit-scrollbar-thumb {
+            background: rgba(204, 184, 159, 0.15);
+            border-radius: 4px;
+        }
+        #notificationDropdown .dropdown-body::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        #notificationDropdown .dropdown-footer {
+            padding: 12px 20px;
+            border-top: 1px solid rgba(255, 255, 255, 0.04);
+            text-align: center;
+        }
+        #notificationDropdown .dropdown-footer span {
+            font-size: 11px;
+            color: #4a5a72;
+        }
+
+        /* 通知项 */
+        .notif-item {
+            padding: 12px 16px;
+            margin: 0 8px 4px 8px;
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.02);
+            border-left: 3px solid #C9B095;
+            border: 1px solid rgba(255, 255, 255, 0.03);
+            transition: all 0.2s;
+            cursor: default;
+        }
+        .notif-item:hover {
+            background: rgba(255, 255, 255, 0.04);
+        }
+        .notif-item .notif-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: #d8e0f0;
+        }
+        .notif-item .notif-desc {
+            font-size: 12px;
+            color: #8892a8;
+            margin-top: 4px;
+            word-break: break-word;
+        }
+        .notif-item .notif-time {
+            font-size: 10px;
+            color: #5a6a82;
+            margin-top: 6px;
+        }
+
+        @media (max-width: 1000px) { 
+            .chat-two-columns { flex-direction: column; } 
+        }
+        @media (max-width: 480px) {
+            #notificationDropdown {
+                width: 340px;
+                right: 10px;
+                top: 70px;
+            }
+            .notification-bell-wrapper .bell-icon {
+                width: 38px;
+                height: 38px;
+            }
+            .notification-bell-wrapper .bell-icon i {
+                font-size: 17px;
+            }
+            .chat-header h1 {
+                font-size: 22px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -160,41 +310,55 @@
             <div class="sidebar-top">
                 <div class="logo">ADDITIVE<span>*</span></div>
                 <nav class="nav">
-    <a href="dashboard.html" class="nav-item"><i class="fas fa-th-large"></i><span data-i18n="nav_dashboard">Dashboard</span></a>
-    <a href="start.html" class="nav-item"><i class="fas fa-play"></i><span data-i18n="nav_start">Start</span></a>
-    <a href="history.html" class="nav-item"><i class="fas fa-clock"></i><span data-i18n="nav_history">History</span></a>
-    <a href="checkin.html" class="nav-item"><i class="fas fa-calendar-check"></i><span data-i18n="nav_checkin">Sign in</span></a>
-    <a href="event.html" class="nav-item"><i class="fas fa-calendar-alt"></i><span data-i18n="nav_event">Event</span></a>
-    <a href="withdrawal.html" class="nav-item"><i class="fas fa-arrow-right-to-bracket"></i><span data-i18n="nav_withdrawal">Withdrawal</span></a>
-    <a href="employment.html" class="nav-item"><i class="fas fa-file-contract"></i><span data-i18n="nav_employment">Employment Contract</span></a>
-    <a href="company.html" class="nav-item"><i class="fas fa-building"></i><span data-i18n="nav_company">Company Profile</span></a>
-    <a href="chat.html" class="nav-item active"><i class="fas fa-comment-dots"></i><span data-i18n="nav_chat">Chat with us</span></a>
-    <a href="settings.html" class="nav-item"><i class="fas fa-sliders-h"></i><span data-i18n="nav_settings">Settings</span></a>
-    <a href="membership.html" class="nav-item"><i class="fas fa-crown"></i><span data-i18n="nav_membership">Membership</span></a>
-</nav>
+                    <a href="dashboard.html" class="nav-item"><i class="fas fa-th-large"></i><span data-i18n="nav_dashboard">Dashboard</span></a>
+                    <a href="start.html" class="nav-item"><i class="fas fa-play"></i><span data-i18n="nav_start">Start</span></a>
+                    <a href="history.html" class="nav-item"><i class="fas fa-clock"></i><span data-i18n="nav_history">History</span></a>
+                    <a href="checkin.html" class="nav-item"><i class="fas fa-calendar-check"></i><span data-i18n="nav_checkin">Sign in</span></a>
+                    <a href="event.html" class="nav-item"><i class="fas fa-calendar-alt"></i><span data-i18n="nav_event">Event</span></a>
+                    <a href="withdrawal.html" class="nav-item"><i class="fas fa-arrow-right-to-bracket"></i><span data-i18n="nav_withdrawal">Withdrawal</span></a>
+                    <a href="employment.html" class="nav-item"><i class="fas fa-file-contract"></i><span data-i18n="nav_employment">Employment Contract</span></a>
+                    <a href="company.html" class="nav-item"><i class="fas fa-building"></i><span data-i18n="nav_company">Company Profile</span></a>
+                    <a href="chat.html" class="nav-item active"><i class="fas fa-comment-dots"></i><span data-i18n="nav_chat">Chat with us</span></a>
+                    <a href="settings.html" class="nav-item"><i class="fas fa-sliders-h"></i><span data-i18n="nav_settings">Settings</span></a>
+                    <a href="membership.html" class="nav-item"><i class="fas fa-crown"></i><span data-i18n="nav_membership">Membership</span></a>
+                </nav>
             </div>
             <div class="sidebar-upgrade-card">
-    <div class="sidebar-premium-badge" data-i18n="sidebar_premium">PREMIUM ACCESS</div>
-    <div class="sidebar-upgrade-title" data-i18n="sidebar_upgrade">Upgrade your membership</div>
-    <div class="sidebar-upgrade-desc" data-i18n="sidebar_upgrade_desc">Unlock higher rewards,<br>priority support, and premium<br>hotel discovery benefits</div>
-    <a href="membership.html" class="sidebar-upgrade-btn" data-i18n="sidebar_upgrade_btn">Upgrade Now <i class="fas fa-arrow-right"></i></a>
-</div>
+                <div class="sidebar-premium-badge" data-i18n="sidebar_premium">PREMIUM ACCESS</div>
+                <div class="sidebar-upgrade-title" data-i18n="sidebar_upgrade">Upgrade your membership</div>
+                <div class="sidebar-upgrade-desc" data-i18n="sidebar_upgrade_desc">Unlock higher rewards,<br>priority support, and premium<br>hotel discovery benefits</div>
+                <a href="membership.html" class="sidebar-upgrade-btn" data-i18n="sidebar_upgrade_btn">Upgrade Now <i class="fas fa-arrow-right"></i></a>
+            </div>
         </aside>
 
         <main class="main">
-<div class="mobile-top-bar">
-    <div class="menu-toggle" id="menuToggleBtn" onclick="toggleMenu()">
-        <i class="fas fa-bars"></i>
-    </div>
-    <div class="mobile-logo">
-        <img src="https://qgmbzdfnwsdosdqphlxk.supabase.co/storage/v1/object/public/logos/additivelogo1.png" alt="ADDITIVE">
-    </div>
-</div>
-            <div class="chat-header">
-                <h1 data-i18n="chat_title">CHAT WITH US</h1>
-                <p data-i18n="chat_subtitle">Connect with our support team for account, withdrawal, reward, or hotel task assistance.</p>
+            <div class="mobile-top-bar">
+                <div class="menu-toggle" id="menuToggleBtn" onclick="toggleMenu()">
+                    <i class="fas fa-bars"></i>
+                </div>
+                <div class="mobile-logo">
+                    <img src="https://qgmbzdfnwsdosdqphlxk.supabase.co/storage/v1/object/public/logos/additivelogo1.png" alt="ADDITIVE">
+                </div>
             </div>
 
+            <!-- ===== 页面标题 + 铃铛 ===== -->
+            <div class="chat-header">
+                <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+                    <div>
+                        <h1 data-i18n="chat_title" style="margin-bottom: 4px;">CHAT WITH US</h1>
+                        <p data-i18n="chat_subtitle" style="margin: 0; color: #7a85a5; font-size: 13px;">Connect with our support team for account, withdrawal, reward, or hotel task assistance.</p>
+                    </div>
+                    <!-- 🔔 通知铃铛 -->
+                    <div class="notification-bell-wrapper" onclick="toggleNotificationDropdown()">
+                        <div class="bell-icon">
+                            <i class="fas fa-bell"></i>
+                        </div>
+                        <span class="badge" id="notifBadge">0</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ===== 页面内容 ===== -->
             <div class="chat-two-columns">
                 <div class="chat-left">
                     <div class="need-help-card">
@@ -208,7 +372,6 @@
                     </div>
                     <div class="info-card">
                         <div class="info-row"><i class="fas fa-clock"></i><div><strong data-i18n="chat_service_hours">SERVICE HOURS</strong><span data-i18n="chat_service_hours_value">10:00AM - 10:00PM</span></div></div>
-                        <!-- ✅ SUPPORT'S SIGNAL → SUPPORT'S CHANNEL + 可点击跳转 -->
                         <div class="info-row" onclick="window.open('https://t.me/Additive_Support33', '_blank')" style="cursor: pointer;">
                             <i class="fas fa-hashtag"></i>
                             <div>
@@ -231,32 +394,213 @@
                     </div>
                 </div>
             </div>
+
+            <!-- 🔔 通知下拉列表 -->
+            <div id="notificationDropdown">
+                <div class="dropdown-header">
+                    <span class="title"><i class="fas fa-bell"></i>Notifications</span>
+                    <span class="count" id="notifCount">0</span>
+                </div>
+                <div class="dropdown-body" id="notificationList">
+                    <div style="text-align: center; padding: 40px 20px; color: #6a7a92; font-size: 13px;">
+                        <i class="fas fa-inbox" style="display: block; font-size: 28px; color: #4a5a72; margin-bottom: 10px;"></i>
+                        No notifications
+                    </div>
+                </div>
+                <div class="dropdown-footer">
+                    <span>You can view all notifications here</span>
+                </div>
+            </div>
+
             <div class="footer-note"><i class="fas fa-lock"></i> <span data-i18n="secure_platform">Secure platform · Protected by ADDITIVE</span></div>
         </main>
     </div>
 
     <script>
-        function toggleMenu() { const sidebar = document.getElementById('sidebar'); const overlay = document.querySelector('.menu-overlay'); const menuBtn = document.getElementById('menuToggleBtn'); if (sidebar) sidebar.classList.toggle('open'); if (overlay) overlay.classList.toggle('active'); if (menuBtn) menuBtn.classList.toggle('hidden'); }
-        function closeMenu() { const sidebar = document.getElementById('sidebar'); const overlay = document.querySelector('.menu-overlay'); const menuBtn = document.getElementById('menuToggleBtn'); if (sidebar) sidebar.classList.remove('open'); if (overlay) overlay.classList.remove('active'); if (menuBtn) menuBtn.classList.remove('hidden'); }
-        if (document.querySelectorAll('.nav-item')) { document.querySelectorAll('.nav-item').forEach(link => { link.addEventListener('click', () => { if (window.innerWidth <= 768) closeMenu(); }); }); }
+        // ============================================================
+        // 菜单控制
+        // ============================================================
+        function toggleMenu() { 
+            const sidebar = document.getElementById('sidebar'); 
+            const overlay = document.querySelector('.menu-overlay'); 
+            const menuBtn = document.getElementById('menuToggleBtn'); 
+            if (sidebar) sidebar.classList.toggle('open'); 
+            if (overlay) overlay.classList.toggle('active'); 
+            if (menuBtn) menuBtn.classList.toggle('hidden'); 
+        }
+        function closeMenu() { 
+            const sidebar = document.getElementById('sidebar'); 
+            const overlay = document.querySelector('.menu-overlay'); 
+            const menuBtn = document.getElementById('menuToggleBtn'); 
+            if (sidebar) sidebar.classList.remove('open'); 
+            if (overlay) overlay.classList.remove('active'); 
+            if (menuBtn) menuBtn.classList.remove('hidden'); 
+        }
+        if (document.querySelectorAll('.nav-item')) { 
+            document.querySelectorAll('.nav-item').forEach(link => { 
+                link.addEventListener('click', () => { 
+                    if (window.innerWidth <= 768) closeMenu(); 
+                }); 
+            }); 
+        }
 
-        // ✅ 跳转到 Telegram 支持频道
+        // ============================================================
+        // 工具函数
+        // ============================================================
+        function escapeHtml(str) {
+            if (!str) return '';
+            return String(str).replace(/[&<>]/g, function(m) {
+                return m === '&' ? '&amp;' : m === '<' ? '&lt;' : m === '>' ? '&gt;' : m;
+            });
+        }
+
+        function getCurrentUser() {
+            const userStr = localStorage.getItem('currentUser');
+            if (!userStr) return null;
+            try {
+                return JSON.parse(userStr);
+            } catch(e) {
+                return null;
+            }
+        }
+
+        // Supabase 客户端（user-data.js 已提供 sb，这里做兼容）
+        if (typeof sb === 'undefined') {
+            var sb = supabase.createClient(
+                'https://qgmbzdfnwsdosdqphlxk.supabase.co',
+                'sb_publishable_zsJFjfNUO7NKp8ZH5KrXFQ_WZ8Q2Kym'
+            );
+        }
+
+        // ============================================================
+        // Telegram 跳转
+        // ============================================================
         function openLiveChat() {
             window.open('https://t.me/Additive_Support33', '_blank');
         }
-
-        // ✅ 跳转到 Telegram App Store
         function openAppStore() {
             window.open('https://apps.apple.com/us/app/telegram-messenger/id686449807', '_blank');
         }
-
-        // ✅ 跳转到 Telegram Google Play
         function openGooglePlay() {
             window.open('https://play.google.com/store/apps/details?id=org.telegram.messenger', '_blank');
         }
 
-        function checkLogin() { if (!localStorage.getItem('currentUser')) { console.log('Not logged in'); } }
+        // ============================================================
+        // 🔔 通知功能（用户端只读展示）
+        // ============================================================
+
+        // 获取用户通知列表
+        async function getUserNotifications(uid) {
+            try {
+                const { data, error } = await sb
+                    .from('user_notifications')
+                    .select('*')
+                    .or(`target_type.eq.all,target_uid.eq.${uid}`)
+                    .order('sent_time', { ascending: false });
+
+                if (error) {
+                    console.error('加载通知失败:', error);
+                    return [];
+                }
+                return data || [];
+            } catch (e) {
+                console.error('加载通知异常:', e);
+                return [];
+            }
+        }
+
+        // 加载并显示通知
+        async function loadUserNotifications() {
+            const user = getCurrentUser();
+            if (!user) return;
+
+            const notifications = await getUserNotifications(user.uid);
+            const badge = document.getElementById('notifBadge');
+            const countEl = document.getElementById('notifCount');
+            const listEl = document.getElementById('notificationList');
+
+            // 更新角标
+            if (badge) {
+                if (notifications.length > 0) {
+                    badge.classList.add('show');
+                    badge.textContent = notifications.length > 99 ? '99+' : notifications.length;
+                } else {
+                    badge.classList.remove('show');
+                }
+            }
+
+            if (countEl) {
+                countEl.textContent = notifications.length + ' notification' + (notifications.length !== 1 ? 's' : '');
+            }
+
+            // 渲染列表
+            if (listEl) {
+                if (notifications.length === 0) {
+                    listEl.innerHTML = `
+                        <div style="text-align: center; padding: 40px 20px; color: #6a7a92; font-size: 13px;">
+                            <i class="fas fa-inbox" style="display: block; font-size: 28px; color: #4a5a72; margin-bottom: 10px;"></i>
+                            No notifications
+                        </div>
+                    `;
+                    return;
+                }
+
+                let html = '';
+                notifications.forEach(function(n) {
+                    const time = new Date(n.sent_time).toLocaleString();
+                    html += `
+                        <div class="notif-item">
+                            <div class="notif-title">${escapeHtml(n.title)}</div>
+                            <div class="notif-desc">${escapeHtml(n.description)}</div>
+                            <div class="notif-time">${time}</div>
+                        </div>
+                    `;
+                });
+                listEl.innerHTML = html;
+            }
+        }
+
+        // 切换通知下拉
+        function toggleNotificationDropdown() {
+            const dropdown = document.getElementById('notificationDropdown');
+            if (!dropdown) return;
+
+            if (dropdown.style.display === 'block') {
+                dropdown.style.display = 'none';
+            } else {
+                dropdown.style.display = 'block';
+                loadUserNotifications();
+            }
+        }
+
+        // 点击外部关闭下拉
+        document.addEventListener('click', function(e) {
+            const wrapper = document.querySelector('.notification-bell-wrapper');
+            const dropdown = document.getElementById('notificationDropdown');
+            if (wrapper && dropdown && !wrapper.contains(e.target) && !dropdown.contains(e.target)) {
+                dropdown.style.display = 'none';
+            }
+        });
+
+        // ============================================================
+        // 初始化
+        // ============================================================
+        function checkLogin() { 
+            if (!localStorage.getItem('currentUser')) { 
+                console.log('Not logged in'); 
+            } 
+        }
         checkLogin();
+
+        // 页面加载时加载通知
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(function() {
+                const user = getCurrentUser();
+                if (user) {
+                    loadUserNotifications();
+                }
+            }, 500);
+        });
     </script>
     <script src="i18n.js"></script>
     <script>
