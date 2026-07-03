@@ -29,9 +29,12 @@ function notifFormatDate(iso) {
 
 function notifGetDefaultSentTime() {
     var now = new Date();
-    var offset = now.getTimezoneOffset();
-    var local = new Date(now.getTime() - offset * 60000);
-    return local.toISOString().slice(0, 16);
+    var day = String(now.getDate()).padStart(2, '0');
+    var month = String(now.getMonth() + 1).padStart(2, '0');
+    var year = now.getFullYear();
+    var hours = String(now.getHours()).padStart(2, '0');
+    var minutes = String(now.getMinutes()).padStart(2, '0');
+    return { day: day, month: month, year: year, time: hours + ':' + minutes };
 }
 
 function notifGetStatusBadge(record) {
@@ -206,7 +209,10 @@ function notifUpdateStats(list) {
 async function notifCreateNotification() {
     var title = document.getElementById('notifTitleInput').value.trim();
     var description = document.getElementById('notifDescInput').value.trim();
-    var sentTime = document.getElementById('notifSentTimeInput').value;
+    var day = document.getElementById('notifDay').value.trim();
+    var month = document.getElementById('notifMonth').value.trim();
+    var year = document.getElementById('notifYear').value.trim();
+    var time = document.getElementById('notifTime').value;
     var targetType = notifCurrentAudience;
     var targetUid = document.getElementById('notifSpecificUid').value.trim();
 
@@ -218,20 +224,42 @@ async function notifCreateNotification() {
         showToast('Please enter a description', 'error');
         return;
     }
-    if (!sentTime) {
-        showToast('Please select a sent time', 'error');
+    if (!day || !month || !year || !time) {
+        showToast('Please enter full date and time (DD/MM/YYYY HH:mm)', 'error');
         return;
     }
+    
+    var dayNum = parseInt(day);
+    var monthNum = parseInt(month);
+    var yearNum = parseInt(year);
+    
+    if (isNaN(dayNum) || dayNum < 1 || dayNum > 31) {
+        showToast('Please enter a valid day (1-31)', 'error');
+        return;
+    }
+    if (isNaN(monthNum) || monthNum < 1 || monthNum > 12) {
+        showToast('Please enter a valid month (1-12)', 'error');
+        return;
+    }
+    if (isNaN(yearNum) || yearNum < 2020 || yearNum > 2099) {
+        showToast('Please enter a valid year (2020-2099)', 'error');
+        return;
+    }
+    
     if (targetType === 'specific' && !targetUid) {
         showToast('Please enter a UID for specific user', 'error');
         return;
     }
 
+    var paddedDay = String(dayNum).padStart(2, '0');
+    var paddedMonth = String(monthNum).padStart(2, '0');
+    var dateTimeStr = year + '-' + paddedMonth + '-' + paddedDay + 'T' + time + ':00';
+
     var payload = {
         type: notifCurrentType,
         title: title,
         description: description,
-        sent_time: new Date(sentTime).toISOString(),
+        sent_time: new Date(dateTimeStr).toISOString(),
         target_type: targetType,
         target_uid: targetType === 'specific' ? targetUid : null,
         status: 'unread',
@@ -269,17 +297,41 @@ async function notifDeleteNotification(id) {
 
 async function notifSaveEditTime() {
     var id = document.getElementById('editNotifId').value;
-    var sentTime = document.getElementById('editSentTimeInput').value;
+    var day = document.getElementById('editDay').value.trim();
+    var month = document.getElementById('editMonth').value.trim();
+    var year = document.getElementById('editYear').value.trim();
+    var time = document.getElementById('editTime').value;
 
-    if (!sentTime) {
-        showToast('Please select a sent time', 'error');
+    if (!day || !month || !year || !time) {
+        showToast('Please enter full date and time (DD/MM/YYYY HH:mm)', 'error');
         return;
     }
+    
+    var dayNum = parseInt(day);
+    var monthNum = parseInt(month);
+    var yearNum = parseInt(year);
+    
+    if (isNaN(dayNum) || dayNum < 1 || dayNum > 31) {
+        showToast('Please enter a valid day (1-31)', 'error');
+        return;
+    }
+    if (isNaN(monthNum) || monthNum < 1 || monthNum > 12) {
+        showToast('Please enter a valid month (1-12)', 'error');
+        return;
+    }
+    if (isNaN(yearNum) || yearNum < 2020 || yearNum > 2099) {
+        showToast('Please enter a valid year (2020-2099)', 'error');
+        return;
+    }
+
+    var paddedDay = String(dayNum).padStart(2, '0');
+    var paddedMonth = String(monthNum).padStart(2, '0');
+    var dateTimeStr = year + '-' + paddedMonth + '-' + paddedDay + 'T' + time + ':00';
 
     try {
         if (!sb) throw new Error('Supabase client not available');
         var result = await sb.from('user_notifications')
-            .update({ sent_time: new Date(sentTime).toISOString() })
+            .update({ sent_time: new Date(dateTimeStr).toISOString() })
             .eq('id', parseInt(id));
 
         if (result.error) throw result.error;
@@ -331,7 +383,6 @@ function notifSelectAudience(type) {
     var container = document.getElementById('specificUidContainer');
     if (type === 'specific') {
         container.style.display = 'block';
-        // 清空之前选中的用户信息
         notifSelectedUser = null;
         document.getElementById('userInfoDisplay').innerHTML = '';
     } else {
@@ -360,7 +411,6 @@ function notifSetupUidListener() {
             return;
         }
         
-        // 防抖：延迟500ms请求
         clearTimeout(debounceTimer);
         debounceTimer = setTimeout(async function() {
             infoDisplay.innerHTML = '<div style="color:#6a7a92; font-size:12px; padding:8px 0;"><i class="fas fa-spinner fa-spin"></i> Loading user info...</div>';
@@ -393,8 +443,13 @@ function notifSetupUidListener() {
 function notifOpenCreateModal() {
     document.getElementById('createNotifModal').classList.add('active');
     document.getElementById('createNotifModal').style.display = 'flex';
+    
     var defaultTime = notifGetDefaultSentTime();
-    document.getElementById('notifSentTimeInput').value = defaultTime;
+    document.getElementById('notifDay').value = defaultTime.day;
+    document.getElementById('notifMonth').value = defaultTime.month;
+    document.getElementById('notifYear').value = defaultTime.year;
+    document.getElementById('notifTime').value = defaultTime.time;
+    
     document.getElementById('notifTitleInput').value = '';
     document.getElementById('notifDescInput').value = '';
     document.getElementById('notifSpecificUid').value = '';
@@ -410,20 +465,32 @@ function notifCloseCreateModal() {
 
 function notifOpenEditTimeModal(id, sentTime) {
     document.getElementById('editNotifId').value = id;
-    var dt = '';
+    var day = '', month = '', year = '', time = '';
     if (sentTime) {
         try {
             var d = new Date(sentTime);
-            var offset = d.getTimezoneOffset();
-            var local = new Date(d.getTime() - offset * 60000);
-            dt = local.toISOString().slice(0, 16);
+            day = String(d.getDate()).padStart(2, '0');
+            month = String(d.getMonth() + 1).padStart(2, '0');
+            year = d.getFullYear();
+            time = String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
         } catch (e) {
-            dt = notifGetDefaultSentTime();
+            var defaultTime = notifGetDefaultSentTime();
+            day = defaultTime.day;
+            month = defaultTime.month;
+            year = defaultTime.year;
+            time = defaultTime.time;
         }
     } else {
-        dt = notifGetDefaultSentTime();
+        var defaultTime = notifGetDefaultSentTime();
+        day = defaultTime.day;
+        month = defaultTime.month;
+        year = defaultTime.year;
+        time = defaultTime.time;
     }
-    document.getElementById('editSentTimeInput').value = dt;
+    document.getElementById('editDay').value = day;
+    document.getElementById('editMonth').value = month;
+    document.getElementById('editYear').value = year;
+    document.getElementById('editTime').value = time;
     document.getElementById('editTimeModal').classList.add('active');
     document.getElementById('editTimeModal').style.display = 'flex';
 }
@@ -530,8 +597,19 @@ function loadNotificationPage() {
                     <textarea id="notifDescInput" placeholder="Write notification description..." style="width: 100%; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06); border-radius: 10px; padding: 10px 14px; color: #e6edf5; font-size: 14px; outline: none; transition: 0.2s; font-family: 'Inter', sans-serif; box-sizing: border-box; resize: vertical; min-height: 80px;"></textarea>
                 </div>
                 <div class="form-group" style="margin-bottom: 16px;">
-                    <label style="display: block; font-size: 11px; color: #6a7a92; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; font-weight: 600;">Sent Time <span style="color:#e88080;">*</span></label>
-                    <input type="datetime-local" id="notifSentTimeInput" lang="en-GB" style="width: 100%; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06); border-radius: 10px; padding: 10px 14px; color: #e6edf5; font-size: 14px; outline: none; transition: 0.2s; font-family: 'Inter', sans-serif; box-sizing: border-box; color-scheme: dark;" />
+                    <label style="display: block; font-size: 11px; color: #6a7a92; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; font-weight: 600;">
+                        Sent Time <span style="color:#e88080;">*</span>
+                        <span style="color:#4a5a72; font-weight:400; text-transform:none; letter-spacing:0.3px; margin-left:6px; font-size:10px;">(DD / MM / YYYY HH:mm)</span>
+                    </label>
+                    <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+                        <input type="number" id="notifDay" placeholder="DD" min="1" max="31" style="width: 60px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06); border-radius: 10px; padding: 10px 8px; color: #e6edf5; font-size: 14px; outline: none; transition: 0.2s; font-family: 'Inter', sans-serif; box-sizing: border-box; text-align: center;">
+                        <span style="color: #4a5a72; font-size: 16px; font-weight: 600;">/</span>
+                        <input type="number" id="notifMonth" placeholder="MM" min="1" max="12" style="width: 60px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06); border-radius: 10px; padding: 10px 8px; color: #e6edf5; font-size: 14px; outline: none; transition: 0.2s; font-family: 'Inter', sans-serif; box-sizing: border-box; text-align: center;">
+                        <span style="color: #4a5a72; font-size: 16px; font-weight: 600;">/</span>
+                        <input type="number" id="notifYear" placeholder="YYYY" min="2020" max="2099" style="width: 80px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06); border-radius: 10px; padding: 10px 8px; color: #e6edf5; font-size: 14px; outline: none; transition: 0.2s; font-family: 'Inter', sans-serif; box-sizing: border-box; text-align: center;">
+                        <span style="color: #4a5a72; font-size: 16px; font-weight: 600; margin: 0 2px;">|</span>
+                        <input type="time" id="notifTime" style="width: 120px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06); border-radius: 10px; padding: 10px 8px; color: #e6edf5; font-size: 14px; outline: none; transition: 0.2s; font-family: 'Inter', sans-serif; box-sizing: border-box; text-align: center; color-scheme: dark;">
+                    </div>
                 </div>
                 <div class="form-group" style="margin-bottom: 16px;">
                     <label style="display: block; font-size: 11px; color: #6a7a92; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; font-weight: 600;">Audience</label>
@@ -565,8 +643,19 @@ function loadNotificationPage() {
                     <h3 style="font-size: 18px; font-weight: 600; color: #e8e8f0; margin: 0; letter-spacing: 0.3px;">Edit Sent Time</h3>
                 </div>
                 <div class="form-group" style="margin-bottom: 16px;">
-                    <label style="display: block; font-size: 11px; color: #6a7a92; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; font-weight: 600;">Sent Time</label>
-                    <input type="datetime-local" id="editSentTimeInput" lang="en-GB" style="width: 100%; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06); border-radius: 10px; padding: 10px 14px; color: #e6edf5; font-size: 14px; outline: none; transition: 0.2s; font-family: 'Inter', sans-serif; box-sizing: border-box; color-scheme: dark;" />
+                    <label style="display: block; font-size: 11px; color: #6a7a92; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; font-weight: 600;">
+                        Sent Time
+                        <span style="color:#4a5a72; font-weight:400; text-transform:none; letter-spacing:0.3px; margin-left:6px; font-size:10px;">(DD / MM / YYYY HH:mm)</span>
+                    </label>
+                    <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+                        <input type="number" id="editDay" placeholder="DD" min="1" max="31" style="width: 60px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06); border-radius: 10px; padding: 10px 8px; color: #e6edf5; font-size: 14px; outline: none; transition: 0.2s; font-family: 'Inter', sans-serif; box-sizing: border-box; text-align: center;">
+                        <span style="color: #4a5a72; font-size: 16px; font-weight: 600;">/</span>
+                        <input type="number" id="editMonth" placeholder="MM" min="1" max="12" style="width: 60px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06); border-radius: 10px; padding: 10px 8px; color: #e6edf5; font-size: 14px; outline: none; transition: 0.2s; font-family: 'Inter', sans-serif; box-sizing: border-box; text-align: center;">
+                        <span style="color: #4a5a72; font-size: 16px; font-weight: 600;">/</span>
+                        <input type="number" id="editYear" placeholder="YYYY" min="2020" max="2099" style="width: 80px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06); border-radius: 10px; padding: 10px 8px; color: #e6edf5; font-size: 14px; outline: none; transition: 0.2s; font-family: 'Inter', sans-serif; box-sizing: border-box; text-align: center;">
+                        <span style="color: #4a5a72; font-size: 16px; font-weight: 600; margin: 0 2px;">|</span>
+                        <input type="time" id="editTime" style="width: 120px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06); border-radius: 10px; padding: 10px 8px; color: #e6edf5; font-size: 14px; outline: none; transition: 0.2s; font-family: 'Inter', sans-serif; box-sizing: border-box; text-align: center; color-scheme: dark;">
+                    </div>
                 </div>
                 <input type="hidden" id="editNotifId" />
                 <div class="modal-actions" style="display: flex; gap: 10px; margin-top: 20px; border-top: 1px solid rgba(255,255,255,0.04); padding-top: 20px;">
@@ -654,7 +743,7 @@ function loadNotificationPage() {
     notifLoadNotifications();
 
     console.log('✅ User Notification page loaded');
-    console.log('   - Date picker: DD/MM/YYYY (en-GB)');
+    console.log('   - Date picker: 4 separate inputs (DD / MM / YYYY HH:mm)');
     console.log('   - Audience cards: glow effect on active');
     console.log('   - UID input: auto fetch user info');
 }
