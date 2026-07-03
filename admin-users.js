@@ -195,7 +195,6 @@ async function loadUsersPage() {
                             <th style="min-width: 100px;">Username</th>
                             <th style="min-width: 80px;">Referrer</th>
                             <th style="min-width: 60px;">Country</th>
-                            <th style="min-width: 65px;">VIP RANK</th>
                             <th style="min-width: 70px;">Pending (€)</th>
                             <th style="min-width: 75px;">Balance (€)</th>
                             <th style="min-width: 200px;">Round / Orders</th>
@@ -294,31 +293,30 @@ async function loadUsersPage() {
             background: rgba(200,176,144,0.03) !important;
         }
 
-/* ===== 列宽定义 - 精确调整版 ===== */
+/* ===== 列宽定义 - 删除 VIP RANK 后调整 ===== */
 .data-table th:nth-child(1),
-.data-table td:nth-child(1) { width: 40px !important; min-width: 40px !important; }  /* Actions 齿轮 */
+.data-table td:nth-child(1) { width: 40px !important; min-width: 40px !important; }  /* Actions */
 .data-table th:nth-child(2),
 .data-table td:nth-child(2) { width: 85px !important; min-width: 85px !important; }  /* Phone */
 .data-table th:nth-child(3),
 .data-table td:nth-child(3) { width: 80px !important; min-width: 80px !important; }  /* User ID */
 .data-table th:nth-child(4),
-.data-table td:nth-child(4) { width: 110px !important; min-width: 110px !important; } /* Username (新增) */
+.data-table td:nth-child(4) { width: 110px !important; min-width: 110px !important; } /* Username */
 .data-table th:nth-child(5),
 .data-table td:nth-child(5) { width: 75px !important; min-width: 75px !important; }  /* Referrer */
 .data-table th:nth-child(6),
 .data-table td:nth-child(6) { width: 50px !important; min-width: 50px !important; }  /* Country */
+/* ❌ VIP RANK 列已删除，后续列序号前移 */
 .data-table th:nth-child(7),
-.data-table td:nth-child(7) { width: 55px !important; min-width: 55px !important; }  /* VIP */
+.data-table td:nth-child(7) { width: 65px !important; min-width: 65px !important; }  /* Pending */
 .data-table th:nth-child(8),
-.data-table td:nth-child(8) { width: 65px !important; min-width: 65px !important; }  /* Pending */
+.data-table td:nth-child(8) { width: 70px !important; min-width: 70px !important; }  /* Balance */
 .data-table th:nth-child(9),
-.data-table td:nth-child(9) { width: 70px !important; min-width: 70px !important; }  /* Balance */
+.data-table td:nth-child(9) { width: 185px !important; min-width: 185px !important; } /* Round / Orders */
 .data-table th:nth-child(10),
-.data-table td:nth-child(10) { width: 185px !important; min-width: 185px !important; } /* Round / Orders */
+.data-table td:nth-child(10) { width: 85px !important; min-width: 85px !important; } /* IP */
 .data-table th:nth-child(11),
-.data-table td:nth-child(11) { width: 85px !important; min-width: 85px !important; }  /* IP */
-.data-table th:nth-child(12),
-.data-table td:nth-child(12) { width: 65px !important; min-width: 65px !important; }  /* Last Online */
+.data-table td:nth-child(11) { width: 65px !important; min-width: 65px !important; } /* Last Online */
 
         .actions-wrapper {
             display: flex;
@@ -927,49 +925,7 @@ row.appendChild(referrerCell);
             }
             countryCell.innerHTML = countryHtml;
             row.appendChild(countryCell);
-            
-            // ===== 7. VIP RANK =====
-            const vipCell = document.createElement('td');
-            const vipLevels = [
-                { level: 1, name: 'Normal', color: '#8a9aaa' },
-                { level: 2, name: 'VIP', color: '#c8b090' },
-                { level: 3, name: 'SVIP', color: '#ffd700' }
-            ];
-            const currentVip = vipLevels.find(v => v.level === u.vip_level) || vipLevels[0];
-            const currentColor = currentVip.color;
-            const symbol = currentVip.level === 1 ? '●' : currentVip.level === 2 ? '◆' : '★';
-            
-            let optionsHtml = '';
-            vipLevels.forEach(v => {
-                const selected = v.level === u.vip_level ? 'selected' : '';
-                optionsHtml += `<option value="${v.level}" ${selected} 
-                    style="background:#0e1228; color:${v.color}; padding:6px 12px; 
-                           font-size:11px; font-weight:${v.level === u.vip_level ? '700' : '500'}; 
-                           border-bottom:1px solid rgba(255,255,255,0.04); 
-                           font-family:'Inter',sans-serif;">
-                    ${v.name}
-                </option>`;
-            });
-            
-            vipCell.innerHTML = `
-                <div class="vip-wrapper" style="position:relative; display:inline-block; width:85px;">
-                    <select class="vip-select vip-change-select" data-uid="${u.uid}" data-username="${escapeHtml(u.username)}" data-level="${u.vip_level}"
-                            style="width:85px; min-width:85px; max-width:85px; height:24px; padding:0 16px 0 22px; border-radius:14px; 
-                                   border:1px solid ${currentColor}40; background:rgba(255,255,255,0.03); color:${currentColor}; 
-                                   font-size:10px; font-weight:600; cursor:pointer; appearance:none; -webkit-appearance:none;
-                                   font-family:'Inter',sans-serif; text-align:center; letter-spacing:0.2px;
-                                   line-height:24px; box-sizing:border-box;
-                                   background-image: url('data:image/svg+xml,%3Csvg xmlns=\\'http://www.w3.org/2000/svg\\' width=\\'8\\' height=\\'5\\'%3E%3Cpath d=\\'M0 0l4 5 4-5z\\' fill=\\'${encodeURIComponent(currentColor)}60\\'/%3E%3C/svg%3E');
-                                   background-repeat:no-repeat; background-position:right 8px center; background-size:8px 5px;">
-                        ${optionsHtml}
-                    </select>
-                    <span style="position:absolute; left:6px; top:50%; transform:translateY(-50%); font-size:9px; pointer-events:none; color:${currentColor}; text-shadow: 0 0 8px ${currentColor}40; line-height:1; display:flex; align-items:center; justify-content:center; width:12px; height:12px;">
-                        ${symbol}
-                    </span>
-                </div>
-            `;
-            row.appendChild(vipCell);
-            
+          
             // ===== 8. Pending =====
             const pendingDisplay = u.pending_display || 0;
             const pendingCell = document.createElement('td');
@@ -1812,6 +1768,13 @@ function openEditUserModal(uid, username, phone, pin, currency, address, creditS
                 <div style="margin-bottom: 14px; position: relative; z-index: 1;">
     <div style="font-size: 9px; font-weight: 600; color: #5a5a6a; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px;">Account Actions</div>
     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px;">
+        <!-- ✅ 新增：VIP 升级按钮 -->
+        <div onclick="changeUserVip('${uid}')" style="background: rgba(201,176,149,0.06); border: 1px solid rgba(201,176,149,0.12); border-radius: 8px; padding: 8px 12px; cursor: pointer; transition: 0.2s;">
+            <div style="font-weight: 500; color: #C9B095; font-size: 12px;">
+                <i class="fas fa-crown" style="font-size: 11px;"></i> Change VIP
+            </div>
+            <div style="font-size: 9px; color: #5a5a6a;">Upgrade/downgrade user VIP</div>
+        </div>
         <div onclick="resetWithdrawalPin('${uid}')" style="background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(180, 180, 200, 0.05); border-radius: 8px; padding: 8px 12px; cursor: pointer; transition: 0.2s;">
             <div style="font-weight: 500; color: #e8e8f0; font-size: 12px;">Reset Withdrawal PIN</div>
             <div style="font-size: 9px; color: #5a5a6a;">Reset user's withdrawal pin</div>
@@ -2007,6 +1970,237 @@ async function resetWithdrawalPin(uid) {
             showToast('重置失败: ' + e.message, 'error');
         }
     });
+}
+
+// ============================================================
+// 🔥 Change User VIP (在弹窗中修改)
+// ============================================================
+async function changeUserVip(uid) {
+    try {
+        // 获取当前用户 VIP 等级
+        var { data: user, error } = await sb
+            .from('users')
+            .select('vip_level, username')
+            .eq('uid', uid)
+            .single();
+        
+        if (error) throw error;
+        
+        var currentLevel = user?.vip_level || 1;
+        var username = user?.username || uid;
+        
+        // VIP 等级选项
+        var vipOptions = [
+            { level: 1, name: 'Normal', color: '#8a9aaa' },
+            { level: 2, name: 'VIP', color: '#c8b090' },
+            { level: 3, name: 'SVIP', color: '#ffd700' }
+        ];
+        
+        // 生成选项 HTML
+        var optionsHtml = vipOptions.map(function(vip) {
+            var selected = vip.level === currentLevel ? 'selected' : '';
+            var checkMark = vip.level === currentLevel ? ' ✓' : '';
+            return '<div class="vip-change-option ' + selected + '" data-level="' + vip.level + '" style="display:flex; align-items:center; justify-content:space-between; padding:10px 16px; cursor:pointer; transition:0.15s ease; color:' + (vip.level === currentLevel ? '#C9B095' : '#b8c4de') + '; font-size:14px; font-weight:' + (vip.level === currentLevel ? '600' : '500') + '; border-bottom:1px solid rgba(255,255,255,0.03);">' +
+                '<span><span style="color:' + vip.color + ';">◆</span> ' + vip.name + '</span>' +
+                '<span style="color:#4ade80; font-size:12px;">' + checkMark + '</span>' +
+                '</div>';
+        }).join('');
+        
+        // 获取当前 VIP 名称
+        var currentVip = vipOptions.find(function(v) { return v.level === currentLevel; }) || vipOptions[0];
+        
+        // 创建弹窗
+        var overlay = document.createElement('div');
+        overlay.id = 'changeVipModal';
+        overlay.style.cssText = `
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(7, 11, 26, 0.92);
+            backdrop-filter: blur(14px);
+            -webkit-backdrop-filter: blur(14px);
+            z-index: 30000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            animation: fadeIn 0.25s ease;
+        `;
+        
+        var modal = document.createElement('div');
+        modal.style.cssText = `
+            background: linear-gradient(160deg, #1a1428, #0e0a1a);
+            border-radius: 24px;
+            padding: 32px 36px 28px;
+            max-width: 400px;
+            width: 90%;
+            border: 1px solid rgba(201, 176, 149, 0.1);
+            box-shadow: 0 24px 60px rgba(0, 0, 0, 0.6);
+            animation: scaleIn 0.25s cubic-bezier(0.2, 0.9, 0.4, 1.1) forwards;
+            transform: scale(0.92);
+        `;
+        
+        modal.innerHTML = `
+            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 20px;">
+                <span style="display: inline-block; width: 3px; height: 18px; background: linear-gradient(180deg, #C9B095, #b8944a); border-radius: 2px;"></span>
+                <h3 style="color: #e8e8f0; font-size: 17px; font-weight: 600; margin: 0; letter-spacing: 0.3px;">
+                    <i class="fas fa-crown" style="color: #C9B095; margin-right: 8px;"></i>
+                    Change VIP Level
+                </h3>
+                <span style="margin-left: auto; font-size: 12px; color: #6a6a80; background: rgba(255,255,255,0.04); padding: 2px 12px; border-radius: 20px;">${escapeHtml(username)}</span>
+            </div>
+            
+            <div style="margin-bottom: 16px;">
+                <label style="display: block; font-size: 11px; color: #6a7a92; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">
+                    <i class="fas fa-tag" style="margin-right: 4px; font-size: 11px;"></i>
+                    User ID
+                </label>
+                <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.04); border-radius: 10px; padding: 10px 14px; color: #8892a8; font-size: 14px; font-family: monospace;">
+                    ${escapeHtml(uid)}
+                </div>
+            </div>
+            
+            <div style="margin-bottom: 20px;">
+                <label style="display: block; font-size: 11px; color: #6a7a92; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">
+                    <i class="fas fa-crown" style="margin-right: 4px; font-size: 11px;"></i>
+                    Current VIP Level
+                </label>
+                <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.04); border-radius: 10px; padding: 10px 14px; color: ${currentVip.color}; font-size: 16px; font-weight: 600;">
+                    ${currentVip.name}
+                </div>
+            </div>
+            
+            <div style="margin-bottom: 20px;">
+                <label style="display: block; font-size: 11px; color: #6a7a92; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">
+                    <i class="fas fa-arrow-up" style="margin-right: 4px; font-size: 11px;"></i>
+                    Select New VIP Level
+                </label>
+                <div class="vip-select-wrapper" style="position: relative; width: 100%; border: 1px solid rgba(255,255,255,0.06); border-radius: 10px; overflow: hidden; background: rgba(255,255,255,0.02);">
+                    ${optionsHtml}
+                </div>
+            </div>
+            
+            <div style="display: flex; gap: 10px;">
+                <button id="changeVipCancelBtn" style="flex: 1; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06); border-radius: 40px; padding: 10px 0; color: #6a6a80; font-weight: 500; font-size: 13px; cursor: pointer; transition: 0.2s; font-family: 'Inter', sans-serif;">
+                    Cancel
+                </button>
+                <button id="changeVipConfirmBtn" style="flex: 1; background: rgba(201,176,149,0.06); border: 1px solid rgba(201,176,149,0.12); border-radius: 40px; padding: 10px 0; color: #C9B095; font-weight: 600; font-size: 13px; cursor: pointer; transition: 0.2s; font-family: 'Inter', sans-serif;">
+                    <i class="fas fa-save"></i> Update VIP
+                </button>
+            </div>
+        `;
+        
+        overlay.appendChild(modal);
+        document.body.appendChild(overlay);
+        
+        // ============================================================
+        // VIP 选项点击事件
+        // ============================================================
+        var selectedLevel = currentLevel;
+        var options = modal.querySelectorAll('.vip-change-option');
+        
+        options.forEach(function(opt) {
+            opt.addEventListener('click', function() {
+                options.forEach(function(o) {
+                    o.classList.remove('selected');
+                    o.style.color = '#b8c4de';
+                    o.style.fontWeight = '500';
+                    var check = o.querySelector('span:last-child');
+                    if (check) check.textContent = '';
+                });
+                this.classList.add('selected');
+                this.style.color = '#C9B095';
+                this.style.fontWeight = '600';
+                var check = this.querySelector('span:last-child');
+                if (check) check.textContent = ' ✓';
+                selectedLevel = parseInt(this.dataset.level);
+            });
+        });
+        
+        // ============================================================
+        // 动画样式
+        // ============================================================
+        if (!document.getElementById('changeVipModalStyles')) {
+            var style = document.createElement('style');
+            style.id = 'changeVipModalStyles';
+            style.textContent = `
+                @keyframes fadeIn {
+                    from { opacity: 0; }
+                    to { opacity: 1; }
+                }
+                @keyframes scaleIn {
+                    from { transform: scale(0.92); opacity: 0; }
+                    to { transform: scale(1); opacity: 1; }
+                }
+                .vip-change-option:hover {
+                    background: rgba(255,255,255,0.04);
+                }
+                .vip-change-option.selected {
+                    background: rgba(201,176,149,0.06);
+                }
+            `;
+            document.head.appendChild(style);
+        }
+        
+        // ============================================================
+        // 关闭弹窗
+        // ============================================================
+        function closeModal() {
+            if (overlay.parentNode) overlay.remove();
+        }
+        
+        document.getElementById('changeVipCancelBtn').addEventListener('click', closeModal);
+        overlay.addEventListener('click', function(e) {
+            if (e.target === this) closeModal();
+        });
+        
+        document.addEventListener('keydown', function escHandler(e) {
+            if (e.key === 'Escape') {
+                closeModal();
+                document.removeEventListener('keydown', escHandler);
+            }
+        });
+        
+        // ============================================================
+        // 确认更新
+        // ============================================================
+        document.getElementById('changeVipConfirmBtn').addEventListener('click', async function() {
+            if (selectedLevel === currentLevel) {
+                showToast('VIP level is already ' + currentVip.name, 'info');
+                closeModal();
+                return;
+            }
+            
+            this.disabled = true;
+            this.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Updating...';
+            
+            try {
+                var { error } = await sb
+                    .from('users')
+                    .update({ vip_level: selectedLevel })
+                    .eq('uid', uid);
+                
+                if (error) throw error;
+                
+                var levelNames = { 1: 'Normal', 2: 'VIP', 3: 'SVIP' };
+                showToast('✅ VIP level updated to ' + levelNames[selectedLevel] + ' for ' + uid, 'success');
+                closeModal();
+                closeEditUserModal();
+                loadUsers();
+                
+            } catch (e) {
+                console.error('Update VIP failed:', e);
+                showToast('❌ Failed to update VIP: ' + e.message, 'error');
+                this.disabled = false;
+                this.innerHTML = '<i class="fas fa-save"></i> Update VIP';
+            }
+        });
+        
+    } catch (e) {
+        console.error('Open change VIP modal failed:', e);
+        showToast('Failed to load user data: ' + e.message, 'error');
+    }
 }
 
 // ============================================================
