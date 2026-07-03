@@ -753,7 +753,7 @@ function loadNotificationPage() {
     notifLoadNotifications();
 
     console.log('✅ User Notification page loaded');
-    console.log('   - Date picker: 4 separate inputs with labels below');
+    console.log('   - Date picker: 4 separate inputs with labels below (Month / Day / Year)');
     console.log('   - Audience cards: glow effect on active');
     console.log('   - UID input: auto fetch user info');
 }
