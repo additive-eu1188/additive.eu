@@ -1810,34 +1810,38 @@ function openEditUserModal(uid, username, phone, pin, currency, address, creditS
                 </div>
 
                 <div style="margin-bottom: 14px; position: relative; z-index: 1;">
-                    <div style="font-size: 9px; font-weight: 600; color: #5a5a6a; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px;">Account Actions</div>
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px;">
-                        <div onclick="resetWithdrawalPin('${uid}')" style="background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(180, 180, 200, 0.05); border-radius: 8px; padding: 8px 12px; cursor: pointer; transition: 0.2s;">
-                            <div style="font-weight: 500; color: #e8e8f0; font-size: 12px;">Reset Withdrawal PIN</div>
-                            <div style="font-size: 9px; color: #5a5a6a;">Reset user's withdrawal pin</div>
-                        </div>
-                        <div onclick="resetUserPassword('${uid}')" style="background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(180, 180, 200, 0.05); border-radius: 8px; padding: 8px 12px; cursor: pointer; transition: 0.2s;">
-                            <div style="font-weight: 500; color: #e8e8f0; font-size: 12px;">Reset Password</div>
-                            <div style="font-size: 9px; color: #5a5a6a;">Reset user's account password</div>
-                        </div>
-                        <div onclick="resetUserPhone('${uid}')" style="background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(180, 180, 200, 0.05); border-radius: 8px; padding: 8px 12px; cursor: pointer; transition: 0.2s;">
-                            <div style="font-weight: 500; color: #e8e8f0; font-size: 12px;">Reset Phone Number</div>
-                            <div style="font-size: 9px; color: #5a5a6a;">Reset user's phone number</div>
-                        </div>
-                        <div onclick="promoteToAdmin('${uid}')" style="background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(180, 180, 200, 0.05); border-radius: 8px; padding: 8px 12px; cursor: pointer; transition: 0.2s;">
-                            <div style="font-weight: 500; color: #c8b090; font-size: 12px;">${roleDisplay === 'Agent' ? 'Demote to User' : 'Promote Admin'}</div>
-                            <div style="font-size: 9px; color: #5a5a6a;">${roleDisplay === 'Agent' ? 'Remove admin privileges' : 'Allow user to view downline data'}</div>
-                        </div>
-                        <div onclick="freezeUserWithdrawal('${uid}')" style="background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(180, 180, 200, 0.05); border-radius: 8px; padding: 8px 12px; cursor: pointer; transition: 0.2s;">
-                            <div style="font-weight: 500; color: ${withdrawalFrozen ? '#7ad0b0' : '#e8e8f0'}; font-size: 12px;">${withdrawalFrozen ? 'Unfreeze Withdrawal' : 'Freeze Withdrawal'}</div>
-                            <div style="font-size: 9px; color: #5a5a6a;">${withdrawalFrozen ? 'Restore withdrawal access' : 'Block this user from withdrawing'}</div>
-                        </div>
-                        <div onclick="toggleBanUser('${uid}')" style="background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(180, 180, 200, 0.05); border-radius: 8px; padding: 8px 12px; cursor: pointer; transition: 0.2s;">
-                            <div style="font-weight: 500; color: ${banButtonColor}; font-size: 12px;">${banButtonText}</div>
-                            <div style="font-size: 9px; color: #5a5a6a;">${isBanned ? 'Restore user access' : 'Disable user account'}</div>
-                        </div>
-                    </div>
-                </div>
+    <div style="font-size: 9px; font-weight: 600; color: #5a5a6a; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px;">Account Actions</div>
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px;">
+        <div onclick="resetWithdrawalPin('${uid}')" style="background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(180, 180, 200, 0.05); border-radius: 8px; padding: 8px 12px; cursor: pointer; transition: 0.2s;">
+            <div style="font-weight: 500; color: #e8e8f0; font-size: 12px;">Reset Withdrawal PIN</div>
+            <div style="font-size: 9px; color: #5a5a6a;">Reset user's withdrawal pin</div>
+        </div>
+        <div onclick="resetWithdrawalAddress('${uid}')" style="background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(201, 176, 149, 0.15); border-radius: 8px; padding: 8px 12px; cursor: pointer; transition: 0.2s;">
+            <div style="font-weight: 500; color: #C9B095; font-size: 12px;">Reset Withdrawal Address</div>
+            <div style="font-size: 9px; color: #5a5a6a;">Reset user's withdrawal address</div>
+        </div>
+        <div onclick="resetUserPassword('${uid}')" style="background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(180, 180, 200, 0.05); border-radius: 8px; padding: 8px 12px; cursor: pointer; transition: 0.2s;">
+            <div style="font-weight: 500; color: #e8e8f0; font-size: 12px;">Reset Password</div>
+            <div style="font-size: 9px; color: #5a5a6a;">Reset user's account password</div>
+        </div>
+        <div onclick="resetUserPhone('${uid}')" style="background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(180, 180, 200, 0.05); border-radius: 8px; padding: 8px 12px; cursor: pointer; transition: 0.2s;">
+            <div style="font-weight: 500; color: #e8e8f0; font-size: 12px;">Reset Phone Number</div>
+            <div style="font-size: 9px; color: #5a5a6a;">Reset user's phone number</div>
+        </div>
+        <div onclick="promoteToAdmin('${uid}')" style="background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(180, 180, 200, 0.05); border-radius: 8px; padding: 8px 12px; cursor: pointer; transition: 0.2s;">
+            <div style="font-weight: 500; color: #c8b090; font-size: 12px;">${roleDisplay === 'Agent' ? 'Demote to User' : 'Promote Admin'}</div>
+            <div style="font-size: 9px; color: #5a5a6a;">${roleDisplay === 'Agent' ? 'Remove admin privileges' : 'Allow user to view downline data'}</div>
+        </div>
+        <div onclick="freezeUserWithdrawal('${uid}')" style="background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(180, 180, 200, 0.05); border-radius: 8px; padding: 8px 12px; cursor: pointer; transition: 0.2s;">
+            <div style="font-weight: 500; color: ${withdrawalFrozen ? '#7ad0b0' : '#e8e8f0'}; font-size: 12px;">${withdrawalFrozen ? 'Unfreeze Withdrawal' : 'Freeze Withdrawal'}</div>
+            <div style="font-size: 9px; color: #5a5a6a;">${withdrawalFrozen ? 'Restore withdrawal access' : 'Block this user from withdrawing'}</div>
+        </div>
+        <div onclick="toggleBanUser('${uid}')" style="background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(180, 180, 200, 0.05); border-radius: 8px; padding: 8px 12px; cursor: pointer; transition: 0.2s;">
+            <div style="font-weight: 500; color: ${banButtonColor}; font-size: 12px;">${banButtonText}</div>
+            <div style="font-size: 9px; color: #5a5a6a;">${isBanned ? 'Restore user access' : 'Disable user account'}</div>
+        </div>
+    </div>
+</div>
 
                 <div style="margin-bottom: 14px; background: rgba(255,255,255,0.02); border-radius: 8px; padding: 10px 14px; border: 1px solid rgba(180,180,200,0.05); position:relative; z-index:1;">
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
@@ -2004,6 +2008,43 @@ async function resetWithdrawalPin(uid) {
         }
     });
 }
+
+// ============================================================
+// 🔥 Reset Withdrawal Address
+// ============================================================
+async function resetWithdrawalAddress(uid) {
+    showConfirm(
+        'Reset Withdrawal Address', 
+        'Are you sure you want to reset the withdrawal address for user <strong>' + escapeHtml(uid) + '</strong>?<br><br>This will clear their current withdrawal address and they will need to bind a new one before withdrawing.',
+        async function() {
+            try {
+                // 清空 withdrawal_address 和 withdrawal_address_type
+                var { error } = await sb
+                    .from('users')
+                    .update({ 
+                        withdrawal_address: null,
+                        withdrawal_address_type: null
+                    })
+                    .eq('uid', uid);
+                
+                if (error) throw error;
+                
+                showToast('✅ Withdrawal address has been reset for ' + uid, 'success');
+                closeEditUserModal();
+                loadUsers();
+                
+            } catch (e) {
+                console.error('Reset withdrawal address failed:', e);
+                showToast('❌ Failed to reset withdrawal address: ' + e.message, 'error');
+            }
+        }
+    );
+}
+
+// ============================================================
+// 🔥 Reset Withdrawal PIN (已存在，无需修改)
+// ============================================================
+// async function resetWithdrawalPin(uid) { ... }
 
 async function resetUserPassword(uid) {
     showPrompt('Reset Password', '请输入新密码 (至少4位):', async (newPassword) => {
