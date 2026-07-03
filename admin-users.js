@@ -293,7 +293,7 @@ async function loadUsersPage() {
             background: rgba(200,176,144,0.03) !important;
         }
 
-/* ===== 列宽定义 - 删除 VIP RANK 后调整 ===== */
+/* ===== 列宽定义 ===== */
 .data-table th:nth-child(1),
 .data-table td:nth-child(1) { width: 40px !important; min-width: 40px !important; }  /* Actions */
 .data-table th:nth-child(2),
@@ -310,7 +310,7 @@ async function loadUsersPage() {
 .data-table th:nth-child(7),
 .data-table td:nth-child(7) { width: 65px !important; min-width: 65px !important; }  /* Pending */
 .data-table th:nth-child(8),
-.data-table td:nth-child(8) { width: 70px !important; min-width: 70px !important; }  /* Balance */
+.data-table td:nth-child(8) { width: 110px !important; min-width: 110px !important; }  /* Balance ⬅️ 从 70px 改为 110px */
 .data-table th:nth-child(9),
 .data-table td:nth-child(9) { width: 185px !important; min-width: 185px !important; } /* Round / Orders */
 .data-table th:nth-child(10),
