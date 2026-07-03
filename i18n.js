@@ -630,6 +630,11 @@ if (typeof window._i18n_loaded === 'undefined') {
             'chat_coming_soon': 'Live chat support is coming soon.',
             'chat_email': 'Email: support@additive.com',
             'chat_telegram': 'Telegram: @additive_support',
+'notifications_title': 'Notifications',
+'notifications_empty': 'No notifications',
+'notifications_caught_up': "You're all caught up!",
+'notifications_unread': 'unread',
+'notifications_close': 'Close',
 
             // ==================== Sign In ====================
             'signin_title': 'Sign In',
@@ -1358,6 +1363,11 @@ if (typeof window._i18n_loaded === 'undefined') {
             'chat_coming_soon': 'Live-Chat-Support kommt bald.',
             'chat_email': 'E-Mail: support@additive.com',
             'chat_telegram': 'Telegram: @additive_support',
+'notifications_title': 'Benachrichtigungen',
+'notifications_empty': 'Keine Benachrichtigungen',
+'notifications_caught_up': 'Du bist auf dem neuesten Stand!',
+'notifications_unread': 'ungelesen',
+'notifications_close': 'Schließen',
 
             // ==================== Sign In ====================
             'signin_title': 'Anmelden',
@@ -2087,6 +2097,11 @@ if (typeof window._i18n_loaded === 'undefined') {
             'chat_coming_soon': 'Il supporto chat live è in arrivo.',
             'chat_email': 'Email: support@additive.com',
             'chat_telegram': 'Telegram: @additive_support',
+'notifications_title': 'Notifiche',
+'notifications_empty': 'Nessuna notifica',
+'notifications_caught_up': 'Sei al corrente!',
+'notifications_unread': 'non letto',
+'notifications_close': 'Chiudi',
 
             // ==================== Sign In ====================
             'signin_title': 'Accedi',
