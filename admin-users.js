@@ -1816,9 +1816,9 @@ function openEditUserModal(uid, username, phone, pin, currency, address, creditS
             <div style="font-weight: 500; color: #e8e8f0; font-size: 12px;">Reset Withdrawal PIN</div>
             <div style="font-size: 9px; color: #5a5a6a;">Reset user's withdrawal pin</div>
         </div>
-        <div onclick="resetWithdrawalAddress('${uid}')" style="background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(201, 176, 149, 0.15); border-radius: 8px; padding: 8px 12px; cursor: pointer; transition: 0.2s;">
-            <div style="font-weight: 500; color: #C9B095; font-size: 12px;">Reset Withdrawal Address</div>
-            <div style="font-size: 9px; color: #5a5a6a;">Reset user's withdrawal address</div>
+        <div onclick="updateWithdrawalAddress('${uid}')" style="background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(201, 176, 149, 0.15); border-radius: 8px; padding: 8px 12px; cursor: pointer; transition: 0.2s;">
+            <div style="font-weight: 500; color: #C9B095; font-size: 12px;">Update Withdrawal Address</div>
+            <div style="font-size: 9px; color: #5a5a6a;">Edit user's withdrawal address</div>
         </div>
         <div onclick="resetUserPassword('${uid}')" style="background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(180, 180, 200, 0.05); border-radius: 8px; padding: 8px 12px; cursor: pointer; transition: 0.2s;">
             <div style="font-weight: 500; color: #e8e8f0; font-size: 12px;">Reset Password</div>
@@ -2010,35 +2010,223 @@ async function resetWithdrawalPin(uid) {
 }
 
 // ============================================================
-// 🔥 Reset Withdrawal Address
+// 🔥 Update Withdrawal Address (管理员直接修改)
 // ============================================================
-async function resetWithdrawalAddress(uid) {
-    showConfirm(
-        'Reset Withdrawal Address', 
-        'Are you sure you want to reset the withdrawal address for user <strong>' + escapeHtml(uid) + '</strong>?<br><br>This will clear their current withdrawal address and they will need to bind a new one before withdrawing.',
-        async function() {
+async function updateWithdrawalAddress(uid) {
+    try {
+        // 获取用户当前的提款地址信息
+        var { data: user, error } = await sb
+            .from('users')
+            .select('withdrawal_address, withdrawal_address_type, username')
+            .eq('uid', uid)
+            .single();
+        
+        if (error) throw error;
+        
+        var currentAddress = user?.withdrawal_address || '';
+        var currentType = user?.withdrawal_address_type || 'USDT';
+        var username = user?.username || uid;
+        
+        // 创建自定义弹窗
+        var overlay = document.createElement('div');
+        overlay.id = 'updateAddressModal';
+        overlay.style.cssText = `
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(7, 11, 26, 0.92);
+            backdrop-filter: blur(14px);
+            -webkit-backdrop-filter: blur(14px);
+            z-index: 30000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            animation: fadeIn 0.25s ease;
+        `;
+        
+        var modal = document.createElement('div');
+        modal.style.cssText = `
+            background: linear-gradient(160deg, #1a1428, #0e0a1a);
+            border-radius: 24px;
+            padding: 32px 36px 28px;
+            max-width: 520px;
+            width: 90%;
+            border: 1px solid rgba(201, 176, 149, 0.1);
+            box-shadow: 0 24px 60px rgba(0, 0, 0, 0.6);
+            animation: scaleIn 0.25s cubic-bezier(0.2, 0.9, 0.4, 1.1) forwards;
+            transform: scale(0.92);
+            max-height: 90vh;
+            overflow-y: auto;
+        `;
+        
+        // 加密类型选项
+        var typeOptions = ['USDT', 'BTC', 'ETH', 'USDC'];
+        var typeOptionsHtml = typeOptions.map(function(type) {
+            var selected = type === currentType ? 'selected' : '';
+            return '<option value="' + type + '" ' + selected + '>' + type + '</option>';
+        }).join('');
+        
+        modal.innerHTML = `
+            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 20px;">
+                <span style="display: inline-block; width: 3px; height: 18px; background: linear-gradient(180deg, #C9B095, #b8944a); border-radius: 2px;"></span>
+                <h3 style="color: #e8e8f0; font-size: 17px; font-weight: 600; margin: 0; letter-spacing: 0.3px;">
+                    <i class="fas fa-edit" style="color: #C9B095; margin-right: 8px;"></i>
+                    Update Withdrawal Address
+                </h3>
+                <span style="margin-left: auto; font-size: 12px; color: #6a6a80; background: rgba(255,255,255,0.04); padding: 2px 12px; border-radius: 20px;">${escapeHtml(username)}</span>
+            </div>
+            
+            <div style="margin-bottom: 14px;">
+                <label style="display: block; font-size: 11px; color: #6a7a92; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">
+                    <i class="fas fa-tag" style="margin-right: 4px; font-size: 11px;"></i>
+                    User ID
+                </label>
+                <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.04); border-radius: 10px; padding: 10px 14px; color: #8892a8; font-size: 14px; font-family: monospace;">
+                    ${escapeHtml(uid)}
+                </div>
+            </div>
+            
+            <div style="margin-bottom: 14px;">
+                <label style="display: block; font-size: 11px; color: #6a7a92; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">
+                    <i class="fas fa-coins" style="margin-right: 4px; font-size: 11px;"></i>
+                    Currency Type
+                </label>
+                <select id="newAddressType" style="width: 100%; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06); border-radius: 10px; padding: 10px 14px; color: #e6edf5; font-size: 14px; outline: none; transition: 0.2s; box-sizing: border-box;">
+                    ${typeOptionsHtml}
+                </select>
+            </div>
+            
+            <div style="margin-bottom: 14px;">
+                <label style="display: block; font-size: 11px; color: #6a7a92; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">
+                    <i class="fas fa-address-book" style="margin-right: 4px; font-size: 11px;"></i>
+                    Current Address
+                </label>
+                <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.04); border-radius: 10px; padding: 10px 14px; color: #6a7a92; font-size: 12px; word-break: break-all; font-family: monospace; min-height: 20px;">
+                    ${currentAddress || '<span style="color: #4a5a72;">No address bound</span>'}
+                </div>
+            </div>
+            
+            <div style="margin-bottom: 20px;">
+                <label style="display: block; font-size: 11px; color: #6a7a92; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">
+                    <i class="fas fa-pen" style="margin-right: 4px; font-size: 11px;"></i>
+                    New Address
+                </label>
+                <input type="text" id="newAddressInput" placeholder="Enter new wallet address..." value="${escapeHtml(currentAddress)}" style="width: 100%; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06); border-radius: 10px; padding: 10px 14px; color: #e6edf5; font-size: 14px; outline: none; transition: 0.2s; box-sizing: border-box; font-family: monospace;">
+                <div style="font-size: 10px; color: #4a5a72; margin-top: 4px;">
+                    <i class="fas fa-info-circle"></i> Enter the new withdrawal address for this user
+                </div>
+            </div>
+            
+            <div style="display: flex; gap: 10px;">
+                <button id="updateAddressCancelBtn" style="flex: 1; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06); border-radius: 40px; padding: 10px 0; color: #6a6a80; font-weight: 500; font-size: 13px; cursor: pointer; transition: 0.2s; font-family: 'Inter', sans-serif;">
+                    Cancel
+                </button>
+                <button id="updateAddressConfirmBtn" style="flex: 1; background: rgba(201,176,149,0.06); border: 1px solid rgba(201,176,149,0.12); border-radius: 40px; padding: 10px 0; color: #C9B095; font-weight: 600; font-size: 13px; cursor: pointer; transition: 0.2s; font-family: 'Inter', sans-serif;">
+                    <i class="fas fa-save"></i> Update Address
+                </button>
+            </div>
+        `;
+        
+        overlay.appendChild(modal);
+        document.body.appendChild(overlay);
+        
+        // 动画样式
+        if (!document.getElementById('updateAddressModalStyles')) {
+            var style = document.createElement('style');
+            style.id = 'updateAddressModalStyles';
+            style.textContent = `
+                @keyframes fadeIn {
+                    from { opacity: 0; }
+                    to { opacity: 1; }
+                }
+                @keyframes scaleIn {
+                    from { transform: scale(0.92); opacity: 0; }
+                    to { transform: scale(1); opacity: 1; }
+                }
+                #updateAddressModal input:focus,
+                #updateAddressModal select:focus {
+                    border-color: rgba(201,176,149,0.25);
+                    background: rgba(255,255,255,0.06);
+                }
+                #updateAddressModal input::placeholder {
+                    color: rgba(255,255,255,0.12);
+                }
+            `;
+            document.head.appendChild(style);
+        }
+        
+        // 关闭弹窗
+        function closeModal() {
+            if (overlay.parentNode) overlay.remove();
+        }
+        
+        document.getElementById('updateAddressCancelBtn').addEventListener('click', closeModal);
+        overlay.addEventListener('click', function(e) {
+            if (e.target === this) closeModal();
+        });
+        
+        document.addEventListener('keydown', function escHandler(e) {
+            if (e.key === 'Escape') {
+                closeModal();
+                document.removeEventListener('keydown', escHandler);
+            }
+        });
+        
+        // 确认更新
+        document.getElementById('updateAddressConfirmBtn').addEventListener('click', async function() {
+            var newAddress = document.getElementById('newAddressInput').value.trim();
+            var newType = document.getElementById('newAddressType').value;
+            
+            if (!newAddress) {
+                showToast('Please enter a wallet address', 'error');
+                return;
+            }
+            
+            if (newAddress.length < 10) {
+                showToast('Please enter a valid wallet address (min 10 characters)', 'error');
+                return;
+            }
+            
+            this.disabled = true;
+            this.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Updating...';
+            
             try {
-                // 清空 withdrawal_address 和 withdrawal_address_type
                 var { error } = await sb
                     .from('users')
-                    .update({ 
-                        withdrawal_address: null,
-                        withdrawal_address_type: null
+                    .update({
+                        withdrawal_address: newAddress,
+                        withdrawal_address_type: newType
                     })
                     .eq('uid', uid);
                 
                 if (error) throw error;
                 
-                showToast('✅ Withdrawal address has been reset for ' + uid, 'success');
+                showToast('✅ Withdrawal address updated successfully for ' + uid, 'success');
+                closeModal();
                 closeEditUserModal();
                 loadUsers();
                 
             } catch (e) {
-                console.error('Reset withdrawal address failed:', e);
-                showToast('❌ Failed to reset withdrawal address: ' + e.message, 'error');
+                console.error('Update withdrawal address failed:', e);
+                showToast('❌ Failed to update: ' + e.message, 'error');
+                this.disabled = false;
+                this.innerHTML = '<i class="fas fa-save"></i> Update Address';
             }
-        }
-    );
+        });
+        
+        // Enter 键触发确认
+        document.getElementById('newAddressInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                document.getElementById('updateAddressConfirmBtn').click();
+            }
+        });
+        
+    } catch (e) {
+        console.error('Open update address modal failed:', e);
+        showToast('Failed to load user data: ' + e.message, 'error');
+    }
 }
 
 // ============================================================
