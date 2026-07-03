@@ -13,70 +13,222 @@ const NOTIFICATION_SOUNDS = {
     email: 'https://qgmbzdfnwsdosdqphlxk.supabase.co/storage/v1/object/public/notification-sounds/emailverification.mp3'
 };
 
+// ============================================================
+// 🔔 通知声音 - 彻底修复版
+// ============================================================
+
 let audioCache = {};
 let audioContextUnlocked = false;
+let audioContext = null;
+let soundInitAttempts = 0;
 
-// ============================================================
-// 🔥 通知声音播放函数（支持自动播放策略）
-// ============================================================
+// 预加载所有声音（页面加载时执行）
+function preloadAllSounds() {
+    Object.keys(NOTIFICATION_SOUNDS).forEach(function(type) {
+        try {
+            var url = NOTIFICATION_SOUNDS[type];
+            if (!url) return;
+            var audio = new Audio(url);
+            audio.preload = 'auto';
+            audio.load();
+            audioCache[type] = audio;
+            console.log('🔊 预加载声音:', type);
+        } catch (e) {
+            console.log('⚠️ 预加载声音失败:', type, e.message);
+        }
+    });
+}
 
-function playNotificationSound(type) {
+// 获取或创建 AudioContext
+function getAudioContext() {
+    if (!audioContext) {
+        try {
+            audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        } catch (e) {
+            console.log('⚠️ 无法创建 AudioContext:', e.message);
+            return null;
+        }
+    }
+    return audioContext;
+}
+
+// 解锁音频（在用户交互时调用）
+function unlockAudioContext() {
+    if (audioContextUnlocked) return;
+    
     try {
-        const url = NOTIFICATION_SOUNDS[type];
-        if (!url) return;
-
-        if (!audioCache[type]) {
-            audioCache[type] = new Audio(url);
-            audioCache[type].preload = 'auto';
-        }
-
-        const audio = audioCache[type];
-
-        if (!audioContextUnlocked && typeof AudioContext !== 'undefined') {
-            const context = new (window.AudioContext || window.webkitAudioContext)();
-            if (context.state === 'suspended') {
-                context.resume().then(function() {
-                    audioContextUnlocked = true;
-                    console.log('🔊 音频上下文已解锁');
-                }).catch(function() {});
-            } else {
+        var ctx = getAudioContext();
+        if (!ctx) return;
+        
+        if (ctx.state === 'suspended') {
+            ctx.resume().then(function() {
                 audioContextUnlocked = true;
-            }
-        }
-
-        audio.currentTime = 0;
-        var playPromise = audio.play();
-
-        if (playPromise !== undefined) {
-            playPromise.catch(function(error) {
-                console.log('🔇 播放被阻止（需要用户交互）:', error.message);
+                console.log('🔊 音频上下文已解锁 (state:', ctx.state, ')');
+            }).catch(function(e) {
+                console.log('⚠️ 音频解锁失败:', e.message);
             });
+        } else if (ctx.state === 'running') {
+            audioContextUnlocked = true;
+            console.log('🔊 音频上下文已运行');
         }
     } catch (e) {
-        // 静默处理
+        console.log('⚠️ 音频解锁异常:', e.message);
     }
 }
 
-function unlockAudioOnUserInteraction() {
-    var unlock = function() {
-        if (typeof AudioContext !== 'undefined') {
-            var context = new (window.AudioContext || window.webkitAudioContext)();
-            if (context.state === 'suspended') {
-                context.resume().then(function() {
-                    audioContextUnlocked = true;
-                    console.log('🔊 音频已通过用户交互解锁');
-                }).catch(function() {});
-            } else {
-                audioContextUnlocked = true;
-            }
-        }
-        document.removeEventListener('click', unlock);
-        document.removeEventListener('touchstart', unlock);
+// 用户交互时解锁（一次性，多个事件触发）
+function setupAudioUnlock() {
+    var events = ['click', 'touchstart', 'keydown', 'mousemove', 'scroll'];
+    var unlockHandler = function() {
+        unlockAudioContext();
+        // 移除所有监听，只执行一次
+        events.forEach(function(evt) {
+            document.removeEventListener(evt, unlockHandler);
+        });
+        console.log('🔊 音频解锁事件已触发并移除');
     };
-
-    document.addEventListener('click', unlock);
-    document.addEventListener('touchstart', unlock);
+    
+    events.forEach(function(evt) {
+        document.addEventListener(evt, unlockHandler, { once: true, passive: true });
+    });
+    
+    // 额外：如果 3 秒后还没有解锁，尝试强制解锁
+    setTimeout(function() {
+        if (!audioContextUnlocked) {
+            try {
+                var ctx = getAudioContext();
+                if (ctx && ctx.state === 'suspended') {
+                    ctx.resume().catch(function() {});
+                }
+            } catch (e) {}
+        }
+    }, 3000);
 }
+
+// 🎯 核心播放函数
+function playNotificationSound(type) {
+    try {
+        var url = NOTIFICATION_SOUNDS[type];
+        if (!url) {
+            console.log('⚠️ 没有找到通知声音:', type);
+            return;
+        }
+
+        // 1. 尝试解锁音频
+        unlockAudioContext();
+
+        // 2. 从缓存获取 audio
+        var audio = audioCache[type];
+        
+        // 3. 如果缓存不存在或已损坏，重新创建
+        if (!audio) {
+            audio = new Audio(url);
+            audio.preload = 'auto';
+            audioCache[type] = audio;
+        }
+
+        // 4. 重置到开头
+        audio.currentTime = 0;
+        
+        // 5. 设置音量
+        audio.volume = 0.9;
+
+        // 6. 尝试播放
+        var playPromise = audio.play();
+        
+        if (playPromise !== undefined) {
+            playPromise.then(function() {
+                console.log('🔊 声音播放成功:', type);
+            }).catch(function(error) {
+                console.log('🔇 播放失败:', error.message);
+                
+                // 降级方案：创建新的 Audio 元素
+                try {
+                    var fallbackAudio = new Audio(url);
+                    fallbackAudio.volume = 0.9;
+                    fallbackAudio.play().then(function() {
+                        console.log('🔊 降级播放成功:', type);
+                    }).catch(function(e) {
+                        console.log('🔇 降级播放也失败:', e.message);
+                    });
+                } catch (e2) {
+                    console.log('⚠️ 降级播放异常:', e2.message);
+                }
+            });
+        }
+    } catch (e) {
+        console.log('⚠️ 播放声音异常:', e.message);
+    }
+}
+
+// 🔥 强制播放（用于测试，在控制台输入 playNotificationSound('kyc')）
+window.playNotificationSound = playNotificationSound;
+
+// 隐藏音频激活器（强制唤醒 AudioContext）
+function addHiddenAudioActivator() {
+    try {
+        // 创建一个不可见的音频元素
+        var activator = document.createElement('div');
+        activator.id = 'audioActivator';
+        activator.style.cssText = 'position:fixed;bottom:0;left:0;width:1px;height:1px;opacity:0;pointer-events:none;z-index:999999;';
+        activator.setAttribute('aria-hidden', 'true');
+        document.body.appendChild(activator);
+        
+        // 使用无声振荡器激活 AudioContext
+        setTimeout(function() {
+            try {
+                var ctx = getAudioContext();
+                if (ctx && ctx.state === 'suspended') {
+                    // 创建无声振荡器（0.001 秒，几乎听不到）
+                    var oscillator = ctx.createOscillator();
+                    var gain = ctx.createGain();
+                    gain.gain.value = 0.001;
+                    oscillator.connect(gain);
+                    gain.connect(ctx.destination);
+                    oscillator.start(0);
+                    oscillator.stop(0.001);
+                    ctx.resume().then(function() {
+                        audioContextUnlocked = true;
+                        console.log('🔊 音频通过无声振荡器激活');
+                    }).catch(function() {
+                        console.log('⚠️ 无声振荡器激活失败');
+                    });
+                }
+            } catch (e) {
+                // 静默处理
+            }
+        }, 1000);
+    } catch (e) {
+        console.log('⚠️ 添加音频激活器失败:', e.message);
+    }
+}
+
+// 页面加载时预加载所有声音
+function initSoundSystem() {
+    console.log('🔊 初始化声音系统...');
+    preloadAllSounds();
+    setupAudioUnlock();
+    addHiddenAudioActivator();  // 👈 添加这一行
+    
+    // 如果页面已经加载完成，尝试立即解锁
+    if (document.readyState === 'complete') {
+        setTimeout(unlockAudioContext, 500);
+    }
+}
+
+// 页面加载时初始化
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initSoundSystem);
+} else {
+    initSoundSystem();
+}
+
+// 页面可见时重新尝试解锁
+document.addEventListener('visibilitychange', function() {
+    if (document.visibilityState === 'visible') {
+        setTimeout(unlockAudioContext, 300);
+    }
+});
 
 // ============================================================
 // 通知数据
@@ -1330,8 +1482,6 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     
     loadNotificationCounts();
-    
-    unlockAudioOnUserInteraction();
     
     setTimeout(function() {
         loadNotifications();
