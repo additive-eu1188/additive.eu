@@ -1487,66 +1487,67 @@ function deductBalance(uid, username) {
     document.addEventListener('keydown', escHandler);
 
     document.getElementById('deductConfirmBtn')?.addEventListener('click', async function() {
-        const deductAmount = parseFloat(document.getElementById('deductAmountInput').value);
-        if (isNaN(deductAmount) || deductAmount <= 0) {
-            showToast('Please enter a valid amount', 'error');
+    const deductAmount = parseFloat(document.getElementById('deductAmountInput').value);
+    if (isNaN(deductAmount) || deductAmount <= 0) {
+        showToast('Please enter a valid amount', 'error');
+        return;
+    }
+
+    overlay.remove();
+
+    try {
+        // ============================================================
+        // 🔥 获取用户当前余额和 amount_due_round
+        // ============================================================
+        const { data: user, error } = await sb
+            .from('users')
+            .select('balance, amount_due_round')
+            .eq('uid', uid)
+            .single();
+        if (error) throw error;
+
+        if (deductAmount > (user.balance || 0)) {
+            showToast('Insufficient balance', 'error');
             return;
         }
 
-        overlay.remove();
+        const newBalance = (user.balance || 0) - deductAmount;
+        
+        // ============================================================
+        // 🔥🔥🔥 扣除后 amount_due 增加（因为用户余额减少）
+        // ============================================================
+        let newAmountDue = (user.amount_due_round || 0) + deductAmount;
+        console.log('💰 amount_due 更新（扣除）:', user.amount_due_round || 0, '->', newAmountDue, '(扣除 €' + deductAmount + ')');
 
-        try {
-            const { data: user, error } = await sb
-                .from('users')
-                .select('balance')
-                .eq('uid', uid)
-                .single();
-            if (error) throw error;
+        // ============================================================
+        // 更新数据库：balance 和 amount_due_round
+        // ============================================================
+        await sb.from('users')
+            .update({ 
+                balance: newBalance,
+                amount_due_round: newAmountDue
+            })
+            .eq('uid', uid);
 
-            if (deductAmount > (user.balance || 0)) {
-                showToast('Insufficient balance', 'error');
-                return;
-            }
+        // 记录扣除日志
+        await sb.from('deposits').insert([{
+            uid: uid,
+            username: username,
+            amount: deductAmount,
+            type: 'manual_deduction',
+            description: 'Manual Deduction',
+            created_at: new Date().toISOString()
+        }]);
 
-            const newBalance = (user.balance || 0) - deductAmount;
-
-            await sb.from('users')
-                .update({ balance: newBalance })
-                .eq('uid', uid);
-
-            await sb.from('deposits').insert([{
-                uid: uid,
-                username: username,
-                amount: deductAmount,
-                type: 'manual_deduction',
-                description: 'Manual Deduction',
-                created_at: new Date().toISOString()
-            }]);
-
-            // ============================================================
-            // 🔥 扣除成功后，更新 amount_due
-            // ============================================================
-            const amountDueData = getAmountDue(uid);
-            if (amountDueData && amountDueData.orderPrice > 0) {
-                const orderPrice = amountDueData.orderPrice;
-                const remainingAmountDue = Math.max(0, orderPrice - newBalance);
-                
-                if (remainingAmountDue > 0) {
-                    setAmountDue(uid, orderPrice, remainingAmountDue);
-                    console.log('✅ amount_due 更新（扣除后）:', uid, '剩余 €' + remainingAmountDue.toFixed(2));
-                } else {
-                    localStorage.removeItem('amountDue_' + uid);
-                    console.log('✅ amount_due 已付清（扣除后）:', uid);
-                }
-            }
-
-            showToast(`✅ Deducted €${deductAmount.toFixed(2)} from ${username}`, 'success');
-            loadUsers();
-            if (window.loadDashboardPage) window.loadDashboardPage(currentDays);
-        } catch (e) {
-            showToast('Operation failed: ' + e.message, 'error');
-        }
-    });
+        showToast(`✅ Deducted €${deductAmount.toFixed(2)} from ${username}`, 'success');
+        loadUsers();
+        if (window.loadDashboardPage) window.loadDashboardPage(currentDays);
+        
+    } catch (e) {
+        console.error('deductBalance error:', e);
+        showToast('Operation failed: ' + e.message, 'error');
+    }
+});
 
     document.getElementById('deductAmountInput')?.addEventListener('keypress', function(e) {
         if (e.key === 'Enter') {
@@ -1564,9 +1565,12 @@ async function processDeposit(uid, username, depositAmount, rewardAmount, reward
         return;
     }
     try {
+        // ============================================================
+        // 🔥🔥🔥 关键修复：select 必须包含 amount_due_round
+        // ============================================================
         const { data: user, error } = await sb
             .from('users')
-            .select('balance, is_premium, current_round, round_orders_count')
+            .select('balance, is_premium, current_round, round_orders_count, amount_due_round')
             .eq('uid', uid)
             .single();
         if (error) throw error;
@@ -1606,33 +1610,31 @@ async function processDeposit(uid, username, depositAmount, rewardAmount, reward
             }]);
             message += `${rewardName} €${rewardAmount.toFixed(2)}; `;
         }
+        
+        // ============================================================
+        // 🔥🔥🔥 核心修复：计算新的 amount_due_round（用充值金额抵扣）
+        // ============================================================
+        let newAmountDue = user.amount_due_round || 0;
+        if (newAmountDue > 0 && depositAmount > 0) {
+            newAmountDue = Math.max(0, newAmountDue - depositAmount);
+            console.log('💰 amount_due 更新（充值）:', user.amount_due_round || 0, '->', newAmountDue, '(充值 €' + depositAmount + ')');
+        }
+        
+        // ============================================================
+        // 更新数据库：balance 和 amount_due_round
+        // ============================================================
         const { error: updateError } = await sb
             .from('users')
-            .update({ balance: newBalance })
+            .update({ 
+                balance: newBalance,
+                amount_due_round: newAmountDue
+            })
             .eq('uid', uid);
         if (updateError) throw updateError;
         
-        // ============================================================
-        // 🔥🔥🔥 核心修复：充值成功后，更新 amount_due
-        // ============================================================
-        const amountDueData = getAmountDue(uid);
-        if (amountDueData && amountDueData.orderPrice > 0) {
-            const orderPrice = amountDueData.orderPrice;
-            const remainingAmountDue = Math.max(0, orderPrice - newBalance);
-            
-            if (remainingAmountDue > 0) {
-                // 更新为剩余金额
-                setAmountDue(uid, orderPrice, remainingAmountDue);
-                console.log('✅ amount_due 更新（充值后）:', uid, '剩余 €' + remainingAmountDue.toFixed(2));
-            } else {
-                // 已付清，删除缓存
-                localStorage.removeItem('amountDue_' + uid);
-                console.log('✅ amount_due 已付清（充值后）:', uid);
-            }
-        }
-        
         showToast(`✅ Success! ${message} Current balance: €${newBalance.toFixed(2)}`, 'success');
         
+        // 刷新用户列表
         loadUsers();
         if (window.loadDashboardPage) window.loadDashboardPage(currentDays);
         
