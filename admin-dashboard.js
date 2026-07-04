@@ -1134,7 +1134,6 @@ function initTrendChart() {
     window._chartDates = defaultDates;
     
     console.log('✅ D&W Trend 上下分表初始化完成');
-}
     
     if (pulseInterval) {
         clearInterval(pulseInterval);
