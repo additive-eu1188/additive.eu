@@ -956,7 +956,7 @@ if (canClaim) {
 
 }
 
-        // ============================================================
+// ============================================================
 // handleClaim - 使用内联自定义弹窗
 // ============================================================
 async function handleClaim() {
@@ -966,7 +966,7 @@ async function handleClaim() {
     const { streak, lastClaimDate, claimedDays } = loadData();
 
     // ============================================================
-    // 🔥 检查今天是否已经 Claim 过
+    // 🔥 检查今天是否已经 Claim 过（防止同一天重复点击）
     // ============================================================
     if (lastClaimDate && new Date().toDateString() === new Date(lastClaimDate).toDateString()) {
         showToast('checkin_claimed_today_msg', 'warning');
@@ -994,6 +994,9 @@ async function handleClaim() {
         return;
     }
 
+    // ============================================================
+    // 🔥 获取当前用户信息
+    // ============================================================
     const user = getCurrentUser();
     if (!user) {
         showToast('signin_required_login', 'error');
@@ -1018,12 +1021,27 @@ async function handleClaim() {
         return;
     }
 
-    // 领取 nextDay
+    // ============================================================
+    // 🔥🔥🔥 核心修复：检查上次 Claim 时的 Round 是否与当前相同
+    // 如果相同，说明是同一个 Round 2 的 30 单，不允许重复 Claim
+    // ============================================================
+    const lastClaimRound = localStorage.getItem('checkin_last_claim_round_' + user.uid);
+    
+    if (lastClaimRound && parseInt(lastClaimRound) === currentRound) {
+        console.log('⛔ 当前 Round 已经 Claim 过奖励，不能重复 Claim');
+        showToast('checkin_already_claimed_this_round', 'warning');
+        return;
+    }
+
+    // ============================================================
+    // 🔥 准备 Claim
+    // ============================================================
     const amount = signInRewards[nextDay - 1].amount;
     const claimDay = nextDay;
 
     console.log('💰 Claim Day:', claimDay, 'Amount:', amount);
 
+    // 显示确认弹窗
     showCustomConfirm(
         t('checkin_claim_reward_title'),
         t('checkin_claim_reward_message', { day: claimDay, amount: amount.toFixed(2) }),
@@ -1038,90 +1056,120 @@ async function handleClaim() {
     );
 }
 
+// ============================================================
+// 处理 Claim 逻辑
+// ============================================================
+async function processClaim(user, amount, claimDay, claimedDays) {
+    console.log('🔄 开始处理 Claim...');
+    
+    try {
         // ============================================================
-        // 处理 Claim 逻辑
+        // 1. 添加奖励到余额
         // ============================================================
-        async function processClaim(user, amount, claimDay, claimedDays) {
-            console.log('🔄 开始处理 Claim...');
-            
-            try {
-                // 1. 添加奖励到余额
-                const { data: userData, error: fetchError } = await sb
-                    .from('users')
-                    .select('balance')
-                    .eq('uid', user.uid)
-                    .single();
-                
-                if (fetchError) throw fetchError;
-                
-                const newBalance = (userData?.balance || 0) + amount;
-                
-                const { error: updateError } = await sb
-                    .from('users')
-                    .update({ balance: newBalance })
-                    .eq('uid', user.uid);
-                
-                if (updateError) throw updateError;
-                console.log('✅ 余额更新成功: €' + newBalance);
+        const { data: userData, error: fetchError } = await sb
+            .from('users')
+            .select('balance')
+            .eq('uid', user.uid)
+            .single();
+        
+        if (fetchError) throw fetchError;
+        
+        const newBalance = (userData?.balance || 0) + amount;
+        
+        const { error: updateError } = await sb
+            .from('users')
+            .update({ balance: newBalance })
+            .eq('uid', user.uid);
+        
+        if (updateError) throw updateError;
+        console.log('✅ 余额更新成功: €' + newBalance);
 
-                // 2. 添加到 deposits 表
-                const { error: depositError } = await sb
-                    .from('deposits')
-                    .insert([{
-                        uid: user.uid,
-                        username: user.username || user.uid,
-                        amount: amount,
-                        type: 'checkin_bonus',
-                        description: `Check-in Day ${claimDay} Bonus`,
-                        created_at: new Date().toISOString()
-                    }]);
-                
-                if (depositError) {
-                    console.error('❌ Deposits 记录失败:', depositError);
-                } else {
-                    console.log('✅ Deposits 记录成功: €' + amount);
-                }
-
-                // 3. 保存签到记录到数据库
-const { error: insertError } = await sb
-    .from('user_checkin_records')
-    .insert([{
-        uid: user.uid,
-        day_number: claimDay,
-        amount: amount,
-        checkin_date: new Date().toISOString().split('T')[0],
-        created_at: new Date().toISOString()
-    }]);
-
-                // 4. 更新本地存储
-let newClaimedDays = [...claimedDays];
-if (!newClaimedDays.includes(claimDay)) {
-    newClaimedDays.push(claimDay);
-}
-newClaimedDays.sort((a, b) => a - b);
-
-const newStreak = newClaimedDays.length;
-
-saveData(newStreak, new Date().toISOString(), newClaimedDays);
-console.log('✅ Claim saved: claimedDays:', newClaimedDays, 'streak:', newStreak);
-
-                // 5. 更新本地用户对象
-                user.balance = newBalance;
-                localStorage.setItem('currentUser', JSON.stringify(user));
-
-                // 6. 刷新页面
-                await render();
-                
-                // 7. 显示成功消息
-                const t = window.i18n?.t || function(key) { return key; };
-                showToast(t('checkin_claim_success', { day: claimDay, amount: amount.toFixed(2) }), 'success');
-                console.log('🎉 Claim 完成!');
-                
-            } catch (err) {
-                console.error('processClaim error:', err);
-                showToast('checkin_failed_add_reward', 'error');
-            }
+        // ============================================================
+        // 2. 添加到 deposits 表
+        // ============================================================
+        const { error: depositError } = await sb
+            .from('deposits')
+            .insert([{
+                uid: user.uid,
+                username: user.username || user.uid,
+                amount: amount,
+                type: 'checkin_bonus',
+                description: `Check-in Day ${claimDay} Bonus`,
+                created_at: new Date().toISOString()
+            }]);
+        
+        if (depositError) {
+            console.error('❌ Deposits 记录失败:', depositError);
+        } else {
+            console.log('✅ Deposits 记录成功: €' + amount);
         }
+
+        // ============================================================
+        // 3. 保存签到记录到 user_checkin_records 表
+        // ============================================================
+        const { error: insertError } = await sb
+            .from('user_checkin_records')
+            .insert([{
+                uid: user.uid,
+                day_number: claimDay,
+                amount: amount,
+                checkin_date: new Date().toISOString().split('T')[0],
+                created_at: new Date().toISOString()
+            }]);
+
+        if (insertError) {
+            console.error('❌ 签到记录保存失败:', insertError);
+        } else {
+            console.log('✅ 签到记录保存成功: Day', claimDay);
+        }
+
+        // ============================================================
+        // 4. 更新本地存储（claimedDays）
+        // ============================================================
+        let newClaimedDays = [...claimedDays];
+        if (!newClaimedDays.includes(claimDay)) {
+            newClaimedDays.push(claimDay);
+        }
+        newClaimedDays.sort((a, b) => a - b);
+
+        const newStreak = newClaimedDays.length;
+
+        saveData(newStreak, new Date().toISOString(), newClaimedDays);
+        console.log('✅ Claim 数据已保存: claimedDays:', newClaimedDays, 'streak:', newStreak);
+
+        // ============================================================
+        // 5. 🔥🔥🔥 记录本次 Claim 时的 Round
+        // 这样下次检查时，如果 Round 没变，就不能再 Claim
+        // ============================================================
+        const currentRound = user.currentRound || 0;
+        localStorage.setItem('checkin_last_claim_round_' + user.uid, String(currentRound));
+        console.log('✅ 已记录 Claim 时的 Round:', currentRound);
+
+        // ============================================================
+        // 6. 更新本地用户对象（包含余额）
+        // ============================================================
+        user.balance = newBalance;
+        // 🔥 注意：不修改 currentRound 和 roundOrdersCount
+        // 由后台管理员手动重置
+        localStorage.setItem('currentUser', JSON.stringify(user));
+
+        // ============================================================
+        // 7. 刷新页面 UI
+        // ============================================================
+        await render();
+        
+        // ============================================================
+        // 8. 显示成功消息
+        // ============================================================
+        const t = window.i18n?.t || function(key) { return key; };
+        showToast(t('checkin_claim_success', { day: claimDay, amount: amount.toFixed(2) }), 'success');
+        console.log('🎉 Claim 完成! Round 保持不变:', currentRound);
+        
+    } catch (err) {
+        console.error('❌ processClaim 错误:', err);
+        showToast('checkin_failed_add_reward', 'error');
+    }
+}
 
         // ============================================================
 // Initialization
