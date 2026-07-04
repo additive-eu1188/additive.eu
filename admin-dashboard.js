@@ -334,34 +334,39 @@ async function loadChartData(force) {
         cachedData.chart = { dates: dates, depositData: depositData, withdrawData: withdrawData };
         cachedData.lastChartTime = now;
         
-        // ============================================================
-        // 🔥 替换为上下分表更新
-        // ============================================================
-        if (window._depositChart && window._withdrawChart) {
-            var allData = depositData.concat(withdrawData);
-            var globalMax = Math.max.apply(null, allData);
-            var yMax = Math.ceil(globalMax / 100) * 100 + 50;
-            if (yMax < 50) yMax = 50;
-            
-            window._depositChart.setOption({
-                xAxis: { data: dates },
-                yAxis: { max: yMax },
-                series: [{ data: depositData }]
-            });
-            
-            window._withdrawChart.setOption({
-                xAxis: { data: dates },
-                yAxis: { max: yMax },
-                series: [{ data: withdrawData }]
-            });
-            
-            window._chartDates = dates;
-            console.log('📊 D&W Trend 已更新 (上下分表, 柏林时间, 最近7天)');
-        }
-        
-    } catch (e) {
-        console.error('加载图表数据失败:', e);
-    }
+// ============================================================
+// 🔥 替换为上下分表更新
+// ============================================================
+if (window._depositChart && window._withdrawChart) {
+    var allData = depositData.concat(withdrawData);
+    var globalMax = Math.max.apply(null, allData);
+    var yMax = Math.ceil(globalMax / 100) * 100 + 50;
+    if (yMax < 50) yMax = 50;
+    
+    // 计算总计
+    var depositTotal = depositData.reduce(function(a, b) { return a + b; }, 0);
+    var withdrawTotal = withdrawData.reduce(function(a, b) { return a + b; }, 0);
+    
+    // 更新顶部统计
+    var depTotalEl = document.getElementById('headerDepositTotal');
+    var wdTotalEl = document.getElementById('headerWithdrawTotal');
+    if (depTotalEl) depTotalEl.textContent = '€' + depositTotal.toFixed(2);
+    if (wdTotalEl) wdTotalEl.textContent = '€' + withdrawTotal.toFixed(2);
+    
+    window._depositChart.setOption({
+        xAxis: { data: dates },
+        yAxis: { max: yMax },
+        series: [{ data: depositData }]
+    });
+    
+    window._withdrawChart.setOption({
+        xAxis: { data: dates },
+        yAxis: { max: yMax },
+        series: [{ data: withdrawData }]
+    });
+    
+    window._chartDates = dates;
+    console.log('📊 D&W Trend 已更新 (上下分表, 柏林时间, 最近7天)');
 }
 
 // ============================================================
@@ -984,24 +989,51 @@ function initTrendChart() {
         defaultWithdrawData.push(0);
     }
     
-    // ============================================================
-    // 创建两个独立的 ECharts 实例
-    // ============================================================
-    // 清空容器，创建两个子容器
-    dom.innerHTML = '';
-    dom.style.cssText = 'height: 320px; width: 100%; position: relative; display: flex; flex-direction: column;';
+// ============================================================
+// 顶部统计显示（同行右侧）
+// ============================================================
+var statsHtml = `
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; flex-shrink: 0; padding: 0 2px;">
+        <div style="font-size: 14px; font-weight: 600; color: #d8dff0; display: flex; align-items: center; gap: 6px;">
+            <i class="fas fa-chart-line" style="color: #8892a8; font-size: 13px;"></i> D&W Trend
+        </div>
+        <div style="display: flex; align-items: center; gap: 16px; font-size: 12px;">
+            <span style="display: flex; align-items: center; gap: 5px; color: #8892a8;">
+                <span style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #4ade80; box-shadow: 0 0 8px rgba(74,222,128,0.3);"></span>
+                Deposits: <span id="headerDepositTotal" style="font-weight: 700; color: #4ade80;">€0.00</span>
+            </span>
+            <span style="display: flex; align-items: center; gap: 5px; color: #8892a8;">
+                <span style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #e88080; box-shadow: 0 0 8px rgba(232,128,128,0.3);"></span>
+                Withdrawals: <span id="headerWithdrawTotal" style="font-weight: 700; color: #e88080;">€0.00</span>
+            </span>
+        </div>
+    </div>
+`;
+
+// 保存引用供更新使用
+window._headerDepositTotal = document.getElementById('headerDepositTotal');
+window._headerWithdrawTotal = document.getElementById('headerWithdrawTotal');
+
+// 清空容器，重建
+dom.innerHTML = '';
+dom.style.cssText = 'height: 320px; width: 100%; position: relative; display: flex; flex-direction: column;';
+dom.insertAdjacentHTML('afterbegin', statsHtml);
     
     var topContainer = document.createElement('div');
     topContainer.style.cssText = 'flex: 1; min-height: 0; position: relative;';
     topContainer.id = 'depositChartContainer';
     
     var divider = document.createElement('div');
-    divider.style.cssText = 'height: 18px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; gap: 12px; position: relative;';
-    divider.innerHTML = `
-        <span style="flex:1; height:1px; background: linear-gradient(90deg, transparent, rgba(180,180,200,0.06));"></span>
-        <span style="font-size:8px; color:#4a5a72; letter-spacing:1.5px; text-transform:uppercase; font-weight:600;">▼</span>
-        <span style="flex:1; height:1px; background: linear-gradient(90deg, rgba(180,180,200,0.06), transparent);"></span>
-    `;
+divider.style.cssText = 'height: 20px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; gap: 14px; position: relative; padding: 0 8px;';
+divider.innerHTML = `
+    <span style="flex:1; height: 1.5px; background: linear-gradient(90deg, transparent, rgba(180,180,200,0.12), rgba(180,180,200,0.20)); border-radius: 2px;"></span>
+    <span style="display: flex; align-items: center; gap: 6px; font-size: 8px; color: #5a6a82; letter-spacing: 1.5px; text-transform: uppercase; font-weight: 700; background: rgba(10,12,24,0.6); padding: 0 10px; border-radius: 10px; height: 18px; border: 1px solid rgba(180,180,200,0.04);">
+        <span style="display:inline-block; width:5px; height:5px; border-radius:50%; background:#4ade80;"></span>
+        <span>vs</span>
+        <span style="display:inline-block; width:5px; height:5px; border-radius:50%; background:#e88080;"></span>
+    </span>
+    <span style="flex:1; height: 1.5px; background: linear-gradient(90deg, rgba(180,180,200,0.20), rgba(180,180,200,0.12), transparent); border-radius: 2px;"></span>
+`;
     
     var bottomContainer = document.createElement('div');
     bottomContainer.style.cssText = 'flex: 1; min-height: 0; position: relative;';
