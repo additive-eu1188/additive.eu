@@ -973,7 +973,7 @@ function initTrendChart() {
     
     trendChart = echarts.init(dom);
     
-    // ✅ 生成最近7天的日期标签（柏林时间）
+    // 生成最近7天的日期标签（柏林时间）
     var defaultDates = [];
     var today = getBerlinDate();
     
@@ -992,6 +992,9 @@ function initTrendChart() {
         defaultWithdrawData.push(0);
     }
     
+    // ============================================================
+    // 🔥 替换为 ⑤ 动态光晕 样式
+    // ============================================================
     trendChart.setOption({
         tooltip: { 
             trigger: 'axis', 
@@ -1042,42 +1045,86 @@ function initTrendChart() {
         },
         legend: { show: false },
         series: [
-            { 
-                name: 'Deposit', 
-                type: 'line', 
+            {
+                name: 'Deposit',
+                type: 'line',
                 data: defaultDepositData,
-                smooth: false,
-                symbol: 'circle', 
-                symbolSize: 3,
-                lineStyle: { 
-                    color: '#4ade80', 
-                    width: 1.5
-                }, 
-                itemStyle: { color: '#4ade80' },
-                connectNulls: false,
-                animation: false,
-                animationDuration: 0
+                smooth: 0.4,
+                symbol: 'circle',
+                symbolSize: 5,
+                showSymbol: true,
+                lineStyle: {
+                    color: '#4ade80',
+                    width: 2.5,
+                    shadowBlur: 16,
+                    shadowColor: 'rgba(74,222,128,0.15)'
+                },
+                itemStyle: {
+                    color: '#4ade80',
+                    borderColor: '#080c1a',
+                    borderWidth: 1.5,
+                    shadowBlur: 10,
+                    shadowColor: 'rgba(74,222,128,0.2)'
+                },
+                areaStyle: {
+                    color: {
+                        type: 'linear',
+                        x: 0,
+                        y: 0,
+                        x2: 0,
+                        y2: 1,
+                        colorStops: [
+                            { offset: 0, color: 'rgba(74,222,128,0.20)' },
+                            { offset: 0.6, color: 'rgba(74,222,128,0.05)' },
+                            { offset: 1, color: 'rgba(74,222,128,0.01)' }
+                        ]
+                    }
+                },
+                animationDuration: 1000,
+                animationEasing: 'cubicOut'
             },
-            { 
-                name: 'Withdrawal', 
-                type: 'line', 
+            {
+                name: 'Withdrawal',
+                type: 'line',
                 data: defaultWithdrawData,
-                smooth: false,
-                symbol: 'circle', 
-                symbolSize: 3,
-                lineStyle: { 
-                    color: '#e88080', 
-                    width: 1.5
-                }, 
-                itemStyle: { color: '#e88080' },
-                connectNulls: false,
-                animation: false,
-                animationDuration: 0
+                smooth: 0.4,
+                symbol: 'circle',
+                symbolSize: 5,
+                showSymbol: true,
+                lineStyle: {
+                    color: '#e88080',
+                    width: 2.5,
+                    shadowBlur: 16,
+                    shadowColor: 'rgba(232,128,128,0.15)'
+                },
+                itemStyle: {
+                    color: '#e88080',
+                    borderColor: '#080c1a',
+                    borderWidth: 1.5,
+                    shadowBlur: 10,
+                    shadowColor: 'rgba(232,128,128,0.2)'
+                },
+                areaStyle: {
+                    color: {
+                        type: 'linear',
+                        x: 0,
+                        y: 0,
+                        x2: 0,
+                        y2: 1,
+                        colorStops: [
+                            { offset: 0, color: 'rgba(232,128,128,0.16)' },
+                            { offset: 0.6, color: 'rgba(232,128,128,0.04)' },
+                            { offset: 1, color: 'rgba(232,128,128,0.01)' }
+                        ]
+                    }
+                },
+                animationDuration: 1000,
+                animationEasing: 'cubicOut'
             }
         ]
     });
     
-    console.log('✅ D&W Trend 初始化完成（柏林时间，最近7天）');
+    console.log('✅ D&W Trend 初始化完成（动态光晕样式）');
     
     if (pulseInterval) {
         clearInterval(pulseInterval);
