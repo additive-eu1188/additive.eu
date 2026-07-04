@@ -494,14 +494,33 @@
             border-radius: 16px;
         }
 
-        .table-container::-webkit-scrollbar {
-            width: 3px;
-            height: 3px;
-        }
-        .table-container::-webkit-scrollbar-thumb {
-            background: rgba(214, 178, 94, 0.06);
-            border-radius: 4px;
-        }
+        /* ============================================================
+   横向滚动条 - 琥珀发光（明显版）
+   ============================================================ */
+.table-container::-webkit-scrollbar {
+    width: 6px;
+    height: 50px;
+}
+.table-container::-webkit-scrollbar-track {
+    background: rgba(255, 184, 77, 0.04);
+    border-radius: 8px;
+    border: 1px solid rgba(255, 184, 77, 0.06);
+}
+.table-container::-webkit-scrollbar-thumb {
+    background: linear-gradient(90deg, #b8942a, #F3D38B, #D6B25E, #F3D38B, #b8942a);
+    border-radius: 8px;
+    border: 2px solid rgba(8, 12, 26, 0.3);
+    box-shadow: 0 0 30px rgba(214, 178, 94, 0.15), inset 0 0 12px rgba(214, 178, 94, 0.08);
+}
+.table-container::-webkit-scrollbar-thumb:hover {
+    box-shadow: 0 0 50px rgba(214, 178, 94, 0.30), inset 0 0 20px rgba(214, 178, 94, 0.12);
+}
+
+/* Firefox 兼容 */
+.table-container {
+    scrollbar-width: auto;
+    scrollbar-color: #D6B25E rgba(255, 184, 77, 0.04);
+}
 
         /* ============================================================
            统计卡片
