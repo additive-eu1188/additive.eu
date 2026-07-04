@@ -1496,12 +1496,10 @@ function deductBalance(uid, username) {
     overlay.remove();
 
     try {
-        // ============================================================
-        // 🔥 获取用户当前余额和 amount_due_round
-        // ============================================================
+        // 🔥 只获取用户当前余额
         const { data: user, error } = await sb
             .from('users')
-            .select('balance, amount_due_round')
+            .select('balance')
             .eq('uid', uid)
             .single();
         if (error) throw error;
@@ -1513,20 +1511,9 @@ function deductBalance(uid, username) {
 
         const newBalance = (user.balance || 0) - deductAmount;
         
-        // ============================================================
-        // 🔥🔥🔥 扣除后 amount_due 增加（因为用户余额减少）
-        // ============================================================
-        let newAmountDue = (user.amount_due_round || 0) + deductAmount;
-        console.log('💰 amount_due 更新（扣除）:', user.amount_due_round || 0, '->', newAmountDue, '(扣除 €' + deductAmount + ')');
-
-        // ============================================================
-        // 更新数据库：balance 和 amount_due_round
-        // ============================================================
+        // 🔥 只更新余额，不修改 amount_due_round
         await sb.from('users')
-            .update({ 
-                balance: newBalance,
-                amount_due_round: newAmountDue
-            })
+            .update({ balance: newBalance })
             .eq('uid', uid);
 
         // 记录扣除日志
