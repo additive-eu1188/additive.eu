@@ -1577,7 +1577,7 @@
                     if (resetIndex > 0 && resetIndex < currentStepIndex) {
                         currentStepIndex = resetIndex;
                         container.style.transition = 'none';
-                        container.style.transform = 'translateX(-' + resetIndex * stepWidth + 'px)';
+                        container.style.transform = `translateX(-${resetIndex * stepWidth}px)`;
                         void container.offsetWidth;
                         container.style.transition = 'transform 0.5s ease-in-out';
                     }
@@ -1606,16 +1606,16 @@
                         mediaHtml = '<img src="https://placehold.co/240x180/121232/CCB299?text=No+Image" alt="' + escapeHtml(product.name) + '">';
                     }
                     
-                    newHtml += '
-                        <div class="product-card-style7" data-product-id="' + product.id + '" onclick="window.open(\'' + (mediaUrl || '') + '\', \'_blank\')">
+                    newHtml += `
+                        <div class="product-card-style7" data-product-id="${product.id}" onclick="window.open('${mediaUrl || ''}', '_blank')">
                             <div class="image-wrapper">
-                                ' + mediaHtml + '
+                                ${mediaHtml}
                             </div>
                             <div class="floating-content">
-                                <div class="product-name">' + escapeHtml(product.name) + '</div>
+                                <div class="product-name">${escapeHtml(product.name)}</div>
                             </div>
                         </div>
-                    ';
+                    `;
                 });
                 container.insertAdjacentHTML('beforeend', newHtml);
                 
@@ -1654,16 +1654,16 @@
                             mediaHtml = '<img src="https://placehold.co/240x180/121232/CCB299?text=No+Image" alt="' + escapeHtml(product.name) + '">';
                         }
                         
-                        productsHtml += '
-                            <div class="product-card-style7" data-product-id="' + product.id + '" onclick="window.open(\'' + (mediaUrl || '') + '\', \'_blank\')">
+                        productsHtml += `
+                            <div class="product-card-style7" data-product-id="${product.id}" onclick="window.open('${mediaUrl || ''}', '_blank')">
                                 <div class="image-wrapper">
-                                    ' + mediaHtml + '
+                                    ${mediaHtml}
                                 </div>
                                 <div class="floating-content">
-                                    <div class="product-name">' + escapeHtml(product.name) + '</div>
+                                    <div class="product-name">${escapeHtml(product.name)}</div>
                                 </div>
                             </div>
-                        ';
+                        `;
                     });
                     container.innerHTML = productsHtml;
                     currentStepIndex = 0;
