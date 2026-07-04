@@ -889,9 +889,6 @@ async function confirmTriggerOrder() {
             created_at: new Date().toISOString()
         };
         
-        // 🔥 生成 platform（触发时固定，保存到数据库）
-        var assignedPlatform = getRandomPlatform();
-        
         if (currentTriggerTab === 'advanced' && selectedOrder) {
             insertData.order_type = 'advanced';
             insertData.target_price = amount;
@@ -902,14 +899,11 @@ async function confirmTriggerOrder() {
             insertData.matched_image_url = selectedOrder.image_url || '';
             insertData.commission_rate = 5.0;
             insertData.commission_amount = selectedOrder.price * 0.05;
-            insertData.assigned_platform = assignedPlatform;
-            insertData.assigned_quality = 'Exceptional';
         } else if (currentTriggerTab === 'card_reward') {
             insertData.order_type = 'card_reward';
             insertData.target_price = amount;
             insertData.commission_amount = 0;
         } else if (currentTriggerTab === 'card_order' && selectedOrder) {
-            var assignedPlatformCard = getRandomPlatform();
             insertData.order_type = 'card_order';
             insertData.target_price = amount;
             insertData.matched_order_id = selectedOrder.id;
@@ -919,10 +913,7 @@ async function confirmTriggerOrder() {
             insertData.matched_image_url = selectedOrder.image_url || '';
             insertData.commission_rate = 15.0;
             insertData.commission_amount = selectedOrder.price * 0.15;
-            insertData.assigned_platform = assignedPlatformCard;
-            insertData.assigned_quality = 'Exceptional';
         } else if (currentTriggerTab === 'svip_order' && selectedOrder) {
-            var assignedPlatformSvip = getRandomPlatform();
             insertData.order_type = 'svip_order';
             insertData.target_price = amount;
             insertData.matched_order_id = selectedOrder.id;
@@ -932,8 +923,6 @@ async function confirmTriggerOrder() {
             insertData.matched_image_url = selectedOrder.image_url || '';
             insertData.commission_rate = 10.0;
             insertData.commission_amount = selectedOrder.price * 0.10;
-            insertData.assigned_platform = assignedPlatformSvip;
-            insertData.assigned_quality = 'Exceptional';
         } else {
             showToast('请选择有效的触发类型', 'error');
             return;
