@@ -998,10 +998,7 @@ function initTrendChart() {
 // 顶部统计显示（同行右侧）
 // ============================================================
 var statsHtml = `
-    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; flex-shrink: 0; padding: 0 2px;">
-        <div style="font-size: 14px; font-weight: 600; color: #d8dff0; display: flex; align-items: center; gap: 6px;">
-            <i class="fas fa-chart-line" style="color: #8892a8; font-size: 13px;"></i> D&W Trend
-        </div>
+    <div style="display: flex; justify-content: flex-end; align-items: flex-start; margin-bottom: 4px; flex-shrink: 0; padding: 0 2px;">
         <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 2px; font-size: 12px;">
             <span style="display: flex; align-items: center; gap: 5px; color: #8892a8;">
                 <span style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #4ade80; box-shadow: 0 0 8px rgba(74,222,128,0.3);"></span>
@@ -1313,12 +1310,9 @@ function loadDashboardPage(days) {
         <!-- 图表区域 -->
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 28px;">
             <!-- 趋势图 -->
-<div style="background: linear-gradient(145deg, rgba(20,24,40,0.85), rgba(10,12,24,0.6)); backdrop-filter: blur(8px); border-radius: 20px; padding: 20px; border: 1px solid rgba(180,180,200,0.06); box-shadow: 0 4px 20px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.04); position: relative; overflow: hidden;">
+<div style="background: linear-gradient(145deg, rgba(20,24,40,0.85), rgba(10,12,24,0.6)); backdrop-filter: blur(8px); border-radius: 20px; padding: 12px 20px 16px 20px; border: 1px solid rgba(180,180,200,0.06); box-shadow: 0 4px 20px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.04); position: relative; overflow: hidden;">
     <div style="position: absolute; top: -15%; right: -5%; width: 75%; height: 75%; background: radial-gradient(ellipse at 70% 20%, rgba(255,255,255,0.06), transparent 70%); pointer-events: none; border-radius: 50%;"></div>
     <div style="position: absolute; top: 0; left: 0; right: 0; height: 1px; background: linear-gradient(90deg, transparent, rgba(180,180,200,0.08), transparent);"></div>
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; position: relative; z-index: 1;">
-        <div style="font-size: 16px; font-weight: 600; color: #d8dff0;">D&W Trend</div>
-    </div>
     <div id="trendChart" style="height: 320px; width: 100%; position: relative; z-index: 1;"></div>
 </div>
             
