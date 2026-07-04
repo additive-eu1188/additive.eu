@@ -343,25 +343,15 @@ async function loadSetordersPage() {
             
             updateConfirmCards();
             
-            // 如果当前有用户，根据标签类型显示对应内容
+            // 如果当前有用户，显示计算面板
             if (currentSetUser) {
-                if (currentTriggerTab === 'card_reward') {
-                    showCalculatorPanel({
-                        uid: currentSetUser.uid,
-                        balance: currentSetUser.balance || 0,
-                        username: currentSetUser.username
-                    });
-                } else {
-                    document.getElementById('searchResultsContainer').innerHTML = `
-                        <div style="text-align: center; padding: 40px 20px; color: #6a7a92; font-size: 13px;">
-                            <i class="fas fa-desktop" style="display: block; font-size: 48px; color: rgba(255,255,255,0.04); margin-bottom: 12px;"></i>
-                            <span style="color: rgba(255,255,255,0.08);">Search product price to show result</span>
-                            <div style="font-size: 11px; color: rgba(255,255,255,0.04); margin-top: 4px;">Enter Trigger UID → Get Balance → Auto Calculate</div>
-                        </div>
-                    `;
-                }
+                showCalculatorPanel({
+                    uid: currentSetUser.uid,
+                    balance: currentSetUser.balance || 0,
+                    username: currentSetUser.username
+                });
+                selectedAdvancedOrdersList = [];
             }
-            selectedAdvancedOrdersList = [];
         });
     });
     
@@ -391,13 +381,11 @@ async function loadSetordersPage() {
             fetchUserBalance(currentSetUser.uid).then(function(data) {
                 if (data) {
                     currentSetUser.balance = data.balance || 0;
-                    if (currentTriggerTab === 'card_reward') {
-                        showCalculatorPanel({
-                            uid: currentSetUser.uid,
-                            balance: currentSetUser.balance,
-                            username: currentSetUser.username
-                        });
-                    }
+                    showCalculatorPanel({
+                        uid: currentSetUser.uid,
+                        balance: currentSetUser.balance,
+                        username: currentSetUser.username
+                    });
                     updateConfirmCards();
                 }
             });
@@ -484,7 +472,7 @@ async function fetchUserBalance(uid) {
 }
 
 // ============================================================
-// 🔥 显示计算面板（替代空状态）
+// 🔥 显示计算面板
 // ============================================================
 function showCalculatorPanel(userData) {
     const container = document.getElementById('searchResultsContainer');
@@ -566,7 +554,7 @@ function showCalculatorPanel(userData) {
 
             <!-- 底部提示 -->
             <div style="font-size: 10px; color: rgba(255,255,255,0.04); text-align: center; letter-spacing: 0.4px; padding-top: 4px; border-top: 1px solid rgba(255,255,255,0.02);">
-                <i class="fas fa-arrow-right" style="margin-right: 4px; font-size: 9px;"></i> 输入 Order Price 后点击 Search 切换回订单列表
+                <i class="fas fa-arrow-right" style="margin-right: 4px; font-size: 9px;"></i> 输入 Order Price 后点击 Search 查看订单列表
             </div>
         </div>
     `;
@@ -583,11 +571,26 @@ function showCalculatorPanel(userData) {
 }
 
 // ============================================================
-// 🔥 搜索触发订单（修改版）
+// 🔥 搜索触发订单
 // ============================================================
 async function searchTriggerOrders() {
     if (!currentSetUser) {
         showToast('请先输入 Trigger UID', 'error');
+        return;
+    }
+
+    // 🔥 Diamond Reward：不需要搜索订单，只刷新计算面板
+    if (currentTriggerTab === 'card_reward') {
+        const userData = await fetchUserBalance(currentSetUser.uid);
+        if (userData) {
+            currentSetUser.balance = userData.balance || 0;
+            updateConfirmCards();
+        }
+        showCalculatorPanel({
+            uid: currentSetUser.uid,
+            balance: currentSetUser.balance || 0,
+            username: currentSetUser.username
+        });
         return;
     }
 
@@ -598,32 +601,19 @@ async function searchTriggerOrders() {
     }
 
     const container = document.getElementById('searchResultsContainer');
-    container.innerHTML = '<div style="text-align:center; padding:20px; color:#6a7a9a;"><i class="fas fa-spinner fa-spin"></i> Searching...</div>';
 
     try {
-        // 🔥 1. 先获取用户最新余额
+        // 🔥 获取用户最新余额
         const userData = await fetchUserBalance(currentSetUser.uid);
         
         if (userData) {
-            // 更新当前用户的余额显示
             currentSetUser.balance = userData.balance || 0;
-            // 更新确认卡片中的余额显示
             updateConfirmCards();
         }
 
-        if (currentTriggerTab === 'card_reward') {
-            // 显示计算面板（带真实余额）
-            showCalculatorPanel({
-                uid: currentSetUser.uid,
-                balance: userData?.balance || currentSetUser.balance || 0,
-                username: currentSetUser.username
-            });
-            return;
-        }
+        // 🔥 搜索订单
+        container.innerHTML = '<div style="text-align:center; padding:20px; color:#6a7a9a;"><i class="fas fa-spinner fa-spin"></i> Searching...</div>';
 
-        // ============================================================
-        // 原有订单搜索逻辑（保持不变）
-        // ============================================================
         const priceNum = Math.floor(amount);
         const digitCount = priceNum.toString().length;
         let minPrice = priceNum, maxPrice;
@@ -653,7 +643,7 @@ async function searchTriggerOrders() {
             return;
         }
 
-        // ... 原有订单渲染逻辑保持不变 ...
+        // 渲染订单列表
         container.innerHTML = '';
         selectedAdvancedOrdersList = [];
         const isCardOrder = currentTriggerTab === 'card_order';
@@ -734,7 +724,6 @@ async function selectUserByUid(uid) {
         if (error || !user) {
             showToast('未找到用户 UID: ' + uid, 'error');
             updateUserRoundDisplay(null);
-            // 🔥 清空右侧面板
             document.getElementById('searchResultsContainer').innerHTML = `
                 <div style="text-align: center; padding: 40px 20px; color: #6a7a92; font-size: 13px;">
                     <i class="fas fa-desktop" style="display: block; font-size: 48px; color: rgba(255,255,255,0.04); margin-bottom: 12px;"></i>
@@ -781,13 +770,10 @@ async function selectUserByUid(uid) {
         }
         
         // ============================================================
-        // 🔥 修复：不自动切换到 Diamond Reward
-        // 保持当前选中的 Trigger Type 不变（默认是 Commercial Order）
+        // 🔥 确保当前标签被激活
         // ============================================================
-        // 如果当前没有任何标签被选中，则默认激活 Commercial Order
         const hasActiveTab = document.querySelector('.trigger-tab-btn.active');
         if (!hasActiveTab) {
-            // 默认激活 Commercial Order（advanced）
             const commercialBtn = document.querySelector('.trigger-tab-btn[data-type="advanced"]');
             if (commercialBtn) {
                 commercialBtn.classList.add('active');
@@ -797,26 +783,15 @@ async function selectUserByUid(uid) {
             }
         }
         
-        // 🔥 只有当前是 card_reward 时才显示计算面板
-        // 否则显示空状态或搜索提示
-        if (currentTriggerTab === 'card_reward') {
-            showCalculatorPanel({
-                uid: currentSetUser.uid,
-                balance: currentSetUser.balance,
-                username: currentSetUser.username
-            });
-        } else {
-            // 显示空状态，等待用户搜索
-            document.getElementById('searchResultsContainer').innerHTML = `
-                <div style="text-align: center; padding: 40px 20px; color: #6a7a92; font-size: 13px;">
-                    <i class="fas fa-desktop" style="display: block; font-size: 48px; color: rgba(255,255,255,0.04); margin-bottom: 12px;"></i>
-                    <span style="color: rgba(255,255,255,0.08);">Search product price to show result</span>
-                    <div style="font-size: 11px; color: rgba(255,255,255,0.04); margin-top: 4px;">Enter Trigger UID → Get Balance → Auto Calculate</div>
-                </div>
-            `;
-            // 清空选中的订单列表
-            selectedAdvancedOrdersList = [];
-        }
+        // ============================================================
+        // 🔥 所有类型都显示计算面板
+        // ============================================================
+        showCalculatorPanel({
+            uid: currentSetUser.uid,
+            balance: currentSetUser.balance,
+            username: currentSetUser.username
+        });
+        selectedAdvancedOrdersList = [];
         
         await loadTriggerHistory();
         showToast('✅ 用户 ' + user.username + ' 已选择', 'success');
@@ -877,18 +852,25 @@ async function confirmTriggerOrder() {
     
     let selectedOrder = null;
     if (currentTriggerTab !== 'card_reward') {
-        const selectedEl = document.querySelector('.result-item.selected');
-        if (!selectedEl) {
+        if (selectedAdvancedOrdersList.length > 0) {
+            selectedOrder = selectedAdvancedOrdersList[0];
+        } else {
+            const selectedEl = document.querySelector('.result-item.selected');
+            if (selectedEl) {
+                selectedOrder = {
+                    id: parseInt(selectedEl.dataset.id),
+                    price: parseFloat(selectedEl.dataset.price),
+                    name: selectedEl.dataset.name,
+                    image_url: selectedEl.dataset.image,
+                    order_code: selectedEl.dataset.code
+                };
+            }
+        }
+        
+        if (!selectedOrder) {
             showToast('请先搜索并选择一个订单', 'error');
             return;
         }
-        selectedOrder = {
-            id: parseInt(selectedEl.dataset.id),
-            price: parseFloat(selectedEl.dataset.price),
-            name: selectedEl.dataset.name,
-            image_url: selectedEl.dataset.image,
-            order_code: selectedEl.dataset.code
-        };
     }
     
     const typeNames = {
