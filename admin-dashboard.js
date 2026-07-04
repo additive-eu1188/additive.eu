@@ -367,7 +367,12 @@ if (window._depositChart && window._withdrawChart) {
     
     window._chartDates = dates;
     console.log('📊 D&W Trend 已更新 (上下分表, 柏林时间, 最近7天)');
-}
+        }  // ← 闭合 if
+        
+    } catch (e) {
+        console.error('加载图表数据失败:', e);
+    }
+}  // ← 闭合 loadChartData
 
 // ============================================================
 // loadConversionData - 统计注册用户转化率（完整版）
