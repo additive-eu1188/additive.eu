@@ -998,7 +998,10 @@ function initTrendChart() {
 // 顶部统计显示（同行右侧）
 // ============================================================
 var statsHtml = `
-    <div style="display: flex; justify-content: flex-end; align-items: flex-start; margin-bottom: 4px; flex-shrink: 0; padding: 0 2px;">
+    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; flex-shrink: 0; padding: 0 2px;">
+        <div style="font-size: 14px; font-weight: 600; color: #d8dff0; display: flex; align-items: center; gap: 6px;">
+            <i class="fas fa-chart-line" style="color: #8892a8; font-size: 13px;"></i> D&W Trend
+        </div>
         <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 2px; font-size: 12px;">
             <span style="display: flex; align-items: center; gap: 5px; color: #8892a8;">
                 <span style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #4ade80; box-shadow: 0 0 8px rgba(74,222,128,0.3);"></span>
