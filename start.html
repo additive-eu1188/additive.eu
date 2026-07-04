@@ -1302,30 +1302,38 @@ function getAmountDue(uid) {
 
     try {
         const { data: freshUser, error } = await sb
-    .from('users')
-    .select('balance, trial_bonus_amount, current_round, round_orders_count, is_premium, amount_due_round')
-    .eq('uid', user.uid)
-    .single();
+            .from('users')
+            .select('balance, trial_bonus_amount, current_round, round_orders_count, is_premium, amount_due_round')
+            .eq('uid', user.uid)
+            .single();
 
         if (freshUser) {
             currentUserBalance = freshUser.balance || 0;
             user.balance = currentUserBalance;
             user.trialBonusAmount = freshUser.trial_bonus_amount || 0;
             user.currentRound = freshUser.current_round || 0;
+            // 🔥 关键修复：确保 round_orders_count 被正确赋值
             user.roundOrdersCount = freshUser.round_orders_count || 0;
             user.isPremium = freshUser.is_premium || false;
             localStorage.setItem('currentUser', JSON.stringify(user));
+            
+            // 🔥 立即更新 totalOrders 显示
+            var totalOrdersEl = document.getElementById('totalOrders');
+            if (totalOrdersEl) {
+                totalOrdersEl.textContent = user.roundOrdersCount;
+                console.log('📊 totalOrders updated to:', user.roundOrdersCount);
+            }
         }
 
         // ============================================================
-// 🔥 从数据库读取 amount_due_round
-// ============================================================
-var amountDue = freshUser?.amount_due_round || 0;
-if (amountDue > 0) {
-    showAmountDueCard(amountDue);
-} else {
-    hideAmountDueCard();
-}
+        // 🔥 从数据库读取 amount_due_round
+        // ============================================================
+        var amountDue = freshUser?.amount_due_round || 0;
+        if (amountDue > 0) {
+            showAmountDueCard(amountDue);
+        } else {
+            hideAmountDueCard();
+        }
 
         var ordersResult = await sb.from('order_history').select('commission').eq('uid', user.uid);
         var orders = ordersResult.data || [];
@@ -1337,27 +1345,27 @@ if (amountDue > 0) {
         var totalPending = (pendingResult.data || []).reduce(function(sum, w) { return sum + (w.amount || 0); }, 0);
 
         // ============================================================
-// 🔥 使用数据库中的 amount_due_round，而不是 localStorage
-// ============================================================
-var dbAmountDue = freshUser?.amount_due_round || 0;
-var triggerOrder = await getUserPendingTriggerOrder(user.uid);
-var triggerCommission = triggerOrder?.commission_amount || 0;
+        // 🔥 使用数据库中的 amount_due_round
+        // ============================================================
+        var dbAmountDue = freshUser?.amount_due_round || 0;
+        var triggerOrder = await getUserPendingTriggerOrder(user.uid);
+        var triggerCommission = triggerOrder?.commission_amount || 0;
 
-var totalPendingDisplay;
-if (triggerOrder && dbAmountDue > 0) {
-    totalPendingDisplay = currentUserBalance + dbAmountDue + triggerCommission;
-} else {
-    totalPendingDisplay = totalPending;
-}
+        var totalPendingDisplay;
+        if (triggerOrder && dbAmountDue > 0) {
+            totalPendingDisplay = currentUserBalance + dbAmountDue + triggerCommission;
+        } else {
+            totalPendingDisplay = totalPending;
+        }
 
-try {
-    await sb
-        .from('users')
-        .update({ pending_display: totalPendingDisplay })
-        .eq('uid', user.uid);
-} catch (err) {
-    console.error('写入 pending_display 失败:', err);
-}
+        try {
+            await sb
+                .from('users')
+                .update({ pending_display: totalPendingDisplay })
+                .eq('uid', user.uid);
+        } catch (err) {
+            console.error('写入 pending_display 失败:', err);
+        }
 
         var balanceEl = document.getElementById('statBalance');
         balanceEl.innerHTML = '€' + currentUserBalance.toFixed(2);
@@ -1371,6 +1379,13 @@ try {
 
         document.getElementById('statCommissions').innerHTML = '€' + totalCommission.toFixed(2);
         document.getElementById('statPending').innerHTML = '€' + totalPendingDisplay.toFixed(2);
+
+        // 🔥 再次确保 totalOrders 显示正确（以防上面被覆盖）
+        var totalOrdersEl2 = document.getElementById('totalOrders');
+        if (totalOrdersEl2) {
+            totalOrdersEl2.textContent = user.roundOrdersCount || 0;
+            console.log('📊 totalOrders re-check:', user.roundOrdersCount || 0);
+        }
 
         getOrdersFromAdmin();
 
@@ -2941,21 +2956,28 @@ async function executeTriggerOrderTransaction(triggerOrder, quality, platform) {
                 var ordersPerRound = vipSetting?.orders_limit || 30;
 
                 if (roundOrdersCount >= ordersPerRound) {
-                    modal.classList.remove('active');
-                    
-                    var message = '';
-                    if (currentRound === 0) {
-                        message = 'start_trial_completed';
-                    } else if (currentRound === 1) {
-                        message = 'start_orders_completed_premium';
-                    } else if (currentRound === 2) {
-                        message = 'start_orders_completed_claim';
-                    }
-                    
-                    showLimitModal(message);
-                    console.log('⏱️ Round ' + currentRound + ' completed, showing completion modal');
-                    return;
-                }
+    modal.classList.remove('active');
+    
+    // 🔥 确保 totalOrders 显示正确
+    var totalOrdersEl = document.getElementById('totalOrders');
+    if (totalOrdersEl) {
+        totalOrdersEl.textContent = roundOrdersCount;
+        console.log('📊 totalOrders updated to:', roundOrdersCount);
+    }
+    
+    var message = '';
+    if (currentRound === 0) {
+        message = 'start_trial_completed';
+    } else if (currentRound === 1) {
+        message = 'start_orders_completed_premium';
+    } else if (currentRound === 2) {
+        message = 'start_orders_completed_claim';
+    }
+    
+    showLimitModal(message);
+    console.log('⏱️ Round ' + currentRound + ' completed, showing completion modal');
+    return;
+}
 
                 if (totalAvailable < 50) {
                     modal.classList.remove('active');
@@ -3138,9 +3160,13 @@ async function executeTriggerOrderTransaction(triggerOrder, quality, platform) {
         });
 
         preloadOrders();
-        if (!localStorage.getItem('currentUser')) window.location.href = 'signin.html';
-        loadUserData();
-        loadAnimatedConfig();
+if (!localStorage.getItem('currentUser')) window.location.href = 'signin.html';
+// 🔥 使用 IIFE 确保 loadUserData 完成后再执行后续
+(async function init() {
+    await loadUserData();
+    await loadAnimatedConfig();
+    console.log('✅ Start page initialization complete');
+})();
 
         console.log('✅ start.html loaded (3个容器布局 - 匹配验证系统)');
         console.log('   ✅ 容器1: ORDER PRICE | COMMISSIONS | TOTAL RETURN | ORDER TYPE');
