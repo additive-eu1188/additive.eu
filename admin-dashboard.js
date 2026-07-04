@@ -1018,8 +1018,8 @@ window._headerWithdrawTotal = document.getElementById('headerWithdrawTotal');
 dom.innerHTML = '';
 dom.style.cssText = 'height: 320px; width: 100%; position: relative; display: flex; flex-direction: column;';
 dom.insertAdjacentHTML('afterbegin', statsHtml);
-    
-    var topContainer = document.createElement('div');
+
+var topContainer = document.createElement('div');
     topContainer.style.cssText = 'flex: 1; min-height: 0; position: relative;';
     topContainer.id = 'depositChartContainer';
     
@@ -1854,4 +1854,3 @@ function toggleCongratsMessage() {
 
 // 暴露到全局
 window.toggleCongratsMessage = toggleCongratsMessage;
-}
