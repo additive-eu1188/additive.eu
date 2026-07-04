@@ -257,9 +257,6 @@ async function loadChartData(force) {
     }
     
     try {
-        // ============================================================
-        // 🔥 数据源与统计卡片完全一致
-        // ============================================================
         var depositsRes = await sb.from('deposits')
             .select('created_at, amount')
             .eq('type', 'manual');
@@ -270,17 +267,13 @@ async function loadChartData(force) {
         var deposits = depositsRes.data || [];
         var withdrawals = withdrawalsRes.data || [];
         
-        // ============================================================
-        // 🔥 使用柏林时间生成最近7天（修复版：精确 UTC 范围）
-        // ============================================================
         var today = getBerlinDate();
         var dates = [];
-        var dateRangeMap = {}; // 存储每一天的 UTC 时间范围
+        var dateRangeMap = {};
 
         for (var i = 6; i >= 0; i--) {
             var d = new Date(today);
             d.setDate(d.getDate() - i);
-            // 获取当天的柏林时间 00:00:00
             var dayStartBerlin = new Date(d);
             dayStartBerlin.setHours(0, 0, 0, 0);
             var dayStartUTC = dayStartBerlin.toISOString();
@@ -294,16 +287,11 @@ async function loadChartData(force) {
             dateRangeMap[label] = { start: dayStartUTC, end: dayEndUTC };
         }
         
-        // ============================================================
-        // 🔥 按天汇总数据（最近7天，柏林时间）
-        // ============================================================
         var depositData = [];
         var withdrawData = [];
         
-        // 过滤出最近7天的数据（使用精确 UTC 范围）
         var periodDeposits = deposits.filter(function(d) {
             if (!d.created_at) return false;
-            // 检查是否落在任何一天的范围内
             for (var label in dateRangeMap) {
                 var range = dateRangeMap[label];
                 if (d.created_at >= range.start && d.created_at <= range.end) {
@@ -325,7 +313,6 @@ async function loadChartData(force) {
             return false;
         });
          
-        // 按天汇总
         for (var i = 0; i < dates.length; i++) {
             var label = dates[i];
             var range = dateRangeMap[label];
@@ -347,24 +334,31 @@ async function loadChartData(force) {
         cachedData.chart = { dates: dates, depositData: depositData, withdrawData: withdrawData };
         cachedData.lastChartTime = now;
         
-        if (trendChart) {
-            trendChart.setOption({ 
-                xAxis: { data: dates }, 
-                series: [
-                    { 
-                        name: 'Deposit', 
-                        data: depositData,
-                        connectNulls: false
-                    },
-                    { 
-                        name: 'Withdrawal', 
-                        data: withdrawData,
-                        connectNulls: false
-                    }
-                ]
+        // ============================================================
+        // 🔥 替换为上下分表更新
+        // ============================================================
+        if (window._depositChart && window._withdrawChart) {
+            var allData = depositData.concat(withdrawData);
+            var globalMax = Math.max.apply(null, allData);
+            var yMax = Math.ceil(globalMax / 100) * 100 + 50;
+            if (yMax < 50) yMax = 50;
+            
+            window._depositChart.setOption({
+                xAxis: { data: dates },
+                yAxis: { max: yMax },
+                series: [{ data: depositData }]
             });
-            console.log('📊 D&W Trend 已更新 (柏林时间, 最近7天)');
+            
+            window._withdrawChart.setOption({
+                xAxis: { data: dates },
+                yAxis: { max: yMax },
+                series: [{ data: withdrawData }]
+            });
+            
+            window._chartDates = dates;
+            console.log('📊 D&W Trend 已更新 (上下分表, 柏林时间, 最近7天)');
         }
+        
     } catch (e) {
         console.error('加载图表数据失败:', e);
     }
@@ -969,11 +963,11 @@ function initTrendChart() {
         trendChart = null;
     }
     
-    console.log('📊 趋势图已加载（柏林时间，最近7天）');
+    console.log('📊 D&W Trend 上下分表已加载');
     
-    trendChart = echarts.init(dom);
-    
+    // ============================================================
     // 生成最近7天的日期标签（柏林时间）
+    // ============================================================
     var defaultDates = [];
     var today = getBerlinDate();
     
@@ -983,126 +977,123 @@ function initTrendChart() {
         defaultDates.push((d.getMonth() + 1) + '/' + d.getDate());
     }
     
-    // 默认数据：全部为 0
     var defaultDepositData = [];
     var defaultWithdrawData = [];
-    
     for (var i = 0; i < 7; i++) {
         defaultDepositData.push(0);
         defaultWithdrawData.push(0);
     }
     
     // ============================================================
-    // 🔥 替换为 ⑤ 动态光晕 样式
+    // 创建两个独立的 ECharts 实例
     // ============================================================
-    trendChart.setOption({
-        tooltip: { 
-            trigger: 'axis', 
-            axisPointer: { type: 'line' }, 
-            backgroundColor: 'rgba(14,18,30,0.92)', 
-            borderColor: 'rgba(180,180,200,0.06)', 
-            borderWidth: 1, 
-            textStyle: { color: '#d8dff0', fontSize: 11 },
-            formatter: function(params) {
-                var result = params[0].axisValue + '<br/>';
-                var hasData = false;
-                params.forEach(function(p) {
-                    if (p.value !== null && p.value !== undefined && p.value > 0) {
-                        result += p.marker + ' ' + p.seriesName + ': €' + p.value.toFixed(2) + '<br/>';
-                        hasData = true;
-                    }
-                });
-                if (!hasData) {
-                    result += '<span style="color:#5a6a82;">No data for this day</span>';
+    // 清空容器，创建两个子容器
+    dom.innerHTML = '';
+    dom.style.cssText = 'height: 320px; width: 100%; position: relative; display: flex; flex-direction: column;';
+    
+    var topContainer = document.createElement('div');
+    topContainer.style.cssText = 'flex: 1; min-height: 0; position: relative;';
+    topContainer.id = 'depositChartContainer';
+    
+    var divider = document.createElement('div');
+    divider.style.cssText = 'height: 18px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; gap: 12px; position: relative;';
+    divider.innerHTML = `
+        <span style="flex:1; height:1px; background: linear-gradient(90deg, transparent, rgba(180,180,200,0.06));"></span>
+        <span style="font-size:8px; color:#4a5a72; letter-spacing:1.5px; text-transform:uppercase; font-weight:600;">▼</span>
+        <span style="flex:1; height:1px; background: linear-gradient(90deg, rgba(180,180,200,0.06), transparent);"></span>
+    `;
+    
+    var bottomContainer = document.createElement('div');
+    bottomContainer.style.cssText = 'flex: 1; min-height: 0; position: relative;';
+    bottomContainer.id = 'withdrawChartContainer';
+    
+    dom.appendChild(topContainer);
+    dom.appendChild(divider);
+    dom.appendChild(bottomContainer);
+    
+    // ============================================================
+    // 初始化两个图表
+    // ============================================================
+    var depositChart = echarts.init(topContainer);
+    var withdrawChart = echarts.init(bottomContainer);
+    
+    // 保存引用以便后续更新
+    window._depositChart = depositChart;
+    window._withdrawChart = withdrawChart;
+    
+    var yAxisMax = 100; // 默认值，稍后更新
+    
+    // ============================================================
+    // 通用图表配置
+    // ============================================================
+    function createChartOption(data, color, label, showXAxis, maxVal) {
+        var yMax = Math.ceil(maxVal / 100) * 100 + 50;
+        if (yMax < 50) yMax = 50;
+        
+        return {
+            tooltip: {
+                trigger: 'axis',
+                backgroundColor: 'rgba(14,18,30,0.92)',
+                borderColor: 'rgba(180,180,200,0.06)',
+                borderWidth: 1,
+                textStyle: { color: '#d8dff0', fontSize: 10 },
+                formatter: function(params) {
+                    var p = params[0];
+                    return p.axisValue + '<br/>' + p.marker + ' ' + label + ': €' + p.value.toFixed(2);
                 }
-                return result;
-            }
-        },
-        grid: { 
-            top: 16, 
-            left: 38, 
-            right: 12, 
-            bottom: 18, 
-            containLabel: false 
-        },
-        xAxis: { 
-            type: 'category', 
-            data: defaultDates,
-            axisLabel: { 
-                color: 'rgba(255,255,255,0.6)', 
-                fontSize: 12
-            }, 
-            axisLine: { lineStyle: { color: 'rgba(255,255,255,0.04)' } }, 
-            axisTick: { show: false } 
-        },
-        yAxis: { 
-            type: 'value', 
-            name: '', 
-            axisLabel: { color: 'rgba(255,255,255,0.6)', fontSize: 12 }, 
-            axisLine: { show: false }, 
-            axisTick: { show: false }, 
-            splitLine: { lineStyle: { color: 'rgba(255,255,255,0.03)', type: 'dashed' } } 
-        },
-        legend: { show: false },
-        series: [
-            {
-                name: 'Deposit',
-                type: 'line',
-                data: defaultDepositData,
-                smooth: 0.4,
-                symbol: 'circle',
-                symbolSize: 5,
-                showSymbol: true,
-                lineStyle: {
-                    color: '#4ade80',
-                    width: 2.5,
-                    shadowBlur: 16,
-                    shadowColor: 'rgba(74,222,128,0.15)'
-                },
-                itemStyle: {
-                    color: '#4ade80',
-                    borderColor: '#080c1a',
-                    borderWidth: 1.5,
-                    shadowBlur: 10,
-                    shadowColor: 'rgba(74,222,128,0.2)'
-                },
-                areaStyle: {
-                    color: {
-                        type: 'linear',
-                        x: 0,
-                        y: 0,
-                        x2: 0,
-                        y2: 1,
-                        colorStops: [
-                            { offset: 0, color: 'rgba(74,222,128,0.20)' },
-                            { offset: 0.6, color: 'rgba(74,222,128,0.05)' },
-                            { offset: 1, color: 'rgba(74,222,128,0.01)' }
-                        ]
-                    }
-                },
-                animationDuration: 1000,
-                animationEasing: 'cubicOut'
             },
-            {
-                name: 'Withdrawal',
+            grid: {
+                top: showXAxis ? 14 : 6,
+                left: 38,
+                right: 6,
+                bottom: showXAxis ? 4 : 14,
+                containLabel: false
+            },
+            xAxis: {
+                type: 'category',
+                data: defaultDates,
+                axisLabel: {
+                    color: 'rgba(255,255,255,0.40)',
+                    fontSize: showXAxis ? 10 : 9,
+                    interval: 0,
+                    fontWeight: 500
+                },
+                axisLine: { lineStyle: { color: 'rgba(255,255,255,0.06)' } },
+                axisTick: { show: false },
+                show: showXAxis,
+                position: 'bottom'
+            },
+            yAxis: {
+                type: 'value',
+                min: 0,
+                max: yMax,
+                axisLabel: {
+                    color: 'rgba(255,255,255,0.25)',
+                    fontSize: 9,
+                    formatter: function(v) { return '€' + v; }
+                },
+                axisLine: { show: false },
+                axisTick: { show: false },
+                splitLine: {
+                    lineStyle: { color: 'rgba(255,255,255,0.04)', type: 'dashed' }
+                }
+            },
+            series: [{
                 type: 'line',
-                data: defaultWithdrawData,
-                smooth: 0.4,
+                data: data,
+                smooth: 0.35,
                 symbol: 'circle',
-                symbolSize: 5,
-                showSymbol: true,
+                symbolSize: 4,
                 lineStyle: {
-                    color: '#e88080',
-                    width: 2.5,
-                    shadowBlur: 16,
-                    shadowColor: 'rgba(232,128,128,0.15)'
+                    color: color,
+                    width: 2,
+                    shadowBlur: 10,
+                    shadowColor: color + '25'
                 },
                 itemStyle: {
-                    color: '#e88080',
+                    color: color,
                     borderColor: '#080c1a',
-                    borderWidth: 1.5,
-                    shadowBlur: 10,
-                    shadowColor: 'rgba(232,128,128,0.2)'
+                    borderWidth: 1.5
                 },
                 areaStyle: {
                     color: {
@@ -1112,19 +1103,38 @@ function initTrendChart() {
                         x2: 0,
                         y2: 1,
                         colorStops: [
-                            { offset: 0, color: 'rgba(232,128,128,0.16)' },
-                            { offset: 0.6, color: 'rgba(232,128,128,0.04)' },
-                            { offset: 1, color: 'rgba(232,128,128,0.01)' }
+                            { offset: 0, color: color + '20' },
+                            { offset: 1, color: color + '02' }
                         ]
                     }
                 },
-                animationDuration: 1000,
+                animationDuration: 600,
                 animationEasing: 'cubicOut'
-            }
-        ]
+            }]
+        };
+    }
+    
+    // 初始渲染
+    depositChart.setOption(createChartOption(defaultDepositData, '#4ade80', 'Deposit', true, yAxisMax));
+    withdrawChart.setOption(createChartOption(defaultWithdrawData, '#e88080', 'Withdrawal', false, yAxisMax));
+    
+    // 窗口 resize
+    var resizeTimer;
+    window.addEventListener('resize', function() {
+        clearTimeout(resizeTimer);
+        resizeTimer = setTimeout(function() {
+            depositChart.resize();
+            withdrawChart.resize();
+        }, 200);
     });
     
-    console.log('✅ D&W Trend 初始化完成（动态光晕样式）');
+    // 保存 chart 实例到全局，供 loadChartData 更新
+    window._depositChart = depositChart;
+    window._withdrawChart = withdrawChart;
+    window._chartDates = defaultDates;
+    
+    console.log('✅ D&W Trend 上下分表初始化完成');
+}
     
     if (pulseInterval) {
         clearInterval(pulseInterval);
