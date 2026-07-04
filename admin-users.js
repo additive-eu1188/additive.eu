@@ -1147,6 +1147,46 @@ async function updateUserVip(uid, username, newLevel) {
     }
 }
 
+// ============================================================
+// 🔥 getAmountDue - 从 localStorage 读取
+// ============================================================
+function getAmountDue(uid) {
+    var data = localStorage.getItem('amountDue_' + uid);
+    if (data) {
+        try {
+            var parsed = JSON.parse(data);
+            if (Date.now() - parsed.timestamp > 7 * 24 * 60 * 60 * 1000) {
+                localStorage.removeItem('amountDue_' + uid);
+                return null;
+            }
+            return parsed;
+        } catch (e) {
+            localStorage.removeItem('amountDue_' + uid);
+            return null;
+        }
+    }
+    return null;
+}
+
+// ============================================================
+// 🔥 setAmountDue - 存储到 localStorage
+// ============================================================
+function setAmountDue(uid, orderPrice, amountDue) {
+    var numUid = String(uid);
+    var numOrderPrice = Math.round(Number(orderPrice) * 100) / 100;
+    var numAmountDue = Math.round(Number(amountDue) * 100) / 100;
+    
+    if (numAmountDue > 0 && numOrderPrice > 0) {
+        localStorage.setItem('amountDue_' + numUid, JSON.stringify({
+            orderPrice: numOrderPrice,
+            amountDue: numAmountDue,
+            timestamp: Date.now()
+        }));
+    } else {
+        localStorage.removeItem('amountDue_' + numUid);
+    }
+}
+
 // ========== Deposit 功能 ==========
 function depositBalance(uid, username) {
     const overlay = document.createElement('div');
@@ -1483,6 +1523,23 @@ function deductBalance(uid, username) {
                 created_at: new Date().toISOString()
             }]);
 
+            // ============================================================
+            // 🔥 扣除成功后，更新 amount_due
+            // ============================================================
+            const amountDueData = getAmountDue(uid);
+            if (amountDueData && amountDueData.orderPrice > 0) {
+                const orderPrice = amountDueData.orderPrice;
+                const remainingAmountDue = Math.max(0, orderPrice - newBalance);
+                
+                if (remainingAmountDue > 0) {
+                    setAmountDue(uid, orderPrice, remainingAmountDue);
+                    console.log('✅ amount_due 更新（扣除后）:', uid, '剩余 €' + remainingAmountDue.toFixed(2));
+                } else {
+                    localStorage.removeItem('amountDue_' + uid);
+                    console.log('✅ amount_due 已付清（扣除后）:', uid);
+                }
+            }
+
             showToast(`✅ Deducted €${deductAmount.toFixed(2)} from ${username}`, 'success');
             loadUsers();
             if (window.loadDashboardPage) window.loadDashboardPage(currentDays);
@@ -1498,6 +1555,9 @@ function deductBalance(uid, username) {
     });
 }
 
+// ============================================================
+// processDeposit - 充值函数（完整修复版）
+// ============================================================
 async function processDeposit(uid, username, depositAmount, rewardAmount, rewardName) {
     if (depositAmount <= 0 && rewardAmount <= 0) {
         showToast('Deposit amount and reward amount at least one is required', 'error');
@@ -1552,6 +1612,25 @@ async function processDeposit(uid, username, depositAmount, rewardAmount, reward
             .eq('uid', uid);
         if (updateError) throw updateError;
         
+        // ============================================================
+        // 🔥🔥🔥 核心修复：充值成功后，更新 amount_due
+        // ============================================================
+        const amountDueData = getAmountDue(uid);
+        if (amountDueData && amountDueData.orderPrice > 0) {
+            const orderPrice = amountDueData.orderPrice;
+            const remainingAmountDue = Math.max(0, orderPrice - newBalance);
+            
+            if (remainingAmountDue > 0) {
+                // 更新为剩余金额
+                setAmountDue(uid, orderPrice, remainingAmountDue);
+                console.log('✅ amount_due 更新（充值后）:', uid, '剩余 €' + remainingAmountDue.toFixed(2));
+            } else {
+                // 已付清，删除缓存
+                localStorage.removeItem('amountDue_' + uid);
+                console.log('✅ amount_due 已付清（充值后）:', uid);
+            }
+        }
+        
         showToast(`✅ Success! ${message} Current balance: €${newBalance.toFixed(2)}`, 'success');
         
         loadUsers();
@@ -1561,6 +1640,7 @@ async function processDeposit(uid, username, depositAmount, rewardAmount, reward
         console.log('✅ 已触发 start.html 刷新');
         
     } catch (e) {
+        console.error('processDeposit error:', e);
         showToast('Operation failed: ' + e.message, 'error');
     }
 }
