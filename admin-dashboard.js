@@ -343,15 +343,15 @@ if (window._depositChart && window._withdrawChart) {
     var yMax = Math.ceil(globalMax / 100) * 100 + 50;
     if (yMax < 50) yMax = 50;
     
-    // 计算总计
-    var depositTotal = depositData.reduce(function(a, b) { return a + b; }, 0);
-    var withdrawTotal = withdrawData.reduce(function(a, b) { return a + b; }, 0);
-    
-    // 更新顶部统计
-    var depTotalEl = document.getElementById('headerDepositTotal');
-    var wdTotalEl = document.getElementById('headerWithdrawTotal');
-    if (depTotalEl) depTotalEl.textContent = '€' + depositTotal.toFixed(2);
-    if (wdTotalEl) wdTotalEl.textContent = '€' + withdrawTotal.toFixed(2);
+    // ✅ 只显示今天的数据（数组最后一个），图表保持7天不变
+var depositToday = depositData.length > 0 ? depositData[depositData.length - 1] : 0;
+var withdrawToday = withdrawData.length > 0 ? withdrawData[withdrawData.length - 1] : 0;
+
+// ✅ 更新顶部统计（只显示今天）
+var depTotalEl = document.getElementById('headerDepositTotal');
+var wdTotalEl = document.getElementById('headerWithdrawTotal');
+if (depTotalEl) depTotalEl.textContent = '€' + depositToday.toFixed(2);
+if (wdTotalEl) wdTotalEl.textContent = '€' + withdrawToday.toFixed(2);
     
     window._depositChart.setOption({
         xAxis: { data: dates },
