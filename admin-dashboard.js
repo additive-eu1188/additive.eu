@@ -1859,3 +1859,4 @@ function toggleCongratsMessage() {
 
 // 暴露到全局
 window.toggleCongratsMessage = toggleCongratsMessage;
+}
