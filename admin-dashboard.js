@@ -998,11 +998,11 @@ function initTrendChart() {
 // 顶部统计显示（同行右侧）
 // ============================================================
 var statsHtml = `
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; flex-shrink: 0; padding: 0 2px;">
+    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; flex-shrink: 0; padding: 0 2px;">
         <div style="font-size: 14px; font-weight: 600; color: #d8dff0; display: flex; align-items: center; gap: 6px;">
             <i class="fas fa-chart-line" style="color: #8892a8; font-size: 13px;"></i> D&W Trend
         </div>
-        <div style="display: flex; align-items: center; gap: 16px; font-size: 12px;">
+        <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 2px; font-size: 12px;">
             <span style="display: flex; align-items: center; gap: 5px; color: #8892a8;">
                 <span style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #4ade80; box-shadow: 0 0 8px rgba(74,222,128,0.3);"></span>
                 Deposits: <span id="headerDepositTotal" style="font-weight: 700; color: #4ade80;">€0.00</span>
@@ -1029,7 +1029,7 @@ var topContainer = document.createElement('div');
     topContainer.id = 'depositChartContainer';
     
     var divider = document.createElement('div');
-divider.style.cssText = 'height: 20px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; gap: 14px; position: relative; padding: 0 8px;';
+divider.style.cssText = 'height: 28px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; gap: 14px; position: relative; padding: 4px 8px; margin: 2px 0;';
 divider.innerHTML = `
     <span style="flex:1; height: 1.5px; background: linear-gradient(90deg, transparent, rgba(180,180,200,0.12), rgba(180,180,200,0.20)); border-radius: 2px;"></span>
     <span style="display: flex; align-items: center; gap: 6px; font-size: 8px; color: #5a6a82; letter-spacing: 1.5px; text-transform: uppercase; font-weight: 700; background: rgba(10,12,24,0.6); padding: 0 10px; border-radius: 10px; height: 18px; border: 1px solid rgba(180,180,200,0.04);">
