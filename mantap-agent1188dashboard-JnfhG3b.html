@@ -495,25 +495,55 @@
         }
 
         /* ============================================================
-   横向滚动条 - 琥珀发光（超大号 100px）
+   超大横向滚动条 - 琥珀发光（30px 粗）
    ============================================================ */
+.table-container {
+    overflow-x: auto;
+    overflow-y: auto;
+    max-height: 500px;
+    border-radius: 16px;
+    border: 1px solid rgba(255, 255, 255, 0.03);
+    position: relative;
+    /* 自定义滚动条 - 用 padding-bottom 留出空间 */
+    padding-bottom: 0;
+}
+
+/* 在表格下方添加一个自定义滚动条轨道 */
+.table-container::after {
+    content: '';
+    display: block;
+    height: 30px;
+    background: rgba(255, 184, 77, 0.04);
+    border-radius: 0 0 16px 16px;
+    border-top: 1px solid rgba(255, 184, 77, 0.06);
+    position: sticky;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 5;
+    pointer-events: none;
+}
+
+/* 自定义滚动条 - 使用更粗的尺寸 */
 .table-container::-webkit-scrollbar {
-    width: 6px;
-    height: 100px;
+    width: 8px;
+    height: 30px;  /* 横向滚动条高度 30px */
 }
 .table-container::-webkit-scrollbar-track {
-    background: rgba(255, 184, 77, 0.04);
-    border-radius: 8px;
-    border: 1px solid rgba(255, 184, 77, 0.06);
+    background: rgba(255, 184, 77, 0.03);
+    border-radius: 0 0 16px 16px;
+    border: 1px solid rgba(255, 184, 77, 0.04);
+    border-top: none;
 }
 .table-container::-webkit-scrollbar-thumb {
     background: linear-gradient(90deg, #b8942a, #F3D38B, #D6B25E, #F3D38B, #b8942a);
-    border-radius: 8px;
-    border: 2px solid rgba(8, 12, 26, 0.3);
-    box-shadow: 0 0 30px rgba(214, 178, 94, 0.15), inset 0 0 12px rgba(214, 178, 94, 0.08);
+    border-radius: 4px;
+    border: 4px solid rgba(8, 12, 26, 0.2);
+    box-shadow: 0 0 30px rgba(214, 178, 94, 0.20), inset 0 0 12px rgba(214, 178, 94, 0.08);
+    min-height: 20px;
 }
 .table-container::-webkit-scrollbar-thumb:hover {
-    box-shadow: 0 0 50px rgba(214, 178, 94, 0.30), inset 0 0 20px rgba(214, 178, 94, 0.12);
+    box-shadow: 0 0 50px rgba(214, 178, 94, 0.35), inset 0 0 20px rgba(214, 178, 94, 0.12);
 }
 
 /* Firefox 兼容 */
