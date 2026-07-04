@@ -1006,6 +1006,331 @@
             padding: 16px 0;
             border-top: 1px solid rgba(204, 178, 153, 0.08);
         }
+
+/* ============================================================
+   提款成功弹窗 - 金色主题
+   ============================================================ */
+.withdrawal-success-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(7, 11, 26, 0.92);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    z-index: 30000;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    animation: wsFadeIn 0.3s ease;
+}
+
+.withdrawal-success-overlay.active {
+    display: flex;
+}
+
+@keyframes wsFadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes wsScaleIn {
+    from { transform: scale(0.92); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+}
+
+.withdrawal-success-card {
+    background: linear-gradient(160deg, #1a1428, #0e0a1a);
+    border-radius: 24px;
+    padding: 32px 30px 28px;
+    max-width: 440px;
+    width: 92%;
+    border: 1px solid rgba(201, 176, 149, 0.08);
+    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.6);
+    position: relative;
+    overflow: hidden;
+    animation: wsScaleIn 0.3s cubic-bezier(0.2, 0.9, 0.4, 1.1) forwards;
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+.withdrawal-success-card::-webkit-scrollbar {
+    width: 3px;
+}
+.withdrawal-success-card::-webkit-scrollbar-thumb {
+    background: rgba(201, 176, 149, 0.12);
+    border-radius: 4px;
+}
+
+/* 顶部金属高光 */
+.withdrawal-success-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 10%;
+    right: 10%;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(201, 176, 149, 0.10), rgba(201, 176, 149, 0.20), rgba(201, 176, 149, 0.10), transparent);
+    pointer-events: none;
+}
+
+/* 成功图标 - 金色 */
+.withdrawal-success-card .success-icon {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: rgba(201, 176, 149, 0.10);
+    color: #C9B095;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 14px;
+    font-size: 26px;
+    position: relative;
+}
+
+.withdrawal-success-card .success-icon .icon-bg {
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    background: rgba(201, 176, 149, 0.06);
+    animation: wsPulseRing 2.5s ease-out infinite;
+}
+
+@keyframes wsPulseRing {
+    0% { transform: scale(0.8); opacity: 0.6; }
+    100% { transform: scale(1.6); opacity: 0; }
+}
+
+/* 标题 */
+.withdrawal-success-card .modal-title {
+    text-align: center;
+    font-size: 20px;
+    font-weight: 700;
+    color: #ffffff;
+    margin-bottom: 2px;
+}
+
+.withdrawal-success-card .modal-subtitle {
+    text-align: center;
+    font-size: 13px;
+    color: #7a85a5;
+    margin-bottom: 18px;
+    line-height: 1.5;
+}
+
+.withdrawal-success-card .modal-subtitle .pending {
+    color: #ffb84d;
+    font-weight: 500;
+}
+
+/* 分割线 */
+.withdrawal-success-card .divider {
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(201, 176, 149, 0.06), rgba(201, 176, 149, 0.12), rgba(201, 176, 149, 0.06), transparent);
+    margin: 0 0 14px 0;
+}
+
+/* 详情行 */
+.withdrawal-success-card .detail-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 6px 0;
+}
+
+.withdrawal-success-card .detail-row .label {
+    font-size: 12px;
+    color: #6a7a92;
+    font-weight: 500;
+    letter-spacing: 0.3px;
+}
+
+.withdrawal-success-card .detail-row .value {
+    font-size: 13px;
+    font-weight: 600;
+    color: #d8e0f0;
+}
+
+.withdrawal-success-card .detail-row .value.address {
+    font-family: 'Courier New', monospace;
+    font-size: 12px;
+    color: #c8b090;
+    letter-spacing: 0.3px;
+}
+
+.withdrawal-success-card .detail-row .value.amount {
+    color: #4ade80;
+    font-size: 16px;
+}
+
+.withdrawal-success-card .detail-row .value.crypto {
+    color: #C9B095;
+}
+
+/* 导航标题 */
+.withdrawal-success-card .nav-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: #7a85a5;
+    text-align: center;
+    margin: 16px 0 12px 0;
+    letter-spacing: 0.5px;
+}
+
+/* 选项网格 */
+.withdrawal-success-card .options-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 16px;
+}
+
+.withdrawal-success-card .option-card {
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.04);
+    border-radius: 14px;
+    padding: 14px 10px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.25s ease;
+}
+
+.withdrawal-success-card .option-card:hover {
+    background: rgba(201, 176, 149, 0.04);
+    border-color: rgba(201, 176, 149, 0.10);
+}
+
+.withdrawal-success-card .option-card.selected {
+    background: rgba(201, 176, 149, 0.06);
+    border-color: rgba(201, 176, 149, 0.20);
+    box-shadow: 0 0 20px rgba(201, 176, 149, 0.03);
+}
+
+.withdrawal-success-card .option-card .opt-icon {
+    font-size: 22px;
+    color: #C9B095;
+    display: block;
+    margin-bottom: 4px;
+}
+
+.withdrawal-success-card .option-card .opt-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: #d8e0f0;
+}
+
+.withdrawal-success-card .option-card .opt-desc {
+    font-size: 10px;
+    color: #6a7a92;
+    margin-top: 2px;
+}
+
+.withdrawal-success-card .option-card .check-mark {
+    display: none;
+    font-size: 12px;
+    color: #4ade80;
+    margin-top: 4px;
+}
+
+.withdrawal-success-card .option-card.selected .check-mark {
+    display: block;
+}
+
+/* Next 按钮 - 金色 */
+.withdrawal-success-card .btn-next {
+    width: 100%;
+    padding: 12px;
+    border-radius: 40px;
+    border: none;
+    background: linear-gradient(135deg, #C9B095, #b8944a);
+    color: #0A122B;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    font-family: 'Inter', sans-serif;
+    letter-spacing: 0.3px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.withdrawal-success-card .btn-next:hover {
+    transform: scale(1.01);
+    box-shadow: 0 4px 20px rgba(201, 176, 149, 0.20);
+}
+
+.withdrawal-success-card .btn-next:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+    transform: none !important;
+    box-shadow: none !important;
+}
+
+/* ===== 响应式 ===== */
+@media (max-width: 480px) {
+    .withdrawal-success-card {
+        padding: 24px 16px 20px;
+        border-radius: 20px;
+    }
+
+    .withdrawal-success-card .success-icon {
+        width: 46px;
+        height: 46px;
+        font-size: 20px;
+    }
+
+    .withdrawal-success-card .modal-title {
+        font-size: 17px;
+    }
+
+    .withdrawal-success-card .modal-subtitle {
+        font-size: 12px;
+    }
+
+    .withdrawal-success-card .options-grid {
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+    }
+
+    .withdrawal-success-card .option-card {
+        padding: 10px 8px;
+    }
+
+    .withdrawal-success-card .option-card .opt-icon {
+        font-size: 18px;
+    }
+
+    .withdrawal-success-card .option-card .opt-title {
+        font-size: 12px;
+    }
+
+    .withdrawal-success-card .detail-row .value.amount {
+        font-size: 14px;
+    }
+
+    .withdrawal-success-card .detail-row .value {
+        font-size: 12px;
+    }
+
+    .withdrawal-success-card .btn-next {
+        font-size: 13px;
+        padding: 10px;
+    }
+
+    .withdrawal-success-card .nav-title {
+        font-size: 12px;
+    }
+}
+
+@media (max-width: 380px) {
+    .withdrawal-success-card .options-grid {
+        grid-template-columns: 1fr;
+    }
+}
     </style>
 </head>
 <body>
@@ -1241,6 +1566,67 @@
             </div>
 
             <div class="footer-note"><i class="fas fa-lock"></i> <span data-i18n="secure_platform">Secure platform · Protected by ADDITIVE</span></div>
+
+<!-- ============================================================
+     提款成功弹窗 - 金色主题
+     ============================================================ -->
+<div id="withdrawalSuccessModal" class="withdrawal-success-overlay">
+    <div class="withdrawal-success-card">
+        <!-- 成功图标 -->
+        <div class="success-icon">
+            <span class="icon-bg"></span>
+            <i class="fas fa-check-circle"></i>
+        </div>
+
+        <!-- 标题 -->
+        <div class="modal-title" data-i18n="withdrawal_success_title">Withdrawal Submitted</div>
+        <div class="modal-subtitle" data-i18n-html="withdrawal_success_subtitle">
+            Your withdrawal has been submitted and it's currently <span class="pending">(Pending)</span>.
+        </div>
+
+        <div class="divider"></div>
+
+        <!-- 详情 -->
+        <div class="detail-row">
+            <span class="label" data-i18n="withdrawal_success_amount">Amount</span>
+            <span class="value amount" id="wsAmount">€0.00</span>
+        </div>
+        <div class="detail-row">
+            <span class="label" data-i18n="withdrawal_success_crypto">Crypto Type</span>
+            <span class="value crypto" id="wsCrypto">USDT (TRC20)</span>
+        </div>
+        <div class="detail-row">
+            <span class="label" data-i18n="withdrawal_success_address">Address</span>
+            <span class="value address" id="wsAddress">Txdsfkjh42...jk341234</span>
+        </div>
+
+        <div class="divider"></div>
+
+        <!-- 导航标题 -->
+        <div class="nav-title" data-i18n="withdrawal_success_next_title">Where would you like to go next?</div>
+
+        <!-- 选项 -->
+        <div class="options-grid">
+            <div class="option-card selected" data-target="history" onclick="selectWithdrawalOption(this)">
+                <span class="opt-icon"><i class="fas fa-clock"></i></span>
+                <div class="opt-title" data-i18n="withdrawal_success_history">History</div>
+                <div class="opt-desc" data-i18n="withdrawal_success_history_desc">View your withdrawal history</div>
+                <span class="check-mark"><i class="fas fa-check-circle"></i></span>
+            </div>
+            <div class="option-card" data-target="dashboard" onclick="selectWithdrawalOption(this)">
+                <span class="opt-icon"><i class="fas fa-th-large"></i></span>
+                <div class="opt-title" data-i18n="withdrawal_success_dashboard">Dashboard</div>
+                <div class="opt-desc" data-i18n="withdrawal_success_dashboard_desc">Back to your main page</div>
+                <span class="check-mark"><i class="fas fa-check-circle"></i></span>
+            </div>
+        </div>
+
+        <!-- Next 按钮 -->
+        <button class="btn-next" id="wsNextBtn" onclick="handleWithdrawalSuccessNext()">
+            <span data-i18n="withdrawal_success_next_btn">Next</span> <i class="fas fa-arrow-right"></i>
+        </button>
+    </div>
+</div>
         </main>
     </div>
 
@@ -1877,57 +2263,59 @@
 
         // ---------- 执行提款 ----------
         async function executeWithdrawal(amount) {
-            try {
-                var newBalance = currentUserBalance - amount;
+    try {
+        var newBalance = currentUserBalance - amount;
 
-                var { error: updateError } = await sb
-                    .from('users')
-                    .update({ balance: newBalance })
-                    .eq('uid', currentUser.uid);
+        var { error: updateError } = await sb
+            .from('users')
+            .update({ balance: newBalance })
+            .eq('uid', currentUser.uid);
 
-                if (updateError) throw updateError;
+        if (updateError) throw updateError;
 
-                var { data: userData } = await sb
-                    .from('users')
-                    .select('withdrawal_address, withdrawal_address_type')
-                    .eq('uid', currentUser.uid)
-                    .single();
+        var { data: userData, error: userError } = await sb
+            .from('users')
+            .select('withdrawal_address, withdrawal_address_type')
+            .eq('uid', currentUser.uid)
+            .single();
 
-                var { error: withdrawalError } = await sb
-                    .from('withdrawals')
-                    .insert({
-                        uid: currentUser.uid,
-                        username: currentUser.username,
-                        amount: amount,
-                        wallet_address: userData.withdrawal_address,
-                        currency: userData.withdrawal_address_type || 'USDT',
-                        status: 'pending',
-                        request_date: new Date().toISOString()
-                    });
+        if (userError) throw userError;
 
-                if (withdrawalError) {
-                    await sb.from('users').update({ balance: currentUserBalance }).eq('uid', currentUser.uid);
-                    throw withdrawalError;
-                }
+        var { error: withdrawalError } = await sb
+            .from('withdrawals')
+            .insert({
+                uid: currentUser.uid,
+                username: currentUser.username,
+                amount: amount,
+                wallet_address: userData.withdrawal_address,
+                currency: userData.withdrawal_address_type || 'USDT',
+                status: 'pending',
+                request_date: new Date().toISOString()
+            });
 
-                currentUserBalance = newBalance;
-                if (currentUser) {
-                    currentUser.balance = newBalance;
-                    localStorage.setItem('currentUser', JSON.stringify(currentUser));
-                }
-
-                // 更新显示
-                const displayBalanceEl = document.getElementById('displayBalance');
-                if (displayBalanceEl) displayBalanceEl.innerHTML = '€' + newBalance.toFixed(2);
-                document.getElementById('amountInput').value = '';
-
-                const t = window.i18n?.t || function(key) { return key; };
-showToast(t('withdrawal_success', { amount: amount.toFixed(2) }), 'success');
-
-            } catch (e) {
-                showToast('withdrawal_failed: ' + e.message, 'error');
-            }
+        if (withdrawalError) {
+            await sb.from('users').update({ balance: currentUserBalance }).eq('uid', currentUser.uid);
+            throw withdrawalError;
         }
+
+        currentUserBalance = newBalance;
+        if (currentUser) {
+            currentUser.balance = newBalance;
+            localStorage.setItem('currentUser', JSON.stringify(currentUser));
+        }
+
+        // 更新显示
+        var displayBalanceEl = document.getElementById('displayBalance');
+        if (displayBalanceEl) displayBalanceEl.innerHTML = '€' + newBalance.toFixed(2);
+        document.getElementById('amountInput').value = '';
+
+        // ✅ 显示金色弹窗（带 i18n）
+        showWithdrawalSuccessModal(amount, userData.withdrawal_address_type || 'USDT', userData.withdrawal_address || '');
+
+    } catch (e) {
+        showToast('withdrawal_failed: ' + e.message, 'error');
+    }
+}
 
         // ============================================================
         // requestWithdrawal 函数
@@ -2079,6 +2467,92 @@ showToast(t('withdrawal_success', { amount: amount.toFixed(2) }), 'success');
             document.getElementById('withdrawBtn').addEventListener('click', requestWithdrawal);
             initNavClickClose();
         })();
+
+// ============================================================
+// 提款成功弹窗 - 金色主题 (放在 requestWithdrawal 函数后面)
+// ============================================================
+
+var wsSelectedTarget = 'history';
+
+function selectWithdrawalOption(el) {
+    var parent = el.closest('.withdrawal-success-card');
+    var allOptions = parent.querySelectorAll('.option-card');
+
+    allOptions.forEach(function(opt) {
+        opt.classList.remove('selected');
+    });
+
+    el.classList.add('selected');
+    wsSelectedTarget = el.dataset.target;
+}
+
+function handleWithdrawalSuccessNext() {
+    if (wsSelectedTarget === 'history') {
+        window.location.href = 'history.html';
+    } else {
+        window.location.href = 'dashboard.html';
+    }
+}
+
+function showWithdrawalSuccessModal(amount, crypto, address) {
+    var modal = document.getElementById('withdrawalSuccessModal');
+    if (!modal) return;
+
+    var amountEl = document.getElementById('wsAmount');
+    var cryptoEl = document.getElementById('wsCrypto');
+    var addressEl = document.getElementById('wsAddress');
+
+    if (amountEl) amountEl.textContent = '€' + parseFloat(amount).toFixed(2);
+    if (cryptoEl) cryptoEl.textContent = crypto || 'USDT (TRC20)';
+
+    if (addressEl && address) {
+        if (address.length > 16) {
+            addressEl.textContent = address.substring(0, 8) + '...' + address.substring(address.length - 8);
+        } else {
+            addressEl.textContent = address;
+        }
+    }
+
+    var defaultOption = modal.querySelector('.option-card[data-target="history"]');
+    var allOptions = modal.querySelectorAll('.option-card');
+    allOptions.forEach(function(opt) {
+        opt.classList.remove('selected');
+    });
+    if (defaultOption) {
+        defaultOption.classList.add('selected');
+        wsSelectedTarget = 'history';
+    }
+
+    if (window.i18n && typeof window.i18n.applyTranslations === 'function') {
+        window.i18n.applyTranslations();
+    }
+
+    modal.classList.add('active');
+    document.body.style.overflow = 'hidden';
+}
+
+function closeWithdrawalSuccessModal() {
+    var modal = document.getElementById('withdrawalSuccessModal');
+    if (modal) {
+        modal.classList.remove('active');
+        document.body.style.overflow = '';
+    }
+}
+
+// 点击遮罩关闭
+document.addEventListener('click', function(e) {
+    var modal = document.getElementById('withdrawalSuccessModal');
+    if (modal && modal.classList.contains('active') && e.target === modal) {
+        closeWithdrawalSuccessModal();
+    }
+});
+
+// ESC 键关闭
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        closeWithdrawalSuccessModal();
+    }
+});
     </script>
     <script src="i18n.js"></script>
     <script>
