@@ -1474,54 +1474,16 @@
                 try { return JSON.parse(u); } catch (e) { return null; }
             }
 
-            // ============================================================
-            // 🔥 立即执行：页面加载时判断显示哪个卡片（消除闪烁）
-            // ============================================================
-            (function() {
-                var userStr = localStorage.getItem('currentUser');
-                if (!userStr) return;
-                
-                try {
-                    var user = JSON.parse(userStr);
-                    var amountDueData = localStorage.getItem('amountDue_' + user.uid);
-                    var amountDue = 0;
-                    var orderPrice = 0;
-                    
-                    if (amountDueData) {
-                        try {
-                            var parsed = JSON.parse(amountDueData);
-                            if (Date.now() - parsed.timestamp < 7 * 24 * 60 * 60 * 1000) {
-                                amountDue = parsed.amountDue || 0;
-                                orderPrice = parsed.orderPrice || 0;
-                            }
-                        } catch (e) {}
-                    }
-                    
-                    var balanceCard = document.getElementById('balanceCard');
-                    var amountDueCard = document.getElementById('amountDueCard');
-                    var displayAmountDue = document.getElementById('displayAmountDue');
-                    var amountDueUsername = document.getElementById('amountDueUsername');
-                    var balanceUsername = document.getElementById('balanceUsername');
-                    
-                    if (amountDue > 0 && orderPrice > 0) {
-                        if (balanceCard) balanceCard.style.display = 'none';
-                        if (amountDueCard) {
-                            amountDueCard.style.display = 'flex';
-                            if (displayAmountDue) displayAmountDue.textContent = '€' + amountDue.toFixed(2);
-                            if (amountDueUsername) amountDueUsername.textContent = user.username || user.uid;
-                            if (balanceUsername) balanceUsername.textContent = user.username || user.uid;
-                        }
-                    } else {
-                        if (balanceCard) balanceCard.style.display = 'flex';
-                        if (amountDueCard) amountDueCard.style.display = 'none';
-                    }
-                } catch (e) {
-                    var balanceCard = document.getElementById('balanceCard');
-                    var amountDueCard = document.getElementById('amountDueCard');
-                    if (balanceCard) balanceCard.style.display = 'flex';
-                    if (amountDueCard) amountDueCard.style.display = 'none';
-                }
-            })();
+// ============================================================
+// 🔥 页面加载时默认显示 Balance 卡片（由 loadDashboard 中的 checkAmountDueAndSwitchCard 决定最终显示）
+// ============================================================
+(function() {
+    // 默认显示 Balance 卡片，隐藏 Amount Due 卡片
+    var balanceCard = document.getElementById('balanceCard');
+    var amountDueCard = document.getElementById('amountDueCard');
+    if (balanceCard) balanceCard.style.display = 'flex';
+    if (amountDueCard) amountDueCard.style.display = 'none';
+})();
 
             // ========== 产品滚动 ==========
             let currentStepIndex = 0,
@@ -1713,47 +1675,60 @@
                 return null;
             }
 
-            // 检查 Amount Due
-            async function checkAmountDueAndSwitchCard() {
-                var user = getCurrentUser();
-                if (!user) return;
-                
-                var amountDueData = getAmountDue(user.uid);
-                var amountDue = amountDueData?.amountDue || 0;
-                var orderPrice = amountDueData?.orderPrice || 0;
-                
-                var balanceCard = document.getElementById('balanceCard');
-                var amountDueCard = document.getElementById('amountDueCard');
-                var displayBalance = document.getElementById('displayBalance');
-                var displayAmountDue = document.getElementById('displayAmountDue');
-                var amountDueUsername = document.getElementById('amountDueUsername');
-                var balanceUsername = document.getElementById('balanceUsername');
-                
-                var isShowingAmountDue = amountDueCard && amountDueCard.style.display !== 'none';
-                var shouldShowAmountDue = amountDue > 0 && orderPrice > 0;
-                
-                if (shouldShowAmountDue && !isShowingAmountDue) {
-                    balanceCard.style.display = 'none';
-                    amountDueCard.style.display = 'flex';
-                    displayAmountDue.textContent = '€' + amountDue.toFixed(2);
-                    amountDueUsername.textContent = user.username || user.uid;
-                    balanceUsername.textContent = user.username || user.uid;
-                } else if (!shouldShowAmountDue && isShowingAmountDue) {
-                    balanceCard.style.display = 'flex';
-                    amountDueCard.style.display = 'none';
-                    var result = await sb.from('users').select('balance').eq('uid', user.uid).single();
-                    if (result.data) {
-                        displayBalance.textContent = '€' + (result.data.balance || 0).toFixed(2);
-                        balanceUsername.textContent = user.username || user.uid;
-                    }
-                } else if (!shouldShowAmountDue && !isShowingAmountDue) {
-                    var result = await sb.from('users').select('balance').eq('uid', user.uid).single();
-                    if (result.data) {
-                        displayBalance.textContent = '€' + (result.data.balance || 0).toFixed(2);
-                        balanceUsername.textContent = user.username || user.uid;
-                    }
-                }
+            // 检查 Amount Due - 从数据库读取 amount_due_round
+async function checkAmountDueAndSwitchCard() {
+    var user = getCurrentUser();
+    if (!user) return;
+    
+    try {
+        // 🔥 从数据库读取 amount_due_round（与 start.html 保持一致）
+        var { data: userData, error } = await sb
+            .from('users')
+            .select('amount_due_round, balance, username')
+            .eq('uid', user.uid)
+            .single();
+        
+        if (error) {
+            console.error('获取 amount_due_round 失败:', error);
+            return;
+        }
+        
+        var amountDue = userData.amount_due_round || 0;
+        var balance = userData.balance || 0;
+        var username = userData.username || user.username;
+        
+        var balanceCard = document.getElementById('balanceCard');
+        var amountDueCard = document.getElementById('amountDueCard');
+        var displayBalance = document.getElementById('displayBalance');
+        var displayAmountDue = document.getElementById('displayAmountDue');
+        var amountDueUsername = document.getElementById('amountDueUsername');
+        var balanceUsername = document.getElementById('balanceUsername');
+        
+        // 更新 Username
+        if (balanceUsername) balanceUsername.textContent = username;
+        if (amountDueUsername) amountDueUsername.textContent = username;
+        
+        var shouldShowAmountDue = amountDue > 0;
+        
+        if (shouldShowAmountDue) {
+            // 显示 Amount Due 卡片
+            if (balanceCard) balanceCard.style.display = 'none';
+            if (amountDueCard) {
+                amountDueCard.style.display = 'flex';
+                if (displayAmountDue) displayAmountDue.textContent = '€' + amountDue.toFixed(2);
             }
+        } else {
+            // 显示 Balance 卡片
+            if (balanceCard) {
+                balanceCard.style.display = 'flex';
+                if (displayBalance) displayBalance.textContent = '€' + (balance || 0).toFixed(2);
+            }
+            if (amountDueCard) amountDueCard.style.display = 'none';
+        }
+    } catch (e) {
+        console.error('checkAmountDueAndSwitchCard error:', e);
+    }
+}
 
             // ========== 图表 ==========
             let commissionChart = null,
