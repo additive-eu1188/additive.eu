@@ -2790,78 +2790,87 @@ async function executeTriggerOrderTransaction(triggerOrder, quality, platform) {
         // Handle trigger order
         // ============================================================
         async function handleTriggerOrder(modalContent) {
-            var matchedPrice = currentTriggerOrder.matched_price || 0;
-            
-            var commission = currentTriggerOrder.commission_amount;
-            
-            if (commission === null || commission === undefined) {
-                commission = 0;
-            }
-            
-            console.log('💰 handleTriggerOrder - commission_amount from DB:', commission);
-            console.log('💰 handleTriggerOrder - matched_price:', matchedPrice);
-            console.log('💰 handleTriggerOrder - order_type:', currentTriggerOrder.order_type);
+    var matchedPrice = currentTriggerOrder.matched_price || 0;
+    
+    var commission = currentTriggerOrder.commission_amount;
+    
+    if (commission === null || commission === undefined) {
+        commission = 0;
+    }
+    
+    console.log('💰 handleTriggerOrder - commission_amount from DB:', commission);
+    console.log('💰 handleTriggerOrder - matched_price:', matchedPrice);
+    console.log('💰 handleTriggerOrder - order_type:', currentTriggerOrder.order_type);
 
-            var orderTypeDisplay = 'Order';
-            var commissionPercent = '';
-            var assignedQuality = 'Exceptional'; // 高级订单和卡牌订单固定 Exceptional
-            var assignedPlatform = getRandomPlatform();
-            
-            if (currentTriggerOrder.order_type === 'advanced') {
-                orderTypeDisplay = t('order_type_commercial') || 'Commercial Reservations Order';
-                commissionPercent = '5';
-                // 高级订单 - ASSIGN TYPE 固定 Exceptional
-                assignedQuality = 'Exceptional';
-                assignedPlatform = getRandomPlatform();
-            } else if (currentTriggerOrder.order_type === 'card_order') {
-                orderTypeDisplay = t('order_type_30x') || '30x Commissions Reservations Order';
-                commissionPercent = '15';
-                // 卡牌订单 - ASSIGN TYPE 固定 Exceptional
-                assignedQuality = 'Exceptional';
-                assignedPlatform = getRandomPlatform();
-            } else if (currentTriggerOrder.order_type === 'svip_order') {
-                orderTypeDisplay = t('order_type_svip') || 'SVIP Reservation Order (20x)';
-                commissionPercent = '10';
-                // SVIP订单 - ASSIGN TYPE 固定 Exceptional
-                assignedQuality = 'Exceptional';
-                assignedPlatform = getRandomPlatform();
-            }
+    var orderTypeDisplay = 'Order';
+    var commissionPercent = '';
+    var assignedQuality = 'Exceptional';
+    var assignedPlatform = getRandomPlatform();
+    
+    if (currentTriggerOrder.order_type === 'advanced') {
+        orderTypeDisplay = t('order_type_commercial') || 'Commercial Reservations Order';
+        commissionPercent = '5';
+        assignedQuality = 'Exceptional';
+        assignedPlatform = getRandomPlatform();
+    } else if (currentTriggerOrder.order_type === 'card_order') {
+        orderTypeDisplay = t('order_type_30x') || '30x Commissions Reservations Order';
+        commissionPercent = '15';
+        assignedQuality = 'Exceptional';
+        assignedPlatform = getRandomPlatform();
+    } else if (currentTriggerOrder.order_type === 'svip_order') {
+        orderTypeDisplay = t('order_type_svip') || 'SVIP Reservation Order (20x)';
+        commissionPercent = '10';
+        assignedQuality = 'Exceptional';
+        assignedPlatform = getRandomPlatform();
+    }
 
-            currentOrder = {
-                id: currentTriggerOrder.id,
-                orderCode: currentTriggerOrder.matched_order_code,
-                accommodationName: currentTriggerOrder.matched_order_name,
-                price: matchedPrice,
-                imageUrl: currentTriggerOrder.matched_image_url,
-                commissionAmount: commission,
-                isTriggerOrder: true,
-                triggerOrderId: currentTriggerOrder.id,
-                orderType: orderTypeDisplay,
-                commissionPercent: commissionPercent,
-                assignedQuality: assignedQuality,
-                assignedPlatform: assignedPlatform
-            };
-            
-            console.log('📦 currentOrder after setup:', currentOrder);
+    // 🔥 关键修复：检查 temp_order 中是否已有相同的触发订单
+    // 如果有且是同一个 triggerOrderId，复用已有的 assignedQuality 和 assignedPlatform
+    var tempOrder = getTempOrder();
+    if (tempOrder && tempOrder.triggerOrderId === currentTriggerOrder.id) {
+        console.log('🔄 从 temp_order 恢复触发订单配置:', {
+            assignedQuality: tempOrder.assignedQuality,
+            assignedPlatform: tempOrder.assignedPlatform
+        });
+        assignedQuality = tempOrder.assignedQuality || assignedQuality;
+        assignedPlatform = tempOrder.assignedPlatform || assignedPlatform;
+    }
 
-            if (!currentOrder.imageUrl && currentTriggerOrder.matched_order_id) {
-                var poolResult = await sb.from('orders_pool').select('image_url').eq('id', currentTriggerOrder.matched_order_id).single();
-                if (poolResult.data) currentOrder.imageUrl = poolResult.data.image_url;
-            }
+    currentOrder = {
+        id: currentTriggerOrder.id,
+        orderCode: currentTriggerOrder.matched_order_code,
+        accommodationName: currentTriggerOrder.matched_order_name,
+        price: matchedPrice,
+        imageUrl: currentTriggerOrder.matched_image_url,
+        commissionAmount: commission,
+        isTriggerOrder: true,
+        triggerOrderId: currentTriggerOrder.id,
+        orderType: orderTypeDisplay,
+        commissionPercent: commissionPercent,
+        assignedQuality: assignedQuality,
+        assignedPlatform: assignedPlatform
+    };
+    
+    console.log('📦 currentOrder after setup:', currentOrder);
 
-            selectedQuality = null;
-            selectedPlatform = null;
-            var randomCode = generateRandomOrderCode();
-            currentOrder.displayOrderCode = randomCode;
+    if (!currentOrder.imageUrl && currentTriggerOrder.matched_order_id) {
+        var poolResult = await sb.from('orders_pool').select('image_url').eq('id', currentTriggerOrder.matched_order_id).single();
+        if (poolResult.data) currentOrder.imageUrl = poolResult.data.image_url;
+    }
 
-            var user = getCurrentUser();
-            if (user) {
-                currentOrder.uid = user.uid;
-                saveTempOrder(currentOrder);
-            }
+    selectedQuality = null;
+    selectedPlatform = null;
+    var randomCode = generateRandomOrderCode();
+    currentOrder.displayOrderCode = randomCode;
 
-            renderOrderModalContent(currentOrder);
-        }
+    var user = getCurrentUser();
+    if (user) {
+        currentOrder.uid = user.uid;
+        saveTempOrder(currentOrder);
+    }
+
+    renderOrderModalContent(currentOrder);
+}
 
         // ============================================================
         // 🔥 为普通订单生成随机的 ASSIGN TYPE 和 PUBLISH PLATFORM
