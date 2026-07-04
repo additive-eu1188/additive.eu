@@ -1004,27 +1004,32 @@ function getAmountDue(uid) {
         }
 
         function checkAndShowAmountDue() {
-            var user = getCurrentUser();
-            if (!user || !user.uid) return;
+    var user = getCurrentUser();
+    if (!user || !user.uid) return;
 
-            var data = getAmountDue(user.uid);
-            if (data && data.amountDue > 0 && data.orderPrice > 0) {
-                showAmountDueCard(data.amountDue);
-                sb.from('users').select('balance').eq('uid', user.uid).single()
-                    .then(function(result) {
-                        if (result.data) {
-                            var balance = result.data.balance || 0;
-                            if (balance >= data.orderPrice) {
-                                setAmountDue(user.uid, 0, 0);
-                                hideAmountDueCard();
-                            }
-                        }
-                    })
-                    .catch(function(err) { console.error('Balance check failed:', err); });
-            } else {
-                hideAmountDueCard();
+    // ============================================================
+    // 🔥 从数据库读取最新的 amount_due_round
+    // ============================================================
+    sb.from('users')
+        .select('balance, amount_due_round')
+        .eq('uid', user.uid)
+        .single()
+        .then(function(result) {
+            if (result.data) {
+                var currentBalance = result.data.balance || 0;
+                var amountDue = result.data.amount_due_round || 0;
+                
+                if (amountDue > 0) {
+                    showAmountDueCard(amountDue);
+                } else {
+                    hideAmountDueCard();
+                }
             }
-        }
+        })
+        .catch(function(err) {
+            console.error('检查余额失败:', err);
+        });
+}
 
         // ============================================================
         // Temporary order storage
@@ -1297,10 +1302,10 @@ function getAmountDue(uid) {
 
     try {
         const { data: freshUser, error } = await sb
-            .from('users')
-            .select('balance, trial_bonus_amount, current_round, round_orders_count, is_premium')
-            .eq('uid', user.uid)
-            .single();
+    .from('users')
+    .select('balance, trial_bonus_amount, current_round, round_orders_count, is_premium, amount_due_round')
+    .eq('uid', user.uid)
+    .single();
 
         if (freshUser) {
             currentUserBalance = freshUser.balance || 0;
@@ -1312,13 +1317,15 @@ function getAmountDue(uid) {
             localStorage.setItem('currentUser', JSON.stringify(user));
         }
 
-        document.getElementById('totalOrders').innerText = user.roundOrdersCount || 0;
-
-        var amountDueData = getAmountDue(user.uid);
-        if (amountDueData && amountDueData.orderPrice > 0 && currentUserBalance >= amountDueData.orderPrice) {
-            setAmountDue(user.uid, 0, 0);
-            hideAmountDueCard();
-        }
+        // ============================================================
+// 🔥 从数据库读取 amount_due_round
+// ============================================================
+var amountDue = freshUser?.amount_due_round || 0;
+if (amountDue > 0) {
+    showAmountDueCard(amountDue);
+} else {
+    hideAmountDueCard();
+}
 
         var ordersResult = await sb.from('order_history').select('commission').eq('uid', user.uid);
         var orders = ordersResult.data || [];
@@ -1329,16 +1336,19 @@ function getAmountDue(uid) {
         var pendingResult = await sb.from('withdrawals').select('amount').eq('uid', user.uid).eq('status', 'pending');
         var totalPending = (pendingResult.data || []).reduce(function(sum, w) { return sum + (w.amount || 0); }, 0);
 
-        var amountDue = getAmountDue(user.uid)?.amountDue || 0;
-        var triggerOrder = await getUserPendingTriggerOrder(user.uid);
-        var triggerCommission = triggerOrder?.commission_amount || 0;
+        // ============================================================
+// 🔥 使用数据库中的 amount_due_round，而不是 localStorage
+// ============================================================
+var dbAmountDue = freshUser?.amount_due_round || 0;
+var triggerOrder = await getUserPendingTriggerOrder(user.uid);
+var triggerCommission = triggerOrder?.commission_amount || 0;
 
-        var totalPendingDisplay;
-        if (triggerOrder && amountDue > 0) {
-            totalPendingDisplay = currentUserBalance + amountDue + triggerCommission;
-        } else {
-            totalPendingDisplay = totalPending;
-        }
+var totalPendingDisplay;
+if (triggerOrder && dbAmountDue > 0) {
+    totalPendingDisplay = currentUserBalance + dbAmountDue + triggerCommission;
+} else {
+    totalPendingDisplay = totalPending;
+}
 
 try {
     await sb
@@ -3141,6 +3151,29 @@ async function executeTriggerOrderTransaction(triggerOrder, quality, platform) {
         console.log('   ✅ 每个订单随机分配 ASSIGN TYPE 和 PUBLISH PLATFORM');
         console.log('   ✅ 高级/卡牌订单: ASSIGN TYPE 固定 Exceptional');
         console.log('   ✅ 用户必须选择匹配的选项才能提交');
+
+// ============================================================
+// 🔥 添加页面可见性监听（切换回页面时刷新数据）
+// ============================================================
+document.addEventListener('visibilitychange', function() {
+    if (document.visibilityState === 'visible') {
+        console.log('🔄 页面可见，刷新 Start 页面数据');
+        loadUserData();
+        checkAndShowAmountDue();
+    }
+});
+
+// ============================================================
+// 🔥 监听 storage 事件（后台充值后触发）
+// ============================================================
+window.addEventListener('storage', function(e) {
+    if (e.key === 'refresh_start_page') {
+        console.log('🔄 检测到充值完成，刷新 Start 页面数据');
+        localStorage.removeItem('refresh_start_page');
+        loadUserData();
+        checkAndShowAmountDue();
+    }
+});
     </script>
 <script src="i18n.js"></script>
 <script>

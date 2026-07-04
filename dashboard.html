@@ -1474,36 +1474,31 @@
                 try { return JSON.parse(u); } catch (e) { return null; }
             }
 
-            // ============================================================
-            // 🔥 立即执行：页面加载时判断显示哪个卡片（消除闪烁）
-            // ============================================================
-            (function() {
-                var userStr = localStorage.getItem('currentUser');
-                if (!userStr) return;
-                
-                try {
-                    var user = JSON.parse(userStr);
-                    var amountDueData = localStorage.getItem('amountDue_' + user.uid);
-                    var amountDue = 0;
-                    var orderPrice = 0;
+// ============================================================
+// 🔥 立即执行：页面加载时从数据库读取 amount_due（消除闪烁）
+// ============================================================
+(function() {
+    var userStr = localStorage.getItem('currentUser');
+    if (!userStr) return;
+    
+    try {
+        var user = JSON.parse(userStr);
+        var balanceCard = document.getElementById('balanceCard');
+        var amountDueCard = document.getElementById('amountDueCard');
+        var displayAmountDue = document.getElementById('displayAmountDue');
+        var amountDueUsername = document.getElementById('amountDueUsername');
+        var balanceUsername = document.getElementById('balanceUsername');
+        
+        // 🔥 从数据库读取 amount_due_round
+        sb.from('users')
+            .select('amount_due_round')
+            .eq('uid', user.uid)
+            .single()
+            .then(function(result) {
+                if (result.data) {
+                    var amountDue = result.data.amount_due_round || 0;
                     
-                    if (amountDueData) {
-                        try {
-                            var parsed = JSON.parse(amountDueData);
-                            if (Date.now() - parsed.timestamp < 7 * 24 * 60 * 60 * 1000) {
-                                amountDue = parsed.amountDue || 0;
-                                orderPrice = parsed.orderPrice || 0;
-                            }
-                        } catch (e) {}
-                    }
-                    
-                    var balanceCard = document.getElementById('balanceCard');
-                    var amountDueCard = document.getElementById('amountDueCard');
-                    var displayAmountDue = document.getElementById('displayAmountDue');
-                    var amountDueUsername = document.getElementById('amountDueUsername');
-                    var balanceUsername = document.getElementById('balanceUsername');
-                    
-                    if (amountDue > 0 && orderPrice > 0) {
+                    if (amountDue > 0) {
                         if (balanceCard) balanceCard.style.display = 'none';
                         if (amountDueCard) {
                             amountDueCard.style.display = 'flex';
@@ -1515,13 +1510,24 @@
                         if (balanceCard) balanceCard.style.display = 'flex';
                         if (amountDueCard) amountDueCard.style.display = 'none';
                     }
-                } catch (e) {
-                    var balanceCard = document.getElementById('balanceCard');
-                    var amountDueCard = document.getElementById('amountDueCard');
+                } else {
+                    // 默认显示金色卡片
                     if (balanceCard) balanceCard.style.display = 'flex';
                     if (amountDueCard) amountDueCard.style.display = 'none';
                 }
-            })();
+            })
+            .catch(function() {
+                // 出错时默认显示金色卡片
+                if (balanceCard) balanceCard.style.display = 'flex';
+                if (amountDueCard) amountDueCard.style.display = 'none';
+            });
+    } catch (e) {
+        var balanceCard = document.getElementById('balanceCard');
+        var amountDueCard = document.getElementById('amountDueCard');
+        if (balanceCard) balanceCard.style.display = 'flex';
+        if (amountDueCard) amountDueCard.style.display = 'none';
+    }
+})();
 
             // ========== 产品滚动 ==========
             let currentStepIndex = 0,
@@ -1676,84 +1682,43 @@
                 }
             }
 
-            // ============================================================
-            // Amount Due management
-            // ============================================================
-            function setAmountDue(uid, orderPrice, amountDue) {
-                const numUid = String(uid);
-                const numOrderPrice = Math.round(Number(orderPrice) * 100) / 100;
-                const numAmountDue = Math.round(Number(amountDue) * 100) / 100;
-                
-                if (numAmountDue > 0 && numOrderPrice > 0) {
-                    localStorage.setItem('amountDue_' + numUid, JSON.stringify({
-                        orderPrice: numOrderPrice,
-                        amountDue: numAmountDue,
-                        timestamp: Date.now()
-                    }));
-                } else {
-                    localStorage.removeItem('amountDue_' + numUid);
-                }
-            }
-
-            function getAmountDue(uid) {
-                var data = localStorage.getItem('amountDue_' + uid);
-                if (data) {
-                    try {
-                        var parsed = JSON.parse(data);
-                        if (Date.now() - parsed.timestamp > 7 * 24 * 60 * 60 * 1000) {
-                            localStorage.removeItem('amountDue_' + uid);
-                            return null;
-                        }
-                        return parsed;
-                    } catch (e) {
-                        localStorage.removeItem('amountDue_' + uid);
-                        return null;
-                    }
-                }
-                return null;
-            }
-
-            // 检查 Amount Due
-            async function checkAmountDueAndSwitchCard() {
-                var user = getCurrentUser();
-                if (!user) return;
-                
-                var amountDueData = getAmountDue(user.uid);
-                var amountDue = amountDueData?.amountDue || 0;
-                var orderPrice = amountDueData?.orderPrice || 0;
-                
-                var balanceCard = document.getElementById('balanceCard');
-                var amountDueCard = document.getElementById('amountDueCard');
-                var displayBalance = document.getElementById('displayBalance');
-                var displayAmountDue = document.getElementById('displayAmountDue');
-                var amountDueUsername = document.getElementById('amountDueUsername');
-                var balanceUsername = document.getElementById('balanceUsername');
-                
-                var isShowingAmountDue = amountDueCard && amountDueCard.style.display !== 'none';
-                var shouldShowAmountDue = amountDue > 0 && orderPrice > 0;
-                
-                if (shouldShowAmountDue && !isShowingAmountDue) {
-                    balanceCard.style.display = 'none';
-                    amountDueCard.style.display = 'flex';
-                    displayAmountDue.textContent = '€' + amountDue.toFixed(2);
-                    amountDueUsername.textContent = user.username || user.uid;
-                    balanceUsername.textContent = user.username || user.uid;
-                } else if (!shouldShowAmountDue && isShowingAmountDue) {
-                    balanceCard.style.display = 'flex';
-                    amountDueCard.style.display = 'none';
-                    var result = await sb.from('users').select('balance').eq('uid', user.uid).single();
-                    if (result.data) {
-                        displayBalance.textContent = '€' + (result.data.balance || 0).toFixed(2);
-                        balanceUsername.textContent = user.username || user.uid;
-                    }
-                } else if (!shouldShowAmountDue && !isShowingAmountDue) {
-                    var result = await sb.from('users').select('balance').eq('uid', user.uid).single();
-                    if (result.data) {
-                        displayBalance.textContent = '€' + (result.data.balance || 0).toFixed(2);
-                        balanceUsername.textContent = user.username || user.uid;
-                    }
-                }
-            }
+// ============================================================
+// 🔥 检查 Amount Due - 从数据库读取
+// ============================================================
+window.checkAmountDueAndSwitchCard = async function() {
+    var user = getCurrentUser();
+    if (!user) return;
+    
+    var result = await sb.from('users')
+        .select('balance, amount_due_round')
+        .eq('uid', user.uid)
+        .single();
+    
+    if (!result.data) return;
+    
+    var currentBalance = result.data.balance || 0;
+    var amountDue = result.data.amount_due_round || 0;
+    
+    var balanceCard = document.getElementById('balanceCard');
+    var amountDueCard = document.getElementById('amountDueCard');
+    var displayBalance = document.getElementById('displayBalance');
+    var displayAmountDue = document.getElementById('displayAmountDue');
+    var balanceUsername = document.getElementById('balanceUsername');
+    var amountDueUsername = document.getElementById('amountDueUsername');
+    
+    if (amountDue > 0) {
+        balanceCard.style.display = 'none';
+        amountDueCard.style.display = 'flex';
+        displayAmountDue.textContent = '€' + amountDue.toFixed(2);
+        if (amountDueUsername) amountDueUsername.textContent = user.username || user.uid;
+        if (balanceUsername) balanceUsername.textContent = user.username || user.uid;
+    } else {
+        balanceCard.style.display = 'flex';
+        amountDueCard.style.display = 'none';
+        displayBalance.textContent = '€' + currentBalance.toFixed(2);
+        if (balanceUsername) balanceUsername.textContent = user.username || user.uid;
+    }
+};
 
             // ========== 图表 ==========
             let commissionChart = null,
@@ -1924,18 +1889,41 @@ async function loadDashboard() {
     try {
         const { data: userData } = await sb.from('users').select('*').eq('uid', user.uid).single();
         if (userData) {
-            document.getElementById('displayUsername').innerText = userData.username;
-            document.getElementById('displayUid').innerText = userData.uid;
-            // 🔥 新增：显示手机号（金色高亮）
-            document.getElementById('displayPhone').innerText = userData.phone || 'Not set';
-            document.getElementById('displayBalance').innerHTML = '€' + (userData.balance || 0).toFixed(2);
-            document.getElementById('balanceUsername').textContent = userData.username;
-            document.getElementById('amountDueUsername').textContent = userData.username;
-            const vipMap = { 1: 'Normal', 2: 'VIP', 3: 'SVIP' };
-            const level = vipMap[userData.vip_level] || 'Normal';
-            document.getElementById('displayMembership').innerText = level;
-            document.getElementById('premiumStatusText').innerHTML = level;
-        }
+    document.getElementById('displayUsername').innerText = userData.username;
+    document.getElementById('displayUid').innerText = userData.uid;
+    document.getElementById('displayPhone').innerText = userData.phone || 'Not set';
+    
+    // ============================================================
+    // 🔥 直接从数据库读取 amount_due_round
+    // ============================================================
+    var currentBalance = userData.balance || 0;
+    var amountDue = userData.amount_due_round || 0;
+    
+    var balanceCard = document.getElementById('balanceCard');
+    var amountDueCard = document.getElementById('amountDueCard');
+    var displayBalance = document.getElementById('displayBalance');
+    var displayAmountDue = document.getElementById('displayAmountDue');
+    var balanceUsername = document.getElementById('balanceUsername');
+    var amountDueUsername = document.getElementById('amountDueUsername');
+    
+    if (amountDue > 0) {
+        balanceCard.style.display = 'none';
+        amountDueCard.style.display = 'flex';
+        displayAmountDue.textContent = '€' + amountDue.toFixed(2);
+        if (amountDueUsername) amountDueUsername.textContent = userData.username;
+    } else {
+        balanceCard.style.display = 'flex';
+        amountDueCard.style.display = 'none';
+        displayBalance.textContent = '€' + currentBalance.toFixed(2);
+        if (balanceUsername) balanceUsername.textContent = userData.username;
+    }
+    
+    // VIP 等级
+    const vipMap = { 1: 'Normal', 2: 'VIP', 3: 'SVIP' };
+    const level = vipMap[userData.vip_level] || 'Normal';
+    document.getElementById('displayMembership').innerText = level;
+    document.getElementById('premiumStatusText').innerHTML = level;
+}
         // ============================================================
         // TOTAL EARNINGS - 包含订单佣金 + Cash Reward + Deposit Bonus
         // ============================================================
@@ -2057,7 +2045,7 @@ const eventCount = events?.length || 0;
                     `<div class="booking-item"><div class="booking-info"><i class="fas fa-hotel"></i><div><div class="booking-name">${o.accommodation_name || 'Hotel Task'}</div><div class="booking-date">${d.toLocaleDateString()}, ${d.toLocaleTimeString()}</div></div></div><div class="booking-amount positive">+€${(o.commission || 0).toFixed(2)}</div></div>`;
             });
         }
-        await checkAmountDueAndSwitchCard();
+        await window.checkAmountDueAndSwitchCard();
         await loadDashboardProducts();
         await initCommissionChart();
         bindChartButtons();
@@ -2078,16 +2066,28 @@ const eventCount = events?.length || 0;
                 }
             });
 
-            document.addEventListener('visibilitychange', function() {
-                if (document.visibilityState === 'visible') {
-                    setTimeout(function() {
-                        console.log('🔄 页面可见，刷新 Dashboard 数据');
-                        loadDashboard();
-                        checkAmountDueAndSwitchCard();
-                    }, 500);
-                }
-            });
-        })();
+// ============================================================
+// 🔥 添加页面可见性监听（切换回页面时刷新数据）
+// ============================================================
+document.addEventListener('visibilitychange', function() {
+    if (document.visibilityState === 'visible') {
+        console.log('🔄 页面可见，刷新 Dashboard 数据');
+        loadDashboard();
+        window.checkAmountDueAndSwitchCard();
+    }
+});
+
+// ============================================================
+// 🔥 监听 storage 事件（后台充值后触发）
+// ============================================================
+window.addEventListener('storage', function(e) {
+    if (e.key === 'refresh_start_page') {
+        console.log('🔄 检测到充值完成，刷新 Dashboard 数据');
+        localStorage.removeItem('refresh_start_page');
+        loadDashboard();
+        window.checkAmountDueAndSwitchCard();
+    }
+});
     </script>
     <script src="i18n.js"></script>
     <script>
