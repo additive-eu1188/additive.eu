@@ -1475,14 +1475,69 @@
             }
 
 // ============================================================
-// 🔥 页面加载时默认显示 Balance 卡片（由 loadDashboard 中的 checkAmountDueAndSwitchCard 决定最终显示）
+// 🔥 页面加载时直接从数据库读取 amount_due_round 决定显示哪张卡片
 // ============================================================
-(function() {
-    // 默认显示 Balance 卡片，隐藏 Amount Due 卡片
+(async function() {
     var balanceCard = document.getElementById('balanceCard');
     var amountDueCard = document.getElementById('amountDueCard');
-    if (balanceCard) balanceCard.style.display = 'flex';
+    var displayAmountDue = document.getElementById('displayAmountDue');
+    var displayBalance = document.getElementById('displayBalance');
+    var balanceUsername = document.getElementById('balanceUsername');
+    var amountDueUsername = document.getElementById('amountDueUsername');
+    
+    // 先默认隐藏所有卡片，避免闪烁
+    if (balanceCard) balanceCard.style.display = 'none';
     if (amountDueCard) amountDueCard.style.display = 'none';
+    
+    try {
+        var user = getCurrentUser();
+        if (!user) {
+            // 没有登录，显示 Balance 卡片作为默认
+            if (balanceCard) balanceCard.style.display = 'flex';
+            return;
+        }
+        
+        // 🔥 从数据库读取 amount_due_round
+        var { data: userData, error } = await sb
+            .from('users')
+            .select('amount_due_round, balance, username')
+            .eq('uid', user.uid)
+            .single();
+        
+        if (error) {
+            console.error('获取 amount_due_round 失败:', error);
+            // 出错时默认显示 Balance
+            if (balanceCard) balanceCard.style.display = 'flex';
+            return;
+        }
+        
+        var amountDue = userData.amount_due_round || 0;
+        var balance = userData.balance || 0;
+        var username = userData.username || user.username;
+        
+        if (amountDue > 0) {
+            // 🔥 有 Amount Due → 直接显示 Amount Due 卡片
+            if (amountDueCard) {
+                amountDueCard.style.display = 'flex';
+                if (displayAmountDue) displayAmountDue.textContent = '€' + amountDue.toFixed(2);
+                if (amountDueUsername) amountDueUsername.textContent = username;
+            }
+            if (balanceCard) balanceCard.style.display = 'none';
+        } else {
+            // 没有 Amount Due → 显示 Balance 卡片
+            if (balanceCard) {
+                balanceCard.style.display = 'flex';
+                if (displayBalance) displayBalance.textContent = '€' + balance.toFixed(2);
+                if (balanceUsername) balanceUsername.textContent = username;
+            }
+            if (amountDueCard) amountDueCard.style.display = 'none';
+        }
+    } catch (e) {
+        console.error('初始化卡片显示失败:', e);
+        // 出错时默认显示 Balance
+        if (balanceCard) balanceCard.style.display = 'flex';
+        if (amountDueCard) amountDueCard.style.display = 'none';
+    }
 })();
 
             // ========== 产品滚动 ==========
