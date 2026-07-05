@@ -977,26 +977,27 @@ function getAmountDue(uid) {
 }
 
         function showAmountDueCard(amountDue) {
-            var existing = document.getElementById('amountDueCard');
-            if (existing) {
-                var val = existing.querySelector('.amount-due-value');
-                if (val) val.innerHTML = '€' + amountDue.toFixed(2);
-                return;
-            }
-            var card = document.createElement('div');
-            card.id = 'amountDueCard';
-            card.className = 'amount-due-card';
-            card.innerHTML = '<span class="amount-due-label"><i class="fas fa-exclamation-triangle"></i> Amount Due</span><span class="amount-due-value">€' + amountDue.toFixed(2) + '</span>';
-            var ordersRow = document.querySelector('.orders-row');
-            if (ordersRow && ordersRow.parentNode) {
-                ordersRow.parentNode.insertBefore(card, ordersRow);
-            } else {
-                var bigCard = document.querySelector('.big-card');
-                if (bigCard) {
-                    bigCard.insertBefore(card, bigCard.firstChild);
-                }
-            }
+    var existing = document.getElementById('amountDueCard');
+    if (existing) {
+        var val = existing.querySelector('.amount-due-value');
+        if (val) val.innerHTML = '€' + amountDue.toFixed(2);
+        return;
+    }
+    var card = document.createElement('div');
+    card.id = 'amountDueCard';
+    card.className = 'amount-due-card';
+    // 🔥 修改这里：使用 t('amount_due') 翻译
+    card.innerHTML = '<span class="amount-due-label"><i class="fas fa-exclamation-triangle"></i> ' + t('amount_due') + '</span><span class="amount-due-value">€' + amountDue.toFixed(2) + '</span>';
+    var ordersRow = document.querySelector('.orders-row');
+    if (ordersRow && ordersRow.parentNode) {
+        ordersRow.parentNode.insertBefore(card, ordersRow);
+    } else {
+        var bigCard = document.querySelector('.big-card');
+        if (bigCard) {
+            bigCard.insertBefore(card, bigCard.firstChild);
         }
+    }
+}
 
         function hideAmountDueCard() {
             var existing = document.getElementById('amountDueCard');
