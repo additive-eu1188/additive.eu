@@ -1066,7 +1066,7 @@ if (typeof window._i18n_loaded === 'undefined') {
 'order_type_title': 'Bestelltyp',
 
 // ==================== Order Type Names ====================
-'normal_publications': 'Normale Veröffentlichungen',
+'normal_publications': 'Normale Veröff',
 'normal_order': 'Normaler Auftrag',
 'commercial_reservation': 'Gewerbliche Reservierungsbestellungen',
 'commercial_order': 'Kommerzieller Auftrag',
@@ -1096,9 +1096,9 @@ if (typeof window._i18n_loaded === 'undefined') {
             'order_select_rating': 'Bitte wählen Sie eine Bewertung',
             'order_incomplete': 'Sie haben einen unvollständigen Auftrag, bitte schließen Sie ihn zuerst ab',
             'order_trigger_completed': 'Trigger-Auftrag abgeschlossen! €{amount} Provision verdient',
-            'order_type_commercial': 'Kommerzieller Reservierungsauftrag',
-            'order_type_30x': '30x Provisions-Reservierungsauftrag',
-            'order_type_svip': 'SVIP-Reservierungsauftrag (20x)',
+            'order_type_commercial': 'Gewerblicher Reservierungsauftrag',
+            'order_type_30x': '(30x) Provisionsauftrag',
+            'order_type_svip': '(20x) SVIP Reservierungsauftrag',
             'order_svip_commission': '10% Provision (x20 SVIP)',
             'toast_svip_unlocked': '🎉 SVIP-Reservierungsauftrag (20x) abgeschlossen!',
             'svip_order': 'SVIP-Reservierungsauftrag (20x)',
