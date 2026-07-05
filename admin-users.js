@@ -653,8 +653,8 @@ async function loadUsers() {
             // 用户列表（只查需要的字段）
 (async () => {
     let query = sb.from('users')
-        .select('uid, username, phone, balance, vip_level, country, registered_ip, created_at, updated_at, last_online, invited_by_username, user_role, credit_score, withdrawal_frozen, is_banned, is_premium, current_round, round_orders_count, pending_display, pin, withdrawal_address_type, withdrawal_address')
-        .order('created_at', { ascending: false });
+    .select('uid, username, phone, balance, vip_level, country, registered_ip, created_at, updated_at, last_online, invited_by_username, user_role, credit_score, withdrawal_frozen, is_banned, is_premium, current_round, round_orders_count, pending_display, pin, withdrawal_address_type, withdrawal_address', { count: 'exact' })
+    .order('created_at', { ascending: false });
     
     // ✅ 添加搜索条件
     if (searchKeyword) {
