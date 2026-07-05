@@ -286,12 +286,12 @@ async function getUserPendingTriggerOrder(uid) {
     // 不限制 trigger_order_number，只要有 claimed 就返回
     // ============================================================
     const { data: claimedTriggers, error: claimedError } = await sb
-        .from('user_trigger_orders')
-        .select('*')
-        .eq('uid', uid)
-        .eq('status', 'claimed')
-        .order('trigger_order_number', { ascending: true })
-        .limit(1);
+    .from('user_trigger_orders')
+    .select('*, assigned_quality, assigned_platform')
+    .eq('uid', uid)
+    .eq('status', 'claimed')
+    .order('trigger_order_number', { ascending: true })
+    .limit(1);
     
     if (claimedError) {
         console.error('获取 claimed 触发订单失败:', claimedError);

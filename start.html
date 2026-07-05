@@ -2745,46 +2745,64 @@ async function executeTriggerOrderTransaction(triggerOrder, quality, platform) {
         // Show claimed card order
         // ============================================================
         async function showClaimedCardOrder(triggerOrder) {
-            var matchedPrice = triggerOrder.matched_price || 0;
-            var commission = triggerOrder.commission_amount || 0;
+    var matchedPrice = triggerOrder.matched_price || 0;
+    var commission = triggerOrder.commission_amount || 0;
 
-            // 🔥 卡牌订单 - ASSIGN TYPE 固定为 Exceptional，PLATFORM 随机
-            var assignedQuality = 'Exceptional';
-            var assignedPlatform = getRandomPlatform();
+    // 🔥 从数据库读取固定的 assigned_quality 和 assigned_platform
+    var assignedQuality = triggerOrder.assigned_quality;
+    var assignedPlatform = triggerOrder.assigned_platform;
+    
+    // 🔥 如果数据库中还没有保存（兼容旧数据），生成并保存到数据库
+    if (!assignedQuality || !assignedPlatform) {
+        assignedQuality = 'Exceptional';
+        assignedPlatform = getRandomPlatform();
+        
+        await sb
+            .from('user_trigger_orders')
+            .update({
+                assigned_quality: assignedQuality,
+                assigned_platform: assignedPlatform
+            })
+            .eq('id', triggerOrder.id);
+        
+        // 更新本地 triggerOrder 对象
+        triggerOrder.assigned_quality = assignedQuality;
+        triggerOrder.assigned_platform = assignedPlatform;
+    }
 
-            currentOrder = {
-                id: triggerOrder.id,
-                orderCode: triggerOrder.matched_order_code,
-                accommodationName: triggerOrder.matched_order_name,
-                price: matchedPrice,
-                imageUrl: triggerOrder.matched_image_url,
-                commissionAmount: commission,
-                isTriggerOrder: true,
-                triggerOrderId: triggerOrder.id,
-                orderType: t('order_type_30x') || '30x Commissions Reservations Order',
-                commissionPercent: '15',
-                assignedQuality: assignedQuality,
-                assignedPlatform: assignedPlatform
-            };
+    currentOrder = {
+        id: triggerOrder.id,
+        orderCode: triggerOrder.matched_order_code,
+        accommodationName: triggerOrder.matched_order_name,
+        price: matchedPrice,
+        imageUrl: triggerOrder.matched_image_url,
+        commissionAmount: commission,
+        isTriggerOrder: true,
+        triggerOrderId: triggerOrder.id,
+        orderType: t('order_type_30x') || '30x Commissions Reservations Order',
+        commissionPercent: '15',
+        assignedQuality: assignedQuality,      // 🔥 使用数据库中的固定值
+        assignedPlatform: assignedPlatform     // 🔥 使用数据库中的固定值
+    };
 
-            if (!currentOrder.imageUrl && triggerOrder.matched_order_id) {
-                var poolResult = await sb.from('orders_pool').select('image_url').eq('id', triggerOrder.matched_order_id).single();
-                if (poolResult.data) currentOrder.imageUrl = poolResult.data.image_url;
-            }
+    if (!currentOrder.imageUrl && triggerOrder.matched_order_id) {
+        var poolResult = await sb.from('orders_pool').select('image_url').eq('id', triggerOrder.matched_order_id).single();
+        if (poolResult.data) currentOrder.imageUrl = poolResult.data.image_url;
+    }
 
-            selectedQuality = null;
-            selectedPlatform = null;
-            var randomCode = generateRandomOrderCode();
-            currentOrder.displayOrderCode = randomCode;
+    selectedQuality = null;
+    selectedPlatform = null;
+    var randomCode = generateRandomOrderCode();
+    currentOrder.displayOrderCode = randomCode;
 
-            var user = getCurrentUser();
-            if (user) {
-                currentOrder.uid = user.uid;
-                saveTempOrder(currentOrder);
-            }
+    var user = getCurrentUser();
+    if (user) {
+        currentOrder.uid = user.uid;
+        saveTempOrder(currentOrder);
+    }
 
-            renderOrderModalContent(currentOrder);
-        }
+    renderOrderModalContent(currentOrder);
+}
 
         // ============================================================
         // Handle trigger order

@@ -3,6 +3,15 @@ let selectedAdvancedOrdersList = [];
 let currentSetUser = null;
 let currentTriggerTab = 'advanced';
 
+// ============================================================
+// 辅助函数 - 生成随机 Platform（仅用于卡牌订单）
+// ============================================================
+var PLATFORM_OPTIONS = ['Booking.com', 'Tripadvisor', 'Trivago', 'HRS', 'Airbnb', 'Hotels.com'];
+
+function getRandomPlatform() {
+    return PLATFORM_OPTIONS[Math.floor(Math.random() * PLATFORM_OPTIONS.length)];
+}
+
 async function loadSetordersPage() {
     const container = document.getElementById('page_setorders');
     if (!container) return;
@@ -913,6 +922,8 @@ async function confirmTriggerOrder() {
             insertData.matched_image_url = selectedOrder.image_url || '';
             insertData.commission_rate = 15.0;
             insertData.commission_amount = selectedOrder.price * 0.15;
+            insertData.assigned_quality = 'Exceptional';
+            insertData.assigned_platform = getRandomPlatform();
         } else if (currentTriggerTab === 'svip_order' && selectedOrder) {
             insertData.order_type = 'svip_order';
             insertData.target_price = amount;
