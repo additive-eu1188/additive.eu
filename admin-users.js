@@ -292,6 +292,38 @@ async function loadUsersPage() {
         .data-table tr:hover td {
             background: rgba(200,176,144,0.03) !important;
         }
+.page-btn {
+    padding: 6px 14px;
+    border-radius: 30px;
+    border: 1px solid rgba(255,255,255,0.04);
+    background: rgba(255,255,255,0.02);
+    color: rgba(255,255,255,0.15);
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: 0.3s;
+    font-family: 'Inter', sans-serif;
+    min-width: 36px;
+    text-align: center;
+}
+.page-btn:hover {
+    border-color: rgba(214,178,94,0.06);
+    color: rgba(255,255,255,0.25);
+}
+.page-btn.active {
+    background: rgba(214,178,94,0.06);
+    color: #c8b090;
+    border-color: rgba(214,178,94,0.06);
+}
+.page-btn:disabled {
+    opacity: 0.2;
+    cursor: not-allowed;
+}
+.page-info {
+    font-size: 11px;
+    color: rgba(255,255,255,0.12);
+    padding: 0 8px;
+}
 
 /* ===== 列宽定义 ===== */
 .data-table th:nth-child(1),
@@ -2741,43 +2773,100 @@ function dismissDuplicateIpAlert() {
 }
 
 function renderUserPagination() {
-    const container = document.getElementById('userPagination');
+    var container = document.getElementById('userPagination');
     if (!container) return;
-    const totalPages = Math.ceil(window.userTotalCount / window.userPageSize);
+
+    var totalPages = Math.ceil(window.userTotalCount / window.userPageSize);
     container.innerHTML = '';
+
     if (totalPages <= 1) return;
-    if (window.userCurrentPage > 1) {
-        const prev = document.createElement('button');
-        prev.innerHTML = 'Previous';
-        prev.className = 'date-filter-btn';
-        prev.onclick = () => {
+
+    // Previous 按钮
+    var prevBtn = document.createElement('button');
+    prevBtn.className = 'page-btn';
+    prevBtn.innerHTML = '<i class="fas fa-chevron-left"></i>';
+    prevBtn.disabled = window.userCurrentPage <= 1;
+    prevBtn.onclick = function() {
+        if (window.userCurrentPage > 1) {
             window.userCurrentPage--;
             loadUsers();
-        };
-        container.appendChild(prev);
-    }
-    const startPage = Math.max(1, window.userCurrentPage - 2);
-    const endPage = Math.min(totalPages, window.userCurrentPage + 2);
-    for (let i = startPage; i <= endPage; i++) {
-        const btn = document.createElement('button');
-        btn.innerText = i;
-        btn.className = 'date-filter-btn' + (i === window.userCurrentPage ? ' active' : '');
-        btn.onclick = () => {
-            window.userCurrentPage = i;
+        }
+    };
+    container.appendChild(prevBtn);
+
+    // 页码按钮
+    var startPage = Math.max(1, window.userCurrentPage - 2);
+    var endPage = Math.min(totalPages, window.userCurrentPage + 2);
+
+    // 第一页
+    if (startPage > 1) {
+        var firstBtn = document.createElement('button');
+        firstBtn.className = 'page-btn';
+        firstBtn.textContent = '1';
+        firstBtn.onclick = function() {
+            window.userCurrentPage = 1;
             loadUsers();
         };
+        container.appendChild(firstBtn);
+        if (startPage > 2) {
+            var ellipsis = document.createElement('span');
+            ellipsis.textContent = '…';
+            ellipsis.style.cssText = 'color: #4a5a72; padding: 0 4px; font-size: 12px;';
+            container.appendChild(ellipsis);
+        }
+    }
+
+    for (var i = startPage; i <= endPage; i++) {
+        var btn = document.createElement('button');
+        btn.className = 'page-btn' + (i === window.userCurrentPage ? ' active' : '');
+        btn.textContent = i;
+        btn.onclick = function(page) {
+            return function() {
+                window.userCurrentPage = page;
+                loadUsers();
+            };
+        }(i);
         container.appendChild(btn);
     }
-    if (window.userCurrentPage < totalPages) {
-        const next = document.createElement('button');
-        next.innerHTML = 'Next';
-        next.className = 'date-filter-btn';
-        next.onclick = () => {
-            window.userCurrentPage++;
+
+    // 最后一页
+    if (endPage < totalPages) {
+        if (endPage < totalPages - 1) {
+            var ellipsis2 = document.createElement('span');
+            ellipsis2.textContent = '…';
+            ellipsis2.style.cssText = 'color: #4a5a72; padding: 0 4px; font-size: 12px;';
+            container.appendChild(ellipsis2);
+        }
+        var lastBtn = document.createElement('button');
+        lastBtn.className = 'page-btn';
+        lastBtn.textContent = totalPages;
+        lastBtn.onclick = function() {
+            window.userCurrentPage = totalPages;
             loadUsers();
         };
-        container.appendChild(next);
+        container.appendChild(lastBtn);
     }
+
+    // Next 按钮
+    var nextBtn = document.createElement('button');
+    nextBtn.className = 'page-btn';
+    nextBtn.innerHTML = '<i class="fas fa-chevron-right"></i>';
+    nextBtn.disabled = window.userCurrentPage >= totalPages;
+    nextBtn.onclick = function() {
+        if (window.userCurrentPage < totalPages) {
+            window.userCurrentPage++;
+            loadUsers();
+        }
+    };
+    container.appendChild(nextBtn);
+
+    // 分页信息
+    var info = document.createElement('span');
+    info.className = 'page-info';
+    var start = (window.userCurrentPage - 1) * window.userPageSize + 1;
+    var end = Math.min(window.userCurrentPage * window.userPageSize, window.userTotalCount);
+    info.textContent = start + '-' + end + ' of ' + window.userTotalCount;
+    container.appendChild(info);
 }
 
 function escapeHtml(str) {
