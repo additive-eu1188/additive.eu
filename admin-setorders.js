@@ -584,7 +584,9 @@ function showCalculatorPanel(userData) {
             window._hasPending = false;
         });
 
-        // 绑定输入事件（自动计算）
+    // ============================================================
+    // 🔥 绑定输入事件（自动计算）
+    // ============================================================
     function updateCalculator() {
         var ordersInput = document.getElementById('calcOrdersInput');
         var negativeInput = document.getElementById('calcNegativeInput');
@@ -594,10 +596,12 @@ function showCalculatorPanel(userData) {
         
         if (!ordersInput || !negativeInput || !resultDisplay) return;
         
+        // 🔥 使用当前显示的值（可能是 Balance 或 Pending）
         var currentValue = window._pendingDisplayValue !== undefined ? window._pendingDisplayValue : (userData.balance || 0);
         var orders = parseInt(ordersInput.value) || 1;
         var setNegative = parseFloat(negativeInput.value) || 0;
         
+        // 🔥 计算方式：当前值 × 0.005 × Orders + 当前值 + Set Negative
         var result = currentValue * 0.005 * orders + currentValue + setNegative;
         
         if (uidDisplay) uidDisplay.textContent = userData.uid || '-';
@@ -605,16 +609,18 @@ function showCalculatorPanel(userData) {
         resultDisplay.textContent = '€' + result.toFixed(2);
         
         document.getElementById('cardAmount').innerHTML = '€' + result.toFixed(2);
-    }  // ← 这行必须存在！
+    }
 
+    // 绑定输入事件
     var ordersInput = document.getElementById('calcOrdersInput');
     var negativeInput = document.getElementById('calcNegativeInput');
     
     if (ordersInput) ordersInput.addEventListener('input', updateCalculator);
     if (negativeInput) negativeInput.addEventListener('input', updateCalculator);
 
+    // 初始计算
     setTimeout(updateCalculator, 100);
-}  // ← showCalculatorPanel 函数的闭合括号
+}
 
 // ============================================================
 // 🔥 搜索触发订单
