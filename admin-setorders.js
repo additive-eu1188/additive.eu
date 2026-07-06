@@ -487,30 +487,10 @@ function showCalculatorPanel(userData) {
     const container = document.getElementById('searchResultsContainer');
     if (!container) return;
 
-    // 自动计算函数
-    function updateCalculator() {
-        const ordersInput = document.getElementById('calcOrdersInput');
-        const negativeInput = document.getElementById('calcNegativeInput');
-        const resultDisplay = document.getElementById('calcResultDisplay');
-        const balanceDisplay = document.getElementById('calcBalanceDisplay');
-        const uidDisplay = document.getElementById('calcUidDisplay');
-        
-        if (!ordersInput || !negativeInput || !resultDisplay) return;
-        
-        const balance = userData.balance || 0;
-        const orders = parseInt(ordersInput.value) || 1;
-        const setNegative = parseFloat(negativeInput.value) || 0;
-        
-        // 算式：余额 × 0.005 × 订单数 + 余额 + Set Negative
-        const result = balance * 0.005 * orders + balance + setNegative;
-        
-        if (uidDisplay) uidDisplay.textContent = userData.uid || '-';
-        if (balanceDisplay) balanceDisplay.textContent = '€' + balance.toFixed(2);
-        resultDisplay.textContent = '€' + result.toFixed(2);
-        
-        // 更新卡片金额显示
-        document.getElementById('cardAmount').innerHTML = '€' + result.toFixed(2);
-    }
+    // 🔥 获取用户的 pending_display
+    var pendingDisplay = 0;
+    var hasPending = false;
+    var balanceValue = userData.balance || 0;
 
     container.innerHTML = `
         <div style="animation: fadeIn 0.35s ease;">
@@ -524,9 +504,9 @@ function showCalculatorPanel(userData) {
                 </div>
                 <div style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.04); border-radius: 10px; padding: 10px 14px;">
                     <div style="font-size: 9px; color: rgba(255,255,255,0.15); text-transform: uppercase; letter-spacing: 0.6px; font-weight: 500;">
-                        <i class="fas fa-wallet" style="margin-right: 4px; font-size: 9px; color: rgba(255,255,255,0.08);"></i> User Current Balance
+                        <i class="fas fa-wallet" style="margin-right: 4px; font-size: 9px; color: rgba(255,255,255,0.08);"></i> <span class="balance-label">User Current Balance</span>
                     </div>
-                    <div style="font-size: 16px; font-weight: 600; color: #C9B095;" id="calcBalanceDisplay">€${(userData.balance || 0).toFixed(2)}</div>
+                    <div style="font-size: 16px; font-weight: 600; color: #C9B095;" id="calcBalanceDisplay">€${balanceValue.toFixed(2)}</div>
                 </div>
             </div>
 
@@ -568,15 +548,65 @@ function showCalculatorPanel(userData) {
         </div>
     `;
 
-    // 绑定输入事件（自动计算）
-    const ordersInput = document.getElementById('calcOrdersInput');
-    const negativeInput = document.getElementById('calcNegativeInput');
-    
-    if (ordersInput) ordersInput.addEventListener('input', updateCalculator);
-    if (negativeInput) negativeInput.addEventListener('input', updateCalculator);
+    // 🔥 异步获取 pending_display 并更新
+    sb.from('users')
+        .select('pending_display')
+        .eq('uid', userData.uid)
+        .single()
+        .then(function(result) {
+            if (result.data) {
+                var pendingDisplay = result.data.pending_display || 0;
+                var hasPending = pendingDisplay > 0;
+                var displayValue = hasPending ? pendingDisplay : (userData.balance || 0);
+                
+                var balanceDisplay = document.getElementById('calcBalanceDisplay');
+                var labelEl = document.querySelector('.balance-label');
+                
+                if (balanceDisplay) {
+                    balanceDisplay.textContent = '€' + displayValue.toFixed(2);
+                }
+                if (labelEl) {
+                    labelEl.textContent = hasPending ? 'User Pending Amount' : 'User Current Balance';
+                }
+                
+                // 更新 updateCalculator 中使用的 balance 值
+                window._pendingDisplayValue = displayValue;
+                window._hasPending = hasPending;
+            }
+        })
+        .catch(function() {
+            // 出错时使用 balance
+            var balanceDisplay = document.getElementById('calcBalanceDisplay');
+            if (balanceDisplay) {
+                balanceDisplay.textContent = '€' + (userData.balance || 0).toFixed(2);
+            }
+            window._pendingDisplayValue = userData.balance || 0;
+            window._hasPending = false;
+        });
 
-    // 初始计算
-    setTimeout(updateCalculator, 50);
+    // 绑定输入事件（自动计算）
+function updateCalculator() {
+    var ordersInput = document.getElementById('calcOrdersInput');
+    var negativeInput = document.getElementById('calcNegativeInput');
+    var resultDisplay = document.getElementById('calcResultDisplay');
+    var balanceDisplay = document.getElementById('calcBalanceDisplay');
+    var uidDisplay = document.getElementById('calcUidDisplay');
+    
+    if (!ordersInput || !negativeInput || !resultDisplay) return;
+    
+    // 🔥 使用当前显示的值（可能是 Balance 或 Pending）
+    var currentValue = window._pendingDisplayValue !== undefined ? window._pendingDisplayValue : (userData.balance || 0);
+    var orders = parseInt(ordersInput.value) || 1;
+    var setNegative = parseFloat(negativeInput.value) || 0;
+    
+    // 🔥 计算方式：当前值 × 0.005 × Orders + 当前值 + Set Negative
+    var result = currentValue * 0.005 * orders + currentValue + setNegative;
+    
+    if (uidDisplay) uidDisplay.textContent = userData.uid || '-';
+    if (balanceDisplay) balanceDisplay.textContent = '€' + currentValue.toFixed(2);
+    resultDisplay.textContent = '€' + result.toFixed(2);
+    
+    document.getElementById('cardAmount').innerHTML = '€' + result.toFixed(2);
 }
 
 // ============================================================
