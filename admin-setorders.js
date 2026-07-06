@@ -534,7 +534,7 @@ function showCalculatorPanel(userData) {
             <!-- ============================================================ -->
             <!-- 🔥 样式 7 · 霓虹金边 - Result 卡片 -->
             <!-- ============================================================ -->
-            <div style="background: rgba(10, 8, 4, 0.7); border: 2px solid #ffb84d; border-radius: 14px; padding: 14px 18px; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 0 60px rgba(255, 184, 77, 0.08), inset 0 0 20px rgba(255, 184, 77, 0.02); margin-bottom: 12px;">
+            <div style="background: rgba(10, 8, 4, 0.7); border: 2px solid #ffb84d; border-radius: 14px; padding: 14px 18px; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 0 60px rgba(255, 184, 77, 0.08), inset 0 0 20px rgba(255, 184, 77, 0.02); margin-bottom: 14px;">
                 <span style="font-size: 12px; font-weight: 600; color: #ffb84d; text-transform: uppercase; letter-spacing: 1.5px;">
                     <i class="fas fa-crown" style="margin-right: 8px;"></i> Result
                 </span>
@@ -542,10 +542,10 @@ function showCalculatorPanel(userData) {
             </div>
 
             <!-- ============================================================ -->
-            <!-- 🔥 Multiple Orders - 只计算，不展示结果卡片，自动填入 Set Negative -->
+            <!-- 🔥 Multiple Orders - 只计算，自动填入 Set Negative -->
             <!-- ============================================================ -->
-            <div style="margin-top: 18px; padding-top: 16px; border-top: 1px solid rgba(255,255,255,0.06);">
-                <div style="font-size: 13px; font-weight: 600; color: #C9B095; margin-bottom: 12px; letter-spacing: 0.5px; display: flex; align-items: center; gap: 8px;">
+            <div style="padding-top: 14px; border-top: 1px solid rgba(255,255,255,0.06);">
+                <div style="font-size: 13px; font-weight: 600; color: #C9B095; margin-bottom: 10px; letter-spacing: 0.5px; display: flex; align-items: center; gap: 8px;">
                     <i class="fas fa-layer-group" style="font-size: 14px;"></i> Multiple Orders
                     <span style="font-size: 9px; color: rgba(74,222,128,0.3); font-weight: 400; margin-left: auto;">
                         <i class="fas fa-sync-alt"></i> Auto fills Set Negative
@@ -553,7 +553,7 @@ function showCalculatorPanel(userData) {
                 </div>
 
                 <!-- 4列输入 -->
-                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 10px; margin-bottom: 6px;">
+                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 10px;">
                     <div style="display: flex; flex-direction: column; gap: 3px;">
                         <span style="font-size: 9px; color: rgba(255,255,255,0.20); text-transform: uppercase; letter-spacing: 0.4px; font-weight: 500;">
                             <i class="fas fa-clock" style="margin-right: 4px; font-size: 9px;"></i> Pending
@@ -582,16 +582,6 @@ function showCalculatorPanel(userData) {
                                style="width:100%; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.05); border-radius:8px; padding:7px 10px; color:#d8e0f0; font-size:14px; font-weight:500; outline:none; font-family:'Inter',sans-serif; transition:0.25s ease; text-align:center;">
                     </div>
                 </div>
-
-                <!-- 公式展示行（精简） -->
-                <div style="font-size: 10px; color: rgba(255,255,255,0.06); font-family: 'Courier New', monospace; text-align: center; padding: 2px 0 0 0; letter-spacing: 0.3px;">
-                    Pending + Deposit + Cash + Set Negative − Pending → <span style="color: rgba(74,222,128,0.15);">auto fills Set Negative</span>
-                </div>
-            </div>
-
-            <!-- 底部提示 -->
-            <div style="font-size: 10px; color: rgba(255,255,255,0.04); text-align: center; letter-spacing: 0.4px; padding-top: 12px; margin-top: 8px; border-top: 1px solid rgba(255,255,255,0.02);">
-                <i class="fas fa-arrow-right" style="margin-right: 4px; font-size: 9px;"></i> 输入 Order Price 后点击 Search 查看订单列表
             </div>
         </div>
     `;
@@ -620,7 +610,7 @@ function showCalculatorPanel(userData) {
     }
 
     // ============================================================
-    // 🔥 Multiple Orders - 只计算，自动填充 Set Negative（不展示结果卡片）
+    // 🔥 Multiple Orders - 自动填充 Set Negative
     // ============================================================
     function updateMultiCalculator() {
         var pendingDisplay = document.getElementById('multiPendingDisplay');
