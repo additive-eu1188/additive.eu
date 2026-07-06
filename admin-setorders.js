@@ -527,8 +527,8 @@ function showCalculatorPanel(userData) {
             </div>
 
             <!-- 公式小字 -->
-<div style="font-size: 13px; color: rgba(255,255,255,0.08); font-family: 'Courier New', monospace; letter-spacing: 0.3px; text-align: right; margin-bottom: 10px; font-weight: 500;">
-    <span id="formulaLabel" style="color: rgba(201,176,149,0.25); font-weight: 600;">Balance</span> × 0.005 × <span style="color: rgba(201,176,149,0.25); font-weight: 600;">Orders</span> + <span id="formulaLabel2" style="color: rgba(201,176,149,0.25); font-weight: 600;">Balance</span> + <span style="color: rgba(74,222,128,0.20); font-weight: 600;">Set Negative</span>
+<div style="font-size: 13px; color: rgba(255,255,255,0.15); font-family: 'Courier New', monospace; letter-spacing: 0.3px; text-align: right; margin-bottom: 10px; font-weight: 500;">
+    <span id="formulaLabel" style="color: rgba(201,176,149,0.5); font-weight: 600;">Balance</span> × 0.005 × <span style="color: rgba(201,176,149,0.5); font-weight: 600;">Orders</span> + <span id="formulaLabel2" style="color: rgba(201,176,149,0.5); font-weight: 600;">Balance</span> + <span style="color: rgba(74,222,128,0.4); font-weight: 600;">Set Negative</span>
 </div>
 
             <!-- 计算结果 -->
