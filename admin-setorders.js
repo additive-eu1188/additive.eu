@@ -527,9 +527,9 @@ function showCalculatorPanel(userData) {
             </div>
 
             <!-- 公式小字 -->
-            <div style="font-size: 9px; color: rgba(255,255,255,0.05); font-family: 'Courier New', monospace; letter-spacing: 0.2px; text-align: right; margin-bottom: 10px;">
-                <span style="color: rgba(201,176,149,0.12);">Balance</span> × 0.005 × <span style="color: rgba(201,176,149,0.12);">Orders</span> + <span style="color: rgba(201,176,149,0.12);">Balance</span> + <span style="color: rgba(74,222,128,0.10);">Set Negative</span>
-            </div>
+<div style="font-size: 13px; color: rgba(255,255,255,0.08); font-family: 'Courier New', monospace; letter-spacing: 0.3px; text-align: right; margin-bottom: 10px; font-weight: 500;">
+    <span id="formulaLabel" style="color: rgba(201,176,149,0.25); font-weight: 600;">Balance</span> × 0.005 × <span style="color: rgba(201,176,149,0.25); font-weight: 600;">Orders</span> + <span id="formulaLabel2" style="color: rgba(201,176,149,0.25); font-weight: 600;">Balance</span> + <span style="color: rgba(74,222,128,0.20); font-weight: 600;">Set Negative</span>
+</div>
 
             <!-- 计算结果 -->
             <div style="background: rgba(255,255,255,0.015); border: 1px solid rgba(255,255,255,0.03); border-radius: 12px; padding: 12px 16px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; margin-bottom: 12px;">
@@ -571,42 +571,47 @@ function showCalculatorPanel(userData) {
 
     // 🔥 异步获取 pending_display 并更新
     sb.from('users')
-        .select('pending_display')
-        .eq('uid', userData.uid)
-        .single()
-        .then(function(result) {
-            if (result.data) {
-                var pendingDisplay = result.data.pending_display || 0;
-                var hasPending = pendingDisplay > 0;
-                var displayValue = hasPending ? pendingDisplay : (userData.balance || 0);
-                
-                var balanceDisplay = document.getElementById('calcBalanceDisplay');
-                var labelEl = document.querySelector('.balance-label');
-                
-                if (balanceDisplay) {
-                    balanceDisplay.textContent = '€' + displayValue.toFixed(2);
-                }
-                if (labelEl) {
-                    labelEl.textContent = hasPending ? 'User Pending Amount' : 'User Current Balance';
-                }
-                
-                window._pendingDisplayValue = displayValue;
-                window._hasPending = hasPending;
-                
-                // 🔥 更新完成后立即刷新计算
-                updateCalculator();
-            }
-        })
-        .catch(function() {
-            // 出错时使用 balance
+    .select('pending_display')
+    .eq('uid', userData.uid)
+    .single()
+    .then(function(result) {
+        if (result.data) {
+            var pendingDisplay = result.data.pending_display || 0;
+            var hasPending = pendingDisplay > 0;
+            var displayValue = hasPending ? pendingDisplay : (userData.balance || 0);
+            
             var balanceDisplay = document.getElementById('calcBalanceDisplay');
+            var labelEl = document.querySelector('.balance-label');
+            var formulaLabel = document.getElementById('formulaLabel');
+            var formulaLabel2 = document.getElementById('formulaLabel2');
+            
             if (balanceDisplay) {
-                balanceDisplay.textContent = '€' + (userData.balance || 0).toFixed(2);
+                balanceDisplay.textContent = '€' + displayValue.toFixed(2);
             }
-            window._pendingDisplayValue = userData.balance || 0;
-            window._hasPending = false;
+            if (labelEl) {
+                labelEl.textContent = hasPending ? 'User Pending Amount' : 'User Current Balance';
+            }
+            
+            // 🔥 更新公式标签
+            var formulaText = hasPending ? 'Pending' : 'Balance';
+            if (formulaLabel) formulaLabel.textContent = formulaText;
+            if (formulaLabel2) formulaLabel2.textContent = formulaText;
+            
+            window._pendingDisplayValue = displayValue;
+            window._hasPending = hasPending;
+            
             updateCalculator();
-        });
+        }
+    })
+    .catch(function() {
+        var balanceDisplay = document.getElementById('calcBalanceDisplay');
+        if (balanceDisplay) {
+            balanceDisplay.textContent = '€' + (userData.balance || 0).toFixed(2);
+        }
+        window._pendingDisplayValue = userData.balance || 0;
+        window._hasPending = false;
+        updateCalculator();
+    });
 
     // 绑定输入事件
     var ordersInput = document.getElementById('calcOrdersInput');
