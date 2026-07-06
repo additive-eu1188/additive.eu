@@ -495,14 +495,14 @@ function showCalculatorPanel(userData) {
             <!-- 顶部：User ID + Balance -->
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px;">
                 <div style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.04); border-radius: 10px; padding: 10px 14px;">
-                    <div style="font-size: 9px; color: rgba(255,255,255,0.15); text-transform: uppercase; letter-spacing: 0.6px; font-weight: 500;">
-                        <i class="fas fa-user" style="margin-right: 4px; font-size: 9px; color: rgba(255,255,255,0.08);"></i> User ID
+                    <div style="font-size: 9px; color: rgba(255,255,255,0.35); text-transform: uppercase; letter-spacing: 0.6px; font-weight: 500;">
+                        <i class="fas fa-user" style="margin-right: 4px; font-size: 9px; color: rgba(255,255,255,0.35);"></i> User ID
                     </div>
                     <div style="font-size: 16px; font-weight: 600; color: #d8e0f0;" id="calcUidDisplay">${userData.uid || '-'}</div>
                 </div>
                 <div style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.04); border-radius: 10px; padding: 10px 14px;">
-                    <div style="font-size: 9px; color: rgba(255,255,255,0.15); text-transform: uppercase; letter-spacing: 0.6px; font-weight: 500;">
-                        <i class="fas fa-wallet" style="margin-right: 4px; font-size: 9px; color: rgba(255,255,255,0.08);"></i> <span class="balance-label">User Current Balance</span>
+                    <div style="font-size: 9px; color: rgba(255,255,255,0.35); text-transform: uppercase; letter-spacing: 0.6px; font-weight: 500;">
+                        <i class="fas fa-wallet" style="margin-right: 4px; font-size: 9px; color: rgba(255,255,255,0.35);"></i> <span class="balance-label">User Current Balance</span>
                     </div>
                     <div style="font-size: 16px; font-weight: 600; color: #C9B095;" id="calcBalanceDisplay">€${balanceValue.toFixed(2)}</div>
                 </div>
@@ -511,15 +511,15 @@ function showCalculatorPanel(userData) {
             <!-- 输入行：Orders Number + Set Negative -->
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px;">
                 <div style="display: flex; flex-direction: column; gap: 3px;">
-                    <span style="font-size: 9px; color: rgba(255,255,255,0.15); text-transform: uppercase; letter-spacing: 0.6px; font-weight: 500;">
-                        <i class="fas fa-hashtag" style="margin-right: 4px; font-size: 9px; color: rgba(255,255,255,0.08);"></i> Orders Number
+                    <span style="font-size: 9px; color: rgba(255,255,255,0.35); text-transform: uppercase; letter-spacing: 0.6px; font-weight: 500;">
+                        <i class="fas fa-hashtag" style="margin-right: 4px; font-size: 9px; color: rgba(255,255,255,0.35);"></i> Orders Number
                     </span>
                     <input type="number" id="calcOrdersInput" value="1" min="1" step="1" placeholder="0" 
                            style="width:100%; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.05); border-radius:10px; padding:7px 12px; color:#d8e0f0; font-size:14px; font-weight:500; outline:none; font-family:'Inter',sans-serif; transition:0.25s ease;">
                 </div>
                 <div style="display: flex; flex-direction: column; gap: 3px;">
-                    <span style="font-size: 9px; color: rgba(255,255,255,0.15); text-transform: uppercase; letter-spacing: 0.6px; font-weight: 500;">
-                        <i class="fas fa-coins" style="margin-right: 4px; font-size: 9px; color: rgba(255,255,255,0.08);"></i> Set Negative
+                    <span style="font-size: 9px; color: rgba(255,255,255,0.35); text-transform: uppercase; letter-spacing: 0.6px; font-weight: 500;">
+                        <i class="fas fa-coins" style="margin-right: 4px; font-size: 9px; color: rgba(255,255,255,0.35);"></i> Set Negative
                     </span>
                     <input type="number" id="calcNegativeInput" value="0" step="0.01" placeholder="0.00" min="0"
                            style="width:100%; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.05); border-radius:10px; padding:7px 12px; color:#d8e0f0; font-size:14px; font-weight:500; outline:none; font-family:'Inter',sans-serif; transition:0.25s ease;">
@@ -527,8 +527,8 @@ function showCalculatorPanel(userData) {
             </div>
 
             <!-- 公式小字 -->
-            <div style="font-size: 13px; color: rgba(255,255,255,0.15); font-family: 'Courier New', monospace; letter-spacing: 0.3px; text-align: right; margin-bottom: 10px; font-weight: 500;">
-                <span id="formulaLabel" style="color: rgba(201,176,149,0.5); font-weight: 600;">Balance</span> × 0.005 × <span style="color: rgba(201,176,149,0.5); font-weight: 600;">Orders</span> + <span id="formulaLabel2" style="color: rgba(201,176,149,0.5); font-weight: 600;">Balance</span> + <span style="color: rgba(74,222,128,0.4); font-weight: 600;">Set Negative</span>
+            <div style="font-size: 13px; color: rgba(255,255,255,0.30); font-family: 'Courier New', monospace; letter-spacing: 0.3px; text-align: right; margin-bottom: 10px; font-weight: 500;">
+                <span id="formulaLabel" style="color: rgba(201,176,149,0.6); font-weight: 600;">Balance</span> × 0.005 × <span style="color: rgba(201,176,149,0.6); font-weight: 600;">Orders</span> + <span id="formulaLabel2" style="color: rgba(201,176,149,0.6); font-weight: 600;">Balance</span> + <span style="color: rgba(74,222,128,0.5); font-weight: 600;">Set Negative</span>
             </div>
 
             <!-- ============================================================ -->
@@ -544,10 +544,10 @@ function showCalculatorPanel(userData) {
             <!-- ============================================================ -->
             <!-- 🔥 Multiple Orders - 只计算，自动填入 Set Negative -->
             <!-- ============================================================ -->
-            <div style="padding-top: 14px; border-top: 1px solid rgba(255,255,255,0.06);">
+            <div style="padding-top: 14px; border-top: 1px solid rgba(255,255,255,0.08);">
                 <div style="font-size: 13px; font-weight: 600; color: #C9B095; margin-bottom: 10px; letter-spacing: 0.5px; display: flex; align-items: center; gap: 8px;">
                     <i class="fas fa-layer-group" style="font-size: 14px;"></i> Multiple Orders
-                    <span style="font-size: 9px; color: rgba(74,222,128,0.3); font-weight: 400; margin-left: auto;">
+                    <span style="font-size: 9px; color: rgba(74,222,128,0.4); font-weight: 400; margin-left: auto;">
                         <i class="fas fa-sync-alt"></i> Auto fills Set Negative
                     </span>
                 </div>
@@ -555,31 +555,31 @@ function showCalculatorPanel(userData) {
                 <!-- 4列输入 -->
                 <div style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 10px;">
                     <div style="display: flex; flex-direction: column; gap: 3px;">
-                        <span style="font-size: 9px; color: rgba(255,255,255,0.20); text-transform: uppercase; letter-spacing: 0.4px; font-weight: 500;">
-                            <i class="fas fa-clock" style="margin-right: 4px; font-size: 9px;"></i> Pending
+                        <span style="font-size: 9px; color: rgba(255,255,255,0.35); text-transform: uppercase; letter-spacing: 0.4px; font-weight: 500;">
+                            <i class="fas fa-clock" style="margin-right: 4px; font-size: 9px; color: rgba(255,255,255,0.35);"></i> Pending
                         </span>
-                        <span style="font-size: 16px; font-weight: 700; color: #C9B095; padding: 6px 0; background: rgba(255,255,255,0.02); border-radius: 8px; text-align: center; border: 1px solid rgba(255,255,255,0.03);" id="multiPendingDisplay">€0.00</span>
+                        <span style="font-size: 16px; font-weight: 700; color: #C9B095; padding: 6px 0; background: rgba(255,255,255,0.02); border-radius: 8px; text-align: center; border: 1px solid rgba(255,255,255,0.05);" id="multiPendingDisplay">€0.00</span>
                     </div>
                     <div style="display: flex; flex-direction: column; gap: 3px;">
-                        <span style="font-size: 9px; color: rgba(255,255,255,0.20); text-transform: uppercase; letter-spacing: 0.4px; font-weight: 500;">
-                            <i class="fas fa-gift" style="margin-right: 4px; font-size: 9px;"></i> Deposit Bonus
+                        <span style="font-size: 9px; color: rgba(255,255,255,0.35); text-transform: uppercase; letter-spacing: 0.4px; font-weight: 500;">
+                            <i class="fas fa-gift" style="margin-right: 4px; font-size: 9px; color: rgba(255,255,255,0.35);"></i> Deposit Bonus
                         </span>
                         <input type="number" id="multiDepositInput" value="0" step="0.01" min="0" placeholder="0.00"
-                               style="width:100%; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.05); border-radius:8px; padding:7px 10px; color:#d8e0f0; font-size:14px; font-weight:500; outline:none; font-family:'Inter',sans-serif; transition:0.25s ease; text-align:center;">
+                               style="width:100%; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.06); border-radius:8px; padding:7px 10px; color:#d8e0f0; font-size:14px; font-weight:500; outline:none; font-family:'Inter',sans-serif; transition:0.25s ease; text-align:center;">
                     </div>
                     <div style="display: flex; flex-direction: column; gap: 3px;">
-                        <span style="font-size: 9px; color: rgba(255,255,255,0.20); text-transform: uppercase; letter-spacing: 0.4px; font-weight: 500;">
-                            <i class="fas fa-money-bill-wave" style="margin-right: 4px; font-size: 9px;"></i> Cash Reward
+                        <span style="font-size: 9px; color: rgba(255,255,255,0.35); text-transform: uppercase; letter-spacing: 0.4px; font-weight: 500;">
+                            <i class="fas fa-money-bill-wave" style="margin-right: 4px; font-size: 9px; color: rgba(255,255,255,0.35);"></i> Cash Reward
                         </span>
                         <input type="number" id="multiCashInput" value="0" step="0.01" min="0" placeholder="0.00"
-                               style="width:100%; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.05); border-radius:8px; padding:7px 10px; color:#d8e0f0; font-size:14px; font-weight:500; outline:none; font-family:'Inter',sans-serif; transition:0.25s ease; text-align:center;">
+                               style="width:100%; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.06); border-radius:8px; padding:7px 10px; color:#d8e0f0; font-size:14px; font-weight:500; outline:none; font-family:'Inter',sans-serif; transition:0.25s ease; text-align:center;">
                     </div>
                     <div style="display: flex; flex-direction: column; gap: 3px;">
-                        <span style="font-size: 9px; color: rgba(255,255,255,0.20); text-transform: uppercase; letter-spacing: 0.4px; font-weight: 500;">
-                            <i class="fas fa-minus-circle" style="margin-right: 4px; font-size: 9px;"></i> Set Negative
+                        <span style="font-size: 9px; color: rgba(255,255,255,0.35); text-transform: uppercase; letter-spacing: 0.4px; font-weight: 500;">
+                            <i class="fas fa-minus-circle" style="margin-right: 4px; font-size: 9px; color: rgba(255,255,255,0.35);"></i> Set Negative
                         </span>
                         <input type="number" id="multiNegativeInput" value="0" step="0.01" min="0" placeholder="0.00"
-                               style="width:100%; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.05); border-radius:8px; padding:7px 10px; color:#d8e0f0; font-size:14px; font-weight:500; outline:none; font-family:'Inter',sans-serif; transition:0.25s ease; text-align:center;">
+                               style="width:100%; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.06); border-radius:8px; padding:7px 10px; color:#d8e0f0; font-size:14px; font-weight:500; outline:none; font-family:'Inter',sans-serif; transition:0.25s ease; text-align:center;">
                     </div>
                 </div>
             </div>
