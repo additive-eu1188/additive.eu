@@ -229,40 +229,50 @@ async function loadAllOrdersFromDB() {
         const maxPrice = parseFloat(document.getElementById('poolMaxPrice')?.value) || Infinity;
 
         // ============================================================
-        // 🔥 1. 获取统计数据
+        // 🔥 并行执行所有统计查询
         // ============================================================
-        let statsQuery = sb.from('orders_pool').select('*', { count: 'exact', head: true });
+        let totalQuery = sb.from('orders_pool').select('id', { count: 'exact', head: true });
+        let availableQuery = sb.from('orders_pool').select('id', { count: 'exact', head: true }).eq('status', 'available');
+        let unavailableQuery = sb.from('orders_pool').select('id', { count: 'exact', head: true }).eq('status', 'unavailable');
+        let valueQuery = sb.from('orders_pool').select('price');
+
+        // 应用搜索条件
         if (keyword) {
-            statsQuery = statsQuery.or(`order_code.ilike.%${keyword}%,accommodation_name.ilike.%${keyword}%`);
+            totalQuery = totalQuery.or(`order_code.ilike.%${keyword}%,accommodation_name.ilike.%${keyword}%`);
+            availableQuery = availableQuery.or(`order_code.ilike.%${keyword}%,accommodation_name.ilike.%${keyword}%`);
+            unavailableQuery = unavailableQuery.or(`order_code.ilike.%${keyword}%,accommodation_name.ilike.%${keyword}%`);
+            valueQuery = valueQuery.or(`order_code.ilike.%${keyword}%,accommodation_name.ilike.%${keyword}%`);
         }
         if (statusFilter) {
-            statsQuery = statsQuery.eq('status', statusFilter);
+            totalQuery = totalQuery.eq('status', statusFilter);
+            valueQuery = valueQuery.eq('status', statusFilter);
         }
         if (minPrice > 0) {
-            statsQuery = statsQuery.gte('price', minPrice);
+            totalQuery = totalQuery.gte('price', minPrice);
+            availableQuery = availableQuery.gte('price', minPrice);
+            unavailableQuery = unavailableQuery.gte('price', minPrice);
+            valueQuery = valueQuery.gte('price', minPrice);
         }
         if (maxPrice < Infinity) {
-            statsQuery = statsQuery.lte('price', maxPrice);
+            totalQuery = totalQuery.lte('price', maxPrice);
+            availableQuery = availableQuery.lte('price', maxPrice);
+            unavailableQuery = unavailableQuery.lte('price', maxPrice);
+            valueQuery = valueQuery.lte('price', maxPrice);
         }
-        const { count: total } = await statsQuery;
-        totalCount = total || 0;
 
-        // ============================================================
-        // 🔥 2. 获取统计数据（按状态分组）
-        // ============================================================
-        let statusQuery = sb.from('orders_pool').select('status, price');
-        if (keyword) {
-            statusQuery = statusQuery.or(`order_code.ilike.%${keyword}%,accommodation_name.ilike.%${keyword}%`);
-        }
-        const { data: allDataForStats } = await statusQuery;
+        const [totalResult, availableResult, unavailableResult, valueResult] = await Promise.all([
+            totalQuery,
+            availableQuery,
+            unavailableQuery,
+            valueQuery
+        ]);
 
-        let availableCount = 0;
-        let unavailableCount = 0;
+        totalCount = totalResult.count || 0;
+        const availableCount = availableResult.count || 0;
+        const unavailableCount = unavailableResult.count || 0;
         let totalValue = 0;
-        if (allDataForStats) {
-            allDataForStats.forEach(function(o) {
-                if (o.status === 'available') availableCount++;
-                else unavailableCount++;
+        if (valueResult.data) {
+            valueResult.data.forEach(function(o) {
                 totalValue += (o.price || 0);
             });
         }
@@ -273,7 +283,7 @@ async function loadAllOrdersFromDB() {
         document.getElementById('poolStatValue').innerHTML = '€' + totalValue.toFixed(2);
 
         // ============================================================
-        // 🔥 3. 获取分页数据
+        // 🔥 获取分页数据
         // ============================================================
         let query = sb.from('orders_pool').select('*');
         
