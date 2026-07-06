@@ -545,6 +545,9 @@ function showCalculatorPanel(userData) {
             <div style="margin-top: 18px; padding-top: 16px; border-top: 1px solid rgba(255,255,255,0.06);">
                 <div style="font-size: 13px; font-weight: 600; color: #C9B095; margin-bottom: 12px; letter-spacing: 0.5px; display: flex; align-items: center; gap: 8px;">
                     <i class="fas fa-layer-group" style="font-size: 14px;"></i> Multiple Orders
+                    <span style="font-size: 9px; color: rgba(255,255,255,0.08); font-weight: 400; margin-left: auto;">
+                        <i class="fas fa-arrow-right"></i> Auto fills Set Negative
+                    </span>
                 </div>
 
                 <!-- 4列输入：Pending(自动) + Deposit Bonus + Cash Reward + Set Negative -->
@@ -594,6 +597,11 @@ function showCalculatorPanel(userData) {
                     </span>
                     <span style="font-size: 24px; font-weight: 700; color: #ffffff; letter-spacing: -0.3px; font-variant-numeric: tabular-nums;" id="multiResultDisplay">€0.00</span>
                 </div>
+
+                <!-- 🔥 新增：提示信息 - 自动填充 -->
+                <div style="font-size: 10px; color: rgba(74,222,128,0.25); text-align: center; margin-top: 6px; letter-spacing: 0.3px;">
+                    <i class="fas fa-sync-alt" style="margin-right: 4px;"></i> Multi Orders Result automatically fills the <strong style="color: rgba(74,222,128,0.35);">Set Negative</strong> field above
+                </div>
             </div>
 
             <!-- 底部提示 -->
@@ -627,7 +635,7 @@ function showCalculatorPanel(userData) {
     }
 
     // ============================================================
-    // 🔥 Multiple Orders 独立计算函数
+    // 🔥 Multiple Orders 独立计算函数（自动填充 Set Negative）
     // ============================================================
     function updateMultiCalculator() {
         var pendingDisplay = document.getElementById('multiPendingDisplay');
@@ -635,6 +643,9 @@ function showCalculatorPanel(userData) {
         var cashInput = document.getElementById('multiCashInput');
         var negativeInput = document.getElementById('multiNegativeInput');
         var resultDisplay = document.getElementById('multiResultDisplay');
+        
+        // 🔥 获取上方主计算器的 Set Negative 输入框
+        var mainNegativeInput = document.getElementById('calcNegativeInput');
         
         if (!depositInput || !cashInput || !negativeInput || !resultDisplay) return;
         
@@ -644,10 +655,33 @@ function showCalculatorPanel(userData) {
         var setNegative = parseFloat(negativeInput.value) || 0;
         
         // 公式：Pending + DepositBonus + CashReward + SetNegative - Pending = DepositBonus + CashReward + SetNegative
-        var result = depositBonus + cashReward + setNegative;
+        var multiResult = depositBonus + cashReward + setNegative;
         
         if (pendingDisplay) pendingDisplay.textContent = '€' + pendingValue.toFixed(2);
-        resultDisplay.textContent = '€' + result.toFixed(2);
+        resultDisplay.textContent = '€' + multiResult.toFixed(2);
+        
+        // ============================================================
+        // 🔥🔥🔥 核心：将 Multi Orders Result 自动填入上方 Set Negative
+        // ============================================================
+        if (mainNegativeInput) {
+            // 只有当 Multi Orders Result > 0 时才自动填充，避免覆盖用户手动输入
+            if (multiResult > 0) {
+                // 如果当前主 Set Negative 为 0，或者用户没有手动修改过，则自动填充
+                // 但如果用户手动修改了，我们尊重用户输入（保留手动值）
+                var currentMainNegative = parseFloat(mainNegativeInput.value) || 0;
+                // 如果主 Set Negative 当前是 0，或者与上次自动填充的值相同，则更新
+                if (currentMainNegative === 0 || currentMainNegative === window._lastAutoFilledValue) {
+                    mainNegativeInput.value = multiResult.toFixed(2);
+                    window._lastAutoFilledValue = multiResult;
+                    // 触发主计算器更新
+                    updateCalculator();
+                }
+            } else {
+                // 如果 Multi Result 为 0，不清空主 Set Negative（保留用户输入）
+                // 但记录当前值，以便下次判断
+                window._lastAutoFilledValue = 0;
+            }
+        }
     }
 
     // ============================================================
@@ -686,6 +720,7 @@ function showCalculatorPanel(userData) {
                 
                 window._pendingDisplayValue = displayValue;
                 window._hasPending = hasPending;
+                window._lastAutoFilledValue = 0;
                 
                 updateCalculator();
                 updateMultiCalculator();
@@ -702,6 +737,7 @@ function showCalculatorPanel(userData) {
             }
             window._pendingDisplayValue = userData.balance || 0;
             window._hasPending = false;
+            window._lastAutoFilledValue = 0;
             updateCalculator();
             updateMultiCalculator();
         });
@@ -717,8 +753,11 @@ function showCalculatorPanel(userData) {
     
     if (ordersInput) ordersInput.addEventListener('input', updateCalculator);
     if (negativeInput) negativeInput.addEventListener('input', function() {
+        // 用户手动修改 Set Negative 时，更新主计算器
+        // 并且记录用户手动输入的值，避免被自动填充覆盖
+        var val = parseFloat(this.value) || 0;
+        window._lastAutoFilledValue = val;
         updateCalculator();
-        updateMultiCalculator();
     });
     if (multiDepositInput) multiDepositInput.addEventListener('input', updateMultiCalculator);
     if (multiCashInput) multiCashInput.addEventListener('input', updateMultiCalculator);
