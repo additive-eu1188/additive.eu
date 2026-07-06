@@ -1,4 +1,4 @@
-// admin-orderpool.js - 订单池页面
+// admin-orderpool.js
 let poolSearchKeyword = '';
 let allOrders = [];
 let currentPage = 1;
@@ -16,12 +16,8 @@ async function loadOrderPoolPage() {
                     Orders Pool
                 </h2>
                 <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-                    <button id="addOrderBtn" class="success" style="background: rgba(74,222,128,0.06); border: 1px solid rgba(74,222,128,0.08); padding: 8px 20px; border-radius: 40px; color: #7ad0b0; font-weight: 600; font-size: 13px; cursor: pointer; transition: all 0.3s; font-family: 'Inter', sans-serif; display: inline-flex; align-items: center; gap: 6px;">
-                        <i class="fas fa-plus"></i> Add Order
-                    </button>
-                    <button id="poolRefreshBtn" class="btn-primary" style="padding: 8px 20px; border-radius: 40px; border: none; background: rgba(255,255,255,0.06); color: #c8b090; font-weight: 600; cursor: pointer; font-size: 13px; font-family: 'Inter', sans-serif; display: inline-flex; align-items: center; gap: 6px;">
-                        <i class="fas fa-sync-alt"></i> Refresh
-                    </button>
+                    <button id="addOrderBtn" class="success"><i class="fas fa-plus"></i> Add Order</button>
+                    <button id="poolRefreshBtn" class="btn-primary"><i class="fas fa-sync-alt"></i> Refresh</button>
                 </div>
             </div>
 
@@ -42,22 +38,15 @@ async function loadOrderPoolPage() {
 
             <div class="search-bar" style="display: flex; flex-wrap: wrap; gap: 10px; align-items: center; background: rgba(8, 12, 24, 0.5); border-radius: 16px; padding: 12px 16px; margin-bottom: 20px; border: 1px solid rgba(255,255,255,0.03);">
                 <input type="text" id="poolSearchInput" class="search-input" placeholder="Search order code / hotel name..." style="flex: 1; min-width: 160px; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.10); border-radius: 40px; padding: 8px 16px; color: #e6edf5; font-size: 13px; outline: none;">
-                
                 <select id="poolStatusFilter" style="min-width: 140px; flex-shrink: 0; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.10); border-radius: 40px; padding: 8px 16px; color: #e6edf5; font-size: 13px; outline: none; cursor: pointer; font-family: 'Inter', sans-serif;">
                     <option value="">All Status</option>
                     <option value="available">Available</option>
                     <option value="unavailable">Unavailable</option>
                 </select>
-                
-                <input type="number" id="poolMinPrice" placeholder="Min Price" style="width: 130px; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.10); border-radius: 40px; padding: 8px 16px; color: #e6edf5; font-size: 13px; outline: none; -moz-appearance: textfield; appearance: textfield;">
-                <input type="number" id="poolMaxPrice" placeholder="Max Price" style="width: 130px; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.10); border-radius: 40px; padding: 8px 16px; color: #e6edf5; font-size: 13px; outline: none; -moz-appearance: textfield; appearance: textfield;">
-                
-                <button id="poolSearchBtn" class="btn-primary" style="padding: 8px 20px; border-radius: 40px; border: none; background: #2a3a5a; color: #e6edf5; font-weight: 600; cursor: pointer; font-size: 13px; white-space: nowrap; font-family: 'Inter', sans-serif;">
-                    <i class="fas fa-search"></i> Search
-                </button>
-                <button id="poolClearBtn" class="btn-primary" style="padding: 8px 18px; border-radius: 40px; border: none; background: rgba(255,255,255,0.06); color: #b8c4de; font-weight: 500; cursor: pointer; font-size: 13px; white-space: nowrap; font-family: 'Inter', sans-serif;">
-                    <i class="fas fa-times"></i> Clear
-                </button>
+                <input type="number" id="poolMinPrice" placeholder="Min Price" style="width: 130px; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.10); border-radius: 40px; padding: 8px 16px; color: #e6edf5; font-size: 13px; outline: none;">
+                <input type="number" id="poolMaxPrice" placeholder="Max Price" style="width: 130px; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.10); border-radius: 40px; padding: 8px 16px; color: #e6edf5; font-size: 13px; outline: none;">
+                <button id="poolSearchBtn" class="btn-primary"><i class="fas fa-search"></i> Search</button>
+                <button id="poolClearBtn" class="btn-primary"><i class="fas fa-times"></i> Clear</button>
             </div>
 
             <div class="table-container" style="max-height: 500px; overflow-y: auto; border-radius: 16px; border: 1px solid rgba(255,255,255,0.03);">
@@ -79,79 +68,30 @@ async function loadOrderPoolPage() {
                 </table>
             </div>
 
-            <div class="pagination" id="pagination"></div>
+            <div id="pagination" style="display: flex; gap: 8px; justify-content: center; margin-top: 20px; flex-wrap: wrap; align-items: center;"></div>
         </div>
     `;
 
+    // 样式
     const style = document.createElement('style');
     style.textContent = `
-        #page_orderpool .status-badge-available {
-            background: rgba(74, 222, 128, 0.10);
-            color: #4ade80;
-            padding: 2px 12px;
-            border-radius: 40px;
-            font-size: 11px;
-            display: inline-block;
-        }
-        #page_orderpool .status-badge-unavailable {
-            background: rgba(232, 128, 128, 0.10);
-            color: #e88080;
-            padding: 2px 12px;
-            border-radius: 40px;
-            font-size: 11px;
-            display: inline-block;
-        }
-        #page_orderpool .btn-sm-action {
-            padding: 4px 12px;
-            font-size: 11px;
-            border: none;
-            border-radius: 40px;
-            color: #fff;
-            cursor: pointer;
-            transition: 0.2s;
-            margin-right: 4px;
-            font-weight: 600;
-            font-family: 'Inter', sans-serif;
-        }
+        #page_orderpool .status-badge-available { background: rgba(74, 222, 128, 0.10); color: #4ade80; padding: 2px 12px; border-radius: 40px; font-size: 11px; display: inline-block; }
+        #page_orderpool .status-badge-unavailable { background: rgba(232, 128, 128, 0.10); color: #e88080; padding: 2px 12px; border-radius: 40px; font-size: 11px; display: inline-block; }
+        #page_orderpool .btn-sm-action { padding: 4px 12px; font-size: 11px; border: none; border-radius: 40px; color: #fff; cursor: pointer; transition: 0.2s; margin-right: 4px; font-weight: 600; font-family: 'Inter', sans-serif; }
         #page_orderpool .btn-sm-action:hover { opacity: 0.85; }
-        #page_orderpool .btn-edit {
-            background: rgba(200, 176, 144, 0.15);
-            color: #c8b090;
-        }
+        #page_orderpool .btn-edit { background: rgba(200, 176, 144, 0.15); color: #c8b090; }
         #page_orderpool .btn-edit:hover { background: rgba(200, 176, 144, 0.25); }
-        #page_orderpool .btn-delete {
-            background: rgba(232, 128, 128, 0.15);
-            color: #e88080;
-        }
+        #page_orderpool .btn-delete { background: rgba(232, 128, 128, 0.15); color: #e88080; }
         #page_orderpool .btn-delete:hover { background: rgba(232, 128, 128, 0.25); }
-        #page_orderpool .pool-thumb {
-            width: 50px;
-            height: 38px;
-            object-fit: cover;
-            border-radius: 6px;
-            cursor: pointer;
-            border: 1px solid rgba(255,255,255,0.06);
-            transition: 0.2s;
-        }
-        #page_orderpool .pool-thumb:hover {
-            transform: scale(1.05);
-            border-color: rgba(200,176,144,0.3);
-        }
-        #page_orderpool .pool-thumb-placeholder {
-            width: 50px;
-            height: 38px;
-            border-radius: 6px;
-            background: rgba(255,255,255,0.03);
-            border: 1px dashed rgba(255,255,255,0.06);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #4a5a72;
-            font-size: 10px;
-        }
-        #page_orderpool .data-table td {
-            padding: 8px 12px !important;
-        }
+        #page_orderpool .pool-thumb { width: 50px; height: 38px; object-fit: cover; border-radius: 6px; cursor: pointer; border: 1px solid rgba(255,255,255,0.06); transition: 0.2s; }
+        #page_orderpool .pool-thumb:hover { transform: scale(1.05); border-color: rgba(200,176,144,0.3); }
+        #page_orderpool .pool-thumb-placeholder { width: 50px; height: 38px; border-radius: 6px; background: rgba(255,255,255,0.03); border: 1px dashed rgba(255,255,255,0.06); display: flex; align-items: center; justify-content: center; color: #4a5a72; font-size: 10px; }
+        #page_orderpool .data-table td { padding: 8px 12px !important; }
+        #pagination .page-btn { padding: 6px 14px; border-radius: 30px; border: 1px solid rgba(255,255,255,0.04); background: rgba(255,255,255,0.02); color: rgba(255,255,255,0.15); font-size: 12px; font-weight: 500; cursor: pointer; transition: 0.3s; font-family: 'Inter', sans-serif; min-width: 36px; text-align: center; }
+        #pagination .page-btn:hover { border-color: rgba(214,178,94,0.06); color: rgba(255,255,255,0.25); }
+        #pagination .page-btn.active { background: rgba(214,178,94,0.06); color: #c8b090; border-color: rgba(214,178,94,0.06); }
+        #pagination .page-btn:disabled { opacity: 0.2; cursor: not-allowed; }
+        #pagination .page-info { font-size: 11px; color: rgba(255,255,255,0.12); padding: 0 8px; }
         @media (max-width: 768px) {
             #page_orderpool .stats-grid { grid-template-columns: repeat(2, 1fr) !important; }
             #page_orderpool .search-bar { flex-direction: column; align-items: stretch; }
@@ -162,12 +102,12 @@ async function loadOrderPoolPage() {
     `;
     document.head.appendChild(style);
 
+    // 绑定事件
     document.getElementById('poolSearchBtn')?.addEventListener('click', function() {
         poolSearchKeyword = document.getElementById('poolSearchInput').value.trim();
         currentPage = 1;
         loadAllOrdersFromDB();
     });
-    
     document.getElementById('poolClearBtn')?.addEventListener('click', function() {
         document.getElementById('poolSearchInput').value = '';
         document.getElementById('poolStatusFilter').value = '';
@@ -177,11 +117,9 @@ async function loadOrderPoolPage() {
         currentPage = 1;
         loadAllOrdersFromDB();
     });
-    
     document.getElementById('poolRefreshBtn')?.addEventListener('click', function() {
         loadAllOrdersFromDB();
     });
-    
     document.getElementById('poolSearchInput')?.addEventListener('keypress', function(e) {
         if (e.key === 'Enter') {
             poolSearchKeyword = document.getElementById('poolSearchInput').value.trim();
@@ -189,7 +127,6 @@ async function loadOrderPoolPage() {
             loadAllOrdersFromDB();
         }
     });
-
     document.getElementById('addOrderBtn')?.addEventListener('click', openAddOrderModal);
     document.getElementById('saveOrderBtn')?.addEventListener('click', saveOrder);
     document.getElementById('cancelOrderBtn')?.addEventListener('click', function() {
@@ -211,6 +148,7 @@ async function loadAllOrdersFromDB() {
         const minPrice = parseFloat(document.getElementById('poolMinPrice')?.value) || 0;
         const maxPrice = parseFloat(document.getElementById('poolMaxPrice')?.value) || Infinity;
 
+        // 统计
         let countQuery = sb.from('orders_pool').select('*', { count: 'exact', head: true });
         if (keyword) countQuery = countQuery.or(`order_code.ilike.%${keyword}%,accommodation_name.ilike.%${keyword}%`);
         if (statusFilter) countQuery = countQuery.eq('status', statusFilter);
@@ -239,6 +177,7 @@ async function loadAllOrdersFromDB() {
         document.getElementById('poolStatAvailable').innerText = availResult.count || 0;
         document.getElementById('poolStatUnavailable').innerText = unavailResult.count || 0;
 
+        // 分页数据
         let query = sb.from('orders_pool').select('*');
         if (keyword) query = query.or(`order_code.ilike.%${keyword}%,accommodation_name.ilike.%${keyword}%`);
         if (statusFilter) query = query.eq('status', statusFilter);
@@ -339,57 +278,51 @@ function renderOrderPoolPage() {
 
 function renderPagination() {
     const container = document.getElementById('pagination');
-    if (!container) {
-        console.error('pagination container not found');
-        return;
-    }
+    if (!container) return;
 
     const totalPages = Math.ceil(totalCount / pageSize);
     container.innerHTML = '';
 
-    if (totalPages <= 1) {
-        return;
-    }
+    if (totalPages <= 1) return;
 
     // 上一页
-    const prevBtn = document.createElement('button');
-    prevBtn.innerHTML = '上一页';
-    prevBtn.className = 'page-btn';
-    prevBtn.disabled = currentPage <= 1;
-    prevBtn.onclick = function() {
+    const prev = document.createElement('button');
+    prev.className = 'page-btn';
+    prev.innerHTML = '上一页';
+    prev.disabled = currentPage <= 1;
+    prev.onclick = function() {
         if (currentPage > 1) {
             currentPage--;
             loadAllOrdersFromDB();
         }
     };
-    container.appendChild(prevBtn);
+    container.appendChild(prev);
 
-    // 第一页
-    if (currentPage > 3) {
-        const firstBtn = document.createElement('button');
-        firstBtn.textContent = '1';
-        firstBtn.className = 'page-btn';
-        firstBtn.onclick = function() {
+    // 页码
+    const start = Math.max(1, currentPage - 2);
+    const end = Math.min(totalPages, currentPage + 2);
+
+    if (start > 1) {
+        const btn = document.createElement('button');
+        btn.className = 'page-btn';
+        btn.textContent = '1';
+        btn.onclick = function() {
             currentPage = 1;
             loadAllOrdersFromDB();
         };
-        container.appendChild(firstBtn);
-        if (currentPage > 4) {
-            const ellipsis = document.createElement('span');
-            ellipsis.textContent = '…';
-            ellipsis.style.cssText = 'color: #4a5a72; padding: 0 4px; font-size: 12px;';
-            container.appendChild(ellipsis);
+        container.appendChild(btn);
+        if (start > 2) {
+            const dot = document.createElement('span');
+            dot.textContent = '…';
+            dot.style.cssText = 'color: #4a5a72; padding: 0 4px;';
+            container.appendChild(dot);
         }
     }
 
-    // 当前页附近
-    const startPage = Math.max(1, currentPage - 2);
-    const endPage = Math.min(totalPages, currentPage + 2);
-
-    for (let i = startPage; i <= endPage; i++) {
+    for (let i = start; i <= end; i++) {
         const btn = document.createElement('button');
-        btn.textContent = i;
         btn.className = 'page-btn' + (i === currentPage ? ' active' : '');
+        btn.textContent = i;
         btn.onclick = function(page) {
             return function() {
                 currentPage = page;
@@ -399,46 +332,43 @@ function renderPagination() {
         container.appendChild(btn);
     }
 
-    // 最后一页
-    if (currentPage < totalPages - 2) {
-        if (currentPage < totalPages - 3) {
-            const ellipsis = document.createElement('span');
-            ellipsis.textContent = '…';
-            ellipsis.style.cssText = 'color: #4a5a72; padding: 0 4px; font-size: 12px;';
-            container.appendChild(ellipsis);
+    if (end < totalPages) {
+        if (end < totalPages - 1) {
+            const dot = document.createElement('span');
+            dot.textContent = '…';
+            dot.style.cssText = 'color: #4a5a72; padding: 0 4px;';
+            container.appendChild(dot);
         }
-        const lastBtn = document.createElement('button');
-        lastBtn.textContent = totalPages;
-        lastBtn.className = 'page-btn';
-        lastBtn.onclick = function() {
+        const btn = document.createElement('button');
+        btn.className = 'page-btn';
+        btn.textContent = totalPages;
+        btn.onclick = function() {
             currentPage = totalPages;
             loadAllOrdersFromDB();
         };
-        container.appendChild(lastBtn);
+        container.appendChild(btn);
     }
 
     // 下一页
-    const nextBtn = document.createElement('button');
-    nextBtn.innerHTML = '下一页';
-    nextBtn.className = 'page-btn';
-    nextBtn.disabled = currentPage >= totalPages;
-    nextBtn.onclick = function() {
+    const next = document.createElement('button');
+    next.className = 'page-btn';
+    next.innerHTML = '下一页';
+    next.disabled = currentPage >= totalPages;
+    next.onclick = function() {
         if (currentPage < totalPages) {
             currentPage++;
             loadAllOrdersFromDB();
         }
     };
-    container.appendChild(nextBtn);
+    container.appendChild(next);
 
     // 信息
     const info = document.createElement('span');
     info.className = 'page-info';
-    const start = (currentPage - 1) * pageSize + 1;
-    const end = Math.min(currentPage * pageSize, totalCount);
-    info.textContent = start + '-' + end + ' of ' + totalCount;
+    const from = (currentPage - 1) * pageSize + 1;
+    const to = Math.min(currentPage * pageSize, totalCount);
+    info.textContent = from + '-' + to + ' of ' + totalCount;
     container.appendChild(info);
-
-    console.log('✅ 分页已渲染, 当前页:', currentPage, '总页数:', totalPages);
 }
 
 function openAddOrderModal() {
