@@ -1,4 +1,4 @@
-// admin-emailverify.js - 邮箱验证管理页面（完整版）
+// admin-emailverify.js - 邮箱验证管理页面（完整版 + 自动发送状态）
 let activeEmailTab = 'pending';
 let emailSearchKeyword = '';
 
@@ -85,7 +85,6 @@ function sendVerificationEmail(email, requestId) {
 // ============================================================
 async function saveTACToDatabase(requestId, code, email) {
     try {
-        // ✅ 只设置 code，不改变 send_count
         const { error } = await sb
             .from('email_verification_requests')
             .update({ 
@@ -165,6 +164,80 @@ async function deleteEmailRequest(requestId, email) {
     }
 }
 
+// ============================================================
+// 🔥 手动标记为已自动发送（管理员补偿操作）
+// ============================================================
+async function markAsAutoSent(requestId) {
+    try {
+        const { error } = await sb
+            .from('email_verification_requests')
+            .update({ 
+                auto_sent: true,
+                auto_sent_at: new Date().toISOString()
+            })
+            .eq('id', parseInt(requestId));
+
+        if (error) throw error;
+
+        showToast('✅ Marked as auto-sent', 'success');
+        await loadEmailPending();
+
+    } catch (e) {
+        console.error('❌ 标记失败:', e);
+        showToast('❌ Failed to mark: ' + e.message, 'error');
+    }
+}
+
+// ============================================================
+// 🔥 手动重发自动邮件（Resend 失败时使用）
+// ============================================================
+async function resendAutoEmail(requestId, email) {
+    if (!email) {
+        showToast('❌ No email address', 'error');
+        return;
+    }
+
+    // 检查是否已自动发送
+    const { data: record } = await sb
+        .from('email_verification_requests')
+        .select('auto_sent, code')
+        .eq('id', parseInt(requestId))
+        .single();
+
+    if (record && record.auto_sent === true) {
+        showToast('⚠️ Already auto-sent. Use Send button to resend manually.', 'warning');
+        return;
+    }
+
+    // 如果没有 code，先生成一个
+    let tacCode = record?.code;
+    if (!tacCode) {
+        tacCode = generateTAC();
+        await saveTACToDatabase(requestId, tacCode, email);
+    }
+
+    // 构造邮件
+    let subject = EMAIL_TEMPLATE.subject;
+    let body = EMAIL_TEMPLATE.body;
+    body = body.replace(/\[VERIFICATION_CODE\]/g, tacCode);
+
+    const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(email)}&su=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+    
+    window.open(gmailUrl, '_blank');
+
+    // 标记为已自动发送（管理员手动重发也标记）
+    await sb
+        .from('email_verification_requests')
+        .update({ 
+            auto_sent: true,
+            auto_sent_at: new Date().toISOString()
+        })
+        .eq('id', parseInt(requestId));
+
+    showToast(`✅ Auto-email resent for ${email}`, 'success');
+    await loadEmailPending();
+}
+
 async function loadEmailVerifyPage() {
     const container = document.getElementById('page_emailverify');
     if (!container) return;
@@ -184,7 +257,7 @@ async function loadEmailVerifyPage() {
             </div>
             
             <div id="emailPendingPanel" class="email-panel">
-                <div class="stats-grid" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 24px;">
+                <div class="stats-grid" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px;">
                     <div class="stat-item" style="background: rgba(12, 16, 28, 0.6); border-radius: 16px; padding: 16px 20px; text-align: center; border: 1px solid rgba(255,255,255,0.04);">
                         <div class="label" style="font-size: 11px; color: #8892a8; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">🆕 New Requests</div>
                         <div class="value" id="emailStatNew" style="font-size: 28px; font-weight: 700; color: #4a7cff;">0</div>
@@ -197,6 +270,10 @@ async function loadEmailVerifyPage() {
                         <div class="label" style="font-size: 11px; color: #8892a8; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">✅ Verified</div>
                         <div class="value" id="emailStatVerified" style="font-size: 28px; font-weight: 700; color: #4ade80;">0</div>
                     </div>
+                    <div class="stat-item" style="background: rgba(12, 16, 28, 0.6); border-radius: 16px; padding: 16px 20px; text-align: center; border: 1px solid rgba(255,255,255,0.04);">
+                        <div class="label" style="font-size: 11px; color: #8892a8; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">📤 Auto Sent</div>
+                        <div class="value" id="emailStatAutoSent" style="font-size: 28px; font-weight: 700; color: #4ade80;">0</div>
+                    </div>
                 </div>
                 
                 <div class="search-bar" style="display: flex; flex-wrap: wrap; gap: 10px; align-items: center; background: rgba(8, 12, 24, 0.5); border-radius: 16px; padding: 12px 16px; margin-bottom: 20px; border: 1px solid rgba(255,255,255,0.03);">
@@ -205,17 +282,18 @@ async function loadEmailVerifyPage() {
                 </div>
                 
                 <div class="table-container" style="max-height: 500px; overflow-y: auto; border-radius: 16px; border: 1px solid rgba(255,255,255,0.03);">
-                    <table class="data-table" style="width: 100%; border-collapse: collapse; font-size: 13px; min-width: 950px;">
+                    <table class="data-table" style="width: 100%; border-collapse: collapse; font-size: 13px; min-width: 1050px;">
                         <thead>
                             <tr>
                                 <th style="padding: 14px 14px; color: #a8b4d0; font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid rgba(255,255,255,0.04); background: rgba(10,14,28,0.3); text-align: left; min-width: 120px;">PHONE</th>
                                 <th style="padding: 14px 14px; color: #a8b4d0; font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid rgba(255,255,255,0.04); background: rgba(10,14,28,0.3); text-align: left; min-width: 200px;">EMAIL</th>
                                 <th style="padding: 14px 14px; color: #a8b4d0; font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid rgba(255,255,255,0.04); background: rgba(10,14,28,0.3); text-align: left; min-width: 160px;">REQUEST TIME</th>
-                                <th style="padding: 14px 14px; color: #a8b4d0; font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid rgba(255,255,255,0.04); background: rgba(10,14,28,0.3); text-align: left; min-width: 160px;">STATUS</th>
-                                <th style="padding: 14px 14px; color: #a8b4d0; font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid rgba(255,255,255,0.04); background: rgba(10,14,28,0.3); text-align: left; min-width: 280px;">ACTIONS</th>
+                                <th style="padding: 14px 14px; color: #a8b4d0; font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid rgba(255,255,255,0.04); background: rgba(10,14,28,0.3); text-align: left; min-width: 140px;">STATUS</th>
+                                <th style="padding: 14px 14px; color: #a8b4d0; font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid rgba(255,255,255,0.04); background: rgba(10,14,28,0.3); text-align: left; min-width: 120px;">AUTO SEND</th>
+                                <th style="padding: 14px 14px; color: #a8b4d0; font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid rgba(255,255,255,0.04); background: rgba(10,14,28,0.3); text-align: left; min-width: 320px;">ACTIONS</th>
                             </tr>
                         </thead>
-                        <tbody id="emailTableBody"><tr><td colspan="5" style="text-align:center; padding:30px; color:#6a7a9a;">Loading...</td></tr></tbody>
+                        <tbody id="emailTableBody"><tr><td colspan="6" style="text-align:center; padding:30px; color:#6a7a9a;">Loading...</td></tr></tbody>
                     </table>
                 </div>
             </div>
@@ -532,6 +610,48 @@ async function loadEmailVerifyPage() {
         }
         .btn-delete-email i { font-size: 12px; }
 
+        /* 新增：Auto Send 相关样式 */
+        .btn-auto-resend {
+            background: rgba(74, 124, 255, 0.06);
+            border: 1px solid rgba(74, 124, 255, 0.12);
+            border-radius: 40px;
+            padding: 5px 14px;
+            color: #4a7cff;
+            font-size: 11px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.2s;
+            white-space: nowrap;
+            font-family: 'Inter', sans-serif;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: linear-gradient(160deg, rgba(255,255,255,0.035), rgba(255,255,255,0.005));
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.04), inset 0 -1px 0 rgba(0,0,0,0.15), 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .btn-auto-resend:hover {
+            background: rgba(74, 124, 255, 0.10);
+            border-color: rgba(74, 124, 255, 0.25);
+            transform: translateY(-2px);
+        }
+        
+        .btn-mark-auto {
+            background: rgba(74, 222, 128, 0.06);
+            border: 1px solid rgba(74, 222, 128, 0.12);
+            border-radius: 40px;
+            padding: 5px 12px;
+            color: #4ade80;
+            font-size: 10px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: 0.2s;
+            white-space: nowrap;
+            font-family: 'Inter', sans-serif;
+        }
+        .btn-mark-auto:hover {
+            background: rgba(74, 222, 128, 0.12);
+        }
+
         .status-badge-verified {
             background: rgba(74, 222, 128, 0.12);
             color: #4ade80;
@@ -559,6 +679,30 @@ async function loadEmailVerifyPage() {
             font-weight: 600;
             display: inline-block;
         }
+        
+        .auto-sent-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 11px;
+            font-weight: 500;
+            padding: 2px 10px;
+            border-radius: 20px;
+            background: rgba(74, 222, 128, 0.10);
+            color: #4ade80;
+        }
+        .auto-pending-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 11px;
+            font-weight: 500;
+            padding: 2px 10px;
+            border-radius: 20px;
+            background: rgba(255, 184, 77, 0.10);
+            color: #ffb84d;
+        }
+        
         @media (max-width: 768px) {
             .stats-grid { grid-template-columns: repeat(2, 1fr) !important; }
             .tab-email-btn { font-size: 12px; padding: 6px 14px; }
@@ -638,7 +782,7 @@ async function updateEmailStats() {
     try {
         const { data: allUnverified } = await sb
             .from('email_verification_requests')
-            .select('code, is_verified, send_count')
+            .select('code, is_verified, send_count, auto_sent')
             .eq('is_verified', false);
         
         // New Request: code 为空且 send_count = 0
@@ -656,6 +800,9 @@ async function updateEmailStats() {
         // Pending: code 有值 (管理员已发送)
         const pendingRequests = allUnverified?.filter(r => r.code && r.code !== '' && r.code !== null) || [];
         
+        // Auto Sent
+        const autoSentCount = allUnverified?.filter(r => r.auto_sent === true)?.length || 0;
+        
         const { count: verifiedCount } = await sb
             .from('email_verification_requests')
             .select('id', { count: 'exact', head: true })
@@ -664,6 +811,7 @@ async function updateEmailStats() {
         document.getElementById('emailStatNew').innerText = newRequests.length + clickedRequests.length;
         document.getElementById('emailStatPending').innerText = pendingRequests.length;
         document.getElementById('emailStatVerified').innerText = verifiedCount || 0;
+        document.getElementById('emailStatAutoSent').innerText = autoSentCount;
         document.getElementById('emailHistoryStatTotal').innerText = verifiedCount || 0;
     } catch (e) {
         console.error('更新Email统计失败:', e);
@@ -673,7 +821,7 @@ async function updateEmailStats() {
 async function loadEmailPending() {
     const tbody = document.getElementById('emailTableBody');
     if (!tbody) return;
-    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:30px; color:#6a7a9a;">Loading...</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:30px; color:#6a7a9a;">Loading...</td></tr>';
     
     try {
         let query = sb.from('email_verification_requests')
@@ -689,7 +837,7 @@ async function loadEmailPending() {
         const { data: emailList } = await query;
         
         if (!emailList || emailList.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:30px; color:#6a7a9a;">No pending email verification</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:30px; color:#6a7a9a;">No pending email verification</td></tr>';
             return;
         }
         
@@ -720,6 +868,9 @@ async function loadEmailPending() {
             const isPending = status.label === 'Pending';
             const isClicked = status.label !== 'New Request' && status.label !== 'Pending' && status.label !== 'Verified';
             
+            // ===== Auto Send 状态 =====
+            const isAutoSent = item.auto_sent === true;
+            
             row.insertCell(0).innerHTML = `<span style="font-size:12px; color:#b0c0da;">${escapeHtml(phone)}</span>`;
             row.insertCell(1).innerHTML = `<span style="font-weight:500; color:#d8e0f0;">${escapeHtml(item.email)}</span>`;
             row.insertCell(2).innerHTML = `<span style="font-size:12px; color:#8892a8;">${requestTime}</span>`;
@@ -742,15 +893,26 @@ async function loadEmailPending() {
                 </span>
             `;
             
+            // ===== Auto Send 列 =====
+            row.insertCell(4).innerHTML = `
+                <span class="${isAutoSent ? 'auto-sent-badge' : 'auto-pending-badge'}">
+                    ${isAutoSent ? '<i class="fas fa-check-circle"></i> Auto Sent' : '<i class="fas fa-clock"></i> Pending'}
+                </span>
+            `;
+            
             // ===== Actions 列 - 金属质感按钮 =====
-            const actionsCell = row.insertCell(4);
+            const actionsCell = row.insertCell(5);
             let actionsHtml = '';
             
             if (isNewRequest || isClicked) {
+                const sendDisabled = isAutoSent ? 'disabled' : '';
                 actionsHtml = `
-                    <button class="btn-send-email send-email-btn" data-id="${item.id}" data-email="${item.email}">
-                        <i class="fas fa-envelope"></i> Send
+                    <button class="btn-send-email send-email-btn" data-id="${item.id}" data-email="${item.email}" ${sendDisabled}>
+                        <i class="fas fa-envelope"></i> ${isAutoSent ? 'Sent' : 'Send'}
                     </button>
+                    ${!isAutoSent ? `<button class="btn-auto-resend auto-resend-btn" data-id="${item.id}" data-email="${item.email}" title="Resend via Auto">
+                        <i class="fas fa-sync-alt"></i> Auto Resend
+                    </button>` : ''}
                     <button class="btn-delete-email delete-email-btn" data-id="${item.id}" data-email="${item.email}" title="Delete this request">
                         <i class="fas fa-trash"></i>
                     </button>
@@ -763,6 +925,9 @@ async function loadEmailPending() {
                     <button class="btn-verify-email verify-email-btn" data-id="${item.id}" data-email="${item.email}" title="Mark as verified">
                         <i class="fas fa-check"></i> Verify
                     </button>
+                    ${!isAutoSent ? `<button class="btn-mark-auto mark-auto-btn" data-id="${item.id}" title="Mark as Auto Sent">
+                        <i class="fas fa-check-double"></i> Mark Auto
+                    </button>` : ''}
                     <button class="btn-delete-email delete-email-btn" data-id="${item.id}" data-email="${item.email}" title="Delete this request">
                         <i class="fas fa-trash"></i>
                     </button>
@@ -797,6 +962,23 @@ async function loadEmailPending() {
             });
         });
         
+        // ===== Auto Resend 按钮 =====
+        document.querySelectorAll('.auto-resend-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const id = this.dataset.id;
+                const email = this.dataset.email;
+                resendAutoEmail(id, email);
+            });
+        });
+        
+        // ===== Mark Auto 按钮 =====
+        document.querySelectorAll('.mark-auto-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const id = this.dataset.id;
+                markAsAutoSent(id);
+            });
+        });
+        
         // ===== Delete 按钮事件 =====
         document.querySelectorAll('.delete-email-btn').forEach(btn => {
             btn.addEventListener('click', function() {
@@ -815,7 +997,7 @@ async function loadEmailPending() {
         
     } catch (e) {
         console.error('加载Email待处理失败:', e);
-        tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; padding:30px; color:#ff8888;">加载失败: ${escapeHtml(e.message)}</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding:30px; color:#ff8888;">加载失败: ${escapeHtml(e.message)}</td></tr>`;
     }
 }
 
