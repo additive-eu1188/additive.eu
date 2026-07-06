@@ -527,9 +527,9 @@ function showCalculatorPanel(userData) {
             </div>
 
             <!-- 公式小字 -->
-<div style="font-size: 13px; color: rgba(255,255,255,0.15); font-family: 'Courier New', monospace; letter-spacing: 0.3px; text-align: right; margin-bottom: 10px; font-weight: 500;">
-    <span id="formulaLabel" style="color: rgba(201,176,149,0.5); font-weight: 600;">Balance</span> × 0.005 × <span style="color: rgba(201,176,149,0.5); font-weight: 600;">Orders</span> + <span id="formulaLabel2" style="color: rgba(201,176,149,0.5); font-weight: 600;">Balance</span> + <span style="color: rgba(74,222,128,0.4); font-weight: 600;">Set Negative</span>
-</div>
+            <div style="font-size: 13px; color: rgba(255,255,255,0.15); font-family: 'Courier New', monospace; letter-spacing: 0.3px; text-align: right; margin-bottom: 10px; font-weight: 500;">
+                <span id="formulaLabel" style="color: rgba(201,176,149,0.5); font-weight: 600;">Balance</span> × 0.005 × <span style="color: rgba(201,176,149,0.5); font-weight: 600;">Orders</span> + <span id="formulaLabel2" style="color: rgba(201,176,149,0.5); font-weight: 600;">Balance</span> + <span style="color: rgba(74,222,128,0.4); font-weight: 600;">Set Negative</span>
+            </div>
 
             <!-- 计算结果 -->
             <div style="background: rgba(255,255,255,0.015); border: 1px solid rgba(255,255,255,0.03); border-radius: 12px; padding: 12px 16px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; margin-bottom: 12px;">
@@ -539,14 +539,73 @@ function showCalculatorPanel(userData) {
                 <span style="font-size: 24px; font-weight: 700; color: #C9B095; letter-spacing: -0.3px; font-variant-numeric: tabular-nums;" id="calcResultDisplay">€0.00</span>
             </div>
 
+            <!-- ============================================================ -->
+            <!-- 🔥 新增：Multiple Orders 独立区域（在 Result 下方） -->
+            <!-- ============================================================ -->
+            <div style="margin-top: 18px; padding-top: 16px; border-top: 1px solid rgba(255,255,255,0.06);">
+                <div style="font-size: 13px; font-weight: 600; color: #C9B095; margin-bottom: 12px; letter-spacing: 0.5px; display: flex; align-items: center; gap: 8px;">
+                    <i class="fas fa-layer-group" style="font-size: 14px;"></i> Multiple Orders
+                </div>
+
+                <!-- 4列输入：Pending(自动) + Deposit Bonus + Cash Reward + Set Negative -->
+                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 10px; margin-bottom: 10px;">
+                    <!-- Pending Amount（自动显示） -->
+                    <div style="display: flex; flex-direction: column; gap: 3px;">
+                        <span style="font-size: 9px; color: rgba(255,255,255,0.20); text-transform: uppercase; letter-spacing: 0.4px; font-weight: 500;">
+                            <i class="fas fa-clock" style="margin-right: 4px; font-size: 9px;"></i> Pending
+                        </span>
+                        <span style="font-size: 16px; font-weight: 700; color: #C9B095; padding: 6px 0; background: rgba(255,255,255,0.02); border-radius: 8px; text-align: center; border: 1px solid rgba(255,255,255,0.03);" id="multiPendingDisplay">€0.00</span>
+                    </div>
+                    <!-- Deposit Bonus -->
+                    <div style="display: flex; flex-direction: column; gap: 3px;">
+                        <span style="font-size: 9px; color: rgba(255,255,255,0.20); text-transform: uppercase; letter-spacing: 0.4px; font-weight: 500;">
+                            <i class="fas fa-gift" style="margin-right: 4px; font-size: 9px;"></i> Deposit Bonus
+                        </span>
+                        <input type="number" id="multiDepositInput" value="0" step="0.01" min="0" placeholder="0.00"
+                               style="width:100%; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.05); border-radius:8px; padding:7px 10px; color:#d8e0f0; font-size:14px; font-weight:500; outline:none; font-family:'Inter',sans-serif; transition:0.25s ease; text-align:center;">
+                    </div>
+                    <!-- Cash Reward -->
+                    <div style="display: flex; flex-direction: column; gap: 3px;">
+                        <span style="font-size: 9px; color: rgba(255,255,255,0.20); text-transform: uppercase; letter-spacing: 0.4px; font-weight: 500;">
+                            <i class="fas fa-money-bill-wave" style="margin-right: 4px; font-size: 9px;"></i> Cash Reward
+                        </span>
+                        <input type="number" id="multiCashInput" value="0" step="0.01" min="0" placeholder="0.00"
+                               style="width:100%; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.05); border-radius:8px; padding:7px 10px; color:#d8e0f0; font-size:14px; font-weight:500; outline:none; font-family:'Inter',sans-serif; transition:0.25s ease; text-align:center;">
+                    </div>
+                    <!-- Set Negative -->
+                    <div style="display: flex; flex-direction: column; gap: 3px;">
+                        <span style="font-size: 9px; color: rgba(255,255,255,0.20); text-transform: uppercase; letter-spacing: 0.4px; font-weight: 500;">
+                            <i class="fas fa-minus-circle" style="margin-right: 4px; font-size: 9px;"></i> Set Negative
+                        </span>
+                        <input type="number" id="multiNegativeInput" value="0" step="0.01" min="0" placeholder="0.00"
+                               style="width:100%; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.05); border-radius:8px; padding:7px 10px; color:#d8e0f0; font-size:14px; font-weight:500; outline:none; font-family:'Inter',sans-serif; transition:0.25s ease; text-align:center;">
+                    </div>
+                </div>
+
+                <!-- 公式展示行 -->
+                <div style="font-size: 11px; color: rgba(255,255,255,0.08); font-family: 'Courier New', monospace; text-align: center; padding: 2px 0 6px 0; letter-spacing: 0.3px;">
+                    Pending + Deposit Bonus + Cash Reward + Set Negative − Pending = Result
+                </div>
+
+                <!-- Multiple Orders 结果（白色字体） -->
+                <div style="background: rgba(255,255,255,0.015); border: 1px solid rgba(255,255,255,0.04); border-radius: 10px; padding: 12px 16px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px;">
+                    <span style="font-size: 10px; color: rgba(255,255,255,0.12); text-transform: uppercase; letter-spacing: 0.6px; font-weight: 500;">
+                        <i class="fas fa-calculator" style="margin-right: 6px; color: rgba(255,255,255,0.06);"></i> Multi Orders Result
+                    </span>
+                    <span style="font-size: 24px; font-weight: 700; color: #ffffff; letter-spacing: -0.3px; font-variant-numeric: tabular-nums;" id="multiResultDisplay">€0.00</span>
+                </div>
+            </div>
+
             <!-- 底部提示 -->
-            <div style="font-size: 10px; color: rgba(255,255,255,0.04); text-align: center; letter-spacing: 0.4px; padding-top: 4px; border-top: 1px solid rgba(255,255,255,0.02);">
+            <div style="font-size: 10px; color: rgba(255,255,255,0.04); text-align: center; letter-spacing: 0.4px; padding-top: 12px; margin-top: 8px; border-top: 1px solid rgba(255,255,255,0.02);">
                 <i class="fas fa-arrow-right" style="margin-right: 4px; font-size: 9px;"></i> 输入 Order Price 后点击 Search 查看订单列表
             </div>
         </div>
     `;
 
-    // 🔥 定义 updateCalculator 函数
+    // ============================================================
+    // 🔥 主计算器更新函数
+    // ============================================================
     function updateCalculator() {
         var ordersInput = document.getElementById('calcOrdersInput');
         var negativeInput = document.getElementById('calcNegativeInput');
@@ -565,63 +624,111 @@ function showCalculatorPanel(userData) {
         if (uidDisplay) uidDisplay.textContent = userData.uid || '-';
         if (balanceDisplay) balanceDisplay.textContent = '€' + currentValue.toFixed(2);
         resultDisplay.textContent = '€' + result.toFixed(2);
-        
-        document.getElementById('cardAmount').innerHTML = '€' + result.toFixed(2);
     }
 
-    // 🔥 异步获取 pending_display 并更新
-    sb.from('users')
-    .select('pending_display')
-    .eq('uid', userData.uid)
-    .single()
-    .then(function(result) {
-        if (result.data) {
-            var pendingDisplay = result.data.pending_display || 0;
-            var hasPending = pendingDisplay > 0;
-            var displayValue = hasPending ? pendingDisplay : (userData.balance || 0);
-            
-            var balanceDisplay = document.getElementById('calcBalanceDisplay');
-            var labelEl = document.querySelector('.balance-label');
-            var formulaLabel = document.getElementById('formulaLabel');
-            var formulaLabel2 = document.getElementById('formulaLabel2');
-            
-            if (balanceDisplay) {
-                balanceDisplay.textContent = '€' + displayValue.toFixed(2);
-            }
-            if (labelEl) {
-                labelEl.textContent = hasPending ? 'User Pending Amount' : 'User Current Balance';
-            }
-            
-            // 🔥 更新公式标签
-            var formulaText = hasPending ? 'Pending' : 'Balance';
-            if (formulaLabel) formulaLabel.textContent = formulaText;
-            if (formulaLabel2) formulaLabel2.textContent = formulaText;
-            
-            window._pendingDisplayValue = displayValue;
-            window._hasPending = hasPending;
-            
-            updateCalculator();
-        }
-    })
-    .catch(function() {
-        var balanceDisplay = document.getElementById('calcBalanceDisplay');
-        if (balanceDisplay) {
-            balanceDisplay.textContent = '€' + (userData.balance || 0).toFixed(2);
-        }
-        window._pendingDisplayValue = userData.balance || 0;
-        window._hasPending = false;
-        updateCalculator();
-    });
+    // ============================================================
+    // 🔥 Multiple Orders 独立计算函数
+    // ============================================================
+    function updateMultiCalculator() {
+        var pendingDisplay = document.getElementById('multiPendingDisplay');
+        var depositInput = document.getElementById('multiDepositInput');
+        var cashInput = document.getElementById('multiCashInput');
+        var negativeInput = document.getElementById('multiNegativeInput');
+        var resultDisplay = document.getElementById('multiResultDisplay');
+        
+        if (!depositInput || !cashInput || !negativeInput || !resultDisplay) return;
+        
+        var pendingValue = window._pendingDisplayValue !== undefined ? window._pendingDisplayValue : (userData.balance || 0);
+        var depositBonus = parseFloat(depositInput.value) || 0;
+        var cashReward = parseFloat(cashInput.value) || 0;
+        var setNegative = parseFloat(negativeInput.value) || 0;
+        
+        // 公式：Pending + DepositBonus + CashReward + SetNegative - Pending = DepositBonus + CashReward + SetNegative
+        var result = depositBonus + cashReward + setNegative;
+        
+        if (pendingDisplay) pendingDisplay.textContent = '€' + pendingValue.toFixed(2);
+        resultDisplay.textContent = '€' + result.toFixed(2);
+    }
 
-    // 绑定输入事件
+    // ============================================================
+    // 🔥 异步获取 pending_display 并更新
+    // ============================================================
+    sb.from('users')
+        .select('pending_display')
+        .eq('uid', userData.uid)
+        .single()
+        .then(function(result) {
+            if (result.data) {
+                var pendingDisplay = result.data.pending_display || 0;
+                var hasPending = pendingDisplay > 0;
+                var displayValue = hasPending ? pendingDisplay : (userData.balance || 0);
+                
+                var balanceDisplay = document.getElementById('calcBalanceDisplay');
+                var labelEl = document.querySelector('.balance-label');
+                var formulaLabel = document.getElementById('formulaLabel');
+                var formulaLabel2 = document.getElementById('formulaLabel2');
+                var pendingDisplayEl = document.getElementById('multiPendingDisplay');
+                
+                if (balanceDisplay) {
+                    balanceDisplay.textContent = '€' + displayValue.toFixed(2);
+                }
+                if (labelEl) {
+                    labelEl.textContent = hasPending ? 'User Pending Amount' : 'User Current Balance';
+                }
+                if (pendingDisplayEl) {
+                    pendingDisplayEl.textContent = '€' + displayValue.toFixed(2);
+                }
+                
+                // 更新公式标签
+                var formulaText = hasPending ? 'Pending' : 'Balance';
+                if (formulaLabel) formulaLabel.textContent = formulaText;
+                if (formulaLabel2) formulaLabel2.textContent = formulaText;
+                
+                window._pendingDisplayValue = displayValue;
+                window._hasPending = hasPending;
+                
+                updateCalculator();
+                updateMultiCalculator();
+            }
+        })
+        .catch(function() {
+            var balanceDisplay = document.getElementById('calcBalanceDisplay');
+            if (balanceDisplay) {
+                balanceDisplay.textContent = '€' + (userData.balance || 0).toFixed(2);
+            }
+            var pendingDisplayEl = document.getElementById('multiPendingDisplay');
+            if (pendingDisplayEl) {
+                pendingDisplayEl.textContent = '€' + (userData.balance || 0).toFixed(2);
+            }
+            window._pendingDisplayValue = userData.balance || 0;
+            window._hasPending = false;
+            updateCalculator();
+            updateMultiCalculator();
+        });
+
+    // ============================================================
+    // 🔥 绑定输入事件
+    // ============================================================
     var ordersInput = document.getElementById('calcOrdersInput');
     var negativeInput = document.getElementById('calcNegativeInput');
+    var multiDepositInput = document.getElementById('multiDepositInput');
+    var multiCashInput = document.getElementById('multiCashInput');
+    var multiNegativeInput = document.getElementById('multiNegativeInput');
     
     if (ordersInput) ordersInput.addEventListener('input', updateCalculator);
-    if (negativeInput) negativeInput.addEventListener('input', updateCalculator);
+    if (negativeInput) negativeInput.addEventListener('input', function() {
+        updateCalculator();
+        updateMultiCalculator();
+    });
+    if (multiDepositInput) multiDepositInput.addEventListener('input', updateMultiCalculator);
+    if (multiCashInput) multiCashInput.addEventListener('input', updateMultiCalculator);
+    if (multiNegativeInput) multiNegativeInput.addEventListener('input', updateMultiCalculator);
 
     // 备用：延迟执行确保首次渲染
-    setTimeout(updateCalculator, 200);
+    setTimeout(function() {
+        updateCalculator();
+        updateMultiCalculator();
+    }, 200);
 }
 
 // ============================================================
