@@ -1,4 +1,4 @@
-// admin-orderpool.js - 订单池页面（与 Withdrawal 页面风格一致 + 后端分页优化）
+// admin-orderpool.js - 订单池页面
 let poolSearchKeyword = '';
 let allOrders = [];
 let currentPage = 1;
@@ -267,10 +267,7 @@ async function loadAllOrdersFromDB() {
 
 function renderOrderPoolPage() {
     const tbody = document.getElementById('orderPoolTableBody');
-    if (!tbody) {
-        renderPagination();
-        return;
-    }
+    if (!tbody) return;
 
     if (allOrders.length === 0) {
         tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding:30px; color:#6a7a9a;">No orders found</td></tr>';
@@ -342,12 +339,17 @@ function renderOrderPoolPage() {
 
 function renderPagination() {
     const container = document.getElementById('pagination');
-    if (!container) return;
+    if (!container) {
+        console.error('pagination container not found');
+        return;
+    }
 
     const totalPages = Math.ceil(totalCount / pageSize);
     container.innerHTML = '';
 
-    if (totalPages <= 1) return;
+    if (totalPages <= 1) {
+        return;
+    }
 
     // 上一页
     const prevBtn = document.createElement('button');
@@ -362,7 +364,7 @@ function renderPagination() {
     };
     container.appendChild(prevBtn);
 
-    // 显示第一页
+    // 第一页
     if (currentPage > 3) {
         const firstBtn = document.createElement('button');
         firstBtn.textContent = '1';
@@ -380,7 +382,7 @@ function renderPagination() {
         }
     }
 
-    // 当前页附近 -2 到 +2
+    // 当前页附近
     const startPage = Math.max(1, currentPage - 2);
     const endPage = Math.min(totalPages, currentPage + 2);
 
@@ -397,7 +399,7 @@ function renderPagination() {
         container.appendChild(btn);
     }
 
-    // 显示最后一页
+    // 最后一页
     if (currentPage < totalPages - 2) {
         if (currentPage < totalPages - 3) {
             const ellipsis = document.createElement('span');
@@ -427,6 +429,16 @@ function renderPagination() {
         }
     };
     container.appendChild(nextBtn);
+
+    // 信息
+    const info = document.createElement('span');
+    info.className = 'page-info';
+    const start = (currentPage - 1) * pageSize + 1;
+    const end = Math.min(currentPage * pageSize, totalCount);
+    info.textContent = start + '-' + end + ' of ' + totalCount;
+    container.appendChild(info);
+
+    console.log('✅ 分页已渲染, 当前页:', currentPage, '总页数:', totalPages);
 }
 
 function openAddOrderModal() {
