@@ -151,7 +151,7 @@ async function loadSetordersPage() {
                                 <th style="padding: 10px 14px; color: #a8b4d0; font-weight: 600; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid rgba(255,255,255,0.04); background: rgba(10,14,28,0.3); text-align: left;">Trigger Type</th>
                                 <th style="padding: 10px 14px; color: #a8b4d0; font-weight: 600; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid rgba(255,255,255,0.04); background: rgba(10,14,28,0.3); text-align: left;">Orders Number</th>
                                 <th style="padding: 10px 14px; color: #a8b4d0; font-weight: 600; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid rgba(255,255,255,0.04); background: rgba(10,14,28,0.3); text-align: left;">Trigger Amount</th>
-                                <th style="padding: 10px 14px; color: #a8b4d0; font-weight: 600; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid rgba(255,255,255,0.04); background: rgba(10,14,28,0.3); text-align: left; min-width: 180px;">Trigger Date</th>
+                                <th style="padding: 10px 14px; color: #a8b4d0; font-weight: 600; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid rgba(255,255,255,0.04); background: rgba(10,14,28,0.3); text-align: left; min-width: 180px;">Set Trigger Time</th>
                                 <th style="padding: 10px 14px; color: #a8b4d0; font-weight: 600; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid rgba(255,255,255,0.04); background: rgba(10,14,28,0.3); text-align: left;">Status</th>
                                 <th style="padding: 10px 14px; color: #a8b4d0; font-weight: 600; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid rgba(255,255,255,0.04); background: rgba(10,14,28,0.3); text-align: left; min-width: 90px;">Action</th>
                             </tr>
@@ -1139,11 +1139,12 @@ async function loadTriggerHistory() {
     tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding:20px; color:#6a7a9a;">Loading...</td></tr>';
     
     try {
+        // ✅ 按 created_at 降序排列，最新的在最上方
         const { data: records, error } = await sb
             .from('user_trigger_orders')
             .select('*')
             .eq('uid', currentSetUser.uid)
-            .order('created_at', { ascending: false });
+            .order('created_at', { ascending: false });  // ← 最新到最旧
         
         if (error) throw error;
         
@@ -1173,8 +1174,9 @@ async function loadTriggerHistory() {
             row.insertCell(2).innerHTML = '<span style="font-size: 12px; color: #8892a8;">' + record.trigger_order_number + '</span>';
             row.insertCell(3).innerHTML = '<span style="font-size: 12px; color: #c8b090; font-weight: 600;">€' + (amount || 0).toFixed(2) + '</span>';
             
-            const triggerDate = record.created_at ? new Date(record.created_at).toLocaleString() : '-';
-            row.insertCell(4).innerHTML = '<span style="font-size: 12px; color: #8892a8; white-space: nowrap;">' + triggerDate + '</span>';
+            // 🔥 修改：显示 Set Trigger Time（用户设置的时间），使用 created_at
+            const setTriggerTime = record.created_at ? new Date(record.created_at).toLocaleString() : '-';
+            row.insertCell(4).innerHTML = '<span style="font-size: 12px; color: #8892a8; white-space: nowrap;">' + setTriggerTime + '</span>';
             
             row.insertCell(5).innerHTML = '<span class="' + statusClass + '">' + statusText + '</span>';
             
