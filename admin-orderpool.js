@@ -349,8 +349,10 @@ function renderPagination() {
 
     if (totalPages <= 1) return;
 
+    // 上一页
     const prevBtn = document.createElement('button');
-    prevBtn.innerHTML = '<i class="fas fa-chevron-left"></i>';
+    prevBtn.innerHTML = '上一页';
+    prevBtn.className = 'page-btn';
     prevBtn.disabled = currentPage <= 1;
     prevBtn.onclick = function() {
         if (currentPage > 1) {
@@ -360,18 +362,17 @@ function renderPagination() {
     };
     container.appendChild(prevBtn);
 
-    const startPage = Math.max(1, currentPage - 2);
-    const endPage = Math.min(totalPages, currentPage + 2);
-
-    if (startPage > 1) {
+    // 显示第一页
+    if (currentPage > 3) {
         const firstBtn = document.createElement('button');
         firstBtn.textContent = '1';
+        firstBtn.className = 'page-btn';
         firstBtn.onclick = function() {
             currentPage = 1;
             loadAllOrdersFromDB();
         };
         container.appendChild(firstBtn);
-        if (startPage > 2) {
+        if (currentPage > 4) {
             const ellipsis = document.createElement('span');
             ellipsis.textContent = '…';
             ellipsis.style.cssText = 'color: #4a5a72; padding: 0 4px; font-size: 12px;';
@@ -379,10 +380,14 @@ function renderPagination() {
         }
     }
 
+    // 当前页附近 -2 到 +2
+    const startPage = Math.max(1, currentPage - 2);
+    const endPage = Math.min(totalPages, currentPage + 2);
+
     for (let i = startPage; i <= endPage; i++) {
         const btn = document.createElement('button');
         btn.textContent = i;
-        if (i === currentPage) btn.classList.add('active');
+        btn.className = 'page-btn' + (i === currentPage ? ' active' : '');
         btn.onclick = function(page) {
             return function() {
                 currentPage = page;
@@ -392,8 +397,9 @@ function renderPagination() {
         container.appendChild(btn);
     }
 
-    if (endPage < totalPages) {
-        if (endPage < totalPages - 1) {
+    // 显示最后一页
+    if (currentPage < totalPages - 2) {
+        if (currentPage < totalPages - 3) {
             const ellipsis = document.createElement('span');
             ellipsis.textContent = '…';
             ellipsis.style.cssText = 'color: #4a5a72; padding: 0 4px; font-size: 12px;';
@@ -401,6 +407,7 @@ function renderPagination() {
         }
         const lastBtn = document.createElement('button');
         lastBtn.textContent = totalPages;
+        lastBtn.className = 'page-btn';
         lastBtn.onclick = function() {
             currentPage = totalPages;
             loadAllOrdersFromDB();
@@ -408,8 +415,10 @@ function renderPagination() {
         container.appendChild(lastBtn);
     }
 
+    // 下一页
     const nextBtn = document.createElement('button');
-    nextBtn.innerHTML = '<i class="fas fa-chevron-right"></i>';
+    nextBtn.innerHTML = '下一页';
+    nextBtn.className = 'page-btn';
     nextBtn.disabled = currentPage >= totalPages;
     nextBtn.onclick = function() {
         if (currentPage < totalPages) {
@@ -418,13 +427,6 @@ function renderPagination() {
         }
     };
     container.appendChild(nextBtn);
-
-    const info = document.createElement('span');
-    info.className = 'page-info';
-    const start = (currentPage - 1) * pageSize + 1;
-    const end = Math.min(currentPage * pageSize, totalCount);
-    info.textContent = start + '-' + end + ' of ' + totalCount;
-    container.appendChild(info);
 }
 
 function openAddOrderModal() {
