@@ -487,9 +487,7 @@ function showCalculatorPanel(userData) {
     const container = document.getElementById('searchResultsContainer');
     if (!container) return;
 
-    // 🔥 获取用户的 pending_display
-    var pendingDisplay = 0;
-    var hasPending = false;
+    // 初始值
     var balanceValue = userData.balance || 0;
 
     container.innerHTML = `
@@ -548,6 +546,29 @@ function showCalculatorPanel(userData) {
         </div>
     `;
 
+    // 🔥 定义 updateCalculator 函数
+    function updateCalculator() {
+        var ordersInput = document.getElementById('calcOrdersInput');
+        var negativeInput = document.getElementById('calcNegativeInput');
+        var resultDisplay = document.getElementById('calcResultDisplay');
+        var balanceDisplay = document.getElementById('calcBalanceDisplay');
+        var uidDisplay = document.getElementById('calcUidDisplay');
+        
+        if (!ordersInput || !negativeInput || !resultDisplay) return;
+        
+        var currentValue = window._pendingDisplayValue !== undefined ? window._pendingDisplayValue : (userData.balance || 0);
+        var orders = parseInt(ordersInput.value) || 1;
+        var setNegative = parseFloat(negativeInput.value) || 0;
+        
+        var result = currentValue * 0.005 * orders + currentValue + setNegative;
+        
+        if (uidDisplay) uidDisplay.textContent = userData.uid || '-';
+        if (balanceDisplay) balanceDisplay.textContent = '€' + currentValue.toFixed(2);
+        resultDisplay.textContent = '€' + result.toFixed(2);
+        
+        document.getElementById('cardAmount').innerHTML = '€' + result.toFixed(2);
+    }
+
     // 🔥 异步获取 pending_display 并更新
     sb.from('users')
         .select('pending_display')
@@ -569,9 +590,11 @@ function showCalculatorPanel(userData) {
                     labelEl.textContent = hasPending ? 'User Pending Amount' : 'User Current Balance';
                 }
                 
-                // 更新 updateCalculator 中使用的 balance 值
                 window._pendingDisplayValue = displayValue;
                 window._hasPending = hasPending;
+                
+                // 🔥 更新完成后立即刷新计算
+                updateCalculator();
             }
         })
         .catch(function() {
@@ -582,34 +605,8 @@ function showCalculatorPanel(userData) {
             }
             window._pendingDisplayValue = userData.balance || 0;
             window._hasPending = false;
+            updateCalculator();
         });
-
-    // ============================================================
-    // 🔥 绑定输入事件（自动计算）
-    // ============================================================
-    function updateCalculator() {
-        var ordersInput = document.getElementById('calcOrdersInput');
-        var negativeInput = document.getElementById('calcNegativeInput');
-        var resultDisplay = document.getElementById('calcResultDisplay');
-        var balanceDisplay = document.getElementById('calcBalanceDisplay');
-        var uidDisplay = document.getElementById('calcUidDisplay');
-        
-        if (!ordersInput || !negativeInput || !resultDisplay) return;
-        
-        // 🔥 使用当前显示的值（可能是 Balance 或 Pending）
-        var currentValue = window._pendingDisplayValue !== undefined ? window._pendingDisplayValue : (userData.balance || 0);
-        var orders = parseInt(ordersInput.value) || 1;
-        var setNegative = parseFloat(negativeInput.value) || 0;
-        
-        // 🔥 计算方式：当前值 × 0.005 × Orders + 当前值 + Set Negative
-        var result = currentValue * 0.005 * orders + currentValue + setNegative;
-        
-        if (uidDisplay) uidDisplay.textContent = userData.uid || '-';
-        if (balanceDisplay) balanceDisplay.textContent = '€' + currentValue.toFixed(2);
-        resultDisplay.textContent = '€' + result.toFixed(2);
-        
-        document.getElementById('cardAmount').innerHTML = '€' + result.toFixed(2);
-    }
 
     // 绑定输入事件
     var ordersInput = document.getElementById('calcOrdersInput');
@@ -618,8 +615,8 @@ function showCalculatorPanel(userData) {
     if (ordersInput) ordersInput.addEventListener('input', updateCalculator);
     if (negativeInput) negativeInput.addEventListener('input', updateCalculator);
 
-    // 初始计算
-    setTimeout(updateCalculator, 100);
+    // 备用：延迟执行确保首次渲染
+    setTimeout(updateCalculator, 200);
 }
 
 // ============================================================
