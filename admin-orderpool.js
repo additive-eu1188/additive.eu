@@ -10,7 +10,6 @@ async function loadOrderPoolPage() {
     if (!container) return;
     container.innerHTML = `
         <div class="card">
-            <!-- 顶部：左侧标题 + 右侧按钮 -->
             <div class="withdraw-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 24px;">
                 <h2 style="font-size: 18px; font-weight: 600; color: #d8e0f0; margin: 0;">
                     <i class="fas fa-hotel" style="color: #8892a8; margin-right: 10px;"></i>
@@ -26,7 +25,6 @@ async function loadOrderPoolPage() {
                 </div>
             </div>
 
-            <!-- 统计卡片（3个） -->
             <div class="stats-grid" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 24px;">
                 <div class="stat-item" style="background: rgba(12, 16, 28, 0.6); border-radius: 16px; padding: 16px 20px; text-align: center; border: 1px solid rgba(255,255,255,0.04);">
                     <div class="label" style="font-size: 11px; color: #8892a8; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">Total Orders</div>
@@ -42,7 +40,6 @@ async function loadOrderPoolPage() {
                 </div>
             </div>
 
-            <!-- 搜索栏 -->
             <div class="search-bar" style="display: flex; flex-wrap: wrap; gap: 10px; align-items: center; background: rgba(8, 12, 24, 0.5); border-radius: 16px; padding: 12px 16px; margin-bottom: 20px; border: 1px solid rgba(255,255,255,0.03);">
                 <input type="text" id="poolSearchInput" class="search-input" placeholder="Search order code / hotel name..." style="flex: 1; min-width: 160px; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.10); border-radius: 40px; padding: 8px 16px; color: #e6edf5; font-size: 13px; outline: none;">
                 
@@ -63,7 +60,6 @@ async function loadOrderPoolPage() {
                 </button>
             </div>
 
-            <!-- 表格 -->
             <div class="table-container" style="max-height: 500px; overflow-y: auto; border-radius: 16px; border: 1px solid rgba(255,255,255,0.03);">
                 <table class="data-table" style="width: 100%; border-collapse: collapse; font-size: 13px; min-width: 900px; table-layout: fixed;">
                     <thead>
@@ -83,19 +79,12 @@ async function loadOrderPoolPage() {
                 </table>
             </div>
 
-            <!-- 分页 -->
             <div class="pagination" id="pagination"></div>
         </div>
     `;
 
-    // 添加样式
     const style = document.createElement('style');
     style.textContent = `
-        #page_orderpool .order-pool-panel { animation: fadeIn 0.3s ease; }
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(8px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
         #page_orderpool .status-badge-available {
             background: rgba(74, 222, 128, 0.10);
             color: #4ade80;
@@ -173,7 +162,6 @@ async function loadOrderPoolPage() {
     `;
     document.head.appendChild(style);
 
-    // ========== 绑定事件 ==========
     document.getElementById('poolSearchBtn')?.addEventListener('click', function() {
         poolSearchKeyword = document.getElementById('poolSearchInput').value.trim();
         currentPage = 1;
@@ -208,13 +196,9 @@ async function loadOrderPoolPage() {
         document.getElementById('orderModal').classList.remove('active');
     });
 
-    // 加载数据
     await loadAllOrdersFromDB();
 }
 
-// ============================================================
-// 🔥 加载订单（后端分页 + 统计）
-// ============================================================
 async function loadAllOrdersFromDB() {
     const tbody = document.getElementById('orderPoolTableBody');
     if (tbody) {
@@ -227,64 +211,39 @@ async function loadAllOrdersFromDB() {
         const minPrice = parseFloat(document.getElementById('poolMinPrice')?.value) || 0;
         const maxPrice = parseFloat(document.getElementById('poolMaxPrice')?.value) || Infinity;
 
-        // ============================================================
-        // 🔥 并行执行所有统计查询
-        // ============================================================
-        let totalQuery = sb.from('orders_pool').select('id', { count: 'exact', head: true });
-        let availableQuery = sb.from('orders_pool').select('id', { count: 'exact', head: true }).eq('status', 'available');
-        let unavailableQuery = sb.from('orders_pool').select('id', { count: 'exact', head: true }).eq('status', 'unavailable');
+        let countQuery = sb.from('orders_pool').select('*', { count: 'exact', head: true });
+        if (keyword) countQuery = countQuery.or(`order_code.ilike.%${keyword}%,accommodation_name.ilike.%${keyword}%`);
+        if (statusFilter) countQuery = countQuery.eq('status', statusFilter);
+        if (minPrice > 0) countQuery = countQuery.gte('price', minPrice);
+        if (maxPrice < Infinity) countQuery = countQuery.lte('price', maxPrice);
+        const { count: total } = await countQuery;
+        totalCount = total || 0;
 
-        // 应用搜索条件
+        let availQuery = sb.from('orders_pool').select('*', { count: 'exact', head: true }).eq('status', 'available');
+        let unavailQuery = sb.from('orders_pool').select('*', { count: 'exact', head: true }).eq('status', 'unavailable');
         if (keyword) {
-            totalQuery = totalQuery.or(`order_code.ilike.%${keyword}%,accommodation_name.ilike.%${keyword}%`);
-            availableQuery = availableQuery.or(`order_code.ilike.%${keyword}%,accommodation_name.ilike.%${keyword}%`);
-            unavailableQuery = unavailableQuery.or(`order_code.ilike.%${keyword}%,accommodation_name.ilike.%${keyword}%`);
-        }
-        if (statusFilter) {
-            totalQuery = totalQuery.eq('status', statusFilter);
+            availQuery = availQuery.or(`order_code.ilike.%${keyword}%,accommodation_name.ilike.%${keyword}%`);
+            unavailQuery = unavailQuery.or(`order_code.ilike.%${keyword}%,accommodation_name.ilike.%${keyword}%`);
         }
         if (minPrice > 0) {
-            totalQuery = totalQuery.gte('price', minPrice);
-            availableQuery = availableQuery.gte('price', minPrice);
-            unavailableQuery = unavailableQuery.gte('price', minPrice);
+            availQuery = availQuery.gte('price', minPrice);
+            unavailQuery = unavailQuery.gte('price', minPrice);
         }
         if (maxPrice < Infinity) {
-            totalQuery = totalQuery.lte('price', maxPrice);
-            availableQuery = availableQuery.lte('price', maxPrice);
-            unavailableQuery = unavailableQuery.lte('price', maxPrice);
+            availQuery = availQuery.lte('price', maxPrice);
+            unavailQuery = unavailQuery.lte('price', maxPrice);
         }
-
-        const [totalResult, availableResult, unavailableResult] = await Promise.all([
-            totalQuery,
-            availableQuery,
-            unavailableQuery
-        ]);
-
-        totalCount = totalResult.count || 0;
-        const availableCount = availableResult.count || 0;
-        const unavailableCount = unavailableResult.count || 0;
+        const [availResult, unavailResult] = await Promise.all([availQuery, unavailQuery]);
 
         document.getElementById('poolStatTotal').innerText = totalCount;
-        document.getElementById('poolStatAvailable').innerText = availableCount;
-        document.getElementById('poolStatUnavailable').innerText = unavailableCount;
+        document.getElementById('poolStatAvailable').innerText = availResult.count || 0;
+        document.getElementById('poolStatUnavailable').innerText = unavailResult.count || 0;
 
-        // ============================================================
-        // 🔥 获取分页数据
-        // ============================================================
         let query = sb.from('orders_pool').select('*');
-        
-        if (keyword) {
-            query = query.or(`order_code.ilike.%${keyword}%,accommodation_name.ilike.%${keyword}%`);
-        }
-        if (statusFilter) {
-            query = query.eq('status', statusFilter);
-        }
-        if (minPrice > 0) {
-            query = query.gte('price', minPrice);
-        }
-        if (maxPrice < Infinity) {
-            query = query.lte('price', maxPrice);
-        }
+        if (keyword) query = query.or(`order_code.ilike.%${keyword}%,accommodation_name.ilike.%${keyword}%`);
+        if (statusFilter) query = query.eq('status', statusFilter);
+        if (minPrice > 0) query = query.gte('price', minPrice);
+        if (maxPrice < Infinity) query = query.lte('price', maxPrice);
 
         const from = (currentPage - 1) * pageSize;
         const to = from + pageSize - 1;
@@ -306,12 +265,12 @@ async function loadAllOrdersFromDB() {
     }
 }
 
-// ============================================================
-// 🔥 渲染订单列表
-// ============================================================
 function renderOrderPoolPage() {
     const tbody = document.getElementById('orderPoolTableBody');
-    if (!tbody) return;
+    if (!tbody) {
+        renderPagination();
+        return;
+    }
 
     if (allOrders.length === 0) {
         tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding:30px; color:#6a7a9a;">No orders found</td></tr>';
@@ -326,23 +285,17 @@ function renderOrderPoolPage() {
         const statusClass = order.status === 'available' ? 'status-badge-available' : 'status-badge-unavailable';
         const statusText = order.status === 'available' ? 'Available' : 'Unavailable';
 
-        // ID
         row.insertCell(0).innerHTML = `<span style="font-size:12px; color:#6a7a92;">${order.id}</span>`;
-
-        // Order Code
         row.insertCell(1).innerHTML = `<span class="badge" style="background: rgba(255,255,255,0.08); padding: 2px 12px; border-radius: 20px; font-size: 11px; color: #c8d2e8; border: 1px solid rgba(255,255,255,0.06);">${escapeHtml(order.order_code || '-')}</span>`;
-
-        // Hotel Name - 使用 innerText 避免乱码
+        
         const nameCell = row.insertCell(2);
         nameCell.style.fontWeight = '500';
         nameCell.style.color = '#d8e0f0';
         nameCell.style.fontSize = '13px';
         nameCell.textContent = order.accommodation_name || '-';
 
-        // Price
         row.insertCell(3).innerHTML = `<span style="font-weight:700; color:#c8b090; font-size:15px;">€${(order.price || 0).toFixed(2)}</span>`;
 
-        // Image
         let imageHtml = '';
         if (order.image_url) {
             imageHtml = `<img src="${order.image_url}" class="pool-thumb" onclick="window.open('${order.image_url}','_blank')" onerror="this.outerHTML='<div class=\\'pool-thumb-placeholder\\'><i class=\\'fas fa-image\\'></i></div>'">`;
@@ -350,11 +303,7 @@ function renderOrderPoolPage() {
             imageHtml = `<div class="pool-thumb-placeholder"><i class="fas fa-image"></i></div>`;
         }
         row.insertCell(4).innerHTML = imageHtml;
-
-        // Status
         row.insertCell(5).innerHTML = `<span class="${statusClass}">${statusText}</span>`;
-
-        // Actions
         row.insertCell(6).innerHTML = `
             <div style="display: flex; gap: 4px; flex-wrap: nowrap; align-items: center;">
                 <button class="btn-sm-action btn-edit edit-order" data-id="${order.id}" style="white-space:nowrap; font-size:10px; padding:4px 12px;">
@@ -367,7 +316,6 @@ function renderOrderPoolPage() {
         `;
     }
 
-    // ========== 绑定编辑事件 ==========
     document.querySelectorAll('.edit-order').forEach(function(btn) {
         btn.addEventListener('click', function() {
             const order = allOrders.find(function(o) { return o.id == this.dataset.id; }.bind(this));
@@ -377,7 +325,6 @@ function renderOrderPoolPage() {
         });
     });
 
-    // ========== 绑定删除事件 ==========
     document.querySelectorAll('.delete-order').forEach(function(btn) {
         btn.addEventListener('click', function() {
             const id = parseInt(this.dataset.id);
@@ -393,9 +340,6 @@ function renderOrderPoolPage() {
     renderPagination();
 }
 
-// ============================================================
-// 🔥 分页
-// ============================================================
 function renderPagination() {
     const container = document.getElementById('pagination');
     if (!container) return;
@@ -405,7 +349,6 @@ function renderPagination() {
 
     if (totalPages <= 1) return;
 
-    // Previous
     const prevBtn = document.createElement('button');
     prevBtn.innerHTML = '<i class="fas fa-chevron-left"></i>';
     prevBtn.disabled = currentPage <= 1;
@@ -417,7 +360,6 @@ function renderPagination() {
     };
     container.appendChild(prevBtn);
 
-    // Page numbers
     const startPage = Math.max(1, currentPage - 2);
     const endPage = Math.min(totalPages, currentPage + 2);
 
@@ -441,10 +383,12 @@ function renderPagination() {
         const btn = document.createElement('button');
         btn.textContent = i;
         if (i === currentPage) btn.classList.add('active');
-        btn.onclick = function() {
-            currentPage = i;
-            loadAllOrdersFromDB();
-        };
+        btn.onclick = function(page) {
+            return function() {
+                currentPage = page;
+                loadAllOrdersFromDB();
+            };
+        }(i);
         container.appendChild(btn);
     }
 
@@ -464,7 +408,6 @@ function renderPagination() {
         container.appendChild(lastBtn);
     }
 
-    // Next
     const nextBtn = document.createElement('button');
     nextBtn.innerHTML = '<i class="fas fa-chevron-right"></i>';
     nextBtn.disabled = currentPage >= totalPages;
@@ -476,7 +419,6 @@ function renderPagination() {
     };
     container.appendChild(nextBtn);
 
-    // Info
     const info = document.createElement('span');
     info.className = 'page-info';
     const start = (currentPage - 1) * pageSize + 1;
@@ -485,9 +427,6 @@ function renderPagination() {
     container.appendChild(info);
 }
 
-// ============================================================
-// 🔥 弹窗操作
-// ============================================================
 function openAddOrderModal() {
     document.getElementById('orderModalTitle').innerHTML = 'Add Order';
     document.getElementById('orderCode').value = '';
