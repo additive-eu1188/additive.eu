@@ -26,8 +26,8 @@ async function loadOrderPoolPage() {
                 </div>
             </div>
 
-            <!-- 统计卡片 -->
-            <div class="stats-grid" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px;">
+            <!-- 统计卡片（3个） -->
+            <div class="stats-grid" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 24px;">
                 <div class="stat-item" style="background: rgba(12, 16, 28, 0.6); border-radius: 16px; padding: 16px 20px; text-align: center; border: 1px solid rgba(255,255,255,0.04);">
                     <div class="label" style="font-size: 11px; color: #8892a8; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">Total Orders</div>
                     <div class="value" id="poolStatTotal" style="font-size: 28px; font-weight: 700; color: #ffffff;">0</div>
@@ -39,10 +39,6 @@ async function loadOrderPoolPage() {
                 <div class="stat-item" style="background: rgba(12, 16, 28, 0.6); border-radius: 16px; padding: 16px 20px; text-align: center; border: 1px solid rgba(255,255,255,0.04);">
                     <div class="label" style="font-size: 11px; color: #8892a8; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">Unavailable</div>
                     <div class="value" id="poolStatUnavailable" style="font-size: 28px; font-weight: 700; color: #e88080;">0</div>
-                </div>
-                <div class="stat-item" style="background: rgba(12, 16, 28, 0.6); border-radius: 16px; padding: 16px 20px; text-align: center; border: 1px solid rgba(255,255,255,0.04);">
-                    <div class="label" style="font-size: 11px; color: #8892a8; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">Total Value</div>
-                    <div class="value" id="poolStatValue" style="font-size: 28px; font-weight: 700; color: #c8b090;">€0</div>
                 </div>
             </div>
 
@@ -164,6 +160,9 @@ async function loadOrderPoolPage() {
             color: #4a5a72;
             font-size: 10px;
         }
+        #page_orderpool .data-table td {
+            padding: 8px 12px !important;
+        }
         @media (max-width: 768px) {
             #page_orderpool .stats-grid { grid-template-columns: repeat(2, 1fr) !important; }
             #page_orderpool .search-bar { flex-direction: column; align-items: stretch; }
@@ -234,53 +233,40 @@ async function loadAllOrdersFromDB() {
         let totalQuery = sb.from('orders_pool').select('id', { count: 'exact', head: true });
         let availableQuery = sb.from('orders_pool').select('id', { count: 'exact', head: true }).eq('status', 'available');
         let unavailableQuery = sb.from('orders_pool').select('id', { count: 'exact', head: true }).eq('status', 'unavailable');
-        let valueQuery = sb.from('orders_pool').select('price');
 
         // 应用搜索条件
         if (keyword) {
             totalQuery = totalQuery.or(`order_code.ilike.%${keyword}%,accommodation_name.ilike.%${keyword}%`);
             availableQuery = availableQuery.or(`order_code.ilike.%${keyword}%,accommodation_name.ilike.%${keyword}%`);
             unavailableQuery = unavailableQuery.or(`order_code.ilike.%${keyword}%,accommodation_name.ilike.%${keyword}%`);
-            valueQuery = valueQuery.or(`order_code.ilike.%${keyword}%,accommodation_name.ilike.%${keyword}%`);
         }
         if (statusFilter) {
             totalQuery = totalQuery.eq('status', statusFilter);
-            valueQuery = valueQuery.eq('status', statusFilter);
         }
         if (minPrice > 0) {
             totalQuery = totalQuery.gte('price', minPrice);
             availableQuery = availableQuery.gte('price', minPrice);
             unavailableQuery = unavailableQuery.gte('price', minPrice);
-            valueQuery = valueQuery.gte('price', minPrice);
         }
         if (maxPrice < Infinity) {
             totalQuery = totalQuery.lte('price', maxPrice);
             availableQuery = availableQuery.lte('price', maxPrice);
             unavailableQuery = unavailableQuery.lte('price', maxPrice);
-            valueQuery = valueQuery.lte('price', maxPrice);
         }
 
-        const [totalResult, availableResult, unavailableResult, valueResult] = await Promise.all([
+        const [totalResult, availableResult, unavailableResult] = await Promise.all([
             totalQuery,
             availableQuery,
-            unavailableQuery,
-            valueQuery
+            unavailableQuery
         ]);
 
         totalCount = totalResult.count || 0;
         const availableCount = availableResult.count || 0;
         const unavailableCount = unavailableResult.count || 0;
-        let totalValue = 0;
-        if (valueResult.data) {
-            valueResult.data.forEach(function(o) {
-                totalValue += (o.price || 0);
-            });
-        }
 
         document.getElementById('poolStatTotal').innerText = totalCount;
         document.getElementById('poolStatAvailable').innerText = availableCount;
         document.getElementById('poolStatUnavailable').innerText = unavailableCount;
-        document.getElementById('poolStatValue').innerHTML = '€' + totalValue.toFixed(2);
 
         // ============================================================
         // 🔥 获取分页数据
@@ -346,8 +332,12 @@ function renderOrderPoolPage() {
         // Order Code
         row.insertCell(1).innerHTML = `<span class="badge" style="background: rgba(255,255,255,0.08); padding: 2px 12px; border-radius: 20px; font-size: 11px; color: #c8d2e8; border: 1px solid rgba(255,255,255,0.06);">${escapeHtml(order.order_code || '-')}</span>`;
 
-        // Hotel Name
-        row.insertCell(2).innerHTML = `<span style="font-weight:500; color:#d8e0f0; font-size:13px;">${escapeHtml(order.accommodation_name || '-')}</span>`;
+        // Hotel Name - 使用 innerText 避免乱码
+        const nameCell = row.insertCell(2);
+        nameCell.style.fontWeight = '500';
+        nameCell.style.color = '#d8e0f0';
+        nameCell.style.fontSize = '13px';
+        nameCell.textContent = order.accommodation_name || '-';
 
         // Price
         row.insertCell(3).innerHTML = `<span style="font-weight:700; color:#c8b090; font-size:15px;">€${(order.price || 0).toFixed(2)}</span>`;
