@@ -531,35 +531,35 @@ function showCalculatorPanel(userData) {
                 <span id="formulaLabel" style="color: rgba(201,176,149,0.5); font-weight: 600;">Balance</span> × 0.005 × <span style="color: rgba(201,176,149,0.5); font-weight: 600;">Orders</span> + <span id="formulaLabel2" style="color: rgba(201,176,149,0.5); font-weight: 600;">Balance</span> + <span style="color: rgba(74,222,128,0.4); font-weight: 600;">Set Negative</span>
             </div>
 
-            <!-- 计算结果 -->
-            <div style="background: rgba(255,255,255,0.015); border: 1px solid rgba(255,255,255,0.03); border-radius: 12px; padding: 12px 16px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; margin-bottom: 12px;">
-                <span style="font-size: 10px; color: rgba(255,255,255,0.12); text-transform: uppercase; letter-spacing: 0.6px; font-weight: 500;">
-                    <i class="fas fa-calculator" style="margin-right: 6px; color: rgba(255,255,255,0.06);"></i> Result
+            <!-- ============================================================ -->
+            <!-- 🔥 样式 7 · 霓虹金边 - Result 卡片 -->
+            <!-- ============================================================ -->
+            <div style="background: rgba(10, 8, 4, 0.7); border: 2px solid #ffb84d; border-radius: 14px; padding: 14px 18px; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 0 60px rgba(255, 184, 77, 0.08), inset 0 0 20px rgba(255, 184, 77, 0.02); margin-bottom: 12px;">
+                <span style="font-size: 12px; font-weight: 600; color: #ffb84d; text-transform: uppercase; letter-spacing: 1.5px;">
+                    <i class="fas fa-crown" style="margin-right: 8px;"></i> Result
                 </span>
-                <span style="font-size: 24px; font-weight: 700; color: #C9B095; letter-spacing: -0.3px; font-variant-numeric: tabular-nums;" id="calcResultDisplay">€0.00</span>
+                <span style="font-size: 26px; font-weight: 800; color: #ffdd77; text-shadow: 0 0 40px rgba(255, 221, 119, 0.1);" id="calcResultDisplay">€0.00</span>
             </div>
 
             <!-- ============================================================ -->
-            <!-- 🔥 新增：Multiple Orders 独立区域（在 Result 下方） -->
+            <!-- 🔥 Multiple Orders - 只计算，不展示结果卡片，自动填入 Set Negative -->
             <!-- ============================================================ -->
             <div style="margin-top: 18px; padding-top: 16px; border-top: 1px solid rgba(255,255,255,0.06);">
                 <div style="font-size: 13px; font-weight: 600; color: #C9B095; margin-bottom: 12px; letter-spacing: 0.5px; display: flex; align-items: center; gap: 8px;">
                     <i class="fas fa-layer-group" style="font-size: 14px;"></i> Multiple Orders
-                    <span style="font-size: 9px; color: rgba(255,255,255,0.08); font-weight: 400; margin-left: auto;">
-                        <i class="fas fa-arrow-right"></i> Auto fills Set Negative
+                    <span style="font-size: 9px; color: rgba(74,222,128,0.3); font-weight: 400; margin-left: auto;">
+                        <i class="fas fa-sync-alt"></i> Auto fills Set Negative
                     </span>
                 </div>
 
-                <!-- 4列输入：Pending(自动) + Deposit Bonus + Cash Reward + Set Negative -->
-                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 10px; margin-bottom: 10px;">
-                    <!-- Pending Amount（自动显示） -->
+                <!-- 4列输入 -->
+                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 10px; margin-bottom: 6px;">
                     <div style="display: flex; flex-direction: column; gap: 3px;">
                         <span style="font-size: 9px; color: rgba(255,255,255,0.20); text-transform: uppercase; letter-spacing: 0.4px; font-weight: 500;">
                             <i class="fas fa-clock" style="margin-right: 4px; font-size: 9px;"></i> Pending
                         </span>
                         <span style="font-size: 16px; font-weight: 700; color: #C9B095; padding: 6px 0; background: rgba(255,255,255,0.02); border-radius: 8px; text-align: center; border: 1px solid rgba(255,255,255,0.03);" id="multiPendingDisplay">€0.00</span>
                     </div>
-                    <!-- Deposit Bonus -->
                     <div style="display: flex; flex-direction: column; gap: 3px;">
                         <span style="font-size: 9px; color: rgba(255,255,255,0.20); text-transform: uppercase; letter-spacing: 0.4px; font-weight: 500;">
                             <i class="fas fa-gift" style="margin-right: 4px; font-size: 9px;"></i> Deposit Bonus
@@ -567,7 +567,6 @@ function showCalculatorPanel(userData) {
                         <input type="number" id="multiDepositInput" value="0" step="0.01" min="0" placeholder="0.00"
                                style="width:100%; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.05); border-radius:8px; padding:7px 10px; color:#d8e0f0; font-size:14px; font-weight:500; outline:none; font-family:'Inter',sans-serif; transition:0.25s ease; text-align:center;">
                     </div>
-                    <!-- Cash Reward -->
                     <div style="display: flex; flex-direction: column; gap: 3px;">
                         <span style="font-size: 9px; color: rgba(255,255,255,0.20); text-transform: uppercase; letter-spacing: 0.4px; font-weight: 500;">
                             <i class="fas fa-money-bill-wave" style="margin-right: 4px; font-size: 9px;"></i> Cash Reward
@@ -575,7 +574,6 @@ function showCalculatorPanel(userData) {
                         <input type="number" id="multiCashInput" value="0" step="0.01" min="0" placeholder="0.00"
                                style="width:100%; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.05); border-radius:8px; padding:7px 10px; color:#d8e0f0; font-size:14px; font-weight:500; outline:none; font-family:'Inter',sans-serif; transition:0.25s ease; text-align:center;">
                     </div>
-                    <!-- Set Negative -->
                     <div style="display: flex; flex-direction: column; gap: 3px;">
                         <span style="font-size: 9px; color: rgba(255,255,255,0.20); text-transform: uppercase; letter-spacing: 0.4px; font-weight: 500;">
                             <i class="fas fa-minus-circle" style="margin-right: 4px; font-size: 9px;"></i> Set Negative
@@ -585,22 +583,9 @@ function showCalculatorPanel(userData) {
                     </div>
                 </div>
 
-                <!-- 公式展示行 -->
-                <div style="font-size: 11px; color: rgba(255,255,255,0.08); font-family: 'Courier New', monospace; text-align: center; padding: 2px 0 6px 0; letter-spacing: 0.3px;">
-                    Pending + Deposit Bonus + Cash Reward + Set Negative − Pending = Result
-                </div>
-
-                <!-- Multiple Orders 结果（白色字体） -->
-                <div style="background: rgba(255,255,255,0.015); border: 1px solid rgba(255,255,255,0.04); border-radius: 10px; padding: 12px 16px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px;">
-                    <span style="font-size: 10px; color: rgba(255,255,255,0.12); text-transform: uppercase; letter-spacing: 0.6px; font-weight: 500;">
-                        <i class="fas fa-calculator" style="margin-right: 6px; color: rgba(255,255,255,0.06);"></i> Multi Orders Result
-                    </span>
-                    <span style="font-size: 24px; font-weight: 700; color: #ffffff; letter-spacing: -0.3px; font-variant-numeric: tabular-nums;" id="multiResultDisplay">€0.00</span>
-                </div>
-
-                <!-- 🔥 新增：提示信息 - 自动填充 -->
-                <div style="font-size: 10px; color: rgba(74,222,128,0.25); text-align: center; margin-top: 6px; letter-spacing: 0.3px;">
-                    <i class="fas fa-sync-alt" style="margin-right: 4px;"></i> Multi Orders Result automatically fills the <strong style="color: rgba(74,222,128,0.35);">Set Negative</strong> field above
+                <!-- 公式展示行（精简） -->
+                <div style="font-size: 10px; color: rgba(255,255,255,0.06); font-family: 'Courier New', monospace; text-align: center; padding: 2px 0 0 0; letter-spacing: 0.3px;">
+                    Pending + Deposit + Cash + Set Negative − Pending → <span style="color: rgba(74,222,128,0.15);">auto fills Set Negative</span>
                 </div>
             </div>
 
@@ -635,50 +620,36 @@ function showCalculatorPanel(userData) {
     }
 
     // ============================================================
-    // 🔥 Multiple Orders 独立计算函数（自动填充 Set Negative）
+    // 🔥 Multiple Orders - 只计算，自动填充 Set Negative（不展示结果卡片）
     // ============================================================
     function updateMultiCalculator() {
         var pendingDisplay = document.getElementById('multiPendingDisplay');
         var depositInput = document.getElementById('multiDepositInput');
         var cashInput = document.getElementById('multiCashInput');
         var negativeInput = document.getElementById('multiNegativeInput');
-        var resultDisplay = document.getElementById('multiResultDisplay');
-        
-        // 🔥 获取上方主计算器的 Set Negative 输入框
         var mainNegativeInput = document.getElementById('calcNegativeInput');
         
-        if (!depositInput || !cashInput || !negativeInput || !resultDisplay) return;
+        if (!depositInput || !cashInput || !negativeInput) return;
         
         var pendingValue = window._pendingDisplayValue !== undefined ? window._pendingDisplayValue : (userData.balance || 0);
         var depositBonus = parseFloat(depositInput.value) || 0;
         var cashReward = parseFloat(cashInput.value) || 0;
         var setNegative = parseFloat(negativeInput.value) || 0;
         
-        // 公式：Pending + DepositBonus + CashReward + SetNegative - Pending = DepositBonus + CashReward + SetNegative
         var multiResult = depositBonus + cashReward + setNegative;
         
         if (pendingDisplay) pendingDisplay.textContent = '€' + pendingValue.toFixed(2);
-        resultDisplay.textContent = '€' + multiResult.toFixed(2);
         
-        // ============================================================
-        // 🔥🔥🔥 核心：将 Multi Orders Result 自动填入上方 Set Negative
-        // ============================================================
+        // 🔥 自动填充主 Set Negative
         if (mainNegativeInput) {
-            // 只有当 Multi Orders Result > 0 时才自动填充，避免覆盖用户手动输入
             if (multiResult > 0) {
-                // 如果当前主 Set Negative 为 0，或者用户没有手动修改过，则自动填充
-                // 但如果用户手动修改了，我们尊重用户输入（保留手动值）
                 var currentMainNegative = parseFloat(mainNegativeInput.value) || 0;
-                // 如果主 Set Negative 当前是 0，或者与上次自动填充的值相同，则更新
                 if (currentMainNegative === 0 || currentMainNegative === window._lastAutoFilledValue) {
                     mainNegativeInput.value = multiResult.toFixed(2);
                     window._lastAutoFilledValue = multiResult;
-                    // 触发主计算器更新
                     updateCalculator();
                 }
             } else {
-                // 如果 Multi Result 为 0，不清空主 Set Negative（保留用户输入）
-                // 但记录当前值，以便下次判断
                 window._lastAutoFilledValue = 0;
             }
         }
@@ -713,7 +684,6 @@ function showCalculatorPanel(userData) {
                     pendingDisplayEl.textContent = '€' + displayValue.toFixed(2);
                 }
                 
-                // 更新公式标签
                 var formulaText = hasPending ? 'Pending' : 'Balance';
                 if (formulaLabel) formulaLabel.textContent = formulaText;
                 if (formulaLabel2) formulaLabel2.textContent = formulaText;
@@ -753,8 +723,6 @@ function showCalculatorPanel(userData) {
     
     if (ordersInput) ordersInput.addEventListener('input', updateCalculator);
     if (negativeInput) negativeInput.addEventListener('input', function() {
-        // 用户手动修改 Set Negative 时，更新主计算器
-        // 并且记录用户手动输入的值，避免被自动填充覆盖
         var val = parseFloat(this.value) || 0;
         window._lastAutoFilledValue = val;
         updateCalculator();
