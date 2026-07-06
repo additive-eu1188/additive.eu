@@ -446,57 +446,44 @@
         let currentOrderDetail = null;
         
         function showOrderDetail(order) {
-            currentOrderDetail = order;
-            const modal = document.getElementById('orderDetailModal');
-            const body = document.getElementById('orderDetailBody');
-            
-            const date = new Date(order.date);
-            const formattedDate = date.toLocaleDateString() + ' ' + date.toLocaleTimeString();
-            const rating = order.rating || 0;
-            
-            let starsHtml = '';
-            for (let i = 1; i <= 5; i++) {
-                starsHtml += `<i class="fas fa-star" style="color: ${i <= rating ? '#C9B095' : '#4a5578'};"></i>`;
-            }
-            
-            const t = window.i18n?.t || function(key) { return key; };
-body.innerHTML = `
-    <div class="order-detail-row">
-        <span class="order-detail-label">${t('history_order_code')}</span>
-        <span class="order-detail-value">${order.order_code || 'N/A'}</span>
-    </div>
-    <div class="order-detail-row">
-        <span class="order-detail-label">${t('history_hotel')}</span>
-        <span class="order-detail-value">${order.accommodation_name || 'Hotel Task'}</span>
-    </div>
-    <div class="order-detail-row">
-        <span class="order-detail-label">${t('history_price')}</span>
-        <span class="order-detail-value price">€${(order.price || 0).toFixed(2)}</span>
-    </div>
-    <div class="order-detail-row">
-        <span class="order-detail-label">${t('history_commission')}</span>
-        <span class="order-detail-value commission">+€${(order.commission || 0).toFixed(2)}</span>
-    </div>
-    <div class="order-detail-row">
-        <span class="order-detail-label">${t('history_net_profit')}</span>
-        <span class="order-detail-value commission">+€${((order.commission || 0) - (order.price || 0)).toFixed(2)}</span>
-    </div>
-    <div class="order-detail-row">
-        <span class="order-detail-label">${t('history_rating')}</span>
-        <div class="rating-stars">${starsHtml}</div>
-    </div>
-    <div class="order-detail-row">
-        <span class="order-detail-label">${t('history_date')}</span>
-        <span class="order-detail-value">${formattedDate}</span>
-    </div>
-    <div class="order-detail-row">
-        <span class="order-detail-label">${t('history_status')}</span>
-        <span class="order-detail-value" style="color:#4ade80;">${order.status || 'Completed'}</span>
-    </div>
-`;
-            
-            modal.classList.add('active');
-        }
+    currentOrderDetail = order;
+    const modal = document.getElementById('orderDetailModal');
+    const body = document.getElementById('orderDetailBody');
+    
+    const date = new Date(order.date);
+    const formattedDate = date.toLocaleDateString() + ' ' + date.toLocaleTimeString();
+    
+    const t = window.i18n?.t || function(key) { return key; };
+    
+    body.innerHTML = `
+        <div class="order-detail-row">
+            <span class="order-detail-label">${t('history_order_code')}</span>
+            <span class="order-detail-value">${order.order_code || 'N/A'}</span>
+        </div>
+        <div class="order-detail-row">
+            <span class="order-detail-label">${t('history_hotel')}</span>
+            <span class="order-detail-value">${order.accommodation_name || 'Hotel Task'}</span>
+        </div>
+        <div class="order-detail-row">
+            <span class="order-detail-label">${t('history_price')}</span>
+            <span class="order-detail-value price">€${(order.price || 0).toFixed(2)}</span>
+        </div>
+        <div class="order-detail-row">
+            <span class="order-detail-label">${t('history_commission')}</span>
+            <span class="order-detail-value commission">+€${(order.commission || 0).toFixed(2)}</span>
+        </div>
+        <div class="order-detail-row">
+            <span class="order-detail-label">${t('history_date')}</span>
+            <span class="order-detail-value">${formattedDate}</span>
+        </div>
+        <div class="order-detail-row">
+            <span class="order-detail-label">${t('history_status')}</span>
+            <span class="order-detail-value" style="color:#4ade80;">${order.status || 'Completed'}</span>
+        </div>
+    `;
+    
+    modal.classList.add('active');
+}
         
         function closeOrderDetailModal() {
             document.getElementById('orderDetailModal').classList.remove('active');
