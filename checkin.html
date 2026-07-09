@@ -855,6 +855,10 @@ const storedRound = localStorage.getItem('checkin_round_' + user.uid) || '0';
 
 // 如果 Round 变化了，处理签到数据
 if (parseInt(storedRound) !== currentRound) {
+    // ✅ 新增：清除上次 Claim 的 Round 记录
+    localStorage.removeItem('checkin_last_claim_round_' + user.uid);
+    console.log('🔄 Round 变化，清除 lastClaimRound');
+    
     // 保留已 Claim 的天数列表
     const existingData = loadData();
     const preservedClaimedDays = existingData.claimedDays || [];
