@@ -851,7 +851,7 @@
             const storedRound = localStorage.getItem('checkin_round_' + user.uid) || '0';
 
             if (parseInt(storedRound) !== currentRound) {
-                // ✅ 清除上次 Claim 的 Round 记录
+                // ✅ Round 变化时清除 lastClaimRound 锁定
                 localStorage.removeItem('checkin_last_claim_round_' + user.uid);
                 console.log('🔄 Round 变化，清除 lastClaimRound');
                 
@@ -863,7 +863,7 @@
                     localStorage.setItem('checkin_round_' + user.uid, String(currentRound));
                     streak = 0;
                     claimedDays = preservedClaimedDays;
-                    console.log('🔄 Round 2 -> Round 1: Streak reset, lastClaimDate preserved:', lastClaimDate, 'claimedDays preserved:', preservedClaimedDays);
+                    console.log('🔄 Round 2 -> Round 1: Streak reset, claimedDays preserved:', preservedClaimedDays);
                 } else {
                     localStorage.setItem('checkin_round_' + user.uid, String(currentRound));
                     const currentData = loadData();
@@ -947,7 +947,7 @@
         }
 
         // ============================================================
-        // handleClaim - 修复版（移除 lastClaimRound 检查）
+        // handleClaim - 保留 lastClaimRound 检查
         // ============================================================
         async function handleClaim() {
             console.log('🔔 handleClaim 被调用');
@@ -1011,9 +1011,23 @@
             }
 
             // ============================================================
-            // ✅ 移除 lastClaimRound 检查
-            // 使用 claimedDays + lastClaimDate 已经足够判断
+            // 🔥🔥🔥 核心检查：每个 Round 2 只能 Claim 1 次
+            // 如果 lastClaimRound == currentRound，说明这个 Round 已经 Claim 过了
+            // 必须 Reset 回 Round 1 并重新完成 30 单
             // ============================================================
+            const lastClaimRound = localStorage.getItem('checkin_last_claim_round_' + user.uid);
+            
+            if (lastClaimRound && parseInt(lastClaimRound) === currentRound) {
+                console.log('⛔ 当前 Round 已经 Claim 过奖励，需要 Reset 后重新完成 30 单');
+                
+                showCustomConfirm(
+                    t('checkin_already_claimed_title') || '⚠️ Already Claimed',
+                    t('checkin_already_claimed_message') || 'You have already claimed the sign-in bonus for this round.<br><br>Please reset to <strong>Round 1</strong> and complete <strong>30 orders</strong> again to claim the next day.',
+                    function() {},
+                    function() {}
+                );
+                return;
+            }
 
             // ============================================================
             // 🔥 准备 Claim
@@ -1120,22 +1134,30 @@
                 console.log('✅ Claim 数据已保存: claimedDays:', newClaimedDays, 'streak:', newStreak);
 
                 // ============================================================
-                // 5. 更新本地用户对象（包含余额）
+                // 5. 🔥🔥🔥 记录本次 Claim 时的 Round
+                // 防止同一个 Round 2 重复 Claim
+                // ============================================================
+                const currentRound = user.currentRound || 0;
+                localStorage.setItem('checkin_last_claim_round_' + user.uid, String(currentRound));
+                console.log('✅ 已记录 Claim 时的 Round:', currentRound);
+
+                // ============================================================
+                // 6. 更新本地用户对象（包含余额）
                 // ============================================================
                 user.balance = newBalance;
                 localStorage.setItem('currentUser', JSON.stringify(user));
 
                 // ============================================================
-                // 6. 刷新页面 UI
+                // 7. 刷新页面 UI
                 // ============================================================
                 await render();
                 
                 // ============================================================
-                // 7. 显示成功消息
+                // 8. 显示成功消息
                 // ============================================================
                 const t = window.i18n?.t || function(key) { return key; };
                 showToast(t('checkin_claim_success', { day: claimDay, amount: amount.toFixed(2) }), 'success');
-                console.log('🎉 Claim 完成!');
+                console.log('🎉 Claim 完成! Round 保持不变:', currentRound);
                 
             } catch (err) {
                 console.error('❌ processClaim 错误:', err);
@@ -1173,6 +1195,7 @@
             }
             console.log('✅ checkin.html 初始化完成');
             console.log('📋 签到规则: 只有 Round 2 且完成 30 单才能签到');
+            console.log('📋 每个 Round 2 只能 Claim 1 天，必须 Reset 后重新完成 30 单');
         })();
 
         // ============================================================
@@ -1193,7 +1216,7 @@
             }, 300);
         });
 
-        console.log('✅ checkin.html loaded — 修复版（已移除 lastClaimRound 检查）');
+        console.log('✅ checkin.html loaded — 正确版（每个 Round 2 只能 Claim 1 天）');
         console.log('💡 点击 Claim now 会显示自定义弹窗，不是浏览器 alert');
     </script>
     <script src="i18n.js"></script>
