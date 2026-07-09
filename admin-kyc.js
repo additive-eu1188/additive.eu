@@ -1,11 +1,13 @@
-// admin-kyc.js - 完整优化版
+// admin-kyc.js - 完整优化版（支持所有文件类型弹窗预览）
 // 优化内容：
 // 1. 支持所有文件类型（HEIC, PDF, DOC, XLS, PPT, 视频, 音频, 压缩包, 代码等）
-// 2. Verification History 按最新到最旧排序
-// 3. 分页加载（每页20条）
-// 4. 图片懒加载（IntersectionObserver）
-// 5. 批量查询优化（减少数据库请求）
-// 6. 缓存用户名（减少重复查询）
+// 2. 所有文件点击后在弹窗中预览（不是新标签页）
+// 3. HEIC/PDF 直接在弹窗中显示
+// 4. Verification History 按最新到最旧排序
+// 5. 分页加载（每页20条）
+// 6. 图片懒加载（IntersectionObserver）
+// 7. 批量查询优化（减少数据库请求）
+// 8. 缓存用户名
 
 let activeTab = 'pending';
 let kycSearchKeyword = '';
@@ -138,7 +140,7 @@ async function loadKycPage() {
         </div>
     `;
     
-    // 添加样式
+    // 添加样式（包含预览弹窗样式）
     const style = document.createElement('style');
     style.textContent = `
         .tab-kyc-btn {
@@ -193,6 +195,7 @@ async function loadKycPage() {
             color: #4a5a72;
             font-size: 10px;
             transition: 0.2s;
+            cursor: pointer;
         }
         .kyc-doc-placeholder:hover {
             border-color: rgba(200,176,144,0.3);
@@ -247,7 +250,179 @@ async function loadKycPage() {
             color: rgba(255,255,255,0.12);
             padding: 0 8px;
         }
+        
+        /* ===== 预览弹窗样式 ===== */
+        .kyc-preview-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.92);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            z-index: 99999;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            animation: previewFadeIn 0.25s ease;
+        }
+        .kyc-preview-overlay.active {
+            display: flex;
+        }
+        @keyframes previewFadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        @keyframes previewScaleIn {
+            from { transform: scale(0.92); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+        .kyc-preview-content {
+            position: relative;
+            max-width: 92vw;
+            max-height: 92vh;
+            background: rgba(20, 24, 40, 0.95);
+            border-radius: 24px;
+            border: 1px solid rgba(201, 176, 149, 0.1);
+            box-shadow: 0 30px 80px rgba(0, 0, 0, 0.6);
+            overflow: hidden;
+            animation: previewScaleIn 0.3s cubic-bezier(0.2, 0.9, 0.4, 1.1) forwards;
+        }
+        .kyc-preview-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 24px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+        }
+        .kyc-preview-header .file-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .kyc-preview-header .file-info .file-type-badge {
+            font-size: 11px;
+            font-weight: 600;
+            padding: 4px 14px;
+            border-radius: 20px;
+            background: rgba(201, 176, 149, 0.1);
+            color: #c8b090;
+        }
+        .kyc-preview-header .file-info .file-name {
+            font-size: 14px;
+            color: #d8e0f0;
+            font-weight: 500;
+            max-width: 300px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .kyc-preview-close {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            color: #6a7a92;
+            cursor: pointer;
+            font-size: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: 0.25s;
+        }
+        .kyc-preview-close:hover {
+            background: rgba(232, 128, 128, 0.12);
+            color: #e88080;
+        }
+        .kyc-preview-body {
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 200px;
+            max-height: 75vh;
+            overflow: auto;
+        }
+        .kyc-preview-body img {
+            max-width: 100%;
+            max-height: 70vh;
+            border-radius: 12px;
+            object-fit: contain;
+        }
+        .kyc-preview-body iframe {
+            width: 100%;
+            height: 70vh;
+            border: none;
+            border-radius: 12px;
+            background: rgba(0, 0, 0, 0.2);
+        }
+        .kyc-preview-body .file-preview-placeholder {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 60px 40px;
+            color: #6a7a92;
+            text-align: center;
+        }
+        .kyc-preview-body .file-preview-placeholder i {
+            font-size: 64px;
+            color: #c8b090;
+            margin-bottom: 16px;
+        }
+        .kyc-preview-body .file-preview-placeholder .preview-label {
+            font-size: 14px;
+            color: #c8b090;
+            font-weight: 500;
+        }
+        .kyc-preview-body .file-preview-placeholder .preview-hint {
+            font-size: 12px;
+            color: #5a6a82;
+            margin-top: 8px;
+        }
+        .kyc-preview-body .file-preview-placeholder .download-link {
+            margin-top: 16px;
+            padding: 8px 24px;
+            border-radius: 40px;
+            background: rgba(201, 176, 149, 0.1);
+            border: 1px solid rgba(201, 176, 149, 0.2);
+            color: #c8b090;
+            text-decoration: none;
+            font-size: 13px;
+            transition: 0.2s;
+        }
+        .kyc-preview-body .file-preview-placeholder .download-link:hover {
+            background: rgba(201, 176, 149, 0.2);
+        }
+        .kyc-preview-body .video-preview {
+            max-width: 100%;
+            max-height: 70vh;
+            border-radius: 12px;
+        }
+        .kyc-preview-body .audio-preview {
+            width: 100%;
+            max-width: 500px;
+        }
         @media (max-width: 768px) {
+            .kyc-preview-content {
+                max-width: 96vw;
+                max-height: 96vh;
+            }
+            .kyc-preview-header .file-info .file-name {
+                max-width: 150px;
+                font-size: 12px;
+            }
+            .kyc-preview-body {
+                padding: 12px;
+                max-height: 70vh;
+            }
+            .kyc-preview-body iframe {
+                height: 50vh;
+            }
+        }
+        @media (max-width: 600px) {
             .stats-grid { grid-template-columns: repeat(2, 1fr) !important; }
             .tab-kyc-btn { font-size: 12px; padding: 6px 14px; }
             .search-bar { flex-direction: column; align-items: stretch; }
@@ -356,6 +531,138 @@ async function updateKycStats() {
 }
 
 // ============================================================
+// 🔥 预览弹窗函数（所有文件类型通用）
+// ============================================================
+function openKycPreview(url, fileType, fileName) {
+    // 移除已有弹窗
+    const existing = document.querySelector('.kyc-preview-overlay');
+    if (existing) existing.remove();
+    
+    const safeUrl = getSafeImageUrl(url);
+    const lowerUrl = url.toLowerCase();
+    const typeInfo = getFileTypeInfo(url);
+    
+    // 构建弹窗
+    const overlay = document.createElement('div');
+    overlay.className = 'kyc-preview-overlay active';
+    
+    let bodyContent = '';
+    
+    // 判断文件类型并生成预览内容
+    const isImage = typeInfo.type === 'image';
+    const isHeic = typeInfo.type === 'heic';
+    const isPdf = typeInfo.type === 'pdf';
+    const isVideo = typeInfo.type === 'video';
+    const isAudio = typeInfo.type === 'audio';
+    const isWord = typeInfo.type === 'word';
+    const isExcel = typeInfo.type === 'excel';
+    const isPowerpoint = typeInfo.type === 'powerpoint';
+    const isText = typeInfo.type === 'text' || typeInfo.type === 'richtext' || typeInfo.type === 'code';
+    const isArchive = typeInfo.type === 'archive';
+    const isUnknown = typeInfo.type === 'unknown';
+    
+    if (isImage) {
+        // 图片：直接显示
+        bodyContent = `<img src="${safeUrl}" alt="KYC Document" onerror="this.outerHTML='<div class=\\'file-preview-placeholder\\'><i class=\\'fas fa-file-image\\'></i><div class=\\'preview-label\\'>Image</div><div class=\\'preview-hint\\'>Failed to load image</div><a href=\\'${safeUrl}\\' target=\\'_blank\\' class=\\'download-link\\'><i class=\\'fas fa-download\\'></i> Download</a></div>'">`;
+    } else if (isPdf) {
+        // PDF：使用 iframe 内嵌显示
+        bodyContent = `<iframe src="${safeUrl}#toolbar=1" frameborder="0"></iframe>`;
+    } else if (isHeic) {
+        // HEIC：无法直接预览，显示下载提示
+        bodyContent = `
+            <div class="file-preview-placeholder">
+                <i class="fas fa-file-image"></i>
+                <div class="preview-label">HEIC Image</div>
+                <div class="preview-hint">HEIC format cannot be previewed directly in browser</div>
+                <a href="${safeUrl}" target="_blank" class="download-link"><i class="fas fa-download"></i> Download & View</a>
+            </div>
+        `;
+    } else if (isVideo) {
+        // 视频：使用 video 标签
+        bodyContent = `<video src="${safeUrl}" controls class="video-preview" autoplay></video>`;
+    } else if (isAudio) {
+        // 音频：使用 audio 标签
+        bodyContent = `<audio src="${safeUrl}" controls class="audio-preview" autoplay></audio>`;
+    } else if (isWord || isExcel || isPowerpoint) {
+        // Office 文档：使用 Google Docs Viewer 或下载
+        const docType = isWord ? 'Word' : isExcel ? 'Excel' : 'PowerPoint';
+        bodyContent = `
+            <div class="file-preview-placeholder">
+                <i class="fas ${typeInfo.icon}"></i>
+                <div class="preview-label">${docType} Document</div>
+                <div class="preview-hint">Office documents cannot be previewed directly in browser</div>
+                <a href="${safeUrl}" target="_blank" class="download-link"><i class="fas fa-download"></i> Download & View</a>
+            </div>
+        `;
+    } else if (isText) {
+        // 文本/代码文件：尝试使用 iframe 加载
+        bodyContent = `<iframe src="${safeUrl}" frameborder="0"></iframe>`;
+    } else if (isArchive) {
+        // 压缩包：显示下载提示
+        bodyContent = `
+            <div class="file-preview-placeholder">
+                <i class="fas ${typeInfo.icon}"></i>
+                <div class="preview-label">${typeInfo.label} Archive</div>
+                <div class="preview-hint">Archive files cannot be previewed directly in browser</div>
+                <a href="${safeUrl}" target="_blank" class="download-link"><i class="fas fa-download"></i> Download</a>
+            </div>
+        `;
+    } else {
+        // 未知格式：显示下载提示
+        bodyContent = `
+            <div class="file-preview-placeholder">
+                <i class="fas ${typeInfo.icon}"></i>
+                <div class="preview-label">${typeInfo.label}</div>
+                <div class="preview-hint">This file type cannot be previewed directly in browser</div>
+                <a href="${safeUrl}" target="_blank" class="download-link"><i class="fas fa-download"></i> Download</a>
+            </div>
+        `;
+    }
+    
+    const displayName = fileName || url.split('/').pop() || 'KYC Document';
+    const badgeLabel = typeInfo.label || 'File';
+    
+    overlay.innerHTML = `
+        <div class="kyc-preview-content">
+            <div class="kyc-preview-header">
+                <div class="file-info">
+                    <span class="file-type-badge">${badgeLabel}</span>
+                    <span class="file-name">${escapeHtml(displayName)}</span>
+                </div>
+                <button class="kyc-preview-close" onclick="closeKycPreview()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="kyc-preview-body">
+                ${bodyContent}
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(overlay);
+    
+    // 点击遮罩关闭
+    overlay.addEventListener('click', function(e) {
+        if (e.target === this) {
+            closeKycPreview();
+        }
+    });
+    
+    // ESC 键关闭
+    document.addEventListener('keydown', function escHandler(e) {
+        if (e.key === 'Escape') {
+            closeKycPreview();
+            document.removeEventListener('keydown', escHandler);
+        }
+    });
+}
+
+function closeKycPreview() {
+    const overlay = document.querySelector('.kyc-preview-overlay');
+    if (overlay) overlay.remove();
+}
+
+// ============================================================
 // 批量获取用户名（缓存优化）
 // ============================================================
 async function getUsernameBatch(uids) {
@@ -398,7 +705,7 @@ async function getUsernameBatch(uids) {
 }
 
 // ============================================================
-// 生成安全图片URL（解决 No Image 问题）
+// 生成安全图片URL
 // ============================================================
 function getSafeImageUrl(url) {
     if (!url) return null;
@@ -488,7 +795,7 @@ function getFileTypeInfo(url) {
 }
 
 // ============================================================
-// 🔥 核心函数：渲染任何类型的文件（支持所有格式）
+// 🔥 核心函数：渲染任何类型的文件（所有文件点击打开预览弹窗）
 // ============================================================
 function renderKycImage(url, alt, placeholderText) {
     if (!url) {
@@ -497,107 +804,100 @@ function renderKycImage(url, alt, placeholderText) {
     
     const safeUrl = getSafeImageUrl(url);
     const fileInfo = getFileTypeInfo(url);
+    const fileName = url.split('/').pop() || 'File';
     
-    // 🔥 如果是可渲染的图片格式，显示缩略图
+    // 🔥 所有文件点击都打开预览弹窗
+    const previewClick = `openKycPreview('${safeUrl}', '${fileInfo.type}', '${escapeHtml(fileName)}')`;
+    
+    // 🔥 如果是图片格式，显示缩略图
     if (fileInfo.type === 'image') {
-        return `<img data-src="${safeUrl}" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='60'%3E%3Crect width='80' height='60' fill='rgba(255,255,255,0.02)'/%3E%3C/svg%3E" class="kyc-doc-image lazy-kyc" onclick="window.open('${safeUrl}','_blank')" onerror="this.outerHTML='<div class=\\'kyc-doc-placeholder\\' style=\\'cursor:pointer; border-color: rgba(200,176,144,0.3); background: rgba(200,176,144,0.05);\\' onclick=\\'window.open(\\'${safeUrl}\\',\\'_blank\\')\\'> <i class=\\'fas fa-file-image\\' style=\\'font-size:24px; color:#c8b090; display:block; margin-bottom:4px;\\'></i> <span style=\\'font-size:10px; color:#c8b090; font-weight:600;\\'>Image</span> <span style=\\'font-size:8px; color:#6a7a92; display:block; margin-top:2px;\\'>Click to view</span> </div>'" alt="${alt || 'KYC Image'}">`;
+        return `<img data-src="${safeUrl}" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='60'%3E%3Crect width='80' height='60' fill='rgba(255,255,255,0.02)'/%3E%3C/svg%3E" class="kyc-doc-image lazy-kyc" onclick="${previewClick}" onerror="this.outerHTML='<div class=\\'kyc-doc-placeholder\\' onclick=\\'${previewClick}\\'><i class=\\'fas fa-file-image\\' style=\\'font-size:20px; color:#c8b090; display:block; margin-bottom:4px;\\'></i><span style=\\'font-size:9px; color:#c8b090;\\'>Image</span></div>'" alt="${alt || 'KYC Image'}">`;
     }
     
-    // 🔥 HEIC 格式 - 显示为可点击的文件图标
+    // 🔥 HEIC 格式
     if (fileInfo.type === 'heic') {
-        return `<div class="kyc-doc-placeholder" style="cursor:pointer; border-color: rgba(200,176,144,0.3); background: rgba(200,176,144,0.05);" onclick="window.open('${safeUrl}','_blank')">
-            <i class="fas fa-file-image" style="font-size:24px; color:#c8b090; display:block; margin-bottom:4px;"></i>
-            <span style="font-size:10px; color:#c8b090; font-weight:600;">HEIC</span>
-            <span style="font-size:8px; color:#6a7a92; display:block; margin-top:2px;">Click to view</span>
+        return `<div class="kyc-doc-placeholder" onclick="${previewClick}">
+            <i class="fas fa-file-image" style="font-size:20px; color:#c8b090; display:block; margin-bottom:4px;"></i>
+            <span style="font-size:9px; color:#c8b090;">HEIC</span>
         </div>`;
     }
     
-    // 🔥 PDF 格式 - 显示为可点击的文件图标
+    // 🔥 PDF 格式
     if (fileInfo.type === 'pdf') {
-        return `<div class="kyc-doc-placeholder" style="cursor:pointer; border-color: rgba(232, 128, 128, 0.3); background: rgba(232, 128, 128, 0.05);" onclick="window.open('${safeUrl}','_blank')">
-            <i class="fas fa-file-pdf" style="font-size:24px; color:#e88080; display:block; margin-bottom:4px;"></i>
-            <span style="font-size:10px; color:#e88080; font-weight:600;">PDF</span>
-            <span style="font-size:8px; color:#6a7a92; display:block; margin-top:2px;">Click to view</span>
+        return `<div class="kyc-doc-placeholder" onclick="${previewClick}">
+            <i class="fas fa-file-pdf" style="font-size:20px; color:#e88080; display:block; margin-bottom:4px;"></i>
+            <span style="font-size:9px; color:#e88080;">PDF</span>
         </div>`;
     }
     
     // 🔥 Word 文档
     if (fileInfo.type === 'word') {
-        return `<div class="kyc-doc-placeholder" style="cursor:pointer; border-color: rgba(43, 87, 154, 0.3); background: rgba(43, 87, 154, 0.05);" onclick="window.open('${safeUrl}','_blank')">
-            <i class="fas fa-file-word" style="font-size:24px; color:#2b579a; display:block; margin-bottom:4px;"></i>
-            <span style="font-size:10px; color:#2b579a; font-weight:600;">WORD</span>
-            <span style="font-size:8px; color:#6a7a92; display:block; margin-top:2px;">Click to view</span>
+        return `<div class="kyc-doc-placeholder" onclick="${previewClick}">
+            <i class="fas fa-file-word" style="font-size:20px; color:#2b579a; display:block; margin-bottom:4px;"></i>
+            <span style="font-size:9px; color:#2b579a;">DOC</span>
         </div>`;
     }
     
     // 🔥 Excel 文档
     if (fileInfo.type === 'excel') {
-        return `<div class="kyc-doc-placeholder" style="cursor:pointer; border-color: rgba(33, 115, 70, 0.3); background: rgba(33, 115, 70, 0.05);" onclick="window.open('${safeUrl}','_blank')">
-            <i class="fas fa-file-excel" style="font-size:24px; color:#217346; display:block; margin-bottom:4px;"></i>
-            <span style="font-size:10px; color:#217346; font-weight:600;">EXCEL</span>
-            <span style="font-size:8px; color:#6a7a92; display:block; margin-top:2px;">Click to view</span>
+        return `<div class="kyc-doc-placeholder" onclick="${previewClick}">
+            <i class="fas fa-file-excel" style="font-size:20px; color:#217346; display:block; margin-bottom:4px;"></i>
+            <span style="font-size:9px; color:#217346;">XLS</span>
         </div>`;
     }
     
     // 🔥 PowerPoint 文档
     if (fileInfo.type === 'powerpoint') {
-        return `<div class="kyc-doc-placeholder" style="cursor:pointer; border-color: rgba(203, 65, 84, 0.3); background: rgba(203, 65, 84, 0.05);" onclick="window.open('${safeUrl}','_blank')">
-            <i class="fas fa-file-powerpoint" style="font-size:24px; color:#cb4154; display:block; margin-bottom:4px;"></i>
-            <span style="font-size:10px; color:#cb4154; font-weight:600;">POWERPOINT</span>
-            <span style="font-size:8px; color:#6a7a92; display:block; margin-top:2px;">Click to view</span>
+        return `<div class="kyc-doc-placeholder" onclick="${previewClick}">
+            <i class="fas fa-file-powerpoint" style="font-size:20px; color:#cb4154; display:block; margin-bottom:4px;"></i>
+            <span style="font-size:9px; color:#cb4154;">PPT</span>
         </div>`;
     }
     
     // 🔥 文本文件
     if (fileInfo.type === 'text' || fileInfo.type === 'richtext') {
-        return `<div class="kyc-doc-placeholder" style="cursor:pointer; border-color: rgba(200,176,144,0.3); background: rgba(200,176,144,0.05);" onclick="window.open('${safeUrl}','_blank')">
-            <i class="fas fa-file-alt" style="font-size:24px; color:#c8b090; display:block; margin-bottom:4px;"></i>
-            <span style="font-size:10px; color:#c8b090; font-weight:600;">${fileInfo.label}</span>
-            <span style="font-size:8px; color:#6a7a92; display:block; margin-top:2px;">Click to view</span>
+        return `<div class="kyc-doc-placeholder" onclick="${previewClick}">
+            <i class="fas fa-file-alt" style="font-size:20px; color:#c8b090; display:block; margin-bottom:4px;"></i>
+            <span style="font-size:9px; color:#c8b090;">${fileInfo.label}</span>
         </div>`;
     }
     
     // 🔥 视频文件
     if (fileInfo.type === 'video') {
-        return `<div class="kyc-doc-placeholder" style="cursor:pointer; border-color: rgba(255, 107, 107, 0.3); background: rgba(255, 107, 107, 0.05);" onclick="window.open('${safeUrl}','_blank')">
-            <i class="fas fa-file-video" style="font-size:24px; color:#ff6b6b; display:block; margin-bottom:4px;"></i>
-            <span style="font-size:10px; color:#ff6b6b; font-weight:600;">${fileInfo.label}</span>
-            <span style="font-size:8px; color:#6a7a92; display:block; margin-top:2px;">Click to view</span>
+        return `<div class="kyc-doc-placeholder" onclick="${previewClick}">
+            <i class="fas fa-file-video" style="font-size:20px; color:#ff6b6b; display:block; margin-bottom:4px;"></i>
+            <span style="font-size:9px; color:#ff6b6b;">${fileInfo.label}</span>
         </div>`;
     }
     
     // 🔥 音频文件
     if (fileInfo.type === 'audio') {
-        return `<div class="kyc-doc-placeholder" style="cursor:pointer; border-color: rgba(74, 124, 255, 0.3); background: rgba(74, 124, 255, 0.05);" onclick="window.open('${safeUrl}','_blank')">
-            <i class="fas fa-file-audio" style="font-size:24px; color:#4a7cff; display:block; margin-bottom:4px;"></i>
-            <span style="font-size:10px; color:#4a7cff; font-weight:600;">${fileInfo.label}</span>
-            <span style="font-size:8px; color:#6a7a92; display:block; margin-top:2px;">Click to view</span>
+        return `<div class="kyc-doc-placeholder" onclick="${previewClick}">
+            <i class="fas fa-file-audio" style="font-size:20px; color:#4a7cff; display:block; margin-bottom:4px;"></i>
+            <span style="font-size:9px; color:#4a7cff;">${fileInfo.label}</span>
         </div>`;
     }
     
     // 🔥 压缩包
     if (fileInfo.type === 'archive') {
-        return `<div class="kyc-doc-placeholder" style="cursor:pointer; border-color: rgba(255, 184, 77, 0.3); background: rgba(255, 184, 77, 0.05);" onclick="window.open('${safeUrl}','_blank')">
-            <i class="fas fa-file-archive" style="font-size:24px; color:#ffb84d; display:block; margin-bottom:4px;"></i>
-            <span style="font-size:10px; color:#ffb84d; font-weight:600;">${fileInfo.label}</span>
-            <span style="font-size:8px; color:#6a7a92; display:block; margin-top:2px;">Click to view</span>
+        return `<div class="kyc-doc-placeholder" onclick="${previewClick}">
+            <i class="fas fa-file-archive" style="font-size:20px; color:#ffb84d; display:block; margin-bottom:4px;"></i>
+            <span style="font-size:9px; color:#ffb84d;">${fileInfo.label}</span>
         </div>`;
     }
     
     // 🔥 代码文件
     if (fileInfo.type === 'code') {
-        return `<div class="kyc-doc-placeholder" style="cursor:pointer; border-color: rgba(74, 222, 128, 0.3); background: rgba(74, 222, 128, 0.05);" onclick="window.open('${safeUrl}','_blank')">
-            <i class="fas fa-file-code" style="font-size:24px; color:#4ade80; display:block; margin-bottom:4px;"></i>
-            <span style="font-size:10px; color:#4ade80; font-weight:600;">${fileInfo.label}</span>
-            <span style="font-size:8px; color:#6a7a92; display:block; margin-top:2px;">Click to view</span>
+        return `<div class="kyc-doc-placeholder" onclick="${previewClick}">
+            <i class="fas fa-file-code" style="font-size:20px; color:#4ade80; display:block; margin-bottom:4px;"></i>
+            <span style="font-size:9px; color:#4ade80;">${fileInfo.label}</span>
         </div>`;
     }
     
     // 🔥 未知格式 - 通用文件图标
-    return `<div class="kyc-doc-placeholder" style="cursor:pointer; border-color: rgba(200,176,144,0.3); background: rgba(200,176,144,0.05);" onclick="window.open('${safeUrl}','_blank')">
-        <i class="fas fa-file" style="font-size:24px; color:#c8b090; display:block; margin-bottom:4px;"></i>
-        <span style="font-size:10px; color:#c8b090; font-weight:600;">${fileInfo.label}</span>
-        <span style="font-size:8px; color:#6a7a92; display:block; margin-top:2px;">Click to view</span>
+    return `<div class="kyc-doc-placeholder" onclick="${previewClick}">
+        <i class="fas fa-file" style="font-size:20px; color:#c8b090; display:block; margin-bottom:4px;"></i>
+        <span style="font-size:9px; color:#c8b090;">${fileInfo.label}</span>
     </div>`;
 }
 
@@ -628,7 +928,6 @@ function setupKycLazyLoading() {
             kycImageObserver.observe(img);
         });
     } else {
-        // Fallback: 直接加载所有图片
         document.querySelectorAll('.lazy-kyc').forEach(img => {
             const src = img.dataset.src;
             if (src) {
@@ -651,7 +950,6 @@ function renderKycPagination(containerId, currentPage, totalCount, pageSize, cal
     
     if (totalPages <= 1) return;
     
-    // Previous
     const prevBtn = document.createElement('button');
     prevBtn.className = 'page-btn';
     prevBtn.innerHTML = '<i class="fas fa-chevron-left"></i>';
@@ -663,7 +961,6 @@ function renderKycPagination(containerId, currentPage, totalCount, pageSize, cal
     };
     container.appendChild(prevBtn);
     
-    // Page numbers
     const startPage = Math.max(1, currentPage - 2);
     const endPage = Math.min(totalPages, currentPage + 2);
     
@@ -703,7 +1000,6 @@ function renderKycPagination(containerId, currentPage, totalCount, pageSize, cal
         container.appendChild(btn);
     }
     
-    // Next
     const nextBtn = document.createElement('button');
     nextBtn.className = 'page-btn';
     nextBtn.innerHTML = '<i class="fas fa-chevron-right"></i>';
@@ -715,7 +1011,6 @@ function renderKycPagination(containerId, currentPage, totalCount, pageSize, cal
     };
     container.appendChild(nextBtn);
     
-    // Info
     const info = document.createElement('span');
     info.className = 'page-info';
     const from = (currentPage - 1) * pageSize + 1;
@@ -725,7 +1020,7 @@ function renderKycPagination(containerId, currentPage, totalCount, pageSize, cal
 }
 
 // ============================================================
-// 加载待处理 KYC（分页 + 优化）
+// 加载待处理 KYC
 // ============================================================
 async function loadKycPending(page) {
     if (page !== undefined) kycCurrentPage = page;
@@ -773,11 +1068,9 @@ async function loadKycPending(page) {
             return;
         }
         
-        // 批量获取用户名
         const uids = [...new Set(kycList.map(item => item.uid))];
         const userMap = await getUsernameBatch(uids);
         
-        // 按用户分组
         const userGroups = {};
         for (const item of kycList) {
             if (!userGroups[item.uid]) userGroups[item.uid] = [];
@@ -843,7 +1136,6 @@ async function loadKycPending(page) {
             row.insertCell(5).innerHTML = actionsHtml;
         }
         
-        // 绑定事件
         document.querySelectorAll('.approve-kyc').forEach(btn => btn.addEventListener('click', async () => {
             const uid = btn.dataset.uid;
             showConfirm('Approve KYC', `Confirm to approve KYC for user ${uid}?`, async () => {
@@ -868,10 +1160,8 @@ async function loadKycPending(page) {
             });
         }));
         
-        // 设置懒加载
         setTimeout(setupKycLazyLoading, 100);
         
-        // 分页
         renderKycPagination('kycPendingPagination', kycCurrentPage, kycTotalCount, KYC_PAGE_SIZE, (page) => {
             loadKycPending(page);
         });
@@ -883,7 +1173,7 @@ async function loadKycPending(page) {
 }
 
 // ============================================================
-// 加载已审核 KYC（分页 + 优化 + 最新优先）
+// 加载已审核 KYC（最新优先）
 // ============================================================
 async function loadKycVerified(page) {
     if (page !== undefined) kycCurrentPage = page;
@@ -893,7 +1183,6 @@ async function loadKycVerified(page) {
     tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:30px; color:#6a7a9a;"><i class="fas fa-spinner fa-spin"></i> Loading...</td></tr>';
     
     try {
-        // 🔥 按最新到最旧排序：uploaded_at DESC（最新在上）
         let query = sb.from('kyc_verifications')
             .select('*', { count: 'exact' })
             .in('status', ['approved', 'rejected'])
@@ -932,11 +1221,9 @@ async function loadKycVerified(page) {
             return;
         }
         
-        // 批量获取用户名
         const uids = [...new Set(kycList.map(item => item.uid))];
         const userMap = await getUsernameBatch(uids);
         
-        // 按用户分组
         const userGroups = {};
         for (const item of kycList) {
             if (!userGroups[item.uid]) userGroups[item.uid] = [];
@@ -996,10 +1283,8 @@ async function loadKycVerified(page) {
             row.insertCell(5).innerHTML = statusHtml;
         }
         
-        // 设置懒加载
         setTimeout(setupKycLazyLoading, 100);
         
-        // 分页
         renderKycPagination('kycVerifiedPagination', kycCurrentPage, kycTotalCount, KYC_PAGE_SIZE, (page) => {
             loadKycVerified(page);
         });
