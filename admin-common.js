@@ -10,7 +10,9 @@ const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 const NOTIFICATION_SOUNDS = {
     kyc: 'https://qgmbzdfnwsdosdqphlxk.supabase.co/storage/v1/object/public/notification-sounds/kycverification.mp3',
     withdrawal: 'https://qgmbzdfnwsdosdqphlxk.supabase.co/storage/v1/object/public/notification-sounds/withdrawal.mp3',
-    email: 'https://qgmbzdfnwsdosdqphlxk.supabase.co/storage/v1/object/public/notification-sounds/emailverificationshuat.mp3'
+    email: 'https://qgmbzdfnwsdosdqphlxk.supabase.co/storage/v1/object/public/notification-sounds/emailverificationshuat.mp3',
+    // 🔥 新增：多次邮箱请求
+    email_multiple: 'https://qgmbzdfnwsdosdqphlxk.supabase.co/storage/v1/object/public/notification-sounds/multiplerequestemail.mp3'
 };
 
 // ============================================================
@@ -1336,6 +1338,51 @@ function handleNewEmailRequest(data) {
 }
 
 // ============================================================
+// 🔥 处理多次邮箱验证请求（2次及以上）
+// ============================================================
+function handleMultipleEmailRequest(data) {
+    var requestCount = (data.send_count || 0) + 1;
+    console.log('🔔 检测到多次邮箱验证请求:', data.email, '第', requestCount, '次请求');
+    
+    // 播放专门的声音
+    playNotificationSound('email_multiple');
+    
+    // 刷新数据
+    if (window.refreshDashboardData) {
+        window.refreshDashboardData(currentDays);
+    }
+    var emailPage = document.getElementById('page_emailverify');
+    if (emailPage && emailPage.classList.contains('active')) {
+        if (window.loadEmailVerifyPage) {
+            window.loadEmailVerifyPage();
+        }
+    }
+    
+    // 添加通知到通知系统
+    var notification = {
+        id: 'email_multiple_' + data.id + '_' + Date.now(),
+        type: 'email_multiple',
+        title: '🔁 多次邮箱验证请求',
+        message: '用户 ' + (data.email || data.uid) + ' 已请求验证 ' + requestCount + ' 次',
+        timestamp: new Date().toISOString(),
+        read: false,
+        data: data
+    };
+    addNotification(notification);
+    
+    loadNotificationCounts();
+    
+    // 显示琥珀通知
+    if (window.showAmberNotification) {
+        window.showAmberNotification(
+            '🔄 多次邮箱验证请求',
+            '用户 ' + data.email + ' 已请求 ' + requestCount + ' 次验证码',
+            'email_multiple'
+        );
+    }
+}
+
+// ============================================================
 // 🔥 全局实时订阅
 // ============================================================
 var realtimeChannel = null;
@@ -1388,14 +1435,23 @@ function tryConnectRealtime() {
             )
             // ✅ 已有：Email 新请求
             .on(
-                'postgres_changes',
-                { event: 'INSERT', schema: 'public', table: 'email_verification_requests' },
-                function(payload) {
-                    console.log('🔔 [Realtime] 检测到新邮箱验证请求:', payload.new);
-                    realtimeConnected = true;
-                    handleNewEmailRequest(payload.new);
-                }
-            )
+    'postgres_changes',
+    { event: 'INSERT', schema: 'public', table: 'email_verification_requests' },
+    function(payload) {
+        console.log('🔔 [Realtime] 检测到新邮箱验证请求:', payload.new);
+        realtimeConnected = true;
+        
+        // 🔥 检查是否是多次请求（send_count > 0 表示不是首次）
+        var sendCount = payload.new.send_count || 0;
+        if (sendCount > 0) {
+            // 多次请求 - 使用专门的函数
+            handleMultipleEmailRequest(payload.new);
+        } else {
+            // 首次请求
+            handleNewEmailRequest(payload.new);
+        }
+    }
+)
             // 🔥 新增：新用户注册
             .on(
                 'postgres_changes',
@@ -1477,26 +1533,31 @@ async function pollForUpdates() {
             handleNewWithdrawal(withdrawals.data[0]);
         }
         
-        var emails = await sb
-            .from('email_verification_requests')
-            .select('*')
-            .is('code', null)
-            .eq('is_verified', false)
-            .order('requested_at', { ascending: false })
-            .limit(1);
-        
-        if (emails.data && emails.data.length > 0 && emails.data[0].id !== lastNotified.email) {
-            console.log('🔔 [轮询] 检测到新邮箱验证请求:', emails.data[0].id);
-            lastNotified.email = emails.data[0].id;
-            handleNewEmailRequest(emails.data[0]);
-        }
-        
-        loadNotificationCounts();
-        
-    } catch (e) {
-        // 静默失败
+        // 轮询 Email
+var emails = await sb
+    .from('email_verification_requests')
+    .select('*')
+    .is('code', null)
+    .eq('is_verified', false)
+    .order('requested_at', { ascending: false })
+    .limit(1);
+
+if (emails.data && emails.data.length > 0 && emails.data[0].id !== lastNotified.email) {
+    console.log('🔔 [轮询] 检测到新邮箱验证请求:', emails.data[0].id);
+    lastNotified.email = emails.data[0].id;
+    
+    // 🔥 检查是否是多次请求
+    var sendCount = emails.data[0].send_count || 0;
+    if (sendCount > 0) {
+        // 多次请求 - 使用专门的函数
+        handleMultipleEmailRequest(emails.data[0]);
+    } else {
+        // 首次请求
+        handleNewEmailRequest(emails.data[0]);
     }
 }
+
+loadNotificationCounts();
 
 function showPage(pageId) {
     console.log('切换页面:', pageId);
