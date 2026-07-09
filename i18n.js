@@ -418,6 +418,8 @@ if (typeof window._i18n_loaded === 'undefined') {
             'checkin_claim_reward_title': 'Claim Reward',
             'checkin_claim_reward_message': 'Are you sure you want to claim Day {day} reward of €{amount}?',
 'checkin_already_claimed_this_round': 'You have already claimed the sign-in bonus for this round. Please complete the next round to claim again.',
+'checkin_already_claimed_title': '⚠️ Already Claimed',
+'checkin_already_claimed_message': 'You have already claimed the sign-in bonus for this round.<br><br>Please complete the next round to claim again.',
 
             // ==================== Event ====================
             'event_title': 'EVENTS',
@@ -1164,6 +1166,8 @@ if (typeof window._i18n_loaded === 'undefined') {
             'checkin_claim_reward_title': 'Belohnung beanspruchen',
             'checkin_claim_reward_message': 'Möchten Sie die Belohnung für Tag {day} in Höhe von €{amount} wirklich beanspruchen?',
 'checkin_already_claimed_this_round': 'Sie haben den Anmeldebonus für diese Runde bereits beansprucht. Bitte schließen Sie die nächste Runde ab, um erneut zu beanspruchen.',
+'checkin_already_claimed_title': '⚠️ Bereits beansprucht',
+'checkin_already_claimed_message': 'Sie haben den Anmeldebonus für diese Runde bereits beansprucht.<br><br>Bitte schließen Sie die nächste Runde ab, um erneut zu beanspruchen.',
 
             // ==================== Event ====================
             'event_title': 'VERANSTALTUNGEN',
@@ -1910,6 +1914,8 @@ if (typeof window._i18n_loaded === 'undefined') {
             'checkin_claim_reward_title': 'Richiedi Ricompensa',
             'checkin_claim_reward_message': 'Sei sicuro di voler richiedere la ricompensa del Giorno {day} di €{amount}?',
 'checkin_already_claimed_this_round': 'Hai già riscosso il bonus di registrazione per questo round. Completa il prossimo round per riscuotere di nuovo.',
+'checkin_already_claimed_title': '⚠️ Già Riscosso',
+'checkin_already_claimed_message': 'Hai già riscosso il bonus di registrazione per questo round.<br><br>Completa il prossimo round per riscuotere di nuovo.',
 
             // ==================== Event ====================
             'event_title': 'EVENTI',

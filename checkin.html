@@ -1030,17 +1030,15 @@ const lastClaimRound = localStorage.getItem('checkin_last_claim_round_' + user.u
 if (lastClaimRound && parseInt(lastClaimRound) === currentRound) {
     console.log('⛔ 当前 Round 已经 Claim 过奖励，不能重复 Claim');
     
-    // ✅ 改为弹窗显示
+    // ✅ 使用 i18n 翻译的弹窗
     showCustomConfirm(
-        '⚠️ Already Claimed',  // 标题
-        'You have already claimed the sign-in bonus for this round.<br><br>Please complete the next round to claim again.',  // 消息（支持 HTML）
+        t('checkin_already_claimed_title'),
+        t('checkin_already_claimed_message'),
         function() {
-            // 点击 Confirm 按钮时关闭弹窗
-            // 不需要任何操作，只是关闭
+            // 点击 Confirm 时关闭弹窗（无操作）
         },
         function() {
-            // 点击 Cancel 按钮时关闭弹窗
-            // 不需要任何操作，只是关闭
+            // 点击 Cancel 时关闭弹窗（无操作）
         }
     );
     return;
