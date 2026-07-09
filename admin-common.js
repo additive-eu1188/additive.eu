@@ -105,7 +105,7 @@ function setupAudioUnlock() {
     }, 3000);
 }
 
-// 🎯 核心播放函数
+// 🎯 核心播放函数（优化版 - 确保加载完成再播放）
 function playNotificationSound(type) {
     try {
         var url = NOTIFICATION_SOUNDS[type];
@@ -120,7 +120,7 @@ function playNotificationSound(type) {
         // 2. 从缓存获取 audio
         var audio = audioCache[type];
         
-        // 3. 如果缓存不存在或已损坏，重新创建
+        // 3. 如果缓存不存在，重新创建
         if (!audio) {
             audio = new Audio(url);
             audio.preload = 'auto';
@@ -129,32 +129,23 @@ function playNotificationSound(type) {
 
         // 4. 重置到开头
         audio.currentTime = 0;
-        
-        // 5. 设置音量
         audio.volume = 0.9;
 
-        // 6. 尝试播放
-        var playPromise = audio.play();
-        
-        if (playPromise !== undefined) {
-            playPromise.then(function() {
-                console.log('🔊 声音播放成功:', type);
-            }).catch(function(error) {
-                console.log('🔇 播放失败:', error.message);
-                
-                // 降级方案：创建新的 Audio 元素
-                try {
-                    var fallbackAudio = new Audio(url);
-                    fallbackAudio.volume = 0.9;
-                    fallbackAudio.play().then(function() {
-                        console.log('🔊 降级播放成功:', type);
-                    }).catch(function(e) {
-                        console.log('🔇 降级播放也失败:', e.message);
-                    });
-                } catch (e2) {
-                    console.log('⚠️ 降级播放异常:', e2.message);
-                }
+        // 5. 🔥 关键优化：检查音频是否已加载完成
+        if (audio.readyState >= 2) {  // HAVE_CURRENT_DATA 或更高
+            // 已加载，直接播放
+            audio.play().catch(function(e) {
+                console.log('🔇 播放失败:', e.message);
             });
+        } else {
+            // 未加载完成，等待加载完成再播放
+            audio.addEventListener('canplaythrough', function onReady() {
+                audio.play().catch(function(e) {
+                    console.log('🔇 播放失败:', e.message);
+                });
+                audio.removeEventListener('canplaythrough', onReady);
+            });
+            audio.load();  // 开始加载
         }
     } catch (e) {
         console.log('⚠️ 播放声音异常:', e.message);
