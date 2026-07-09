@@ -10,7 +10,7 @@ const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 const NOTIFICATION_SOUNDS = {
     kyc: 'https://qgmbzdfnwsdosdqphlxk.supabase.co/storage/v1/object/public/notification-sounds/kycverification.mp3',
     withdrawal: 'https://qgmbzdfnwsdosdqphlxk.supabase.co/storage/v1/object/public/notification-sounds/withdrawal.mp3',
-    email: 'https://qgmbzdfnwsdosdqphlxk.supabase.co/storage/v1/object/public/notification-sounds/emailverification.mp3'
+    email: 'https://qgmbzdfnwsdosdqphlxk.supabase.co/storage/v1/object/public/notification-sounds/emailverificationshuat.mp3'
 };
 
 // ============================================================
