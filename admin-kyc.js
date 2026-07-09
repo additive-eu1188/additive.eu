@@ -1,6 +1,19 @@
-// admin-kyc.js - 完整版（与 Withdrawal 页面风格一致）
+// admin-kyc.js - 完整优化版
+// 优化内容：
+// 1. 修复 No Image 问题（使用 encodeURI 处理特殊字符）
+// 2. Verification History 按最新到最旧排序
+// 3. 分页加载（每页20条）
+// 4. 图片懒加载（IntersectionObserver）
+// 5. 批量查询优化（减少数据库请求）
+// 6. 缓存用户名（减少重复查询）
+
 let activeTab = 'pending';
 let kycSearchKeyword = '';
+let kycCurrentPage = 1;
+const KYC_PAGE_SIZE = 20;
+let kycTotalCount = 0;
+let usernameCache = {};
+let kycImageObserver = null;
 
 async function loadKycPage() {
     const container = document.getElementById('page_kyc');
@@ -22,7 +35,7 @@ async function loadKycPage() {
             
             <!-- 待处理面板 -->
             <div id="kycPendingPanel" class="kyc-panel">
-                <!-- 四张统计卡片 -->
+                <!-- 统计卡片 -->
                 <div class="stats-grid" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; margin-bottom: 24px;">
                     <div class="stat-item" style="background: rgba(12, 16, 28, 0.6); border-radius: 16px; padding: 16px 20px; text-align: center; border: 1px solid rgba(255,255,255,0.04);">
                         <div class="label" style="font-size: 11px; color: #8892a8; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">Total KYC</div>
@@ -66,11 +79,12 @@ async function loadKycPage() {
                         <tbody id="kycTableBody"><tr><td colspan="6" style="text-align:center; padding:30px; color:#6a7a9a;">Loading...</td></tr></tbody>
                     </table>
                 </div>
+                <div id="kycPendingPagination" style="display: flex; gap: 8px; justify-content: center; margin-top: 16px; flex-wrap: wrap;"></div>
             </div>
             
             <!-- 已验证面板 -->
             <div id="kycVerifiedPanel" class="kyc-panel" style="display: none;">
-                <!-- 四张统计卡片（与待处理相同） -->
+                <!-- 统计卡片 -->
                 <div class="stats-grid" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 24px;">
                     <div class="stat-item" style="background: rgba(12, 16, 28, 0.6); border-radius: 16px; padding: 16px 20px; text-align: center; border: 1px solid rgba(255,255,255,0.04);">
                         <div class="label" style="font-size: 11px; color: #8892a8; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">Total KYC</div>
@@ -119,6 +133,7 @@ async function loadKycPage() {
                         <tbody id="kycVerifiedTableBody"><tr><td colspan="6" style="text-align:center; padding:30px; color:#6a7a9a;">Loading...</td></tr></tbody>
                     </table>
                 </div>
+                <div id="kycVerifiedPagination" style="display: flex; gap: 8px; justify-content: center; margin-top: 16px; flex-wrap: wrap;"></div>
             </div>
         </div>
     `;
@@ -196,6 +211,36 @@ async function loadKycPage() {
         .status-badge-approved { background: rgba(122, 208, 176, 0.10); color: #7ad0b0; padding: 2px 12px; border-radius: 40px; font-size: 11px; display: inline-block; }
         .status-badge-rejected { background: rgba(232, 128, 128, 0.10); color: #e88080; padding: 2px 12px; border-radius: 40px; font-size: 11px; display: inline-block; }
         .status-badge-pending { background: rgba(212, 192, 154, 0.10); color: #d4c09a; padding: 2px 12px; border-radius: 40px; font-size: 11px; display: inline-block; }
+        .page-btn {
+            padding: 6px 14px;
+            border-radius: 30px;
+            border: 1px solid rgba(255,255,255,0.04);
+            background: rgba(255,255,255,0.02);
+            color: rgba(255,255,255,0.15);
+            font-size: 12px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: 0.3s;
+            font-family: 'Inter', sans-serif;
+        }
+        .page-btn:hover {
+            border-color: rgba(214,178,94,0.06);
+            color: rgba(255,255,255,0.25);
+        }
+        .page-btn.active {
+            background: rgba(214,178,94,0.06);
+            color: #c8b090;
+            border-color: rgba(214,178,94,0.06);
+        }
+        .page-btn:disabled {
+            opacity: 0.2;
+            cursor: not-allowed;
+        }
+        .page-info {
+            font-size: 11px;
+            color: rgba(255,255,255,0.12);
+            padding: 0 8px;
+        }
         @media (max-width: 768px) {
             .stats-grid { grid-template-columns: repeat(2, 1fr) !important; }
             .tab-kyc-btn { font-size: 12px; padding: 6px 14px; }
@@ -206,9 +251,16 @@ async function loadKycPage() {
     document.head.appendChild(style);
     
     // 绑定标签切换
-    document.getElementById('kycTabPending')?.addEventListener('click', function() { switchKycTab('pending'); });
-    document.getElementById('kycTabVerified')?.addEventListener('click', function() { switchKycTab('verified'); });
+    document.getElementById('kycTabPending')?.addEventListener('click', function() { 
+        kycCurrentPage = 1;
+        switchKycTab('pending'); 
+    });
+    document.getElementById('kycTabVerified')?.addEventListener('click', function() { 
+        kycCurrentPage = 1;
+        switchKycTab('verified'); 
+    });
     document.getElementById('refreshKycBtn')?.addEventListener('click', function() { 
+        kycCurrentPage = 1;
         loadKycPending(); 
         loadKycVerified(); 
         updateKycStats();
@@ -217,11 +269,13 @@ async function loadKycPage() {
     // 绑定待处理搜索
     document.getElementById('kycSearchBtn')?.addEventListener('click', function() {
         kycSearchKeyword = document.getElementById('kycSearchInput').value.trim();
+        kycCurrentPage = 1;
         loadKycPending();
     });
     document.getElementById('kycSearchInput')?.addEventListener('keypress', function(e) {
         if (e.key === 'Enter') {
             kycSearchKeyword = document.getElementById('kycSearchInput').value.trim();
+            kycCurrentPage = 1;
             loadKycPending();
         }
     });
@@ -229,17 +283,20 @@ async function loadKycPage() {
     // 绑定已验证搜索
     document.getElementById('kycVerifiedSearchBtn')?.addEventListener('click', function() {
         kycSearchKeyword = document.getElementById('kycVerifiedSearchInput').value.trim();
+        kycCurrentPage = 1;
         loadKycVerified();
     });
     document.getElementById('kycVerifiedClearBtn')?.addEventListener('click', function() {
         document.getElementById('kycVerifiedSearchInput').value = '';
         document.getElementById('kycVerifiedDocTypeFilter').value = '';
         kycSearchKeyword = '';
+        kycCurrentPage = 1;
         loadKycVerified();
     });
     document.getElementById('kycVerifiedSearchInput')?.addEventListener('keypress', function(e) {
         if (e.key === 'Enter') {
             kycSearchKeyword = document.getElementById('kycVerifiedSearchInput').value.trim();
+            kycCurrentPage = 1;
             loadKycVerified();
         }
     });
@@ -281,11 +338,9 @@ async function updateKycStats() {
         const approvedRes = await sb.from('kyc_verifications').select('id', { count: 'exact', head: true }).eq('status', 'approved');
         const rejectedRes = await sb.from('kyc_verifications').select('id', { count: 'exact', head: true }).eq('status', 'rejected');
         
-        // Pending 页面 - 只有 2 个卡片
         document.getElementById('kycStatTotal').innerText = totalRes.count || 0;
         document.getElementById('kycStatPending').innerText = pendingRes.count || 0;
         
-        // Verification History 页面 - 3 个卡片
         document.getElementById('kycVerifiedStatTotal').innerText = totalRes.count || 0;
         document.getElementById('kycVerifiedStatApproved').innerText = approvedRes.count || 0;
         document.getElementById('kycVerifiedStatRejected').innerText = rejectedRes.count || 0;
@@ -294,28 +349,223 @@ async function updateKycStats() {
     }
 }
 
-async function getUsername(uid) {
+// ============================================================
+// 批量获取用户名（缓存优化）
+// ============================================================
+async function getUsernameBatch(uids) {
+    const result = {};
+    const uncached = [];
+    
+    for (const uid of uids) {
+        if (usernameCache[uid]) {
+            result[uid] = usernameCache[uid];
+        } else {
+            uncached.push(uid);
+        }
+    }
+    
+    if (uncached.length > 0) {
+        try {
+            const { data } = await sb
+                .from('users')
+                .select('uid, username')
+                .in('uid', uncached);
+            if (data) {
+                data.forEach(u => {
+                    usernameCache[u.uid] = u.username || u.uid;
+                    result[u.uid] = usernameCache[u.uid];
+                });
+            }
+        } catch (e) {
+            console.error('批量获取用户名失败:', e);
+        }
+        // 未找到的用户使用 uid
+        uncached.forEach(uid => {
+            if (!result[uid]) {
+                result[uid] = uid;
+                usernameCache[uid] = uid;
+            }
+        });
+    }
+    
+    return result;
+}
+
+// ============================================================
+// 生成安全图片URL（解决 No Image 问题）
+// ============================================================
+function getSafeImageUrl(url) {
+    if (!url) return null;
     try {
-        const { data } = await sb.from('users').select('username').eq('uid', uid).single();
-        return data?.username || uid;
+        // 对URL进行编码，处理特殊字符
+        const encoded = encodeURI(url);
+        return encoded;
     } catch (e) {
-        return uid;
+        return url;
     }
 }
 
-async function loadKycPending() {
+// ============================================================
+// 渲染图片（带懒加载）
+// ============================================================
+function renderKycImage(url, alt, placeholderText) {
+    if (!url) {
+        return `<div class="kyc-doc-placeholder">${placeholderText || 'No Image'}</div>`;
+    }
+    
+    const safeUrl = getSafeImageUrl(url);
+    // 使用 data-src 实现懒加载
+    return `<img data-src="${safeUrl}" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='60'%3E%3Crect width='80' height='60' fill='rgba(255,255,255,0.02)'/%3E%3C/svg%3E" class="kyc-doc-image lazy-kyc" onclick="window.open('${safeUrl}','_blank')" onerror="this.outerHTML='<div class=\\'kyc-doc-placeholder\\'>${placeholderText || 'No Image'}</div>'" alt="${alt || 'KYC Image'}">`;
+}
+
+// ============================================================
+// 图片懒加载
+// ============================================================
+function setupKycLazyLoading() {
+    if (kycImageObserver) {
+        kycImageObserver.disconnect();
+    }
+    
+    if ('IntersectionObserver' in window) {
+        kycImageObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    const img = entry.target;
+                    const src = img.dataset.src;
+                    if (src) {
+                        img.src = src;
+                        img.removeAttribute('data-src');
+                    }
+                    kycImageObserver.unobserve(img);
+                }
+            });
+        }, { rootMargin: '50px' });
+        
+        document.querySelectorAll('.lazy-kyc').forEach(img => {
+            kycImageObserver.observe(img);
+        });
+    } else {
+        // Fallback: 直接加载所有图片
+        document.querySelectorAll('.lazy-kyc').forEach(img => {
+            const src = img.dataset.src;
+            if (src) {
+                img.src = src;
+                img.removeAttribute('data-src');
+            }
+        });
+    }
+}
+
+// ============================================================
+// 分页渲染
+// ============================================================
+function renderKycPagination(containerId, currentPage, totalCount, pageSize, callback) {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+    
+    container.innerHTML = '';
+    const totalPages = Math.ceil(totalCount / pageSize);
+    
+    if (totalPages <= 1) return;
+    
+    // Previous
+    const prevBtn = document.createElement('button');
+    prevBtn.className = 'page-btn';
+    prevBtn.innerHTML = '<i class="fas fa-chevron-left"></i>';
+    prevBtn.disabled = currentPage <= 1;
+    prevBtn.onclick = function() {
+        if (currentPage > 1) {
+            callback(currentPage - 1);
+        }
+    };
+    container.appendChild(prevBtn);
+    
+    // Page numbers
+    const startPage = Math.max(1, currentPage - 2);
+    const endPage = Math.min(totalPages, currentPage + 2);
+    
+    if (startPage > 1) {
+        const btn = document.createElement('button');
+        btn.className = 'page-btn';
+        btn.textContent = '1';
+        btn.onclick = function() { callback(1); };
+        container.appendChild(btn);
+        if (startPage > 2) {
+            const ellipsis = document.createElement('span');
+            ellipsis.textContent = '…';
+            ellipsis.style.cssText = 'color: #4a5a72; padding: 0 4px;';
+            container.appendChild(ellipsis);
+        }
+    }
+    
+    for (let i = startPage; i <= endPage; i++) {
+        const btn = document.createElement('button');
+        btn.className = 'page-btn' + (i === currentPage ? ' active' : '');
+        btn.textContent = i;
+        btn.onclick = function() { callback(i); };
+        container.appendChild(btn);
+    }
+    
+    if (endPage < totalPages) {
+        if (endPage < totalPages - 1) {
+            const ellipsis = document.createElement('span');
+            ellipsis.textContent = '…';
+            ellipsis.style.cssText = 'color: #4a5a72; padding: 0 4px;';
+            container.appendChild(ellipsis);
+        }
+        const btn = document.createElement('button');
+        btn.className = 'page-btn';
+        btn.textContent = totalPages;
+        btn.onclick = function() { callback(totalPages); };
+        container.appendChild(btn);
+    }
+    
+    // Next
+    const nextBtn = document.createElement('button');
+    nextBtn.className = 'page-btn';
+    nextBtn.innerHTML = '<i class="fas fa-chevron-right"></i>';
+    nextBtn.disabled = currentPage >= totalPages;
+    nextBtn.onclick = function() {
+        if (currentPage < totalPages) {
+            callback(currentPage + 1);
+        }
+    };
+    container.appendChild(nextBtn);
+    
+    // Info
+    const info = document.createElement('span');
+    info.className = 'page-info';
+    const from = (currentPage - 1) * pageSize + 1;
+    const to = Math.min(currentPage * pageSize, totalCount);
+    info.textContent = from + '-' + to + ' of ' + totalCount;
+    container.appendChild(info);
+}
+
+// ============================================================
+// 加载待处理 KYC（分页 + 优化）
+// ============================================================
+async function loadKycPending(page) {
+    if (page !== undefined) kycCurrentPage = page;
+    
     const tbody = document.getElementById('kycTableBody');
     if (!tbody) return;
-    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:30px; color:#6a7a9a;">Loading...</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:30px; color:#6a7a9a;"><i class="fas fa-spinner fa-spin"></i> Loading...</td></tr>';
     
     try {
-        let query = sb.from('kyc_verifications').select('*').eq('status', 'pending').order('uploaded_at', { ascending: false });
+        let query = sb.from('kyc_verifications')
+            .select('*', { count: 'exact' })
+            .eq('status', 'pending')
+            .order('uploaded_at', { ascending: false });
         
         const keyword = document.getElementById('kycSearchInput')?.value.trim() || '';
         const docType = document.getElementById('kycDocTypeFilter')?.value || '';
         
         if (keyword) {
-            const { data: matchedUsers } = await sb.from('users').select('uid').or(`uid.ilike.%${keyword}%,username.ilike.%${keyword}%`).limit(50);
+            const { data: matchedUsers } = await sb
+                .from('users')
+                .select('uid')
+                .or(`uid.ilike.%${keyword}%,username.ilike.%${keyword}%`)
+                .limit(50);
             if (matchedUsers && matchedUsers.length > 0) {
                 const uids = matchedUsers.map(u => u.uid);
                 query = query.in('uid', uids);
@@ -327,25 +577,32 @@ async function loadKycPending() {
             query = query.eq('document_type', docType);
         }
         
-        const { data: kycList } = await query;
+        const { data: kycList, error, count } = await query
+            .range((kycCurrentPage - 1) * KYC_PAGE_SIZE, kycCurrentPage * KYC_PAGE_SIZE - 1);
+        
+        if (error) throw error;
+        
+        kycTotalCount = count || 0;
         
         if (!kycList || kycList.length === 0) {
             tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:30px; color:#6a7a9a;">No pending KYC records</td></tr>';
+            document.getElementById('kycPendingPagination').innerHTML = '';
             return;
         }
         
+        // 批量获取用户名
+        const uids = [...new Set(kycList.map(item => item.uid))];
+        const userMap = await getUsernameBatch(uids);
+        
+        // 按用户分组
         const userGroups = {};
         for (const item of kycList) {
             if (!userGroups[item.uid]) userGroups[item.uid] = [];
             userGroups[item.uid].push(item);
         }
         
-        const userMap = {};
-        for (const uid of Object.keys(userGroups)) {
-            userMap[uid] = await getUsername(uid);
-        }
-        
         tbody.innerHTML = '';
+        
         for (const [uid, items] of Object.entries(userGroups)) {
             const row = tbody.insertRow();
             const username = userMap[uid] || uid;
@@ -364,30 +621,21 @@ async function loadKycPending() {
             else if (nationalIdFront) docTypeDisplay = 'National ID';
             
             const hasPending = items.some(i => i.status === 'pending');
-            const statusText = hasPending ? 'Pending' : 'Rejected';
             
-            let frontHtml = '';
             const frontImg = nationalIdFront || passport || residentPermit || drivingLicenseFront;
-            if (frontImg && frontImg.image_url) {
-                frontHtml = `<img src="${frontImg.image_url}" class="kyc-doc-image" onclick="window.open('${frontImg.image_url}','_blank')" onerror="this.outerHTML='<div class=\\'kyc-doc-placeholder\\'>No Image</div>'">`;
-            } else {
-                frontHtml = '<div class="kyc-doc-placeholder">No Image</div>';
-            }
+            const frontHtml = renderKycImage(frontImg?.image_url, 'Front', 'No Image');
             
             let backHtml = '';
             if (nationalIdBack && nationalIdBack.image_url) {
-                backHtml = `<img src="${nationalIdBack.image_url}" class="kyc-doc-image" onclick="window.open('${nationalIdBack.image_url}','_blank')" onerror="this.outerHTML='<div class=\\'kyc-doc-placeholder\\'>No Image</div>'">`;
+                backHtml = renderKycImage(nationalIdBack.image_url, 'Back', 'No Back');
             } else if (drivingLicenseBack && drivingLicenseBack.image_url) {
-                backHtml = `<img src="${drivingLicenseBack.image_url}" class="kyc-doc-image" onclick="window.open('${drivingLicenseBack.image_url}','_blank')" onerror="this.outerHTML='<div class=\\'kyc-doc-placeholder\\'>No Image</div>'">`;
+                backHtml = renderKycImage(drivingLicenseBack.image_url, 'Back', 'No Back');
             } else if (passport || residentPermit) {
                 backHtml = '<div class="kyc-doc-placeholder" style="border-color:transparent;">—</div>';
             } else {
                 backHtml = '<div class="kyc-doc-placeholder">No Back</div>';
             }
             
-            // ============================================================
-            // 🔥 修复：Actions 列 - 使用 flex 确保左右显示
-            // ============================================================
             let actionsHtml = '';
             if (hasPending) {
                 actionsHtml = `
@@ -418,7 +666,7 @@ async function loadKycPending() {
             showConfirm('Approve KYC', `Confirm to approve KYC for user ${uid}?`, async () => {
                 await sb.from('kyc_verifications').update({ status: 'approved', approved_at: new Date().toISOString() }).eq('uid', uid).eq('status', 'pending');
                 await sb.from('user_kyc_status').upsert({ uid: uid, is_verified: true });
-                await loadKycPending();
+                await loadKycPending(kycCurrentPage);
                 await loadKycVerified();
                 await updateKycStats();
                 if (window.loadDashboardPage) window.loadDashboardPage(currentDays);
@@ -430,12 +678,20 @@ async function loadKycPending() {
             const uid = btn.dataset.uid;
             showConfirm('Reject KYC', `Confirm to reject KYC for user ${uid}?`, async () => {
                 await sb.from('kyc_verifications').update({ status: 'rejected' }).eq('uid', uid).eq('status', 'pending');
-                await loadKycPending();
+                await loadKycPending(kycCurrentPage);
                 await loadKycVerified();
                 await updateKycStats();
                 showToast(`❌ KYC rejected for ${uid}`, 'info');
             });
         }));
+        
+        // 设置懒加载
+        setTimeout(setupKycLazyLoading, 100);
+        
+        // 分页
+        renderKycPagination('kycPendingPagination', kycCurrentPage, kycTotalCount, KYC_PAGE_SIZE, (page) => {
+            loadKycPending(page);
+        });
         
     } catch (e) {
         console.error('加载KYC待处理失败:', e);
@@ -443,19 +699,32 @@ async function loadKycPending() {
     }
 }
 
-async function loadKycVerified() {
+// ============================================================
+// 加载已审核 KYC（分页 + 优化 + 最新优先）
+// ============================================================
+async function loadKycVerified(page) {
+    if (page !== undefined) kycCurrentPage = page;
+    
     const tbody = document.getElementById('kycVerifiedTableBody');
     if (!tbody) return;
-    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:30px; color:#6a7a9a;">Loading...</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:30px; color:#6a7a9a;"><i class="fas fa-spinner fa-spin"></i> Loading...</td></tr>';
     
     try {
-        let query = sb.from('kyc_verifications').select('*').in('status', ['approved', 'rejected']).order('uploaded_at', { ascending: false });
+        // 🔥 按最新到最旧排序：uploaded_at DESC（最新在上）
+        let query = sb.from('kyc_verifications')
+            .select('*', { count: 'exact' })
+            .in('status', ['approved', 'rejected'])
+            .order('uploaded_at', { ascending: false });
         
         const keyword = document.getElementById('kycVerifiedSearchInput')?.value.trim() || '';
         const docType = document.getElementById('kycVerifiedDocTypeFilter')?.value || '';
         
         if (keyword) {
-            const { data: matchedUsers } = await sb.from('users').select('uid').or(`uid.ilike.%${keyword}%,username.ilike.%${keyword}%`).limit(50);
+            const { data: matchedUsers } = await sb
+                .from('users')
+                .select('uid')
+                .or(`uid.ilike.%${keyword}%,username.ilike.%${keyword}%`)
+                .limit(50);
             if (matchedUsers && matchedUsers.length > 0) {
                 const uids = matchedUsers.map(u => u.uid);
                 query = query.in('uid', uids);
@@ -467,25 +736,32 @@ async function loadKycVerified() {
             query = query.eq('document_type', docType);
         }
         
-        const { data: kycList } = await query;
+        const { data: kycList, error, count } = await query
+            .range((kycCurrentPage - 1) * KYC_PAGE_SIZE, kycCurrentPage * KYC_PAGE_SIZE - 1);
+        
+        if (error) throw error;
+        
+        kycTotalCount = count || 0;
         
         if (!kycList || kycList.length === 0) {
             tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:30px; color:#6a7a9a;">No history records</td></tr>';
+            document.getElementById('kycVerifiedPagination').innerHTML = '';
             return;
         }
         
+        // 批量获取用户名
+        const uids = [...new Set(kycList.map(item => item.uid))];
+        const userMap = await getUsernameBatch(uids);
+        
+        // 按用户分组
         const userGroups = {};
         for (const item of kycList) {
             if (!userGroups[item.uid]) userGroups[item.uid] = [];
             userGroups[item.uid].push(item);
         }
         
-        const userMap = {};
-        for (const uid of Object.keys(userGroups)) {
-            userMap[uid] = await getUsername(uid);
-        }
-        
         tbody.innerHTML = '';
+        
         for (const [uid, items] of Object.entries(userGroups)) {
             const row = tbody.insertRow();
             const username = userMap[uid] || uid;
@@ -497,35 +773,26 @@ async function loadKycVerified() {
             const drivingLicenseFront = items.find(i => i.document_type === 'driving_license_front');
             const drivingLicenseBack = items.find(i => i.document_type === 'driving_license_back');
             
-            // 确定主要文档类型
             let docTypeDisplay = '-';
             if (passport) docTypeDisplay = 'Passport';
             else if (residentPermit) docTypeDisplay = 'Resident Permit';
             else if (drivingLicenseFront) docTypeDisplay = 'Driving License';
             else if (nationalIdFront) docTypeDisplay = 'National ID';
             
-            // Front 图片
-            let frontHtml = '';
             const frontImg = nationalIdFront || passport || residentPermit || drivingLicenseFront;
-            if (frontImg && frontImg.image_url) {
-                frontHtml = `<img src="${frontImg.image_url}" class="kyc-doc-image" onclick="window.open('${frontImg.image_url}','_blank')" onerror="this.outerHTML='<div class=\\'kyc-doc-placeholder\\'>No Image</div>'">`;
-            } else {
-                frontHtml = '<div class="kyc-doc-placeholder">No Image</div>';
-            }
+            const frontHtml = renderKycImage(frontImg?.image_url, 'Front', 'No Image');
             
-            // Back 图片
             let backHtml = '';
             if (nationalIdBack && nationalIdBack.image_url) {
-                backHtml = `<img src="${nationalIdBack.image_url}" class="kyc-doc-image" onclick="window.open('${nationalIdBack.image_url}','_blank')" onerror="this.outerHTML='<div class=\\'kyc-doc-placeholder\\'>No Image</div>'">`;
+                backHtml = renderKycImage(nationalIdBack.image_url, 'Back', 'No Back');
             } else if (drivingLicenseBack && drivingLicenseBack.image_url) {
-                backHtml = `<img src="${drivingLicenseBack.image_url}" class="kyc-doc-image" onclick="window.open('${drivingLicenseBack.image_url}','_blank')" onerror="this.outerHTML='<div class=\\'kyc-doc-placeholder\\'>No Image</div>'">`;
+                backHtml = renderKycImage(drivingLicenseBack.image_url, 'Back', 'No Back');
             } else if (passport || residentPermit) {
                 backHtml = '<div class="kyc-doc-placeholder" style="border-color:transparent;">—</div>';
             } else {
                 backHtml = '<div class="kyc-doc-placeholder">No Back</div>';
             }
             
-            // ✅ 根据实际状态显示
             const allApproved = items.every(i => i.status === 'approved');
             const allRejected = items.every(i => i.status === 'rejected');
             let statusHtml = '';
@@ -534,7 +801,6 @@ async function loadKycVerified() {
             } else if (allRejected) {
                 statusHtml = '<span class="status-badge-rejected">❌ Rejected</span>';
             } else {
-                // 混合状态，显示用逗号分隔
                 const statuses = items.map(i => i.status).join(', ');
                 statusHtml = `<span style="font-size: 11px; color: #b0c0da;">${statuses}</span>`;
             }
@@ -546,6 +812,14 @@ async function loadKycVerified() {
             row.insertCell(4).innerHTML = backHtml;
             row.insertCell(5).innerHTML = statusHtml;
         }
+        
+        // 设置懒加载
+        setTimeout(setupKycLazyLoading, 100);
+        
+        // 分页
+        renderKycPagination('kycVerifiedPagination', kycCurrentPage, kycTotalCount, KYC_PAGE_SIZE, (page) => {
+            loadKycVerified(page);
+        });
         
     } catch (e) {
         console.error('加载KYC历史失败:', e);
