@@ -1022,16 +1022,29 @@ async function handleClaim() {
     }
 
     // ============================================================
-    // 🔥🔥🔥 核心修复：检查上次 Claim 时的 Round 是否与当前相同
-    // 如果相同，说明是同一个 Round 2 的 30 单，不允许重复 Claim
-    // ============================================================
-    const lastClaimRound = localStorage.getItem('checkin_last_claim_round_' + user.uid);
+// 🔥🔥🔥 核心修复：检查上次 Claim 时的 Round 是否与当前相同
+// 如果相同，说明是同一个 Round 2 的 30 单，不允许重复 Claim
+// ============================================================
+const lastClaimRound = localStorage.getItem('checkin_last_claim_round_' + user.uid);
+
+if (lastClaimRound && parseInt(lastClaimRound) === currentRound) {
+    console.log('⛔ 当前 Round 已经 Claim 过奖励，不能重复 Claim');
     
-    if (lastClaimRound && parseInt(lastClaimRound) === currentRound) {
-        console.log('⛔ 当前 Round 已经 Claim 过奖励，不能重复 Claim');
-        showToast('checkin_already_claimed_this_round', 'warning');
-        return;
-    }
+    // ✅ 改为弹窗显示
+    showCustomConfirm(
+        '⚠️ Already Claimed',  // 标题
+        'You have already claimed the sign-in bonus for this round.<br><br>Please complete the next round to claim again.',  // 消息（支持 HTML）
+        function() {
+            // 点击 Confirm 按钮时关闭弹窗
+            // 不需要任何操作，只是关闭
+        },
+        function() {
+            // 点击 Cancel 按钮时关闭弹窗
+            // 不需要任何操作，只是关闭
+        }
+    );
+    return;
+}
 
     // ============================================================
     // 🔥 准备 Claim
