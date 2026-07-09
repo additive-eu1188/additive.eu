@@ -214,12 +214,34 @@ if (document.readyState === 'loading') {
     initSoundSystem();
 }
 
-// 页面可见时重新尝试解锁
-document.addEventListener('visibilitychange', function() {
-    if (document.visibilityState === 'visible') {
-        setTimeout(unlockAudioContext, 300);
+// ===== 🔥 新增：强制解锁 AudioContext =====
+function forceUnlockAudioContext() {
+    try {
+        var ctx = getAudioContext();
+        if (!ctx) return;
+        if (ctx.state === 'suspended') {
+            ctx.resume().then(function() {
+                audioContextUnlocked = true;
+                console.log('🔊 AudioContext 已强制解锁 (state: running)');
+            }).catch(function(e) {
+                console.log('⚠️ AudioContext 恢复失败:', e.message);
+            });
+        } else if (ctx.state === 'running') {
+            audioContextUnlocked = true;
+        }
+    } catch (e) {
+        console.log('⚠️ 强制解锁失败:', e.message);
     }
-});
+}
+
+// 页面加载后自动解锁
+setTimeout(forceUnlockAudioContext, 200);
+
+// 用户点击时解锁（最可靠）
+document.addEventListener('click', function onClickUnlock() {
+    forceUnlockAudioContext();
+    document.removeEventListener('click', onClickUnlock);
+}, { once: true });
 
 // ============================================================
 // 通知数据
