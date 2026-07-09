@@ -165,6 +165,52 @@ async function deleteEmailRequest(requestId, email) {
     }
 }
 
+// ============================================================
+// 🔥 处理邮件重发请求（每次点击 Send 触发通知 + 音效）
+// ============================================================
+function handleEmailResendRequest(data) {
+    console.log('📧 处理邮件重发请求:', data.email, '次数:', data.send_count);
+    
+    // 播放音效
+    if (typeof playNotificationSound === 'function') {
+        playNotificationSound('email');
+    }
+    
+    // 创建通知
+    var notification = {
+        id: 'email_resend_' + data.id + '_' + Date.now(),
+        type: 'email',
+        title: '📧 Email Verification Resend',
+        message: data.email + ' has requested ' + data.send_count + ' times TAC',
+        timestamp: new Date().toISOString(),
+        read: false,
+        data: {
+            email: data.email,
+            send_count: data.send_count,
+            request_id: data.id
+        }
+    };
+    
+    // 添加到通知系统
+    if (typeof addNotification === 'function') {
+        addNotification(notification);
+    }
+    
+    // 刷新 UI
+    if (typeof loadNotificationCounts === 'function') {
+        loadNotificationCounts();
+    }
+    if (typeof updateNotificationUI === 'function') {
+        updateNotificationUI();
+    }
+    if (typeof updateSidebarBadges === 'function') {
+        updateSidebarBadges();
+    }
+    if (typeof updateGlobalNotificationBadge === 'function') {
+        updateGlobalNotificationBadge();
+    }
+}
+
 async function loadEmailVerifyPage() {
     const container = document.getElementById('page_emailverify');
     if (!container) return;
