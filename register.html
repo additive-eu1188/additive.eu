@@ -715,7 +715,7 @@
         }
 
         pendingEmail = email;
-        startCountdown(60);
+startCountdown(300);
 
     } catch (err) {
         console.error('Error:', err);
@@ -726,21 +726,24 @@
 }
 
         function startCountdown(seconds) {
-const t = window.i18n?.t || function(key) { return key; };
-            countdown = seconds;
-            const btn = document.getElementById('sendCodeBtn');
-            if (countdownInterval) clearInterval(countdownInterval);
-            countdownInterval = setInterval(() => {
-                countdown--;
-                if (countdown <= 0) {
-                    clearInterval(countdownInterval);
-                    btn.disabled = false;
-                    btn.innerHTML = t('register_send');
-                } else {
-                    btn.innerHTML = `${countdown}s`;
-                }
-            }, 1000);
+    const t = window.i18n?.t || function(key) { return key; };
+    countdown = seconds;
+    const btn = document.getElementById('sendCodeBtn');
+    if (countdownInterval) clearInterval(countdownInterval);
+    countdownInterval = setInterval(() => {
+        countdown--;
+        if (countdown <= 0) {
+            clearInterval(countdownInterval);
+            btn.disabled = false;
+            btn.innerHTML = t('register_send');
+        } else {
+            // ✅ 改为显示 分:秒 格式
+            const mins = Math.floor(countdown / 60);
+            const secs = countdown % 60;
+            btn.innerHTML = `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
         }
+    }, 1000);
+}
 
         function generateInviteCode() {
             const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
