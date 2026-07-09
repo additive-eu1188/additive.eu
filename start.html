@@ -668,6 +668,120 @@ padding-bottom: 12px;
         .mobile-top-bar { display: flex !important; justify-content: space-between; align-items: center !important; padding: 0 16px 12px 16px !important; }
         .mobile-logo img { margin-top: 30px !important; }
         .footer-note { margin-top: 40px; text-align: center; font-size: 11px; color: #5a6e8a; padding: 16px 0; border-top: 1px solid rgba(204,178,153,0.08); }
+
+/* ===== Toast with Progress Bar (Style #8) ===== */
+.toast-progress-container {
+    position: fixed;
+    bottom: 30px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 99999;
+    width: 100%;
+    max-width: 480px;
+    padding: 0 20px;
+    pointer-events: none;
+}
+
+.toast-progress {
+    pointer-events: auto;
+    width: 100%;
+    padding: 16px 20px;
+    border-radius: 14px;
+    background: rgba(14, 18, 34, 0.96);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(74, 222, 128, 0.12);
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    font-size: 14px;
+    font-weight: 500;
+    font-family: 'Inter', sans-serif;
+    color: #fff;
+    box-shadow: 0 12px 48px rgba(0, 0, 0, 0.5);
+    animation: toastSlideUp 0.4s cubic-bezier(0.2, 0.9, 0.4, 1) forwards;
+    position: relative;
+    overflow: hidden;
+}
+
+.toast-progress .toast-icon {
+    color: #4ade80;
+    font-size: 18px;
+    flex-shrink: 0;
+}
+
+.toast-progress .toast-msg {
+    flex: 1;
+}
+
+.toast-progress .toast-close {
+    background: none;
+    border: none;
+    color: rgba(255, 255, 255, 0.12);
+    cursor: pointer;
+    font-size: 14px;
+    padding: 4px;
+    flex-shrink: 0;
+    transition: 0.2s;
+}
+
+.toast-progress .toast-close:hover {
+    color: rgba(255, 255, 255, 0.35);
+}
+
+.toast-progress .toast-progress-bar {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    height: 3px;
+    background: linear-gradient(90deg, #4ade80, #22a65a);
+    border-radius: 0 0 14px 14px;
+    animation: toastProgress 3s linear forwards;
+}
+
+@keyframes toastSlideUp {
+    from {
+        opacity: 0;
+        transform: translateY(24px) scale(0.96);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+@keyframes toastProgress {
+    from { width: 100%; }
+    to { width: 0%; }
+}
+
+.toast-progress.hiding {
+    animation: toastSlideDown 0.3s ease forwards;
+}
+
+@keyframes toastSlideDown {
+    from {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+    to {
+        opacity: 0;
+        transform: translateY(24px) scale(0.96);
+    }
+}
+
+@media (max-width: 640px) {
+    .toast-progress {
+        font-size: 13px;
+        padding: 14px 16px;
+        border-radius: 12px;
+    }
+    .toast-progress-container {
+        max-width: 100%;
+        padding: 0 16px;
+        bottom: 20px;
+    }
+}
     </style>
 </head>
 <body>
@@ -2197,6 +2311,56 @@ function renderOrderModalContent(order) {
             }
         }
 
+// ============================================================
+// Toast with Progress Bar (Style #8) - 固定底部居中
+// ============================================================
+let toastTimer = null;
+
+function showOrderCompletedToast(amount) {
+    const t = window.i18n?.t || function(key) { return key; };
+    const container = document.getElementById('toastProgressContainer');
+    
+    // 移除旧 toast
+    container.innerHTML = '';
+    if (toastTimer) {
+        clearTimeout(toastTimer);
+        toastTimer = null;
+    }
+
+    const toast = document.createElement('div');
+    toast.className = 'toast-progress';
+    toast.innerHTML = `
+        <span class="toast-icon"><i class="fas fa-check-circle"></i></span>
+        <span class="toast-msg">${t('order_completed_message', { amount: amount.toFixed(2) })}</span>
+        <button class="toast-close" onclick="closeOrderCompletedToast()">
+            <i class="fas fa-times"></i>
+        </button>
+        <div class="toast-progress-bar"></div>
+    `;
+
+    container.appendChild(toast);
+
+    // 3秒后自动关闭
+    toastTimer = setTimeout(function() {
+        closeOrderCompletedToast();
+    }, 3000);
+}
+
+function closeOrderCompletedToast() {
+    const container = document.getElementById('toastProgressContainer');
+    const toast = container.querySelector('.toast-progress');
+    if (toast) {
+        toast.classList.add('hiding');
+        setTimeout(function() {
+            container.innerHTML = '';
+        }, 300);
+    }
+    if (toastTimer) {
+        clearTimeout(toastTimer);
+        toastTimer = null;
+    }
+}
+
         // ============================================================
         // submitOrder - 保留原有逻辑，增加匹配验证
         // ============================================================
@@ -2367,7 +2531,7 @@ function renderOrderModalContent(order) {
         clearTempOrder();
 
         var orderTypeText = isTrialOrder ? ' (Trial Order)' : '';
-        showToast(t('order_completed_commission', { amount: finalCommission.toFixed(2) }) + orderTypeText, 'success');
+showOrderCompletedToast(finalCommission);
 
         const { data: userCheck } = await sb
             .from('users')
@@ -2711,7 +2875,7 @@ async function executeTriggerOrderTransaction(triggerOrder, quality, platform) {
         clearTempOrder();
 
         var orderTypeName = currentOrder.orderType || 'Trigger';
-        showToast('✅ ' + orderTypeName + ' completed! Earned €' + finalCommission.toFixed(2) + ' commission', 'success');
+showOrderCompletedToast(finalCommission);
 
         if (user && user.uid && currentOrder.accommodationName) {
             await recordUsedHotel(user.uid, currentOrder.accommodationName, latestBalance);
@@ -3237,5 +3401,6 @@ window.addEventListener('storage', function(e) {
         }
     });
 </script>
+<div class="toast-progress-container" id="toastProgressContainer"></div>
 </body>
 </html>

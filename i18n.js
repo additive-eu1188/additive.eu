@@ -283,6 +283,9 @@ if (typeof window._i18n_loaded === 'undefined') {
 'start_withdraw_success': 'Withdrawal submitted successfully!',
 'start_searching_order': 'Searching Order...',
 'start_searching_subtitle': 'Please wait while we find the best match',
+'order_completed_title': 'Order Completed',
+'order_completed_message': 'Order completed! Earned €{amount} commission',
+
 
 // ==================== Start Page - Order Modal ====================
 'order_details_title': 'ORDER DETAILS',
@@ -1032,6 +1035,8 @@ if (typeof window._i18n_loaded === 'undefined') {
 'start_withdraw_success': 'Auszahlung erfolgreich beantragt!',
 'start_searching_order': 'Suche Auftrag...',
 'start_searching_subtitle': 'Bitte warten Sie, während wir die beste Bestellung finden',
+'order_completed_title': 'Auftrag abgeschlossen',
+'order_completed_message': 'Auftrag abgeschlossen! €{amount} Provision verdient',
 
 // ==================== Start Page - Order Modal ====================
 'order_details_title': 'Bestelldetails',
@@ -1780,6 +1785,8 @@ if (typeof window._i18n_loaded === 'undefined') {
 'start_withdraw_success': 'Prelievo inviato con successo!',
 'start_searching_order': 'Ricerca ordine...',
 'start_searching_subtitle': 'Attendere prego mentre troviamo il miglior ordine',
+'order_completed_title': 'Ordine completato',
+'order_completed_message': 'Ordine completato! Guadagnati €{amount} di commissione',
 
 // ==================== Start Page - Order Modal ====================
 'order_details_title': 'DETTAGLI ORDINE',
