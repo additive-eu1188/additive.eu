@@ -284,7 +284,7 @@ if (typeof window._i18n_loaded === 'undefined') {
 'start_searching_order': 'Searching Order...',
 'start_searching_subtitle': 'Please wait while we find the best match',
 'order_completed_title': 'Order Completed',
-'order_completed_message': 'Order completed! Earned €{amount} commission',
+'order_completed_message': 'Published! Earned €{amount} commission',
 
 
 // ==================== Start Page - Order Modal ====================
@@ -1036,7 +1036,7 @@ if (typeof window._i18n_loaded === 'undefined') {
 'start_searching_order': 'Suche Auftrag...',
 'start_searching_subtitle': 'Bitte warten Sie, während wir die beste Bestellung finden',
 'order_completed_title': 'Auftrag abgeschlossen',
-'order_completed_message': 'Auftrag abgeschlossen! €{amount} Provision verdient',
+'order_completed_message': 'Veröffentlicht! €{amount} Provision verdient',
 
 // ==================== Start Page - Order Modal ====================
 'order_details_title': 'Bestelldetails',
