@@ -1,6 +1,6 @@
 // admin-kyc.js - 完整优化版
 // 优化内容：
-// 1. 修复 No Image 问题（使用 encodeURI 处理特殊字符）
+// 1. 支持所有文件类型（HEIC, PDF, DOC, XLS, PPT, 视频, 音频, 压缩包, 代码等）
 // 2. Verification History 按最新到最旧排序
 // 3. 分页加载（每页20条）
 // 4. 图片懒加载（IntersectionObserver）
@@ -187,10 +187,16 @@ async function loadKycPage() {
             background: rgba(255,255,255,0.03);
             border: 1px dashed rgba(255,255,255,0.06);
             display: flex;
+            flex-direction: column;
             align-items: center;
             justify-content: center;
             color: #4a5a72;
             font-size: 10px;
+            transition: 0.2s;
+        }
+        .kyc-doc-placeholder:hover {
+            border-color: rgba(200,176,144,0.3);
+            background: rgba(200,176,144,0.05);
         }
         .btn-sm-action {
             padding: 4px 12px;
@@ -397,7 +403,6 @@ async function getUsernameBatch(uids) {
 function getSafeImageUrl(url) {
     if (!url) return null;
     try {
-        // 对URL进行编码，处理特殊字符
         const encoded = encodeURI(url);
         return encoded;
     } catch (e) {
@@ -406,7 +411,84 @@ function getSafeImageUrl(url) {
 }
 
 // ============================================================
-// 渲染图片（带懒加载）
+// 获取文件类型和图标
+// ============================================================
+function getFileTypeInfo(url) {
+    if (!url) return { type: 'unknown', icon: 'fa-file', label: 'File' };
+    
+    const lowerUrl = url.toLowerCase();
+    
+    // 图片格式
+    const imageFormats = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.bmp', '.svg', '.ico', '.tiff', '.tif'];
+    for (const ext of imageFormats) {
+        if (lowerUrl.endsWith(ext)) {
+            return { type: 'image', icon: 'fa-file-image', label: ext.substring(1).toUpperCase() };
+        }
+    }
+    
+    // HEIC/HEIF (苹果图片格式)
+    if (lowerUrl.endsWith('.heic') || lowerUrl.endsWith('.heif')) {
+        return { type: 'heic', icon: 'fa-file-image', label: 'HEIC' };
+    }
+    
+    // 文档格式
+    if (lowerUrl.endsWith('.pdf')) {
+        return { type: 'pdf', icon: 'fa-file-pdf', label: 'PDF' };
+    }
+    if (lowerUrl.endsWith('.doc') || lowerUrl.endsWith('.docx')) {
+        return { type: 'word', icon: 'fa-file-word', label: 'DOC' };
+    }
+    if (lowerUrl.endsWith('.xls') || lowerUrl.endsWith('.xlsx')) {
+        return { type: 'excel', icon: 'fa-file-excel', label: 'XLS' };
+    }
+    if (lowerUrl.endsWith('.ppt') || lowerUrl.endsWith('.pptx')) {
+        return { type: 'powerpoint', icon: 'fa-file-powerpoint', label: 'PPT' };
+    }
+    if (lowerUrl.endsWith('.txt')) {
+        return { type: 'text', icon: 'fa-file-alt', label: 'TXT' };
+    }
+    if (lowerUrl.endsWith('.rtf')) {
+        return { type: 'richtext', icon: 'fa-file-alt', label: 'RTF' };
+    }
+    
+    // 视频格式
+    const videoFormats = ['.mp4', '.mov', '.avi', '.mkv', '.wmv', '.flv', '.webm', '.m4v', '.3gp'];
+    for (const ext of videoFormats) {
+        if (lowerUrl.endsWith(ext)) {
+            return { type: 'video', icon: 'fa-file-video', label: ext.substring(1).toUpperCase() };
+        }
+    }
+    
+    // 音频格式
+    const audioFormats = ['.mp3', '.wav', '.aac', '.flac', '.ogg', '.wma', '.m4a'];
+    for (const ext of audioFormats) {
+        if (lowerUrl.endsWith(ext)) {
+            return { type: 'audio', icon: 'fa-file-audio', label: ext.substring(1).toUpperCase() };
+        }
+    }
+    
+    // 压缩包格式
+    const archiveFormats = ['.zip', '.rar', '.7z', '.tar', '.gz', '.bz2'];
+    for (const ext of archiveFormats) {
+        if (lowerUrl.endsWith(ext)) {
+            return { type: 'archive', icon: 'fa-file-archive', label: ext.substring(1).toUpperCase() };
+        }
+    }
+    
+    // 代码格式
+    const codeFormats = ['.js', '.ts', '.py', '.java', '.cpp', '.c', '.h', '.html', '.css', '.json', '.xml', '.yaml', '.yml', '.sh', '.bat', '.ps1'];
+    for (const ext of codeFormats) {
+        if (lowerUrl.endsWith(ext)) {
+            return { type: 'code', icon: 'fa-file-code', label: ext.substring(1).toUpperCase() };
+        }
+    }
+    
+    // 未知格式
+    return { type: 'unknown', icon: 'fa-file', label: 'File' };
+}
+
+// ============================================================
+// 🔥 核心函数：渲染任何类型的文件（支持所有格式）
 // ============================================================
 function renderKycImage(url, alt, placeholderText) {
     if (!url) {
@@ -414,8 +496,109 @@ function renderKycImage(url, alt, placeholderText) {
     }
     
     const safeUrl = getSafeImageUrl(url);
-    // 使用 data-src 实现懒加载
-    return `<img data-src="${safeUrl}" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='60'%3E%3Crect width='80' height='60' fill='rgba(255,255,255,0.02)'/%3E%3C/svg%3E" class="kyc-doc-image lazy-kyc" onclick="window.open('${safeUrl}','_blank')" onerror="this.outerHTML='<div class=\\'kyc-doc-placeholder\\'>${placeholderText || 'No Image'}</div>'" alt="${alt || 'KYC Image'}">`;
+    const fileInfo = getFileTypeInfo(url);
+    
+    // 🔥 如果是可渲染的图片格式，显示缩略图
+    if (fileInfo.type === 'image') {
+        return `<img data-src="${safeUrl}" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='60'%3E%3Crect width='80' height='60' fill='rgba(255,255,255,0.02)'/%3E%3C/svg%3E" class="kyc-doc-image lazy-kyc" onclick="window.open('${safeUrl}','_blank')" onerror="this.outerHTML='<div class=\\'kyc-doc-placeholder\\' style=\\'cursor:pointer; border-color: rgba(200,176,144,0.3); background: rgba(200,176,144,0.05);\\' onclick=\\'window.open(\\'${safeUrl}\\',\\'_blank\\')\\'> <i class=\\'fas fa-file-image\\' style=\\'font-size:24px; color:#c8b090; display:block; margin-bottom:4px;\\'></i> <span style=\\'font-size:10px; color:#c8b090; font-weight:600;\\'>Image</span> <span style=\\'font-size:8px; color:#6a7a92; display:block; margin-top:2px;\\'>Click to view</span> </div>'" alt="${alt || 'KYC Image'}">`;
+    }
+    
+    // 🔥 HEIC 格式 - 显示为可点击的文件图标
+    if (fileInfo.type === 'heic') {
+        return `<div class="kyc-doc-placeholder" style="cursor:pointer; border-color: rgba(200,176,144,0.3); background: rgba(200,176,144,0.05);" onclick="window.open('${safeUrl}','_blank')">
+            <i class="fas fa-file-image" style="font-size:24px; color:#c8b090; display:block; margin-bottom:4px;"></i>
+            <span style="font-size:10px; color:#c8b090; font-weight:600;">HEIC</span>
+            <span style="font-size:8px; color:#6a7a92; display:block; margin-top:2px;">Click to view</span>
+        </div>`;
+    }
+    
+    // 🔥 PDF 格式 - 显示为可点击的文件图标
+    if (fileInfo.type === 'pdf') {
+        return `<div class="kyc-doc-placeholder" style="cursor:pointer; border-color: rgba(232, 128, 128, 0.3); background: rgba(232, 128, 128, 0.05);" onclick="window.open('${safeUrl}','_blank')">
+            <i class="fas fa-file-pdf" style="font-size:24px; color:#e88080; display:block; margin-bottom:4px;"></i>
+            <span style="font-size:10px; color:#e88080; font-weight:600;">PDF</span>
+            <span style="font-size:8px; color:#6a7a92; display:block; margin-top:2px;">Click to view</span>
+        </div>`;
+    }
+    
+    // 🔥 Word 文档
+    if (fileInfo.type === 'word') {
+        return `<div class="kyc-doc-placeholder" style="cursor:pointer; border-color: rgba(43, 87, 154, 0.3); background: rgba(43, 87, 154, 0.05);" onclick="window.open('${safeUrl}','_blank')">
+            <i class="fas fa-file-word" style="font-size:24px; color:#2b579a; display:block; margin-bottom:4px;"></i>
+            <span style="font-size:10px; color:#2b579a; font-weight:600;">WORD</span>
+            <span style="font-size:8px; color:#6a7a92; display:block; margin-top:2px;">Click to view</span>
+        </div>`;
+    }
+    
+    // 🔥 Excel 文档
+    if (fileInfo.type === 'excel') {
+        return `<div class="kyc-doc-placeholder" style="cursor:pointer; border-color: rgba(33, 115, 70, 0.3); background: rgba(33, 115, 70, 0.05);" onclick="window.open('${safeUrl}','_blank')">
+            <i class="fas fa-file-excel" style="font-size:24px; color:#217346; display:block; margin-bottom:4px;"></i>
+            <span style="font-size:10px; color:#217346; font-weight:600;">EXCEL</span>
+            <span style="font-size:8px; color:#6a7a92; display:block; margin-top:2px;">Click to view</span>
+        </div>`;
+    }
+    
+    // 🔥 PowerPoint 文档
+    if (fileInfo.type === 'powerpoint') {
+        return `<div class="kyc-doc-placeholder" style="cursor:pointer; border-color: rgba(203, 65, 84, 0.3); background: rgba(203, 65, 84, 0.05);" onclick="window.open('${safeUrl}','_blank')">
+            <i class="fas fa-file-powerpoint" style="font-size:24px; color:#cb4154; display:block; margin-bottom:4px;"></i>
+            <span style="font-size:10px; color:#cb4154; font-weight:600;">POWERPOINT</span>
+            <span style="font-size:8px; color:#6a7a92; display:block; margin-top:2px;">Click to view</span>
+        </div>`;
+    }
+    
+    // 🔥 文本文件
+    if (fileInfo.type === 'text' || fileInfo.type === 'richtext') {
+        return `<div class="kyc-doc-placeholder" style="cursor:pointer; border-color: rgba(200,176,144,0.3); background: rgba(200,176,144,0.05);" onclick="window.open('${safeUrl}','_blank')">
+            <i class="fas fa-file-alt" style="font-size:24px; color:#c8b090; display:block; margin-bottom:4px;"></i>
+            <span style="font-size:10px; color:#c8b090; font-weight:600;">${fileInfo.label}</span>
+            <span style="font-size:8px; color:#6a7a92; display:block; margin-top:2px;">Click to view</span>
+        </div>`;
+    }
+    
+    // 🔥 视频文件
+    if (fileInfo.type === 'video') {
+        return `<div class="kyc-doc-placeholder" style="cursor:pointer; border-color: rgba(255, 107, 107, 0.3); background: rgba(255, 107, 107, 0.05);" onclick="window.open('${safeUrl}','_blank')">
+            <i class="fas fa-file-video" style="font-size:24px; color:#ff6b6b; display:block; margin-bottom:4px;"></i>
+            <span style="font-size:10px; color:#ff6b6b; font-weight:600;">${fileInfo.label}</span>
+            <span style="font-size:8px; color:#6a7a92; display:block; margin-top:2px;">Click to view</span>
+        </div>`;
+    }
+    
+    // 🔥 音频文件
+    if (fileInfo.type === 'audio') {
+        return `<div class="kyc-doc-placeholder" style="cursor:pointer; border-color: rgba(74, 124, 255, 0.3); background: rgba(74, 124, 255, 0.05);" onclick="window.open('${safeUrl}','_blank')">
+            <i class="fas fa-file-audio" style="font-size:24px; color:#4a7cff; display:block; margin-bottom:4px;"></i>
+            <span style="font-size:10px; color:#4a7cff; font-weight:600;">${fileInfo.label}</span>
+            <span style="font-size:8px; color:#6a7a92; display:block; margin-top:2px;">Click to view</span>
+        </div>`;
+    }
+    
+    // 🔥 压缩包
+    if (fileInfo.type === 'archive') {
+        return `<div class="kyc-doc-placeholder" style="cursor:pointer; border-color: rgba(255, 184, 77, 0.3); background: rgba(255, 184, 77, 0.05);" onclick="window.open('${safeUrl}','_blank')">
+            <i class="fas fa-file-archive" style="font-size:24px; color:#ffb84d; display:block; margin-bottom:4px;"></i>
+            <span style="font-size:10px; color:#ffb84d; font-weight:600;">${fileInfo.label}</span>
+            <span style="font-size:8px; color:#6a7a92; display:block; margin-top:2px;">Click to view</span>
+        </div>`;
+    }
+    
+    // 🔥 代码文件
+    if (fileInfo.type === 'code') {
+        return `<div class="kyc-doc-placeholder" style="cursor:pointer; border-color: rgba(74, 222, 128, 0.3); background: rgba(74, 222, 128, 0.05);" onclick="window.open('${safeUrl}','_blank')">
+            <i class="fas fa-file-code" style="font-size:24px; color:#4ade80; display:block; margin-bottom:4px;"></i>
+            <span style="font-size:10px; color:#4ade80; font-weight:600;">${fileInfo.label}</span>
+            <span style="font-size:8px; color:#6a7a92; display:block; margin-top:2px;">Click to view</span>
+        </div>`;
+    }
+    
+    // 🔥 未知格式 - 通用文件图标
+    return `<div class="kyc-doc-placeholder" style="cursor:pointer; border-color: rgba(200,176,144,0.3); background: rgba(200,176,144,0.05);" onclick="window.open('${safeUrl}','_blank')">
+        <i class="fas fa-file" style="font-size:24px; color:#c8b090; display:block; margin-bottom:4px;"></i>
+        <span style="font-size:10px; color:#c8b090; font-weight:600;">${fileInfo.label}</span>
+        <span style="font-size:8px; color:#6a7a92; display:block; margin-top:2px;">Click to view</span>
+    </div>`;
 }
 
 // ============================================================
