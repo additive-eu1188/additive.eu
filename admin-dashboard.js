@@ -433,7 +433,7 @@ async function loadConversionData(days, force) {
         
         var depositUsers = {};
         deposits.forEach(function(d) {
-            if (d.uid && (d.amount || 0) >= 40) {
+            if (d.uid && (d.amount || 0) >= 10) {
                 depositUsers[d.uid] = true;
             }
         });
@@ -726,7 +726,7 @@ async function loadRecentRegistrations() {
             var referrer = u.invited_by_username || '-';
             
             var totalManual = manualDepositMap[u.uid] || 0;
-            var hasManualDeposit = totalManual >= 40;
+            var hasManualDeposit = totalManual >= 10;
             
             var amount = totalManual > 0 ? '€' + totalManual.toFixed(2) : '€0.00';
             
@@ -1666,7 +1666,7 @@ async function refreshRecentOnly() {
             var u = users[i];
             var referrer = u.invited_by_username || '-';
             var totalManual = manualDepositMap[u.uid] || 0;
-            var hasManualDeposit = totalManual >= 40;
+            var hasManualDeposit = totalManual >= 10;
             var amount = totalManual > 0 ? '€' + totalManual.toFixed(2) : '€0.00';
             
             html += '<tr style="border-bottom: 1px solid rgba(200,176,144,0.04);">' +
@@ -1763,7 +1763,7 @@ async function updateCongratsMessage() {
         // 2. 找出今天存款 >= 40 的用户
         var depositUsers = {};
         todayDeposits.forEach(function(d) {
-            if (d.amount >= 40) {
+            if (d.amount >= 10) {
                 depositUsers[d.uid] = true;
             }
         });
