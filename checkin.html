@@ -724,38 +724,57 @@
             }
         }
 
-        function loadData() {
+        // ============================================================
+        // 🔥 核心修复：从 Supabase 加载签到数据
+        // ============================================================
+        async function loadDataFromDB() {
             const user = getCurrentUser();
             if (!user) return { streak: 0, lastClaimDate: null, claimedDays: [] };
-            
-            const key = 'additive_checkin_' + user.uid;
-            const saved = localStorage.getItem(key);
-            console.log('📂 loadData - key:', key, 'raw:', saved);
-            if (saved) {
-                try {
-                    const data = JSON.parse(saved);
-                    console.log('📂 loadData - parsed:', data);
-                    return { 
-                        streak: data.streak || 0, 
-                        lastClaimDate: data.lastClaimDate || null, 
-                        claimedDays: data.claimedDays || [] 
-                    };
-                } catch (e) {
-                    console.error('❌ loadData parse error:', e);
+
+            try {
+                // 1. 获取所有签到记录
+                const { data: records, error } = await sb
+                    .from('user_checkin_records')
+                    .select('day_number, checkin_date')
+                    .eq('uid', user.uid)
+                    .order('day_number', { ascending: true });
+
+                if (error) {
+                    console.error('❌ 加载签到记录失败:', error);
                     return { streak: 0, lastClaimDate: null, claimedDays: [] };
                 }
+
+                const claimedDays = records?.map(r => r.day_number) || [];
+                const streak = claimedDays.length;
+
+                // 2. 获取最后一次签到日期
+                const lastRecord = records?.length > 0 ? records[records.length - 1] : null;
+
+                console.log('📂 从数据库加载签到数据:', { streak, claimedDays, lastClaimDate: lastRecord?.checkin_date });
+
+                return {
+                    streak: streak,
+                    lastClaimDate: lastRecord?.checkin_date || null,
+                    claimedDays: claimedDays
+                };
+
+            } catch (e) {
+                console.error('❌ loadDataFromDB error:', e);
+                return { streak: 0, lastClaimDate: null, claimedDays: [] };
             }
-            return { streak: 0, lastClaimDate: null, claimedDays: [] };
         }
 
+        // ============================================================
+        // 兼容旧代码 - 但实际数据从 Supabase 读取
+        // ============================================================
+        async function loadData() {
+            return await loadDataFromDB();
+        }
+
+        // saveData 不再需要，数据直接写入 Supabase
         function saveData(streak, lastClaimDate, claimedDays) {
-            const user = getCurrentUser();
-            if (!user) return;
-            
-            const key = 'additive_checkin_' + user.uid;
-            const data = { streak, lastClaimDate, claimedDays };
-            console.log('💾 saveData - key:', key, 'saving:', data);
-            localStorage.setItem(key, JSON.stringify(data));
+            console.log('💾 saveData 调用 (数据已由 processClaim 写入数据库，无需本地存储)');
+            return true;
         }
 
         function hasClaimedToday(last) {
@@ -833,7 +852,8 @@
         async function render() {
             const t = window.i18n?.t || function(key) { return key; };
 
-            const data = loadData();
+            // ✅ 从数据库加载
+            const data = await loadDataFromDB();
             console.log('📊 render - claimedDays:', data.claimedDays);
             console.log('📊 render - streak:', data.streak);
             
@@ -844,33 +864,19 @@
             const currentRound = freshUser?.currentRound || 0;
             const roundOrdersCount = freshUser?.roundOrdersCount || 0;
             
-            // ============================================================
-            // 加载签到数据，检测 Round 变化时重置
-            // ============================================================
-            let { streak, lastClaimDate, claimedDays } = loadData();
+            let { streak, lastClaimDate, claimedDays } = data;
             const storedRound = localStorage.getItem('checkin_round_' + user.uid) || '0';
 
             if (parseInt(storedRound) !== currentRound) {
-                // ✅ Round 变化时清除 lastClaimRound 锁定
+                // Round 变化时清除 lastClaimRound 锁定
                 localStorage.removeItem('checkin_last_claim_round_' + user.uid);
                 console.log('🔄 Round 变化，清除 lastClaimRound');
                 
-                const existingData = loadData();
-                const preservedClaimedDays = existingData.claimedDays || [];
-                
                 if (parseInt(storedRound) === 2 && currentRound === 1) {
-                    saveData(0, lastClaimDate, preservedClaimedDays);
                     localStorage.setItem('checkin_round_' + user.uid, String(currentRound));
-                    streak = 0;
-                    claimedDays = preservedClaimedDays;
-                    console.log('🔄 Round 2 -> Round 1: Streak reset, claimedDays preserved:', preservedClaimedDays);
+                    console.log('🔄 Round 2 -> Round 1: claimedDays preserved:', claimedDays);
                 } else {
                     localStorage.setItem('checkin_round_' + user.uid, String(currentRound));
-                    const currentData = loadData();
-                    streak = currentData.streak || 0;
-                    lastClaimDate = currentData.lastClaimDate || null;
-                    claimedDays = currentData.claimedDays || [];
-                    console.log('🔄 Round changed from', storedRound, 'to', currentRound, '- Data preserved');
                 }
             }
             
@@ -947,25 +953,24 @@
         }
 
         // ============================================================
-        // handleClaim - 保留 lastClaimRound 检查
+        // handleClaim - 使用数据库数据
         // ============================================================
         async function handleClaim() {
             console.log('🔔 handleClaim 被调用');
             
             const t = window.i18n?.t || function(key) { return key; };
-            const { streak, lastClaimDate, claimedDays } = loadData();
+            
+            // ✅ 从数据库加载
+            const data = await loadDataFromDB();
+            const { streak, lastClaimDate, claimedDays } = data;
 
-            // ============================================================
-            // 🔥 检查今天是否已经 Claim 过（防止同一天重复点击）
-            // ============================================================
+            // 检查今天是否已经 Claim 过
             if (lastClaimDate && new Date().toDateString() === new Date(lastClaimDate).toDateString()) {
                 showToast('checkin_claimed_today_msg', 'warning');
                 return;
             }
 
-            // ============================================================
-            // 🔥 找出第一个未领取的天数
-            // ============================================================
+            // 找出第一个未领取的天数
             let nextDay = 1;
             let allClaimed = true;
             for (let i = 1; i <= signInRewards.length; i++) {
@@ -983,9 +988,7 @@
                 return;
             }
 
-            // ============================================================
-            // 🔥 获取当前用户信息
-            // ============================================================
+            // 获取当前用户信息
             const user = getCurrentUser();
             if (!user) {
                 showToast('signin_required_login', 'error');
@@ -998,9 +1001,7 @@
 
             console.log('👤 User:', user.uid, 'Round:', currentRound, 'Orders:', roundOrdersCount);
 
-            // ============================================================
-            // 🔥 只有 Round 2 且完成 30 单才能签到
-            // ============================================================
+            // 只有 Round 2 且完成 30 单才能签到
             if (currentRound !== 2) {
                 showToast('checkin_round2_required', 'warning');
                 return;
@@ -1010,16 +1011,11 @@
                 return;
             }
 
-            // ============================================================
-            // 🔥🔥🔥 核心检查：每个 Round 2 只能 Claim 1 次
-            // 如果 lastClaimRound == currentRound，说明这个 Round 已经 Claim 过了
-            // 必须 Reset 回 Round 1 并重新完成 30 单
-            // ============================================================
+            // 检查是否已经在当前 Round 2 Claim 过
             const lastClaimRound = localStorage.getItem('checkin_last_claim_round_' + user.uid);
             
             if (lastClaimRound && parseInt(lastClaimRound) === currentRound) {
-                console.log('⛔ 当前 Round 已经 Claim 过奖励，需要 Reset 后重新完成 30 单');
-                
+                console.log('⛔ 当前 Round 已经 Claim 过奖励');
                 showCustomConfirm(
                     t('checkin_already_claimed_title') || '⚠️ Already Claimed',
                     t('checkin_already_claimed_message') || 'You have already claimed the sign-in bonus for this round.<br><br>Please reset to <strong>Round 1</strong> and complete <strong>30 orders</strong> again to claim the next day.',
@@ -1029,9 +1025,7 @@
                 return;
             }
 
-            // ============================================================
-            // 🔥 准备 Claim
-            // ============================================================
+            // 准备 Claim
             const amount = signInRewards[nextDay - 1].amount;
             const claimDay = nextDay;
 
@@ -1053,15 +1047,13 @@
         }
 
         // ============================================================
-        // 处理 Claim 逻辑
+        // 处理 Claim 逻辑 - 直接写入 Supabase
         // ============================================================
         async function processClaim(user, amount, claimDay, claimedDays) {
             console.log('🔄 开始处理 Claim...');
             
             try {
-                // ============================================================
                 // 1. 添加奖励到余额
-                // ============================================================
                 const { data: userData, error: fetchError } = await sb
                     .from('users')
                     .select('balance')
@@ -1080,9 +1072,7 @@
                 if (updateError) throw updateError;
                 console.log('✅ 余额更新成功: €' + newBalance);
 
-                // ============================================================
                 // 2. 添加到 deposits 表
-                // ============================================================
                 const { error: depositError } = await sb
                     .from('deposits')
                     .insert([{
@@ -1100,9 +1090,7 @@
                     console.log('✅ Deposits 记录成功: €' + amount);
                 }
 
-                // ============================================================
-                // 3. 保存签到记录到 user_checkin_records 表
-                // ============================================================
+                // 3. ✅ 保存签到记录到 user_checkin_records 表 (关键!)
                 const { error: insertError } = await sb
                     .from('user_checkin_records')
                     .insert([{
@@ -1115,49 +1103,27 @@
 
                 if (insertError) {
                     console.error('❌ 签到记录保存失败:', insertError);
+                    throw insertError;
                 } else {
                     console.log('✅ 签到记录保存成功: Day', claimDay);
                 }
 
-                // ============================================================
-                // 4. 更新本地存储（claimedDays）
-                // ============================================================
-                let newClaimedDays = [...claimedDays];
-                if (!newClaimedDays.includes(claimDay)) {
-                    newClaimedDays.push(claimDay);
-                }
-                newClaimedDays.sort((a, b) => a - b);
-
-                const newStreak = newClaimedDays.length;
-
-                saveData(newStreak, new Date().toISOString(), newClaimedDays);
-                console.log('✅ Claim 数据已保存: claimedDays:', newClaimedDays, 'streak:', newStreak);
-
-                // ============================================================
-                // 5. 🔥🔥🔥 记录本次 Claim 时的 Round
-                // 防止同一个 Round 2 重复 Claim
-                // ============================================================
+                // 4. 🔥 记录本次 Claim 时的 Round (localStorage 仅用于防重复)
                 const currentRound = user.currentRound || 0;
                 localStorage.setItem('checkin_last_claim_round_' + user.uid, String(currentRound));
                 console.log('✅ 已记录 Claim 时的 Round:', currentRound);
 
-                // ============================================================
-                // 6. 更新本地用户对象（包含余额）
-                // ============================================================
+                // 5. 更新本地用户对象
                 user.balance = newBalance;
                 localStorage.setItem('currentUser', JSON.stringify(user));
 
-                // ============================================================
-                // 7. 刷新页面 UI
-                // ============================================================
+                // 6. 刷新页面 UI
                 await render();
                 
-                // ============================================================
-                // 8. 显示成功消息
-                // ============================================================
+                // 7. 显示成功消息
                 const t = window.i18n?.t || function(key) { return key; };
                 showToast(t('checkin_claim_success', { day: claimDay, amount: amount.toFixed(2) }), 'success');
-                console.log('🎉 Claim 完成! Round 保持不变:', currentRound);
+                console.log('🎉 Claim 完成!');
                 
             } catch (err) {
                 console.error('❌ processClaim 错误:', err);
@@ -1193,9 +1159,8 @@
             if (window.i18n && window.i18n.applyTranslations) {
                 window.i18n.applyTranslations();
             }
-            console.log('✅ checkin.html 初始化完成');
-            console.log('📋 签到规则: 只有 Round 2 且完成 30 单才能签到');
-            console.log('📋 每个 Round 2 只能 Claim 1 天，必须 Reset 后重新完成 30 单');
+            console.log('✅ checkin.html 初始化完成 (数据来源: Supabase)');
+            console.log('📋 签到数据存储在 Supabase，换设备登录不丢失');
         })();
 
         // ============================================================
@@ -1216,7 +1181,7 @@
             }, 300);
         });
 
-        console.log('✅ checkin.html loaded — 正确版（每个 Round 2 只能 Claim 1 天）');
+        console.log('✅ checkin.html loaded — 数据存储在 Supabase，换设备登录不丢失');
         console.log('💡 点击 Claim now 会显示自定义弹窗，不是浏览器 alert');
     </script>
     <script src="i18n.js"></script>
@@ -1224,13 +1189,6 @@
         document.addEventListener('DOMContentLoaded', function() {
             if (window.i18n) {
                 window.i18n.applyTranslations();
-            }
-            const saved = localStorage.getItem('additive_checkin');
-            if (saved) {
-                try {
-                    const data = JSON.parse(saved);
-                    console.log('📂 DOMContentLoaded - claimedDays:', data.claimedDays);
-                } catch(e) {}
             }
         });
     </script>
