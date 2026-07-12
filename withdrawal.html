@@ -2264,40 +2264,64 @@
         // ---------- 执行提款 ----------
         async function executeWithdrawal(amount) {
     try {
-        var newBalance = currentUserBalance - amount;
+        // ============================================================
+        // 🔥 修复3：扣款前再次验证余额（防止并发）
+        // ============================================================
+        const { data: userData, error: userError } = await sb
+            .from('users')
+            .select('balance')
+            .eq('uid', currentUser.uid)
+            .single();
 
-        var { error: updateError } = await sb
+        if (userError || !userData) {
+            showToast('Failed to verify balance', 'error');
+            return;
+        }
+
+        if (amount > (userData.balance || 0)) {
+            showToast('withdrawal_insufficient', 'error');
+            return;
+        }
+
+        var newBalance = (userData.balance || 0) - amount;
+
+        // 更新余额
+        const { error: updateError } = await sb
             .from('users')
             .update({ balance: newBalance })
             .eq('uid', currentUser.uid);
 
         if (updateError) throw updateError;
 
-        var { data: userData, error: userError } = await sb
+        // 获取提款地址
+        const { data: addressData, error: addressError } = await sb
             .from('users')
             .select('withdrawal_address, withdrawal_address_type')
             .eq('uid', currentUser.uid)
             .single();
 
-        if (userError) throw userError;
+        if (addressError) throw addressError;
 
-        var { error: withdrawalError } = await sb
+        // 创建提款记录
+        const { error: withdrawalError } = await sb
             .from('withdrawals')
             .insert({
                 uid: currentUser.uid,
                 username: currentUser.username,
                 amount: amount,
-                wallet_address: userData.withdrawal_address,
-                currency: userData.withdrawal_address_type || 'USDT',
+                wallet_address: addressData.withdrawal_address,
+                currency: addressData.withdrawal_address_type || 'USDT',
                 status: 'pending',
                 request_date: new Date().toISOString()
             });
 
         if (withdrawalError) {
-            await sb.from('users').update({ balance: currentUserBalance }).eq('uid', currentUser.uid);
+            // 如果提款记录创建失败，退回余额
+            await sb.from('users').update({ balance: userData.balance }).eq('uid', currentUser.uid);
             throw withdrawalError;
         }
 
+        // 更新全局变量和本地存储
         currentUserBalance = newBalance;
         if (currentUser) {
             currentUser.balance = newBalance;
@@ -2309,8 +2333,8 @@
         if (displayBalanceEl) displayBalanceEl.innerHTML = '€' + newBalance.toFixed(2);
         document.getElementById('amountInput').value = '';
 
-        // ✅ 显示金色弹窗（带 i18n）
-        showWithdrawalSuccessModal(amount, userData.withdrawal_address_type || 'USDT', userData.withdrawal_address || '');
+        // 显示成功弹窗
+        showWithdrawalSuccessModal(amount, addressData.withdrawal_address_type || 'USDT', addressData.withdrawal_address || '');
 
     } catch (e) {
         showToast('withdrawal_failed: ' + e.message, 'error');
@@ -2321,99 +2345,144 @@
         // requestWithdrawal 函数
         // ============================================================
         async function requestWithdrawal() {
-            var t = window.i18n?.t || function(key) { return key; };
+    var t = window.i18n?.t || function(key) { return key; };
 
-            var currentUserLocal = getCurrentUser();
-            if (currentUserLocal) {
-                var { data: userData } = await sb.from('users').select('withdrawal_frozen, pin').eq('uid', currentUserLocal.uid).single();
-                if (userData?.withdrawal_frozen === true) {
-                    showToast('withdrawal_frozen', 'error');
-                    return;
-                }
-            }
+    // ============================================================
+    // 🔥 修复1：每次从数据库读取实时余额
+    // ============================================================
+    const { data: userData, error: userError } = await sb
+        .from('users')
+        .select('balance, withdrawal_frozen, pin, pin_attempts, pin_locked_until, withdrawal_address')
+        .eq('uid', currentUser.uid)
+        .single();
 
-            try {
-                var currentUserLocal2 = getCurrentUser();
-                if (currentUserLocal2) {
-                    var freshUser = await syncUserData();
-                    var creditScore = freshUser?.creditScore || 100;
-                    if (creditScore < 95) {
-                        showCreditBlockModal();
-                        return;
-                    }
-                }
-            } catch (e) {
-                console.error('Credit score check failed:', e);
-            }
+    if (userError || !userData) {
+        showToast('Failed to load account data', 'error');
+        return;
+    }
 
-            var currentUserLocal3 = getCurrentUser();
-            if (!currentUserLocal3) {
-                window.location.href = 'signin.html';
-                return;
-            }
+    // 使用数据库中的实时余额
+    var realBalance = userData.balance || 0;
+    currentUserBalance = realBalance; // 更新全局变量
 
-            await syncUserData();
-            var freshUser = getCurrentUser();
-            var isPremium = freshUser?.isPremium || false;
-            var currentRound = freshUser?.currentRound || 0;
-            var roundOrdersCount = freshUser?.roundOrdersCount || 0;
-            var { count: totalOrders } = await sb.from('order_history').select('id', { count: 'exact' }).eq('uid', currentUserLocal3.uid);
+    // 检查提款是否被冻结
+    if (userData.withdrawal_frozen === true) {
+        showToast('withdrawal_frozen', 'error');
+        return;
+    }
 
-            var canWithdraw = false;
-            if (!isPremium) {
-                canWithdraw = totalOrders >= 30;
-            } else {
-                canWithdraw = currentRound === 2 && roundOrdersCount >= 30;
-            }
+    // ============================================================
+    // 🔥 修复2：检查是否有 pending 提款
+    // ============================================================
+    const { data: pendingCheck, error: pendingError } = await sb
+        .from('withdrawals')
+        .select('id')
+        .eq('uid', currentUser.uid)
+        .eq('status', 'pending')
+        .limit(1);
 
-            if (!canWithdraw) {
-                if (!isPremium) {
-                    showToast('start_need_orders', 'warning');
-                } else {
-                    showToast('start_need_rounds', 'warning');
-                }
-                return;
-            }
+    if (pendingCheck && pendingCheck.length > 0) {
+        showToast('You already have a pending withdrawal request. Please wait for approval.', 'warning');
+        return;
+    }
 
-            var amount = parseFloat(document.getElementById('amountInput').value);
-            if (isNaN(amount) || amount < 10) { showToast('withdrawal_min_amount', 'error'); return; }
-            if (amount > currentUserBalance) { showToast('withdrawal_insufficient', 'error'); return; }
-
-            var { data: userData } = await sb
-                .from('users')
-                .select('withdrawal_address, pin, pin_attempts, pin_locked_until')
-                .eq('uid', currentUser.uid)
-                .single();
-
-            if (!userData?.withdrawal_address) {
-                showToast('withdrawal_no_address', 'error');
-                return;
-            }
-
-            if (userData.pin_locked_until) {
-                var lockTime = new Date(userData.pin_locked_until);
-                if (lockTime > new Date()) {
-                    var minutes = Math.ceil((lockTime - new Date()) / 60000);
-                    showToast('🔒 PIN locked. Try again in ' + minutes + ' minutes.', 'error');
-                    return;
-                }
-            }
-
-            if ((userData.pin_attempts || 0) >= MAX_PIN_ATTEMPTS) {
-                showToast('🔒 PIN locked due to too many failed attempts.', 'error');
-                return;
-            }
-
-            pendingWithdrawAmount = amount;
-
-            var hasPin = userData.pin && userData.pin !== '0000' && userData.pin !== '';
-
-            if (hasPin) {
-                showPinModal('Enter Withdrawal PIN', 'Enter your 4-digit PIN to confirm withdrawal', false);
-            } else {
-                showPinModal('Set Withdrawal PIN', 'Set a 4-digit PIN to secure your withdrawals', true);
-            }
+    // ============================================================
+    // 信用分数检查
+    // ============================================================
+    try {
+        var freshUser = await syncUserData();
+        var creditScore = freshUser?.creditScore || 100;
+        if (creditScore < 95) {
+            showCreditBlockModal();
+            return;
         }
+    } catch (e) {
+        console.error('Credit score check failed:', e);
+    }
+
+    // ============================================================
+    // 检查是否可以提款
+    // ============================================================
+    var currentUserLocal3 = getCurrentUser();
+    if (!currentUserLocal3) {
+        window.location.href = 'signin.html';
+        return;
+    }
+
+    await syncUserData();
+    var freshUser2 = getCurrentUser();
+    var isPremium = freshUser2?.isPremium || false;
+    var currentRound = freshUser2?.currentRound || 0;
+    var roundOrdersCount = freshUser2?.roundOrdersCount || 0;
+    var { count: totalOrders } = await sb
+        .from('order_history')
+        .select('id', { count: 'exact' })
+        .eq('uid', currentUserLocal3.uid);
+
+    var canWithdraw = false;
+    if (!isPremium) {
+        canWithdraw = totalOrders >= 30;
+    } else {
+        canWithdraw = currentRound === 2 && roundOrdersCount >= 30;
+    }
+
+    if (!canWithdraw) {
+        if (!isPremium) {
+            showToast('start_need_orders', 'warning');
+        } else {
+            showToast('start_need_rounds', 'warning');
+        }
+        return;
+    }
+
+    // ============================================================
+    // 金额检查（使用实时余额）
+    // ============================================================
+    var amount = parseFloat(document.getElementById('amountInput').value);
+    if (isNaN(amount) || amount < 10) {
+        showToast('withdrawal_min_amount', 'error');
+        return;
+    }
+    if (amount > realBalance) {
+        showToast('withdrawal_insufficient', 'error');
+        return;
+    }
+
+    // ============================================================
+    // 检查提款地址
+    // ============================================================
+    if (!userData.withdrawal_address) {
+        showToast('withdrawal_no_address', 'error');
+        return;
+    }
+
+    // ============================================================
+    // PIN 检查
+    // ============================================================
+    if (userData.pin_locked_until) {
+        var lockTime = new Date(userData.pin_locked_until);
+        if (lockTime > new Date()) {
+            var minutes = Math.ceil((lockTime - new Date()) / 60000);
+            showToast('🔒 PIN locked. Try again in ' + minutes + ' minutes.', 'error');
+            return;
+        }
+    }
+
+    if ((userData.pin_attempts || 0) >= MAX_PIN_ATTEMPTS) {
+        showToast('🔒 PIN locked due to too many failed attempts.', 'error');
+        return;
+    }
+
+    pendingWithdrawAmount = amount;
+
+    var hasPin = userData.pin && userData.pin !== '0000' && userData.pin !== '';
+
+    if (hasPin) {
+        showPinModal('Enter Withdrawal PIN', 'Enter your 4-digit PIN to confirm withdrawal', false);
+    } else {
+        showPinModal('Set Withdrawal PIN', 'Set a 4-digit PIN to secure your withdrawals', true);
+    }
+}
 
         // ---------- 信用分数阻断弹窗 ----------
         function showCreditBlockModal() {
