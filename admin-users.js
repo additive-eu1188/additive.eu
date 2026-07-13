@@ -1634,10 +1634,11 @@ async function processDeposit(uid, username, depositAmount, rewardAmount, reward
         // 🔥🔥🔥 核心修复：计算新的 amount_due_round（用充值金额抵扣）
         // ============================================================
         let newAmountDue = user.amount_due_round || 0;
-        if (newAmountDue > 0 && depositAmount > 0) {
-            newAmountDue = Math.max(0, newAmountDue - depositAmount);
-            console.log('💰 amount_due 更新（充值）:', user.amount_due_round || 0, '->', newAmountDue, '(充值 €' + depositAmount + ')');
-        }
+const totalPayment = depositAmount + rewardAmount;
+if (newAmountDue > 0 && totalPayment > 0) {
+    newAmountDue = Math.max(0, newAmountDue - totalPayment);
+    console.log('💰 amount_due 更新:', user.amount_due_round || 0, '->', newAmountDue, '(抵扣 €' + totalPayment + ')');
+}
         
         // ============================================================
         // 更新数据库：balance 和 amount_due_round
