@@ -479,7 +479,22 @@ async function loadTrialActivated() {
 
 async function processTrialAdd(uid, username, amount) {
     try {
-        // 🔥 获取当前用户数据
+        // ============================================================
+        // 🔥 防重复检查：如果该用户已经有 trial_bonus 记录，阻止再次添加
+        // ============================================================
+        const { data: existingDeposit, error: checkError } = await sb
+            .from('deposits')
+            .select('id')
+            .eq('uid', uid)
+            .eq('type', 'trial_bonus')
+            .limit(1);
+
+        if (existingDeposit && existingDeposit.length > 0) {
+            showToast(`⚠️ ${username} already has trial bonus added. Duplicate not allowed.`, 'warning');
+            return;
+        }
+
+        // 继续原有逻辑...
         const { data: user, error: fetchError } = await sb
             .from('users')
             .select('trial_bonus_amount, trial_bonus_activated')
@@ -491,18 +506,16 @@ async function processTrialAdd(uid, username, amount) {
         const currentAmount = user?.trial_bonus_amount || 0;
         const newAmount = currentAmount + amount;
         
-        // 🔥 更新用户 trial_bonus_amount 和 trial_bonus_activated
         const { error: updateError } = await sb
             .from('users')
             .update({ 
                 trial_bonus_amount: newAmount,
-                trial_bonus_activated: true   // 🔥 标记为已激活
+                trial_bonus_activated: true
             })
             .eq('uid', uid);
         
         if (updateError) throw updateError;
         
-        // 记录到 deposits
         await sb.from('deposits').insert([{
             uid: uid,
             username: username,
@@ -514,7 +527,6 @@ async function processTrialAdd(uid, username, amount) {
         
         showToast(`✅ Added €${amount.toFixed(2)} trial bonus to ${username}`, 'success');
         
-        // 刷新所有列表
         await loadTrialUnactivated();
         await loadTrialActivated();
         await updateTrialStats();
