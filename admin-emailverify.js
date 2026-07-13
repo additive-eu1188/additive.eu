@@ -116,11 +116,11 @@ async function saveTACToDatabase(requestId, code, email) {
 // ============================================================
 async function verifyEmail(requestId, email) {
     try {
+        // 🔥 点击 Verify 时，只设置 code = '000000'，不修改 is_verified
         const { error } = await sb
             .from('email_verification_requests')
             .update({ 
-                is_verified: true,
-                verified_at: new Date().toISOString()
+                code: '000000'
             })
             .eq('id', parseInt(requestId));
 
@@ -130,7 +130,7 @@ async function verifyEmail(requestId, email) {
             return;
         }
 
-        showToast(`✅ ${email} verified successfully!`, 'success');
+        showToast(`✅ ${email} verified! Use code 000000 to register`, 'success');
         
         await loadEmailPending();
         await loadEmailHistory();

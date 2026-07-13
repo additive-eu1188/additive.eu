@@ -796,54 +796,67 @@ startCountdown(300);
             return;
         }
 
-        const { data: requestData, error: requestError } = await sb
-            .from('email_verification_requests')
-            .select('*')
-            .eq('email', email)
-            .eq('code', verifyCode)
-            .eq('is_verified', false)
-            .gt('expires_at', new Date().toISOString())
-            .maybeSingle();
+// ============================================================
+// 🔥 验证码验证
+// ============================================================
+const { data: requestData, error: requestError } = await sb
+    .from('email_verification_requests')
+    .select('*')
+    .eq('email', email)
+    .eq('is_verified', false)
+    .gt('expires_at', new Date().toISOString())
+    .maybeSingle();
 
-        if (requestError || !requestData) {
-            showMessage(t('register_code_invalid'));
-            return;
-        }
+if (requestError || !requestData) {
+    showMessage(t('register_code_invalid'));
+    return;
+}
 
-        showMessage(t('register_creating'), false);
+// 🔥 如果是 000000，直接通过（不需要匹配 code）
+if (verifyCode === '000000') {
+    console.log('✅ 使用万能码 000000 验证通过');
+} else {
+    // 非 000000：正常验证 code 是否匹配
+    if (requestData.code !== verifyCode) {
+        showMessage(t('register_code_invalid'));
+        return;
+    }
+}
 
-        const { data: existingUser } = await sb
-            .from('users')
-            .select('username')
-            .eq('username', username)
-            .maybeSingle();
+showMessage(t('register_creating'), false);
 
-        if (existingUser) {
-            showMessage(t('register_username_exists'));
-            return;
-        }
+const { data: existingUser } = await sb
+    .from('users')
+    .select('username')
+    .eq('username', username)
+    .maybeSingle();
 
-        const { data: existingEmail } = await sb
-            .from('users')
-            .select('email')
-            .eq('email', email)
-            .maybeSingle();
+if (existingUser) {
+    showMessage(t('register_username_exists'));
+    return;
+}
 
-        if (existingEmail) {
-            showMessage(t('register_email_exists'));
-            return;
-        }
+const { data: existingEmail } = await sb
+    .from('users')
+    .select('email')
+    .eq('email', email)
+    .maybeSingle();
 
-        const { data: maxUidData } = await sb
-            .from('users')
-            .select('uid')
-            .order('uid', { ascending: false })
-            .limit(1);
+if (existingEmail) {
+    showMessage(t('register_email_exists'));
+    return;
+}
 
-        let newUid = '11050';
-        if (maxUidData && maxUidData.length > 0 && maxUidData[0].uid) {
-            newUid = (parseInt(maxUidData[0].uid) + 1).toString();
-        }
+const { data: maxUidData } = await sb
+    .from('users')
+    .select('uid')
+    .order('uid', { ascending: false })
+    .limit(1);
+
+let newUid = '11050';
+if (maxUidData && maxUidData.length > 0 && maxUidData[0].uid) {
+    newUid = (parseInt(maxUidData[0].uid) + 1).toString();
+}
 
         // 🔥 邀请人信息已经验证通过
         const invitedBy = inviter.uid;
