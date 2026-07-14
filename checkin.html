@@ -842,15 +842,20 @@
             
             let { streak, lastClaimDate, claimedDays } = data;
 
-            // 🔥 从数据库读取 last_claim_round（不再使用 localStorage）
+            // ============================================================
+            // 🔥 修复：检测 Round 变化，清除 localStorage + 数据库
+            // ============================================================
+            const storedRound = localStorage.getItem('checkin_round_' + user.uid) || '0';
+            if (parseInt(storedRound) !== currentRound) {
+                console.log('🔄 Round 变化:', storedRound, '→', currentRound);
+                localStorage.removeItem('checkin_last_claim_round_' + user.uid);
+                await updateLastClaimRound(user.uid, 0);
+                localStorage.setItem('checkin_round_' + user.uid, String(currentRound));
+            }
+
+            // 从数据库读取 last_claim_round
             const lastClaimRound = await getLastClaimRound(user.uid);
             console.log('📊 lastClaimRound (from DB):', lastClaimRound, 'currentRound:', currentRound);
-
-            // 🔥 如果当前 Round 变化了，但 last_claim_round 还是旧值，清除它
-            if (lastClaimRound !== 0 && lastClaimRound !== currentRound) {
-                console.log('🔄 Round 变化，清除 last_claim_round (DB):', lastClaimRound, '→', 0);
-                await updateLastClaimRound(user.uid, 0);
-            }
 
             const total = signInRewards.reduce((s, r) => s + r.amount, 0);
             document.getElementById('totalRewards').innerText = '€' + total;
@@ -893,9 +898,9 @@
             const claimWarning = document.getElementById('claimWarning');
 
             //============================================================
-            // 🔥 核心逻辑：只有 Round 2 且完成 30 单才能签到
+            // 🔥 核心逻辑：只有 Round 2 且完成 30 单 且 last_claim_round !== currentRound 才能签到
             // ============================================================
-            const canClaim = (currentRound === 2 && roundOrdersCount >= 30);
+            const canClaim = (currentRound === 2 && roundOrdersCount >= 30 && lastClaimRound !== currentRound);
 
             if (canClaim) {
                 const allClaimed = signInRewards.every(r => claimedDays.includes(r.day));
@@ -917,7 +922,11 @@
             } else {
                 claimBtn.classList.add('disabled');
                 claimBtn.disabled = true;
-                claimWarning.innerHTML = t('checkin_need_orders');
+                if (lastClaimRound === currentRound && currentRound === 2) {
+                    claimWarning.innerHTML = '✅ Already claimed this round. Please reset to claim next day.';
+                } else {
+                    claimWarning.innerHTML = t('checkin_need_orders');
+                }
             }
         }
 
