@@ -923,7 +923,7 @@
                 claimBtn.classList.add('disabled');
                 claimBtn.disabled = true;
                 if (lastClaimRound === currentRound && currentRound === 2) {
-                    claimWarning.innerHTML = '✅ Already claimed this round. Please reset to claim next day.';
+                    claimWarning.innerHTML = '<i class="fas fa-info-circle" style="margin-right:6px;"></i> ' + t('checkin_already_claimed_this_round');
                 } else {
                     claimWarning.innerHTML = t('checkin_need_orders');
                 }
